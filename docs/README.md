@@ -35,6 +35,46 @@ ARCHITECTURE §1).
 
 ## Log (newest first)
 
+### D-008 — Gate proven; branch protection required; paths-ignore removed
+- **Date:** 2026-07-19
+- **Status:** Accepted (supersedes the "doc-only commits bypass the test gate" clause of
+  D-005 and the `paths-ignore` choice in D-007)
+- **Context:** The CI gate (D-005/D-007) was only half a gate. `push: branches: [main]`
+  makes the main-push run a **post-hoc check** — it runs on a commit *already on main*, so
+  nothing is physically blocked; the keel run went green because the code was clean, not
+  because a gate stood in the way. **The PR path is the real gate**, and it only blocks if
+  `main` is *protected* and merging is the only route in. Proven empirically below.
+- **Evidence (all on 2026-07-19):**
+  - **Red gate on a PR:** PR #1 (`break-it`, deliberately broken assert) → gate run
+    **`test` = failure, `deploy` = skipped** (`deploy: needs: test` did its job):
+    https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/29706935765
+  - **Advisory-only before protection:** PR #1 read `MERGEABLE / UNSTABLE` — a failing
+    check did **not** block merge on its own.
+  - **Blocking after protection:** same PR flipped to `MERGEABLE / BLOCKED` once `test`
+    was required.
+  - **Direct push refused:** `git push origin main` (empty commit) →
+    `GH006: Protected branch update failed ... Changes must be made through a pull
+    request ... Required status check "test" is expected.`
+- **Decision:**
+  1. **Branch protection on `main` is a hard prerequisite** and is now set: require a pull
+     request (0 approvals), require the **`test`** status check, **`enforce_admins: true`**
+     (no bypass — including the owner), no direct pushes. Direct pushes to `main` (like the
+     keel commit `d656b63`, which predated protection) are no longer possible.
+  2. **Remove `paths-ignore` from `gate.yml`.** With `test` now a *required* check, a
+     doc-only PR that never triggered the workflow would leave the required check
+     unreported and the PR **unmergeable forever**. Dropping `paths-ignore` makes the ~20s
+     suite run on every PR, so the check always reports; docs pay a trivial always-green
+     cost instead of deadlocking.
+- **Deep-learning justification:** Neutral (process), but this is the difference between a
+  gate that *looks* enforced and one that actually is — the guarantee that no untested
+  inference code can reach prod now holds against a tired 11pm `git push origin main`.
+- **Consequences / follow-ups:**
+  - Doc-only commits now run the test suite (they pass trivially and are never blocked) —
+    this is the accepted reversal of the earlier doc-bypass intent.
+  - When the real Fly deploy replaces the placeholder, **guard the `deploy` job** (not the
+    workflow trigger) against doc-only changes, so docs still run tests but don't redeploy.
+  - `enforce_admins: true` means even the owner merges via PR with `test` green — by design.
+
 ### D-007 — Lay the keel: `tests/` + CI deploy gate scaffold
 - **Date:** 2026-07-19
 - **Status:** Accepted
