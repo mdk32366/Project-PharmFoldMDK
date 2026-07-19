@@ -35,6 +35,138 @@ ARCHITECTURE §1).
 
 ## Log (newest first)
 
+### D-009 — Iteration 1 scope, job queue shape, and ECD boundary selection
+- **Date:** 2026-07-19
+- **Status:** Partially accepted — scope clause (§3) is a STUB pending spike S-001 results.
+  Do not begin Iteration-1 application work until §3 is resolved and this entry is
+  updated to Accepted.
+- **Context:** D-004 ratified the two-tier topology and carried three items forward: the
+  job queue schema and claim mechanism, extracellular-domain boundary selection, and the
+  Iteration-1 scope question (cache-first vs. live-first). The first two are resolvable
+  from known constraints. The third depends on measured ESMFold performance on 8 GB VRAM,
+  which does not yet exist. Per the log-leads-the-code rule, the resolvable parts are
+  ratified here and the unresolved part is stubbed explicitly rather than guessed.
+
+---
+
+#### §1 — Job queue: dedicated `jobs` table (Accepted)
+
+- **Decision:** Fold jobs live in a **dedicated `jobs` table**, not as additional columns
+  on `protein_analyses`.
+- **Rationale:** `protein_analyses` rows are durable scientific records; job state is
+  transient operational state with retries, failures, and worker ownership. Merging them
+  would (a) attach permanently-dead queue columns to every historical analysis, (b) make
+  retry semantics awkward, since a retry is a new attempt against the same analysis, and
+  (c) conflate "this analysis exists" with "this fold is in flight."
+- **Shape (initial):**
+
+  | Column | Type | Notes |
+  |---|---|---|
+  | `id` | SERIAL PK | |
+  | `analysis_id` | INTEGER FK → `protein_analyses(id)` | the record this fold produces |
+  | `status` | VARCHAR(20) | `pending` \| `claimed` \| `complete` \| `failed` |
+  | `claimed_at` | TIMESTAMPTZ NULL | set at claim; used for stale-claim reaping |
+  | `completed_at` | TIMESTAMPTZ NULL | |
+  | `worker_id` | VARCHAR(64) NULL | which worker holds it |
+  | `attempts` | INTEGER DEFAULT 0 | retry budget |
+  | `error` | TEXT NULL | last failure message |
+  | `inference_settings` | JSONB | dtype, `chunk_size`, model revision, sequence length — the reproducibility record (D-004) |
+  | `created_at` | TIMESTAMPTZ | |
+
+- **Claim mechanism:** `SELECT ... FOR UPDATE SKIP LOCKED` — the standard Postgres
+  queue-claim pattern. Correct with a single worker and remains correct without change if
+  a second worker is ever added.
+- **Indexes:** `jobs(status, created_at)` for the claim query; `jobs(analysis_id)`.
+- **Stale claims:** a `claimed` job older than a threshold (initially 30 min) is returned
+  to `pending` and `attempts` incremented. Covers the laptop-sleeps-mid-fold case, which
+  D-004 accepted as a normal operating condition rather than an error.
+- **Deep-learning justification:** indirect but load-bearing — this is the mechanism that
+  lets neural inference run on hardware that can actually hold the model. Without a
+  durable queue, the local-GPU tier from D-004 is not viable and the graded DL work has
+  nowhere to execute.
+
+---
+
+#### §2 — ECD boundary selection from UniProt topology (Accepted)
+
+- **Decision:** For each target protein, fold **only the extracellular domain**, with
+  boundaries taken from **UniProt's `Topological domain` feature annotations** where the
+  description is `Extracellular`.
+- **Method:** Query the UniProt REST API for the accession, read `features` of type
+  `Topological domain`, select extracellular spans, slice the canonical sequence to that
+  residue range, and submit only the slice to ESMFold.
+- **Persistence:** store the selected range and its provenance on the analysis row
+  (`metadata` JSONB: `ecd_start`, `ecd_end`, `ecd_source`) so the 3D viewer can label
+  precisely what is being displayed, and so results are reproducible.
+- **Fallback:** when no extracellular topological annotation exists, fall back to the full
+  canonical sequence **and surface a visible warning in the UI** — the user should know
+  they are looking at a whole-protein fold, which for a long target may fail the
+  length cap. Absence of annotation is scientifically informative, not merely an error.
+- **Multiple extracellular spans:** where a target has more than one, select the longest
+  by default and record the choice; per-span selection is a later enhancement.
+- **Deep-learning justification:** this is what makes the D-003 model choice tractable on
+  D-004 hardware, and it is *scientifically* correct rather than merely convenient — ADC
+  antibody binding occurs at the ECD, so the domain we fold is the domain that matters.
+  Reference sizes: HER2 ECD ~630 aa, Trop-2 ECD ~250 aa, Nectin-4 ECD ~350 aa, against
+  full lengths of 1255 / 323 / 510 aa respectively.
+
+---
+
+#### §3 — Iteration 1 scope (STUB — BLOCKED on spike S-001)
+
+- **Status:** UNRESOLVED. This clause is deliberately incomplete. Iteration-1
+  application work MUST NOT begin until it is filled in.
+- **The fork:**
+  - **(A) Cache-first.** Iteration 1 ships the Mission Briefing plus the curated ADC
+    target database, folded offline by the real pipeline and served from cached
+    PDB/pLDDT/PAE artifacts. The worker and `jobs` table exist and are exercised by the
+    offline folding run, but user-submitted live folding is deferred to Iteration 1.5.
+    Demo is independent of the laptop being awake.
+  - **(B) Live-first.** Iteration 1 ships the full loop: user submits a sequence → job
+    queues → local worker folds → result renders. More moving parts; demo depends on the
+    inference tier being online at presentation time.
+- **What decides it:** spike **S-001** (below). The threshold, set in advance so the
+  result is not rationalized after the fact:
+  - 600 aa fold completes in **under ~2 minutes** at acceptable peak VRAM → **(B) viable**
+  - 600 aa fold takes materially longer, or OOMs at `chunk_size=32` in fp16 → **(A)**,
+    and the length cap is revised downward to whatever 8 GB actually sustains.
+- **Note on the DL claim under (A):** cache-first does not weaken the graded deep-learning
+  content **provided the folding pipeline is real, committed, reproducible code in this
+  repo** — invoked to produce the cache — and not a one-off script run once by hand. If
+  (A) is chosen, that condition is binding.
+
+---
+
+#### Follow-ups
+- Alembic migration for `jobs` (blocked on §3 only in timing, not in content).
+- Worker credential handling — Fly secrets, referenced by name (Principle 4).
+- Authenticated artifact-upload endpoint (D-004 consequence, still open).
+- ARCHITECTURE.md §4 (data model) gains `jobs`; §6 Iteration-1 row updates once §3 resolves.
+
+### S-001 — Spike: measure ESMFold fp16 performance on 8 GB Blackwell
+- **Date:** 2026-07-19
+- **Status:** Open
+- **Type:** Spike (time-boxed investigation, not a feature). Produces a measurement and a
+  decision input, not shipped functionality.
+- **Question:** Does `facebook/esmfold_v1` in fp16 fold ADC-relevant extracellular domains
+  on an 8 GB Blackwell laptop GPU, and how fast?
+- **Method:**
+  1. Load `esmfold_v1` with `torch_dtype=torch.float16` on the local GPU.
+  2. Set `chunk_size=64`. Fold a ~300 aa sequence (Trop-2 ECD scale). Record peak VRAM
+     (`torch.cuda.max_memory_allocated`) and wall time.
+  3. Fold a ~600 aa sequence (HER2 ECD scale). Same measurements.
+  4. If either OOMs, retry at `chunk_size=32` and record.
+  5. If 600 aa OOMs at 32, bisect downward to find the actual sustainable ceiling.
+- **Record:** peak VRAM and wall time per sequence length and chunk size; mean pLDDT of
+  each output as a sanity check that fp16 has not degraded quality; model revision hash
+  and torch version.
+- **Decides:** D-009 §3 (cache-first vs. live-first) and the final API sequence-length cap
+  in D-004.
+- **Time box:** one afternoon. If the model will not load at all in fp16, stop and
+  escalate — that invalidates the D-004 mitigation stack and D-003 needs revisiting.
+- **Deliverable:** results appended to this entry, then D-009 §3 filled in and promoted
+  to Accepted.
+
 ### D-008 — Gate proven; branch protection required; paths-ignore removed
 - **Date:** 2026-07-19
 - **Status:** Accepted (supersedes the "doc-only commits bypass the test gate" clause of

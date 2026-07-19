@@ -112,8 +112,14 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 - **`reports`** — 1:N from an analysis; report type, `content_path`, timestamps.
 - **`analysis_embeddings`** — `vector(384)` with an HNSW cosine index for semantic search
   (Iteration 3+).
+- **`jobs`** (D-009 §1) — **transient** fold-queue state, kept **separate** from the durable
+  `protein_analyses` record: `analysis_id` FK, `status`
+  (`pending`/`claimed`/`complete`/`failed`), `claimed_at`, `worker_id`, `attempts`, `error`,
+  and `inference_settings` JSONB (dtype / `chunk_size` / model revision — the reproducibility
+  record). Claimed via `SELECT … FOR UPDATE SKIP LOCKED`; stale `claimed` jobs (>30 min) are
+  requeued. This is the durable queue the local GPU worker (D-004) pulls from.
 
-**Relationships:** `users` 1:N `protein_analyses` 1:N (`mutations`, `reports`).
+**Relationships:** `users` 1:N `protein_analyses` 1:N (`mutations`, `reports`, `jobs`).
 **Migrations:** Alembic, versioned. Any schema change ships with a migration.
 
 ---
