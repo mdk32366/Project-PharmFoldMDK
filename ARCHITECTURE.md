@@ -154,14 +154,22 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
   PR or a doc-only PR hangs unmergeable; the ~20s suite therefore runs on everything. When
   real deploy is wired, guard the **deploy job** (not the trigger) against doc-only changes.
 
-### VRAM constraint (8 GB) — fold-path strategy (D-006)
+### ⚠ VRAM constraint (8 GB) — fold path is UNRESOLVED (D-006 invalidated by S-001)
 
-Full `esmfold_v1` (ESM-2 3B) wants ~16 GB+ for long sequences, so on 8 GB VRAM the worker
-applies, in order: **fp16 trunk**, **axial-attention `chunk_size`** (start 128), **fold the
-ADC-relevant extracellular domain** (from UniProt topology), a **~400-residue interactive
-cap**, **graceful OOM degradation** (smaller chunk → CPU-offload via 31.5 GB RAM →
-`needs_offline`), and an **offline pre-compute pass** over the curated target DB so the demo
-path is instant. Numeric caps are starting values pending empirical validation — see D-006.
+**Measured 2026-07-19 (S-001):** the fp16 model is resident at **8116 MiB** against **7043 MiB
+free / 8151 MiB physical** — it spills to shared system RAM *before any fold*. **fp16 alone does
+not fit `esmfold_v1` in 8 GB.** The D-006 ladder (fp16 → chunking → cap → ECD → caching) is
+**invalid at rung one**: rungs 2+ reduce *activation* memory and cannot fix a *resident-weight*
+overrun. Weights are **9.58 GB on disk** (not ~2.5 GB). Warm-cache load is **15–16 s**.
+
+**The local GPU tier is currently UNPROVEN**, not merely unoptimized: three attempts at a 630 aa
+fold each ended in an identical host bugcheck (`0x00020001` HYPERVISOR_ERROR). Whether that is a
+memory-pressure cascade or a hardware/driver fault is **S-002**, which gates the tier.
+
+Replacement rung one must be a **resident-footprint** reduction — quantized ESM-2 trunk,
+CPU-offloaded LM with the folding head resident, or a smaller backbone (a research project;
+`esmfold_v1` is the only released checkpoint). Per D-004 §5 this stays inside "smaller model /
+narrower targets" and explicitly **does not** mean retreating to AlphaFold retrieval.
 
 > **Open decision (log in `docs/README.md`):** **prod** DB — SQLite-on-Volume prototype
 > (Database Plan §5) vs. Postgres-first. pgvector is central to the DL semantic-search
@@ -174,7 +182,7 @@ path is instant. Numeric caps are starting values pending empirical validation �
 
 | Iter | Product goal | Deep-learning content |
 |------|--------------|-----------------------|
-| **1 (MVP)** | Mission Briefing tab + structure prediction + 3D viewer + basic pocket + ADC summary | **ESMFold run in-project (ratified, D-003)** — protein LM + folding head predicting structure + pLDDT/PAE from sequence |
+| **1 (MVP)** | **Cache-first (D-009 §3)**: Mission Briefing + curated ADC target DB served from pre-folded cached artifacts; live user folding deferred. **Blocked on S-002** — the cache cannot be built until a folding configuration exists that fits 8 GB and does not crash the host | **ESMFold run in-project (D-003)** — the pipeline that *produces* the cache must be real, committed, reproducible code (binding condition of D-009 §3) |
 | **2** | Mutation simulator, comparison views, pocket scoring | Learned mutation-impact and/or druggability model; ESMFold folds wild-type vs. mutant for comparison |
 | **3** | Reports, semantic library search | Neural embeddings + pgvector semantic search; report synthesis |
 | **4 (stretch)** | Epitope suggestion, ADC complex modeling, agentic workflows | Advanced/agentic DL |

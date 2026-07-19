@@ -35,11 +35,57 @@ ARCHITECTURE §1).
 
 ## Log (newest first)
 
+### S-002 — Spike: host stability under sustained GPU load, and a resident-footprint fix
+- **Date:** 2026-07-19
+- **Status:** Open
+- **Type:** Spike (time-boxed investigation). Produces measurements and a decision input.
+- **Why it exists:** S-001 ended in **three identical host bugchecks** (`0x00020001`
+  HYPERVISOR_ERROR, byte-identical parameters, 16:32 / 16:44 / 16:48) during a 630 aa fold run
+  under VRAM spill. Two questions are now open and they gate everything downstream.
+
+**Q1 — Is the local inference tier viable at all?** (the decisive one)
+- **The distinguishing test:** run a workload that fits *comfortably* in VRAM (well under
+  7043 MiB free — e.g. a small model or a short sequence with the trunk sized to fit) under
+  **sustained** GPU load for several minutes, and see whether the host stays up.
+  - **Runs clean for several minutes → memory-pressure cascade.** The crash is a consequence of
+    spilling past physical VRAM; fixing the resident footprint (Q2) plausibly fixes stability.
+  - **Crashes anyway → hardware/driver problem.** Then the local GPU tier is not viable as
+    designed, D-004's topology needs rework (not just its mitigation stack), and cache
+    generation has to happen somewhere else entirely.
+- **Record:** wall-clock survived under load, peak VRAM, GPU clocks/temperature, and any new
+  Event-Viewer bugcheck (ID 41 / 1001) with its code and parameters.
+- **Also worth doing:** read the existing minidumps (`071926-18656-01`, `071926-21093-01`,
+  `071926-20781-01`) — the faulting module would separate "WDDM/shared-memory path" from
+  "driver/hardware" cheaply, before any new run.
+
+**Q2 — Which resident-footprint reduction actually fits 8 GB?** (bounded by D-004 §5)
+- Candidates, each needing its own measurement (none is free):
+  1. **Quantize the ESM-2 trunk** (e.g. 8-bit/4-bit) — cheapest to try; measure resident MiB,
+     fold time, and **mean pLDDT vs the fp16 baseline (70.7 on Trop-2 248 aa)** to detect
+     quality loss.
+  2. **CPU-offload the language-model stack, keep the folding head resident** — trades VRAM for
+     PCIe traffic; measure the wall-time cost honestly (this is the configuration D-004's stack
+     never assumed).
+  3. **Smaller ESM-2 backbone + folding head** — flagged as a **research project, not a config
+     change**: `esmfold_v1` is the only released ESMFold checkpoint.
+- **Out of bounds (restating D-004 §5):** making AlphaFold retrieval the deliverable. That is
+  not a memory fix, it is abandoning D-003's graded DL claim.
+- **Note:** warm-cache load is 15–16 s, so *load-per-job* is a live option and the worker need
+  not hold the model resident.
+- **Decides:** whether D-004's local tier survives; the D-006 replacement ladder (new rung one);
+  and the D-009 §3 length cap, which stays unmeasured until a clean configuration exists.
+- **Time box:** Q1 first — it is cheap and it can invalidate Q2 entirely. Do not spend effort
+  choosing between quantization strategies for a host that cannot stay up under load.
+- **Deliverable:** results appended here; then the D-006 ladder is rewritten and the D-009 §3
+  cap is set (or the topology is reopened).
+
 ### D-009 — Iteration 1 scope, job queue shape, and ECD boundary selection
 - **Date:** 2026-07-19
-- **Status:** Partially accepted — scope clause (§3) is a STUB pending spike S-001 results.
-  Do not begin Iteration-1 application work until §3 is resolved and this entry is
-  updated to Accepted.
+- **Status:** **Accepted (2026-07-19)** — §1 and §2 accepted as originally logged; **§3 resolved
+  by S-001 to (A) cache-first**, with the length cap explicitly left unmeasured. Note that
+  Iteration-1 application work remains blocked, now on **S-002** rather than on §3: (A) is
+  chosen but not executable until a folding configuration exists that fits and does not crash
+  the host.
 - **Context:** D-004 ratified the two-tier topology and carried three items forward: the
   job queue schema and claim mechanism, extracellular-domain boundary selection, and the
   Iteration-1 scope question (cache-first vs. live-first). The first two are resolvable
@@ -112,9 +158,28 @@ ARCHITECTURE §1).
 
 ---
 
-#### §3 — Iteration 1 scope (STUB — BLOCKED on spike S-001)
+#### §3 — Iteration 1 scope — **RESOLVED 2026-07-19: (A) cache-first**
 
-- **Status:** UNRESOLVED. This clause is deliberately incomplete. Iteration-1
+- **Status:** **Accepted.** Resolved by S-001. The pre-registered branch that fired was
+  *"600 aa OOMs / won't load cleanly in fp16 → **(A) cache-first**, and escalate."*
+- **Decision:** **(A) cache-first.** Iteration 1 ships the Mission Briefing plus the curated
+  ADC target database served from cached PDB/pLDDT/PAE artifacts. User-submitted live folding
+  is deferred. The demo does not depend on the laptop being awake — which, given three host
+  bugchecks under load, is now a hard requirement rather than a convenience.
+- **The length cap is deliberately NOT set.** D-009 §3 originally expected the cap to fall out
+  of the bisection. It cannot: **no configuration ran clean**, and the 630 aa fold was never
+  measured (3/3 host crashes). A cap derived from a spilling, crashing configuration would be
+  fiction. **The cap stays unmeasured until a working configuration exists (S-002).**
+- **The binding condition on (A) still applies** (from the original stub): cache-first does not
+  weaken the graded DL content **only if the folding pipeline is real, committed, reproducible
+  code in this repo** that produces the cache — not a one-off script. That condition is now
+  *doubly* binding, because the cache is the only path to a demo.
+- **Blocked downstream:** the cache cannot be built until S-002 yields a configuration that both
+  fits and does not crash the host. **(A) is chosen, but not yet executable.**
+
+*(Original stub text retained below for the record.)*
+
+- **Status (superseded):** UNRESOLVED. This clause is deliberately incomplete. Iteration-1
   application work MUST NOT begin until it is filled in.
 - **The fork:**
   - **(A) Cache-first.** Iteration 1 ships the Mission Briefing plus the curated ADC
@@ -145,7 +210,7 @@ ARCHITECTURE §1).
 
 ### S-001 — Spike: measure ESMFold fp16 performance on 8 GB Blackwell
 - **Date:** 2026-07-19
-- **Status:** Open
+- **Status:** **CLOSED 2026-07-19** — answer: **no, not in this configuration** (see RESULTS).
 - **Type:** Spike (time-boxed investigation, not a feature). Produces a measurement and a
   decision input, not shipped functionality.
 - **Question:** Does `facebook/esmfold_v1` in fp16 fold ADC-relevant extracellular domains
@@ -166,6 +231,75 @@ ARCHITECTURE §1).
   escalate — that invalidates the D-004 mitigation stack and D-003 needs revisiting.
 - **Deliverable:** results appended to this entry, then D-009 §3 filled in and promoted
   to Accepted.
+
+---
+
+#### RESULTS (2026-07-19) — **Status: CLOSED.** Escalation branch fired.
+
+**Reproducer pin (what actually ran):**
+
+| Item | Value |
+|---|---|
+| torch | `2.11.0+cu128` (CUDA build 12.8) |
+| transformers | `5.14.1` |
+| model | `facebook/esmfold_v1`, revision **`75a3841ee059df2bf4d56688166c8fb459ddd97a`** |
+| precision | `esm.half()` → fp16 LM trunk + fp32 folding trunk |
+| GPU | NVIDIA RTX PRO 2000 Blackwell Laptop, capability sm_120 |
+| **on-disk weights** | **9,581,481,414 B ≈ 9.58 GB** (`du`); the in-run tree walk reported 9.78 GB — Windows lacks symlink support so HF duplicates blobs into `snapshots/`. **Not the ~2.5 GB originally assumed.** Disk ≠ VRAM, but it is the worker's deployment footprint. |
+
+**Unit correction (load-bearing, applies to every figure below):** `nvidia-smi` reports
+**MiB**; torch reports **decimal GB**. `8151 MiB` = 8.55 GB decimal (≠ "8.15 GB").
+All memory figures below are normalized to **MiB**.
+
+**Memory — the model does not fit at rest:**
+
+| Quantity | MiB |
+|---|---|
+| Physical VRAM | **8151** |
+| Free at start (desktop using the rest) | 7043 (run 2/3); 7799 (run 1) |
+| **Resident after fp16 load** | **8116** |
+| Peak during 248 aa fold | **8545** |
+
+`params_all_on_cuda = True` (all 4498 params on CUDA — no accelerate/`device_map` offload),
+**but resident (8116) exceeds free VRAM (7043)**, so Windows WDDM silently spilled to shared
+system RAM rather than raising OOM. Peak (8545) exceeds even *total* physical (8151).
+**Conclusion: fp16 alone does not fit `esmfold_v1` in 8 GB.** The absence of an OOM is a
+Windows artifact, not evidence of a fit; on Linux this would have raised `CUDA out of memory`.
+
+**Load time — run 1's 631 s was WRONG as a load figure.** It was download-dominated. From a
+warm cache, **load = 15–16 s** (runs 2 and 3, consistent). Relevant to D-004 worker design:
+loading per job is cheap; holding resident is what does not fit.
+
+**Folds actually measured:**
+
+| Target | Len | Chunk | Time | Peak | mean pLDDT | Verdict |
+|---|---|---|---|---|---|---|
+| Trop-2/TACSTD2 ECD (23–274→27–274) | 248 | 64 | 48.8 s | 8545 MiB | 70.7 | **NOT-CLEAN — `vram-spill`** (run 1 logged `CLEAN` *before* spill detection existed; superseded) |
+| **HER2/ERBB2 ECD (23–652)** | **630** | — | — | — | — | **NEVER MEASURED — host bugchecked, 3/3 attempts** |
+
+**pLDDT scale trap fired for real:** raw B-factors came back on the **0–1 scale** and were
+rescaled ×100 (`rescaled-x100(raw was 0-1 scale)`) to 70.7. Unrescaled, the guard would have
+read 0.707 and wrongly flagged it as suspect/zero. The check is honest only because the
+rescale is explicit.
+
+**Host instability — the run never completed:** three attempts at the 630 aa fold, three
+hard crashes, all with the **identical bugcheck `0x00020001` (HYPERVISOR_ERROR)**, byte-identical
+parameters `(0x28, 0x1, 0x29b92701, 0xfc801000)`:
+
+| # | Kernel-Power 41 (crash) | BugCheck 1001 (reboot) | Minidump |
+|---|---|---|---|
+| 1 | 2026-07-19 16:32:19 | 16:32:32 | `071926-18656-01.dmp` |
+| 2 | 2026-07-19 16:44:28 | 16:44:44 | `071926-21093-01.dmp` |
+| 3 | 2026-07-19 16:48:00 | 16:48:15 | `071926-20781-01.dmp` |
+
+Identical signatures across three independent runs indicate a **reproducible fault**, not random
+corruption. Whether it is a memory-pressure cascade (VRAM spill thrashing the WDDM/shared-memory
+path) or an underlying hardware/driver problem is **not determined by this spike** → **S-002**.
+
+**Decides:** D-009 §3 → **(A) cache-first** (the pre-registered "won't load cleanly in fp16 →
+cache-first + escalate" branch). Length cap **remains unmeasured** — a cap cannot be set from a
+configuration that never ran clean. D-004's mitigation stack is invalidated at rung one (amended
+below). **The local inference tier's viability is now itself unproven** pending S-002.
 
 ### D-008 — Gate proven; branch protection required; paths-ignore removed
 - **Date:** 2026-07-19
@@ -231,8 +365,12 @@ ARCHITECTURE §1).
 
 ### D-006 — ESMFold fold-path strategy for the 8 GB VRAM budget
 - **Date:** 2026-07-19
-- **Status:** Accepted (numeric caps are starting values, to be validated empirically on
-  the local RTX PRO 2000 and then recorded as measured)
+- **Status:** ⚠ **INVALIDATED AT RUNG ONE (2026-07-19) by S-001** — see the amendment on D-004.
+  The ladder below assumes fp16 makes the model *fit at rest*; measurement shows it does not
+  (resident 8116 MiB vs 7043 MiB free). Rungs 2–6 reduce **activation** memory and cannot fix a
+  **resident-weight** overrun. Do not implement this ladder as written; the first rung must
+  become a resident-footprint reduction (quantization / CPU-offload / smaller backbone — S-002).
+  Retained verbatim below for the record.
 - **Context:** The local inference GPU has **8 GB VRAM** (D-004). Full `esmfold_v1`
   (ESM-2 3B) wants ~16 GB+ for long sequences, so it will OOM on large proteins without a
   deliberate memory strategy. ADC targets are often large, but ADCs bind **cell-surface
@@ -336,6 +474,36 @@ ARCHITECTURE §1).
     avoid double-processing, and stale-job requeue on worker death (cf. JARVIS
     `recover_stale_jobs`).
   - **New repo component `worker/`** — runs locally, **not** deployed to Fly.
+
+---
+
+#### ⚠ AMENDMENT (2026-07-19, on S-001 results) — the mitigation stack is invalid at rung one
+
+- **What broke.** The stack above (and its expansion in D-006) was ordered **fp16 → chunking →
+  length cap → ECD scoping → caching**. Every rung *after the first* assumed the model **fits at
+  rest** and that the remaining problem is activations. S-001 measured the opposite: the fp16
+  model is resident at **8116 MiB against 7043 MiB free / 8151 MiB physical** — it spills to
+  shared system RAM *before a single fold begins*. **fp16 alone does not get `esmfold_v1` into
+  8 GB.** Chunking, caps, and ECD scoping all reduce *activation* memory; none of them reduce
+  the *resident weight* footprint that is already over budget. The stack therefore needs
+  **restructuring, not tuning**: the first rung must become a *resident-footprint* reduction.
+- **Consequence for the topology.** D-004's two-tier design is not refuted, but the **local
+  inference tier's viability is now unproven** — three attempts at a 630 aa fold ended in an
+  identical host bugcheck (`0x00020001`). Whether the local GPU can sustain this work at all is
+  **S-002**, and it gates the tier.
+- **Bounded option space (restating §5 so the boundary is visible when the fix is picked).** A
+  non-fit points to a **smaller/lighter folding configuration or narrower targets** — explicitly
+  **NOT** a retreat to AlphaFold retrieval. Inside the boundary: **(a)** quantize the ESM-2
+  trunk, **(b)** CPU-offload the language-model stack while keeping the folding head resident,
+  **(c)** pair a smaller ESM-2 backbone with a folding head. Outside the boundary: making
+  retrieval the deliverable (that would gut D-003's graded DL claim).
+- **Reality check on (c):** `esmfold_v1` is the **only released ESMFold checkpoint**, so
+  "just use a smaller variant" mostly is not a thing — (c) is a research project, not a config
+  change. None of (a)/(b)/(c) is free and each needs its own measurement → **S-002**, not a
+  guess made here.
+- **Corrected worker input:** warm-cache load is **15–16 s**, not the 631 s recorded in run 1
+  (that figure was download-dominated). Cheap loads make *load-per-job* viable, which matters
+  precisely because *holding resident* is what does not fit.
 
 ### D-003 — Run ESMFold ourselves as the Iteration-1 deep-learning core
 - **Date:** 2026-07-19
