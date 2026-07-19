@@ -35,6 +35,46 @@ ARCHITECTURE §1).
 
 ## Log (newest first)
 
+### D-006 — ESMFold fold-path strategy for the 8 GB VRAM budget
+- **Date:** 2026-07-19
+- **Status:** Accepted (numeric caps are starting values, to be validated empirically on
+  the local RTX PRO 2000 and then recorded as measured)
+- **Context:** The local inference GPU has **8 GB VRAM** (D-004). Full `esmfold_v1`
+  (ESM-2 3B) wants ~16 GB+ for long sequences, so it will OOM on large proteins without a
+  deliberate memory strategy. ADC targets are often large, but ADCs bind **cell-surface
+  epitopes**, so the extracellular region is the scientifically relevant part to fold.
+- **Decision — a layered strategy, applied in order:**
+  1. **Half precision:** run the ESM-2 language-model trunk in fp16 on the GPU to roughly
+     halve activation memory.
+  2. **Axial-attention chunking:** set a `chunk_size` (start **128**, step down to 64/32 on
+     OOM) to cap peak attention memory at a modest speed cost.
+  3. **Extracellular-domain folding:** for a UniProt input, parse topology
+     (`TRANSMEM` / `TOPO_DOM` features), extract the **extracellular domain(s)**, and fold
+     those rather than the full chain — both ADC-appropriate and VRAM-friendly. If topology
+     is unavailable, fall back to a length-capped full fold.
+  4. **Interactive length cap:** the live "bring-your-own-sequence" path caps at
+     **~400 residues** (starting value); longer inputs are routed to the offline pipeline
+     or folded domain-only.
+  5. **Graceful OOM degradation on the worker:** catch CUDA OOM → retry smaller
+     `chunk_size` → **CPU-offload** the trunk (using the 31.5 GB system RAM, slow but
+     completes) → else mark the job `needs_offline`.
+  6. **Offline pre-compute pipeline:** a non-interactive worker mode folds the **curated
+     ADC target database** ahead of time (CPU-offload allowed, no time pressure); results
+     are cached as Volume artifacts + DB rows so the class demo path is always instant.
+- **Deep-learning justification:** These are the model-execution decisions themselves —
+  precision, attention chunking, and input truncation are standard neural-inference
+  engineering, and folding the extracellular domain aligns the model's compute with the ADC
+  biology. This is exactly the "how we actually run the deep model" reasoning the course
+  expects, not an API wrapper.
+- **Consequences / follow-ups:**
+  - The 400-residue cap and `chunk_size=128` are **estimates**; measure real peak memory vs.
+    sequence length on the 8 GB card and update this entry with the validated numbers.
+  - Domain extraction needs a UniProt topology parser; proteins lacking topology annotation
+    fall back to length-capped full folding.
+  - fp16 may slightly reduce coordinate accuracy vs. fp32 — acceptable for exploration;
+    note it in output caveats.
+  - Adds an **offline pre-compute worker mode** to the `worker/` component (D-004).
+
 ### D-005 — CI/CD deploy gate + testing strategy (no untested code to prod)
 - **Date:** 2026-07-19
 - **Status:** Accepted
@@ -179,10 +219,9 @@ These are known forks in the road. Each becomes a `D-NNN` entry **before** we ac
 - ~~**DL core for Iteration 1**~~ — **resolved in D-003: run ESMFold ourselves.**
 - ~~**Where inference runs + Fly compute**~~ — **resolved in D-004: local GPU worker,
   pull-based; Fly serving tier has no GPU.**
-- **Sequence-length cap / domain selection** for folding large ADC targets on 8 GB VRAM
-  (axial-attention `chunk_size` + extracellular-domain-only) — *next up, gates the live
-  fold path.*
-- **Pre-compute & cache pipeline** for the curated ADC target database (offline, CPU-offload OK).
+- ~~**Sequence-length cap / domain selection**~~ and ~~**pre-compute & cache pipeline**~~ —
+  **resolved in D-006** (fp16 + `chunk_size` + extracellular-domain fold + 400-residue live
+  cap + OOM degradation + offline pre-compute). Caps still need empirical validation.
 - **Worker ↔ app contract:** job schema, claim/lease semantics, artifact upload, auth token.
 - **Prod DB choice:** Postgres-first vs. SQLite-on-Volume prototype (Database Plan §5).
   *(Note: this is the **prod** DB; the **test** DB is SQLite per D-005 regardless.)*

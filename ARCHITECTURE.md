@@ -143,12 +143,14 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 - **Doc-only commits bypass the test gate** via a path filter (`docs/**`, `**/*.md`,
   `ARCHITECTURE.md`, `LICENSE`, …). Any code change runs the full gate.
 
-### VRAM constraint (8 GB) — design implications
+### VRAM constraint (8 GB) — fold-path strategy (D-006)
 
-Full `esmfold_v1` (ESM-2 3B) wants ~16 GB+ for long sequences, so on 8 GB VRAM we must:
-axial-attention `chunk_size`, a **live sequence-length cap**, fold only the **ADC-relevant
-extracellular domain**, and **pre-compute the curated target DB offline** (CPU-offload with
-the 31.5 GB system RAM). These are follow-up decisions in `docs/README.md`.
+Full `esmfold_v1` (ESM-2 3B) wants ~16 GB+ for long sequences, so on 8 GB VRAM the worker
+applies, in order: **fp16 trunk**, **axial-attention `chunk_size`** (start 128), **fold the
+ADC-relevant extracellular domain** (from UniProt topology), a **~400-residue interactive
+cap**, **graceful OOM degradation** (smaller chunk → CPU-offload via 31.5 GB RAM →
+`needs_offline`), and an **offline pre-compute pass** over the curated target DB so the demo
+path is instant. Numeric caps are starting values pending empirical validation — see D-006.
 
 > **Open decision (log in `docs/README.md`):** **prod** DB — SQLite-on-Volume prototype
 > (Database Plan §5) vs. Postgres-first. pgvector is central to the DL semantic-search
