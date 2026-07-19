@@ -35,6 +35,115 @@ ARCHITECTURE §1).
 
 ## Log (newest first)
 
+### D-005 — CI/CD deploy gate + testing strategy (no untested code to prod)
+- **Date:** 2026-07-19
+- **Status:** Accepted
+- **Context:** Deployment to Fly.io must be rock-solid — **no untested code reaches prod.**
+- **Decision:**
+  - **GitHub Actions gate:** on PRs and pushes to `main`, run a `test` job; the Fly
+    **deploy job runs only if tests pass** (`deploy: needs: [test]`).
+  - **All tests live in `tests/`** (plural — matches the existing Test Plan and pytest
+    convention; if you want the literal singular `test/`, say so and I'll rename).
+  - **Two kinds of tests:** (1) **functional** — `pytest`, `*.py`, covering data layer,
+    inference logic, API contracts (per Test Plan §A); (2) **user-based** — structured
+    human scenarios (per Test Plan §B), run at iteration boundaries, gating iteration
+    sign-off rather than each push.
+  - **Test database is SQLite** (in-memory / temp file): fast, deterministic, no external
+    DB in CI. All external calls — ESMFold inference, AlphaFold DB, UniProt — are mocked.
+  - **Doc-only commits bypass the test gate:** a path filter treats changes limited to
+    `docs/**`, `**/*.md`, `ARCHITECTURE.md`, `LICENSE`, etc. as non-code and skips the
+    `test` job. Any change touching code runs the full gate.
+- **Deep-learning justification:** Neutral (process), but it guards the DL pipeline's
+  correctness — pLDDT/PAE parsing, fallback behavior, and the job-queue contract get
+  tested before they can reach prod.
+- **Consequences / known gaps:**
+  - **SQLite ≠ Postgres/pgvector.** Vector search and Postgres-specific SQL cannot run on
+    SQLite, so those paths must be mocked or covered by a **separate Postgres integration
+    job** later (flag for Iteration 3). *(Same class of gap JARVIS hit: SQLite `create_all`
+    never exercises real Postgres/migration behavior.)*
+  - Deploy needs `FLY_API_TOKEN` in GitHub Actions secrets.
+  - The local GPU worker (D-004) is out of the prod deploy path but its contract with the
+    app (job schema, artifact upload) must be covered by functional tests.
+
+### D-004 — Deployment & inference topology: Fly serving tier + local GPU worker (pull-based)
+- **Date:** 2026-07-19
+- **Status:** Accepted
+- **Context:** ESMFold (D-003) is GPU-heavy and Fly.io GPU is uncertain/expensive. The
+  developer has a local machine with an **NVIDIA RTX PRO 2000 Blackwell Laptop GPU (8 GB
+  VRAM)** and **31.5 GB system RAM**, and wants the app web-accessible but the model on
+  local hardware.
+- **Decision:** Split into two tiers.
+  - **Serving tier — Fly.io:** Streamlit + FastAPI + Postgres/pgvector + Volume. Always-on,
+    **no GPU**. Accepts analyses, stores data/artifacts, serves the UI.
+  - **Inference tier — local machine:** a worker process running **ESMFold on the local
+    NVIDIA GPU**.
+  - **Coupling = pull-based job queue.** The web app enqueues an analysis job (a Postgres
+    row, `status=pending`). The local worker **polls Fly over an authenticated outbound
+    HTTPS connection**, claims pending jobs, folds, uploads artifacts (PDB / pLDDT / PAE)
+    back to the Fly Volume, and sets `status=done|error`. **No inbound exposure of the home
+    machine; no tunnel required.**
+- **Deep-learning justification:** This is what makes running our own ESMFold feasible on a
+  student budget — the neural inference runs on capable local hardware while the app stays
+  web-accessible. The deep learning is still *ours*, executed by our worker.
+- **Why pull-based over a tunnel (the ratified recommendation):** a laptop GPU sleeps,
+  changes networks, and a fold takes seconds–minutes; pull-based tolerates intermittent
+  connectivity, requeues on worker death/OOM, needs no open inbound port, and matches the
+  async nature of folding. A synchronous tunnel (Tailscale/Cloudflare) would require the
+  machine to be reachable and hold long HTTP requests open — kept only as a fallback.
+- **Consequences / follow-ups (each becomes its own entry before we act):**
+  - **8 GB VRAM is the binding constraint.** Full `esmfold_v1` (ESM-2 3B) wants ~16 GB+ for
+    long sequences → OOM risk on large proteins. Mitigations to design: axial-attention
+    `chunk_size`, a **live sequence-length cap**, folding only the **ADC-relevant
+    extracellular domain**, and **pre-computing the curated ADC target DB offline** (can
+    CPU-offload using the 31.5 GB system RAM and be patient).
+  - **Availability:** if the local worker is offline, live jobs **queue** (no loss) but
+    don't complete; pre-computed curated targets keep the class demo always-live.
+  - **Worker plumbing needed:** an API token for the worker, job claim/lease semantics to
+    avoid double-processing, and stale-job requeue on worker death (cf. JARVIS
+    `recover_stale_jobs`).
+  - **New repo component `worker/`** — runs locally, **not** deployed to Fly.
+
+### D-003 — Run ESMFold ourselves as the Iteration-1 deep-learning core
+- **Date:** 2026-07-19
+- **Status:** Accepted
+- **Context:** The course grade depends on a neural network doing load-bearing work
+  (ARCHITECTURE §1). Structure prediction is the tool's foundational output, so it is the
+  natural home for the graded DL. The two candidates were (a) run a protein-folding model
+  ourselves vs. (b) retrieve pre-computed structures from AlphaFold DB with a smaller
+  neural component elsewhere. Option (b) risks reading as "just an API wrapper."
+- **Decision:** PharmFoldMDK will **run ESMFold in-project** to predict 3D structure
+  directly from an amino-acid sequence. ESMFold (Meta AI) is a transformer stack: the
+  ESM-2 protein language model produces residue representations that a folding head turns
+  into 3D coordinates, **from a single sequence with no MSA required**. We load it via
+  Hugging Face (`facebook/esmfold_v1`, `EsmForProteinFolding`) / PyTorch. It emits
+  per-residue **pLDDT** and **PAE**, which map straight onto our data model
+  (`protein_analyses.mean_plddt`, `pae_json_path`). AlphaFold DB / UniProt retrieval is
+  demoted to an **optional fast path for already-solved canonical proteins and a
+  fallback**, not the deliverable — ESMFold is what we run and defend.
+- **Deep-learning justification:** This is the strongest available DL story: our system
+  performs neural inference (a ~3B-parameter transformer language model + folding head) to
+  produce the primary output. It gives us genuine DL substance to present and analyze —
+  the ESM-2/transformer architecture, single-sequence inference vs. MSA-based AlphaFold2,
+  pLDDT confidence calibration, and behavior on cancer-target variants that may not exist
+  in AlphaFold DB. It also uniquely enables Iteration 2's **mutation impact** (fold the
+  wild-type and the mutant and compare) — retrieval alone cannot fold an arbitrary mutant.
+- **Consequences / follow-ups (each becomes its own decision entry before we act):**
+  - **Compute & memory is the primary risk.** Full `esmfold_v1` is GPU-hungry
+    (multi-GB weights; long sequences can exceed ~16 GB GPU RAM). Fly.io GPU availability
+    is uncertain and the TDD flagged GPU deprecation. **Open D-00X:** where inference runs
+    (in-process vs. dedicated worker/queue) and on what Fly compute (CPU-only tolerated for
+    short sequences vs. GPU). Mitigations to evaluate: axial-attention `chunk_size`,
+    sequence-length caps for the demo, and **pre-computing + caching** structures for the
+    curated ADC target database so the live demo path is fast.
+  - **Sequence-length limit** for the graded demo (ADC targets are often large; may fold
+    only the extracellular domain relevant to ADC binding) — to be set in a later entry.
+  - **Dockerfile / dependency weight** grows (torch, transformers, model weights); cold
+    start includes model load — plan a warm-load path.
+  - **Reproducibility:** pin the model revision and torch version; record device and any
+    `chunk_size`/length settings with each analysis (course reproducibility expectation).
+  - Updates `ARCHITECTURE.md` §3 (DL core ratified), §5 (compute now an active concern),
+    and §6 (Iter-1 DL content confirmed).
+
 ### D-002 — Governance: living architecture doc + this decision log
 - **Date:** 2026-07-19
 - **Status:** Accepted
@@ -67,11 +176,15 @@ ARCHITECTURE §1).
 
 These are known forks in the road. Each becomes a `D-NNN` entry **before** we act on it.
 
-- **DL core for Iteration 1:** run ESMFold (protein language model) locally for structure
-  prediction vs. retrieve from AlphaFold DB with a neural fallback. *This is the pivotal
-  decision for the course grade — resolve it first.*
-- **Postgres-first vs. SQLite-on-Volume prototype** (Database Plan §5).
-- **Where inference runs:** in the FastAPI process vs. a dedicated worker/queue.
+- ~~**DL core for Iteration 1**~~ — **resolved in D-003: run ESMFold ourselves.**
+- ~~**Where inference runs + Fly compute**~~ — **resolved in D-004: local GPU worker,
+  pull-based; Fly serving tier has no GPU.**
+- **Sequence-length cap / domain selection** for folding large ADC targets on 8 GB VRAM
+  (axial-attention `chunk_size` + extracellular-domain-only) — *next up, gates the live
+  fold path.*
+- **Pre-compute & cache pipeline** for the curated ADC target database (offline, CPU-offload OK).
+- **Worker ↔ app contract:** job schema, claim/lease semantics, artifact upload, auth token.
+- **Prod DB choice:** Postgres-first vs. SQLite-on-Volume prototype (Database Plan §5).
+  *(Note: this is the **prod** DB; the **test** DB is SQLite per D-005 regardless.)*
 - **Embedding model** for semantic search (which encoder, `vector(384)` assumed).
-- **Compute for inference on Fly.io:** CPU-only vs. GPU availability, and model size that
-  fits (ESMFold memory footprint).
+- **Postgres integration test job** for pgvector/Postgres-specific paths (D-005 gap).

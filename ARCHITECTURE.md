@@ -42,28 +42,43 @@ structure with confidence, druggable pockets, an ADC-suitability assessment, mut
 impact, and pharma-relevant reports.
 
 ```
-                 ┌─────────────────────────────────────────────┐
-                 │              Streamlit Frontend               │
-                 │  Mission Briefing · New Analysis · Library ·  │
-                 │            Reports · Settings                 │
-                 └───────────────────┬───────────────────────────┘
-                                     │ HTTP (internal)
-                 ┌───────────────────▼───────────────────────────┐
-                 │                FastAPI Backend                 │
-                 │   auth · analyses API · inference orchestration │
-                 └──────┬───────────────┬──────────────┬──────────┘
-                        │               │              │
-        ┌───────────────▼──┐   ┌────────▼────────┐   ┌─▼──────────────────┐
-        │  DL / Inference   │   │  Postgres +     │   │  Fly Volume /data  │
-        │  (core, neural)   │   │  pgvector       │   │  PDB/CIF, PAE,     │
-        │  ESMFold, pocket, │   │  relational +   │   │  reports, uploads  │
-        │  embeddings, etc. │   │  JSONB + vectors│   │  (paths in DB)     │
-        └───────────────────┘   └─────────────────┘   └────────────────────┘
+   ┌─────────────── FLY.IO (serving tier, always-on, NO GPU) ───────────────┐
+   │   ┌─────────────────────────────────────────────┐                       │
+   │   │              Streamlit Frontend               │                      │
+   │   │  Mission Briefing · New Analysis · Library ·  │                      │
+   │   │            Reports · Settings                 │                      │
+   │   └───────────────────┬───────────────────────────┘                     │
+   │                       │ HTTP (internal)                                  │
+   │   ┌───────────────────▼───────────────────────────┐                     │
+   │   │                FastAPI Backend                 │                     │
+   │   │   auth · analyses API · job queue · results    │                     │
+   │   └──────────────┬──────────────────┬──────────────┘                    │
+   │                  │                   │                                   │
+   │        ┌─────────▼────────┐   ┌──────▼──────────────┐                    │
+   │        │  Postgres +      │   │  Fly Volume /data   │                    │
+   │        │  pgvector        │   │  PDB/CIF, PAE,      │                     │
+   │        │  relational +    │   │  reports, uploads   │                    │
+   │        │  JSONB + vectors │   │  (paths in DB)      │                    │
+   │        │  + job queue     │   └─────────────────────┘                    │
+   │        └─────────▲────────┘                                              │
+   └──────────────────┼──────────────────────────────────────────────────────┘
+                      │  authenticated OUTBOUND poll / upload (pull-based)
+                      │  (worker claims pending jobs, folds, uploads results)
+   ┌──────────────────┴──────────────────────────────────────────────────────┐
+   │           LOCAL MACHINE (inference tier — NVIDIA GPU, 8 GB VRAM)          │
+   │   Worker: poll → ESMFold (ESM-2 + folding head) → pLDDT/PAE → upload      │
+   │   No inbound exposure. Queues gracefully when offline. (D-004)            │
+   └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Boundary rule:** the database stores structured data, JSONB metadata, and vectors;
-**large binary artifacts (PDB/mmCIF, PAE JSON, generated reports, uploads) live on the
-Fly Volume**, with only their paths recorded in Postgres.
+**Boundary rule:** the database stores structured data, JSONB metadata, vectors, and the
+**job queue**; **large binary artifacts (PDB/mmCIF, PAE JSON, generated reports, uploads)
+live on the Fly Volume**, with only their paths recorded in Postgres.
+
+**Topology rule (D-004):** deep-learning inference does **not** run on Fly. The Fly serving
+tier is GPU-free and always on; a **local GPU worker** pulls jobs from Fly, runs ESMFold,
+and uploads results back over an authenticated outbound connection. No inbound port is
+opened on the local machine.
 
 ---
 
@@ -72,14 +87,16 @@ Fly Volume**, with only their paths recorded in Postgres.
 | Layer | Responsibility | Planned tech |
 |-------|----------------|--------------|
 | **Frontend** | Interactive UI, 3D visualization, onboarding | Streamlit; `py3Dmol`/`stmol` for 3D |
-| **Backend API** | Auth, request handling, orchestration of inference | FastAPI + Uvicorn |
-| **DL / Inference core** | The neural work: structure prediction, pocket/druggability scoring, embeddings, mutation impact | PyTorch + Hugging Face; `biopython` for parsing |
+| **Backend API** | Auth, request handling, **job queue** management, results | FastAPI + Uvicorn (on Fly) |
+| **Local GPU worker** | Polls Fly for jobs, runs **ESMFold** on the local NVIDIA GPU, uploads artifacts back (D-004) — **not deployed to Fly** | Python worker; PyTorch + Hugging Face (`facebook/esmfold_v1`) |
+| **DL / Inference core** | The neural work: **ESMFold structure prediction (D-003)**, plus pocket/druggability scoring, embeddings, mutation impact | PyTorch + Hugging Face; `biopython` for parsing |
 | **Data layer** | Persistence, relationships, vector search | Postgres + pgvector, SQLModel/SQLAlchemy, Alembic |
 | **Object storage** | Large structure/report files | Fly Volume mounted at `/data`, organized `/data/analyses/{id}/` |
 
-> **To be ratified in `docs/README.md`:** the exact DL model(s), whether we run ESMFold
-> locally vs. fall back to AlphaFold DB, and where inference executes (in-process vs. a
-> dedicated worker) are open decisions. Update this table once decided.
+> **Ratified (D-003 + D-004):** we **run ESMFold ourselves** — the ESM-2 protein language
+> model + folding head predicting 3D structure from a single sequence, emitting pLDDT and
+> PAE — **on a local GPU worker, not on Fly** (see §5). AlphaFold DB / UniProt retrieval is
+> demoted to an optional fast path + fallback, not the deliverable.
 
 ---
 
@@ -101,17 +118,42 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 
 ---
 
-## 5. Storage & Deployment
+## 5. Storage, Deployment & Inference Topology
 
-- **Hosting:** Fly.io.
+### Two-tier topology (D-004)
+
+- **Serving tier — Fly.io (always-on, no GPU):** Streamlit + FastAPI, Postgres + pgvector,
+  Fly Volume. Hosts the app, the data, and the **job queue**.
+- **Inference tier — local machine (NVIDIA GPU, 8 GB VRAM):** a **`worker/`** process that
+  **pulls** pending jobs from Fly over an authenticated **outbound** connection, runs
+  ESMFold on the local GPU, uploads PDB/pLDDT/PAE back, and marks the job done/error. **Not
+  deployed to Fly.** No inbound exposure of the local machine; jobs queue when it is offline.
+
+### Fly serving-tier specifics
+
 - **Database:** Fly Postgres addon with pgvector (`CREATE EXTENSION vector;`).
 - **Files:** Fly Volume at `/data`; DB holds paths only.
 - **Backups:** Fly Postgres automated backups + volume snapshots.
 - **Migrations:** Alembic versioned scripts, applied on deploy.
 
-> **Open decision (log in `docs/README.md`):** whether to prototype on SQLite-on-Volume
-> first (Database Plan §5 offers this) or go straight to Postgres. Given pgvector is
-> central to the DL semantic-search story, Postgres-first is the current lean.
+### Deploy gate (D-005) — no untested code to prod
+
+- **GitHub Actions:** PRs and pushes to `main` run a `test` job; the **Fly deploy job runs
+  only if tests pass** (`deploy: needs: [test]`). Needs `FLY_API_TOKEN` in Actions secrets.
+- **Doc-only commits bypass the test gate** via a path filter (`docs/**`, `**/*.md`,
+  `ARCHITECTURE.md`, `LICENSE`, …). Any code change runs the full gate.
+
+### VRAM constraint (8 GB) — design implications
+
+Full `esmfold_v1` (ESM-2 3B) wants ~16 GB+ for long sequences, so on 8 GB VRAM we must:
+axial-attention `chunk_size`, a **live sequence-length cap**, fold only the **ADC-relevant
+extracellular domain**, and **pre-compute the curated target DB offline** (CPU-offload with
+the 31.5 GB system RAM). These are follow-up decisions in `docs/README.md`.
+
+> **Open decision (log in `docs/README.md`):** **prod** DB — SQLite-on-Volume prototype
+> (Database Plan §5) vs. Postgres-first. pgvector is central to the DL semantic-search
+> story, so Postgres-first is the current lean. *(The **test** DB is SQLite regardless —
+> D-005.)*
 
 ---
 
@@ -119,8 +161,8 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 
 | Iter | Product goal | Deep-learning content |
 |------|--------------|-----------------------|
-| **1 (MVP)** | Mission Briefing tab + structure retrieval + 3D viewer + basic pocket + ADC summary | **Structure prediction via a protein LM (ESMFold) is the intended DL core** — TBD/ratify in `docs/README.md` |
-| **2** | Mutation simulator, comparison views, pocket scoring | Learned mutation-impact and/or druggability model |
+| **1 (MVP)** | Mission Briefing tab + structure prediction + 3D viewer + basic pocket + ADC summary | **ESMFold run in-project (ratified, D-003)** — protein LM + folding head predicting structure + pLDDT/PAE from sequence |
+| **2** | Mutation simulator, comparison views, pocket scoring | Learned mutation-impact and/or druggability model; ESMFold folds wild-type vs. mutant for comparison |
 | **3** | Reports, semantic library search | Neural embeddings + pgvector semantic search; report synthesis |
 | **4 (stretch)** | Epitope suggestion, ADC complex modeling, agentic workflows | Advanced/agentic DL |
 
@@ -130,9 +172,12 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 
 - **Security (MVP):** username + hashed password (bcrypt/passlib); protected API routes.
 - **Confidence honesty:** pLDDT/PAE surfaced clearly; outputs framed with caveats.
-- **Testing:** pytest (functional) + structured user-testing scenarios — see
-  [`docs/Test_Plan.md`](docs/Test_Plan.md). External calls and model inference are mocked
-  in unit tests for speed/determinism.
+- **Testing (D-005):** all tests live in **`tests/`**. Two kinds — **functional** (`pytest`,
+  `*.py`: data layer, inference logic, API, worker contract) and **user-based** (structured
+  human scenarios) — see [`docs/Test_Plan.md`](docs/Test_Plan.md). The **test DB is SQLite**
+  (in-memory/temp); external calls and ESMFold inference are **mocked** for speed/determinism.
+  **Gap:** SQLite can't exercise pgvector/Postgres-specific paths — those are mocked now and
+  get a separate Postgres integration job at Iteration 3.
 - **Reproducibility (course expectation):** pin model weights/versions, seed where
   relevant, and record any training/fine-tuning config so results can be reproduced.
 
@@ -145,12 +190,14 @@ Project-PharmFoldMDK/
 ├── ARCHITECTURE.md          # this file — living source of truth
 ├── README.md                # how to run / deploy (kept current in Phase 6)
 ├── CLAUDE.md                # living-doc governance rules
-├── app/                     # Streamlit + FastAPI application code
-├── core/                    # DL / inference + business logic
+├── app/                     # Streamlit + FastAPI application code (deployed to Fly)
+├── core/                    # shared business logic + inference contracts
+├── worker/                  # LOCAL GPU worker: pulls jobs, runs ESMFold (NOT deployed to Fly)
 ├── db/                      # models & Alembic migrations
-├── tests/
+├── tests/                   # functional (pytest) + user-based; SQLite test DB (D-005)
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
-└── Dockerfile
+├── .github/workflows/       # CI: test gate → Fly deploy (D-005)
+└── Dockerfile               # serving tier image (Fly)
 ```
 
 Only `docs/` and the governance files exist today; the rest is created as iterations land,
