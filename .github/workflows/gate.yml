@@ -1,0 +1,37 @@
+# CI deploy gate (D-005): no untested code reaches Fly prod.
+# The `test` job must pass before `deploy` runs. Doc-only changes are exempt via
+# the paths-ignore filter, so a commit touching only docs/** or *.md never
+# triggers this workflow (and therefore neither the test nor deploy job).
+name: gate
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip pytest
+      - run: python -m pytest -q
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Placeholder only: real Fly deploy (flyctl + FLY_API_TOKEN secret) is
+      # wired in a later decision once the application exists. No app code yet.
+      - run: echo "gate passed; deploy placeholder (Fly wiring pending — docs/README.md D-005)"

@@ -35,6 +35,28 @@ ARCHITECTURE §1).
 
 ## Log (newest first)
 
+### D-007 — Lay the keel: `tests/` + CI deploy gate scaffold
+- **Date:** 2026-07-19
+- **Status:** Accepted
+- **Context:** Realize the D-005 deploy gate as actual repo scaffolding **before** any
+  application code exists, so the "no untested code to prod" discipline is in place from
+  the first line of real code.
+- **Decision:**
+  - **`tests/`** with `conftest.py` exposing an **in-memory SQLite fixture** and one trivial
+    passing smoke test. The fixture uses the **stdlib `sqlite3`** module (zero extra deps →
+    CI green with only `pytest`); it will graduate to SQLAlchemy/SQLModel sessions when
+    models land.
+  - **`.github/workflows/gate.yml`**: `deploy` job `needs: test`; **native `paths-ignore`
+    filter** (`**.md`, `docs/**`) so doc-only commits never trigger the workflow (that is
+    how they "bypass the gate" per D-005). CI pins **Python 3.11**, `actions/checkout@v5`,
+    `actions/setup-python@v6`.
+  - The **`deploy` job is a placeholder** (echo) — real Fly deploy (flyctl + `FLY_API_TOKEN`)
+    is wired in a later decision once the app exists. **No application code written.**
+- **Deep-learning justification:** Neutral (scaffolding), but it stands up the gate that
+  will protect the DL pipeline's correctness before any inference code can reach prod.
+- **Consequences:** The SQLite fixture is stdlib-only for now; pgvector/Postgres paths still
+  need the separate integration job flagged in D-005. Deploy is inert until wired.
+
 ### D-006 — ESMFold fold-path strategy for the 8 GB VRAM budget
 - **Date:** 2026-07-19
 - **Status:** Accepted (numeric caps are starting values, to be validated empirically on

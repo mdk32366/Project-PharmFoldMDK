@@ -202,8 +202,10 @@ Project-PharmFoldMDK/
 └── Dockerfile               # serving tier image (Fly)
 ```
 
-Only `docs/` and the governance files exist today; the rest is created as iterations land,
-and this layout section is updated when it changes.
+Today the repo holds the governance files, `docs/`, and the **keel** (D-007): `tests/`
+(in-memory SQLite fixture + smoke test) and `.github/workflows/gate.yml` (test → deploy
+gate). The rest — `app/`, `core/`, `worker/`, `db/`, `Dockerfile` — is created as iterations
+land, and this layout section is updated when it changes.
 
 ---
 
