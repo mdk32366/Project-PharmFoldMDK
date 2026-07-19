@@ -1,19 +1,19 @@
-# CI deploy gate (D-005): no untested code reaches Fly prod.
-# The `test` job must pass before `deploy` runs. Doc-only changes are exempt via
-# the paths-ignore filter, so a commit touching only docs/** or *.md never
-# triggers this workflow (and therefore neither the test nor deploy job).
+# CI deploy gate (D-005, revised by D-008): no untested code reaches Fly prod.
+# `test` must pass before `deploy` runs, and `test` is a REQUIRED status check via
+# branch protection on main (require PR, no direct pushes, no admin bypass).
+#
+# paths-ignore was REMOVED (D-008): a required check must report on EVERY PR, or a
+# doc-only PR never triggers the workflow and hangs unmergeable forever. The suite
+# runs in ~20s, so docs pay a trivial always-green cost instead of deadlocking.
+# When real Fly deploy is wired, guard the DEPLOY JOB (not the trigger) against
+# doc-only changes so docs still run tests but don't redeploy.
 name: gate
 
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
+    branches: [main]
 
 jobs:
   test:

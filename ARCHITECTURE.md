@@ -136,12 +136,17 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 - **Backups:** Fly Postgres automated backups + volume snapshots.
 - **Migrations:** Alembic versioned scripts, applied on deploy.
 
-### Deploy gate (D-005) — no untested code to prod
+### Deploy gate (D-005 → proven & hardened in D-008) — no untested code to prod
 
 - **GitHub Actions:** PRs and pushes to `main` run a `test` job; the **Fly deploy job runs
   only if tests pass** (`deploy: needs: [test]`). Needs `FLY_API_TOKEN` in Actions secrets.
-- **Doc-only commits bypass the test gate** via a path filter (`docs/**`, `**/*.md`,
-  `ARCHITECTURE.md`, `LICENSE`, …). Any code change runs the full gate.
+- **Branch protection on `main` is the actual enforcement (D-008):** require a PR, require
+  the **`test`** check, **`enforce_admins: true`** (no bypass, owner included), no direct
+  pushes. Without it the gate is advisory — a failing check does not block a merge, and
+  `git push origin main` walks straight past it.
+- **No `paths-ignore` (D-008):** since `test` is a *required* check, it must report on every
+  PR or a doc-only PR hangs unmergeable; the ~20s suite therefore runs on everything. When
+  real deploy is wired, guard the **deploy job** (not the trigger) against doc-only changes.
 
 ### VRAM constraint (8 GB) — fold-path strategy (D-006)
 
