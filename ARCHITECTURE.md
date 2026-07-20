@@ -175,12 +175,19 @@ Corrected AER errors on this exact device predate the project (148 across 7 days
 But the `0x00020001` signature has **zero** occurrences before today. One fatal in eight weeks vs
 **three in twenty minutes** ≈ four orders of magnitude — the workload is an **accelerant**.
 
-**Mechanism (connects to the spill finding rather than competing with it):** the fp16 overrun is
-serviced by shuttling memory across the PCIe bus, and sustained heavy PCIe traffic is exactly what
-turns corrected link errors into uncorrected ones. **Testable prediction: a configuration that
-fits in VRAM should crash far less, or not at all.** So the tier is **conditional, not dead** —
-the resident-footprint fix is the candidate remedy, and must be measured (S-002 Q1) before writing
-the local tier off.
+**Mechanism — TESTED 2026-07-19 AND NOT SUPPORTED.** The hypothesis was *spill → sustained PCIe
+traffic → corrected errors escalate*. Both arms were run under the new driver: **int8 non-spilling
+(600 s, 83 folds) and fp16 spilling (368 s, 5 folds) each logged 0 corrected, 0 fatal, 0 bugchecks.**
+Restoring spill did **not** restore errors, so spill is **not sufficient** to trigger the fault at
+248 aa under driver 596.72. The **NVIDIA driver update (595.71 → 596.72)** is now the leading
+explanation — but is **not established**: the original crash condition (**HER2, 630 aa**) was never
+reproduced, and a 6-minute clean window has weak power against a fault that historically appeared on
+8 days out of ~54. **Absence of errors is not evidence the fault is gone.**
+
+**The decisive untested condition is HER2 (630 aa) under the new driver.** Per the two-cap
+amendment, the sensible next run is **int8 + HER2** — simultaneously the product requirement and the
+lower-risk option (no spill), where a multi-minute fold at `chunk 16` counts as a **PASS** for the
+cache path.
 
 **Consequence:** cache generation *may* move to **different compute** (cloud GPU / Colab / cluster)
 to de-risk the schedule — a ≥16 GB GPU also makes the fp16 non-fit stop binding — but that is
