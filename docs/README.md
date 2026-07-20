@@ -15,6 +15,10 @@
 
 ## How to add a decision
 
+> **Numbering note: there is no D-010.** The sequence runs D-001…D-009 then D-011. Nothing was
+> deleted — the number was simply skipped. Not renumbered, because commit `c07b95b` already
+> references D-011 by name. Spike entries use `S-NNN` and instrument/method findings use `F-NNN`.
+
 Add a new `### D-NNN` entry at the **top** of the log (newest first). Use the template:
 
 ```
