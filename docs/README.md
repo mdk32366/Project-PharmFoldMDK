@@ -31,27 +31,58 @@ Every substantive decision must state its **deep-learning justification** — th
 deep learning course project and the neural core is the graded deliverable (see
 ARCHITECTURE §1).
 
+## Method note: state a check precisely enough that its inadequacy is discoverable
+
+Learned the hard way on 2026-07-19 (see S-001 and S-002, where two confidently-stated claims were
+caught and reversed):
+
+- **`params_all_on_cuda=True`** was a *true* summary that missed **spill** — every parameter really
+  was on CUDA, while the allocation silently exceeded physical VRAM.
+- **"217 WHEA events since May"** was a *true* summary that missed **severity** — 213 were
+  corrected, only 4 fatal, and the fatal signature had no history at all.
+
+Both errors came from **accepting a summary instead of returning to the raw records**, and both
+were caught only because the check had been stated specifically enough to be *shown* inadequate.
+So the rule is not "be careful" — it is:
+
+1. **Write the check as a concrete assertion with units and a threshold**, so a later reader can
+   test whether it actually covers the claim ("resident MiB vs *free* MiB", not "does it fit").
+2. **Bucket before you count.** A total is compatible with more hypotheses than a breakdown is;
+   prefer rates and severity splits to raw counts.
+3. **Label inference status explicitly** — *measured* / *predicted* / *assumed* — and never let a
+   *predicted* mechanism be cited later as a finding.
+4. **Record the provenance chain when a claim changes**, including the wrong intermediate versions.
+   The reversal is itself evidence about how much the current version should be trusted.
+
 ---
 
 ## Log (newest first)
 
 ### S-002 — Spike: host stability under sustained GPU load, and a resident-footprint fix
 - **Date:** 2026-07-19
-- **Status:** Open
+- **Status:** **Q1 ANSWERED 2026-07-19 — hardware fault (GPU PCIe link), pre-existing.** Q2
+  deferred pending a working machine or alternative compute. See results at the end of this entry.
 - **Type:** Spike (time-boxed investigation). Produces measurements and a decision input.
 - **Why it exists:** S-001 ended in **three identical host bugchecks** (`0x00020001`
   HYPERVISOR_ERROR, byte-identical parameters, 16:32 / 16:44 / 16:48) during a 630 aa fold run
   under VRAM spill. Two questions are now open and they gate everything downstream.
 
 **Q1 — Is the local inference tier viable at all?** (the decisive one)
+> **REFRAMED after the Q1 results below.** This is no longer a generic "does it survive load"
+> test — it is a **specific falsifiable prediction with a mechanism**: *spill traffic across the
+> PCIe bus is what escalates this GPU's long-standing corrected link errors into fatal ones.*
+> Therefore **a configuration that fits within VRAM should crash far less, or not at all.**
+> Measure the fatal rate as a function of whether the workload spills — not merely whether one
+> run survives.
 - **The distinguishing test:** run a workload that fits *comfortably* in VRAM (well under
   7043 MiB free — e.g. a small model or a short sequence with the trunk sized to fit) under
-  **sustained** GPU load for several minutes, and see whether the host stays up.
-  - **Runs clean for several minutes → memory-pressure cascade.** The crash is a consequence of
-    spilling past physical VRAM; fixing the resident footprint (Q2) plausibly fixes stability.
-  - **Crashes anyway → hardware/driver problem.** Then the local GPU tier is not viable as
-    designed, D-004's topology needs rework (not just its mitigation stack), and cache
-    generation has to happen somewhere else entirely.
+  **sustained** GPU load for several minutes, and see whether the host stays up. Watch WHEA
+  Id-17 corrected-error *rate* as the leading indicator, not just the crash/no-crash outcome.
+  - **Runs clean, corrected-error rate stays low → spill-mediated escalation confirmed.** The
+    resident-footprint fix (Q2) becomes the remedy that keeps the local tier alive.
+  - **Crashes anyway, or corrected errors spike without spill → the link fails under GPU load
+    generally.** Then the local GPU tier is not viable as designed, D-004's topology needs rework
+    (not just its mitigation stack), and cache generation must happen elsewhere.
 - **Record:** wall-clock survived under load, peak VRAM, GPU clocks/temperature, and any new
   Event-Viewer bugcheck (ID 41 / 1001) with its code and parameters.
 - **Also worth doing:** read the existing minidumps (`071926-18656-01`, `071926-21093-01`,
@@ -78,6 +109,160 @@ ARCHITECTURE §1).
   choosing between quantization strategies for a host that cannot stay up under load.
 - **Deliverable:** results appended here; then the D-006 ladder is rewritten and the D-009 §3
   cap is set (or the topology is reopened).
+
+---
+
+#### Q1 ANSWERED (2026-07-19) — **hardware fault: the GPU's PCIe link.** Not a memory-pressure cascade.
+
+**Source discipline: the minidumps were NEVER READ.** `C:\Windows\Minidump` is inaccessible
+without an elevated shell (we are not admin) and no debugger (`cdb`/`kd`/WinDbg) is installed.
+Every finding below comes from **Windows event-log records** — WHEA-Logger (hardware errors) and
+BugCheck/Kernel-Power (crashes). WHEA names the failing component directly, so it answers "what
+faulted" better than `!analyze -v` would have; it does **not** by itself answer "since when",
+which is why the history below is checked separately.
+
+**What faulted — identified, not inferred:**
+- All corrected errors are **PCI Express Advanced Error Reporting (AER)**, component
+  *"PCI Express Legacy Endpoint"*, at bus:dev:fn `0x1:0x0:0x0`, device
+  **`PCI\VEN_10DE&DEV_2D39&SUBSYS_234917AA&REV_A1`** — confirmed via `Get-PnpDevice` to be the
+  **NVIDIA RTX PRO 2000 Blackwell Laptop GPU** (the inference GPU itself).
+- **65 corrected AER errors today**, in bursts: **31 @ 16:32, 31 @ 16:44, 3 @ 16:48**.
+- **3 × WHEA `Id 1` FATAL hardware errors** at **16:32:33, 16:44:45, 16:48:16** — one per
+  bugcheck, matching the three `0x00020001` crashes 1:1.
+- **No display-driver TDR** (no Event 4101 / `nvlddmkm` reset). So this is **not** a driver hang
+  under memory pressure — it is link-level hardware error escalation.
+- **VBS/HVCI is running** (`VirtualizationBasedSecurityStatus=2`, services `2,3,4`), which is why
+  a fatal hardware error surfaces as **HYPERVISOR_ERROR**: the hypervisor is the reporting layer,
+  not the culprit.
+
+**History — checked, and it splits in two. A first-pass claim that "the fault predates the
+project" was PARTLY REFUTED on inspection; both halves are recorded here.**
+
+*Half that survives — the corrected link errors DO predate the project:*
+
+| Date | Id 17 (corrected) | Id 1 (fatal) |
+|---|---|---|
+| 2026-05-27 | 3 | 1 |
+| 2026-06-09 | 65 | – |
+| 2026-06-13 | 3 | – |
+| 2026-06-15 | 3 | – |
+| 2026-07-04 | 3 | – |
+| 2026-07-10 | 31 | – |
+| 2026-07-14 | 40 | – |
+| **2026-07-19** | **65** | **3** |
+
+All **148 pre-today** corrected events are the *same component on the same device*:
+`17 | PCI Express Legacy Endpoint | PCI\VEN_10DE&DEV_2D39&SUBSYS_234917AA&REV_A1`. So a
+**corrected PCIe link problem on this GPU genuinely predates PharmFoldMDK** (7 days spanning
+~7 weeks). That much is solid.
+
+*Half that was REFUTED — the CRASH does not predate it:*
+
+All bugchecks in 90 days (only four):
+
+| When | Bugcheck | Parameters |
+|---|---|---|
+| 2026-05-27 19:44 | **`0x00000133`** (DPC_WATCHDOG_VIOLATION) | `0x0, 0x500, 0x500, 0xfffff800c77c53c8` |
+| 2026-07-19 16:32 | `0x00020001` | `0x28, 0x1, 0x29b92701, 0xfc801000` |
+| 2026-07-19 16:44 | `0x00020001` | *(identical)* |
+| 2026-07-19 16:48 | `0x00020001` | *(identical)* |
+
+**The `0x00020001` signature has ZERO occurrences before today** — three today, all during
+ESMFold runs. The single earlier fatal (May 27) came with a *different* bugcheck and mechanism.
+
+**The clean split (213 corrected / 4 fatal out of 217):**
+
+| | Corrected (Id 17) | Fatal (Id 1) |
+|---|---|---|
+| **Before today** | **148** across 7 days | **1** (May 27) |
+| **Today** | **65** | **3** |
+
+**Synthesis — three parts, all load-bearing:**
+
+1. **The link fault is pre-existing and independently evidenced.** Corrected AER errors on this
+   exact device occur on 7 days back to 2026-05-27 — including 65 on 06-09 and 40 on 07-14, days
+   with no ESMFold anywhere near this machine. **The May 27 fatal is the key corroboration: the
+   link can go fatal without ESMFold**, so the weakness is real and independent of us.
+2. **The workload is an accelerant, not the cause. ⚠ THE RATE IS THE EVIDENCE — NOT THE RAW
+   COUNTS.** **One fatal in eight weeks of ordinary use versus three in under twenty minutes**
+   ≈ **four orders of magnitude**. Read the counts alone ("217 errors, going back to May →
+   pre-existing, unrelated to us") and you reach the wrong conclusion — *which is exactly what
+   happened in the first draft of this entry.* The counts are compatible with both hypotheses;
+   only the **rate under load**, bucketed by **severity**, separates them. Neither "pre-existing
+   hardware, unrelated to our workload" nor "our workload broke the machine" is correct: this is
+   the **latent-fault-triggered** reading.
+3. **Mechanism — ⚠ PREDICTED, NOT MEASURED (hypothesis, pending S-002 Q1).** The proposed chain is
+   *spill → sustained PCIe traffic → corrected errors escalate to uncorrected*: the fp16 model
+   overruns VRAM (resident 8116 MiB vs 7043 MiB free; peak 8545 MiB vs 8151 MiB physical — i.e.
+   **~0.4 GB beyond total physical, ~1.1–1.5 GB beyond what was actually free**), and WDDM services
+   that overrun by shuttling memory across the PCIe bus. This is **plausible and fits the data, but
+   it is not established** — it connects S-001 to the crash rather than competing with it, and
+   **S-002 Q1 is what confirms or refutes it.** Do not cite it as a finding until then; when
+   measured, update this clause from *predicted* to *measured*.
+
+**Falsifiable prediction (this is now S-002 Q1, with a mechanism instead of a generic load test):**
+*a configuration that fits within VRAM should crash far less — or not at all — because it does not
+generate the spill traffic.* If it holds, the resident-footprint fix is not merely a performance
+optimization; it is the thing that keeps the local tier alive. If it fails, the link fails under
+GPU load generally and the tier is done on this machine.
+
+**Reliability floor (a design input, not a disqualifier).** The May 27 fatal happened in ordinary
+use with no ESMFold involved. So **even a perfectly-fitting configuration will occasionally take
+this machine down** — the floor is roughly *one host loss per several weeks of normal use*, and it
+is now **measured rather than hypothetical**. This is precisely what D-009 §1's `jobs` table,
+`claimed_at` + `worker_id`, `attempts`, and **30-minute stale-claim reaping** were designed for:
+a worker that dies mid-job without warning. That design was written against an assumed unreliable
+worker; it now has a number behind the assumption. **No redesign needed — the assumption was
+right.**
+
+**Named unknowns (not glossed):** what workload produced the 06-09 / 07-10 / 07-14 error bursts is
+unknown; whether repair or replacement resolves it is unknown; whether a fitting configuration
+drops the fatal rate to zero (versus merely reducing it) is **exactly what Q1 must measure**; the
+minidumps remain unread.
+
+**Provenance of this claim — it reversed direction twice, and the intermediate versions were
+stated confidently and were wrong. A future reader should see the path, not just the destination:**
+
+| Version | Source claimed | Conclusion | Why it was wrong |
+|---|---|---|---|
+| v1 | "read the minidumps" | GPU PCIe fault | **The minidumps were never read** — no admin, no debugger. The source was the Windows event log. |
+| v2 | WHEA event **counts** (217 over 90 days) | "Pre-existing hardware, unrelated to our workload" | Counts were not bucketed by **severity**. 213 were *corrected*; only 4 were *fatal*. The fatal signature had zero prior occurrences. |
+| v3 (current) | WHEA events **bucketed by severity**, plus all 4 bugcheck codes/params | Latent fault + workload accelerant; mechanism predicted, not measured | — |
+
+**The failure mode both times was accepting a summary instead of returning to the raw data.**
+`params_all_on_cuda=True` was a true summary that missed spill; "217 WHEA events since May" was a
+true summary that missed severity. Each was caught only by re-deriving from the underlying records.
+
+**Suggestive but NOT conclusive:** at idle the link reports `pcie.link.gen.current=1` (max 5) and
+`width=8` (max 16). Consistent with AER-driven downtraining — **but confounded**, because NVIDIA
+GPUs idle at low link speed for power management and some laptops are wired x8. Not offered as
+proof; the 217 AER records are the solid evidence.
+
+**Conclusions:**
+1. **The local tier is NOT killed outright — it is conditional.** The mechanism in §3 above is what
+   keeps it alive: if spill traffic mediates the escalation, then a configuration that fits in VRAM
+   may not trigger the fault at all. **A resident-footprint fix is therefore not just an
+   optimization — it is the candidate remedy**, and it must be measured before writing the tier
+   off. (An earlier draft of this entry concluded "not viable regardless of the memory fix"; that
+   inference was wrong — "a memory fix cannot repair a link" does not imply "a memory fix cannot
+   avoid triggering it.")
+2. **This is still also a platform problem.** Owner actions worth taking in parallel: update NVIDIA
+   driver (595.71 current) and BIOS/EC firmware, and open a vendor support conversation — 148
+   corrected PCIe AER errors over seven weeks plus a fatal on a machine this new is warranty
+   territory. **Whether repair/replacement resolves it is UNKNOWN**; do not plan the project around
+   that outcome either way.
+3. **Project consequence — de-risk without abandoning.** Cache generation (D-009 §3 (A)) can move
+   to **different compute** (cloud GPU / Colab / cluster) to remove the schedule dependency on
+   both the hardware outcome *and* the Q1 result; a rented ≥16 GB GPU additionally makes the S-001
+   fp16 non-fit stop binding, collapsing two problems into one. But this is **de-risking, not a
+   verdict on the local tier** — Q1 may well restore it. Either way this stays **inside the
+   D-004 §5 boundary** and is **not** a retreat to AlphaFold retrieval; D-003's graded DL claim is
+   unaffected, since ESMFold still runs.
+4. **Q2 (resident-footprint fix) is deferred, not cancelled** — whatever compute hosts the cache
+   build still needs a configuration that fits, and the fp16-does-not-fit finding (S-001) travels
+   with us to any 8 GB-class device. On a ≥16 GB device it may simply not bind.
+5. **Minidumps remain unread** (need an elevated shell). Now low value — WHEA already identified
+   the component. Only worth revisiting if the vendor asks for them.
 
 ### D-009 — Iteration 1 scope, job queue shape, and ECD boundary selection
 - **Date:** 2026-07-19

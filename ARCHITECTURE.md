@@ -162,9 +162,30 @@ not fit `esmfold_v1` in 8 GB.** The D-006 ladder (fp16 → chunking → cap → 
 **invalid at rung one**: rungs 2+ reduce *activation* memory and cannot fix a *resident-weight*
 overrun. Weights are **9.58 GB on disk** (not ~2.5 GB). Warm-cache load is **15–16 s**.
 
-**The local GPU tier is currently UNPROVEN**, not merely unoptimized: three attempts at a 630 aa
-fold each ended in an identical host bugcheck (`0x00020001` HYPERVISOR_ERROR). Whether that is a
-memory-pressure cascade or a hardware/driver fault is **S-002**, which gates the tier.
+**The local GPU tier is BLOCKED ON HARDWARE (S-002 Q1, 2026-07-19).** Three 630 aa attempts each
+ended in an identical host bugcheck (`0x00020001`). Windows event logs (**not** the minidumps —
+unreadable without admin) identify the component: **PCIe Advanced Error Reporting faults on the
+inference GPU itself** (`PCI\VEN_10DE&DEV_2D39` = RTX PRO 2000 Blackwell), with 3 fatal WHEA
+errors matching the 3 crashes 1:1 and **no** display-driver TDR. VBS/HVCI is running, which is why
+a fatal hardware error surfaces as HYPERVISOR_ERROR.
+
+**Latent fault, workload-triggered — neither "unrelated bad hardware" nor "we broke it."**
+Corrected AER errors on this exact device predate the project (148 across 7 days since
+2026-05-27, on days with no ESMFold), and a May 27 fatal proves the link can go fatal without us.
+But the `0x00020001` signature has **zero** occurrences before today. One fatal in eight weeks vs
+**three in twenty minutes** ≈ four orders of magnitude — the workload is an **accelerant**.
+
+**Mechanism (connects to the spill finding rather than competing with it):** the fp16 overrun is
+serviced by shuttling memory across the PCIe bus, and sustained heavy PCIe traffic is exactly what
+turns corrected link errors into uncorrected ones. **Testable prediction: a configuration that
+fits in VRAM should crash far less, or not at all.** So the tier is **conditional, not dead** —
+the resident-footprint fix is the candidate remedy, and must be measured (S-002 Q1) before writing
+the local tier off.
+
+**Consequence:** cache generation *may* move to **different compute** (cloud GPU / Colab / cluster)
+to de-risk the schedule — a ≥16 GB GPU also makes the fp16 non-fit stop binding — but that is
+de-risking, **not** a verdict against the local tier. Inside the D-004 §5 boundary either way, and
+**not** a retreat to retrieval.
 
 Replacement rung one must be a **resident-footprint** reduction — quantized ESM-2 trunk,
 CPU-offloaded LM with the folding head resident, or a smaller backbone (a research project;
