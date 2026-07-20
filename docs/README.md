@@ -233,6 +233,33 @@ stated confidently and were wrong. A future reader should see the path, not just
 `params_all_on_cuda=True` was a true summary that missed spill; "217 WHEA events since May" was a
 true summary that missed severity. Each was caught only by re-deriving from the underlying records.
 
+**⚠ Git history carries a superseded claim that cannot be rewritten.** PR #5 squash-merged as
+commit **`5ad4c9b`** with the title:
+
+> `docs: S-002 Q1 answered — GPU PCIe link fault (pre-existing hardware) (#5)`
+
+That title was written **before** the correction, and its parenthetical **"(pre-existing hardware)"
+is superseded by this entry** — the accurate reading is *latent pre-existing link weakness that this
+workload accelerates*, per the provenance table above.
+
+Two details matter for anyone auditing history:
+- The squash **body** does contain all four constituent commit messages *including* the retractions,
+  so a reader who opens the full commit sees the correction sequence. But **`git log --oneline`
+  shows only the title**, and the body's *first* message also states the superseded
+  "the fault predates the project / our load did not cause it" framing before later messages walk
+  it back. History read top-down is therefore misleading in isolation.
+- It **cannot be corrected in place**: `main` is branch-protected (D-008 — required `test` check,
+  PR-only, `enforce_admins`), so rewriting history would require a force-push that protection
+  forbids, and rewriting merged history would be the wrong remedy regardless.
+
+**Authority rule: where commit metadata and this log disagree, THIS ENTRY WINS.** Commit titles are
+not decision records; `docs/README.md` is.
+
+**Adjacent audit (2026-07-19):** `git log -p --all -- .vscode/settings.json` confirms the file
+existed in exactly two commits — added in `5ad4c9b`, removed in `a317a73` — and only ever contained
+a 10-line `files.exclude` block (`.git`, `.svn`, `.hg`, `.DS_Store`, `Thumbs.db`, `.mule`).
+**No credentials, tokens, or sensitive paths entered history.** No remediation required.
+
 **Suggestive but NOT conclusive:** at idle the link reports `pcie.link.gen.current=1` (max 5) and
 `width=8` (max 16). Consistent with AER-driven downtraining — **but confounded**, because NVIDIA
 GPUs idle at low link speed for power management and some laptops are wired x8. Not offered as
