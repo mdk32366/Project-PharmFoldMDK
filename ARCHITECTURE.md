@@ -214,7 +214,7 @@ S-002 Q1, now testable against a config that genuinely fits.
 
 | Iter | Product goal | Deep-learning content |
 |------|--------------|-----------------------|
-| **1 (MVP)** | **Cache-first (D-009 §3)**: Mission Briefing + curated ADC target DB served from pre-folded cached artifacts; live user folding deferred. **Blocked on S-002** — the cache cannot be built until a folding configuration exists that fits 8 GB and does not crash the host | **ESMFold run in-project (D-003)** — the pipeline that *produces* the cache must be real, committed, reproducible code (binding condition of D-009 §3) |
+| **1 (MVP)** | **Cache-first (D-009 §3)**: Mission Briefing + curated ADC target DB served from pre-folded cached artifacts; live user folding deferred. **Two caps, not one (D-009 §3 amendment):** the **cache-build cap** is bounded by *memory fit + host stability only* — wall time is **not** a criterion, so `chunk 16/8` and multi-minute folds are acceptable; the **interactive cap** (Iteration 1.5+) is latency-bounded (`chunk ≥32`, `<120 s`). This is what makes large ECDs such as **HER2 (630 aa)** reachable for the cache even if never viable interactively | **ESMFold run in-project (D-003)** — the pipeline that *produces* the cache must be real, committed, reproducible code (binding condition of D-009 §3) |
 | **2** | Mutation simulator, comparison views, pocket scoring | Learned mutation-impact and/or druggability model; ESMFold folds wild-type vs. mutant for comparison |
 | **3** | Reports, semantic library search | Neural embeddings + pgvector semantic search; report synthesis |
 | **4 (stretch)** | Epitope suggestion, ADC complex modeling, agentic workflows | Advanced/agentic DL |
