@@ -60,8 +60,11 @@ So the rule is not "be careful" — it is:
 
 ### S-003 — Spike: find a configuration of `esmfold_v1` that fits under 7799 MiB
 - **Date:** 2026-07-19
-- **Status:** **CLOSED 2026-07-19 — PASS. int8 ESM-2 trunk quantization fits (peak 5779 MiB, no
-  spill) with pLDDT holding.** Logged before the work per D-002; results appended below.
+- **Status:** **CLOSED 2026-07-19 — PASS ON FIT** (int8 ESM-2 trunk quantization: peak 5779 MiB, no
+  spill, all params on GPU). **Quality anomaly (+4.0 pLDDT) verified as real and non-degenerate**
+  — deterministic across repeat folds and structurally sane — **but accuracy remains unproven**
+  pending a cross-precision TM-score/RMSD comparison. Logged before the work per D-002; results and
+  verification appended below.
 - **Type:** Spike (time-boxed measurement). Produces a candidate configuration, not shipped code.
 - **Question:** Is there a configuration of `facebook/esmfold_v1` whose **peak VRAM stays under
   7799 MiB** while **fold quality holds within a few points of the Trop-2 ECD baseline of
@@ -148,14 +151,50 @@ pLDDT within 5 pts of 70.7.
 - **pLDDT is the model's self-confidence, not accuracy.** A higher pLDDT means the model is more
   confident, which is *not* the same as more correct. A +4.0 shift means the int8 run produced a
   **different** prediction, not a demonstrably better one.
-- The shift is **unexplained**. A plausible (untested) reading is that the fp16 baseline was itself
-  mildly degraded — fp16's narrow exponent range can underflow in a 3B LM trunk — and that int8
-  with higher-precision compute sits closer to the fp32 result. That is a hypothesis, not a finding.
-- **What would actually settle it:** a structural comparison (TM-score / CA-RMSD) between the fp16,
-  bf16, and int8 predicted structures, and ideally against the experimental Trop-2 ECD structure.
-  **Not done here** — out of S-003's scope. Logged as a follow-up.
 - What the data *does* support: **quality did not degrade** by the agreed proxy, so the pass
   criterion is met honestly.
+
+---
+
+#### QUALITY VERIFICATION (2026-07-19) — the anomalous number, checked before it gets cited
+
+Two holes were open in the +4.0 result: it could have been **run variance**, and a fold that
+**collapses to something trivial** can score deceptively well on per-residue confidence while being
+structurally wrong. Both are now closed. *(Same discipline as the WHEA correction: the surprising
+number gets checked, not celebrated.)*
+
+**1. Reproducibility — identical sequence folded twice under int8:**
+
+| Run | wall time | mean pLDDT | CA count | NaN/inf coords | Rg |
+|---|---|---|---|---|---|
+| 1 | 11.9 s | **74.68** | 248 / 248 | 0 | 18.74 Å |
+| 2 | 7.3 s | **74.68** | 248 / 248 | 0 | 18.74 Å |
+
+**pLDDT run-to-run delta = 0.000; CA-RMSD between runs = 0.0000 Å.** The model is **fully
+deterministic**, so **the +4.0 shift vs the fp16 baseline is a real effect of the precision change,
+not run variance.** *(Hole closed.)*
+
+**2. Non-degeneracy — the structure is genuinely folded, not trivial:**
+- **Residue count exact:** 248 CA atoms for a 248 aa input — no truncation, no padding artifacts.
+- **No NaN/inf coordinates** anywhere in the file (all ATOM records parsed and checked).
+- **Radius of gyration 18.74 Å**, against reference bands for N=248:
+  compact globular `2.2·N^0.38` = **17.9 Å** (expected) vs random coil `2.0·N^0.60` = **54.7 Å**.
+  Measured sits **essentially on the compact-globular expectation** — not collapsed (which would be
+  ≪12 Å) and not extended. *(Hole closed — the "confidently wrong garbage" failure mode is ruled
+  out.)*
+- PDBs saved (`trop2_int8_run{1,2}.pdb`, byte-identical) so the cross-precision comparison below is
+  cheap to run later.
+
+**What is now established:** the int8 configuration produces a **deterministic, structurally sane,
+compact fold**, and its higher pLDDT is a genuine consequence of the precision change.
+
+**What remains open — and why the quality claim is still bounded:** pLDDT is *still* self-confidence.
+A sane, compact, confident structure can nonetheless differ from the truth. Settling *accuracy*
+requires **TM-score / CA-RMSD between the fp16, bf16, and int8 structures**, ideally against an
+experimental Trop-2 ECD structure. The fp16/bf16 PDBs were **not saved** during S-003, so this needs
+one short re-run per precision. **Outstanding follow-up; do not claim accuracy until then.**
+A plausible-but-untested reading of the direction: fp16's narrow exponent range can underflow in a
+3B LM trunk, so the fp16 baseline may itself be the mildly degraded one. **Hypothesis, not finding.**
 
 **Observation (weak, recorded as such):** the bf16 run spilled (peak 8544 > 8151 physical) for
 ~45 s and produced **no new WHEA errors**. Weakly consistent with S-002's mechanism being about

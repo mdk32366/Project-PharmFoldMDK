@@ -190,9 +190,11 @@ de-risking, **not** a verdict against the local tier. Inside the D-004 §5 bound
 **Replacement rung one is now MEASURED (S-003, 2026-07-19): quantize the ESM-2 LM trunk to int8
 (`bitsandbytes`), folding head at full precision.** On the Trop-2 ECD (248 aa): resident
 **5351 MiB**, peak **5779 MiB** — comfortably under both the 7799 MiB target and the 7043 MiB
-actually free — **no spill**, and ~1.8× faster than fp16. Mean pLDDT 74.7 vs the 70.7 fp16 baseline
-(*pLDDT is self-confidence, not accuracy — the +4.0 shift means a different prediction, not a
-verified better one; a TM-score/RMSD comparison is the outstanding follow-up*). **bf16 is rung two**
+actually free — **no spill**, and ~1.8× faster than fp16. Mean pLDDT 74.7 vs the 70.7 fp16 baseline —
+**verified reproducible** (two folds: pLDDT delta 0.000, CA-RMSD 0.0000 Å, so the shift is a real
+precision effect, not variance) and **verified non-degenerate** (248/248 CA atoms, zero NaN coords,
+Rg 18.74 Å against a 17.9 Å compact-globular expectation). *Accuracy is still unproven: pLDDT is
+self-confidence, so a cross-precision TM-score/RMSD comparison remains the outstanding follow-up.* **bf16 is rung two**
 — same footprint as fp16 so it cannot fix the fit, but it costs nothing and holds quality (+0.2).
 CPU-offload is **excluded by design**: it trades VRAM for the PCIe traffic implicated in the link
 fault. Per D-004 §5 this stays inside "smaller model / narrower targets" and explicitly **does not**
