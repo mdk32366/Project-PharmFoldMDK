@@ -68,6 +68,65 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-011 — Split compute: local tier under the ceiling, rented GPU for large-ECD cache generation
+- **Date:** 2026-07-19
+- **Status:** Accepted
+- **Context:** S-004/S-005 bracketed the local sequence-length ceiling to **(440, 630) aa**.
+  440 aa folds clean at chunk 64 (28.6 s, peak 6665 MiB, no spill, host stable);
+  630 aa is **4-for-4 fatal host crashes**. HER2's full ECD (~630 aa) — the flagship ADC
+  target — cannot be folded locally. D-004 §5 bounded the response to smaller model /
+  narrower targets / different compute, explicitly **not** retrieval. This selects
+  **"different compute."**
+- **Decision — two paths, one pipeline:**
+  - **Local tier** (Blackwell 8 GB, int8 trunk / bf16 base, chunk 64): every target
+    under the measured ceiling. Trop-2 (~250), Nectin-4 (~350), and the 440 aa class.
+    **0 crashes in ~94 folds.**
+  - **Rented GPU, one-time batch:** targets above the ceiling. A ≥24 GB card runs fp16
+    `esmfold_v1` unquantized and unchunked, so **the entire local mitigation stack stops
+    binding.**
+- **Provider: RunPod.** Per-second billing, no minimum commitment, zero egress fees.
+  - **Card: RTX A6000 48 GB at $0.49/hr** (Secure Cloud). Chosen over the RTX 4090 24 GB
+    at $0.69/hr — more VRAM for less money; **headroom matters more than speed** for a
+    one-time batch. Community Cloud is ~50% cheaper but uses community-contributed
+    hardware with reduced reliability; not worth the interruption risk on a job this
+    short and this cheap.
+  - **No network volumes.** Storage bills at $0.07/GB/month even while the pod is
+    stopped. Use container disk; download weights, fold, upload artifacts, terminate.
+  - **Estimated total cost for the full Iteration-1 large-ECD cache: ~$0.25.**
+    (~5 min weight download + ~10 min folding at $0.49/hr.)
+- **Fly.io GPU is eliminated, not deprioritized.** Fly deprecated GPU Machines; they
+  become **unavailable after 2026-08-01**. D-003's "GPU deprecation on Fly.io" risk and
+  D-004's Fly-compute framing are superseded — the option ceases to exist in 13 days.
+  Fly remains the **serving tier** (CPU-only app + Postgres/pgvector + Volume), unchanged.
+- **Deep-learning justification:** D-003's core is preserved intact — we run ESMFold
+  ourselves on both paths.† Renting a GPU changes *whose silicon* executes the model, not
+  *who runs it*: we still control the checkpoint, the precision, the chunking and the code,
+  and we still perform the inference. That is categorically different from calling a hosted
+  inference API or retrieving pre-computed structures, which is what D-004 §5 rules out.
+  The graded DL claim is unaffected — arguably strengthened, since the project now
+  demonstrates a measured hardware constraint and a reasoned compute split rather than a
+  single-machine assumption.
+
+  > † **The source text for this justification was truncated mid-sentence** at *"we run
+  > ESMFold ourselves on both"*. The completion above is the obvious reading and is
+  > flagged so it can be corrected if it misstates the intent.
+
+- **Superseded by this entry (verified by grep across `docs/`, `ARCHITECTURE.md`, `CLAUDE.md`):**
+  - `docs/README.md` D-004 context — *"Fly.io GPU is uncertain/expensive"* → now **eliminated**,
+    with a date.
+  - `docs/README.md` D-006 context — *"Fly.io GPU availability is uncertain"* → same.
+  - `docs/TDD_v3_ADC_Focused.md` §7 — *"GPU deprecation on Fly.io: Handled by preferring
+    pre-computed structures and lightweight models."* The **risk has materialised**; the stated
+    mitigation is superseded by this split-compute decision. *(Planning docs are historical
+    intent — per this log's preamble, the log wins where they diverge. Not edited.)*
+  - `ARCHITECTURE.md` lines asserting Fly has **no** GPU are **correct and unchanged** — they
+    already agree with this decision.
+- **Follow-ups:** build the rented-GPU batch as **committed, reproducible code in this repo**
+  (the binding condition of D-009 §3 — the cache pipeline must not be a one-off script);
+  decide where rented-run artifacts land (Fly Volume upload path, D-004 consequence, still open);
+  and note the untested possibility from S-005 that HER2 may yet fold locally at `chunk 16/32`,
+  which would shrink the rented batch but does not block it.
+
 ### S-005 — bisect the length ceiling at 440 aa
 - **Date:** 2026-07-19
 - **Status:** **CLOSED 2026-07-19 — 440 aa FOLDED CLEAN (reading 1).** 28.6 s at `chunk 64`,

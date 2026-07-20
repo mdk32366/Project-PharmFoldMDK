@@ -88,7 +88,8 @@ opened on the local machine.
 |-------|----------------|--------------|
 | **Frontend** | Interactive UI, 3D visualization, onboarding | Streamlit; `py3Dmol`/`stmol` for 3D |
 | **Backend API** | Auth, request handling, **job queue** management, results | FastAPI + Uvicorn (on Fly) |
-| **Local GPU worker** | Polls Fly for jobs, runs **ESMFold** on the local NVIDIA GPU, uploads artifacts back (D-004) — **not deployed to Fly** | Python worker; PyTorch + Hugging Face (`facebook/esmfold_v1`) |
+| **Local GPU worker** | Polls Fly for jobs, runs **ESMFold** on the local NVIDIA GPU for targets **under the length ceiling**, uploads artifacts back (D-004) — **not deployed to Fly** | Python worker; PyTorch + Hugging Face (`facebook/esmfold_v1`), int8 trunk |
+| **Rented-GPU batch** (D-011) | One-time offline fold of **above-ceiling** targets (HER2-class ~630 aa); artifacts uploaded to the Fly Volume | RunPod RTX A6000 48 GB, fp16 unquantised/unchunked; committed repo code, not a one-off script |
 | **DL / Inference core** | The neural work: **ESMFold structure prediction (D-003)**, plus pocket/druggability scoring, embeddings, mutation impact | PyTorch + Hugging Face; `biopython` for parsing |
 | **Data layer** | Persistence, relationships, vector search | Postgres + pgvector, SQLModel/SQLAlchemy, Alembic |
 | **Object storage** | Large structure/report files | Fly Volume mounted at `/data`, organized `/data/analyses/{id}/` |
@@ -126,14 +127,25 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 
 ## 5. Storage, Deployment & Inference Topology
 
-### Two-tier topology (D-004)
+### Topology — serving tier + **split compute** (D-004, amended by D-011)
 
 - **Serving tier — Fly.io (always-on, no GPU):** Streamlit + FastAPI, Postgres + pgvector,
   Fly Volume. Hosts the app, the data, and the **job queue**.
-- **Inference tier — local machine (NVIDIA GPU, 8 GB VRAM):** a **`worker/`** process that
+  **Fly GPU is eliminated, not deprioritised (D-011):** Fly deprecated GPU Machines and they become
+  **unavailable after 2026-08-01**. Fly is the serving tier only.
+- **Inference tier A — local machine (NVIDIA Blackwell, 8 GB VRAM):** a **`worker/`** process that
   **pulls** pending jobs from Fly over an authenticated **outbound** connection, runs
-  ESMFold on the local GPU, uploads PDB/pLDDT/PAE back, and marks the job done/error. **Not
-  deployed to Fly.** No inbound exposure of the local machine; jobs queue when it is offline.
+  ESMFold (int8 trunk / bf16 base, `chunk 64`) on the local GPU, uploads PDB/pLDDT/PAE back, and
+  marks the job done/error. **Not deployed to Fly.** No inbound exposure; jobs queue when offline.
+  **Scope: every target under the measured length ceiling** — Trop-2 (~250 aa), Nectin-4 (~350 aa),
+  the 440 aa class. **0 crashes in ~94 folds.**
+- **Inference tier B — rented GPU, one-time batch (D-011):** targets **above** the ceiling
+  (HER2-class, ~630 aa). **RunPod RTX A6000 48 GB @ $0.49/hr**, Secure Cloud, per-second billing,
+  no egress fees, **container disk only** (network volumes bill $0.07/GB/month even when stopped).
+  A ≥24 GB card runs fp16 `esmfold_v1` **unquantised and unchunked**, so the entire local
+  mitigation stack stops binding. **Estimated total for the Iteration-1 large-ECD cache: ~$0.25.**
+  The batch must be **committed, reproducible code in this repo**, not a one-off script
+  (binding condition of D-009 §3).
 
 ### Fly serving-tier specifics
 
