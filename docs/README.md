@@ -58,6 +58,56 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### S-003 — Spike: find a configuration of `esmfold_v1` that fits under 7799 MiB
+- **Date:** 2026-07-19
+- **Status:** Open — **logged before the work**, per the log-leads-the-code rule (D-002).
+- **Type:** Spike (time-boxed measurement). Produces a candidate configuration, not shipped code.
+- **Question:** Is there a configuration of `facebook/esmfold_v1` whose **peak VRAM stays under
+  7799 MiB** while **fold quality holds within a few points of the Trop-2 ECD baseline of
+  mean pLDDT 70.7** (S-001)?
+- **Why now:** S-001 measured the fp16 model resident at **8116 MiB** — over budget before any
+  fold. S-002's (predicted, unmeasured) mechanism says the resulting spill traffic across PCIe is
+  what escalates this GPU's long-standing corrected link errors into fatal ones. **S-003 produces
+  the fitting configuration; S-002 Q1 then tests whether it stops the crashes.** Order matters:
+  fit first, then sustained load.
+
+**Method — test in this order, each against the same target:**
+- **Baseline target:** Trop-2 / TACSTD2 ECD (`P09758`, topological range 27–274, **248 aa**),
+  `chunk_size=64`, compared to **mean pLDDT 70.7** from S-001.
+  1. **bfloat16** — same footprint as fp16, better numerical headroom. **Expected NOT to fit**
+     (bf16 and fp16 are both 2 bytes/param); run it regardless, as a one-line change, for the
+     numerical-stability/quality comparison.
+  2. **8-bit quantization of the ESM-2 trunk** via `bitsandbytes`, **folding head left at full
+     precision**. This is the real candidate: the ESM-2 LM is the bulk of the ~3B params, so int8
+     roughly halves the dominant term.
+  3. **4-bit** — only if 8-bit is insufficient. More quality risk; measure rather than assume.
+- **EXCLUDED BY DESIGN — do not test CPU-offload of the trunk.** It trades VRAM for **PCIe
+  traffic**, which is precisely the mechanism suspected (S-002) of escalating the link fault.
+  Deprioritized *because of* what S-002 found, not for cost.
+
+**Record per configuration:** resident VRAM after load; peak VRAM during fold; wall time; mean
+pLDDT; and the pass flag **peak < 7799 MiB**. *(Note: 7799 MiB was free in S-001 run 1; runs 2–3
+saw only 7043 MiB free because the desktop held more. The fixed 7799 MiB target is used as
+specified, and actual free-at-start is recorded alongside so the margin is visible.)*
+
+**Harness:** reuse the S-001 harness unchanged — parameter **placement assertion**, **spill
+detection** against physical/free VRAM, **JSON written after every step** (so a host crash cannot
+destroy partial results), and **pLDDT scale-trap handling** (0–1 → ×100, stated explicitly).
+Each configuration runs in a **fresh process** so resident VRAM is measured clean.
+
+- **Stop condition:** halt at the **first configuration that fits cleanly and holds pLDDT within a
+  few points of 70.7**. **Do NOT proceed to HER2 (630 aa) or sustained load** — that is S-002 Q1
+  and a separate, riskier test.
+- **Deep-learning justification:** this *is* the model-execution engineering, and it strengthens
+  the graded story rather than weakening it: *"we measured VRAM constraints on real hardware,
+  quantized the LM trunk, and validated that fold quality held"* is substantially more interesting
+  than *"we ran the model as shipped."* Quantization with a measured quality check against a
+  baseline is legitimate DL inference work.
+- **Decides:** the candidate configuration handed to S-002 Q1, and the **replacement rung one** of
+  the invalidated D-006 ladder (which must be a *resident-footprint* reduction).
+- **Deliverable:** results appended here; then D-006's ladder is rewritten with the measured rung
+  one, and S-002 Q1 runs against the winning configuration.
+
 ### S-002 — Spike: host stability under sustained GPU load, and a resident-footprint fix
 - **Date:** 2026-07-19
 - **Status:** **Q1 ANSWERED 2026-07-19 — hardware fault (GPU PCIe link), pre-existing.** Q2
