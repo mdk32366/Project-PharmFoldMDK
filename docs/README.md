@@ -68,6 +68,48 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### S-005 — PRE-REGISTERED: bisect the length ceiling at 440 aa
+- **Date:** 2026-07-19
+- **Status:** **Pre-registered, NOT YET RUN.** Written before any number exists.
+- **Type:** Spike — a single bisection step. **One run, then stop.**
+
+**The bracket.** Length is the discriminator (S-004). The evidence, instrument-free:
+- **248 aa (Trop-2): 0 crashes in ~93 folds** — both precisions, spilling and not.
+- **630 aa (HER2): 4 crashes in 4 attempts.**
+
+The ceiling lies somewhere in **(248, 630)**. **440 aa is the closest integer to the true midpoint**
+(439), so a single run halves the remaining bracket **whichever way it goes** — maximum information
+per crash, which matters when each observation costs a host.
+
+**Sequence — hold everything constant except length.** Take the **HER2 ECD (`P04626`, 23–652) and
+truncate to its first 440 residues**. Same protein, same amino-acid composition, same code path,
+same UniProt-derived source. **Deliberately NOT a different protein at ~440 aa** — that would
+reintroduce composition and fold-difficulty as confounds, and this run only has budget for one
+variable.
+
+**Configuration:** int8 (S-003 recipe), `chunk_size` 64 descending on OOM, driver 596.72,
+GPU process list verified empty, WHEA window recorded from a noted T0.
+
+**Expect JSON corruption on a crash.** S-004's results file was truncated to NUL bytes by the
+unflushed mid-write. **That is now the known signature of a host loss, not a surprise or a bug** —
+stdout is the surviving record, so read it first.
+
+**THE THREE READINGS — fixed in advance:**
+
+| # | Observation | Reading |
+|---|---|---|
+| **1** | **Completes clean** | Ceiling is in **(440, 630)**. Most of the curated ADC set is **locally foldable**; only HER2-class targets need external compute. |
+| **2** | **Crashes** | Ceiling is in **(248, 440)**. The constraint is **broad**, and external compute does **most** of the cache work. |
+| **3** | **Completes, with corrected errors but no fatal** | The **burst-without-crash** pattern seen on six historical days (F-001). **Treat as a PASS.** Interesting, but **uninformative about the ceiling** — corrected errors do not predict crashes. |
+
+**Reading 3 exists because of F-001:** without it, corrected errors during a successful fold would
+have been misread as a near-miss or a partial failure. They are neither.
+
+- **Deep-learning justification:** the ceiling determines how much of the curated ADC target
+  database the local tier can fold, and therefore how much of the graded DL pipeline runs on
+  owned hardware versus rented compute.
+- **Stop condition:** **one run.** Do not bisect further tonight regardless of outcome.
+
 ### F-001 — INSTRUMENT CORRECTION: WHEA corrected-error rate was **inverted**, not merely invalid
 - **Date:** 2026-07-19
 - **Status:** Accepted. **This retroactively restates evidence in S-001, S-002 and S-003.**
