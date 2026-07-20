@@ -215,8 +215,11 @@ riskier.
 
 ### S-002 — Spike: host stability under sustained GPU load, and a resident-footprint fix
 - **Date:** 2026-07-19
-- **Status:** **Q1 ANSWERED 2026-07-19 — hardware fault (GPU PCIe link), pre-existing.** Q2
-  deferred pending a working machine or alternative compute. See results at the end of this entry.
+- **Status:** **Q1 component identified (GPU PCIe link, latent + workload-accelerated).
+  Non-spilling arm MEASURED 2026-07-19: 83 folds / 600 s sustained on the int8 config produced
+  0 corrected and 0 fatal WHEA events, host survived.** Prediction held, **but attribution is
+  confounded by a concurrent NVIDIA driver update** — the fp16 sustained control (same driver,
+  spill restored) is what closes it. Q2 superseded by S-003, which found the fitting config.
 - **Type:** Spike (time-boxed investigation). Produces measurements and a decision input.
 - **Why it exists:** S-001 ended in **three identical host bugchecks** (`0x00020001`
   HYPERVISOR_ERROR, byte-identical parameters, 16:32 / 16:44 / 16:48) during a 630 aa fold run
@@ -346,7 +349,8 @@ ESMFold runs. The single earlier fatal (May 27) came with a *different* bugcheck
    only the **rate under load**, bucketed by **severity**, separates them. Neither "pre-existing
    hardware, unrelated to our workload" nor "our workload broke the machine" is correct: this is
    the **latent-fault-triggered** reading.
-3. **Mechanism — ⚠ PREDICTED, NOT MEASURED (hypothesis, pending S-002 Q1).** The proposed chain is
+3. **Mechanism — ⚠ ONE ARM MEASURED 2026-07-19 (see Q1 RESULTS below); causal attribution still
+   CONFOUNDED.** The proposed chain is
    *spill → sustained PCIe traffic → corrected errors escalate to uncorrected*: the fp16 model
    overruns VRAM (resident 8116 MiB vs 7043 MiB free; peak 8545 MiB vs 8151 MiB physical — i.e.
    **~0.4 GB beyond total physical, ~1.1–1.5 GB beyond what was actually free**), and WDDM services
@@ -360,6 +364,54 @@ ESMFold runs. The single earlier fatal (May 27) came with a *different* bugcheck
 generate the spill traffic.* If it holds, the resident-footprint fix is not merely a performance
 optimization; it is the thing that keeps the local tier alive. If it fails, the link fails under
 GPU load generally and the tier is done on this machine.
+
+---
+
+#### Q1 RESULTS — non-spilling arm (2026-07-19) — **prediction held; attribution confounded**
+
+**Test:** int8 configuration (S-003), **Trop-2 ECD 248 aa only — deliberately NOT HER2**, folded
+repeatedly under continuous load. Window **T0 = 18:14:27 → 18:24:27**.
+
+| Measure | Value |
+|---|---|
+| Folds completed | **83 consecutive** |
+| Sustained duration | **600.1 s** (10 min), GPU 99% util, 2190 MHz, 81 °C, ~75 W |
+| Resident / peak VRAM | 5351 / **5779 MiB** — pinned, `spills_at_rest = False` |
+| mean pLDDT | 74.68 on **every** fold (deterministic, as S-003 verification found) |
+| **WHEA Id 17 (corrected) in window** | **0** |
+| **WHEA Id 1 (fatal) in window** | **0** |
+| **Bugchecks / unexpected shutdowns** | **0** — host survived |
+
+**Null result verified, not assumed:** `Get-WinEvent` throws when it matches nothing, so an empty
+result is indistinguishable from a broken query. A **control query over the same day returned 74
+events** (71 corrected + 3 fatal), confirming the query works; the **last WHEA event of any kind was
+18:06:27, before the window opened.**
+
+**Rate contrast:** fp16/HER2 spilling arm = **65 corrected + 3 fatal in ~16 min**;
+int8 non-spilling arm = **0 + 0 in 10 min** of heavier, *continuous* utilisation.
+
+**⚠ CONFOUND — this does NOT yet establish causation.** The **NVIDIA driver was updated during this
+session** (`595.71 / 32.0.15.9571` → **`596.72 / 32.0.15.9672`**), and PCIe link handling is driver
+territory. Worse for attribution, the timing is adjacent: the last 6 corrected errors occurred at
+**18:04 and 18:06** — plausibly the device reset from the driver installation itself — and **nothing
+at all** afterwards. So the zero-event window begins essentially *at* the driver change. **Two
+explanations remain live: (a) no spill ⇒ no escalation, or (b) the new driver fixed the link
+handling.** The observed data cannot separate them.
+
+**What closes it — the fp16 sustained control** (next, deliberately ordered before HER2): hold the
+**new driver constant**, restore **spill** by running sustained fp16, and see whether corrected
+errors return. Errors return ⇒ spill is the mechanism (a). Still clean ⇒ the driver was the fix (b).
+**Risk priced in:** sustained fp16 is *continuous* spill, a larger dose of the suspected trigger than
+the intermittent spill of the HER2 folds that preceded the three crashes — **this experiment is
+designed to reproduce the fault, so host loss is a likely outcome, not a surprise.** Mitigations:
+**5-minute window rather than 10** (halves exposure, should discriminate as well), and the harness
+writes per-fold JSON incrementally so a crash cannot destroy the record.
+
+**Precondition deviations recorded (verified, not asserted):** free VRAM at start was **7899 MiB**,
+not 8151 (8151 is *total*; 252 MiB reserved). GPU **compute** process list was empty (0 MiB) and
+only our python held the GPU during the run — but **`ollama` and `ollama app` were running as
+processes** throughout; they never claimed GPU memory, so they did not confound this arm.
+HVCI/VBS confirmed still enabled (`VirtualizationBasedSecurityStatus = 2`, services `2,3,4`).
 
 **Reliability floor (a design input, not a disqualifier).** The May 27 fatal happened in ordinary
 use with no ESMFold involved. So **even a perfectly-fitting configuration will occasionally take
@@ -537,6 +589,40 @@ proof; the 217 AER records are the solid evidence.
   of the bisection. It cannot: **no configuration ran clean**, and the 630 aa fold was never
   measured (3/3 host crashes). A cap derived from a spilling, crashing configuration would be
   fiction. **The cap stays unmeasured until a working configuration exists (S-002).**
+
+---
+
+##### STRUCTURAL AMENDMENT (2026-07-19): there are **TWO caps**, not one
+
+**The problem this fixes:** D-006 and S-001 used a single sequence-length cap, and treated
+**`chunk ≤16` as a FAIL** (*"severe chunking ⇒ ceiling below this length"*), alongside a
+**`time < 120 s`** criterion. Those encoded an **interactive-latency assumption** — a user waiting
+on a live fold cannot tolerate minutes, and heavy chunking means slow. **Cache-first (this section)
+makes that assumption irrelevant for Iteration 1.** An offline cache build does not care whether a
+fold takes four minutes; it runs unattended.
+
+**Decision — split the cap into two numbers with two different criteria:**
+
+| | **Interactive cap** | **Cache-build cap** |
+|---|---|---|
+| **Applies to** | live user-submitted folding (deferred to Iteration 1.5+) | offline pre-fold of the curated ADC target DB (**Iteration 1**) |
+| **Bounded by** | **latency** — the user is waiting | **memory fit + host stability** only |
+| **Criteria** | `chunk ≥ 32` **and** wall time `< 120 s` **and** no spill | **no spill** **and** host survives. Wall time is **not** a criterion. `chunk = 16` or `8` is **acceptable**. |
+| **Status** | unmeasured | unmeasured |
+
+**Consequence — read HER2 correctly when it is finally folded:** a HER2 ECD (630 aa) fold that
+completes at `chunk 16` in four minutes without spilling is a **PASS for the cache path**, and
+simultaneously a **FAIL for the interactive path**. Under the old single-cap criteria it would have
+been recorded as a plain failure. **This is logged before HER2 runs precisely so the result is not
+misread when it arrives.**
+
+**Why this changes the product, not just the diagnosis:** it means the curated target database can
+include **large ECDs that would never be viable interactively** — HER2 (630 aa) is the flagship ADC
+target, and cache-first is what makes it reachable. The two-cap split converts a latency constraint
+into a *scope* decision instead of an exclusion.
+
+**Scoping note for D-006/S-001 criteria:** their `chunk ∈ {64,32}` and `time < 120 s` conditions are
+hereby scoped to the **interactive** cap only. They were never valid criteria for the cache path.
 - **The binding condition on (A) still applies** (from the original stub): cache-first does not
   weaken the graded DL content **only if the folding pipeline is real, committed, reproducible
   code in this repo** that produces the cache — not a one-off script. That condition is now
@@ -742,6 +828,10 @@ below). **The local inference tier's viability is now itself unproven** pending 
   as fp16, better numerical headroom, quality unchanged at +0.2). Chunking / length caps / ECD
   scoping remain valid as *activation*-memory rungs **below** these. Ladder retained verbatim below
   for the record; rewrite pending S-002 Q1 confirmation under sustained load.
+  **⚠ ALSO RE-SCOPED (D-009 §3 two-cap amendment, 2026-07-19): this entry's `chunk ≥ 32` and
+  `time < 120 s` conditions are INTERACTIVE-path criteria only.** They encoded a latency assumption
+  that cache-first makes irrelevant. For the **offline cache build**, `chunk = 16` or `8` and a
+  multi-minute fold are **acceptable**; the only criteria there are *no spill* and *host survives*.
 - **Context:** The local inference GPU has **8 GB VRAM** (D-004). Full `esmfold_v1`
   (ESM-2 3B) wants ~16 GB+ for long sequences, so it will OOM on large proteins without a
   deliberate memory strategy. ADC targets are often large, but ADCs bind **cell-surface
