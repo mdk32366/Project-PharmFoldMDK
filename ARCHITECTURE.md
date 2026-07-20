@@ -184,10 +184,27 @@ explanation — but is **not established**: the original crash condition (**HER2
 reproduced, and a 6-minute clean window has weak power against a fault that historically appeared on
 8 days out of ~54. **Absence of errors is not evidence the fault is gone.**
 
-**The decisive untested condition is HER2 (630 aa) under the new driver.** Per the two-cap
-amendment, the sensible next run is **int8 + HER2** — simultaneously the product requirement and the
-lower-risk option (no spill), where a multi-minute fold at `chunk 16` counts as a **PASS** for the
-cache path.
+**HER2 WAS TESTED (S-004, 2026-07-19) — IT CRASHED THE HOST.** int8, `chunk 64`, **no spill at rest**
+(resident 5351 MiB vs 7043 free), bugcheck `0x00020001` at **19:02:28**, ~56 s into the first fold.
+**Fourth crash of the day; fourth on HER2.** Driver 596.72 and other GPU apps are eliminated — it
+reproduced with the new driver and an empty GPU process list.
+
+**Sequence length is the discriminator; duration is not.** The fp16 control had just run five
+individual folds of **73–74 s each without crashing**; S-004 died at **~56 s** — a *shorter* fold.
+Spill is eliminated independently, since int8 does not spill and crashed anyway.
+
+**The strongest, instrument-free evidence:**
+> **4 crashes in 4 HER2 (630 aa) attempts. 0 crashes in ~93 Trop-2 (248 aa) folds** — both
+> precisions, spilling and not, including 83 consecutive folds under sustained load.
+
+**⚠ WHEA corrected-error rate is NOT a valid leading indicator (F-001).** The fatal is logged in the
+same second as the corrected errors in all four crashes, and six burst days produced 65/40/31
+corrected errors with **zero** fatals. Judge stability by **crash count**, never by corrected-error
+rate.
+
+**Consequence:** the local tier **cannot fold HER2** — the flagship ADC target — on this machine.
+Trop-2-scale targets (≈250 aa) are reliable; 630 aa is not. Cache generation for large ECDs needs
+different compute. Still inside D-004 §5, still **not** retrieval.
 
 **Consequence:** cache generation *may* move to **different compute** (cloud GPU / Colab / cluster)
 to de-risk the schedule — a ≥16 GB GPU also makes the fp16 non-fit stop binding — but that is

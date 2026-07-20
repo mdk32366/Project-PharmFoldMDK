@@ -53,14 +53,98 @@ So the rule is not "be careful" — it is:
    *predicted* mechanism be cited later as a finding.
 4. **Record the provenance chain when a claim changes**, including the wrong intermediate versions.
    The reversal is itself evidence about how much the current version should be trusted.
+5. **Before using a metric as a *leading indicator*, verify its events actually PRECEDE the thing
+   it predicts.** (Added 2026-07-19 after **F-001**.) WHEA corrected-error rate was used for hours
+   as an early-warning signal for host crashes; per-second timestamps then showed the fatal is
+   logged *in the same second* as the corrected errors, and that six burst days with 65/40/31
+   corrected errors produced **zero** crashes. The metric was **anti-correlated** with its target.
+   A metric can be real, well-defined, correctly queried — and still measure the *aftermath* of the
+   event you meant to predict. **Check the time-ordering, not just the correlation.**
+6. **Prefer the instrument-free comparison when one exists.** The strongest result in this whole
+   investigation needs no event log at all: *4 crashes in 4 HER2 attempts, 0 in ~93 Trop-2 folds.*
+   When a raw outcome count is available, it outranks any derived telemetry.
 
 ---
 
 ## Log (newest first)
 
-### S-004 — PRE-REGISTERED: int8 + HER2 (630 aa), the untested crash condition
+### F-001 — INSTRUMENT CORRECTION: WHEA corrected-error rate was **inverted**, not merely invalid
 - **Date:** 2026-07-19
-- **Status:** **Pre-registered, NOT YET RUN.** Written before any number exists.
+- **Status:** Accepted. **This retroactively restates evidence in S-001, S-002 and S-003.**
+- **Type:** Finding about the *measuring instrument*, not about the system under test. Logged
+  separately because it invalidates reasoning across multiple prior entries.
+
+**The claim:** WHEA **Id 17 (corrected)** errors are **crash debris, not a precursor ramp.** Every
+comparison in this investigation that used corrected-error *rate* was measuring the wrong quantity.
+
+**Evidence 1 — corrected errors are logged *with* the fatal, never *before* it.** Per-second
+grouping of all WHEA events today:
+
+| Second | Events |
+|---|---|
+| 16:32:33 | **Id1 ×1** + Id17 ×13 *(same second)* |
+| 16:32:34 | Id17 ×18 |
+| 16:44:45 | **Id1 ×1** + Id17 ×31 *(same second)* |
+| 16:48:16 | **Id1 ×1** + Id17 ×3 *(same second)* |
+| 18:04:51 | Id17 ×3 *(no fatal)* |
+| 18:06:27 | Id17 ×3 *(no fatal)* |
+| 19:02:29 | **Id1 ×1** + Id17 ×3 *(same second)* |
+
+In **all four** crashes the fatal is logged **first or simultaneously** with the corrected errors.
+There is no gradual ramp preceding a fatal. The corrected errors are what the machine emits *as it
+dies*.
+
+**Evidence 2 — six burst days produced zero fatals.** Corrected-error volume does not predict crashes:
+
+| Date | corrected | fatal |
+|---|---|---|
+| 2026-05-27 | 3 | **1** ← crash on only 3 corrected |
+| 2026-06-09 | **65** | **0** ← 65 corrected, no crash at all |
+| 2026-06-13 | 3 | 0 |
+| 2026-06-15 | 3 | 0 |
+| 2026-07-04 | 3 | 0 |
+| 2026-07-10 | 31 | 0 |
+| 2026-07-14 | 40 | 0 |
+| 2026-07-19 | 74 | **4** |
+
+**65 corrected errors with no crash (06-09), versus a crash on only 3 (05-27).** The instrument is
+not just noisy — it is **anti-correlated with the thing we were using it to predict.**
+
+**RESTATEMENTS forced by this finding:**
+
+1. **S-002's rate comparison is void.** *"65 corrected in the crashing window vs 0 in clean runs"*
+   was **three crash events versus zero crash events, double-counted** — the corrected errors were
+   debris from those same three crashes. **The valid measure was always the fatal count: now 4 vs 0.**
+2. **The fp16 control's "zero corrected errors" is weaker than recorded.** It reduces to
+   **"no crash"** — which host survival had already established independently. **The refutation of
+   the spill mechanism still stands, but it stands on the fatal count, not the corrected count.**
+3. **"217 corrected errors since May, pre-existing" was true and largely irrelevant.** It does not
+   describe a steadily degrading link. It describes a fault that **fires in bursts and usually
+   recovers**. The 18:04/18:06 events previously attributed to the driver install **may equally have
+   been a spontaneous burst — that is now unknowable, and is recorded as unknowable.**
+4. **What survives with no instrument at all — and it is the strongest evidence in the
+   investigation:**
+   > **4 crashes in 4 HER2 (630 aa) attempts. 0 crashes in ~93 Trop-2 (248 aa) folds today** —
+   > across **both precisions**, **spilling and not**, including 83 consecutive folds under
+   > sustained load.
+
+   This correlation depends on no event log, no severity bucketing, and no interpretation of WHEA
+   semantics. Everything else in S-002 is weaker than this one line.
+
+- **Deep-learning justification:** neutral (instrumentation), but it protects every downstream
+  decision — the local tier's viability was being judged against a metric that was measuring
+  crash aftermath.
+- **Method note connection:** this is the same failure as `params_all_on_cuda` and the WHEA counts —
+  **a true summary that answered a different question than the one asked.** Extend the method note:
+  before using a metric as a *leading indicator*, verify its events actually **precede** the thing
+  it is meant to predict.
+
+### S-004 — int8 + HER2 (630 aa), the untested crash condition
+- **Date:** 2026-07-19
+- **Status:** **CLOSED 2026-07-19 — HOST CRASHED (4th bugcheck, `0x00020001`, 19:02:28).
+  Pre-registered READING 4 fired: escalation is not gradual and the corrected-error instrument is
+  invalid as a leading indicator.** Duration eliminated as the trigger; **sequence length** is the
+  discriminator. See RESULTS and **F-001** below.
 - **Type:** Spike. **This entry is a pre-registration** — the four readings below are fixed *now*
   so the result cannot be rationalised after the fact.
 
@@ -100,6 +184,55 @@ crashed the host three times. Host loss remains a plausible outcome.
 
 - **Deep-learning justification:** HER2 is the flagship ADC target; folding its 630 aa ECD is the
   headline capability of the curated cache. This run decides whether the local tier can produce it.
+
+---
+
+#### RESULTS (2026-07-19) — **CLOSED. The host crashed. Pre-registered READING 4 fired.**
+
+**Outcome: reading 4, not reading 3.** Reading 3 required errors to *"appear but stay corrected"* —
+i.e. **no fatal**. A fatal occurred, and the corrected errors arrived **in the same second as the
+fatal, not before it**. That is reading 4 verbatim: *"host crashes with no prior corrected errors →
+neither story is complete; escalation is not gradual."* **The reading that neither hypothesis
+anticipated is the one that fired** — which is precisely what pre-registering it was for.
+
+**Fourth crash of the day, same signature:**
+
+| # | Bugcheck | Code |
+|---|---|---|
+| 1 | 16:32:32 | `0x00020001` |
+| 2 | 16:44:44 | `0x00020001` |
+| 3 | 16:48:15 | `0x00020001` |
+| **4** | **19:02:28** | **`0x00020001`** |
+
+**What S-004 got before it died** (stdout survived; the results JSON was **corrupted to NUL bytes** —
+an unflushed mid-write file, itself a signature of abrupt power loss rather than clean exit):
+
+| | Value |
+|---|---|
+| Run start | 19:01:17 |
+| Config | **int8**, `resident 5351 MiB`, **`spills_at_rest = False`** |
+| Target | HER2 ECD `(23, 652)`, **630 aa** |
+| **Chunk size** | **64** — the *first* attempt; it never reached the descent to 32/16/8 |
+| **Peak VRAM** | **UNKNOWN — the record was destroyed by the crash.** No `OK` line was ever printed. |
+| **Time into the fold** | **≈56 s** (fold began ≈19:01:32 after load; bugcheck 19:02:28) |
+| PDB saved | none — no fold completed |
+
+**Driver 596.72 and LM Studio are ELIMINATED as explanations** — the crash reproduced with the new
+driver installed and with the GPU compute-process list verified empty at T0.
+
+**⭐ Duration is NOT the trigger — sequence length is.** This is the one open mechanism question, and
+the data now answers it:
+- The **fp16 Trop-2 control** ran **five individual folds of 73.4–74.1 s each** — and **did not crash**.
+- **S-004 crashed ≈56 s into a single fold** — *shorter* than folds the machine had just tolerated
+  five times in a row.
+
+**A shorter fold killed it while longer folds survived.** Single-fold duration up to ~74 s is
+tolerated, so duration is eliminated. What differs is **sequence length / activation geometry**
+(630 aa vs 248 aa). Spill is eliminated too: int8 does not spill at rest, and it crashed anyway.
+
+**Cache-path verdict:** **FAIL** — but *not* on the two-cap latency criterion. It never produced a
+structure at any chunk size, because the host died mid-fold. The two-cap amendment (which would have
+scored a slow `chunk 16` fold as a PASS) never got the chance to apply.
 
 ### S-003 — Spike: find a configuration of `esmfold_v1` that fits under 7799 MiB
 - **Date:** 2026-07-19
@@ -359,6 +492,12 @@ All **148 pre-today** corrected events are the *same component on the same devic
 **corrected PCIe link problem on this GPU genuinely predates PharmFoldMDK** (7 days spanning
 ~7 weeks). That much is solid.
 
+> ⚠ **Restated by F-001: true, but largely irrelevant.** This is **not** a steadily degrading link.
+> It is a fault that **fires in bursts and usually recovers** — six of those seven days produced
+> **zero** fatals (including 65 corrected on 06-09 with no crash). Corrected-error history says
+> almost nothing about crash risk. The **18:04 / 18:06** events attributed above to the driver
+> install **may equally have been a spontaneous burst — now unknowable, recorded as unknowable.**
+
 *Half that was REFUTED — the CRASH does not predate it:*
 
 All bugchecks in 90 days (only four):
@@ -452,6 +591,13 @@ result is indistinguishable from a broken query. A **control query over the same
 events** (71 corrected + 3 fatal), confirming the query works; the **last WHEA event of any kind was
 18:06:27, before the window opened.**
 
+> ⛔ **VOID — see F-001 (instrument correction).** The corrected-error comparison below measures
+> **crash debris, not precursors**: the fatal is logged in the *same second* as the corrected errors
+> in all four crashes, and six historical burst days produced 65/40/31 corrected errors with **zero**
+> fatals. *"65 corrected in the crashing window vs 0 in clean runs"* is **three crash events versus
+> zero, double-counted.* **The valid measure was always the fatal count: 4 vs 0.** Text retained
+> for provenance.
+
 **Rate contrast — phrased to what the data supports:** *the crashing window* (16:32–16:48) logged
 **65 corrected + 3 fatal**; the int8 non-spilling arm logged **0 + 0** across 10 min of heavier,
 *continuous* utilisation.
@@ -493,6 +639,11 @@ WHEA **18:44:41 → 18:52:12** strictly contains folds **18:45:31 → 18:51:39**
 **The prediction was:** restoring spill should restore the corrected errors. **It did not.**
 Continuous spill — a *larger* dose of the suspected trigger than the intermittent spill that
 preceded three host bugchecks — produced **zero events of any severity**.
+
+> ⚠ **Restated by F-001:** this arm's "zero corrected errors" reduces to **"no crash"**, which host
+> survival already established independently. **The refutation below still stands — but on the
+> fatal count, not the corrected count.** S-004 later strengthened it: HER2 crashed at int8 with
+> **no spill at rest**, eliminating spill again by a different route.
 
 **Therefore: the spill → PCIe-traffic → escalation mechanism is NOT SUPPORTED by this test.**
 It moves from *predicted* to **tested and undermined** — not to *confirmed*. The leading explanation
