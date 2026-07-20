@@ -187,10 +187,19 @@ to de-risk the schedule — a ≥16 GB GPU also makes the fp16 non-fit stop bind
 de-risking, **not** a verdict against the local tier. Inside the D-004 §5 boundary either way, and
 **not** a retreat to retrieval.
 
-Replacement rung one must be a **resident-footprint** reduction — quantized ESM-2 trunk,
-CPU-offloaded LM with the folding head resident, or a smaller backbone (a research project;
-`esmfold_v1` is the only released checkpoint). Per D-004 §5 this stays inside "smaller model /
-narrower targets" and explicitly **does not** mean retreating to AlphaFold retrieval.
+**Replacement rung one is now MEASURED (S-003, 2026-07-19): quantize the ESM-2 LM trunk to int8
+(`bitsandbytes`), folding head at full precision.** On the Trop-2 ECD (248 aa): resident
+**5351 MiB**, peak **5779 MiB** — comfortably under both the 7799 MiB target and the 7043 MiB
+actually free — **no spill**, and ~1.8× faster than fp16. Mean pLDDT 74.7 vs the 70.7 fp16 baseline
+(*pLDDT is self-confidence, not accuracy — the +4.0 shift means a different prediction, not a
+verified better one; a TM-score/RMSD comparison is the outstanding follow-up*). **bf16 is rung two**
+— same footprint as fp16 so it cannot fix the fit, but it costs nothing and holds quality (+0.2).
+CPU-offload is **excluded by design**: it trades VRAM for the PCIe traffic implicated in the link
+fault. Per D-004 §5 this stays inside "smaller model / narrower targets" and explicitly **does not**
+mean retreating to AlphaFold retrieval.
+
+**Still unconfirmed:** whether a non-spilling configuration stops the host crashes — that is
+S-002 Q1, now testable against a config that genuinely fits.
 
 > **Open decision (log in `docs/README.md`):** **prod** DB — SQLite-on-Volume prototype
 > (Database Plan §5) vs. Postgres-first. pgvector is central to the DL semantic-search
