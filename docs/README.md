@@ -84,9 +84,12 @@ ARCHITECTURE §1).
 
 #### Q1 ANSWERED (2026-07-19) — **hardware fault: the GPU's PCIe link.** Not a memory-pressure cascade.
 
-Answered from **WHEA-Logger** rather than the minidumps (which are unreadable without admin —
-no debugger installed either). WHEA names the failing component directly, so this is a better
-source than `!analyze -v` would have been.
+**Source discipline: the minidumps were NEVER READ.** `C:\Windows\Minidump` is inaccessible
+without an elevated shell (we are not admin) and no debugger (`cdb`/`kd`/WinDbg) is installed.
+Every finding below comes from **Windows event-log records** — WHEA-Logger (hardware errors) and
+BugCheck/Kernel-Power (crashes). WHEA names the failing component directly, so it answers "what
+faulted" better than `!analyze -v` would have; it does **not** by itself answer "since when",
+which is why the history below is checked separately.
 
 **What faulted — identified, not inferred:**
 - All corrected errors are **PCI Express Advanced Error Reporting (AER)**, component
@@ -102,22 +105,50 @@ source than `!analyze -v` would have been.
   a fatal hardware error surfaces as **HYPERVISOR_ERROR**: the hypervisor is the reporting layer,
   not the culprit.
 
-**Decisive context — the fault PREDATES this project:**
+**History — checked, and it splits in two. A first-pass claim that "the fault predates the
+project" was PARTLY REFUTED on inspection; both halves are recorded here.**
 
-| Date | WHEA events |
-|---|---|
-| 2026-05-27 | 4 |
-| 2026-06-09 | 65 |
-| 2026-06-13 | 3 |
-| 2026-06-15 | 3 |
-| 2026-07-04 | 3 |
-| 2026-07-10 | 31 |
-| 2026-07-14 | 40 |
-| **2026-07-19** | **68** |
+*Half that survives — the corrected link errors DO predate the project:*
 
-**217 WHEA events across 90 days on 8 separate days, starting 2026-05-27** — nearly two months
-before PharmFoldMDK existed. **Our load did not create this fault; it exercised it hard enough to
-escalate to fatal three times in 16 minutes.** VRAM spill is an aggravator, not the root cause.
+| Date | Id 17 (corrected) | Id 1 (fatal) |
+|---|---|---|
+| 2026-05-27 | 3 | 1 |
+| 2026-06-09 | 65 | – |
+| 2026-06-13 | 3 | – |
+| 2026-06-15 | 3 | – |
+| 2026-07-04 | 3 | – |
+| 2026-07-10 | 31 | – |
+| 2026-07-14 | 40 | – |
+| **2026-07-19** | **65** | **3** |
+
+All **148 pre-today** corrected events are the *same component on the same device*:
+`17 | PCI Express Legacy Endpoint | PCI\VEN_10DE&DEV_2D39&SUBSYS_234917AA&REV_A1`. So a
+**corrected PCIe link problem on this GPU genuinely predates PharmFoldMDK** (7 days spanning
+~7 weeks). That much is solid.
+
+*Half that was REFUTED — the CRASH does not predate it:*
+
+All bugchecks in 90 days (only four):
+
+| When | Bugcheck | Parameters |
+|---|---|---|
+| 2026-05-27 19:44 | **`0x00000133`** (DPC_WATCHDOG_VIOLATION) | `0x0, 0x500, 0x500, 0xfffff800c77c53c8` |
+| 2026-07-19 16:32 | `0x00020001` | `0x28, 0x1, 0x29b92701, 0xfc801000` |
+| 2026-07-19 16:44 | `0x00020001` | *(identical)* |
+| 2026-07-19 16:48 | `0x00020001` | *(identical)* |
+
+**The `0x00020001` signature has ZERO occurrences before today** — three today, all during
+ESMFold runs. The single earlier fatal (May 27) came with a *different* bugcheck and mechanism.
+
+**Synthesis (the defensible reading):** a **latent, pre-existing PCIe link weakness** on this GPU
+that **this workload reliably escalates to a fatal crash** — 3/3 attempts, a failure mode never
+observed before. Our load did not create the weakness; it is, however, the **trigger** for this
+crash mode, deterministically. Claiming "bad hardware, unrelated to us" would not survive the
+correlation: zero such crashes in seven weeks of corrected errors, then three in sixteen minutes
+under sustained ESMFold load.
+
+**Named unknowns (not glossed):** what workload produced the 06-09 / 07-10 / 07-14 error bursts is
+unknown; whether repair or replacement resolves it is unknown; the minidumps remain unread.
 
 **Suggestive but NOT conclusive:** at idle the link reports `pcie.link.gen.current=1` (max 5) and
 `width=8` (max 16). Consistent with AER-driven downtraining — **but confounded**, because NVIDIA
@@ -125,19 +156,23 @@ GPUs idle at low link speed for power management and some laptops are wired x8. 
 proof; the 217 AER records are the solid evidence.
 
 **Conclusions:**
-1. **Q1 is answered without running the sustained-load test** — and the answer is the branch that
-   invalidates Q2's urgency: **hardware/platform fault**, so the **local GPU inference tier is not
-   viable as designed**. A resident-footprint fix (quantization / CPU-offload) would reduce how
-   hard we hit the link but **cannot fix a faulting PCIe link**.
+1. **Q1 is answered without running the sustained-load test**, and the answer is *"latent fault,
+   workload-triggered"* — **not** *"bad hardware, unrelated."* That distinction is what matters
+   for D-004: "unrelated bad hardware" would mean the local tier is viable once repaired;
+   **"a latent fault this workload reliably triggers" means the local tier is not viable on this
+   machine as things stand, regardless of the memory fix.** A resident-footprint reduction
+   (quantization / CPU-offload) would lighten PCIe traffic and might reduce crash frequency, but
+   it **cannot repair a faulting link**, and we have no evidence it would drop the rate to zero.
 2. **This is a platform problem, not a code problem** — outside what the repo can solve. Owner
    actions: update NVIDIA driver (595.71 current) and BIOS/EC firmware, then pursue vendor
-   support/RMA — a machine this new logging fatal WHEA errors across two months is a warranty
-   matter.
-3. **Project consequence:** cache generation (D-009 §3 (A)) must either wait for a repaired
-   machine or **move to different compute** — cloud GPU, Colab, or a university cluster. Note this
-   stays **inside the D-004 §5 boundary** ("narrower targets / different compute"); it is still
-   **not** a retreat to AlphaFold retrieval, and D-003's graded DL claim is unaffected — ESMFold
-   still runs, just not on this laptop.
+   support — 148 corrected PCIe AER errors over seven weeks on a machine this new is a warranty
+   conversation. **Whether repair/replacement resolves it is UNKNOWN**; do not plan on it.
+3. **Project consequence:** cache generation (D-009 §3 (A)) should **move to different compute** —
+   cloud GPU, Colab, or a university cluster — rather than wait on a hardware outcome we cannot
+   predict or schedule. This stays **inside the D-004 §5 boundary** ("narrower targets / different
+   compute"); it is still **not** a retreat to AlphaFold retrieval, and D-003's graded DL claim is
+   unaffected: ESMFold still runs, just not on this laptop. A rented ≥16 GB GPU also makes the
+   S-001 fp16 non-fit stop binding, collapsing two problems into one purchase.
 4. **Q2 (resident-footprint fix) is deferred, not cancelled** — whatever compute hosts the cache
    build still needs a configuration that fits, and the fp16-does-not-fit finding (S-001) travels
    with us to any 8 GB-class device. On a ≥16 GB device it may simply not bind.
