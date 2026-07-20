@@ -202,9 +202,19 @@ same second as the corrected errors in all four crashes, and six burst days prod
 corrected errors with **zero** fatals. Judge stability by **crash count**, never by corrected-error
 rate.
 
-**Consequence:** the local tier **cannot fold HER2** — the flagship ADC target — on this machine.
-Trop-2-scale targets (≈250 aa) are reliable; 630 aa is not. Cache generation for large ECDs needs
-different compute. Still inside D-004 §5, still **not** retrieval.
+**Length ceiling bisected (S-005, 2026-07-19): it lies in (440, 630).** HER2 ECD truncated to
+**440 aa folded clean** — 28.6 s at `chunk 64`, peak **6665 MiB** (no spill), pLDDT 84.27,
+440/440 CA atoms, **zero WHEA events, zero bugchecks**.
+
+**Consequence — a far narrower constraint than S-004 alone implied.** The local tier **can** fold
+most of the curated ADC set: Trop-2 (~250 aa), Nectin-4 (~350 aa), and anything up to at least
+**440 aa**. **Only HER2-class targets (>440 aa) need external compute.** Still inside D-004 §5,
+still **not** retrieval.
+
+> *Inference, not measurement:* peak at 440 aa left only **378 MiB** of headroom against 7043 MiB
+> free, so 630 aa at `chunk 64` would plausibly have spilled mid-fold — meaning **HER2 might yet
+> fold at `chunk 16/32`**, which S-004 crashed before reaching. S-004's peak was lost with its
+> corrupted JSON, so this is untested.
 
 **Consequence:** cache generation *may* move to **different compute** (cloud GPU / Colab / cluster)
 to de-risk the schedule — a ≥16 GB GPU also makes the fp16 non-fit stop binding — but that is
