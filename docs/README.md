@@ -370,7 +370,25 @@ GPU load generally and the tier is done on this machine.
 #### Q1 RESULTS — non-spilling arm (2026-07-19) — **prediction held; attribution confounded**
 
 **Test:** int8 configuration (S-003), **Trop-2 ECD 248 aa only — deliberately NOT HER2**, folded
-repeatedly under continuous load. Window **T0 = 18:14:27 → 18:24:27**.
+repeatedly under continuous load.
+
+**Windows stated explicitly — containment, not assumed alignment:**
+
+| Window | Start | End | Source |
+|---|---|---|---|
+| **WHEA query window** | **18:14:27** (T0, recorded to file) | **18:33:30** (T1, query clock) | recorded |
+| **Fold window** | **≈18:17:05** | **≈18:27:05** (600.1 s) | **reconstructed** |
+
+The WHEA window **strictly contains** the fold window, with ~2.6 min of margin before and ~6.4 min
+after. Zero events across the *superset* therefore implies zero during folding — a stronger claim
+than aligning two windows, and it needs no alignment assumption.
+
+⚠ **Harness gap (fix before the fp16 control):** `s002_q1.py` recorded **only relative elapsed
+times** (`elapsed_s`, `time_s`) and **no absolute timestamps**. The fold window above is therefore
+*reconstructed* from file mtimes — the results JSON is rewritten after every fold, so its last write
+(18:27:04.86) marks the end of the final fold, minus `total_elapsed_s = 600.1 s` for the start.
+That reconstruction is sound but it is an inference, not a record. **The control harness must emit
+ISO-8601 start/end timestamps per fold** so the fold and WHEA windows are *shown* to correspond.
 
 | Measure | Value |
 |---|---|
@@ -387,8 +405,17 @@ result is indistinguishable from a broken query. A **control query over the same
 events** (71 corrected + 3 fatal), confirming the query works; the **last WHEA event of any kind was
 18:06:27, before the window opened.**
 
-**Rate contrast:** fp16/HER2 spilling arm = **65 corrected + 3 fatal in ~16 min**;
-int8 non-spilling arm = **0 + 0 in 10 min** of heavier, *continuous* utilisation.
+**Rate contrast — phrased to what the data supports:** *the crashing window* (16:32–16:48) logged
+**65 corrected + 3 fatal**; the int8 non-spilling arm logged **0 + 0** across 10 min of heavier,
+*continuous* utilisation.
+
+⚠ **Do not phrase the baseline as "the fp16 workload produced 65."** That 16-minute window contains
+**three hard reboots and their recovery**, and device re-enumeration at boot plausibly generates
+corrected AER events of its own. The per-minute clustering (31 @ 16:32, 31 @ 16:44, 3 @ 16:48) sits
+right on the crash timestamps and is equally consistent with errors *preceding* the crash (fold
+traffic escalating) or *following* it (reboot artifacts) — the log cannot separate those.
+**"The crashing window logged 65" is defensible; "the fp16 workload produced 65" is not.** The
+direction of the contrast is unaffected; its attribution is weaker than a raw reading suggests.
 
 **⚠ CONFOUND — this does NOT yet establish causation.** The **NVIDIA driver was updated during this
 session** (`595.71 / 32.0.15.9571` → **`596.72 / 32.0.15.9672`**), and PCIe link handling is driver
