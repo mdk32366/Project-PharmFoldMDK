@@ -45,14 +45,21 @@ ARCHITECTURE §1).
   under VRAM spill. Two questions are now open and they gate everything downstream.
 
 **Q1 — Is the local inference tier viable at all?** (the decisive one)
+> **REFRAMED after the Q1 results below.** This is no longer a generic "does it survive load"
+> test — it is a **specific falsifiable prediction with a mechanism**: *spill traffic across the
+> PCIe bus is what escalates this GPU's long-standing corrected link errors into fatal ones.*
+> Therefore **a configuration that fits within VRAM should crash far less, or not at all.**
+> Measure the fatal rate as a function of whether the workload spills — not merely whether one
+> run survives.
 - **The distinguishing test:** run a workload that fits *comfortably* in VRAM (well under
   7043 MiB free — e.g. a small model or a short sequence with the trunk sized to fit) under
-  **sustained** GPU load for several minutes, and see whether the host stays up.
-  - **Runs clean for several minutes → memory-pressure cascade.** The crash is a consequence of
-    spilling past physical VRAM; fixing the resident footprint (Q2) plausibly fixes stability.
-  - **Crashes anyway → hardware/driver problem.** Then the local GPU tier is not viable as
-    designed, D-004's topology needs rework (not just its mitigation stack), and cache
-    generation has to happen somewhere else entirely.
+  **sustained** GPU load for several minutes, and see whether the host stays up. Watch WHEA
+  Id-17 corrected-error *rate* as the leading indicator, not just the crash/no-crash outcome.
+  - **Runs clean, corrected-error rate stays low → spill-mediated escalation confirmed.** The
+    resident-footprint fix (Q2) becomes the remedy that keeps the local tier alive.
+  - **Crashes anyway, or corrected errors spike without spill → the link fails under GPU load
+    generally.** Then the local GPU tier is not viable as designed, D-004's topology needs rework
+    (not just its mitigation stack), and cache generation must happen elsewhere.
 - **Record:** wall-clock survived under load, peak VRAM, GPU clocks/temperature, and any new
   Event-Viewer bugcheck (ID 41 / 1001) with its code and parameters.
 - **Also worth doing:** read the existing minidumps (`071926-18656-01`, `071926-21093-01`,
@@ -140,15 +147,39 @@ All bugchecks in 90 days (only four):
 **The `0x00020001` signature has ZERO occurrences before today** — three today, all during
 ESMFold runs. The single earlier fatal (May 27) came with a *different* bugcheck and mechanism.
 
-**Synthesis (the defensible reading):** a **latent, pre-existing PCIe link weakness** on this GPU
-that **this workload reliably escalates to a fatal crash** — 3/3 attempts, a failure mode never
-observed before. Our load did not create the weakness; it is, however, the **trigger** for this
-crash mode, deterministically. Claiming "bad hardware, unrelated to us" would not survive the
-correlation: zero such crashes in seven weeks of corrected errors, then three in sixteen minutes
-under sustained ESMFold load.
+**The clean split (213 corrected / 4 fatal out of 217):**
+
+| | Corrected (Id 17) | Fatal (Id 1) |
+|---|---|---|
+| **Before today** | **148** across 7 days | **1** (May 27) |
+| **Today** | **65** | **3** |
+
+**Synthesis — three parts, all load-bearing:**
+
+1. **The link fault is pre-existing and independently evidenced.** Corrected AER errors on this
+   exact device occur on 7 days back to 2026-05-27 — including 65 on 06-09 and 40 on 07-14, days
+   with no ESMFold anywhere near this machine. **The May 27 fatal is the key corroboration: the
+   link can go fatal without ESMFold**, so the weakness is real and independent of us.
+2. **The workload is an accelerant, not the cause.** One fatal in eight weeks versus **three in
+   under twenty minutes** is a rate difference of roughly **four orders of magnitude**. Neither
+   "pre-existing hardware, unrelated to our workload" nor "our workload broke the machine" is
+   correct. This is the **latent-fault-triggered** hypothesis, confirmed.
+3. **The escalation is plausibly mediated by spill traffic — which is fixable.** This connects the
+   S-001 spill finding to the crash rather than competing with it: the fp16 model overruns VRAM
+   (resident 8116 MiB vs 7043 MiB free; peak 8545 MiB vs 8151 MiB physical — i.e. **~0.4 GB beyond
+   total physical, ~1.1–1.5 GB beyond what was actually free**), and WDDM services that overrun by
+   shuttling memory across the PCIe bus. **Sustained heavy PCIe traffic is precisely the stress
+   that turns corrected link errors into uncorrected ones.**
+
+**Testable prediction (this is now S-002 Q1, with a mechanism instead of a generic load test):**
+*a configuration that fits within VRAM should crash far less — or not at all — because it does not
+generate the spill traffic.* If that holds, the resident-footprint fix is not merely a performance
+optimization; it is the thing that keeps the local tier alive.
 
 **Named unknowns (not glossed):** what workload produced the 06-09 / 07-10 / 07-14 error bursts is
-unknown; whether repair or replacement resolves it is unknown; the minidumps remain unread.
+unknown; whether repair or replacement resolves it is unknown; whether a fitting configuration
+drops the fatal rate to zero (versus merely reducing it) is **exactly what Q1 must measure**; the
+minidumps remain unread.
 
 **Suggestive but NOT conclusive:** at idle the link reports `pcie.link.gen.current=1` (max 5) and
 `width=8` (max 16). Consistent with AER-driven downtraining — **but confounded**, because NVIDIA
@@ -156,23 +187,25 @@ GPUs idle at low link speed for power management and some laptops are wired x8. 
 proof; the 217 AER records are the solid evidence.
 
 **Conclusions:**
-1. **Q1 is answered without running the sustained-load test**, and the answer is *"latent fault,
-   workload-triggered"* — **not** *"bad hardware, unrelated."* That distinction is what matters
-   for D-004: "unrelated bad hardware" would mean the local tier is viable once repaired;
-   **"a latent fault this workload reliably triggers" means the local tier is not viable on this
-   machine as things stand, regardless of the memory fix.** A resident-footprint reduction
-   (quantization / CPU-offload) would lighten PCIe traffic and might reduce crash frequency, but
-   it **cannot repair a faulting link**, and we have no evidence it would drop the rate to zero.
-2. **This is a platform problem, not a code problem** — outside what the repo can solve. Owner
-   actions: update NVIDIA driver (595.71 current) and BIOS/EC firmware, then pursue vendor
-   support — 148 corrected PCIe AER errors over seven weeks on a machine this new is a warranty
-   conversation. **Whether repair/replacement resolves it is UNKNOWN**; do not plan on it.
-3. **Project consequence:** cache generation (D-009 §3 (A)) should **move to different compute** —
-   cloud GPU, Colab, or a university cluster — rather than wait on a hardware outcome we cannot
-   predict or schedule. This stays **inside the D-004 §5 boundary** ("narrower targets / different
-   compute"); it is still **not** a retreat to AlphaFold retrieval, and D-003's graded DL claim is
-   unaffected: ESMFold still runs, just not on this laptop. A rented ≥16 GB GPU also makes the
-   S-001 fp16 non-fit stop binding, collapsing two problems into one purchase.
+1. **The local tier is NOT killed outright — it is conditional.** The mechanism in §3 above is what
+   keeps it alive: if spill traffic mediates the escalation, then a configuration that fits in VRAM
+   may not trigger the fault at all. **A resident-footprint fix is therefore not just an
+   optimization — it is the candidate remedy**, and it must be measured before writing the tier
+   off. (An earlier draft of this entry concluded "not viable regardless of the memory fix"; that
+   inference was wrong — "a memory fix cannot repair a link" does not imply "a memory fix cannot
+   avoid triggering it.")
+2. **This is still also a platform problem.** Owner actions worth taking in parallel: update NVIDIA
+   driver (595.71 current) and BIOS/EC firmware, and open a vendor support conversation — 148
+   corrected PCIe AER errors over seven weeks plus a fatal on a machine this new is warranty
+   territory. **Whether repair/replacement resolves it is UNKNOWN**; do not plan the project around
+   that outcome either way.
+3. **Project consequence — de-risk without abandoning.** Cache generation (D-009 §3 (A)) can move
+   to **different compute** (cloud GPU / Colab / cluster) to remove the schedule dependency on
+   both the hardware outcome *and* the Q1 result; a rented ≥16 GB GPU additionally makes the S-001
+   fp16 non-fit stop binding, collapsing two problems into one. But this is **de-risking, not a
+   verdict on the local tier** — Q1 may well restore it. Either way this stays **inside the
+   D-004 §5 boundary** and is **not** a retreat to AlphaFold retrieval; D-003's graded DL claim is
+   unaffected, since ESMFold still runs.
 4. **Q2 (resident-footprint fix) is deferred, not cancelled** — whatever compute hosts the cache
    build still needs a configuration that fits, and the fp16-does-not-fit finding (S-001) travels
    with us to any 8 GB-class device. On a ≥16 GB device it may simply not bind.
