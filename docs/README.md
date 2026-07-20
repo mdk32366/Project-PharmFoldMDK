@@ -31,6 +31,29 @@ Every substantive decision must state its **deep-learning justification** — th
 deep learning course project and the neural core is the graded deliverable (see
 ARCHITECTURE §1).
 
+## Method note: state a check precisely enough that its inadequacy is discoverable
+
+Learned the hard way on 2026-07-19 (see S-001 and S-002, where two confidently-stated claims were
+caught and reversed):
+
+- **`params_all_on_cuda=True`** was a *true* summary that missed **spill** — every parameter really
+  was on CUDA, while the allocation silently exceeded physical VRAM.
+- **"217 WHEA events since May"** was a *true* summary that missed **severity** — 213 were
+  corrected, only 4 fatal, and the fatal signature had no history at all.
+
+Both errors came from **accepting a summary instead of returning to the raw records**, and both
+were caught only because the check had been stated specifically enough to be *shown* inadequate.
+So the rule is not "be careful" — it is:
+
+1. **Write the check as a concrete assertion with units and a threshold**, so a later reader can
+   test whether it actually covers the claim ("resident MiB vs *free* MiB", not "does it fit").
+2. **Bucket before you count.** A total is compatible with more hypotheses than a breakdown is;
+   prefer rates and severity splits to raw counts.
+3. **Label inference status explicitly** — *measured* / *predicted* / *assumed* — and never let a
+   *predicted* mechanism be cited later as a finding.
+4. **Record the provenance chain when a claim changes**, including the wrong intermediate versions.
+   The reversal is itself evidence about how much the current version should be trusted.
+
 ---
 
 ## Log (newest first)
@@ -160,26 +183,55 @@ ESMFold runs. The single earlier fatal (May 27) came with a *different* bugcheck
    exact device occur on 7 days back to 2026-05-27 — including 65 on 06-09 and 40 on 07-14, days
    with no ESMFold anywhere near this machine. **The May 27 fatal is the key corroboration: the
    link can go fatal without ESMFold**, so the weakness is real and independent of us.
-2. **The workload is an accelerant, not the cause.** One fatal in eight weeks versus **three in
-   under twenty minutes** is a rate difference of roughly **four orders of magnitude**. Neither
-   "pre-existing hardware, unrelated to our workload" nor "our workload broke the machine" is
-   correct. This is the **latent-fault-triggered** hypothesis, confirmed.
-3. **The escalation is plausibly mediated by spill traffic — which is fixable.** This connects the
-   S-001 spill finding to the crash rather than competing with it: the fp16 model overruns VRAM
-   (resident 8116 MiB vs 7043 MiB free; peak 8545 MiB vs 8151 MiB physical — i.e. **~0.4 GB beyond
-   total physical, ~1.1–1.5 GB beyond what was actually free**), and WDDM services that overrun by
-   shuttling memory across the PCIe bus. **Sustained heavy PCIe traffic is precisely the stress
-   that turns corrected link errors into uncorrected ones.**
+2. **The workload is an accelerant, not the cause. ⚠ THE RATE IS THE EVIDENCE — NOT THE RAW
+   COUNTS.** **One fatal in eight weeks of ordinary use versus three in under twenty minutes**
+   ≈ **four orders of magnitude**. Read the counts alone ("217 errors, going back to May →
+   pre-existing, unrelated to us") and you reach the wrong conclusion — *which is exactly what
+   happened in the first draft of this entry.* The counts are compatible with both hypotheses;
+   only the **rate under load**, bucketed by **severity**, separates them. Neither "pre-existing
+   hardware, unrelated to our workload" nor "our workload broke the machine" is correct: this is
+   the **latent-fault-triggered** reading.
+3. **Mechanism — ⚠ PREDICTED, NOT MEASURED (hypothesis, pending S-002 Q1).** The proposed chain is
+   *spill → sustained PCIe traffic → corrected errors escalate to uncorrected*: the fp16 model
+   overruns VRAM (resident 8116 MiB vs 7043 MiB free; peak 8545 MiB vs 8151 MiB physical — i.e.
+   **~0.4 GB beyond total physical, ~1.1–1.5 GB beyond what was actually free**), and WDDM services
+   that overrun by shuttling memory across the PCIe bus. This is **plausible and fits the data, but
+   it is not established** — it connects S-001 to the crash rather than competing with it, and
+   **S-002 Q1 is what confirms or refutes it.** Do not cite it as a finding until then; when
+   measured, update this clause from *predicted* to *measured*.
 
-**Testable prediction (this is now S-002 Q1, with a mechanism instead of a generic load test):**
+**Falsifiable prediction (this is now S-002 Q1, with a mechanism instead of a generic load test):**
 *a configuration that fits within VRAM should crash far less — or not at all — because it does not
-generate the spill traffic.* If that holds, the resident-footprint fix is not merely a performance
-optimization; it is the thing that keeps the local tier alive.
+generate the spill traffic.* If it holds, the resident-footprint fix is not merely a performance
+optimization; it is the thing that keeps the local tier alive. If it fails, the link fails under
+GPU load generally and the tier is done on this machine.
+
+**Reliability floor (a design input, not a disqualifier).** The May 27 fatal happened in ordinary
+use with no ESMFold involved. So **even a perfectly-fitting configuration will occasionally take
+this machine down** — the floor is roughly *one host loss per several weeks of normal use*, and it
+is now **measured rather than hypothetical**. This is precisely what D-009 §1's `jobs` table,
+`claimed_at` + `worker_id`, `attempts`, and **30-minute stale-claim reaping** were designed for:
+a worker that dies mid-job without warning. That design was written against an assumed unreliable
+worker; it now has a number behind the assumption. **No redesign needed — the assumption was
+right.**
 
 **Named unknowns (not glossed):** what workload produced the 06-09 / 07-10 / 07-14 error bursts is
 unknown; whether repair or replacement resolves it is unknown; whether a fitting configuration
 drops the fatal rate to zero (versus merely reducing it) is **exactly what Q1 must measure**; the
 minidumps remain unread.
+
+**Provenance of this claim — it reversed direction twice, and the intermediate versions were
+stated confidently and were wrong. A future reader should see the path, not just the destination:**
+
+| Version | Source claimed | Conclusion | Why it was wrong |
+|---|---|---|---|
+| v1 | "read the minidumps" | GPU PCIe fault | **The minidumps were never read** — no admin, no debugger. The source was the Windows event log. |
+| v2 | WHEA event **counts** (217 over 90 days) | "Pre-existing hardware, unrelated to our workload" | Counts were not bucketed by **severity**. 213 were *corrected*; only 4 were *fatal*. The fatal signature had zero prior occurrences. |
+| v3 (current) | WHEA events **bucketed by severity**, plus all 4 bugcheck codes/params | Latent fault + workload accelerant; mechanism predicted, not measured | — |
+
+**The failure mode both times was accepting a summary instead of returning to the raw data.**
+`params_all_on_cuda=True` was a true summary that missed spill; "217 WHEA events since May" was a
+true summary that missed severity. Each was caught only by re-deriving from the underlying records.
 
 **Suggestive but NOT conclusive:** at idle the link reports `pcie.link.gen.current=1` (max 5) and
 `width=8` (max 16). Consistent with AER-driven downtraining — **but confounded**, because NVIDIA
