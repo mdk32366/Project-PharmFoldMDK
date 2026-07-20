@@ -37,7 +37,8 @@ ARCHITECTURE §1).
 
 ### S-002 — Spike: host stability under sustained GPU load, and a resident-footprint fix
 - **Date:** 2026-07-19
-- **Status:** Open
+- **Status:** **Q1 ANSWERED 2026-07-19 — hardware fault (GPU PCIe link), pre-existing.** Q2
+  deferred pending a working machine or alternative compute. See results at the end of this entry.
 - **Type:** Spike (time-boxed investigation). Produces measurements and a decision input.
 - **Why it exists:** S-001 ended in **three identical host bugchecks** (`0x00020001`
   HYPERVISOR_ERROR, byte-identical parameters, 16:32 / 16:44 / 16:48) during a 630 aa fold run
@@ -78,6 +79,70 @@ ARCHITECTURE §1).
   choosing between quantization strategies for a host that cannot stay up under load.
 - **Deliverable:** results appended here; then the D-006 ladder is rewritten and the D-009 §3
   cap is set (or the topology is reopened).
+
+---
+
+#### Q1 ANSWERED (2026-07-19) — **hardware fault: the GPU's PCIe link.** Not a memory-pressure cascade.
+
+Answered from **WHEA-Logger** rather than the minidumps (which are unreadable without admin —
+no debugger installed either). WHEA names the failing component directly, so this is a better
+source than `!analyze -v` would have been.
+
+**What faulted — identified, not inferred:**
+- All corrected errors are **PCI Express Advanced Error Reporting (AER)**, component
+  *"PCI Express Legacy Endpoint"*, at bus:dev:fn `0x1:0x0:0x0`, device
+  **`PCI\VEN_10DE&DEV_2D39&SUBSYS_234917AA&REV_A1`** — confirmed via `Get-PnpDevice` to be the
+  **NVIDIA RTX PRO 2000 Blackwell Laptop GPU** (the inference GPU itself).
+- **65 corrected AER errors today**, in bursts: **31 @ 16:32, 31 @ 16:44, 3 @ 16:48**.
+- **3 × WHEA `Id 1` FATAL hardware errors** at **16:32:33, 16:44:45, 16:48:16** — one per
+  bugcheck, matching the three `0x00020001` crashes 1:1.
+- **No display-driver TDR** (no Event 4101 / `nvlddmkm` reset). So this is **not** a driver hang
+  under memory pressure — it is link-level hardware error escalation.
+- **VBS/HVCI is running** (`VirtualizationBasedSecurityStatus=2`, services `2,3,4`), which is why
+  a fatal hardware error surfaces as **HYPERVISOR_ERROR**: the hypervisor is the reporting layer,
+  not the culprit.
+
+**Decisive context — the fault PREDATES this project:**
+
+| Date | WHEA events |
+|---|---|
+| 2026-05-27 | 4 |
+| 2026-06-09 | 65 |
+| 2026-06-13 | 3 |
+| 2026-06-15 | 3 |
+| 2026-07-04 | 3 |
+| 2026-07-10 | 31 |
+| 2026-07-14 | 40 |
+| **2026-07-19** | **68** |
+
+**217 WHEA events across 90 days on 8 separate days, starting 2026-05-27** — nearly two months
+before PharmFoldMDK existed. **Our load did not create this fault; it exercised it hard enough to
+escalate to fatal three times in 16 minutes.** VRAM spill is an aggravator, not the root cause.
+
+**Suggestive but NOT conclusive:** at idle the link reports `pcie.link.gen.current=1` (max 5) and
+`width=8` (max 16). Consistent with AER-driven downtraining — **but confounded**, because NVIDIA
+GPUs idle at low link speed for power management and some laptops are wired x8. Not offered as
+proof; the 217 AER records are the solid evidence.
+
+**Conclusions:**
+1. **Q1 is answered without running the sustained-load test** — and the answer is the branch that
+   invalidates Q2's urgency: **hardware/platform fault**, so the **local GPU inference tier is not
+   viable as designed**. A resident-footprint fix (quantization / CPU-offload) would reduce how
+   hard we hit the link but **cannot fix a faulting PCIe link**.
+2. **This is a platform problem, not a code problem** — outside what the repo can solve. Owner
+   actions: update NVIDIA driver (595.71 current) and BIOS/EC firmware, then pursue vendor
+   support/RMA — a machine this new logging fatal WHEA errors across two months is a warranty
+   matter.
+3. **Project consequence:** cache generation (D-009 §3 (A)) must either wait for a repaired
+   machine or **move to different compute** — cloud GPU, Colab, or a university cluster. Note this
+   stays **inside the D-004 §5 boundary** ("narrower targets / different compute"); it is still
+   **not** a retreat to AlphaFold retrieval, and D-003's graded DL claim is unaffected — ESMFold
+   still runs, just not on this laptop.
+4. **Q2 (resident-footprint fix) is deferred, not cancelled** — whatever compute hosts the cache
+   build still needs a configuration that fits, and the fp16-does-not-fit finding (S-001) travels
+   with us to any 8 GB-class device. On a ≥16 GB device it may simply not bind.
+5. **Minidumps remain unread** (need an elevated shell). Now low value — WHEA already identified
+   the component. Only worth revisiting if the vendor asks for them.
 
 ### D-009 — Iteration 1 scope, job queue shape, and ECD boundary selection
 - **Date:** 2026-07-19

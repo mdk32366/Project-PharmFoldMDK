@@ -162,9 +162,18 @@ not fit `esmfold_v1` in 8 GB.** The D-006 ladder (fp16 → chunking → cap → 
 **invalid at rung one**: rungs 2+ reduce *activation* memory and cannot fix a *resident-weight*
 overrun. Weights are **9.58 GB on disk** (not ~2.5 GB). Warm-cache load is **15–16 s**.
 
-**The local GPU tier is currently UNPROVEN**, not merely unoptimized: three attempts at a 630 aa
-fold each ended in an identical host bugcheck (`0x00020001` HYPERVISOR_ERROR). Whether that is a
-memory-pressure cascade or a hardware/driver fault is **S-002**, which gates the tier.
+**The local GPU tier is BLOCKED ON HARDWARE (S-002 Q1, 2026-07-19).** Three 630 aa attempts each
+ended in an identical host bugcheck (`0x00020001`). WHEA-Logger identifies the cause: **PCIe
+Advanced Error Reporting faults on the inference GPU itself**
+(`PCI\VEN_10DE&DEV_2D39` = RTX PRO 2000 Blackwell) — 65 corrected errors today plus 3 fatal
+errors matching the 3 crashes 1:1, with **no** display-driver TDR. VBS/HVCI is running, which is
+why a fatal hardware error surfaces as HYPERVISOR_ERROR. **The fault predates this project**:
+217 WHEA events over 90 days starting 2026-05-27. VRAM spill aggravated it; it did not cause it.
+
+**Consequence:** a resident-footprint fix cannot repair a faulting PCIe link. Cache generation
+must await a repaired machine or move to **different compute** (cloud GPU / Colab / cluster) —
+which remains inside the D-004 §5 boundary and is **not** a retreat to retrieval. ESMFold still
+runs; just not on this laptop.
 
 Replacement rung one must be a **resident-footprint** reduction — quantized ESM-2 trunk,
 CPU-offloaded LM with the folding head resident, or a smaller backbone (a research project;
