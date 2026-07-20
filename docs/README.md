@@ -215,11 +215,13 @@ riskier.
 
 ### S-002 — Spike: host stability under sustained GPU load, and a resident-footprint fix
 - **Date:** 2026-07-19
-- **Status:** **Q1 component identified (GPU PCIe link, latent + workload-accelerated).
-  Non-spilling arm MEASURED 2026-07-19: 83 folds / 600 s sustained on the int8 config produced
-  0 corrected and 0 fatal WHEA events, host survived.** Prediction held, **but attribution is
-  confounded by a concurrent NVIDIA driver update** — the fp16 sustained control (same driver,
-  spill restored) is what closes it. Q2 superseded by S-003, which found the fitting config.
+- **Status:** **BOTH ARMS MEASURED 2026-07-19 — the spill mechanism is TESTED AND NOT SUPPORTED.**
+  Non-spilling int8 (600 s, 83 folds) and **spilling fp16 (368 s, 5 folds)** each produced
+  **0 corrected, 0 fatal, 0 bugchecks**. Restoring spill did not restore errors, so spill is not
+  sufficient to trigger the fault under driver 596.72 at 248 aa. The **driver update is the leading
+  explanation but is not established** — the original crash condition (HER2, 630 aa) was never
+  reproduced, and a 6-minute clean window has weak power against a fault that historically appeared
+  on 8 days out of ~54. Q2 superseded by S-003, which found the fitting config.
 - **Type:** Spike (time-boxed investigation). Produces measurements and a decision input.
 - **Why it exists:** S-001 ended in **three identical host bugchecks** (`0x00020001`
   HYPERVISOR_ERROR, byte-identical parameters, 16:32 / 16:44 / 16:48) during a 630 aa fold run
@@ -349,8 +351,10 @@ ESMFold runs. The single earlier fatal (May 27) came with a *different* bugcheck
    only the **rate under load**, bucketed by **severity**, separates them. Neither "pre-existing
    hardware, unrelated to our workload" nor "our workload broke the machine" is correct: this is
    the **latent-fault-triggered** reading.
-3. **Mechanism — ⚠ ONE ARM MEASURED 2026-07-19 (see Q1 RESULTS below); causal attribution still
-   CONFOUNDED.** The proposed chain is
+3. **Mechanism — ⛔ TESTED AND NOT SUPPORTED (2026-07-19; both arms measured, see Q1 CONTROL
+   RESULTS).** Restoring spill did **not** restore the errors, so this chain is *undermined*, not
+   confirmed; the driver update is now the leading explanation, though itself unestablished.
+   The proposed chain was
    *spill → sustained PCIe traffic → corrected errors escalate to uncorrected*: the fp16 model
    overruns VRAM (resident 8116 MiB vs 7043 MiB free; peak 8545 MiB vs 8151 MiB physical — i.e.
    **~0.4 GB beyond total physical, ~1.1–1.5 GB beyond what was actually free**), and WDDM services
@@ -425,7 +429,57 @@ at all** afterwards. So the zero-event window begins essentially *at* the driver
 explanations remain live: (a) no spill ⇒ no escalation, or (b) the new driver fixed the link
 handling.** The observed data cannot separate them.
 
-**What closes it — the fp16 sustained control** (next, deliberately ordered before HER2): hold the
+---
+
+#### Q1 CONTROL RESULTS (2026-07-19) — ⛔ **THE MECHANISM PREDICTION FAILED**
+
+**Test:** sustained **fp16** (the spilling configuration), **new driver 596.72 held constant**,
+Trop-2 ECD 248 aa, 5-minute window. Windows **recorded, not reconstructed** (harness gap fixed):
+WHEA **18:44:41 → 18:52:12** strictly contains folds **18:45:31 → 18:51:39**.
+
+| | int8 arm | **fp16 CONTROL arm** |
+|---|---|---|
+| Spilling | no — peak 5779 MiB | **yes — resident 8116 > 7043 free; peak 8544 > 8151 physical** |
+| Duration | 600 s, 83 folds | **368 s, 5 folds** |
+| Per-fold time | 7.2 s | **73–74 s** (10× penalty from thrashing) |
+| mean pLDDT | 74.68 | 70.69 (matches the 70.7 fp16 baseline) |
+| **WHEA corrected (Id 17)** | **0** | **0** |
+| **WHEA fatal (Id 1)** | **0** | **0** |
+| **Bugchecks** | **0** | **0** — host survived |
+
+**The prediction was:** restoring spill should restore the corrected errors. **It did not.**
+Continuous spill — a *larger* dose of the suspected trigger than the intermittent spill that
+preceded three host bugchecks — produced **zero events of any severity**.
+
+**Therefore: the spill → PCIe-traffic → escalation mechanism is NOT SUPPORTED by this test.**
+It moves from *predicted* to **tested and undermined** — not to *confirmed*. The leading explanation
+for the cessation is now the **NVIDIA driver update (595.71 → 596.72)**, which is driver-side PCIe
+link handling, exactly where such a fix would live.
+
+**⚠ But "the driver fixed it" is NOT established either. Two limits:**
+1. **The original crash condition was not reproduced.** All three bugchecks were on **HER2, 630 aa**.
+   Both arms today used **Trop-2, 248 aa**. Sequence length changed *alongside* the driver, so this
+   pair of runs cannot isolate the driver any more cleanly than it isolates spill.
+2. **Weak power against a bursty fault.** Corrected errors historically appeared on **8 days out of
+   ~54**, in clusters — most days logged zero. A 6-minute clean window is thin evidence of absence.
+   *Absence of errors here is not evidence the fault is gone.*
+
+**What this does and does not change:**
+- **The S-003 int8 result stands entirely on its own merits** — it fits (5779 MiB peak), it is
+  **10× faster** than fp16 under these conditions (7.2 s vs 73–74 s), and quality holds. None of
+  that depended on the crash hypothesis.
+- **The local tier looks better than feared** — ~16 minutes of combined sustained GPU load today
+  with zero errors and no host loss — but that is *encouraging*, not *cleared*.
+- **The decisive remaining test is HER2 (630 aa) under the new driver**, since that is the untested
+  condition and the one that actually crashed. Under the **two-cap amendment** (D-009 §3) the
+  sensible next run is **int8 + HER2**: it is simultaneously the *product* requirement (the flagship
+  ADC target for the cache) and the *lower-risk* option (no spill), and a multi-minute fold at
+  `chunk 16` would be a **PASS** for the cache path.
+
+**Superseded:** the paragraph below was written before the control ran and predicted that errors
+would return. Retained for provenance — it is the hypothesis this control tested and undermined.
+
+**What was expected to close it — the fp16 sustained control** (now run, result above): hold the
 **new driver constant**, restore **spill** by running sustained fp16, and see whether corrected
 errors return. Errors return ⇒ spill is the mechanism (a). Still clean ⇒ the driver was the fix (b).
 **Risk priced in:** sustained fp16 is *continuous* spill, a larger dose of the suspected trigger than
