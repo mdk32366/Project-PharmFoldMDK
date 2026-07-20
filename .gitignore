@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Editor-local settings (personal, not shared project config)
+.vscode/
