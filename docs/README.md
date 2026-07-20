@@ -58,6 +58,49 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### S-004 — PRE-REGISTERED: int8 + HER2 (630 aa), the untested crash condition
+- **Date:** 2026-07-19
+- **Status:** **Pre-registered, NOT YET RUN.** Written before any number exists.
+- **Type:** Spike. **This entry is a pre-registration** — the four readings below are fixed *now*
+  so the result cannot be rationalised after the fact.
+
+**Why this run:** every host bugcheck (3/3) occurred on **HER2, 630 aa**. Both S-002 Q1 arms used
+**Trop-2, 248 aa**, so **the actual crash condition has never been reproduced**, and sequence length
+changed alongside the driver update — neither the spill hypothesis nor the driver hypothesis is
+cleanly isolated. HER2 is also the **flagship ADC target** the curated cache needs, so this is the
+product requirement and the decisive experiment at once.
+
+**Configuration:** **int8** (S-003) — deliberately the *lower-risk* option, since it does not spill;
+`chunk_size` descending from 64 as needed; driver **596.72** held constant; WHEA counted against
+recorded ISO windows (harness already emits per-fold timestamps).
+
+**Read against the two-cap amendment (D-009 §3):** a fold completing at **`chunk 16` in four
+minutes is a PASS for the cache path**, and simultaneously a FAIL for the interactive path. Do not
+record a slow-but-successful fold as a failure.
+
+**THE FOUR READINGS — fixed in advance:**
+
+| # | Observation | Reading |
+|---|---|---|
+| **1** | Errors **escalate** (corrected → fatal), crash or not | **Spill/load mechanism supported**; driver hypothesis weakened |
+| **2** | **Zero errors** across the run | **Mechanism substantially weakened**; driver becomes the leading explanation |
+| **3** | Errors appear but **stay corrected** | Link *is* stressed by this workload, but **the new driver handles it** — both hypotheses partially right |
+| **4** | **Host crashes with no prior corrected errors** | **Neither story is complete — escalation is not gradual.** This would invalidate our use of corrected-error rate as a leading indicator |
+
+**Reading #4 is the one neither hypothesis anticipated.** Our entire model has assumed corrected
+errors are the early-warning signal that precedes a fatal. If a crash arrives with a clean WHEA log,
+that assumption is wrong and the monitoring approach in S-002 needs rebuilding, not just its
+conclusion.
+
+**Preconditions to record (verify, do not assert):** driver version, free VRAM, GPU compute-process
+list, HVCI state, WHEA Id-17/Id-1 counts immediately before, and ISO start/end per fold.
+**Everything committed and pushed before the run** — a host loss takes the session with it.
+**Risk:** lower than the fp16 control (no spill), but this is the exact sequence length that
+crashed the host three times. Host loss remains a plausible outcome.
+
+- **Deep-learning justification:** HER2 is the flagship ADC target; folding its 630 aa ECD is the
+  headline capability of the curated cache. This run decides whether the local tier can produce it.
+
 ### S-003 — Spike: find a configuration of `esmfold_v1` that fits under 7799 MiB
 - **Date:** 2026-07-19
 - **Status:** **CLOSED 2026-07-19 — PASS ON FIT** (int8 ESM-2 trunk quantization: peak 5779 MiB, no
