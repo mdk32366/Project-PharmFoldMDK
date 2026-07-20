@@ -60,7 +60,8 @@ So the rule is not "be careful" — it is:
 
 ### S-003 — Spike: find a configuration of `esmfold_v1` that fits under 7799 MiB
 - **Date:** 2026-07-19
-- **Status:** Open — **logged before the work**, per the log-leads-the-code rule (D-002).
+- **Status:** **CLOSED 2026-07-19 — PASS. int8 ESM-2 trunk quantization fits (peak 5779 MiB, no
+  spill) with pLDDT holding.** Logged before the work per D-002; results appended below.
 - **Type:** Spike (time-boxed measurement). Produces a candidate configuration, not shipped code.
 - **Question:** Is there a configuration of `facebook/esmfold_v1` whose **peak VRAM stays under
   7799 MiB** while **fold quality holds within a few points of the Trop-2 ECD baseline of
@@ -107,6 +108,71 @@ Each configuration runs in a **fresh process** so resident VRAM is measured clea
   the invalidated D-006 ladder (which must be a *resident-footprint* reduction).
 - **Deliverable:** results appended here; then D-006's ladder is rewritten with the measured rung
   one, and S-002 Q1 runs against the winning configuration.
+
+---
+
+#### RESULTS (2026-07-19) — **Status: CLOSED. A fitting configuration exists: int8 trunk quantization.**
+
+All runs: Trop-2 / TACSTD2 ECD (`P09758`, 27–274, **248 aa**), `chunk_size=64`, fresh process each,
+`physical=8151 MiB`, `free_at_start=7043 MiB`. Pass = peak < 7799 MiB **and** no spill **and**
+pLDDT within 5 pts of 70.7.
+
+| Config | resident | peak | fits <7799 | spilled | wall time | mean pLDDT | Δ vs 70.7 | verdict |
+|---|---|---|---|---|---|---|---|---|
+| fp16 (S-001 baseline) | 8116 MiB | 8545 MiB | ❌ | **yes** | 48.8 s | 70.7 | — | baseline |
+| **bf16** | **8116 MiB** | 8544 MiB | ❌ | **yes** | 45.4 s | **70.9** | **+0.2** | **FAIL (fit)** |
+| **int8 ESM-2 trunk** | **5351 MiB** | **5779 MiB** | ✅ | **no** | **26.6 s** | **74.7** | **+4.0** | **✅ PASS** |
+| 4-bit | — | — | — | — | — | — | — | **NOT RUN** (stop condition met) |
+
+**Winning configuration (reproducible recipe):**
+- `BitsAndBytesConfig(load_in_8bit=True, llm_int8_skip_modules=['trunk', 'distogram_head',
+  'ptm_head', 'lm_head', 'lddt_head', 'esm_s_mlp', 'esm_s_combine', 'af2_to_esm'])`,
+  `device_map={"": 0}` — i.e. **quantize the ESM-2 LM only; the folding head stays full precision.**
+- `bitsandbytes 0.49.2`, `torch 2.11.0+cu128`, `transformers 5.14.1`,
+  revision `75a3841ee059df2bf4d56688166c8fb459ddd97a`, `chunk_size=64`.
+- **Blackwell note:** bnb blockwise quantization verified working on **sm_120** before the run —
+  this was a genuine feasibility risk worth checking ahead of a long job.
+
+**Findings:**
+1. **bf16 behaved exactly as predicted** — resident identical to fp16 *to the megabyte* (8116 MiB),
+   because both are 2 bytes/param. It cannot fit by construction. **Keep it anyway** for numerical
+   headroom: quality was unchanged (+0.2) at no cost.
+2. **int8 is the fit remedy.** Resident drops **2765 MiB** (8116 → 5351) and peak lands
+   **5779 MiB — comfortably under both the 7799 MiB target and the 7043 MiB actually free.**
+   `spilled=False` for the first time in this project.
+3. **It is also ~1.8× faster** (26.6 s vs 45–49 s). This is *indirect support* for S-002's
+   spill-overhead mechanism — removing spill nearly halved wall time — but it is **not
+   confirmation**; confirmation still requires the sustained-load test (S-002 Q1).
+
+**⚠ Caveat on the +4.0 pLDDT — do not read this as "quantization improved quality."**
+- **pLDDT is the model's self-confidence, not accuracy.** A higher pLDDT means the model is more
+  confident, which is *not* the same as more correct. A +4.0 shift means the int8 run produced a
+  **different** prediction, not a demonstrably better one.
+- The shift is **unexplained**. A plausible (untested) reading is that the fp16 baseline was itself
+  mildly degraded — fp16's narrow exponent range can underflow in a 3B LM trunk — and that int8
+  with higher-precision compute sits closer to the fp32 result. That is a hypothesis, not a finding.
+- **What would actually settle it:** a structural comparison (TM-score / CA-RMSD) between the fp16,
+  bf16, and int8 predicted structures, and ideally against the experimental Trop-2 ECD structure.
+  **Not done here** — out of S-003's scope. Logged as a follow-up.
+- What the data *does* support: **quality did not degrade** by the agreed proxy, so the pass
+  criterion is met honestly.
+
+**Observation (weak, recorded as such):** the bf16 run spilled (peak 8544 > 8151 physical) for
+~45 s and produced **no new WHEA errors**. Weakly consistent with S-002's mechanism being about
+*sustained* traffic volume rather than spill per se — a 45-second fold may not accumulate enough.
+Suggestive only; the three crashes were all on the 630 aa fold, a far longer job.
+
+**Scope discipline:** stopped at the first passing configuration, as specified. **4-bit not run.
+HER2 (630 aa) not run. Sustained load not run** — that is S-002 Q1, deliberately separate and
+riskier.
+
+**Hands off to:**
+- **S-002 Q1** — run sustained load against the int8 configuration. The falsifiable prediction is
+  now testable with a config that genuinely does not spill.
+- **D-006** — replacement **rung one is measured**: *quantize the ESM-2 trunk to int8 (folding head
+  full precision)*, with bf16 retained for the unquantized parts.
+- **Follow-up:** structural comparison (TM-score/RMSD) across precisions to convert the pLDDT
+  proxy into a real quality claim.
 
 ### S-002 — Spike: host stability under sustained GPU load, and a resident-footprint fix
 - **Date:** 2026-07-19
@@ -627,12 +693,16 @@ below). **The local inference tier's viability is now itself unproven** pending 
 
 ### D-006 — ESMFold fold-path strategy for the 8 GB VRAM budget
 - **Date:** 2026-07-19
-- **Status:** ⚠ **INVALIDATED AT RUNG ONE (2026-07-19) by S-001** — see the amendment on D-004.
-  The ladder below assumes fp16 makes the model *fit at rest*; measurement shows it does not
+- **Status:** ⚠ **INVALIDATED AT RUNG ONE (2026-07-19) by S-001 — REPLACEMENT RUNG ONE NOW MEASURED
+  (S-003).** The ladder below assumes fp16 makes the model *fit at rest*; it does not
   (resident 8116 MiB vs 7043 MiB free). Rungs 2–6 reduce **activation** memory and cannot fix a
-  **resident-weight** overrun. Do not implement this ladder as written; the first rung must
-  become a resident-footprint reduction (quantization / CPU-offload / smaller backbone — S-002).
-  Retained verbatim below for the record.
+  **resident-weight** overrun. Do not implement this ladder as written.
+  **New rung one (measured, S-003): quantize the ESM-2 LM trunk to int8 via `bitsandbytes`, leaving
+  the folding head at full precision** → resident 5351 MiB, peak 5779 MiB, **no spill**, ~1.8×
+  faster, pLDDT 74.7 vs 70.7 baseline. **Rung two: bf16** for the unquantized parts (same footprint
+  as fp16, better numerical headroom, quality unchanged at +0.2). Chunking / length caps / ECD
+  scoping remain valid as *activation*-memory rungs **below** these. Ladder retained verbatim below
+  for the record; rewrite pending S-002 Q1 confirmation under sustained load.
 - **Context:** The local inference GPU has **8 GB VRAM** (D-004). Full `esmfold_v1`
   (ESM-2 3B) wants ~16 GB+ for long sequences, so it will OOM on large proteins without a
   deliberate memory strategy. ADC targets are often large, but ADCs bind **cell-surface
