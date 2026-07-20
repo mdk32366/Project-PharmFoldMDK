@@ -68,9 +68,12 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
-### S-005 — PRE-REGISTERED: bisect the length ceiling at 440 aa
+### S-005 — bisect the length ceiling at 440 aa
 - **Date:** 2026-07-19
-- **Status:** **Pre-registered, NOT YET RUN.** Written before any number exists.
+- **Status:** **CLOSED 2026-07-19 — 440 aa FOLDED CLEAN (reading 1).** 28.6 s at `chunk 64`,
+  peak 6665 MiB (no spill), pLDDT 84.27, 440/440 CA, zero WHEA events, zero bugchecks.
+  **⇒ the ceiling is in (440, 630).** Most of the curated ADC set is locally foldable; only
+  HER2-class targets (>440 aa) need external compute.
 - **Type:** Spike — a single bisection step. **One run, then stop.**
 
 **The bracket.** Length is the discriminator (S-004). The evidence, instrument-free:
@@ -109,6 +112,49 @@ have been misread as a near-miss or a partial failure. They are neither.
   database the local tier can fold, and therefore how much of the graded DL pipeline runs on
   owned hardware versus rented compute.
 - **Stop condition:** **one run.** Do not bisect further tonight regardless of outcome.
+
+---
+
+#### RESULTS (2026-07-19) — **CLOSED. Completed clean. READING 1 fired.**
+
+**HER2 ECD truncated to 440 aa folded successfully on the first attempt.** Host alive; last reboot
+remains 19:02:08 (the S-004 crash), i.e. **no new reboot**.
+
+| Measure | Value |
+|---|---|
+| Chunk | **64** — first attempt, no descent needed |
+| Wall time | **28.6 s** |
+| Peak VRAM | **6665 MiB**, `spilled = False` (free was 7043 MiB) |
+| mean pLDDT | **84.27** *(rescaled ×100 per the scale trap)* |
+| CA count | **440 / 440** — exact |
+| NaN/inf coords | **0** |
+| Radius of gyration | **24.64 Å** (compact-globular reference for N=440 ≈ 22.2 Å) |
+| **WHEA in window** | **0 corrected, 0 fatal** (window 19:22:23→19:24:50 contains folds 19:23:49→19:24:17) |
+| **Bugchecks** | **0** |
+
+Null verified against a same-day control (78 WHEA events today, last at 19:02:29 — the S-004 crash).
+This is **reading 1, not reading 3**: there were no corrected errors at all.
+
+**⇒ THE CEILING IS IN (440, 630).** The bracket is halved. Structure is sane (exact residue count,
+no NaN, Rg slightly above the compact-globular estimate as expected for a multi-domain elongated
+ECD), and pLDDT 84.27 is **notably higher** than Trop-2's 74.68.
+
+**Product consequence:** **most of the curated ADC target set is locally foldable.** Typical ADC
+target ECDs — Trop-2 ~250 aa, Nectin-4 ~350 aa, and now anything up to at least 440 aa — run on this
+machine. **Only HER2-class targets (>440 aa) need external compute.** That is a far narrower
+constraint than S-004 alone implied.
+
+**⚠ Observation, labelled as inference not measurement — a memory-adjacent reading of the 630 aa
+crash.** Peak at 440 aa was **6665 MiB against 7043 MiB free — only 378 MiB of headroom** at
+`chunk 64`. Activation memory grows steeply with length, so **630 aa at `chunk 64` would very
+plausibly have exceeded free VRAM and spilled during the fold**, even though it did *not* spill at
+rest (`resident 5351 MiB`). S-004's peak was **destroyed with the corrupted JSON**, so this cannot
+be confirmed. If it is right, **HER2 might still fold at `chunk 16/32`** — the descent existed but
+S-004 crashed at `chunk 64` before reaching it. **Not tested; one run was the budget.** This does
+not resurrect the spill mechanism generally (the fp16 control showed sustained spill at 248 aa
+causes no crash), but it is a live possibility specifically for the 630 aa case.
+
+**Next bisection step if resumed:** ~535 aa, same truncation method.
 
 ### F-001 — INSTRUMENT CORRECTION: WHEA corrected-error rate was **inverted**, not merely invalid
 - **Date:** 2026-07-19
