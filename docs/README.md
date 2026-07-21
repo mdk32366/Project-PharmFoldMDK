@@ -287,7 +287,26 @@ one, and no lock file addresses it.
 **Proof:** the gate must go green installing from the lock with `--require-hashes` before this
 merges. *Result recorded below on observation.*
 
-- **Observed:** *(pending — filled from the run, not predicted; see §6's lesson)*
+- **Observed.** Commit `f569a45`, run `29868958805`. `test` green in **15 s**, installing via
+  `python -m pip install --require-hashes -r requirements-dev.lock`, then `1 passed in 0.01s`.
+  **13 packages installed**, all hash-verified:
+
+  ```
+  alembic-1.18.5  greenlet-3.5.3  iniconfig-2.3.0  mako-1.3.12
+  markupsafe-3.0.3  packaging-26.2  pluggy-1.6.0  psycopg-3.3.4
+  psycopg-binary-3.3.4  pygments-2.20.0  pytest-9.1.1
+  sqlalchemy-2.0.51  typing-extensions-4.16.0
+  ```
+
+  Note the lock contains **15** entries but CI installed **13**: `colorama` and `tzdata` carry
+  `sys_platform == 'win32'` markers from the `--universal` resolution and are correctly skipped
+  on the Linux runner. That difference is expected and is the marker mechanism working — worth
+  recording so a future reader does not read it as the lock being partially applied.
+
+  **Not proven here:** that a *tampered* artifact is rejected. `--require-hashes` is asserted to
+  do that and is standard pip behaviour, but this run only demonstrates the happy path. A
+  negative arm would require serving a mismatched artifact, which is not worth building; the
+  load-bearing red arm for this gate was already taken in §6.
 
 ---
 
