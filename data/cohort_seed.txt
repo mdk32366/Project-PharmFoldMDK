@@ -18,9 +18,22 @@ P04626  B    # ERBB2  / HER2      -- expect ~630 aa, rental bucket
 P00533  B    # EGFR               -- expect ~620 aa, rental bucket
 P08581  B    # MET   / c-Met      -- expect ~930 aa, rental bucket
 Q5ZPR3  B    # CD276 / B7-H3      -- expect ~460 aa, UNTESTED band
-Q92729  B    # NECTIN4            -- expect ~350 aa, local
+Q96NY8  B    # NECTIN4            -- ECD 318 aa, local. CORRECTED: the seed's Q92729 was
+             #                       PTPRU (a phosphatase), not Nectin-4. Q96NY8 is Nectin-4
+             #                       (enfortumab vedotin's target), a real Group B positive.
 Q02223  B    # TNFRSF17 / BCMA    -- expect ~54 aa,  local
-P15328  B    # FOLR1 / FRa        -- expect ~230 aa, local
+P15328  B    # FOLR1 / FRa        -- GPI-ANCHORED: UniProt gives it NO topological-domain
+             #                       feature, so D-009 §2's method cannot slice it (reports as
+             #                       'no topology annotation', not an error). A real ADC target
+             #                       (mirvetuximab soravtansine) that needs a different ECD-
+             #                       boundary rule — flagged for the D-009 §2 follow-up.
 P09758  C    # TACSTD2 / Trop-2   -- EXCLUDED from the 82; already folded (248 aa)
 P21860  C    # ERBB3 / HER3       -- excluded from the 82
-Q9NY76  C    # CLDN18.2           -- excluded from the 82; VERIFY THIS ACCESSION
+P56856  C    # CLDN18.2           -- excluded from the 82. CORRECTED: the seed's Q9NY76 was
+             #                       MUC4 (Mucin-4, 5412 aa), not CLDN18 at all. CLDN18.2 is
+             #                       isoform P56856-2 (UniProt names it "A2"; gastric splice
+             #                       variant, zolbetuximab's target). Canonical P56856 is queried
+             #                       here because the isoform JSON carries NO topology features;
+             #                       both isoforms are ~261 aa 4-pass with tiny ECD loops (largest
+             #                       ~53 aa) -> local either way. Fold the -2 sequence, not
+             #                       canonical, when the actual 18.2 fold is done.
