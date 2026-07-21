@@ -185,11 +185,26 @@ green is witnessed. *Result: see §6.*
   rather than installing it best-effort and continuing, so a future bad pin fails loudly here
   instead of reaching deploy.
 
-- **GREEN — observed.** Commit `1b1b7fe`, run `29867383995`. Pin corrected to `2.0.51`;
-  install succeeded and the suite passed in **17 s** total. Resolved versions recorded below
-  so a later drift is diagnosable:
-  `SQLAlchemy 2.0.51`, `alembic 1.18.5`, `psycopg 3.3.4` (+ `psycopg-binary 3.3.4`),
-  `pytest 9.1.1`.
+- **GREEN — observed.** Commit `3bc3a8f`, run `29867598394`. Pin corrected to `2.0.51`;
+  install succeeded, `test` passed in **20 s**, pytest reported `1 passed in 0.01s`.
+
+  Full resolved set, transitives included, so a later drift is diagnosable rather than
+  mysterious — the pins name four packages, the environment actually contains thirteen:
+
+  ```
+  Mako-1.3.12  MarkupSafe-3.0.3  SQLAlchemy-2.0.51  alembic-1.18.5
+  greenlet-3.5.3  iniconfig-2.3.0  packaging-26.2  pluggy-1.6.0
+  psycopg-3.3.4  psycopg-binary-3.3.4  pygments-2.20.0  pytest-9.1.1
+  typing-extensions-4.16.0
+  ```
+
+  **The nine unpinned transitives are the residual exposure.** Exact pins on direct
+  dependencies do not freeze the environment; a breaking release of `greenlet` or `pluggy`
+  can still turn the gate red with no commit in this repo. Fully closing that needs a lock
+  file (`pip-compile` / `uv lock`) and is deliberately deferred — it is a real cost in
+  maintenance for a risk that has not yet bitten. Recorded here so the gap is known rather
+  than assumed away, and so that when an unexplained red does appear, this is the first place
+  to look.
 
 #### §7 — Deep-learning justification
 
