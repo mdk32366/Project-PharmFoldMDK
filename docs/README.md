@@ -169,11 +169,27 @@ green is witnessed. *Result: see §6.*
 
 #### §6 — Observed result
 
-- **RED:** commit `1bc60c2` — `test` failed in `Install dependencies`:
-  `ERROR: Could not find a version that satisfies the requirement SQLAlchemy==2.0.99999`.
-  pytest never ran. This is the load-bearing observation: it proves the gate resolves the
-  manifest, so a future bad pin fails loudly at the gate instead of at deploy.
-- **GREEN:** commit `07db00e` — install succeeded, suite passed, `test` green.
+- **RED — observed.** Commit `93dc215`, run `29867026923`. `test` failed in **8 s** at the
+  `Install dependencies` step:
+
+  ```
+  ERROR: Could not find a version that satisfies the requirement SQLAlchemy==2.0.99999
+  ERROR: No matching distribution found for SQLAlchemy==2.0.99999
+  ```
+
+  **pytest never ran** — verified by grepping the failed job's log for
+  `passed`/`failed`/`collected` and getting zero matches, rather than inferring it from the
+  step ordering. `deploy` reported `skipping`, confirming `needs: test` still holds.
+
+  This is the load-bearing observation. It proves the gate genuinely *resolves* the manifest
+  rather than installing it best-effort and continuing, so a future bad pin fails loudly here
+  instead of reaching deploy.
+
+- **GREEN — observed.** Commit `1b1b7fe`, run `29867383995`. Pin corrected to `2.0.51`;
+  install succeeded and the suite passed in **17 s** total. Resolved versions recorded below
+  so a later drift is diagnosable:
+  `SQLAlchemy 2.0.51`, `alembic 1.18.5`, `psycopg 3.3.4` (+ `psycopg-binary 3.3.4`),
+  `pytest 9.1.1`.
 
 #### §7 — Deep-learning justification
 

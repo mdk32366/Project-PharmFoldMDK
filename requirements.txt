@@ -9,7 +9,7 @@
 # manifest when `worker/` is built. CI runs on a CPU runner and must never try to
 # install a CUDA stack.
 
-SQLAlchemy==2.0.99999
+SQLAlchemy==2.0.51
 alembic==1.18.5
 
 # Postgres driver for prod (D-012). psycopg 3, not psycopg2 — actively developed
