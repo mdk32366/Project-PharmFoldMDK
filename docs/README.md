@@ -72,6 +72,99 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-014 — Production Postgres is the existing Fly MPG cluster, own database
+- **Date:** 2026-07-21
+- **Status:** Accepted
+- **Context:** D-012 committed the project to Postgres-first and named "the Fly Postgres
+  addon" as the host. Provisioning it revealed that phrase covers **two different products
+  with different capabilities and separate CLI surfaces**, and that the assumption behind
+  it was wrong in both directions — first about capability, then about cost.
+
+  **Measured on 2026-07-21. Every claim below is an observation, not documentation:**
+
+  1. **Unmanaged Fly Postgres cannot run pgvector at all.** On the existing unmanaged
+     cluster `jarvis-db2` (Postgres 17.7):
+     - `SELECT extname FROM pg_extension WHERE extname='vector'` → **0 rows**
+     - `SELECT name FROM pg_available_extensions WHERE name='vector'` → **0 rows**
+
+     The second query is decisive: pgvector is not merely disabled, it is **absent from the
+     image**. No `CREATE EXTENSION` can ever succeed. Enabling it there requires building a
+     custom image on `flyio/postgres-flex`, compiling pgvector, publishing to a registry,
+     recreating the cluster from a volume snapshot, and maintaining that image across every
+     version bump.
+
+  2. **An MPG cluster already exists and is already being paid for.**
+     `sentinel-holy-rain-4562` (`gjpkdonnmkeoyln4`) — Basic, Shared×2, 1 GB RAM,
+     **Postgres 16**, region **SJC**, pooling enabled, **10 GB provisioned / 2.5 GB used**,
+     created 28 days ago. Cost Explorer month-to-date: **$8.55 MPG Cluster + $0.62 MPG
+     Cluster Storage**, projecting to ~$38/month — which accounts for the account's jump
+     from a $38.11 last invoice to a $66.57 upcoming one.
+
+  3. **pgvector enables per-database on MPG, from the dashboard, with no app attached.**
+     Database `pharmfoldmdk` created on that cluster; `vector` **v0.8.2** toggled on and
+     reported as **enabled**, **installed in the `extensions` schema**.
+
+  **The cost premise of the original draft was wrong.** That draft rejected Fly on the
+  grounds that MPG meant a *new* $38/month plan and moved the database to Neon's free tier.
+  With the cluster already provisioned and billed, the marginal cost of hosting
+  PharmFoldMDK is **storage only** — pennies against 7.5 GB free — and the entire case for
+  a second vendor evaporates.
+
+- **Decision:** Production Postgres is the **existing MPG cluster
+  `sentinel-holy-rain-4562`**, with PharmFoldMDK in its **own database (`pharmfoldmdk`)**,
+  not sharing `fly-db`. pgvector v0.8.2 enabled on that database. Fly remains the serving
+  tier and the Volume host; ARCHITECTURE §5's "Fly Postgres addon with pgvector" is
+  **narrowed to MPG specifically** — the unmanaged product cannot satisfy it.
+
+  **Rejected alternatives:**
+
+  | Option | Rejected because |
+  |---|---|
+  | Share `jarvis-db2` | pgvector absent from the image (measured). Also no isolation — PharmFoldMDK migrations would run against the database JARVIS depends on daily. |
+  | New unmanaged Fly cluster | Custom pgvector image to build, publish, and maintain; DR is ours. Recurring work, zero graded output — to obtain what MPG provides as a toggle. |
+  | Neon free tier | Genuinely viable and was the recommendation until the sunk MPG cost surfaced. Costs private networking, adds a second vendor, adds free-tier schedule risk, and adds a 500 ms–2 s cold start — to save ~$0.28/month. |
+  | Supabase free tier | Free projects **pause after 7 days** without database activity and need **manual unpause** (~30 s resume). A worker polling intermittently plus an irregularly-opened demo makes a 7-day quiet stretch plausible. The standard mitigation is a keep-alive cron whose failure is silent — the class of thing D-008 exists to eliminate. |
+  | Share `fly-db` on the MPG cluster | No isolation, for no saving. MPG supports multiple databases per cluster and enables extensions **per-database**, so a separate database costs nothing and contains a bad migration. |
+
+- **Deep-learning justification:** Direct. pgvector is what makes `analysis_embeddings` —
+  learned embeddings powering semantic search — a real deliverable rather than a decorative
+  one (ARCHITECTURE §1). The measured finding is that the originally-named host **cannot
+  run pgvector at all**, so this entry is the difference between a named DL deliverable
+  being possible and being quietly dropped at Iteration 3.
+
+- **Consequences / follow-ups:**
+  - **⚠ pgvector is installed in the `extensions` schema, not `public`.** A migration
+    emitting `vector(384)` will fail with *type does not exist* unless `extensions` is on
+    the `search_path` or the type is schema-qualified. **This must be handled in the first
+    migration that creates a vector column**, and the chosen approach recorded here.
+  - **Postgres 16** (MPG's default; the cluster predates this project). Pin local dev and CI
+    to 16 so behavior matches; do not let tooling drift to 17.
+  - **Shared compute with `fly-db`.** Basic is Shared×2 / 1 GB RAM across all databases on
+    the cluster. Logical isolation is real (separate database, separate extension state, a
+    bad migration is contained) but **CPU and memory are not isolated** — a runaway query in
+    one database can starve the other, and a cluster-level incident takes both down. Load is
+    expected to be light (a polling worker, occasional queries), but this is a **named
+    coupling**, not an assumption of safety.
+  - **Region SJC**, consistent with existing apps. Since February 2026 inter-region private
+    network usage bills at Machine rates, so the serving tier should stay in SJC.
+  - **Connection string is not yet obtainable** — the Connect page wants an app attached,
+    and no PharmFoldMDK app exists. Not blocking: nothing connects until the first Alembic
+    run. Consequence for sequencing: **the Fly app is created before the database is
+    reachable**, inverting the usual order. Whether `flyctl mpg` can yield credentials
+    without an attachment is unverified.
+  - **Pooling is enabled.** Use the **direct** connection for Alembic (transaction-mode
+    poolers break DDL and session-level operations) and the pooled connection for the app at
+    runtime. Both strings recorded in secrets, never in the repo.
+  - **D-005's Postgres integration CI job** should run a Postgres **service container**, not
+    connect to this cluster — CI must not depend on an external service, live credentials,
+    or shared compute. Per D-012 this remains the only thing that will ever prove the
+    D-009 §1 `SKIP LOCKED` claim path.
+  - **Unrelated but surfaced:** `jarvis-db2` (unmanaged) and the MPG cluster now both exist
+    and both bill. Whether JARVIS should migrate is **out of scope here** and is not
+    decided by this entry.
+
+---
+
 ### D-012 — Prod DB is Postgres-first; the test-DB split and the job-queue seam it forces
 - **Date:** 2026-07-21
 - **Status:** Accepted. Authorizes PR A (`jobs` table, queue functions, migration).

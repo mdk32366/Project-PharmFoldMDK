@@ -175,10 +175,25 @@ green suite until a Postgres CI job exposed it.
 
 ### Fly serving-tier specifics
 
-- **Database:** Fly Postgres addon with pgvector (`CREATE EXTENSION vector;`).
+- **Database (D-014):** the existing **Fly MPG** cluster `sentinel-holy-rain-4562`, own database
+  `pharmfoldmdk`, **Postgres 16**, pgvector **v0.8.2** enabled per-database from the dashboard.
+  **Narrowed from "Fly Postgres addon" deliberately** — that phrase spans two products, and the
+  **unmanaged** one cannot run pgvector at all (measured: `pg_available_extensions` returns zero
+  rows for `vector`, i.e. absent from the image, not merely disabled). No `CREATE EXTENSION`
+  step is needed here; the extension is already on, **in the `extensions` schema** — see §4.
+- **Compute isolation — a named coupling, not a safety assumption (D-014):** the cluster is
+  Basic / Shared×2 / 1 GB RAM across *all* its databases, shared with JARVIS's `fly-db`.
+  Logical isolation is real (separate database, separate extension state, a bad migration is
+  contained); **CPU and memory are not**. A runaway query in one database can starve the other,
+  and a cluster-level incident takes both down.
+- **Connections (D-014):** Alembic on the **direct** string (transaction-mode poolers break DDL
+  and session-level operations), the app on the **pooled** string. Both in secrets, never in the
+  repo.
 - **Files:** Fly Volume at `/data`; DB holds paths only.
-- **Backups:** Fly Postgres automated backups + volume snapshots.
+- **Backups:** MPG managed backups + volume snapshots.
 - **Migrations:** Alembic versioned scripts, applied on deploy.
+- **Region:** SJC, matching the cluster and existing apps — since Feb 2026 inter-region private
+  networking bills at Machine rates, so the serving tier should not drift out of SJC.
 
 ### Deploy gate (D-005 → proven & hardened in D-008) — no untested code to prod
 
@@ -293,10 +308,11 @@ mean retreating to AlphaFold retrieval.
 **Still unconfirmed:** whether a non-spilling configuration stops the host crashes — that is
 S-002 Q1, now testable against a config that genuinely fits.
 
-> **Open decision (log in `docs/README.md`):** **prod** DB — SQLite-on-Volume prototype
-> (Database Plan §5) vs. Postgres-first. pgvector is central to the DL semantic-search
-> story, so Postgres-first is the current lean. *(The **test** DB is SQLite regardless —
-> D-005.)*
+> **Resolved — D-012 (engine) + D-014 (host).** Prod is **Postgres-first** from the first
+> migration; the SQLite-on-Volume prototype path is closed, not deferred. Host is the existing
+> **MPG** cluster with pgvector v0.8.2 (see §5). *(The **test** DB remains SQLite — D-005 — and
+> D-012 §3–§5 turns that split from a footnote into a named structural exposure: the
+> `SKIP LOCKED` claim path is a **syntax error** on SQLite and has never executed.)*
 
 ---
 
