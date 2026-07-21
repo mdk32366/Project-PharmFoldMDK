@@ -123,7 +123,20 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 **Relationships:** `users` 1:N `protein_analyses` 1:N (`mutations`, `reports`, `jobs`).
 **Migrations:** Alembic, versioned. Any schema change ships with a migration.
 
-**Engine — Postgres from the first migration (D-012).** The SQLite-on-Volume prototype path
+**Engine — Postgres from the first migration (D-012); host is the existing Fly **MPG** cluster
+`sentinel-holy-rain-4562`, database `pharmfoldmdk`, pgvector **v0.8.2** (D-014).** "Fly
+Postgres" is **not** precise enough: it spans two products, and the **unmanaged** one cannot run
+pgvector at all — measured, `pg_available_extensions` returns zero rows for `vector`, so the
+extension is absent from the image rather than merely disabled. Prod is **Postgres 16**; keep
+local dev and any Postgres CI container on 16.
+
+⚠️ **pgvector is installed in the `extensions` schema, not `public`** — a migration emitting a
+bare `vector(384)` fails with `type "vector" does not exist`. The first migration that creates a
+vector column must schema-qualify the type or set `search_path`, and record which (D-012 §5a,
+D-014). Alembic uses the **direct** connection (transaction-mode poolers break DDL); the app
+uses the pooled one.
+
+The SQLite-on-Volume prototype path
 is closed, not deferred: pgvector hosts the learned embeddings, and the queue-claim mechanism
 is Postgres-specific. **The test DB remains SQLite (D-005), so prod and test run different
 engines** — and `SELECT … FOR UPDATE SKIP LOCKED` is a **syntax error** on SQLite, not an

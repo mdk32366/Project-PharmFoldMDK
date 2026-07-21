@@ -92,8 +92,18 @@ is already load-bearing elsewhere in the log:
   embeddings land — and embeddings are part of the graded DL claim, not an optional extra.
 - **`SELECT … FOR UPDATE SKIP LOCKED`** is the claim mechanism D-009 §1 already ratified. It
   is Postgres-specific.
-- **Fly Postgres** is already the topology in D-004 §"serving tier". Choosing SQLite now would
-  contradict a ratified decision to save work that has not started.
+- **A managed Postgres host is already the topology** in D-004 §"serving tier". Choosing SQLite
+  now would contradict a ratified decision to save work that has not started.
+
+> **Host: see D-014, and do not reuse the phrase this entry originally used.** An earlier draft
+> of this section named *"the Fly Postgres addon"* as the host. **That phrase covers two
+> different Fly products with different capabilities and separate CLI surfaces, and only one of
+> them can run pgvector at all** — measured, not documentation: on the unmanaged cluster
+> `jarvis-db2`, `pg_available_extensions` returns **zero rows** for `vector`, so pgvector is
+> absent from the image entirely and no `CREATE EXTENSION` could ever succeed. The host is
+> resolved in **D-014**: the existing **MPG** cluster `sentinel-holy-rain-4562`, database
+> `pharmfoldmdk`, pgvector **v0.8.2** enabled. This entry defers to D-014 for the host and does
+> not restate it.
 
 What makes this entry worth writing is not the choice. It is **what the choice forces**, in
 §3–§5.
@@ -195,7 +205,36 @@ That job is **not** built in PR A. Until it exists, the honest statement of cove
 
 It remains an open question with a named owner-decision pending, not a solved problem. When it
 is built, the JARVIS precedent in §2 is the template: a throwaway Postgres service in the gate,
-migrations applied, the real implementation exercised.
+migrations applied, the real implementation exercised. **D-014 adds a constraint on how:** that
+job must use a **service container**, not a connection to the production MPG cluster — CI must
+not depend on an external service, live credentials, or compute shared with JARVIS.
+
+#### §5a — Constraint inherited from D-014: pgvector lives in `extensions`, not `public`
+
+Recorded here because it lands on **PR A's migration work**, not at Iteration 3 when the vector
+column is finally written.
+
+pgvector v0.8.2 on the `pharmfoldmdk` database is installed in the **`extensions` schema**. A
+migration emitting a bare `vector(384)` therefore fails with **`type "vector" does not exist`**
+— the type is real and enabled, just not on the default `search_path`.
+
+Three ways to handle it, and the choice is deliberately **not** made here:
+
+| Approach | Trade-off |
+|---|---|
+| Schema-qualify the type (`extensions.vector(384)`) | Explicit and local; every vector column must remember it |
+| Set `search_path` in the Alembic env / connection | One place; invisible at the call site, and a future connection that forgets it fails confusingly |
+| `ALTER DATABASE … SET search_path` | Outside the migration chain — the exact class of environment state that is not reproducible from the repo |
+
+**PR A does not create a vector column**, so it does not have to resolve this. It is written
+down now so the first migration that *does* is designed rather than debugged, and so the
+approach is chosen with the trade-off visible. **D-014 requires the chosen approach to be
+recorded back into that entry.**
+
+**Postgres version:** D-014 pins prod to **Postgres 16** (the MPG cluster's version, which
+predates this project). Local dev and any future Postgres CI service container should match —
+do not let tooling drift to 17, or the suite starts proving things about an engine prod does
+not run.
 
 #### §6 — Deep-learning justification
 
@@ -217,10 +256,18 @@ to reintroduce it.
 - Alembic migrations target Postgres. The SQLite suite does **not** run the migration chain —
   the exact JARVIS H2 shape from §2. Mitigation is the §5 integration job; until it exists,
   this is a known, named exposure and not an oversight.
-- `psycopg[binary]` is already pinned and installing in CI (D-013), so PR A adds no new
-  dependency risk to the gate.
+- `psycopg[binary]` is already pinned and hash-locked into CI (D-013 + Amendment A), so PR A
+  adds no new dependency risk to the gate.
 - The `sqlite_conn` fixture from D-007 stays for tests that genuinely only need a scratch
   database. It is not the queue's test path.
+- **Alembic connects on the DIRECT string, not the pooled one** (D-014): transaction-mode
+  poolers break DDL and session-level operations. The app uses the pooled string at runtime.
+  Both live in secrets, never in the repo.
+- **The host is D-014's, and this entry's host claim was wrong before it was corrected.** The
+  original draft named "the Fly Postgres addon" — a phrase spanning two products, only one of
+  which can run pgvector. Left as a marker: a plausible name for a dependency is not the same
+  as a verified capability of it, and the difference was only found by querying the actual
+  cluster.
 
 ---
 
