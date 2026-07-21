@@ -72,6 +72,205 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-012 — Prod DB is Postgres-first; the test-DB split and the job-queue seam it forces
+- **Date:** 2026-07-21
+- **Status:** Accepted. Authorizes PR A (`jobs` table, queue functions, migration).
+- **Resolves:** the open question *"Prod DB choice: Postgres-first vs. SQLite-on-Volume
+  prototype (Database Plan §5)."*
+- **Depends on:** D-013 (the gate can now install SQLAlchemy/Alembic/psycopg).
+
+#### §1 — Decision
+
+**Postgres is the production database, from the first migration.** The SQLite-on-Volume
+prototype path from Database Plan §5 is closed, not deferred.
+
+There is no serious counter-case, and the entry is short on this point because the reasoning
+is already load-bearing elsewhere in the log:
+
+- **pgvector** is required for the semantic-search embeddings (Database Plan; D-004's serving
+  tier). SQLite has no equivalent, so the prototype path ends in a rewrite the moment
+  embeddings land — and embeddings are part of the graded DL claim, not an optional extra.
+- **`SELECT … FOR UPDATE SKIP LOCKED`** is the claim mechanism D-009 §1 already ratified. It
+  is Postgres-specific.
+- **A managed Postgres host is already the topology** in D-004 §"serving tier". Choosing SQLite
+  now would contradict a ratified decision to save work that has not started.
+
+> **Host: see D-014, and do not reuse the phrase this entry originally used.** An earlier draft
+> of this section named *"the Fly Postgres addon"* as the host. **That phrase covers two
+> different Fly products with different capabilities and separate CLI surfaces, and only one of
+> them can run pgvector at all** — measured, not documentation: on the unmanaged cluster
+> `jarvis-db2`, `pg_available_extensions` returns **zero rows** for `vector`, so pgvector is
+> absent from the image entirely and no `CREATE EXTENSION` could ever succeed. The host is
+> resolved in **D-014**: the existing **MPG** cluster `sentinel-holy-rain-4562`, database
+> `pharmfoldmdk`, pgvector **v0.8.2** enabled. This entry defers to D-014 for the host and does
+> not restate it.
+
+What makes this entry worth writing is not the choice. It is **what the choice forces**, in
+§3–§5.
+
+#### §2 — The test database stays SQLite (D-005), and that is now a real split
+
+D-005 fixed the test DB as SQLite: fast, deterministic, no external service, no container in
+CI. That still holds. But with §1 settled, prod and test are now **different engines**, and
+the gap between them is no longer theoretical.
+
+**Named precedent — JARVIS, same class of failure, observed twice.** In the JARVIS project the
+pytest suite built its schema with SQLite `create_all` and never ran the Alembic chain, so
+migration-bootstrap bugs were structurally invisible to the tests: a green suite proved
+nothing about whether a fresh database could actually be built. That was audit finding H2,
+and it was fixed by adding a CI job that runs `alembic upgrade head` against a throwaway
+Postgres. The gate earned its keep the same day it was cited here — an unguarded column rename
+passed the full local suite and failed immediately against fresh Postgres.
+
+The lesson transfers exactly: **a green SQLite suite is not evidence about Postgres.** D-005
+already flagged this; §3–§5 make it structural rather than a note.
+
+#### §3 — CORRECTION: `FOR UPDATE SKIP LOCKED` is a **syntax error** on SQLite, not an
+untested path
+
+The session pre-work stated that today's suite "proves the claim function's behavior, not its
+concurrency." That is **true and misleading**, in precisely the way this log's *Method note*
+warns about — an accurate summary that conceals the failure mode. It reads as though the
+statement runs on SQLite and merely fails to exercise contention. It does not run at all.
+
+**Measured, not assumed** (stdlib `sqlite3`, library version **3.45.1**):
+
+```
+SELECT id FROM jobs WHERE status='pending' ORDER BY created_at LIMIT 1 FOR UPDATE SKIP LOCKED
+  -> OperationalError: near "FOR": syntax error
+```
+
+Narrowing it, because "SKIP LOCKED is unsupported" would itself have been an imprecise claim:
+
+| Fragment | SQLite 3.45.1 |
+|---|---|
+| `FOR UPDATE` | `OperationalError: near "UPDATE": syntax error` |
+| `FOR UPDATE SKIP LOCKED` | `OperationalError: near "UPDATE": syntax error` |
+
+**`FOR UPDATE` itself is rejected**, not just the `SKIP LOCKED` modifier. SQLite has no
+row-level locking to express, so there is no clause to degrade gracefully.
+
+**Why the distinction changes the design.** "Unverified concurrency" invites one function with
+a dialect branch, tested on the SQLite arm and assumed on the Postgres arm. "Syntax error"
+makes that impossible to do honestly: the Postgres arm cannot execute in the suite *at all*,
+so any structure that presents the two arms as one tested function is a coverage claim the
+tests do not support. Recorded as a correction rather than silently designed around, per the
+Method note's provenance rule.
+
+#### §4 — The claim-function seam: a repository interface
+
+**Decision.** The queue is reached through a narrow interface, not a function with an engine
+branch inside it:
+
+```
+core/queue.py
+    class JobQueue(Protocol):          # claim / complete / fail / reap_stale
+    class PostgresJobQueue:            # the real one — SELECT … FOR UPDATE SKIP LOCKED
+                                       # NEVER executed by the SQLite suite
+tests/doubles.py
+    class UnlockedFakeJobQueue:        # in-memory. Name says what it is not.
+```
+
+**The argument for the seam is coverage honesty, not scale.** Worth stating plainly because
+the obvious objection is right on its own terms: at D-004's single-worker scale the
+indirection buys **nothing operationally**. One worker cannot contend with itself, and if that
+were the whole argument, the seam would be premature abstraction and should be skipped.
+
+The actual argument is about what the test report claims. A dialect branch inside one function
+appears in coverage as *one function, exercised*, with a small variation — when the Postgres
+arm has never run a single time. Not under-tested: never executed. A separate implementation
+class makes that visible in the shape of the code, and a double named `UnlockedFakeJobQueue`
+(rather than `InMemoryJobQueue` or `TestJobQueue`) makes it visible at every call site. The
+name is doing real work: it is the difference between a reader concluding "the queue is
+tested" and "the queue's *callers* are tested against a fake that does no locking."
+
+**Consequence, stated so it cannot be mistaken later:** the suite will prove the claim
+function's *callers* handle claim/complete/fail/stale-reap correctly. It will prove **nothing
+whatsoever** about `FOR UPDATE SKIP LOCKED` — not its syntax, not its semantics, not its
+behaviour under contention. The seam does not test the queue. It stops the tests from
+*claiming* to.
+
+#### §5 — The seam is an honesty mechanism, not coverage
+
+Explicit because it is the easy mistake to make next session: **§4 closes no gap.** It makes an
+existing gap legible. The only thing that will actually exercise `PostgresJobQueue` is a
+**Postgres integration job in CI** — a service container running the real engine, the item
+already sitting in this log's open questions as *"Postgres integration test job for
+pgvector/Postgres-specific paths (D-005 gap)."*
+
+That job is **not** built in PR A. Until it exists, the honest statement of coverage is:
+
+> The claim path has never executed. Its callers are tested against a fake that does no
+> locking, and the fake is named to say so.
+
+It remains an open question with a named owner-decision pending, not a solved problem. When it
+is built, the JARVIS precedent in §2 is the template: a throwaway Postgres service in the gate,
+migrations applied, the real implementation exercised. **D-014 adds a constraint on how:** that
+job must use a **service container**, not a connection to the production MPG cluster — CI must
+not depend on an external service, live credentials, or compute shared with JARVIS.
+
+#### §5a — Constraint inherited from D-014: pgvector lives in `extensions`, not `public`
+
+Recorded here because it lands on **PR A's migration work**, not at Iteration 3 when the vector
+column is finally written.
+
+pgvector v0.8.2 on the `pharmfoldmdk` database is installed in the **`extensions` schema**. A
+migration emitting a bare `vector(384)` therefore fails with **`type "vector" does not exist`**
+— the type is real and enabled, just not on the default `search_path`.
+
+Three ways to handle it, and the choice is deliberately **not** made here:
+
+| Approach | Trade-off |
+|---|---|
+| Schema-qualify the type (`extensions.vector(384)`) | Explicit and local; every vector column must remember it |
+| Set `search_path` in the Alembic env / connection | One place; invisible at the call site, and a future connection that forgets it fails confusingly |
+| `ALTER DATABASE … SET search_path` | Outside the migration chain — the exact class of environment state that is not reproducible from the repo |
+
+**PR A does not create a vector column**, so it does not have to resolve this. It is written
+down now so the first migration that *does* is designed rather than debugged, and so the
+approach is chosen with the trade-off visible. **D-014 requires the chosen approach to be
+recorded back into that entry.**
+
+**Postgres version:** D-014 pins prod to **Postgres 16** (the MPG cluster's version, which
+predates this project). Local dev and any future Postgres CI service container should match —
+do not let tooling drift to 17, or the suite starts proving things about an engine prod does
+not run.
+
+#### §6 — Deep-learning justification
+
+Inherited from D-009 §1 and still load-bearing: the queue is the mechanism that lets neural
+inference run on hardware that can actually hold the model. D-011 split compute across a local
+tier (≤440 aa) and rented GPU (>440 aa); **both** pull work through this queue, so a queue that
+loses or double-claims jobs corrupts the cache that Iteration 1's entire demo is served from.
+
+The Postgres choice specifically carries the DL work in a second way: **pgvector is where the
+learned embeddings live.** Semantic search over ADC targets is a place a neural model does
+primary work rather than decorating a database lookup, and SQLite cannot host it. Choosing
+SQLite for prod would have meant either dropping that capability or rewriting the storage layer
+to reintroduce it.
+
+#### §7 — Consequences
+
+- `db/` is created in PR A, and `ARCHITECTURE.md` §8 repo layout is updated in that same PR
+  (governance rule 2).
+- Alembic migrations target Postgres. The SQLite suite does **not** run the migration chain —
+  the exact JARVIS H2 shape from §2. Mitigation is the §5 integration job; until it exists,
+  this is a known, named exposure and not an oversight.
+- `psycopg[binary]` is already pinned and hash-locked into CI (D-013 + Amendment A), so PR A
+  adds no new dependency risk to the gate.
+- The `sqlite_conn` fixture from D-007 stays for tests that genuinely only need a scratch
+  database. It is not the queue's test path.
+- **Alembic connects on the DIRECT string, not the pooled one** (D-014): transaction-mode
+  poolers break DDL and session-level operations. The app uses the pooled string at runtime.
+  Both live in secrets, never in the repo.
+- **The host is D-014's, and this entry's host claim was wrong before it was corrected.** The
+  original draft named "the Fly Postgres addon" — a phrase spanning two products, only one of
+  which can run pgvector. Left as a marker: a plausible name for a dependency is not the same
+  as a verified capability of it, and the difference was only found by querying the actual
+  cluster.
+
+---
+
 ### D-013 — Pinned dependency manifest + gate install step
 - **Date:** 2026-07-21
 - **Status:** Accepted — proven, not asserted (see §5).
@@ -1710,7 +1909,14 @@ These are known forks in the road. Each becomes a `D-NNN` entry **before** we ac
   **resolved in D-006** (fp16 + `chunk_size` + extracellular-domain fold + 400-residue live
   cap + OOM degradation + offline pre-compute). Caps still need empirical validation.
 - **Worker ↔ app contract:** job schema, claim/lease semantics, artifact upload, auth token.
-- **Prod DB choice:** Postgres-first vs. SQLite-on-Volume prototype (Database Plan §5).
-  *(Note: this is the **prod** DB; the **test** DB is SQLite per D-005 regardless.)*
+- ~~**Prod DB choice**~~ — **resolved in D-012: Postgres-first**, from the first migration;
+  the SQLite-on-Volume prototype path is closed, not deferred. The **test** DB remains SQLite
+  per D-005, which D-012 §3–§5 turns from a footnote into a named, structural exposure.
 - **Embedding model** for semantic search (which encoder, `vector(384)` assumed).
 - **Postgres integration test job** for pgvector/Postgres-specific paths (D-005 gap).
+  **Sharpened by D-012 §5 and now the single largest coverage hole in the project:** the
+  queue-claim path (`SELECT … FOR UPDATE SKIP LOCKED`) *cannot* execute on SQLite — it is a
+  syntax error, not an unsupported feature — so it has never run and will not run until this
+  job exists. D-012's repository seam makes that legible; it does not fix it. Template is the
+  JARVIS precedent: a throwaway Postgres service container in the gate, migrations applied,
+  the real implementation exercised.
