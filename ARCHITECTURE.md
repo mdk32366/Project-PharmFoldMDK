@@ -165,14 +165,24 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 - **No `paths-ignore` (D-008):** since `test` is a *required* check, it must report on every
   PR or a doc-only PR hangs unmergeable; the ~20s suite therefore runs on everything. When
   real deploy is wired, guard the **deploy job** (not the trigger) against doc-only changes.
-- **Pinned dependency manifest (D-013):** the gate installs `requirements-dev.txt`, which
-  includes `requirements.txt`, so a broken **runtime** pin fails at the gate rather than at
-  deploy. All pins are exact (`==`) — a range lets the gate's behaviour change with no commit
-  in this repo. **Install and test are now independently breakable:** when the check goes red,
-  read which step failed. Pip caching is deliberately **off** (D-013 §3) — it buys ~10–20 s and
-  adds an intermittent failure mode to a check with no admin bypass. The CUDA stack
+- **Locked dependency graph (D-013 + Amendment A):** the gate installs
+  **`requirements-dev.lock`** with **`--require-hashes`**. The `.txt` manifests are the
+  human-edited inputs (what we want); the `.lock` files are what those resolved to — every
+  transitive pinned and hashed, compiled by `uv pip compile --generate-hashes --universal
+  --python-version 3.11`. **uv is a local authoring tool and is not installed in CI**; the lock
+  is plain hashed-requirements format, so the gate uses stock pip.
+  **Why the lock and not just exact pins:** four direct pins resolved to *thirteen* installed
+  packages, so pinning the manifest left nine transitives floating — a breaking upstream release
+  could redden the gate with no commit in this repo. The requirement is that a red gate is
+  always attributable to a commit here, and only the lock delivers that. It is the
+  environment-level counterpart of the pinned model revision recorded per-fold in
+  `inference_settings` (D-004), and §7's reproducibility commitment needs both.
+  **Install and test are independently breakable:** when the check goes red, read which step
+  failed. Pip caching is deliberately **off** (D-013 §3). The CUDA stack
   (`torch`/`transformers`/`bitsandbytes`) is **never** installed in CI; it belongs to the GPU
   tier and gets its own manifest with `worker/`.
+  *Residual:* the lock fixes versions and hashes, not index availability — a PyPI outage still
+  reddens the gate and is not attributable to a commit.
 
 ### ⚠ VRAM constraint (8 GB) — fold path is UNRESOLVED (D-006 invalidated by S-001)
 
@@ -304,8 +314,10 @@ Project-PharmFoldMDK/
 ├── tests/                   # functional (pytest) + user-based; SQLite test DB (D-005)
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
 ├── .github/workflows/       # CI: test gate → Fly deploy (D-005)
-├── requirements.txt         # runtime deps, exact pins (D-013)
-├── requirements-dev.txt     # runtime + test deps; this is what the gate installs (D-013)
+├── requirements.txt         # runtime deps — human-edited input, exact pins (D-013)
+├── requirements-dev.txt     # runtime + test deps — human-edited input (D-013)
+├── requirements.lock        # compiled: every transitive pinned + hashed (Amendment A)
+├── requirements-dev.lock    # compiled; THIS is what the gate installs, --require-hashes
 └── Dockerfile               # serving tier image (Fly)
 ```
 

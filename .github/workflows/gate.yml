@@ -23,15 +23,22 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      # D-013: install the PINNED manifest, not a floating `pytest`. requirements-dev.txt
-      # pulls in requirements.txt, so a broken RUNTIME pin fails here rather than
-      # surviving to deploy (D-005). Caching is deliberately OFF — see D-013 §3.
+      # D-013 (+ Amendment A): install the LOCK FILE, not the manifest. The lock pins
+      # every transitive too, and --require-hashes makes pip refuse anything whose
+      # artifact doesn't match — so the installed environment is a function of a
+      # committed file. A red gate is therefore always attributable to a commit in
+      # this repo, never to an upstream release.
+      #
+      # requirements-dev.lock is compiled FROM requirements-dev.txt, which includes
+      # requirements.txt, so a broken RUNTIME pin still fails here rather than
+      # surviving to deploy (D-005). Caching is deliberately OFF — D-013 §3.
+      #
       # If this step fails, read IT and not the pytest output: install and test are
-      # now independently breakable.
+      # independently breakable.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-dev.txt
+          python -m pip install --require-hashes -r requirements-dev.lock
       - run: python -m pytest -q
 
   deploy:

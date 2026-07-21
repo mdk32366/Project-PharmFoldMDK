@@ -227,6 +227,70 @@ including the ones that carry the model.
 
 ---
 
+#### AMENDMENT A (2026-07-21) — exact pins did not close the gap; a lock file does
+
+**Recorded as an amendment rather than an edit to §1**, because the reasoning that led to
+deferring was correct on the information available at the time, and overwriting it would
+destroy the evidence of *why* the gap was missed. §1 stands as written.
+
+**What §1 claimed and what was actually true.** §1 identified "version drift (unpinned dep
+ships a breaking release) → every PR red, with no repo change to explain it" as a failure mode
+the exact pins would close. **That claim is true of the four direct dependencies and false of
+the environment.** The green run resolved them to **thirteen** installed packages; nine were
+unpinned transitives (`greenlet`, `pluggy`, `Mako`, `MarkupSafe`, `packaging`, `iniconfig`,
+`pygments`, `typing-extensions`, `psycopg-binary`). A breaking release in any of them still
+reddened the gate with no commit in this repo — precisely the failure mode §1 named as
+addressed.
+
+This is the same error shape the *Method note* describes and the same one that produced the
+fabricated SHAs in §6 the same afternoon: **a true statement about the part that was checked,
+read as a statement about the whole.** "Direct dependencies are pinned" was accurate. "The
+environment is pinned" was not, and only the second one is what §1 needed.
+
+**Decision — lock the full graph.**
+
+- `requirements.lock` and `requirements-dev.lock`, compiled with **`uv pip compile
+  --generate-hashes --universal --python-version 3.11`** (uv 0.11.30). Every transitive is
+  pinned and hashed; `--universal` resolves across platforms so the same lock serves Linux CI
+  and a Windows dev machine.
+- **The gate installs the lock with `--require-hashes`**, so pip refuses any artifact whose
+  hash does not match. The installed environment is now a function of a committed file, which
+  is the actual requirement: *a red gate is attributable to a commit in this repo.*
+- The `.txt` manifests remain the **human-edited inputs** — they say what we want; the locks
+  say what that resolved to. Changing a dependency means editing the `.txt`, recompiling, and
+  committing both.
+
+**Why now rather than later, and it is not maintenance appetite.** Two reasons:
+
+1. **Cost curve.** `app/`, `core/`, and `worker/` are about to land, and the worker's tree is
+   the heavy one — PyTorch, transformers, bitsandbytes. Locking four direct dependencies is
+   cheap; locking after that arrives is not.
+2. **It is the same discipline this project already applies to model weights.**
+   `ARCHITECTURE.md` §7 commits to reproducibility as a *graded* expectation, and D-004
+   records per-fold `inference_settings` including the model revision so a result can be
+   reproduced. An environment with nine floating packages undermines that claim for exactly
+   the reason a floating model revision would. **A lock file is the environment-level version
+   of a pinned checkpoint.** That argument outweighs the maintenance cost in a way that
+   general engineering hygiene, on its own, would not have.
+
+**Tool choice.** `uv` over `pip-compile`: faster resolution, and it handles the two-manifest
+split cleanly (`requirements-dev.txt` includes `requirements.txt`, and the compiled dev lock
+correctly attributes each entry). **uv is a local authoring tool only — it is NOT installed in
+CI.** The lock is plain hashed requirements format, so the gate uses stock pip and gains no new
+dependency. That keeps the required check's toolchain as small as possible.
+
+**Residual exposure, stated so it is not assumed away in turn:** the lock fixes *versions and
+artifact hashes*, not the index's availability. A PyPI outage still reddens the gate and is not
+attributable to a commit here. That is a network-availability problem, not a reproducibility
+one, and no lock file addresses it.
+
+**Proof:** the gate must go green installing from the lock with `--require-hashes` before this
+merges. *Result recorded below on observation.*
+
+- **Observed:** *(pending — filled from the run, not predicted; see §6's lesson)*
+
+---
+
 ### D-011 — Split compute: local tier under the ceiling, rented GPU for large-ECD cache generation
 - **Date:** 2026-07-19
 - **Status:** Accepted
