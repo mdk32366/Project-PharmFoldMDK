@@ -1508,6 +1508,95 @@ proof; the 217 AER records are the solid evidence.
 
 ---
 
+##### AMENDMENTS (2026-07-21) — settled while implementing §1 in PR A
+
+The original §1 shape left three things underspecified. They surfaced when the queue
+semantics were written as tests (log-leads-code checkpoint), and are settled here **before**
+the implementing code. Each is expressed in code as an assertion of the chosen behaviour, so
+a later change to any of them turns a test red rather than passing silently.
+
+**Amendment 1 — retry budget is 3, then terminal `failed` with a distinguishable reason.**
+§1 called `attempts` a "retry budget" but never stated the budget, so a job whose worker keeps
+vanishing would be reaped and re-dispatched without limit. The cap is **3 attempts**
+(`MAX_ATTEMPTS = 3`), derived from measured host behaviour, not a round number:
+
+- The host reliability floor is roughly **one fatal bugcheck per several weeks** of ordinary
+  use (S-002/F-001), independent of this project. A job must survive one host loss and still
+  complete — one retry does that, two is comfortable margin.
+- A **630 aa fold is 4-for-4 fatal** (S-004): a deterministic host-crasher. Every dispatch of
+  such a job costs a host crash, so the cap must be low enough that a bad job cannot take the
+  machine down repeatedly. Three attempts = the original dispatch plus **at most two
+  retry-induced crashes** before the job stops asking.
+
+  The two failure classes pull in opposite directions (survive transient loss vs. don't feed a
+  deterministic crasher); 3 is the smallest cap that serves the first without over-serving the
+  second.
+- **The reaped-out terminal state must be distinguishable from an explicit failure.** Same
+  `failed` status, but the `error` carries a machine-greppable marker (`[reaped-out] …`)
+  stating the budget was exhausted with no error ever reported. A job that died three times
+  without a worker ever reporting why is a different diagnostic situation, at 3 a.m., from one
+  that reported a real exception — the record has to tell them apart.
+
+  Mechanics: on each reap, `attempts` increments; if it reaches `MAX_ATTEMPTS` the job goes
+  terminal `[reaped-out]` instead of returning to `pending`. So a persistently-vanishing job is
+  dispatched at most 3 times.
+
+**Amendment 2 — an explicit `fail` is terminal and does not touch `attempts`, and the
+asymmetry with reaping is principled, not incidental.** An explicit fail means the worker
+**caught its own error and survived to report it** — and a caught error is usually
+deterministic (bad sequence, malformed input, OOM on an oversized target), so retrying
+reproduces it. A stale reap means the worker **vanished** — usually environmental (sleep,
+network, host bugcheck), where retrying is exactly right because absence is uninformative.
+Therefore reaping retries and explicit failure does not: *reaping retries because absence tells
+you nothing; explicit failure doesn't because the worker already told you what's wrong.* If
+explicit failures were retried, an above-ceiling sequence would trigger three host crashes
+instead of one.
+
+  Consequence for the record, not just for retry semantics: `attempts` is **preserved, never
+  zeroed**, on an explicit fail. A job reaped twice and then failing explicitly must read
+  `attempts = 2` — that history is part of the diagnosis.
+
+**Amendment 3 — FIFO is contract, stated, not inferred from an index.** §1 gave
+`jobs(status, created_at)` as an index "for the claim query." An index makes an ordering cheap;
+it does not guarantee one — a claim query with no explicit `ORDER BY` returns whatever the plan
+yields, and that can change silently under a plan change. The claim query therefore **must
+carry an explicit `ORDER BY created_at`** (with `id` as a deterministic tiebreak), and
+oldest-pending-first is now a promised behaviour of `claim`, not a hopeful consequence of
+index choice.
+
+**Amendment 4 — the `analysis_id` FK is deferred, and what closes the gap is stated in
+enforceable terms.** §1 specifies `analysis_id INTEGER FK → protein_analyses(id)`, but
+`protein_analyses` does not exist and PR A is scoped to the queue. It is **not** created here.
+The reason is not only PR size: a `protein_analyses` built now, in a queue PR, would be shaped
+*for the FK's convenience* rather than from Database Plan v2's column-level decisions — and once
+a table exists in an applied migration its shape is inertial, so the result would be a real FK
+pointing at a wrong-for-the-wrong-reason table, then a later migration spent correcting it. A
+named gap in a small PR is cheaper than a wrong table in the chain. The single-writer point also
+holds: nothing enqueues jobs yet, so no code path can currently orphan an `analysis_id`.
+
+So in PR A `jobs.analysis_id` is a **plain indexed integer with no FK constraint**.
+
+- **Closure condition, in enforceable terms:** the migration that creates `protein_analyses`
+  **adds the `analysis_id` FK constraint in that same migration**. Not "later," not "when
+  convenient" — a deferred constraint with no stated closure is how a nominal integer becomes a
+  permanent one.
+- **Detectable, per the standing pattern:** `test_analysis_id_has_no_fk_yet` asserts the column
+  currently carries no foreign key. When the FK lands, that test goes **red** and forces this
+  amendment to be closed out deliberately rather than the gap being left open or silently
+  half-satisfied — the same discipline as the `[reaped-out]` marker: name the transition and
+  make it detectable.
+
+**Seam note carried from D-012 §4, made sharper by these amendments.** The staleness *decision*
+(`is_stale`) is pure arithmetic and is really covered. Amendments 1–3 make `complete`, `fail`,
+and `reap_stale` (including the budget cap and the terminal-vs-requeue branch) **portable
+status-transition logic** with no Postgres-specific construct — so they execute, for real,
+against the SQLite test fixture. That shrinks the unproven surface to exactly one thing:
+`claim`'s **atomicity** under `SELECT … FOR UPDATE SKIP LOCKED`. The seam stops being "where the
+queue lives" and becomes specifically **where `SKIP LOCKED` lives** — the honest irreducible
+minimum, provable only by the still-absent Postgres integration job (D-012 §5).
+
+---
+
 #### §2 — ECD boundary selection from UniProt topology (Accepted)
 
 - **Decision:** For each target protein, fold **only the extracellular domain**, with

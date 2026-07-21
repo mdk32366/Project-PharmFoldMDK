@@ -9,7 +9,8 @@
 
 **Project**: PharmFoldMDK — an Antibody-Drug Conjugate (ADC) target exploration platform.
 **Context**: Graded coursework for a **Deep Learning** class in an ML Master's program.
-**Status (2026-07-19)**: Pre-implementation. Planning docs are in `docs/`; no application code yet.
+**Status (2026-07-21)**: First application code landed — the job queue (D-009 §1) in `core/`
++ `db/`. Serving-tier app (`app/`) and GPU worker (`worker/`) not yet built.
 
 ---
 
@@ -112,13 +113,24 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 - **`mutations`** — 1:N from an analysis; position, original/new AA, impact score + notes.
 - **`reports`** — 1:N from an analysis; report type, `content_path`, timestamps.
 - **`analysis_embeddings`** — `vector(384)` with an HNSW cosine index for semantic search
-  (Iteration 3+).
-- **`jobs`** (D-009 §1) — **transient** fold-queue state, kept **separate** from the durable
-  `protein_analyses` record: `analysis_id` FK, `status`
-  (`pending`/`claimed`/`complete`/`failed`), `claimed_at`, `worker_id`, `attempts`, `error`,
-  and `inference_settings` JSONB (dtype / `chunk_size` / model revision — the reproducibility
-  record). Claimed via `SELECT … FOR UPDATE SKIP LOCKED`; stale `claimed` jobs (>30 min) are
-  requeued. This is the durable queue the local GPU worker (D-004) pulls from.
+  (Iteration 3+). ⚠️ pgvector lives in the **`extensions`** schema (D-014), so the migration
+  that creates this column must resolve the type via `search_path`, not a bare `vector(384)`.
+  The migration-side seam is already in place: `db/migrations/env.py` sets `search_path TO
+  public, extensions` on Postgres (D-012 §5a). The **app-runtime** connection needs the same
+  search_path — a *separate* seam in the engine config, not handled by env.py (D-012 §5a).
+- **`jobs`** (D-009 §1, **implemented in PR A** as `db.models.JobRecord`) — **transient**
+  fold-queue state, kept **separate** from the durable `protein_analyses` record: `analysis_id`
+  (see FK note), `status` (`pending`/`claimed`/`complete`/`failed`), `claimed_at`, `worker_id`,
+  `attempts`, `error`, and `inference_settings` JSONB (dtype / `chunk_size` / model revision —
+  the reproducibility record). Reached through the `JobQueue` **seam** (`core/queue.py`):
+  claimed via `SELECT … FOR UPDATE SKIP LOCKED` (the one Postgres-only, unproven-in-CI
+  operation), while `complete`/`fail`/`reap_stale` are portable and tested for real on SQLite.
+  Stale `claimed` jobs (age **strictly** > 30 min) are requeued, `attempts++`, up to
+  **`MAX_ATTEMPTS = 3`** then terminal `[reaped-out]` (D-009 §1 Amendment 1); an explicit `fail`
+  is terminal and leaves `attempts` untouched (Amendment 2); claim order is explicit FIFO by
+  `created_at` (Amendment 3). **`analysis_id` carries no FK yet** — a plain indexed integer
+  until the migration that creates `protein_analyses` adds the constraint in that same migration
+  (Amendment 4). This is the durable queue the local GPU worker (D-004) pulls from.
 
 **Relationships:** `users` 1:N `protein_analyses` 1:N (`mutations`, `reports`, `jobs`).
 **Migrations:** Alembic, versioned. Any schema change ships with a migration.
@@ -349,25 +361,28 @@ Project-PharmFoldMDK/
 ├── ARCHITECTURE.md          # this file — living source of truth
 ├── README.md                # how to run / deploy (kept current in Phase 6)
 ├── CLAUDE.md                # living-doc governance rules
-├── app/                     # Streamlit + FastAPI application code (deployed to Fly)
-├── core/                    # shared business logic + inference contracts
-├── worker/                  # LOCAL GPU worker: pulls jobs, runs ESMFold (NOT deployed to Fly)
-├── db/                      # models & Alembic migrations
-├── tests/                   # functional (pytest) + user-based; SQLite test DB (D-005)
+├── app/                     # Streamlit + FastAPI application code (deployed to Fly) — later
+├── core/                    # queue contract + pure logic + PostgresJobQueue (core/queue.py)
+├── worker/                  # LOCAL GPU worker: pulls jobs, runs ESMFold (NOT deployed to Fly) — later
+├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
+├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
 ├── .github/workflows/       # CI: test gate → Fly deploy (D-005)
+├── alembic.ini              # migration config; URL from $DATABASE_URL (direct conn, D-014)
+├── pytest.ini               # pythonpath=. so tests import core/ and db/ (PR A)
 ├── requirements.txt         # runtime deps — human-edited input, exact pins (D-013)
 ├── requirements-dev.txt     # runtime + test deps — human-edited input (D-013)
 ├── requirements.lock        # compiled: every transitive pinned + hashed (Amendment A)
 ├── requirements-dev.lock    # compiled; THIS is what the gate installs, --require-hashes
-└── Dockerfile               # serving tier image (Fly)
+└── Dockerfile               # serving tier image (Fly) — later
 ```
 
-Today the repo holds the governance files, `docs/`, the **keel** (D-007): `tests/`
-(in-memory SQLite fixture + smoke test) and `.github/workflows/gate.yml` (test → deploy
-gate), and the **pinned dependency manifests** (D-013). The rest — `app/`, `core/`,
-`worker/`, `db/`, `Dockerfile` — is created as iterations land, and this layout section is
-updated when it changes.
+Today the repo holds the governance files, `docs/`, the **keel** (D-007), the **pinned +
+locked dependency graph** (D-013), and — as of PR A (D-009 §1 implementation) — the **job
+queue**: `core/queue.py` (the `JobQueue` seam, the pure `is_stale` predicate, and
+`PostgresJobQueue`), `db/models.py` (`JobRecord`), and the first Alembic migration under
+`db/migrations/`. The rest — `app/`, `worker/`, `Dockerfile`, and the remaining Database Plan
+tables — is created as iterations land, and this layout section is updated when it changes.
 
 The GPU tier's dependencies (`torch`, `transformers`, `bitsandbytes`) are **not** in these
 manifests and will live in a separate one under `worker/` — CI runs on a CPU runner and must
