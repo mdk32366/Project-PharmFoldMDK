@@ -111,28 +111,104 @@ So the rule is not "be careful" — it is:
 
 ---
 
+> **REVISED 2026-07-21 (§1 and §3 replaced).** The original framing treated the Kathad
+> result as a *baseline to recover*. It is not ground truth — it is another analysis, with
+> stated filters, commercial authorship, and named omissions. Treating it as an oracle would
+> make *agreement* the success condition and quietly turn this project into a reimplementation.
+> §2, §4, context, and consequences stand as first drafted.
+
 #### §1 — The research question (Accepted)
 
-> **Do structure-derived ADC-suitability features, computed from folds this project runs,
-> reorder an expression-based target ranking — and does that reordering recover targets
-> known to be ADC-viable?**
+> **Does an ADC-suitability ranking built on structural features — computed from folds this
+> project runs — differ from a ranking built on expression and evidence? Where the two
+> disagree, which disagreements are checkable against outcomes the world has already decided,
+> and which are hypotheses?**
 
-Falsifiable in the direction that matters: if the structural score reorders nothing, or
-reorders without recovering known-good targets, that is a reportable negative result and the
-entry stays as written.
+Note what is *not* asked: whether our ranking matches theirs. **Agreement is not the success
+condition and disagreement is not failure.** A structural axis that merely reproduces an
+expression-based ranking has added nothing — it would mean structure carries no information
+beyond abundance, which is itself a reportable (and surprising) negative result.
+
+**The comparator is a comparator, not an oracle.** Kathad et al.'s 82 prioritised targets and
+1–5 evidence scores are a **published, reproducible, independently derived** ranking — which is
+exactly what makes them useful. They are not a gold standard:
+
+- The filters are **explicit and consequential**: a quasi-H-score ≥150 cutoff on a 0–300 scale,
+  exclusion of anything highly expressed in 13 critical normal tissues, mRNA/IHC consistency.
+  The authors themselves record that these filters **excluded TROP2, HER3, and CLDN18.2**.
+- The 1–5 evidence score is built from literature, antibody existence, protein family,
+  preclinical, and clinical criteria — i.e. it substantially measures *how much attention a
+  target has already received*. A popularity-and-precedent score as much as a biology score; a
+  target nobody has studied scores low by construction.
+- The work is authored by a commercial pharma company using a proprietary platform. Not an
+  accusation of bad faith — the method is published in full and CC-BY, which is more than most.
+  It is a reason not to treat the output as neutral ground truth.
+
+**Our position is differently biased, not unbiased.** No commercial stake and no prior
+commitment to any target is real — but inexperience is not neutrality; it also means not
+knowing which failure modes the field has already understood and discarded. The defensible
+claim is narrow and sufficient: **we are looking at an axis they did not measure at all.**
+Structural accessibility of the extracellular domain appears nowhere in their feature set,
+because they folded nothing.
 
 **Two axes, kept orthogonal and never blended into one number:**
 
-| Axis | What it measures | Source |
+| Axis | Measures | Source |
 |---|---|---|
-| **ADC suitability** | Is this protein a good ADC target? | Structure-derived features (ours) + expression baseline |
+| **ADC suitability** | Is this a good ADC target? | Structure-derived features (ours) + expression/evidence comparator |
 | **Urgency / unmet need** | Does it matter clinically if it is? | Cancer-type survival, incidence, existing options |
 
-**Rationale for orthogonality:** survival rate is a property of the *cancer*, not the
-*target*. A highly exploitable thyroid target and a mediocre pancreatic target should both
-surface, for different reasons, and the user must be able to see which is which. Collapsing
-them into a single score destroys exactly the information a researcher needs. Urgency
-**ranks**, it does not **score**.
+Survival rate is a property of the *cancer*, not the *target*. A highly exploitable thyroid
+target and a mediocre pancreatic target should both surface, for different reasons. Collapsing
+them destroys the information a researcher needs. Urgency **ranks**; it does not **score**.
+
+---
+
+#### §1a — Disagreement is the expected outcome, and it is pre-registered (Accepted)
+
+**Written before any result exists**, per the log's method note: *name the outcome that would
+overturn the favoured hypothesis, and state a check precisely enough that its inadequacy is
+discoverable.*
+
+If our ranking disagrees with the comparator, there are exactly **three** explanations. They
+are not equally likely, and they are not equally interesting. **The honest prior for a first
+implementation is that (3) is most probable for any given disagreement.** A disagreement
+claimed without ruling out (3) is worthless.
+
+| # | Explanation | Checkable against | Status of a claim |
+|---|---|---|---|
+| **1** | **Their pipeline has a blind spot we can see.** A target their filters excluded or scored low that the world has since validated. | **Outcomes already decided** — approved ADCs, trials that succeeded. Group C exists for this. | **Checkable finding.** The strongest claim available, and the rarest. |
+| **2** | **We measured an axis they did not.** A target we promote on structural grounds that they never evaluated structurally. | **Nothing — by construction.** They did not fold. Orthogonal information, not contradiction. | **Hypothesis.** Reportable as a generated candidate, never as a correction. |
+| **3** | **Our pipeline is wrong.** Bad ECD boundaries, degenerate folds, a scorer fitting noise on 22 positives, a length-truncation artefact. | **Internal diagnostics** — below. | **A bug.** Reported as a finding about method, which for an ML course is a legitimate result. |
+
+**Ruling out (3) is a precondition for claiming (1) or (2).** The diagnostics, fixed in advance:
+
+- **Fold sanity per target**: CA-atom count matches sequence length, zero NaN coordinates,
+  radius of gyration consistent with a compact globular expectation. (The S-003 checks; they
+  generalise.)
+- **Boundary sanity**: the ECD span came from a UniProt `Topological domain` annotation and was
+  not silently truncated by a length cap. Any target folded on a truncated ECD is **flagged and
+  excluded from ranking claims** — a truncated fold is a different molecule.
+- **pLDDT floor**: targets whose ECD folds below a pre-set mean-pLDDT threshold are reported
+  separately, not silently ranked. *ESMFold's own uncertainty is a feature of the pipeline, not
+  noise to average over.*
+- **Score stability**: a disagreement that vanishes under leave-one-out refitting is a scorer
+  artefact, not a finding.
+
+**A disagreement surviving all four diagnostics is interesting whichever way it falls.** One
+that does not is a bug report — still a result, and for a DL course arguably a more instructive
+one than a ranking that happened to work.
+
+**Pre-registered negative outcome, stated so it cannot be quietly abandoned:** if the
+structural ranking's disagreements with the comparator are **entirely** explained by (3), the
+honest conclusion is that this pipeline, at this cohort size, with these features, does not add
+measurable signal over expression-based prioritisation. That is the result, and it gets written
+up as the result.
+
+**Claim discipline, binding on the UI:** a class-(1) disagreement may be stated as evidence
+about the comparator; a class-(2) disagreement may be stated **only** as a hypothesis. The
+interface must make the class visible — the two look identical in a sorted table and mean
+entirely different things.
 
 ---
 
@@ -182,30 +258,39 @@ must run before the cohort is called final.
 
 #### §3 — Where the deep learning does load-bearing work (Accepted)
 
-**A learned scorer**, not a weighted heuristic. Structure-derived features from our own
-ESMFold folds → a small trained model → an ADC-suitability score, calibrated on Group B.
+**A learned scorer**, not a weighted heuristic. Structure-derived features from our own ESMFold
+folds → a small trained model → an ADC-suitability score, fit against Group B.
 
-- **Trained**, per explicit ruling. A hand-weighted sum over literature-sourced numbers
-  would make the neural network decorative — ARCHITECTURE §1's exact failure mode.
-- **Small and interpretable feature set.** 22 positives cannot support many parameters. A
-  handful of structural features (pocket geometry, surface accessibility, epitope-region
-  pLDDT, ECD size/shape) — **not** a learned embedding over structure.
-- ESMFold stops being the deliverable and becomes the **input to** one. That is a stronger
-  DL story than folding alone: the network's output is now a judgement that can be wrong.
+- **Trained**, per explicit ruling. A hand-weighted sum over literature numbers would make the
+  neural network decorative — ARCHITECTURE §1's exact failure mode.
+- **Small, interpretable feature set.** 22 positives cannot support many parameters. A handful
+  of structural features (pocket geometry, surface accessibility, epitope-region pLDDT, ECD
+  size/shape) — **not** a learned embedding over structure. Interpretability is not decoration
+  here: it is what lets a disagreement be attributed to a feature rather than shrugged at.
+- ESMFold stops being the deliverable and becomes the **input to** one. The network's output is
+  now a judgement that can be wrong — which is the point.
 
 **⚠ 22 positives is a small labelled set, and early stopping is not sufficient mitigation.**
-Pre-registered here, **before any result exists**, per the log's own method note:
+Pre-registered here, **before any result exists**:
 
 1. **Leave-one-out at the target level.** Hold out one Group B target at a time; ask whether
-   the model still ranks it highly. Reported as a distribution, never a single CV number.
-2. **Feature count fixed before fitting**, and recorded here when chosen. Growing the
+   the model still ranks it highly. Reported as a **distribution**, never a single CV number.
+2. **Feature count fixed before fitting**, and recorded in this entry when chosen. Growing the
    feature set after seeing results is how 22 positives get overfit.
-3. **The negative outcome is named in advance:** if leave-one-out ranking of held-out
-   positives is indistinguishable from the baseline evidence score, the structural axis adds
-   nothing measurable at this cohort size. That is the result, and it gets reported.
-4. **Survivorship bias, stated plainly:** Group B targets were pursued partly *because* they
-   were tractable. The honest claim is "does our score recover known-good targets," **never**
-   "does our score predict clinical success."
+3. **Named negative outcome:** if leave-one-out ranking of held-out positives is
+   indistinguishable from the comparator's evidence score, the structural axis adds nothing
+   measurable at this cohort size. That is the result.
+4. **A second named negative, easily missed:** if the structural score correlates *strongly*
+   with the comparator's evidence score, that is **also** a null result — it means our features
+   are proxying for attention-and-precedent rather than measuring structure. **Check this
+   explicitly.** A high correlation would feel like validation and would not be.
+
+**⚠ Group B is not a clean positive set, and the fit inherits its bias.** These targets were
+pursued partly *because* they were tractable, and their tractability was assessed by people who
+could see things we cannot. The honest claim is **"does our score recover targets already known
+to be viable"** — never **"does our score predict clinical success."** Group B is small,
+non-random, and survivorship-selected, and any model fit to it inherits all three properties.
+Stated here so no downstream summary can quietly upgrade the claim.
 
 ---
 
