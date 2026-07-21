@@ -72,6 +72,190 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-015 — Research question, target cohort, and the learned scorer
+- **Date:** 2026-07-21
+- **Status:** Accepted (scope); the scorer's feature set and evaluation are **pre-registered
+  below and not yet run**
+- **Context:** Until now the project's deliverable was single-target analysis: enter a
+  protein, get structure, pockets, an ADC-suitability summary. That satisfies the Prime
+  Directive only weakly — ESMFold is the headline, but nothing *uses* its output to produce
+  a judgement that could be right or wrong. This entry commits the project to a research
+  question with a control, a labelled set, and a falsifiable claim.
+
+  **Prior art was surveyed before scoping, and it is substantial.** This is a settled field,
+  not an empty one:
+  - **Open Targets Platform** (EMBL-EBI/GSK) scores target–disease associations across 20+
+    data sources with a prioritisation layer covering tractability, safety, and expression.
+    Free REST API and bulk downloads.
+  - **Kathad et al. 2024, PLOS ONE** (`10.1371/journal.pone.0308604`, Lantern Pharma) is the
+    closest analogue: an *in silico* ADC-target prioritisation from 20,090 protein-coding
+    genes down to **82 prioritised targets**, filtered on HPA v22 membrane annotation,
+    critical-normal-tissue exclusion, a quasi-H-score ≥150 tumour-expression cutoff, the
+    *in silico* human surfaceome, mRNA/IHC consistency, and haematopoietic-expression
+    exclusion. **CC-BY licensed**; the target list and expression matrices are published as
+    supplementary files (S2, S3).
+  - Consensus ADC target-selection criteria across the literature are stable: high
+    tumour-specific surface expression, minimal normal-tissue expression, efficient
+    internalisation.
+
+  **The gap this project occupies.** Every scheme above ranks on **expression, mutation,
+  genetics, and internalisation**. None ranks on **predicted structural properties of the
+  extracellular domain**, because none of them folds anything. That is the axis we add, and
+  we add it by running our own ESMFold (D-003) rather than retrieving structures.
+
+  There is a documented problem the structural axis plausibly bears on: clinical activity in
+  solid tumours **often does not scale with antigen abundance** — an affinity–efficacy
+  disconnect that abundance-based ranking cannot explain by construction. Whether a
+  bindable, accessible epitope exists is a candidate explanation. *This is a motivating
+  hypothesis, not a claim this project has established.*
+
+---
+
+#### §1 — The research question (Accepted)
+
+> **Do structure-derived ADC-suitability features, computed from folds this project runs,
+> reorder an expression-based target ranking — and does that reordering recover targets
+> known to be ADC-viable?**
+
+Falsifiable in the direction that matters: if the structural score reorders nothing, or
+reorders without recovering known-good targets, that is a reportable negative result and the
+entry stays as written.
+
+**Two axes, kept orthogonal and never blended into one number:**
+
+| Axis | What it measures | Source |
+|---|---|---|
+| **ADC suitability** | Is this protein a good ADC target? | Structure-derived features (ours) + expression baseline |
+| **Urgency / unmet need** | Does it matter clinically if it is? | Cancer-type survival, incidence, existing options |
+
+**Rationale for orthogonality:** survival rate is a property of the *cancer*, not the
+*target*. A highly exploitable thyroid target and a mediocre pancreatic target should both
+surface, for different reasons, and the user must be able to see which is which. Collapsing
+them into a single score destroys exactly the information a researcher needs. Urgency
+**ranks**, it does not **score**.
+
+---
+
+#### §2 — The cohort (Accepted)
+
+Three groups, kept **structurally distinct in the data model and visually distinct in the
+UI**. Conflating them would be the same error as a test double that reads as coverage.
+
+| Group | n | Role |
+|---|---|---|
+| **A — the 82** | 82 | Baseline cohort. Kathad et al.'s prioritised targets, with their published 1–5 evidence score as the **baseline ranking to compare against**. |
+| **B — in-cohort positives** | 22 | Targets within A already tested as ADCs preclinically or clinically (incl. ERBB2, NECTIN4, EGFR). **The labelled set.** |
+| **C — baseline exclusions** | ≥3 | Approved/advanced targets the baseline pipeline **filtered out** — TROP2, HER3, CLDN18.2. Folded and scored as an **out-of-cohort probe**, never mixed into A. |
+
+**Why B is better than "the 23 approved ADCs":** the labels sit *inside* the same cohort, so
+evaluation is a within-cohort comparison rather than a join across two differently-derived
+datasets. 60 of the 82 are unexplored for ADC development — that is the prediction set.
+
+**Group C is the sharpest test available, and its provenance must be stated precisely,
+because two different claims are involved:**
+
+- **Theirs (cited):** Kathad et al. explicitly name TROP2, HER3, and CLDN18.2 as omitted by
+  their filters, and offer the likely causes — the 150 quasi-H-score cutoff, the
+  critical-normal-tissue rule, and missing IHC data. They record it as a limitation.
+- **Ours (derived here, 2026-07-21):** that at least one of those omissions is the target of
+  **two FDA-approved ADCs** (sacituzumab govitecan; datopotamab deruxtecan), making it a
+  **false negative of the baseline** rather than a neutral methodological gap. The paper
+  does not make this connection.
+
+**Trop-2 is already folded** (248 aa ECD, int8 trunk, verified deterministic and
+structurally sane — S-003). If the structural score ranks it well, that is a concrete
+instance of the structural axis recovering something expression-based filtering discarded —
+far sharper than an aggregate correlation.
+
+**⚠ Stated as a limit, not buried:** three named exclusions, at least one approved, is a
+**single instance and not a demonstrated pattern**. "The baseline has blind spots" is the
+hypothesis this project tests, **not a finding inherited from the paper**. If the structural
+score fails to recover Trop-2, that is a result, and no part of the UI may have promised
+otherwise.
+
+**Open, blocking §2's completeness:** the reconciliation of the full approved-ADC target set
+against the 82 has **not been run**. Group C is currently the three exclusions the authors
+named; there may be others they did not. A mechanical reconciliation script closes this and
+must run before the cohort is called final.
+
+---
+
+#### §3 — Where the deep learning does load-bearing work (Accepted)
+
+**A learned scorer**, not a weighted heuristic. Structure-derived features from our own
+ESMFold folds → a small trained model → an ADC-suitability score, calibrated on Group B.
+
+- **Trained**, per explicit ruling. A hand-weighted sum over literature-sourced numbers
+  would make the neural network decorative — ARCHITECTURE §1's exact failure mode.
+- **Small and interpretable feature set.** 22 positives cannot support many parameters. A
+  handful of structural features (pocket geometry, surface accessibility, epitope-region
+  pLDDT, ECD size/shape) — **not** a learned embedding over structure.
+- ESMFold stops being the deliverable and becomes the **input to** one. That is a stronger
+  DL story than folding alone: the network's output is now a judgement that can be wrong.
+
+**⚠ 22 positives is a small labelled set, and early stopping is not sufficient mitigation.**
+Pre-registered here, **before any result exists**, per the log's own method note:
+
+1. **Leave-one-out at the target level.** Hold out one Group B target at a time; ask whether
+   the model still ranks it highly. Reported as a distribution, never a single CV number.
+2. **Feature count fixed before fitting**, and recorded here when chosen. Growing the
+   feature set after seeing results is how 22 positives get overfit.
+3. **The negative outcome is named in advance:** if leave-one-out ranking of held-out
+   positives is indistinguishable from the baseline evidence score, the structural axis adds
+   nothing measurable at this cohort size. That is the result, and it gets reported.
+4. **Survivorship bias, stated plainly:** Group B targets were pursued partly *because* they
+   were tractable. The honest claim is "does our score recover known-good targets," **never**
+   "does our score predict clinical success."
+
+---
+
+#### §4 — Compute consequence: the cohort is measured before it is rented (Accepted)
+
+Folding all 82 ECDs (plus Group C) against a **measured local ceiling in (440, 630) aa**
+(S-004/S-005) means an unknown fraction goes to the D-011 rented GPU. The original D-011
+estimate (~$0.25, HER2-class only) was scoped to a handful of targets and **does not survive
+this decision unexamined**.
+
+**Decision: measure the length distribution before scoping the rental.** A script queries
+UniProt for each cohort accession, extracts `Topological domain` features with description
+`Extracellular` (per D-009 §2), and reports the ECD-length distribution and the
+above/below-ceiling split. Cheap, runs locally, needs no GPU.
+
+**This is a reportable finding, not just planning.** For an ML course, the empirical
+relationship between model memory footprint, sequence length, and required compute is at
+least as germane as the biology. The deliverable includes: how many targets fit an 8 GB
+consumer GPU, how many did not, what the overflow cost, and what that implies about the
+hardware floor for structure-based screening at cohort scale. **We report the size of the
+icebreaker, measured.**
+
+- **Deep-learning justification:** §3 is the entry's core — a trained model producing a
+  primary output from features derived from inference this project runs. §4 makes the
+  compute requirement an empirical finding rather than an assumption. §2 supplies the
+  control and the labels without which §3's output could not be evaluated at all.
+
+- **Consequences / follow-ups:**
+  - **Iteration 1 stays single-target; ranking is Iteration 2 and becomes the spine**, with
+    single-target analysis as the drill-down. Per ruling.
+  - **Schema anticipates ranking now.** A `ranking_runs` concept (target-list version,
+    scorer version, timestamp) with a nullable FK from `protein_analyses`. Costs almost
+    nothing today; retrofitting it into an applied migration chain is expensive. **Touches
+    PR A's neighbourhood — coordinate before the migration lands.**
+  - **UI must surface the DL contribution or it is invisible**, including to a grader. Named
+    now, specified in its own entry: a comparative ranking view (baseline rank, structural
+    rank, delta, movers), per-target fold provenance (model revision, dtype, chunk_size,
+    pLDDT, date — surfaced from `inference_settings`, not left in JSONB), Group C marked
+    visually distinct, and the Mission Briefing carrying the research question and the
+    Trop-2 reasoning **with both attributions and the single-instance caveat**.
+  - **Attribution:** Kathad et al. is CC-BY. The 82, the evidence scores, and the expression
+    matrices are reused **with citation**, and the UI says so.
+  - **Trop-2 sits outside Group A** — a real limitation of the baseline worth commenting on,
+    and the reason Group C exists.
+  - **Data sources to pin with retrieval dates**, since all are living resources: HPA v22,
+    the surfaceome, UniProt, Open Targets. Reproducibility (ARCHITECTURE §7) requires the
+    version, not just the URL.
+
+---
+
 ### D-014 — Production Postgres is the existing Fly MPG cluster, own database
 - **Date:** 2026-07-21
 - **Status:** Accepted
