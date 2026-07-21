@@ -72,6 +72,130 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-013 — Pinned dependency manifest + gate install step
+- **Date:** 2026-07-21
+- **Status:** Accepted — proven, not asserted (see §5).
+- **Sequenced before D-012 and before any model code.** This entry modifies the **required
+  status check**. Under D-008 that is exactly the class of change that gets *proven*, and it
+  gets proven *first*, because everything after it depends on the gate still working.
+
+#### §1 — The problem
+
+The gate installs `pip install --upgrade pip pytest` and nothing else. That was correct for
+the keel (D-007), whose fixture deliberately used stdlib `sqlite3` so the suite needed no
+dependencies at all. It stops being correct the moment any application code imports
+SQLAlchemy or Alembic: the suite would fail to import, and there is no manifest for the gate
+to install.
+
+**Why this is not a trivial plumbing change.** `test` is a required check on a
+branch-protected `main` with `enforce_admins: true` and no bypass — for the owner either.
+Adding an install step introduces failure modes the gate did not previously have:
+
+| New failure mode | Effect while it lasts |
+|---|---|
+| Resolution failure (bad pin, yanked release, conflicting constraints) | every PR red |
+| Version drift (unpinned dep ships a breaking release) | every PR red, with no repo change to explain it |
+| Index flake / network failure | every PR red, intermittently |
+
+Each of these blocks **every PR in the repo, including the PR that would fix it**, because
+there is no admin bypass. That is the same deadlock shape D-008 removed when it deleted
+`paths-ignore` — a required check that cannot report leaves PRs unmergeable forever. The
+mitigation is different here (the check *can* report; it just reports red), but the blast
+radius is the same and it deserves the same care.
+
+#### §2 — Decision
+
+- **Two manifests, both pinned to exact versions (`==`).**
+  - `requirements.txt` — runtime dependencies (what prod needs).
+  - `requirements-dev.txt` — `-r requirements.txt` plus test-only tooling.
+- **The gate installs `requirements-dev.txt`**, which transitively installs the runtime
+  manifest. Deliberate: installing only dev dependencies would let a broken *runtime* pin
+  reach deploy untested, which is precisely what D-005 exists to prevent.
+- **Exact pins, not ranges.** A range means the gate's behaviour can change with no commit
+  in this repo — a red `main` with an empty `git log` to explain it. Reproducibility is also
+  a standing requirement of this project: D-004 records `inference_settings` (dtype, chunk
+  size, model revision) per job so a fold can be reproduced. A floating dependency set
+  undermines that at the environment level. Pins are upgraded deliberately, in a PR, where
+  the gate proves them.
+
+Initial pins:
+
+| Package | Pin | Why now |
+|---|---|---|
+| `SQLAlchemy` | `2.0.51` | models + queue functions (D-012, PR A) |
+| `alembic` | `1.18.5` | migrations (D-009 §1) |
+| `psycopg[binary]` | `3.3.4` | Postgres driver for prod (D-012). psycopg **3**, not psycopg2 — actively developed and the current SQLAlchemy 2.0 recommendation. `[binary]` avoids needing libpq headers at install time. |
+| `pytest` | `9.1.1` | the suite. Previously unpinned and floating. |
+
+`psycopg` is unused by the SQLite test suite and is installed anyway — the manifest describes
+what **prod** needs, and proving it resolves is the point.
+
+#### §3 — Caching: **NO**, deliberately
+
+`actions/setup-python` can cache the pip download directory keyed on a hash of the manifest.
+**We are not enabling it yet.**
+
+- The saving is small: this dependency set installs in roughly 10–20 s against a suite that
+  runs in ~20 s.
+- The cost is a new failure mode on a check that has no bypass. A cache is another thing that
+  can be stale, poisoned, or partially restored, and its failures are intermittent —
+  the hardest kind to diagnose while every PR is blocked.
+- Reinstating it is a one-line change with an obvious trigger: install time becoming a real
+  cost as `app/`, `core/`, and `worker/` acquire dependencies.
+
+Recorded as a decision rather than an omission so the absence is legible later.
+
+#### §4 — Explicitly NOT in this manifest
+
+`torch`, `transformers`, `bitsandbytes`, and the ESMFold model weights. They belong to the
+**local/rented GPU tier** (D-004, D-011), not the Fly serving tier and not CI. The gate must
+never attempt to install a CUDA stack — it would be slow, fragile, and pointless on a CPU
+runner. The worker acquires its own manifest when `worker/` is built, and it is a separate
+file by design.
+
+#### §5 — Proof (D-008 pattern: demonstrate, do not assert)
+
+A gate change is proven by watching it behave, in both directions:
+
+1. **RED first.** The manifest was pushed with a deliberately invalid pin
+   (`SQLAlchemy==2.0.99999`, a version that does not exist). Expected: `test` fails at the
+   install step with a resolution error, before pytest runs — confirming the gate actually
+   installs the manifest rather than silently ignoring it.
+2. **GREEN second.** Pin corrected to `2.0.51`, same PR. Expected: install succeeds, suite
+   green, check reports pass.
+
+Both observations are recorded in this entry when they land, and the PR is not merged until
+green is witnessed. *Result: see §6.*
+
+#### §6 — Observed result
+
+- **RED:** commit `1bc60c2` — `test` failed in `Install dependencies`:
+  `ERROR: Could not find a version that satisfies the requirement SQLAlchemy==2.0.99999`.
+  pytest never ran. This is the load-bearing observation: it proves the gate resolves the
+  manifest, so a future bad pin fails loudly at the gate instead of at deploy.
+- **GREEN:** commit `07db00e` — install succeeded, suite passed, `test` green.
+
+#### §7 — Deep-learning justification
+
+Indirect, and honest about being indirect. No neural network runs in CI and none should. What
+this buys the DL work is **reproducibility of the environment around it**: D-004 requires each
+fold to record its `inference_settings` so a result can be reproduced, and that guarantee is
+worth less if the surrounding library versions drift underneath it. Pinning the serving-tier
+manifest is the environment-level half of the same commitment. It also protects the *ability
+to ship* the DL work at all — an unbypassable gate stuck red halts every subsequent PR,
+including the ones that carry the model.
+
+#### §8 — Consequences
+
+- `ARCHITECTURE.md` §5 (deploy gate) and §8 (repo layout) updated in this PR.
+- The gate's install step is now a thing that can break independently of the tests. When it
+  does, read the *install* step, not the pytest output.
+- Upgrading any pin is a PR that the gate proves. There is no other supported route.
+- A **Postgres integration job** is still absent (D-005's known gap, restated in D-012). This
+  entry does not address it and must not be read as having done so.
+
+---
+
 ### D-011 — Split compute: local tier under the ceiling, rented GPU for large-ECD cache generation
 - **Date:** 2026-07-19
 - **Status:** Accepted

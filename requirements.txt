@@ -1,0 +1,18 @@
+# Runtime dependencies — the Fly serving tier (D-013).
+#
+# EXACT pins only. A range means the gate's behaviour can change with no commit in
+# this repo, producing a red `main` with an empty git log to explain it. Upgrades
+# happen in a PR, where the gate proves them.
+#
+# NOT here, deliberately: torch, transformers, bitsandbytes, ESMFold weights.
+# Those belong to the local/rented GPU tier (D-004, D-011) and get their own
+# manifest when `worker/` is built. CI runs on a CPU runner and must never try to
+# install a CUDA stack.
+
+SQLAlchemy==2.0.99999
+alembic==1.18.5
+
+# Postgres driver for prod (D-012). psycopg 3, not psycopg2 — actively developed
+# and the current SQLAlchemy 2.0 recommendation. [binary] ships a wheel with libpq
+# bundled, so no system headers are needed at install time.
+psycopg[binary]==3.3.4
