@@ -135,6 +135,16 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 **Relationships:** `users` 1:N `protein_analyses` 1:N (`mutations`, `reports`, `jobs`).
 **Migrations:** Alembic, versioned. Any schema change ships with a migration.
 
+**Anticipated — `ranking_runs` (D-015 §4).** Iteration 2 makes cohort ranking the spine, so the
+schema must anticipate it now: a `ranking_runs` row (target-list version, scorer version,
+timestamp) with a **nullable** `ranking_run_id` FK on `protein_analyses` — cheap to establish
+up front, expensive to retrofit into an applied migration chain. **This is not yet built**
+(PR A created neither table). The load-bearing consequence for whoever writes the
+`protein_analyses` migration: that single migration must, together, (a) create
+`protein_analyses`, (b) add the deferred `jobs.analysis_id` FK that closes D-009 §1 Amendment 4,
+and (c) create `ranking_runs` + the nullable `ranking_run_id` FK. Because `protein_analyses`
+does not exist yet, all of this is a clean first-cut, not a retrofit.
+
 **Engine — Postgres from the first migration (D-012); host is the existing Fly **MPG** cluster
 `sentinel-holy-rain-4562`, database `pharmfoldmdk`, pgvector **v0.8.2** (D-014).** "Fly
 Postgres" is **not** precise enough: it spans two products, and the **unmanaged** one cannot run
@@ -333,7 +343,7 @@ S-002 Q1, now testable against a config that genuinely fits.
 | Iter | Product goal | Deep-learning content |
 |------|--------------|-----------------------|
 | **1 (MVP)** | **Cache-first (D-009 §3)**: Mission Briefing + curated ADC target DB served from pre-folded cached artifacts; live user folding deferred. **Two caps, not one (D-009 §3 amendment):** the **cache-build cap** is bounded by *memory fit + host stability only* — wall time is **not** a criterion, so `chunk 16/8` and multi-minute folds are acceptable; the **interactive cap** (Iteration 1.5+) is latency-bounded (`chunk ≥32`, `<120 s`). This is what makes large ECDs such as **HER2 (630 aa)** reachable for the cache even if never viable interactively | **ESMFold run in-project (D-003)** — the pipeline that *produces* the cache must be real, committed, reproducible code (binding condition of D-009 §3) |
-| **2** | Mutation simulator, comparison views, pocket scoring | Learned mutation-impact and/or druggability model; ESMFold folds wild-type vs. mutant for comparison |
+| **2** | **Target ranking becomes the spine (D-015)** — a comparative view over the 82-target cohort (baseline evidence rank vs. structural rank, delta, movers), with single-target analysis as the drill-down. Plus mutation simulator, comparison views, pocket scoring | **The learned ADC-suitability scorer (D-015 §3)** — structure-derived features from our own ESMFold folds → a small trained model calibrated on the 22-positive labelled set, evaluation pre-registered (leave-one-out, fixed feature count, named negative outcome). ESMFold stops being the deliverable and becomes the scorer's **input**. Also learned mutation-impact / druggability |
 | **3** | Reports, semantic library search | Neural embeddings + pgvector semantic search; report synthesis |
 | **4 (stretch)** | Epitope suggestion, ADC complex modeling, agentic workflows | Advanced/agentic DL |
 

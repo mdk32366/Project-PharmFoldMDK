@@ -1,0 +1,26 @@
+# PharmFoldMDK ECD length cohort -- seed file
+# Format: ACCESSION  LABEL
+#   A = the 82 (Kathad et al. baseline cohort)
+#   B = in-cohort positive (already tested as ADC)
+#   C = baseline exclusion / out-of-cohort probe
+#
+# THIS IS A SEED, NOT THE COHORT. The full 82 come from the paper's
+# S2/S3 supplementary XLSX (CC-BY). D-015 §2 flags the approved-vs-82
+# reconciliation as NOT YET RUN.
+#
+# VALIDATION ANCHOR: P04626 (HER2) should report an extracellular span of
+# ~630 aa (mature numbering; subdomains I-IV = 1-195/196-319/320-488/489-630).
+# That is the length measured as 4-for-4 fatal locally (S-004). If the script
+# reports something materially different, the UniProt parsing is WRONG --
+# do not trust the rest of the output.
+
+P04626  B    # ERBB2  / HER2      -- expect ~630 aa, rental bucket
+P00533  B    # EGFR               -- expect ~620 aa, rental bucket
+P08581  B    # MET   / c-Met      -- expect ~930 aa, rental bucket
+Q5ZPR3  B    # CD276 / B7-H3      -- expect ~460 aa, UNTESTED band
+Q92729  B    # NECTIN4            -- expect ~350 aa, local
+Q02223  B    # TNFRSF17 / BCMA    -- expect ~54 aa,  local
+P15328  B    # FOLR1 / FRa        -- expect ~230 aa, local
+P09758  C    # TACSTD2 / Trop-2   -- EXCLUDED from the 82; already folded (248 aa)
+P21860  C    # ERBB3 / HER3       -- excluded from the 82
+Q9NY76  C    # CLDN18.2           -- excluded from the 82; VERIFY THIS ACCESSION
