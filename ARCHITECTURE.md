@@ -165,6 +165,14 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 - **No `paths-ignore` (D-008):** since `test` is a *required* check, it must report on every
   PR or a doc-only PR hangs unmergeable; the ~20s suite therefore runs on everything. When
   real deploy is wired, guard the **deploy job** (not the trigger) against doc-only changes.
+- **Pinned dependency manifest (D-013):** the gate installs `requirements-dev.txt`, which
+  includes `requirements.txt`, so a broken **runtime** pin fails at the gate rather than at
+  deploy. All pins are exact (`==`) — a range lets the gate's behaviour change with no commit
+  in this repo. **Install and test are now independently breakable:** when the check goes red,
+  read which step failed. Pip caching is deliberately **off** (D-013 §3) — it buys ~10–20 s and
+  adds an intermittent failure mode to a check with no admin bypass. The CUDA stack
+  (`torch`/`transformers`/`bitsandbytes`) is **never** installed in CI; it belongs to the GPU
+  tier and gets its own manifest with `worker/`.
 
 ### ⚠ VRAM constraint (8 GB) — fold path is UNRESOLVED (D-006 invalidated by S-001)
 
@@ -296,13 +304,20 @@ Project-PharmFoldMDK/
 ├── tests/                   # functional (pytest) + user-based; SQLite test DB (D-005)
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
 ├── .github/workflows/       # CI: test gate → Fly deploy (D-005)
+├── requirements.txt         # runtime deps, exact pins (D-013)
+├── requirements-dev.txt     # runtime + test deps; this is what the gate installs (D-013)
 └── Dockerfile               # serving tier image (Fly)
 ```
 
-Today the repo holds the governance files, `docs/`, and the **keel** (D-007): `tests/`
+Today the repo holds the governance files, `docs/`, the **keel** (D-007): `tests/`
 (in-memory SQLite fixture + smoke test) and `.github/workflows/gate.yml` (test → deploy
-gate). The rest — `app/`, `core/`, `worker/`, `db/`, `Dockerfile` — is created as iterations
-land, and this layout section is updated when it changes.
+gate), and the **pinned dependency manifests** (D-013). The rest — `app/`, `core/`,
+`worker/`, `db/`, `Dockerfile` — is created as iterations land, and this layout section is
+updated when it changes.
+
+The GPU tier's dependencies (`torch`, `transformers`, `bitsandbytes`) are **not** in these
+manifests and will live in a separate one under `worker/` — CI runs on a CPU runner and must
+never install a CUDA stack.
 
 ---
 

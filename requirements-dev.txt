@@ -1,0 +1,9 @@
+# Test/dev dependencies (D-013).
+#
+# Includes the runtime manifest on purpose: the gate installs THIS file, so a
+# broken runtime pin fails at the gate rather than surviving to deploy. Installing
+# only dev dependencies would leave exactly the hole D-005 exists to close.
+
+-r requirements.txt
+
+pytest==9.1.1
