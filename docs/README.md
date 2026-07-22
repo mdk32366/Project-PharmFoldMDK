@@ -80,6 +80,87 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-018 — PR B is a pure fold-runner: sequence in, structure + provenance out
+- **Date:** 2026-07-21
+- **Status:** Accepted; scopes PR B. Implements the D-011 cache-generation entry point, narrowed.
+- **Context:** PR B was defined (session pre-work) as "the cache-generation entry point:
+  host-agnostic, dtype and chunk_size as parameters, local defaults int8/chunk 64" — *before*
+  D-015 turned single-target folding into the input to a cohort ranking. That raises the
+  question of how much PR B should take on: just fold a sequence, or select/slice/route the
+  whole 82-target cohort?
+
+- **Decision: PR B is the pure fold-runner only.** Sequence + parameters in → structure
+  artifacts (PDB, pLDDT, PAE) + an `inference_settings`/provenance record out. It does **not**
+  select the cohort, query UniProt, choose ECD boundaries, or route to a compute tier — that is
+  the *orchestrator*, a later step. It does **not** touch the database — artifacts go to files,
+  and the DB wiring lands with the `protein_analyses` migration (see below).
+
+  **Why split runner from orchestrator — the argument is correctness conditions, not tidiness.**
+  The two are right about different things and fail in different places:
+  - the **runner** is correct iff *a sequence in produces a valid structure out with an accurate
+    provenance record*;
+  - the **orchestrator** is correct iff *the right set of sequences is selected, sliced at the
+    right boundaries, and routed to the right tier* (D-009 §2, D-011).
+
+  Those are separately testable, and welding them means neither can fail cleanly. There is also
+  a hard operational reason: the runner is what executes on the **rented A6000 where every minute
+  bills** (D-011). That surface must be small, proven, and unable to need cohort data it cannot
+  reach from a rental box.
+
+- **Why no `protein_analyses` / no DB (this matters more than it looks).** The pgvector
+  `extensions`-schema resolution is the **single remaining unproven point in the system** (D-017).
+  The migration that creates `protein_analyses` is already scoped to do four things at once —
+  create it, add the deferred `jobs.analysis_id` FK (D-009 §1 Amendment 4), create `ranking_runs`,
+  add the nullable `ranking_run_id` FK (D-015 §4) — and it is where that last risk gets exercised.
+  Dragging any of it into a standalone runner PR inherits the one remaining risk for **no
+  benefit**. Artifacts to files now; paths recorded in the DB when that migration lands.
+
+- **The CUDA manifest is a new, named, ACCEPTED gap — not an oversight.** PR B introduces
+  `worker/requirements.txt` (torch, transformers, bitsandbytes, accelerate) — the GPU tier's
+  dependencies, which D-013 §4 deliberately kept out of CI. Stated plainly: **the worker's
+  dependencies are NOT covered by the lock-file guarantee** (D-013 Amendment A). A breaking
+  release there reddens no gate and is discovered at fold time, on a GPU host. That is accepted
+  because CI has no GPU and installing a CUDA stack there would be slow, fragile, and pointless.
+  But because ARCHITECTURE §7 makes reproducibility a graded expectation, the manifest carries
+  **exact pins** measured in the S-003 spike — `torch==2.11.0+cu128`, `transformers==5.14.1`,
+  `bitsandbytes==0.49.2` — and the fold records the **model revision**
+  (`75a3841ee059df2bf4d56688166c8fb459ddd97a`). Honest hole (D-016): `accelerate` has **no
+  measured pin yet** (it was present but unrecorded in the spike venv); it is listed to be pinned
+  from the first successful GPU install and the resolved version recorded here.
+
+- **Truncation and slice-provenance are recorded at fold time — a D-015 §1a enforceability
+  requirement, not a nicety.** §1a's diagnostics require that a fold on a **truncated** ECD be
+  flagged and excluded from ranking claims (a truncated fold is a different molecule), and that
+  the ECD boundary be known. The runner cannot know the cohort's intent, but it records what it
+  was handed: whether the input was a **sliced ECD** or a **whole sequence** (the GPI-anchored /
+  FOLR1 fallback case, D-009 §2), the ECD start/end when sliced, and whether any **length cap**
+  truncated the input. If the runner does not capture this at fold time, it cannot be
+  reconstructed later and the §1a diagnostic becomes unenforceable.
+
+- **Testing split (the postgres-job pattern again).** The runner's **pure logic** — provenance
+  construction, the pLDDT rescale (S-001 gotcha: ESMFold B-factor pLDDT returns on the 0–1 scale
+  and must be ×100), length-cap/truncation recording, artifact layout — is unit-tested on the
+  normal gate with no GPU (torch imported lazily, inside the fold call, so the module imports
+  without it). The **actual fold** is GPU-bound: it cannot run in CI (no GPU runner) and is
+  validated on a GPU host by the owner. The int8 recipe is already measured (S-003/S-005); a
+  `@pytest.mark.gpu` test marks the boundary and skips without torch+CUDA, exactly as the
+  postgres tests skip without a database.
+
+- **Deep-learning justification: this is the neural core itself.** Every other decision has been
+  scaffolding around it; PR B is the code that runs ESMFold and emits the structure every
+  downstream feature (the D-015 scorer, pockets, embeddings) consumes. The provenance record it
+  writes is what lets a later ranking claim be checked — D-016's principle applied at the point
+  the numbers are born.
+
+- **Consequences:**
+  - New `worker/` package (`worker/runner.py`, `worker/requirements.txt`), first GPU-tier code.
+  - `ARCHITECTURE.md` §7 (reproducibility) and §8 (layout) updated in this PR.
+  - Deferred, explicitly: cohort selection / UniProt / ECD-boundary slicing / tier routing (the
+    orchestrator); the DB wiring and the `protein_analyses`+`ranking_runs` migration; the
+    worker↔app pull contract (D-004). Each is its own step.
+
+---
+
 ### D-017 — Postgres integration CI job: the seam's other half
 - **Date:** 2026-07-21
 - **Status:** Accepted; implemented in this PR. Implements the job named as required by D-012 §5

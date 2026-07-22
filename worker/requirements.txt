@@ -1,0 +1,27 @@
+# GPU-tier (worker) dependencies — D-018. THE GATE NEVER INSTALLS THIS.
+#
+# Deliberately separate from the root manifests (D-013 §4): CI has no GPU, and a CUDA
+# stack there would be slow, fragile, and pointless. The consequence is stated plainly
+# and accepted (D-018): these dependencies are NOT covered by the root lock-file
+# guarantee (D-013 Amendment A). A breaking release here reddens no gate and is
+# discovered at fold time, on a GPU host — that is the accepted cost of keeping CUDA
+# out of CI.
+#
+# Because that safety net does not apply, reproducibility (ARCHITECTURE §7) rests on
+# these pins alone. They are the versions MEASURED in the S-003 spike, on the
+# RTX PRO 2000 (Blackwell sm_120). The model weights are pinned separately by revision
+# in worker/runner.py (MODEL_REVISION).
+#
+# torch is a +cuXXX build — install from the PyTorch index, not plain PyPI:
+#   pip install torch==2.11.0+cu128 --index-url https://download.pytorch.org/whl/cu128
+#   pip install -r worker/requirements.txt
+
+torch==2.11.0+cu128
+transformers==5.14.1
+bitsandbytes==0.49.2
+
+# accelerate is REQUIRED for the int8 device_map load (S-003 recipe) but its exact
+# version was NOT recorded in the spike venv (D-016: name what is not known). Pin it
+# from the first successful GPU install and record the resolved version here — do not
+# invent one. Left unpinned until then, on purpose.
+accelerate
