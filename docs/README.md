@@ -80,9 +80,106 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
-### D-023 — The orchestrator: cohort → boundary → tier → job (Proposed / scope)
+### D-024 — Coverage and limitations are a first-class UI surface, not a footnote
 - **Date:** 2026-07-21
-- **Status:** **Proposed (scope)** — ruling wanted on choice (i) before the build.
+- **Status:** Proposed
+- **Context:** Four separate decisions have now each produced a constraint that **must be
+  visible in the interface**, and they have been accumulating as scattered consequences
+  rather than as a designed surface:
+  - **D-015 §1a** — disagreement classes must be visually distinct; a class-1 (checkable
+    against decided outcomes) and a class-2 (hypothesis on an axis never measured) look
+    identical in a sorted table and mean entirely different things.
+  - **D-021** — *"N ranked, M held out"* travels with **every** ranking, as part of the
+    result. A cohort of 82 that quietly becomes 69 invalidates the comparison.
+  - **D-022** — named exclusions must be **visible, not silently missing**. MUC16 is CA-125;
+    a reviewer who knows the field notices its absence immediately.
+  - **D-020 / the ECD measurement** — 16% of the cohort has no sliceable topological domain
+    and is folded by a different method.
+
+  Left as consequences of four entries, these will be implemented as caveats if they are
+  implemented at all. **They are the honest reading of the result and belong in the same
+  screen as the result.**
+
+  There is also a finding here that is genuinely interesting rather than merely
+  disqualifying, and it would be lost as an apology: **two targets cannot be folded by this
+  method on any hardware that exists.**
+
+- **Decision:** The application carries a **Coverage & Limitations surface** as a designed,
+  first-class deliverable — not a disclaimer block. It has two homes:
+
+  **(a) Inline, wherever a ranking is shown.** The coverage line is rendered with the
+  ranking itself: *"82 targets · N ranked · M held out (whole-chain method) · K excluded
+  (named)."* Held-out and excluded rows are reachable from that line, not hidden. Boundary
+  method (`sliced_ecd` / `gpi_predicted` / `whole`) is visible per target, and disagreement
+  class is visually distinct per D-015 §1a.
+
+  **(b) A dedicated Limitations page**, written as findings with their reasoning — the
+  measured constraints of this approach, discovered rather than assumed.
+
+- **The write-up that makes this worth doing — "What we cannot fold, and what it would
+  take":**
+
+  **MUC16 (Q8WXI7, 14,451 aa — CA-125) and FAT2 (Q9NYQ8, 4,030 aa)** cannot be folded as a
+  single sequence. This is stated as a **property of the method**, with three routes
+  addressed honestly:
+
+  1. **Bigger hardware does not solve it.** ESMFold's memory scales roughly quadratically
+     with sequence length. An 80 GB card buys perhaps 1.5× the length over a 48 GB one;
+     MUC16 is ~30× the measured local ceiling. **There is no card.** *This is the point most
+     readers will assume their way past, so it is stated first.*
+  2. **Domain decomposition is the real answer, and may be the more correct method
+     anyway.** MUC16 is a tandem-repeat mucin — dominated by ~60 repeats of a ~156-residue
+     SEA domain plus a C-terminal membrane-proximal region. Folding the repeat unit once and
+     the C-terminal domain separately is arguably **better science** than folding 14,451
+     residues as a unit, because the global arrangement of a repeat array is not something
+     single-sequence prediction recovers meaningfully. **For ADC purposes the relevant
+     epitope region is the membrane-proximal portion** — the part an antibody can reach.
+     Decomposition is therefore not a compromise here; it is plausibly the right method,
+     deferred for scope rather than rejected on merit (D-022).
+  3. **A different predictor changes the claim.** Models with different memory
+     characteristics exist, but D-003's graded claim is that **we run ESMFold**, and mixing
+     predictors across a cohort breaks the comparability D-021 exists to protect.
+
+  **Why this is a finding and not an apology:** it demonstrates something a purely
+  computational reader would miss — that **protein size is a real constraint on
+  structure-based screening, and the constraint is biological rather than budgetary.**
+  Tandem-repeat mucins are an entire class. CA-125 is the most-used ovarian-cancer biomarker
+  in clinical practice, and it lies outside what single-sequence folding can reach. That is a
+  genuine limitation of the whole approach, **discovered by measurement rather than
+  anticipated** — and for a deep-learning course it is arguably the most instructive item on
+  the page: *here is where the method stops working, here is why, and here is what it would
+  cost to extend it.*
+
+- **Deep-learning justification:** Direct, in two ways. First, the limits of a model are part
+  of understanding the model; a system that reports its own coverage honestly is doing more
+  DL-relevant work than one that silently drops what it cannot handle. Second, this surface
+  is what makes D-015's claim discipline **enforceable** rather than aspirational — the
+  class-1/class-2 distinction and the coverage line are worthless if the interface renders
+  them identically.
+
+- **Consequences / follow-ups:**
+  - **The UI Plan (`docs/UI_Plan.md`) predates all of this** and has no limitations surface.
+    It needs updating, or superseding, when the application is scoped.
+  - **The coverage line must be computed, not hand-written.** It comes from the orchestrator
+    manifest (D-023), so it is always current with the actual routing rather than a number
+    someone remembered to update.
+  - **If decomposition is ever built (D-022), this page changes** — MUC16 moves from
+    "cannot" to "folded by decomposition," and the finding becomes a *method extension*
+    rather than a limit. Written so that change is an edit, not a rewrite.
+  - **Fold provenance belongs on the same surface**: model revision, dtype, `chunk_size`,
+    mean pLDDT, boundary method, and whether the sequence was truncated — surfaced from
+    `inference_settings` rather than left in JSONB. Per D-015, this is also what makes the
+    "we ran this ourselves" claim legible to a reader, including a grader.
+  - **Numbers to fill in once the orchestrator manifest exists:** exact ranked / held-out /
+    excluded counts. Stated here as pending rather than estimated.
+
+---
+
+### D-023 — The orchestrator: cohort → boundary → tier → job (Accepted)
+- **Date:** 2026-07-21
+- **Status:** **Accepted (2026-07-21)** — all three choices ruled; the orchestrator emits a
+  reviewable manifest first, defers the `gpi_predicted` predictor, and treats the A6000 ceiling
+  as config with a self-labelling default. See "Ruling" below.
 - **Context:** D-018 split the **runner** (folds one sequence) from the **orchestrator** (selects
   the right sequences, slices them at the right boundaries, routes them to the right tier) on
   correctness-condition grounds. Every input the orchestrator needs now exists: the cohort of
@@ -126,6 +223,21 @@ So the rule is not "be careful" — it is:
 - **Deferred / depends on:** the A6000 ceiling (probe, owner-run) for exact borderline routing;
   the SignalP/GPI predictor (D-021) for `gpi_predicted`; the worker↔app pull contract (D-004) +
   the enqueue step for the manifest→fold path.
+- **Ruling (2026-07-21):**
+  - **(i) Manifest first, not direct enqueue.** The orchestrator emits a deterministic routing
+    table — target → boundary method, span, tier, held-out flag, exclusion reason — **reviewable
+    before anything irreversible happens**. Enqueueing directly means the first sight of the
+    routing decisions is when jobs already exist. This is also where D-021's coverage line
+    ("N ranked, M held out, 82 minus named exclusions") is computed. The enqueue step + D-004
+    pull contract are a separate build on top.
+  - **(ii) The `gpi_predicted` predictor is deferred.** Route the GPI subset as `whole`/held-out
+    and upgrade once SignalP/GPI is built as its own scoped piece. Blocking the orchestrator on a
+    new model would repeat the runner/orchestrator conflation D-018 was written to avoid.
+  - **(iii) The A6000 ceiling is config, defaulting conservative and labelled `UNMEASURED,
+    conservative` in the config itself — not in a comment.** An unlabelled `2000` looks measured;
+    the label must ride in the value a reader sees, so the routing cannot be mistaken for having
+    been calibrated against a real fold. The probe (D-022) replaces the label with a measured
+    number when it runs.
 - **Deep-learning justification:** it is the mechanism that turns the 82 into the folds the D-015
   scorer consumes; its correctness (right boundary method per target, held-out set reported) is
   what keeps the ranking comparing like with like rather than mixing domain slices and whole
