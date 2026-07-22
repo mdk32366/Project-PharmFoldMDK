@@ -446,6 +446,7 @@ Project-PharmFoldMDK/
 ├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
 │                            #   orchestrator.py (D-030 job-pull loop, pure/transport-agnostic),
 │                            #   http_client.py (D-031 concrete HTTP QueueClient, gzips PAE),
+│                            #   main.py (entry point: wire client+loop+fold, `python -m worker.main`),
 │                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run),
 │                            #   requirements.txt (CUDA deps + httpx, never installed by CI)
 ├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
