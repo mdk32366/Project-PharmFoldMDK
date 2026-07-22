@@ -61,8 +61,9 @@ def upgrade() -> None:
     op.create_index("ix_protein_analyses_structure_source", "protein_analyses", ["structure_source"])
     op.create_index("ix_protein_analyses_ranking_run_id", "protein_analyses", ["ranking_run_id"])
 
-    # Close D-009 §1 Amendment 4: the deferred FK, now that its target exists.
-    op.create_index("ix_jobs_analysis_id", "jobs", ["analysis_id"])
+    # Close D-009 §1 Amendment 4: the deferred FK, now that its target exists. The
+    # `ix_jobs_analysis_id` index already exists (created by 0001, where analysis_id was
+    # index=True) — 0002 adds only the constraint.
     op.create_foreign_key("fk_jobs_analysis_id", "jobs", "protein_analyses", ["analysis_id"], ["id"])
 
     # pgvector, exercised for real (D-017/D-019). Idempotent on prod (D-014).
@@ -87,7 +88,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.execute("DROP TABLE IF EXISTS analysis_embeddings")
     op.drop_constraint("fk_jobs_analysis_id", "jobs", type_="foreignkey")
-    op.drop_index("ix_jobs_analysis_id", table_name="jobs")
+    # ix_jobs_analysis_id is 0001's, not ours — 0001's downgrade drops it.
     op.drop_table("protein_analyses")
     op.drop_table("ranking_runs")
     # Extension/schema left intact — prod owns them independently (D-014).
