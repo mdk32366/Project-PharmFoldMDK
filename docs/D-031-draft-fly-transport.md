@@ -60,29 +60,30 @@
 
 ---
 
-- **⚠ OPEN — upload size, and it is not a detail.** PAE is an **L×L matrix**. For the largest
-  cohort targets (1652–2213 aa) a JSON-encoded PAE is on the order of **tens of megabytes**,
-  over a residential uplink, inside the 60-minute provisional lease (D-030). Three things follow
-  and none is ruled:
-  - whether PAE is uploaded **at all** for large targets, or computed-and-discarded
-  - whether artifacts are **compressed** in transit (they are highly compressible text)
-  - the endpoint's **max body size**, and what a rejection does to the loop
+- **⚠ OPEN — PAE policy, and it is upstream of D-030's threshold measurement, not downstream.**
+  `worker/runner.py:200` emits PAE whenever the model output carries `predicted_aligned_error`,
+  which `esmfold_v1` always does; `dtype` and `chunk_size` do not gate it (verified by the
+  Builder against `main`). PAE will exist for **every** fold — "computed and discarded" is a
+  ruling to make, not an outcome the model may spare us.
 
-  **This is the item most likely to surface as a surprise during the first large rental fold** —
-  it is simultaneously a cost question (lease expiry → re-fold), a correctness question (partial
-  upload), and a coverage question (a target whose PAE is absent is not identical to one whose
-  PAE was never produced — `worker/runner.py` already treats `pae` as optional, and D-027
-  rejected a PAE-derived feature for exactly this heterogeneity). **Ruling it needs a measured
-  PAE size, which the first large fold will produce.** Recorded as blocking nothing today and
-  named so it cannot arrive unexamined.
+  For a 2213 aa target, L×L ≈ 4.9M floats ≈ **75–100 MB of JSON**. At that size a larger body
+  limit is not the remedy; **compression and/or a large-target PAE policy** are.
 
-  > **Builder note (verified against the code, 2026-07-22).** PAE is **not** optional-in-practice
-  > for this cohort: `worker/runner.py:200` emits it whenever the model output contains
-  > `predicted_aligned_error`, which `facebook/esmfold_v1` (the pinned revision) always does —
-  > `dtype`/`chunk_size` do not gate it. So "computed-and-discarded" is a real *choice* to rule,
-  > not a possibility the model might spare us. And the size is **understated**: an L×L Python
-  > list for a 2213 aa target is ~4.9M floats ≈ **75–100 MB** of JSON, not tens. This strengthens
-  > the item toward compression or a large-target PAE policy rather than a bigger body limit.
+  **Interaction with D-030's provisional lease:** 100 MB over a residential uplink is plausibly
+  **30–80 minutes on its own**, which may exceed the 3600 s provisional lease *before the fold
+  is counted at all*. The threshold measurement D-030 named — claim-stamp to upload-complete on
+  a large rental target — **cannot be interpreted until PAE policy is settled**, because it
+  would be measuring a transfer we may not intend to perform. **Rule PAE first.**
+
+  > **Builder note (verified against `main`, 2026-07-22): nothing downstream consumes PAE.** The
+  > only references in the tree are the producer (`worker/runner.py`) and a nullable
+  > `pae_json_path` column (`db/models.py:100`) that **no code reads**; D-027 rejected the one
+  > PAE-derived feature considered. So "discard at the worker" does not merely make the item
+  > *nearly* free — it **dissolves** the transfer, the lease interaction, and the compression
+  > question at once, because there is no consumer to serve. The residual decision is only
+  > whether to preserve PAE against a *future* consumer: D-027 deferred-not-dismissed a PAE
+  > feature, and recovering a discarded PAE means a **paid re-fold**, so compress-and-store (PAE
+  > gzips well) buys that optionality cheaply. But nothing today needs the bytes on the wire.
 
 - **⚠ The route handlers are new application code touching the database — seam 1 applies
   again.** D-026's real-Postgres test closed the commit/rollback seam for the *enqueue* entry
@@ -127,7 +128,9 @@
 - **Consequences / follow-ups:**
   - **`app/` is created by this entry** — the first application code on Fly. It is also the
     first component the `search_path` seam applies to *as a service* rather than as a script.
-  - **Upload size ruling** is deferred to a measurement, named above.
+  - **PAE policy must be ruled BEFORE the first large rental fold** — it is upstream of D-030's
+    threshold measurement, not deferred to it (see the OPEN item), and the near-certain answer is
+    discard-at-worker (nothing consumes PAE) or compress-and-store for optionality.
   - **Per-worker credentials** when a second worker exists.
   - **Lease heartbeat** (D-030's flag) lands as a fifth route, not by widening an existing one.
   - **Nothing here is deployed to Fly until the full suite passes**, functional and user tests
