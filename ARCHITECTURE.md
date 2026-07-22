@@ -413,8 +413,9 @@ Project-PharmFoldMDK/
 ├── CLAUDE.md                # living-doc governance rules
 ├── app/                     # Streamlit + FastAPI application code (deployed to Fly) — later
 ├── core/                    # queue contract + pure logic + PostgresJobQueue (core/queue.py)
-├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (the D-018 fold-runner)
-│                            #   + requirements.txt (CUDA deps, never installed by CI). Job-pull
+├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
+│                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run),
+│                            #   requirements.txt (CUDA deps, never installed by CI). Job-pull
 │                            #   orchestration is later.
 ├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
 ├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
