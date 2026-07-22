@@ -72,6 +72,85 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-017 — Postgres integration CI job: the seam's other half
+- **Date:** 2026-07-21
+- **Status:** Accepted; implemented in this PR. Implements the job named as required by D-012 §5
+  and D-014, not a new decision about *whether* — a decision about *how* and *how far*.
+- **Context:** Since PR A this has been the single largest coverage hole. The `test` job builds
+  schema with `create_all` and never runs the Alembic chain, and `FOR UPDATE SKIP LOCKED` is a
+  **syntax error** on SQLite (D-012 §3) — so the migration chain and `PostgresJobQueue.claim`'s
+  atomicity are provable by nothing in the repo. D-012 §4's seam made that gap *legible*; it did
+  not close it. This closes it. (The shape is exactly JARVIS audit H2: a green SQLite suite that
+  proved nothing about a fresh Postgres, closed only by a real-Postgres CI job.)
+- **Decision:** A `postgres` CI job (`.github/workflows/gate.yml`) runs a **Postgres 16** service
+  container (matching prod, D-014), installs the locked deps (D-013), applies migrations with
+  `alembic upgrade head` — **the real chain, not `create_all`** — and runs the
+  `@pytest.mark.postgres` tests. They prove three things the SQLite suite cannot:
+  1. the chain builds the schema on real PG (and env.py's Postgres-only `search_path` SET ran
+     without error, or `upgrade` would have failed);
+  2. `claim`'s `SELECT … FOR UPDATE SKIP LOCKED` is **atomic** — a row locked in one open
+     transaction is *skipped* by a claim on another connection, which takes the next row;
+     all-locked yields `None`;
+  3. `complete` / `fail` / `reap_stale` (incl. the cap → terminal `[reaped-out]`) behave
+     identically on real PG.
+
+  The postgres-marked tests **auto-skip** without a postgresql `DATABASE_URL` (the `pg_engine`
+  fixture), so they are inert in the `test` job and run for real only here. `deploy` now
+  `needs: [test, postgres]`.
+
+- **How far — required-vs-advisory, decided explicitly (D-016 discipline: name what is *not* yet
+  true).** The job runs on every PR and push, but is **not yet a branch-protection required
+  check**. Two reasons: branch protection is owner-set (D-008 established it, `enforce_admins`),
+  and a *required* job with a service container that flakes would deadlock every PR with no admin
+  bypass — the exact hazard D-013 §3 declined pip caching to avoid. Interim gate: `deploy: needs
+  postgres`, so a broken migration cannot **deploy** even if a PR merged.
+
+  **Promotion criterion — a specific bar, not a vibe.** The owner adds `postgres` to branch
+  protection's required checks once **all** of the following hold, so "stable" is falsifiable:
+  1. The job has completed on **≥ 5 consecutive PRs** since this one.
+  2. On every one of those, any red was **attributable to a genuine code/migration fault** — the
+     job doing its work (like the env.py bug on run one) — and **never to service-container
+     infrastructure**: container-startup timeout, `pg_isready` health-check failure, or
+     connection-refused. An infra flake is the precise signal that a *required* version would
+     have deadlocked a PR with no bypass.
+  3. **Any infra-attributable failure resets the count to zero.** One flake in five PRs means
+     not yet — the counter measures the thing that matters (would "required" have blocked
+     honest work?), not elapsed time.
+
+  Recorded as a recommendation with a bar, not silently done: it is a repo-settings change
+  (owner-only, like branch protection itself, D-008) with a real downside if promoted early.
+
+- **Still unexercised, stated not hidden:** the service image is stock `postgres:16`. There is no
+  vector column yet, so env.py's `search_path`→`extensions` *resolution* is proven only insofar
+  as the SET executes without error — the SET targeting a real populated `extensions` schema, and
+  a `vector(384)` actually resolving through it, is exercised when the first vector-column
+  migration lands and the image switches to `pgvector/pgvector:pg16`.
+
+- **Deep-learning justification:** Indirect, and the strongest kind available for infrastructure.
+  The queue runs every neural inference (D-009 §1); a silently-broken claim (double-dispatch,
+  lost job) or a migration that fails on real PG would corrupt the cache the DL deliverable is
+  served from, and would do so *invisibly* under a green SQLite suite. This is D-016's provenance
+  principle applied to the queue: the claim path now has an artefact — a passing real-Postgres CI
+  run — behind the assertion that it works.
+
+- **It earned its keep on its first run.** The job immediately caught a real bug that a green
+  SQLite suite could never have: env.py ran the `search_path` SET *before*
+  `context.begin_transaction()`, auto-opening a SQLAlchemy-2.0 transaction alembic did not own,
+  so `alembic upgrade head` logged "Running upgrade → 0001_create_jobs", exited 0, and the
+  CREATE TABLE **silently rolled back** (`relation "jobs" does not exist` at the first test).
+  Every production migration would have no-op'd invisibly. Fixed by moving the SET inside
+  alembic's committed transaction; the artefact (run `29879472591`) is cited in env.py so it is
+  not reintroduced. This is precisely the JARVIS-H2 class of failure the job exists to catch.
+
+- **Consequences:**
+  - The D-012 §4 seam is now proven on **both** sides. The unproven surface is no longer "claim
+    atomicity" but only the narrower "pgvector type resolution," gated to the vector-column PR.
+  - `ARCHITECTURE.md` §5 (deploy gate) updated in this PR.
+  - The open-questions "largest coverage hole" item is closed (see below), with the pgvector
+    caveat carried forward.
+
+---
+
 ### D-015 — Research question, target cohort, and the learned scorer
 - **Date:** 2026-07-21
 - **Status:** Accepted (scope); the scorer's feature set and evaluation are **pre-registered
@@ -2364,10 +2443,13 @@ These are known forks in the road. Each becomes a `D-NNN` entry **before** we ac
   the SQLite-on-Volume prototype path is closed, not deferred. The **test** DB remains SQLite
   per D-005, which D-012 §3–§5 turns from a footnote into a named, structural exposure.
 - **Embedding model** for semantic search (which encoder, `vector(384)` assumed).
-- **Postgres integration test job** for pgvector/Postgres-specific paths (D-005 gap).
-  **Sharpened by D-012 §5 and now the single largest coverage hole in the project:** the
-  queue-claim path (`SELECT … FOR UPDATE SKIP LOCKED`) *cannot* execute on SQLite — it is a
-  syntax error, not an unsupported feature — so it has never run and will not run until this
-  job exists. D-012's repository seam makes that legible; it does not fix it. Template is the
-  JARVIS precedent: a throwaway Postgres service container in the gate, migrations applied,
-  the real implementation exercised.
+- ~~**Postgres integration test job**~~ — **BUILT in D-017.** The `postgres` CI job stands up a
+  real Postgres 16 service container, applies migrations with `alembic upgrade head` (not
+  `create_all`), and exercises `claim`'s `FOR UPDATE SKIP LOCKED` atomicity for the first time.
+  What was "the single largest coverage hole" is closed. **Residual, narrower:** the job is not
+  *yet* a branch-protection required check (owner action, deferred until proven stable — D-017),
+  and pgvector **type resolution** through the `extensions` schema is still unexercised (no vector
+  column yet; the job switches to a pgvector image when the first vector-column migration lands).
+- **pgvector `extensions`-schema resolution** — a `vector(384)` column actually resolving via
+  env.py's `search_path` seam, against a populated `extensions` schema, on real PG. Deferred to
+  the first vector-column migration (D-017 residual; env.py seam already in place, D-012 §5a).
