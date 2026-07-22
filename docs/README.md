@@ -290,6 +290,58 @@ So the rule is not "be careful" — it is:
   > feature, and recovering a discarded PAE means a **paid re-fold**, so compress-and-store (PAE
   > gzips well) buys that optionality cheaply. But nothing today needs the bytes on the wire.
 
+- **RULED (2026-07-22) — the upload route writes `protein_analyses`, not only the Volume; both
+  in one transaction; provenance projects to columns and the remainder into `meta`.** The Builder
+  surfaced this as the one thing the loop's protocol did not settle, and it is forced, not chosen:
+  D-026 filled the **pre-fold** half of `protein_analyses` and assigned the **post-fold** half
+  (`pdb_path`, `mean_plddt`, `pae_json_path`) to *"the worker."* But D-030 gave the worker **no
+  database connection** — it holds only the injected `QueueClient`. So the actor D-026 named
+  cannot do the write. The **only** actor with both the artifacts and a DB connection is the
+  `/artifacts` route. This entry corrects D-026's assignment: **the upload route writes the
+  post-fold columns.** `upload(job, artifacts)` was never "persist files"; it was always
+  "persist the fold," and the durable record is half of that.
+
+  **(a) One transaction spanning a non-transactional filesystem, with a defined ordering and a
+  compensating delete.** The route touches two stores — a Fly Volume (files) and Postgres (the
+  row) — and a partial write is the failure to design against: a DB row whose `pdb_path` names a
+  file that was never written, or files on the Volume that no analysis points at. Neither is
+  acceptable, so the ordering is fixed and the endpoint compensates:
+  1. **Write the Volume files first**, to `{ARTIFACT_ROOT}/{job_id}/` (`structure.pdb`,
+     `plddt.json`, `pae.json.gz` if present, `provenance.json`).
+  2. **Then** update `protein_analyses` in a single DB transaction that stamps the paths.
+  3. **If the file write fails, the DB is never touched** — no orphaned row (the pre-fold columns
+     stay as enqueue left them, post-fold columns stay `NULL`).
+  4. **If the DB transaction fails, the written files are deleted** before the error propagates —
+     no orphaned files. The Volume is not transactional, so the route makes it *look* transactional
+     by compensating; this is the honest bound, not a true 2-phase commit, and single-writer scale
+     (D-004) is why the simple compensation is sufficient.
+  The worker's retry (D-030 §4) then re-drives the whole `upload`, which is why **idempotency
+  (§(2)) and this boundary are the same guarantee seen from two sides**: a retried upload
+  re-writes the same paths and re-stamps the same row, converging, never duplicating.
+
+  **(b) Provenance projection — columns where they exist, the whole record into `meta`, nothing
+  dropped.** `FoldProvenance` (`worker/runner.py`) carries more than `protein_analyses` has
+  columns for. The projection:
+  - `mean_plddt` → the `mean_plddt` column (0–100 scale, already rescaled at fold time);
+  - the `structure.pdb` Volume path → `pdb_path`;
+  - the `pae.json.gz` Volume path → `pae_json_path` (**`NULL` when the fold emitted no PAE** — the
+    column is nullable and stays honest about absence);
+  - `structure_source` → `"esmfold"` (this structure came from our ESMFold runner, as opposed to
+    `alphafold_db` or `user_upload` — the compute *tier* is not this column's job; it already
+    lives in the job's `inference_settings` and in the provenance record);
+  - **the full provenance dict → `meta["fold_provenance"]`**, so `ca_atom_count`, `truncated`,
+    `original_length`, `input_length`, `dtype`, `chunk_size`, `folded_at`, and the ECD bounds are
+    preserved verbatim — the §1a truncation/sanity flags (D-015) must survive to be queryable, and
+    a column-only projection would silently drop them.
+
+  **(c) `/complete` enforces the ordering against this write, server-side.** §(3) ruled upload and
+  complete stay separate so the ordering is *externally observable*; this makes it observable
+  concretely: **`/complete` rejects (HTTP 409) unless the job's analysis has `pdb_path IS NOT
+  NULL`** — i.e. unless the upload's DB transaction actually committed. The forbidden state (a
+  `complete` job with no structure behind it, D-030 §3) is now unreachable by a client that calls
+  the routes out of order, not merely by a well-behaved loop. This is the concrete test behind
+  §"Ordering is protocol-observable."
+
 - **⚠ The route handlers are new application code touching the database — seam 1 applies
   again.** D-026's real-Postgres test closed the commit/rollback seam for the *enqueue* entry
   point. **The route handlers are a different entry point and inherit the obligation to prove it
@@ -323,6 +375,12 @@ So the rule is not "be careful" — it is:
   - **Claim returns the fold spec inline**, asserted explicitly — a route that returned a bare
     job id would compile and would silently reintroduce the worker-fetches-input design that
     D-026 ruled against.
+  - **Transaction boundary (ruled above)** — a failed Volume write leaves the post-fold columns
+    `NULL` (no orphaned row); a failed DB transaction leaves no files on the Volume (the
+    compensating delete ran). Both directions asserted, hermetically, on the `persist_fold` seam.
+  - **Provenance projection (ruled above)** — after an upload the columns hold what they should
+    (`mean_plddt`, `pdb_path`, `pae_json_path`) and `meta["fold_provenance"]` holds the full
+    record, so the §1a truncation/sanity flags are provably not dropped.
 
 - **Deep-learning justification:** indirect and structural, same as D-030. This is the last
   component between a reviewable manifest and executed inference; its correctness is what makes
@@ -333,6 +391,16 @@ So the rule is not "be careful" — it is:
 - **Consequences / follow-ups:**
   - **`app/` is created by this entry** — the first application code on Fly. It is also the
     first component the `search_path` seam applies to *as a service* rather than as a script.
+  - **D-026's post-fold assignment is corrected here (ruled above):** it named "the worker" as
+    the writer of the post-fold columns before D-030 removed the worker's DB connection. The
+    upload route is the writer. No change to D-026's pre-fold work; only the unreachable
+    assignment is superseded.
+  - **First web-framework dependency (D-013 change).** `app/` needs FastAPI; `requirements.txt`
+    gains `fastapi` + `uvicorn` + `python-multipart` and `requirements-dev.txt` gains `httpx`
+    (the `TestClient` transport, also the worker client's HTTP library). The hash-locked
+    `requirements.lock` / `requirements-dev.lock` are regenerated with `uv pip compile
+    --generate-hashes` and the addition is proven RED→GREEN per D-013 — the transport tests do
+    not import before the lock carries FastAPI, and do after.
   - **PAE is compressed and stored (ruled above)** — settled before the first large rental fold,
     which also unblocks D-030's threshold measurement (a large-target upload is now bounded to a
     compressed PAE, so claim-stamp → upload-complete becomes interpretable).

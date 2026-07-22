@@ -7,3 +7,9 @@
 -r requirements.txt
 
 pytest==9.1.1
+
+# httpx is FastAPI's `TestClient` transport (starlette drives the ASGI app through it),
+# so the hermetic transport-route tests need it. It is ALSO the worker client's HTTP
+# library (worker/http_client.py, D-031) — pinned here so the client's tests run on the
+# CPU gate, and pinned again in worker/requirements.txt for the GPU-host runtime (D-018).
+httpx==0.28.1
