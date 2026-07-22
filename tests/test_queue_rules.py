@@ -16,23 +16,25 @@ def _now(**kw):
     return BASE + timedelta(**kw)
 
 
-def test_default_threshold_is_thirty_minutes():
-    # 30 min is stated in D-009 §1, so this constant is faithful, not invented.
-    assert DEFAULT_STALE_SECONDS == 1800
+def test_default_threshold_is_sixty_minutes_provisional():
+    # RAISED to 60 min under D-030 (PROVISIONAL, unmeasured under HTTP transport):
+    # the lease clock now starts at the server's claim stamp, before the fold. This
+    # pin is red-on-change so the provisional value can't drift unremarked.
+    assert DEFAULT_STALE_SECONDS == 3600
 
 
 def test_below_threshold_is_not_stale():
-    assert is_stale(BASE, _now(minutes=29, seconds=59)) is False
+    assert is_stale(BASE, _now(minutes=59, seconds=59)) is False
 
 
 def test_exactly_at_threshold_is_not_stale():
-    # 30:00.000 — the decided edge. "Older than 30 minutes" means age must EXCEED
-    # the threshold, so the exact boundary is not yet stale. Strict `>`.
-    assert is_stale(BASE, _now(minutes=30)) is False
+    # 60:00.000 — the (provisional, D-030) edge. Age must EXCEED the threshold, so
+    # the exact boundary is not yet stale. Strict `>`.
+    assert is_stale(BASE, _now(minutes=60)) is False
 
 
 def test_just_over_threshold_is_stale():
-    assert is_stale(BASE, _now(minutes=30, seconds=1)) is True
+    assert is_stale(BASE, _now(minutes=60, seconds=1)) is True
 
 
 def test_never_claimed_is_not_stale():

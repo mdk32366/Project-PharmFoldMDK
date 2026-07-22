@@ -16,9 +16,12 @@ decisions ruled (D-021/D-022). The **orchestrator manifest** (D-023, `core/manif
 deterministic, reviewable routing table plus the D-024 structured coverage object; the **enqueue**
 (D-026, `core/enqueue.py`) turns each foldable row into a `protein_analyses` row (the exact
 residues + UniProt release + folded span) and a `pending` `jobs` row carrying the tier's fold
-recipe — 80 of 82 enqueue, the 2 named exclusions get none, idempotent per cohort version.
-**Next:** the worker's job-pull orchestration (D-004 — claim → fold → upload). Serving-tier app
-(`app/`) not yet built.
+recipe — 80 of 82 enqueue, the 2 named exclusions get none, idempotent per cohort version. The
+**worker's job-pull loop** (D-030, `worker/orchestrator.py`) is built as a pure, transport-agnostic
+loop over an injected client protocol (claim → fold → upload → complete, with server-side
+done-ordering and the transport/fold-failure taxonomy). **Next:** D-031 — the Fly serving-tier
+HTTP endpoint that realizes the loop's protocol (auth, routes, upload limits); `app/` not yet
+built. The stale-lease threshold was raised to 60 min (PROVISIONAL, D-030) for the HTTP topology.
 
 ---
 
@@ -424,9 +427,9 @@ Project-PharmFoldMDK/
 ├── core/                    # queue.py (JobQueue seam + is_stale), manifest.py (D-023 routing
 │                            #   table + D-024 coverage), enqueue.py (D-026 manifest → analyses+jobs)
 ├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
+│                            #   orchestrator.py (D-030 job-pull loop, pure/transport-agnostic),
 │                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run),
-│                            #   requirements.txt (CUDA deps, never installed by CI). Job-pull
-│                            #   orchestration is later.
+│                            #   requirements.txt (CUDA deps, never installed by CI)
 ├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
 ├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
 ├── docs/                    # plans, notes, and the design-decision log (README.md)

@@ -76,7 +76,7 @@ def test_fail_records_error_and_marks_failed(q):
 def test_reap_returns_stale_claim_to_pending_and_increments_attempts(q):
     jid = q.enqueue(1)
     q.claim("w1")
-    q.now = q.now + timedelta(minutes=30, seconds=1)      # just over the edge
+    q.now = q.now + timedelta(minutes=60, seconds=1)      # just over the (D-030) edge
     assert q.reap_stale() == 1
     row = q.get(jid)
     assert row.status == PENDING
@@ -87,7 +87,7 @@ def test_reap_returns_stale_claim_to_pending_and_increments_attempts(q):
 def test_reap_leaves_a_fresh_claim_untouched(q):
     jid = q.enqueue(1)
     q.claim("w1")
-    q.now = q.now + timedelta(minutes=30)                 # exactly the edge — not stale
+    q.now = q.now + timedelta(minutes=60)                 # exactly the (D-030) edge — not stale
     assert q.reap_stale() == 0
     assert q.get(jid).status == CLAIMED
 
@@ -112,13 +112,13 @@ def test_reaping_retries_below_the_cap_then_terminates_at_it(q):
     # First two reaps: still retried, back to pending.
     for expected in (1, 2):
         q.claim("w1")
-        q.now = q.now + timedelta(minutes=31)
+        q.now = q.now + timedelta(minutes=61)
         q.reap_stale()
         assert q.get(jid).status == PENDING
         assert q.get(jid).attempts == expected
     # Third reap hits the cap: terminal, marked reaped-out.
     q.claim("w1")
-    q.now = q.now + timedelta(minutes=31)
+    q.now = q.now + timedelta(minutes=61)
     q.reap_stale()
     row = q.get(jid)
     assert row.status == FAILED
@@ -134,7 +134,7 @@ def test_explicit_fail_preserves_attempts_history(q):
     jid = q.enqueue(1)
     for _ in range(2):
         q.claim("w1")
-        q.now = q.now + timedelta(minutes=31)
+        q.now = q.now + timedelta(minutes=61)
         q.reap_stale()
     assert q.get(jid).attempts == 2 and q.get(jid).status == PENDING
 
