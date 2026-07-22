@@ -3,7 +3,7 @@
 # is up and the queue accepts work — NOT that any fold has run (DEP-004); folds happen only when
 # the owner starts the worker on the GPU box.
 app = "pharmfoldmdk"
-primary_region = "iad"   # OWNER: confirm this matches the MPG Postgres cluster's region (D-014).
+primary_region = "sjc"   # matches the MPG Postgres cluster's region (D-014).
 
 [build]
   dockerfile = "Dockerfile"
