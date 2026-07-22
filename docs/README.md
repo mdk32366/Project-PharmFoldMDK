@@ -80,6 +80,119 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### DEP-005 — Applying the production schema: supervised first, automated after
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)** — owner-ruled via the deployment-arc orders (the Planner's
+  draft was Proposed; these orders enact it: the corrections below, the phase-1/phase-2 split, and
+  the verification surface).
+- **Context — the gap the Builder surfaced rather than guessed past.** DEP-004 rules that a
+  green deploy means *"the transport API is up and the queue is accepting work."* **That is
+  false until the schema exists on the Fly database.** Nothing in DEP-001…004 says how
+  `alembic upgrade head` runs against production, and the Builder deliberately did **not** add a
+  `fly.toml` `release_command` for it, on the grounds that it touches the prod database and
+  belongs in a decision. Correct call: this entry exists because of it.
+
+  **Provenance (D-016):** ruled against `db/migrations/env.py`, `db/migrations/versions/`, and
+  D-012 §5a / D-017 / D-019, read from the tree at `6792c21`. The Planner has **not** seen the
+  `Dockerfile`, `fly.toml`, or deploy-job body built in PR #48 — those are Builder-reported, and
+  the `release_command` wiring below must be checked against the actual `fly.toml` before it
+  lands.
+
+---
+
+- **Why this is not a routine migration, stated before the ruling.** The chain is two
+  migrations, and `0002` is not ordinary DDL:
+
+  ```
+  0001_create_jobs.py
+  0002_protein_analyses.py   ← creates the extensions schema, the vector extension,
+                                and analysis_embeddings (embedding vector(384))
+  ```
+
+  `0002` runs `CREATE SCHEMA IF NOT EXISTS extensions`, `CREATE EXTENSION IF NOT EXISTS vector
+  SCHEMA extensions`, and then a **bare `vector(384)`** column that resolves only through
+  `env.py`'s `SET search_path TO public, extensions` (D-012 §5a). So the first production
+  migration is simultaneously:
+
+  1. the first time the **migration chain** runs against the Fly MPG cluster (D-014);
+  2. the first time `CREATE EXTENSION vector` is issued **on production**, where the role's
+     privileges are the Fly cluster's, not CI's;
+  3. the first time the `search_path` seam resolves a bare `vector` type **outside CI**.
+
+  **Correction to a claim carried in this project's own hazard notes:** the `postgres` CI job
+  uses a **pgvector image** (D-019), not stock `postgres:16` as
+  `docs/HAZARD-search-path-seams.md` and D-032 both state. Seam 2 is therefore *better* covered
+  than those documents say — the extension path is exercised in CI. **What CI still cannot
+  prove is production role privileges on a managed cluster.** `CREATE EXTENSION` commonly
+  requires elevated rights; if the Fly database role lacks them, this migration fails on the
+  first run and only on production. That is the specific reason to watch it. *(Both documents are
+  corrected in this same change.)*
+
+---
+
+- **Decision — two phases, and they compose:**
+
+  **Phase 1 — the initial migration is run BY HAND, supervised, BEFORE the first deploy.**
+  Not by `release_command`, not by the deploy job. The owner runs `alembic upgrade head`
+  against the Fly database once, watches it, and confirms the schema exists.
+
+  **Why supervised for the first run, specifically:** every item in the list above is
+  first-time-on-prod, and a `release_command` failure surfaces as a deploy log to parse after
+  the fact. A hand-run surfaces as an error message in front of a person who can act on it. The
+  asymmetry is stark and one-directional — supervising costs five minutes; debugging a failed
+  automated migration against a half-applied prod schema costs an evening, and it happens with
+  the deploy already in flight.
+
+  **Phase 2 — a `release_command` in `fly.toml` for steady state, ruled but wired AFTER
+  phase 1 succeeds.** Once the schema is known-good and the app has come up clean, migrations
+  become automatic and versioned with the deploy: Fly runs the release command in a one-off
+  machine before the new version goes live, so **a failed migration aborts the release rather
+  than shipping code against a schema that never applied.** That property is worth having, and
+  it is why phase 2 is ruled now rather than left open.
+
+  **The order is the substance of this entry.** Automating first would mean the riskiest
+  migration in the project's history runs unattended; hand-running forever would mean "did prod
+  get migrated" is a question rather than a guarantee. Supervised-then-automated gets both.
+
+- **⚠ The merge that lands the deploy job must NOT precede phase 1.** DEP-004's promise —
+  a green deploy means the queue accepts work — is only true once the tables exist. Merging
+  first produces a green deploy over an empty database: **the transport would be up and every
+  write would fail**, which is exactly the over-read DEP-004 was written to prevent, arriving by
+  a different route.
+
+---
+
+- **Test surface / verification (what "phase 1 succeeded" means, so it is checkable rather
+  than felt):**
+  - `alembic current` against the Fly database reports **head** (`0002`).
+  - The `extensions` schema exists and the `vector` extension is installed in it.
+  - `analysis_embeddings` exists with an `embedding vector(384)` column — i.e. the bare
+    `vector(384)` resolved, which is the seam actually being tested.
+  - `jobs`, `protein_analyses`, and `ranking_runs` exist with the FK closure D-019 ruled.
+  - **If `CREATE EXTENSION` fails on privileges**, that is a result, not a blocker to work
+    around: it means the Fly role needs elevation or the extension needs pre-installing by the
+    cluster owner, and that fact belongs in this entry as an amendment rather than in a
+    workaround.
+
+- **Deep-learning justification:** indirect. `analysis_embeddings` is the vector store the
+  scorer's outputs (D-027) will land in. A schema that half-applied, or a `vector` type that
+  silently failed to resolve, would surface later as missing data rather than as an error —
+  the same invisible-corruption class D-017 and D-032 exist to guard against, one layer out.
+
+- **Consequences / follow-ups:**
+  - **`docs/HAZARD-search-path-seams.md` and D-032 both need correcting** on the stock-image
+    claim: the `postgres` job uses a pgvector image per D-019. Seam 2's remaining exposure is
+    **production role privileges**, not CI coverage. Its named trigger (the first
+    `analysis_embeddings` write, downstream of D-027) is unchanged. *(Done in this change.)*
+  - **Phase 2's `release_command` is a change to the deploy path**, which sits downstream of two
+    required checks — so per D-008 it is proven, not merged on the strength of a passing run.
+  - **The provisioning checklist is owner action and precedes everything here:** the app-scoped
+    token as the `FLY_API_TOKEN` GitHub secret (DEP-003), `primary_region` matching the MPG
+    cluster's region, `DATABASE_URL`, `WORKER_AUTH_TOKEN` matching the worker's, and the
+    artifacts volume.
+
+---
+
 ### DEP-004 — What a green deploy means, and what it does not
 - **Date:** 2026-07-22
 - **Status:** **Accepted (2026-07-22)**
@@ -389,12 +502,18 @@ So the rule is not "be careful" — it is:
   matters and why it is the Builder's to confirm rather than the Planner's to assume.
 
 - **What this does NOT change, stated so promotion is not mistaken for wider coverage:**
-  - **The pgvector `extensions`-schema resolution is still unproven.** D-017 says so directly:
-    the service image is stock `postgres:16`, there is no vector column, so `search_path`
-    → `extensions` is proven only insofar as the SET executes without error. Per
-    `docs/HAZARD-search-path-seams.md` this is **seam 2**, and its trigger is unchanged — the
-    first `analysis_embeddings` write, downstream of D-027. **A required Postgres job does not
-    close it.**
+  - **Seam 2's remaining exposure is production role privileges, not CI coverage — correcting a
+    claim this entry originally carried.** This entry (and `docs/HAZARD-search-path-seams.md`)
+    said the `postgres` service image is stock `postgres:16` with no vector column; that is
+    **wrong** and is corrected here per DEP-005. D-019 switched the CI image to
+    `pgvector/pgvector:pg16`, and migration `0002` creates `analysis_embeddings` with a bare
+    `vector(384)` column that resolves only through env.py's `search_path` — so the
+    extension/type-resolution path **is** exercised in the `postgres` job at migration time.
+    What a required Postgres job still does **not** prove is **production role privileges**:
+    `CREATE EXTENSION` commonly needs elevated rights and the Fly managed cluster's role is not
+    CI's (DEP-005). Per `docs/HAZARD-search-path-seams.md` this is **seam 2**, and its named
+    trigger is unchanged — the first `analysis_embeddings` write, downstream of D-027. **A
+    required Postgres job does not close it.**
   - **`worker/requirements.txt` remains outside the lock-file guarantee** (D-018, by design;
     `accelerate` unpinned). No CI job reddens on a breaking upstream release there.
   - **`--require-hashes` tamper rejection remains asserted, not demonstrated.**
@@ -414,9 +533,10 @@ So the rule is not "be careful" — it is:
     run against logs with the answer genuinely open, not to ratify a decision already taken. Had
     a red been infra-attributable, the count would have reset per D-017 (3) and this entry would
     have become a dated record of a bar checked and not met.
-  - **The image switches to `pgvector/pgvector:pg16`** when the first vector-column migration
-    lands (D-017). That is a change to a *required* check and therefore must be proven
-    RED→GREEN per D-008, not merged on the strength of a passing run (D-025).
+  - **The image is already `pgvector/pgvector:pg16` (D-019)** — switched when migration `0002`
+    added the vector column, *before* this job became required. Any *future* change to this
+    now-required check (image or otherwise) is proven RED→GREEN per D-008, not merged on the
+    strength of a passing run (D-025).
 
 ---
 
