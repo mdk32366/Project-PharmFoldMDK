@@ -154,8 +154,10 @@ So the rule is not "be careful" — it is:
   Raw, a 2213 aa PAE is L×L ≈ 4.9M floats ≈ **75–100 MB of JSON**, which over a residential
   uplink is plausibly 30–80 minutes on its own and could exceed the 3600 s provisional lease
   (D-030) *before the fold is even counted*. A larger body limit does not fix that; **gzip
-  does** — PAE is highly compressible text and drops to ~20–30 MB, a few minutes' upload, inside
-  the lease. So the **worker compresses** PAE and the **endpoint stores the compressed bytes**
+  does** — gzip on float-heavy JSON typically achieves 5–10×, putting a 75–100 MB PAE at roughly
+  **10–20 MB — an estimate, not a measurement**. The actual ratio is observed on the first large
+  fold, the same measurement that makes D-030's threshold interpretable. At that size the upload
+  is a few minutes, inside the lease. So the **worker compresses** PAE and the **endpoint stores the compressed bytes**
   (the compression is client-side work, not a route concern).
 
   **Store rather than discard:** nothing consumes PAE today (see the Builder note), so discard
