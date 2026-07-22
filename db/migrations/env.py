@@ -26,14 +26,18 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool, text
 
+from db.dburl import normalize_db_url
 from db.models import Base
 
 config = context.config
 
-# DB URL from the environment (D-014: the DIRECT connection, not the pooler).
+# DB URL from the environment (D-014: the DIRECT connection, not the pooler). Normalized to the
+# psycopg 3 scheme (D-012) with the SAME helper the app uses: Fly's attach writes a bare
+# `postgresql://`, which would route alembic to the uninstalled psycopg2 — so the supervised
+# phase-1 migration and phase-2's release_command both survive a re-attach (DEP-005).
 _url = os.environ.get("DATABASE_URL")
 if _url:
-    config.set_main_option("sqlalchemy.url", _url)
+    config.set_main_option("sqlalchemy.url", normalize_db_url(_url))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

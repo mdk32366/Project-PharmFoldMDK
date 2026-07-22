@@ -31,9 +31,9 @@ from typing import Any, Callable, Optional
 
 from sqlalchemy import select, update
 
+from core.contracts import FoldSpec
 from core.queue import Job
 from db.models import JobRecord, ProteinAnalysis
-from worker.orchestrator import FoldSpec
 
 STRUCTURE_SOURCE = "esmfold"   # this structure came from our ESMFold runner (D-031 (b))
 

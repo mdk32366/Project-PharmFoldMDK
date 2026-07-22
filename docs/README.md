@@ -80,6 +80,346 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### DEP-005 — Applying the production schema: supervised first, automated after
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)** — owner-ruled via the deployment-arc orders (the Planner's
+  draft was Proposed; these orders enact it: the corrections below, the phase-1/phase-2 split, and
+  the verification surface).
+- **Context — the gap the Builder surfaced rather than guessed past.** DEP-004 rules that a
+  green deploy means *"the transport API is up and the queue is accepting work."* **That is
+  false until the schema exists on the Fly database.** Nothing in DEP-001…004 says how
+  `alembic upgrade head` runs against production, and the Builder deliberately did **not** add a
+  `fly.toml` `release_command` for it, on the grounds that it touches the prod database and
+  belongs in a decision. Correct call: this entry exists because of it.
+
+  **Provenance (D-016):** ruled against `db/migrations/env.py`, `db/migrations/versions/`, and
+  D-012 §5a / D-017 / D-019, read from the tree at `6792c21`. The Planner has **not** seen the
+  `Dockerfile`, `fly.toml`, or deploy-job body built in PR #48 — those are Builder-reported, and
+  the `release_command` wiring below must be checked against the actual `fly.toml` before it
+  lands.
+
+---
+
+- **Why this is not a routine migration, stated before the ruling.** The chain is two
+  migrations, and `0002` is not ordinary DDL:
+
+  ```
+  0001_create_jobs.py
+  0002_protein_analyses.py   ← creates the extensions schema, the vector extension,
+                                and analysis_embeddings (embedding vector(384))
+  ```
+
+  `0002` runs `CREATE SCHEMA IF NOT EXISTS extensions`, `CREATE EXTENSION IF NOT EXISTS vector
+  SCHEMA extensions`, and then a **bare `vector(384)`** column that resolves only through
+  `env.py`'s `SET search_path TO public, extensions` (D-012 §5a). So the first production
+  migration is simultaneously:
+
+  1. the first time the **migration chain** runs against the Fly MPG cluster (D-014);
+  2. the first time `CREATE EXTENSION vector` is issued **on production**, where the role's
+     privileges are the Fly cluster's, not CI's;
+  3. the first time the `search_path` seam resolves a bare `vector` type **outside CI**.
+
+  **Correction to a claim carried in this project's own hazard notes:** the `postgres` CI job
+  uses a **pgvector image** (D-019), not stock `postgres:16` as
+  `docs/HAZARD-search-path-seams.md` and D-032 both state. Seam 2 is therefore *better* covered
+  than those documents say — the extension path is exercised in CI. **What CI still cannot
+  prove is production role privileges on a managed cluster.** `CREATE EXTENSION` commonly
+  requires elevated rights; if the Fly database role lacks them, this migration fails on the
+  first run and only on production. That is the specific reason to watch it. *(Both documents are
+  corrected in this same change.)*
+
+---
+
+- **Decision — two phases, and they compose:**
+
+  **Phase 1 — the initial migration is run BY HAND, supervised, BEFORE the first deploy.**
+  Not by `release_command`, not by the deploy job. The owner runs `alembic upgrade head`
+  against the Fly database once, watches it, and confirms the schema exists.
+
+  **Why supervised for the first run, specifically:** every item in the list above is
+  first-time-on-prod, and a `release_command` failure surfaces as a deploy log to parse after
+  the fact. A hand-run surfaces as an error message in front of a person who can act on it. The
+  asymmetry is stark and one-directional — supervising costs five minutes; debugging a failed
+  automated migration against a half-applied prod schema costs an evening, and it happens with
+  the deploy already in flight.
+
+  **Phase 2 — a `release_command` in `fly.toml` for steady state, ruled but wired AFTER
+  phase 1 succeeds.** Once the schema is known-good and the app has come up clean, migrations
+  become automatic and versioned with the deploy: Fly runs the release command in a one-off
+  machine before the new version goes live, so **a failed migration aborts the release rather
+  than shipping code against a schema that never applied.** That property is worth having, and
+  it is why phase 2 is ruled now rather than left open.
+
+  **The order is the substance of this entry.** Automating first would mean the riskiest
+  migration in the project's history runs unattended; hand-running forever would mean "did prod
+  get migrated" is a question rather than a guarantee. Supervised-then-automated gets both.
+
+- **⚠ The merge that lands the deploy job must NOT precede phase 1.** DEP-004's promise —
+  a green deploy means the queue accepts work — is only true once the tables exist. Merging
+  first produces a green deploy over an empty database: **the transport would be up and every
+  write would fail**, which is exactly the over-read DEP-004 was written to prevent, arriving by
+  a different route.
+
+---
+
+- **Test surface / verification (what "phase 1 succeeded" means, so it is checkable rather
+  than felt):**
+  - `alembic current` against the Fly database reports **head** (`0002`).
+  - The `extensions` schema exists and the `vector` extension is installed in it.
+  - `analysis_embeddings` exists with an `embedding vector(384)` column — i.e. the bare
+    `vector(384)` resolved, which is the seam actually being tested.
+  - `jobs`, `protein_analyses`, and `ranking_runs` exist with the FK closure D-019 ruled.
+  - **If `CREATE EXTENSION` fails on privileges**, that is a result, not a blocker to work
+    around: it means the Fly role needs elevation or the extension needs pre-installing by the
+    cluster owner, and that fact belongs in this entry as an amendment rather than in a
+    workaround.
+
+- **Deep-learning justification:** indirect. `analysis_embeddings` is the vector store the
+  scorer's outputs (D-027) will land in. A schema that half-applied, or a `vector` type that
+  silently failed to resolve, would surface later as missing data rather than as an error —
+  the same invisible-corruption class D-017 and D-032 exist to guard against, one layer out.
+
+- **Consequences / follow-ups:**
+  - **`docs/HAZARD-search-path-seams.md` and D-032 both need correcting** on the stock-image
+    claim: the `postgres` job uses a pgvector image per D-019. Seam 2's remaining exposure is
+    **production role privileges**, not CI coverage. Its named trigger (the first
+    `analysis_embeddings` write, downstream of D-027) is unchanged. *(Done in this change.)*
+  - **Phase 2's `release_command` is a change to the deploy path**, which sits downstream of two
+    required checks — so per D-008 it is proven, not merged on the strength of a passing run.
+  - **The provisioning checklist is owner action and precedes everything here:** the app-scoped
+    token as the `FLY_API_TOKEN` GitHub secret (DEP-003), `primary_region` matching the MPG
+    cluster's region, `DATABASE_URL`, `WORKER_AUTH_TOKEN` matching the worker's, and the
+    artifacts volume.
+
+---
+
+### DEP-004 — What a green deploy means, and what it does not
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)**
+- **Series note:** first entries under the `DEP-NNN` prefix — deployment/operations, same log,
+  appended at top, monotonic within series (D-002's single-log discipline unchanged). The
+  precedent is `S-NNN` for spikes: a prefix that says which arc an entry belongs to, so a reader
+  tracing the graded scientific claim can skip `DEP-*` and a reader debugging a deploy can find
+  them together. **No deployment TDD** — considered and rejected as disproportionate; the
+  coherent picture is D-004 plus these entries.
+- **Context:** Deployment is about to produce a green "deploy succeeded" signal on every
+  main-push. That signal is easy to over-read, and two facts make the honest reading narrower
+  than the word "deployed" implies:
+  - **The worker is not deployed** (D-004): `worker/` runs on the local GPU box and is started
+    **by hand**. Nothing in the deploy pipeline starts it.
+  - **There is no UI yet.** D-004 plans Streamlit as the serving tier's front end, but **it does
+    not exist** — verified against the tree at `6792c21`: no `streamlit` dependency, no Streamlit
+    code. `app/` is the FastAPI transport only (the four worker→Fly routes from D-031).
+- **Decision — a green deploy means exactly this: the transport API is up on Fly and the queue
+  is accepting work.** It does **not** mean:
+  - that any fold has run, or can run without the owner starting the worker;
+  - that a user-facing UI is reachable — there is none to reach;
+  - that the full system is "live" in any sense a reader might assume from a green checkmark.
+
+  Stated so the signal is not over-read — by the owner, or by a grader seeing a passing deploy.
+- **Deep-learning justification:** neutral — operational honesty, not a model decision. Recorded
+  because an over-read green is the deployment-arc version of the failure the whole log guards
+  against: a signal that claims more than it demonstrates.
+- **Consequences:**
+  - When Streamlit is built, it is its own entry and it changes what a green deploy means — at
+    which point this entry is amended, not silently outgrown. *(Superseded in part by D-033: the
+    UI is React, not Streamlit — but the shape of this consequence is unchanged: the first UI to
+    ship amends what a green deploy means.)*
+  - **Starting the worker on the GPU box is an owner action**, and it is the precondition for the
+    first end-to-end fold (the measurement that retires D-030's provisional lease and D-031's PAE
+    ratio).
+
+---
+
+### DEP-003 — `FLY_API_TOKEN`: an app-scoped deploy token, not an account token
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)**
+- **Context:** The deploy job authenticates to Fly with a token held as a GitHub Actions secret.
+  A GitHub Actions secret is readable by any workflow run on the repo, so its blast radius on
+  compromise is the question, not merely its convenience.
+- **Decision — an app-scoped deploy token (`fly tokens create deploy`), scoped to
+  `pharmfoldmdk` alone.** Not an account/org-wide token.
+  - **Rationale, owner's ruling:** there are **four other apps on the account**. An account-wide
+    token in CI means a compromised workflow could redeploy or disrupt all five; an app-scoped
+    token can touch only this one. The scope cost is nil — the deploy job only ever deploys this
+    app — so there is no reason to hold more authority than the job uses.
+  - **Rotation is an owner action, not automated.** If the token is rotated or revoked, the
+    GitHub secret is updated by hand. No rotation automation is built; naming it here is what
+    keeps "who can redeploy prod" an answerable question rather than an assumed one.
+- **Deep-learning justification:** neutral — least-privilege on a deploy credential.
+- **Consequences:**
+  - The token grants deploy on `pharmfoldmdk` only; a second app would need its own.
+  - Stored as the `FLY_API_TOKEN` GitHub Actions secret; referenced by the deploy job, never
+    echoed.
+  - **Owner action, precondition for the first green deploy:** create the token
+    (`fly tokens create deploy -a pharmfoldmdk`) and set it as the `FLY_API_TOKEN` repo secret.
+    Until it exists, the deploy step authenticates to nothing — the Builder cannot create it
+    (it is a credential), and says so rather than stubbing around it.
+
+---
+
+### DEP-002 — The deploy guard lives on the job, never on the trigger
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)** — forced by D-008; ruled explicitly so the shape is not
+  gotten backwards.
+- **Context:** `gate.yml`'s own header carries the instruction:
+  > *"When real Fly deploy is wired, guard the DEPLOY JOB (not the trigger) against doc-only
+  > changes so docs still run tests but don't redeploy."*
+
+  Without a guard, every docs-only PR merged to main would trigger a production deploy. The
+  tempting fix — a `paths-ignore` on the workflow — is **the exact thing D-008 removed**, because
+  a required status check that does not report on every PR leaves that PR unmergeable forever.
+  `test` and `postgres` are both required (D-032); they must run on docs PRs too.
+- **Decision — the deploy JOB is conditional on the change not being docs-only; the workflow
+  TRIGGER is untouched.** `test` and `postgres` run on every PR and push, as now. The `deploy`
+  job additionally checks whether the push changed anything outside `docs/**` and `*.md`, and
+  **skips the Fly deploy step when it did not.** Docs still run the full required suite; they
+  just do not redeploy.
+- **Why this exact split, restated because it is easy to invert:** guarding the *trigger* would
+  make the required checks stop reporting on docs PRs → deadlock (D-008). Guarding the *job*
+  keeps the checks universal and makes only the *deploy* conditional. The first is a
+  reintroduced bug; the second is the fix.
+- **Deep-learning justification:** neutral — CI topology.
+- **Consequences / test surface:**
+  - **Testable, and tested first (project rule):** a docs-only change must not run the deploy
+    step; a code change must. The doc-only detection (diff of changed paths against the previous
+    main commit, matched against `docs/**` / `*.md`) is the unit under test.
+  - The deploy job stays `needs: [test, postgres]` — it cannot run until both required checks are
+    green, unchanged from the placeholder.
+
+---
+
+### DEP-001 — What the Fly image contains, and what it must never contain
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)**
+- **Context:** The Fly image serves the transport tier. What goes into it is a decision because
+  the failure mode of getting it wrong is silent: an image that includes the worker's CUDA stack
+  would be multi-gigabyte, slow to build and deploy, and **would still work** — so nothing would
+  flag it. D-004 (worker not deployed) and D-018 (the CUDA stack is a separate, unlocked
+  dependency world) both bear on it, and neither is self-enforcing in a Dockerfile.
+- **Decision — the image contains the runtime tier and nothing GPU:**
+  - **Installs `requirements.lock`** — the hash-locked runtime file (D-013), which as of #47
+    carries FastAPI/uvicorn/python-multipart. **Not** `requirements-dev.lock`, **not**
+    `worker/requirements.txt`.
+  - **Copies `app/` and `core/`.** `app/` is the FastAPI transport; `core/` because the `/claim`
+    route calls `core.queue.PostgresJobQueue` (verified in `app/main.py`) and the routes import
+    the queue/manifest primitives.
+  - **Does NOT copy `worker/`** and **does NOT install any `torch`/`transformers` stack.** The
+    worker runs on the GPU box (D-004); its `torch==2.11.0+cu128` build is a CUDA dependency world
+    D-018 deliberately keeps out of the locked environment.
+  - **No Streamlit** — it does not exist yet (verified against the tree). When it is built, this
+    entry is amended to add it and its dependency.
+- **Why explicit rather than left to whoever writes the `COPY` lines:** the image-bloat failure
+  is invisible (it works), and the correct contents are dictated by two prior entries a Dockerfile
+  author might not have in view. Ruling it makes the Dockerfile a transcription of a decision
+  rather than a judgement call.
+- **Deep-learning justification:** indirect — keeping the CUDA stack out of the serving image is
+  the deployment face of D-018's separation, which is what makes the runtime environment a
+  function of a committed lock file (D-013) rather than of an unpinned GPU toolchain.
+- **Consequences / test surface:**
+  - **Assertable and tested first:** the built image (or the Dockerfile's install/copy set) must
+    contain no `torch` and no `worker/`. A test/CI check that greps the image or the Dockerfile
+    for `torch` guards the invisible failure.
+  - When Streamlit lands, both this entry and the image change together. *(Now React, per D-033 —
+    a build step + static-serve path, a DEP-001 amendment when the UI is built, not before.)*
+  - **Builder note (verified against the import graph at `6792c21`, 2026-07-22):** the COPY list
+    above is corrected in two ways the ruling did not trace, **both preserving its intent** (no
+    CUDA/worker world in the serving image):
+    1. **The image also copies `db/`** (the SQLAlchemy ORM models). `app/artifacts.py` imports
+       `db.models`; `db/` is serving-tier with no GPU dependency. DEP-001 under-listed it — an
+       image of `app/` + `core/` alone would fail at import.
+    2. **`FoldSpec` was relocated to `core/contracts.py`.** `app/artifacts.py` imported it from
+       `worker/orchestrator.py`, which would have forced `worker/` into the image **against this
+       very ruling**. `FoldSpec` is the claim contract — the route produces it, the loop consumes
+       it — tier-neutral by nature; it now lives in `core/` and `worker.orchestrator` **re-exports**
+       it, so the loop's tests are unchanged (D-031 rule) and the image ships `app/` + `core/` +
+       `db/`, no `worker/`. The image-contents test enforces the "no `worker/`, no torch"
+       property, so this correction is self-guarding rather than a promise.
+
+---
+
+### D-033 — The serving-tier UI is React, superseding D-004's Streamlit choice
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)**
+- **Supersedes:** D-004's *"Serving tier — Fly.io: **Streamlit** + FastAPI…"* — that clause only.
+  D-004's two-tier topology, pull-based coupling, and no-inbound-exposure constraints are
+  **unchanged and still binding**.
+- **Context:** D-004 named Streamlit on 2026-07-19, before the UI's actual requirements existed.
+  Those requirements arrived later and are now specific:
+  - **D-015 §1a** — disagreement classes must be **visually distinct**; a class-1 and a class-2
+    that render identically in a sorted table mean entirely different things and would read the
+    same.
+  - **D-024** — a coverage line rendered *with* every ranking, held-out and excluded rows
+    reachable from it, boundary method visible per target, fold provenance surfaced.
+  - **D-028** — per-class **quality tooltips** carrying what each disagreement class can and
+    cannot support, inline rather than on a separate methods page; plus feature attribution
+    rendered as a statement about the model, never about the target.
+
+  **Nothing is built.** There is no Streamlit dependency and no Streamlit code in the tree
+  (verified at `6792c21`). So this supersession costs one entry and no code — which is precisely
+  why it is made now rather than after a UI exists.
+
+- **Decision — the serving-tier UI is a React application consuming the FastAPI API.**
+
+  **Why, in terms of what the ruled entries actually require:** every UI commitment above is an
+  *interaction* requirement — conditional styling per disagreement class, inline tooltips whose
+  content varies by class, drill-down from a coverage line into held-out and excluded rows.
+  Streamlit rations exactly that layer: it excels at rapid server-rendered dashboards and
+  fights per-element styling and hover state. **The UI is the vehicle for D-028's claim
+  discipline; a framework that makes tooltips awkward makes that discipline awkward.**
+
+  **It also fits the architecture better than it did in July.** D-031 built `app/` as FastAPI
+  routes — the serving tier is *already* an API. Streamlit would sit beside that API as a second
+  Python server rendering server-side; React consumes it as a client. The serving tier becomes
+  **FastAPI + a static React bundle**, which is one process serving two things rather than two
+  processes.
+
+- **3D visualization — the one real dependency of this switch, resolved not deferred.**
+  `ARCHITECTURE.md` and `docs/UI_Plan.md` specify `py3Dmol`/`stmol`, which are Streamlit-bound.
+  **`py3Dmol` is a Python wrapper around 3Dmol.js**, so React uses **3Dmol.js directly** and
+  every capability the UI Plan lists survives intact: PDB load from path or string, residue
+  highlighting and selection, surface/cartoon/stick representations, **colour-by-pLDDT**, pocket
+  surface rendering, mutation highlighting. Nothing is lost; a wrapper is removed.
+
+- **The tradeoff, recorded because it is real and was weighed rather than waved past.**
+  Streamlit's advantage was **speed to a defensible demo** — a working data app in an afternoon,
+  no bundler, no JS toolchain, for a solo builder on a course deadline. That advantage is
+  genuine and this entry gives it up. It is given up because the UI is not incidental here: it
+  is where D-015 §1a's class distinction, D-024's coverage line, and D-028's tooltips either
+  become legible **to a grader** or do not. A UI that renders the ranking correctly but flattens
+  the disagreement classes would satisfy the letter of those entries and defeat their purpose.
+  **If the deadline later forces a retreat, that is a decision to make explicitly in an entry —
+  not by quietly shipping a flatter UI.**
+
+- **Deep-learning justification:** direct, via D-015 §3 and D-028. The scorer's contribution is
+  only assessable if a reader can see *which* targets moved, *by how much*, in *which*
+  disagreement class, and *what that class supports*. D-024 already ruled that the honest
+  reading travels with the result; **this entry is about the surface that makes that possible
+  rather than aspirational.** A learned scorer whose output is rendered indistinguishably from a
+  heuristic's has had its deep-learning contribution made invisible.
+
+- **Consequences / follow-ups:**
+  - **`docs/UI_Plan.md` is now substantially wrong** — it names Streamlit as primary technology
+    (§ header and §1) and `py3Dmol`/`stmol` for 3D (§3). It predates D-015, D-024 and D-028 and
+    has no coverage or limitations surface at all. **It needs superseding or rewriting**, and
+    that is its own task — not folded into this entry.
+  - **`ARCHITECTURE.md` needs updating in three places** (the diagram at :63, the component
+    table at :105, the serving-tier description at :205, and the roadmap note at :461).
+  - **`docs/TDD_v3_ADC_Focused.md:103`** names "Streamlit frontend + FastAPI backend" — same
+    correction.
+  - **DEP-001 is affected when the UI is built, not before.** The image today ships `app/` +
+    `core/` + the runtime lock. A React UI adds a **build step** (bundle) and a **static-serve
+    path**, which is a DEP-001 amendment at that time. **Today's deploy is unchanged** — there is
+    still no UI to ship.
+  - **DEP-004's meaning is unchanged**: a green deploy means the transport API is up and the
+    queue accepts work. It did not include a UI before this entry and does not now.
+  - **No new runtime Python dependency.** React is a build-time toolchain producing static
+    assets; it does not enter `requirements.lock`. The JS toolchain's own pinning is a question
+    for the entry that builds the UI, and it is **outside D-013's guarantee** in the same way
+    `worker/requirements.txt` is (D-018) — stated now so it is not discovered later.
+
+---
+
 ### D-032 — Promoting the Postgres job to a required check: the D-017 bar, met
 - **Date:** 2026-07-22
 - **Status:** **Accepted (2026-07-22)** — criterion 2 confirmed by the Builder against the
@@ -162,12 +502,18 @@ So the rule is not "be careful" — it is:
   matters and why it is the Builder's to confirm rather than the Planner's to assume.
 
 - **What this does NOT change, stated so promotion is not mistaken for wider coverage:**
-  - **The pgvector `extensions`-schema resolution is still unproven.** D-017 says so directly:
-    the service image is stock `postgres:16`, there is no vector column, so `search_path`
-    → `extensions` is proven only insofar as the SET executes without error. Per
-    `docs/HAZARD-search-path-seams.md` this is **seam 2**, and its trigger is unchanged — the
-    first `analysis_embeddings` write, downstream of D-027. **A required Postgres job does not
-    close it.**
+  - **Seam 2's remaining exposure is production role privileges, not CI coverage — correcting a
+    claim this entry originally carried.** This entry (and `docs/HAZARD-search-path-seams.md`)
+    said the `postgres` service image is stock `postgres:16` with no vector column; that is
+    **wrong** and is corrected here per DEP-005. D-019 switched the CI image to
+    `pgvector/pgvector:pg16`, and migration `0002` creates `analysis_embeddings` with a bare
+    `vector(384)` column that resolves only through env.py's `search_path` — so the
+    extension/type-resolution path **is** exercised in the `postgres` job at migration time.
+    What a required Postgres job still does **not** prove is **production role privileges**:
+    `CREATE EXTENSION` commonly needs elevated rights and the Fly managed cluster's role is not
+    CI's (DEP-005). Per `docs/HAZARD-search-path-seams.md` this is **seam 2**, and its named
+    trigger is unchanged — the first `analysis_embeddings` write, downstream of D-027. **A
+    required Postgres job does not close it.**
   - **`worker/requirements.txt` remains outside the lock-file guarantee** (D-018, by design;
     `accelerate` unpinned). No CI job reddens on a breaking upstream release there.
   - **`--require-hashes` tamper rejection remains asserted, not demonstrated.**
@@ -187,9 +533,10 @@ So the rule is not "be careful" — it is:
     run against logs with the answer genuinely open, not to ratify a decision already taken. Had
     a red been infra-attributable, the count would have reset per D-017 (3) and this entry would
     have become a dated record of a bar checked and not met.
-  - **The image switches to `pgvector/pgvector:pg16`** when the first vector-column migration
-    lands (D-017). That is a change to a *required* check and therefore must be proven
-    RED→GREEN per D-008, not merged on the strength of a passing run (D-025).
+  - **The image is already `pgvector/pgvector:pg16` (D-019)** — switched when migration `0002`
+    added the vector column, *before* this job became required. Any *future* change to this
+    now-required check (image or otherwise) is proven RED→GREEN per D-008, not merged on the
+    strength of a passing run (D-025).
 
 ---
 

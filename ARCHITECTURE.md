@@ -24,8 +24,17 @@ done-ordering and the transport/fold-failure taxonomy). The **Fly transport** (D
 complete / fail), one shared bearer token, the upload route writing the post-fold columns in a
 compensated Volume+DB transaction, and `/complete` enforcing done-ordering server-side (409 until
 `pdb_path` commits). It merged as the first PR under the now-**required** Postgres check (D-032).
-**Next:** the real Fly deploy wiring (flyctl + `FLY_API_TOKEN`) and the first end-to-end large
-rental fold — which retires the PROVISIONAL 60-min lease threshold (D-030) with a measured value.
+The **deployment arc** (DEP-001…004) then wired the Fly serving tier: a runtime-only Docker image
+(`app/` + `core/` + `db/`, hash-locked lock, **no `worker/`/CUDA** — DEP-001, enforced by an
+image-contents test), a `fly.toml`, and a `deploy` job that runs `flyctl deploy --app pharmfoldmdk`
+behind a doc-only guard on the job (DEP-002) with an app-scoped `FLY_API_TOKEN` (DEP-003). A green
+deploy means **the transport API is up and the queue accepts work — not** that any fold has run
+(DEP-004); the worker is hand-started on the GPU box. The UI was ruled **React**, superseding
+D-004's Streamlit clause (D-033) — not yet built.
+**Next (owner-gated):** the app-scoped token + Fly app/Postgres/secrets provisioning so the first
+real deploy goes green; then starting the worker for the first end-to-end large rental fold — which
+retires the PROVISIONAL 60-min lease threshold (D-030) and D-031's estimated PAE ratio with measured
+values.
 
 ---
 
@@ -432,7 +441,8 @@ Project-PharmFoldMDK/
 │                            #   routes.py (D-031 four worker→Fly routes), artifacts.py (FoldSpec
 │                            #   projection + compensated Volume+DB persist), deps.py, config.py
 ├── core/                    # queue.py (JobQueue seam + is_stale), manifest.py (D-023 routing
-│                            #   table + D-024 coverage), enqueue.py (D-026 manifest → analyses+jobs)
+│                            #   table + D-024 coverage), enqueue.py (D-026 manifest → analyses+jobs),
+│                            #   contracts.py (FoldSpec — tier-neutral claim contract, DEP-001)
 ├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
 │                            #   orchestrator.py (D-030 job-pull loop, pure/transport-agnostic),
 │                            #   http_client.py (D-031 concrete HTTP QueueClient, gzips PAE),
@@ -440,16 +450,19 @@ Project-PharmFoldMDK/
 │                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run),
 │                            #   requirements.txt (CUDA deps + httpx, never installed by CI)
 ├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
+├── scripts/                 # ecd_lengths.py, map_genes_to_uniprot.py, deploy_guard.py (DEP-002)
 ├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
-├── .github/workflows/       # CI: test gate → Fly deploy (D-005)
+├── .github/workflows/       # CI: test + postgres gates → Fly deploy job (D-005/DEP-002)
+├── Dockerfile               # serving-tier image: runtime tier only, no worker/CUDA (DEP-001)
+├── .dockerignore            # keeps worker/, venv, tests, docs out of the build context (DEP-001)
+├── fly.toml                 # Fly serving-tier config: app pharmfoldmdk, always-on, Volume mount
 ├── alembic.ini              # migration config; URL from $DATABASE_URL (direct conn, D-014)
 ├── pytest.ini               # pythonpath=. so tests import core/ and db/ (PR A)
 ├── requirements.txt         # runtime deps — human-edited input, exact pins (D-013)
 ├── requirements-dev.txt     # runtime + test deps — human-edited input (D-013)
 ├── requirements.lock        # compiled: every transitive pinned + hashed (Amendment A)
-├── requirements-dev.lock    # compiled; THIS is what the gate installs, --require-hashes
-└── Dockerfile               # serving tier image (Fly) — later
+└── requirements-dev.lock    # compiled; THIS is what the gate installs, --require-hashes
 ```
 
 Today the repo holds the governance files, `docs/`, the **keel** (D-007), the **pinned +

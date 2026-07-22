@@ -1,0 +1,19 @@
+# Keep the build context lean and enforce DEP-001 at the context level too: the worker tier,
+# the venv, caches, tests, docs, and snapshots never enter the image even if a COPY got sloppy.
+.git/
+.github/
+.venv/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# DEP-001: the GPU/worker world is never deployed (D-004/D-018).
+worker/
+
+# Not runtime: tests, docs, scratch scripts, snapshots, and the dev lock.
+tests/
+docs/
+scripts/
+*.zip
+requirements-dev.txt
+requirements-dev.lock
