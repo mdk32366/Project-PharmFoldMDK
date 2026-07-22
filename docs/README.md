@@ -80,6 +80,81 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+> **D-021 and D-022 are a PAIR, logged together on purpose (D-020's measurement raised both).**
+> They interact: decomposition (D-022) and the no-topology boundary rule (D-021) are both "this
+> protein needs boundaries UniProt topology does not give us," so a decomposition mechanism, if
+> built, may also serve some of D-021's targets. Scope them together, not sequentially. Both are
+> **Proposed — the orchestrator (routing) must not be built until they are ruled**, because right
+> now "route to a tier" assumes every target *has* a tier, and MUC16 does not.
+
+### D-022 — Oversize targets: decompose or exclude (Proposed)
+- **Date:** 2026-07-21
+- **Status:** **Proposed** — awaiting a ruling before the orchestrator routes the rental bucket.
+- **Context:** D-020 measured the rental bucket (16 targets, largest ECD span ≥ 630 aa) and found
+  it **non-uniform**. Two targets exceed single-sequence ESMFold feasibility on **any** card —
+  **MUC16 (14 451 aa; CA-125)** and **FAT2 (4 030 aa)** — because the limit is **sequence length,
+  not model weights**, so a 48 GB A6000 does not help. Several more sit near the edge
+  (NOTCH2 1652, PTPRZ1 1612, LRP6 1351, JAG1 1034). D-011's ~$0.25 rental estimate, scoped to a
+  handful of HER2-class targets, does not survive this.
+- **Unmeasured prerequisite (same shape as the local ceiling once was):** the **A6000
+  single-fold ceiling** is unknown. MUC16/FAT2 are over any plausible ceiling (decide regardless);
+  the borderline targets cannot be routed until it is measured.
+- **Options:**
+  - **(a) Domain decomposition** — fold sub-domains separately. Real work, and it introduces a
+    boundary-selection problem of its own (which is also D-021's problem — see the pairing note).
+  - **(b) Exclusion** — drop the oversize targets from the folded set. Cheap. **The exclusions
+    must be named and reported as coverage** — a cohort of 82 that silently becomes 78 is exactly
+    the quiet drift that invalidates a comparison.
+- **Recommendation (for a ruling):** for the first ranking pass, **exclude the definitively-
+  oversize (MUC16, FAT2), named**, and **measure the A6000 ceiling** to route the borderline ones;
+  treat decomposition as a later enhancement rather than a blocker. Coverage is then reported as
+  "82 minus the named exclusions," never a silently smaller number.
+- **Deep-learning justification:** indirect — this determines which targets have folds at all, and
+  therefore which the D-015 scorer can rank; an unnamed exclusion would silently bias the ranking.
+
+### D-021 — A second ECD-boundary method for the no-topology targets (Proposed)
+- **Date:** 2026-07-21
+- **Status:** **Proposed** — awaiting a ruling before the orchestrator routes these.
+- **Context:** D-020 measured **13 of 82 (16%)** with no usable extracellular topological-domain
+  annotation, so D-009 §2 cannot slice them. At 16% this is a **routine path, not an edge case** —
+  D-009 §2's "fold whole sequence + warn" fallback was written for a rarity. The 13 are **not
+  homogeneous:**
+  - **GPI-anchored ADC targets** — **MSLN** (mesothelin), **GPC1** (glypican-1) — whose ECD is
+    essentially the whole mature chain (signal peptide trimmed, GPI-attachment signal removed);
+  - **large multi-domain proteins UniProt does not annotate topologically** (IGF2R 2491, TLR3 904);
+  - **multi-pass transporters** whose extracellular parts are small loops, not an ADC epitope
+    domain (SLC44A3, UGT8);
+  - **SDK1** — an extracellular annotation with **no numeric bounds**: neither sliceable nor
+    cleanly unsliceable. Named separately so it is not silently bucketed with the others.
+- **The stakes (same class as §1a's truncation exclusion):** a fold produced by a *different
+  boundary method* is a different **kind of input** — a whole chain rather than a domain. If 16%
+  of the cohort's structural features are computed on a different kind of input, **D-015's ranking
+  is comparing two things.** Whether that is acceptable, correctable, or grounds for exclusion is
+  the decision.
+- **Options:**
+  - **(a) Predicted boundary** — signal-peptide prediction (SignalP/Phobius) plus TM / GPI-anchor
+    prediction (DeepTMHMM/NetGPI) to derive an ECD. For the GPI-anchored subset, mature-chain-
+    minus-signal-peptide *is* a legitimate, domain-comparable ECD. Adds a prediction step (more DL,
+    its own error), and does not fit the transporters (small loops) or the giants cleanly.
+  - **(b) Whole-sequence with a provenance flag** — fold the whole mature chain, `source=whole`
+    (the runner already records this), and **exclude from cross-method ranking claims** per §1a.
+    Cheap, no new model, but produces folds not comparable to domain slices.
+- **Binding requirement whichever is chosen (§1a):** the ranking **must know which boundary method
+  produced each fold** (`source ∈ {sliced_ecd, predicted_ecd, whole, …}`), and a cross-method
+  comparison must be visibly flagged — the same discipline as truncation exclusion. The runner's
+  provenance field is where this is recorded.
+- **Recommendation (for a ruling):** treat the 13 as the heterogeneous set they are —
+  **predicted-boundary (a) for the GPI-anchored subset** (a real domain-comparable ECD),
+  **whole-sequence-flag (b) elsewhere**, all provenance-tagged and held out of cross-method
+  ranking claims until validated. This needs a ruling: it introduces a new predictor (a DL
+  component, which the Prime Directive welcomes but which is its own work) and a per-fold
+  provenance class the scorer must respect.
+- **Deep-learning justification:** direct if (a) — a learned signal-peptide/GPI predictor is
+  itself load-bearing neural work; and either way this governs whether 16% of the cohort produces
+  comparable structural features, which is a precondition for the D-015 ranking meaning anything.
+
+---
+
 ### D-020 — The 82-target cohort of record, gene→accession mapping, and the measured ECD distribution
 - **Date:** 2026-07-21
 - **Status:** Accepted (data provenance + method); the ECD distribution below is measured.
