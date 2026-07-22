@@ -80,6 +80,115 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-020 — The 82-target cohort of record, gene→accession mapping, and the measured ECD distribution
+- **Date:** 2026-07-21
+- **Status:** Accepted (data provenance + method); the ECD distribution below is measured.
+- **Context:** D-015 fixed the cohort (Group A = Kathad et al.'s 82 prioritised targets) and §4
+  required measuring the ECD-length distribution before scoping the D-011 rental. The 82 lived
+  in a downloaded XLSX; the reproducibility claim (§7) had a hole until the cohort was committed
+  and the accessions derived by a recorded method.
+
+- **Data provenance (D-015 §4: pin the version, not just the URL):**
+  - **Source:** Kathad et al. 2024, *PLOS ONE* `10.1371/journal.pone.0308604`, **CC-BY**.
+    Supplementary **S3**, sheet **`Target_expression_in_normal`** — its unique `Gene name`
+    column is exactly **82** symbols. Retrieved **2026-07-21** from the PLOS file endpoint.
+  - **Committed as the cohort of record:** `data/cohort_82.txt` (the 82 **gene symbols** — the
+    supplementary carries no UniProt accessions), so the cohort no longer lives only in a
+    downloaded binary.
+  - **The comparator arrived with the cohort.** S3 also carries the `Clinical` / `Preclinical` /
+    `Antibody generated` / `Literature evidence` columns — i.e. the evidence-score inputs D-015 §1
+    needs as the comparator ranking. It is *obtainable from the same file*, not reconstructed.
+    (Computing the 1–5 score from them is a later comparator task, not this entry.)
+  - **Mapping:** `scripts/map_genes_to_uniprot.py` (stdlib; reads the committed symbol list) →
+    UniProtKB REST search, **reviewed (SwissProt) only, taxon 9606 pinned**, retrieved 2026-07-21.
+    Output committed: `data/cohort_82_mapping.csv`, resolved accessions `data/cohort_82_accessions.txt`.
+
+- **Why a programmatic mapping is trusted — and it is NOT because it is automated.** A
+  hand-curated list carries the same error rate with none of the flags; the 10-seed's confident
+  MUC4 (for CLDN18.2) and PTPRU (for NECTIN4) are the proof. This mapping is trusted **because it
+  reports what it cannot resolve.** An unresolved or renamed symbol is a visible flag, never a
+  silent guess.
+  - **The census runs on all 82, not a sample:** requested symbol in, returned **primary** gene
+    out, asserted equal. That comparison — against the gene symbol, not the protein name — is
+    exactly what would have caught both seed errors.
+  - **Primary-match disambiguation:** a synonym-only hit is a *different gene*, never a
+    candidate; among multiple reviewed hits, the one whose primary gene equals the requested
+    symbol wins. **0 or ≥2 primary-matches would flag a genuine ambiguity** rather than paper
+    over one — that is what makes the rule safe.
+
+- **Result (observed): 79 clean + 3 resolved-by-primary-match = 82; 0 renamed, 0 ambiguous, 0
+  absent.** Zero renames means the 2024 paper's symbols are all still current (staleness concern
+  retired). The three resolved-from-ambiguity cases are recorded here so a future reader need not
+  re-derive that the method worked — the flags are the evidence:
+
+  | Symbol | resolved → (primary match) | discarded (synonym-only, a different gene) |
+  |---|---|---|
+  | ATP2B2 | `Q01814` | `P23634` (ATP2B4) |
+  | LRRN1  | `Q6UXK5` | `O75427` (LRCH4) |
+  | SMO    | `Q99835` | `Q9NWM0` (SMOX) |
+
+- **Independently anchored, not just internally consistent.** The mapping was checked against the
+  10-seed's already-verified accessions for the Group B symbols present in the 82 — **4/4 exact**
+  (`ERBB2`→P04626, `EGFR`→P00533, `CD276`→Q5ZPR3, `NECTIN4`→Q96NY8). Verification against
+  known-good values, the census applied to the mapping itself.
+
+- **Cohort observation for the D-015 §2 reconciliation (a HYPOTHESIS, not established):** three
+  symbols the 10-seed labelled Group B — **MET, TNFRSF17 (BCMA), FOLR1** — are **not in the 82**.
+  TROP2 and FOLR1 absence is expected (TROP2 is a named author omission; FOLR1 is the GPI-anchored
+  Group C case). BCMA's absence is **consistent with** the paper's haematopoietic-expression
+  exclusion filter (BCMA is a plasma-cell antigen) — *plausible from the filter's presence, not
+  verified against the paper's intermediate lists.* Belongs in the §2 approved-vs-82
+  reconciliation as a check, not a conclusion. The seed's B-labels were illustrative, not
+  authoritative on membership.
+
+#### Measured ECD-length distribution (D-015 §4 — "report the size of the icebreaker, measured")
+
+`scripts/ecd_lengths.py` over the 82 accessions (UniProt `Topological domain` = `Extracellular`,
+per D-009 §2), bucketed against the **measured** local ceiling. Backing data:
+`data/cohort_82_ecd.csv`.
+
+| Bucket (by largest extracellular span) | n | % |
+|---|---|---|
+| **local** (≤440 aa) | 40 | 48.8 |
+| **untested** (441–629 aa) | 13 | 15.9 |
+| **rental** (≥630 aa) | 16 | 19.5 |
+| **unsliceable** (no usable extracellular span) | 13 | 15.9 |
+
+Three findings, each reportable in its own right:
+
+1. **The GPI-anchored / no-topology class is a SECOND METHOD, not an edge case: 13 of 82 (16%).**
+   FOLR1 established that D-009 §2's `Topological domain` method cannot slice GPI-anchored
+   proteins; at 16% of the cohort this is not a fallback to bolt on but a real second boundary
+   problem. Composition: **12** have no extracellular topological domain at all — including
+   GPI-anchored ADC targets **MSLN** (mesothelin) and **GPC1** (glypican-1), plus proteins UniProt
+   simply annotates without topology (IGF2R, TLR3, transporters) — and **1** (SDK1) has an
+   extracellular annotation with **no numeric bounds**, unsliceable as measured. *Which of the 12
+   are specifically GPI-anchored is a follow-up lookup, not asserted here.*
+2. **The rental bucket is not uniform, and D-011's ~$0.25 estimate does not survive.** 16 targets
+   exceed the local ceiling, but two — **MUC16** (14 451 aa; CA-125, a real giant mucin, anchor-
+   confirmed not a parse artifact) and **FAT2** (4 030 aa) — are **too large to fold as a single
+   sequence even on the rented A6000**, and several more (NOTCH2 1652, PTPRZ1 1612, LRP6 1351)
+   approach that limit. "Rental" therefore splits again into *foldable-on-rental* vs
+   *needs-domain-decomposition-or-exclusion* — a real refinement to D-011's scope, to be scoped
+   before renting.
+3. **Just under half (40/82, 49%) fold locally** on the 8 GB GPU with the S-003 int8 recipe — so
+   the local tier carries the plurality of the cohort, and the expensive/hard remainder is now a
+   measured ~35% (untested + rental) plus the 16% that needs a different boundary method.
+
+- **Deep-learning justification:** the cohort is the labelled substrate the D-015 scorer is
+  trained and evaluated on; without a provenance-pinned, accession-verified 82 there is nothing to
+  fit or rank. The ECD measurement turns the compute requirement for cohort-scale structure
+  prediction into an empirical finding (§4), which for an ML course is itself a result.
+
+- **Consequences / follow-ups:** the §2 no-topology count (13) needs a second ECD-boundary rule
+  before those targets can be folded (own decision later); the oversize rental targets need a
+  decomposition-or-exclude call before the rental is scoped; the evidence-score comparator is
+  ready to extract from the same S3 file; the BCMA hypothesis feeds the §2 reconciliation.
+  `openpyxl` was used locally to read S3 but is **not** a project dependency — the committed
+  `cohort_82.txt` is the reproducible artefact, and the stdlib mapping script reads it.
+
+---
+
 ### D-019 — protein_analyses + ranking_runs + FK closure + pgvector: the last unproven point
 - **Date:** 2026-07-21
 - **Status:** Accepted; implemented in this PR (migration `0002`).
