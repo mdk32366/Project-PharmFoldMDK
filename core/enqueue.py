@@ -27,13 +27,14 @@ the single-target view — but are not ranked.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Callable, Iterable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from core.manifest import ManifestRow
+from core.manifest import ManifestRow, build_manifest
 from db.models import JobRecord, ProteinAnalysis, RankingRun
 from worker.runner import (
     DEFAULT_CHUNK_SIZE,
@@ -197,3 +198,103 @@ def uniprot_fetcher(accession: str) -> FetchedSequence:
         version = (data.get("entryAudit") or {}).get("sequenceVersion")
         release = f"seqv{version}" if version is not None else "unknown"
     return FetchedSequence(sequence=sequence, uniprot_release=release)
+
+
+# ── CLI: the prod invocation entry point (wires D-023 manifest → D-026 enqueue) ──
+#
+# Same shape as worker/main.py: nothing new is decided here, it INVOKES ruled pieces.
+# The one baked capability is subset enqueuing — because the first fold is deliberately
+# ONE local-tier target (prove the path before A6000 spend, the pre-work's step 3), and
+# `enqueue_cohort` already takes `Iterable[ManifestRow]`, so a subset is just the manifest
+# filtered before it is passed in. Idempotency (D-026 iii) makes "one now, the rest later"
+# safe by construction: the single target is not re-created when the full cohort runs.
+#
+#   python -m core.enqueue --accession Q96NY8      # one target (NECTIN4, local)
+#   python -m core.enqueue --bucket local --limit 1
+#   python -m core.enqueue --dry-run               # show the selection, touch nothing
+#   python -m core.enqueue                         # the full cohort (80 foldable / 82)
+
+def select_rows(
+    rows: Iterable[ManifestRow],
+    *,
+    accession: str | None = None,
+    bucket: str | None = None,
+    limit: int | None = None,
+) -> list[ManifestRow]:
+    """Filter the manifest to a subset before enqueue. Composable: `accession`, then
+    `bucket` (tier), then `limit`. `--limit` counts FOLDABLE rows — a named exclusion
+    yields no job, so exclusions are dropped before taking N, making `--limit N` mean N
+    jobs. No filters → the whole manifest (the enqueue skips exclusions itself, D-022)."""
+    selected = list(rows)
+    if accession is not None:
+        selected = [r for r in selected if r.accession == accession]
+    if bucket is not None:
+        selected = [r for r in selected if r.tier == bucket]
+    if limit is not None:
+        selected = [r for r in selected if not r.excluded][:limit]
+    return selected
+
+
+def _build_engine():
+    """A real SQLAlchemy engine from `DATABASE_URL`, normalized to the psycopg 3 scheme
+    (D-012) the same way app/config.py and env.py do — so a raw `postgresql://` from the
+    Fly attach works. Loud `KeyError` if `DATABASE_URL` is unset."""
+    from sqlalchemy import create_engine
+
+    from db.dburl import normalize_db_url
+
+    return create_engine(normalize_db_url(os.environ["DATABASE_URL"]), future=True)
+
+
+def run(
+    argv: list[str] | None = None,
+    *,
+    engine_factory: Callable[[], object] = _build_engine,
+    fetch: SequenceFetcher = uniprot_fetcher,
+) -> int:
+    """Parse args, filter the manifest, and enqueue the selection. `engine_factory` and
+    `fetch` are injected in tests (a SQLite engine + a fake fetcher) and default to the
+    real prod engine + UniProt fetcher. Returns a process exit code."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog="python -m core.enqueue",
+        description="Enqueue cohort targets to the queue (D-023 manifest → D-026 enqueue).",
+    )
+    parser.add_argument("--accession", help="enqueue only this UniProt accession")
+    parser.add_argument("--bucket", choices=["local", "rental"],
+                        help="enqueue only this compute tier")
+    parser.add_argument("--limit", type=int,
+                        help="enqueue at most N foldable rows (after --accession/--bucket)")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="print the selected targets; do not touch the database")
+    args = parser.parse_args(argv)
+
+    rows = build_manifest()
+    selected = select_rows(rows, accession=args.accession, bucket=args.bucket, limit=args.limit)
+
+    if not selected:
+        print("no targets match the filter — nothing to enqueue")
+        return 1
+
+    if args.dry_run:
+        print(f"DRY RUN — {len(selected)} target(s) selected, database untouched:")
+        for r in selected:
+            print(f"  {r.accession}  {r.gene:<10} tier={r.tier:<7} "
+                  f"span={r.span}  disposition={r.disposition}")
+        return 0
+
+    engine = engine_factory()
+    with Session(engine) as session:
+        summary = enqueue_cohort(session, selected, fetch)
+    print(f"enqueued: created={summary.created} existed={summary.existed} "
+          f"excluded={summary.excluded}  (ranking_run_id={summary.ranking_run_id})")
+    return 0
+
+
+def main() -> int:
+    return run()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
