@@ -80,9 +80,50 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-025 — Merge-on-green authorization, and what it does not authorize
+- **Date:** 2026-07-22
+- **Status:** Accepted
+- **Context:** The Builder (Code) asked whether the standing merge-on-green authorization from
+  the JARVIS project carries over to PharmFoldMDK. The question was asked in chat, where an
+  answer would have been invisible to every future session. Governance that lives only in a
+  conversation is not governance (D-002).
+- **Decision:** **Merge on green is authorized.** A PR whose required checks pass may be merged
+  without waiting for owner review.
+- **What green means here, stated because the phrase is doing real work:** the D-008 gate —
+  the full suite, functional and user tests, plus the D-013 hash-locked install. Nothing
+  reaches Fly.io that has not passed it first. Merge-on-green is an authorization to *not
+  wait*; it is not a lowering of the bar, and it does not make an unproven check sufficient
+  merely because it is green.
+- **What it does NOT authorize:**
+  - **Merging work whose decision entry does not exist.** THE RULE is unchanged: the log leads
+    the code. A green PR that implements an unruled decision is still incomplete, and green
+    does not substitute for a ruling. D-024's ordering fight this morning is the live example —
+    the manifest could have been built green against an unratified contract.
+  - **Changes to the gate itself.** Under D-008, a change to the required status check is
+    exactly the class of change that gets *proven* RED→GREEN, not merged on the strength of a
+    passing run.
+  - **Silent scope growth.** A PR that grows beyond its entry needs the entry amended, in the
+    same PR (governance rule 2).
+- **Deep-learning justification:** neutral — this is a throughput decision. Recorded because
+  its *absence* from the log was the defect: the Builder was blocked on an unwritten rule, and
+  the next session would have been blocked identically.
+- **Consequences:**
+  - The **D-017 promotion bar is now the live constraint on this entry's value.** Merge-on-green
+    is only as strong as the set of *required* checks, and the Postgres integration job is still
+    not one of them despite having caught **two** production-grade migration bugs without
+    flaking. Until it is promoted, a migration bug can merge green. **This is the one open
+    action that most weakens D-025**, and it needs a number, not "once it's stable across a few
+    PRs."
+  - Two seams remain outside any gate and are unaffected by this entry: the **app-runtime
+    `search_path`** (never run) and **`worker/requirements.txt`** (outside the lock-file
+    guarantee by design, D-018; `accelerate` unpinned).
+
 ### D-024 — Coverage and limitations are a first-class UI surface, not a footnote
 - **Date:** 2026-07-21
-- **Status:** Proposed
+- **Status:** **Accepted (2026-07-22)** — ruled with a **five-state coverage line** (not the
+  four-state prose originally drafted), a **structured** representation, `untested` routed to
+  **rental with its reason recorded**, and SDK1 bucketed but **pinned by a named test**. See
+  "Ruling" below.
 - **Context:** Four separate decisions have now each produced a constraint that **must be
   visible in the interface**, and they have been accumulating as scattered consequences
   rather than as a designed surface:
@@ -156,6 +197,106 @@ So the rule is not "be careful" — it is:
   is what makes D-015's claim discipline **enforceable** rather than aspirational — the
   class-1/class-2 distinction and the coverage line are worthless if the interface renders
   them identically.
+
+- **Ruling (2026-07-22):** Ruled against the measured cohort in `data/cohort_82_ecd.csv`, not
+  against this entry's own prose. The distribution the ruling is made on — recomputed from the
+  CSV, 82 rows, partitioning cleanly:
+
+  | `bucket_by_largest` | n | Meaning |
+  |---|---|---|
+  | `local` | **40** | largest sliceable span ≤ 440 aa (measured local ceiling, S-004/S-005) |
+  | `rental` | **16** | ≥ 630 aa — includes the two named exclusions |
+  | `untested` | **13** | in the **(440, 630) aa** band — unmeasured against the **local** ceiling |
+  | `unknown` | **13** | 12 no-topology + SDK1 |
+  | | **82** | |
+
+  **(i) The coverage line has FIVE states, and is STRUCTURED, not prose.** The drafted line
+  (`82 · N ranked · M held out · K excluded`) has four and does not add up: 13 targets sit in
+  a state it cannot express. The ruled shape is a structured object the UI renders — a string
+  cannot be asserted against a partition invariant, an object can:
+
+      { denominator: 82, ranked: N, held_out: M, excluded: K,
+        unmeasured_tier: U, no_topology: T }
+
+  **The partition invariant is binding:** the states sum to the denominator, always. The prose
+  rendering is a view of this object, never a separately-maintained sentence.
+
+  **(ii) The denominator is 82 — and 79/3 was never a competing number.**
+  `data/cohort_82_accessions.txt` records *79 clean single-hit + 3 resolved by the primary-match
+  rule (ATP2B2/LRRN1/SMO)*. That is **mapping confidence**, not cohort size; both the ECD and
+  mapping CSVs carry 82 rows. The 3 primary-match resolutions travel into the manifest as a
+  **provenance flag on those rows**, per D-020 — visible, not averaged away.
+
+  **(iii) The 13 `untested` targets route to RENTAL, with the reason recorded in the row.**
+  Owner's ruling: completeness over thrift; the rented GPU is available and the 13 are not to
+  be excluded. But the manifest **must not render this indistinguishable from a measured
+  routing.** The row carries `tier=rental, tier_reason=unmeasured_local_ceiling` — the same
+  discipline as D-023 (iii)'s self-labelling `UNMEASURED, conservative` config value, and for
+  the same reason: *an unlabelled `rental` looks measured.* `scripts/ecd_lengths.py:46-52`
+  deliberately buckets against **both** bounds rather than pretending to a single number
+  ("The exact ceiling within (440, 630) is UNMEASURED"); routing these to rental without the
+  reason would spend that honesty silently.
+
+  **They are folded by `sliced_ecd` and are therefore RANKED, not held out.** This is the
+  correction to the first pass of this ruling, and it matters: *held-out* is a
+  **method-comparability** category (D-021), not a tier category. A target folded by the same
+  boundary method as the local 40 is comparable to them regardless of which card did the
+  arithmetic. Holding out 13 `sliced_ecd` targets would drop real, comparable data points from
+  the ranking for no methodological reason — and would understate coverage by 16%.
+
+  **(iv) `held_out` means boundary-method incomparability, and nothing else.** The
+  `whole`-method targets are held out of cross-method ranking claims per D-021 §1a. Tier is
+  orthogonal: a rental-tier `sliced_ecd` fold is ranked; a local-tier `whole` fold is held out.
+  Conflating the two is what produced the error corrected in (iii).
+
+  **(v) SDK1 (`Q7Z5N4`) is bucketed with the no-topology set, and PINNED BY A NAMED TEST.**
+  Owner's ruling: bucketed, not given its own state — but not buried either. Its span is
+  `None-2009(None)`: **a null start and a null width**, i.e. an extracellular annotation that
+  exists but carries no numeric bounds. The hazard is specific and mechanical: it **passes** an
+  `n_spans == 0` check and **fails** a `has_numeric_bounds` check, so a natural implementation
+  admits it as annotated and then slices on `None`. A test naming `Q7Z5N4` explicitly asserts
+  its null-bounds span is never parsed as a boundary — the same shape as
+  `test_analysis_id_has_no_fk_yet`, so the case cannot be silently outlived if the bucketing
+  is ever revisited.
+
+  **(vi) The inline coverage line ships in Iteration 1. The Limitations page ships in
+  Iteration 1 as well.** Owner's ruling. Both homes from the Decision above are Iteration-1
+  scope; the page's per-target numbers are populated from the manifest rather than written by
+  hand, so it is buildable as soon as the manifest exists.
+
+  **What this ruling deliberately does NOT decide:** the exact local ceiling within
+  (440, 630) aa. Routing the 13 to rental makes that measurement *unnecessary for coverage*,
+  not *unnecessary*. It remains open and cheap (~535 aa bisection, local hardware, logic
+  already unit-tested in `worker/ceiling_probe.py`), and if run, it moves some of the 13 from
+  `tier_reason=unmeasured_local_ceiling` to a measured `local` — a cost reduction, not a
+  correctness fix. Recorded, not scheduled.
+
+- **Test surface fixed by this ruling** (written before the manifest, per the project rule):
+  - **Partition invariant** — all 82 accessions land in exactly one state; states sum to 82;
+    the measured distribution is 40 / 16 / 13 / 13.
+  - **Named exclusions present, not absent** — MUC16 (`Q8WXI7`) and FAT2 (`Q9NYQ8`) appear as
+    **excluded rows with a stated reason**. A test asserting they are *missing* would encode
+    the exact bug D-022 exists to prevent.
+  - **`tier_reason` is populated for all 13 `untested`→rental rows**, and a bare `rental` with
+    no reason is a failure.
+  - **GPI subset routes to `whole`, held out** — MSLN (`Q13421`) and GPC1 (`P35052`) route to
+    `whole`, **not** `gpi_predicted`, per D-023 (ii)'s deferral. Pinned because an implementer
+    reading D-021 first will reach for a method that does not yet exist.
+  - **SDK1 (`Q7Z5N4`)** — null-bounds span never parsed as a numeric boundary.
+  - **Primary-match provenance** — ATP2B2, LRRN1, SMO carry their D-020 mapping flag.
+  - **Ranked ≠ local-tier** — a test asserting the 13 rental-tier `sliced_ecd` targets are in
+    `ranked`, so a future refactor cannot quietly re-conflate tier with comparability.
+
+- **Provenance of this ruling (D-016).** Made against `data/cohort_82_ecd.csv`,
+  `data/cohort_82_accessions.txt`, `scripts/ecd_lengths.py:46-52`, and
+  `worker/ceiling_probe.py`'s docstring — read from the tracked tree at HEAD, not from the
+  decision entries' narrative. **Two Planner errors were caught this way while preparing it,
+  both of the same class**, and both are recorded in `docs/PREWORK-2026-07-22.md` rather than
+  quietly fixed: (1) the borderline set was first taken from D-022's prose (NOTCH2, PTPRZ1,
+  LRP6, JAG1) when the CSV shows those are oversize-rental; (2) the corrected 13-target band
+  was then attributed to the **A6000** probe when `ecd_lengths.py` shows the (440, 630) bounds
+  are the **local** ceiling and `ceiling_probe.py` is measuring a different ceiling for a
+  different set. *A decision entry's prose describes a measurement; it is not the measurement.*
 
 - **Consequences / follow-ups:**
   - **The UI Plan (`docs/UI_Plan.md`) predates all of this** and has no limitations surface.
