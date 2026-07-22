@@ -246,6 +246,22 @@ green suite until a Postgres CI job exposed it.
   tier and gets its own manifest with `worker/`.
   *Residual:* the lock fixes versions and hashes, not index availability — a PyPI outage still
   reddens the gate and is not attributable to a commit.
+- **Postgres integration job (D-017) — the seam's other half.** A second CI job, `postgres`,
+  stands up a real **Postgres 16** service container (matching prod, D-014), installs the same
+  locked deps, applies migrations with **`alembic upgrade head`** (the real chain, *not*
+  `create_all`), and runs the `@pytest.mark.postgres` tests. Those prove what the SQLite `test`
+  job structurally cannot: that the migration chain builds the schema, that env.py's Postgres-only
+  `search_path` SET runs without error, and that `PostgresJobQueue.claim`'s `FOR UPDATE SKIP
+  LOCKED` is **atomic** (a locked row is skipped; all-locked yields None). `deploy` now
+  **`needs: [test, postgres]`**. The postgres-marked tests auto-skip in the `test` job (no
+  `DATABASE_URL`), so they are inert there and real only here.
+  **Not yet a branch-protection required check** — that is an owner action (branch protection is
+  owner-set, D-008), deliberately deferred until the service-container job proves stable, per the
+  D-013 caution that a flaky *required* check with no admin bypass deadlocks every PR. Until it is
+  required, `deploy: needs` is the gate: a broken migration cannot deploy even if a PR merged.
+  **Still unexercised:** the service image is stock `postgres:16` and there is no vector column
+  yet, so env.py's `search_path`→`extensions` *resolution* is proven only insofar as the SET does
+  not error; it switches to a pgvector image when the vector-column migration lands (D-017).
 
 ### ⚠ VRAM constraint (8 GB) — fold path is UNRESOLVED (D-006 invalidated by S-001)
 
