@@ -120,10 +120,11 @@ So the rule is not "be careful" — it is:
 
 ### D-024 — Coverage and limitations are a first-class UI surface, not a footnote
 - **Date:** 2026-07-21
-- **Status:** **Accepted (2026-07-22)** — ruled with a **five-state coverage line** (not the
-  four-state prose originally drafted), a **structured** representation, `untested` routed to
-  **rental with its reason recorded**, and SDK1 bucketed but **pinned by a named test**. See
-  "Ruling" below.
+- **Status:** **Accepted (2026-07-22)** — ruled with a **structured coverage object**: a
+  three-cell disposition partition (`ranked` / `held_out` / `excluded`) plus two breakout
+  subsets (`unmeasured_tier`, `no_topology`); `untested` routed to **rental with its reason
+  recorded** and **ranked, not held out**; SDK1 bucketed but **pinned by a named test**. See
+  "Ruling" below, including the §(i) correction of 2026-07-22.
 - **Context:** Four separate decisions have now each produced a constraint that **must be
   visible in the interface**, and they have been accumulating as scattered consequences
   rather than as a designed surface:
@@ -210,16 +211,38 @@ So the rule is not "be careful" — it is:
   | `unknown` | **13** | 12 no-topology + SDK1 |
   | | **82** | |
 
-  **(i) The coverage line has FIVE states, and is STRUCTURED, not prose.** The drafted line
-  (`82 · N ranked · M held out · K excluded`) has four and does not add up: 13 targets sit in
-  a state it cannot express. The ruled shape is a structured object the UI renders — a string
-  cannot be asserted against a partition invariant, an object can:
+  **(i) The coverage line is STRUCTURED, not prose — a THREE-CELL partition plus TWO
+  BREAKOUTS.** The drafted line (`82 · N ranked · M held out · K excluded`) is right about the
+  partition and wrong to stop there: it cannot express that 13 targets are routed on an
+  unmeasured ceiling, or that 13 have no parseable topology. The ruled shape is a structured
+  object the UI renders — a string cannot be asserted against an invariant, an object can:
 
-      { denominator: 82, ranked: N, held_out: M, excluded: K,
-        unmeasured_tier: U, no_topology: T }
+      { denominator:      82,
+        # DISPOSITION PARTITION — mutually exclusive, exhaustive, sums to denominator
+        ranked:           N,
+        held_out:         M,
+        excluded:         K,
+        # BREAKOUTS — subsets that CUT ACROSS the partition; they do NOT sum into it
+        unmeasured_tier:  U,   # routed to rental on an unmeasured local ceiling; these are RANKED
+        no_topology:      T }  # no parseable extracellular span; these are HELD OUT
 
-  **The partition invariant is binding:** the states sum to the denominator, always. The prose
-  rendering is a view of this object, never a separately-maintained sentence.
+  **The binding invariant is `ranked + held_out + excluded == denominator`, and only that.**
+  Measured: **82 = 67 ranked + 13 held out + 2 excluded**, with `unmeasured_tier = 13` (a
+  subset of `ranked`) and `no_topology = 13` (a subset of `held_out`). The prose rendering is a
+  view of this object, never a separately-maintained sentence.
+
+  **Correction, 2026-07-22, raised by the Builder against the entry rather than around it.**
+  This clause first read *"the coverage line has FIVE states… the states sum to the
+  denominator,"* listing all five alongside `denominator`. That is **not consistent with
+  §(iii) or with test-surface item #7**: if `unmeasured_tier` were a partition cell, the 13
+  would not be in `ranked`, which is precisely what §(iii) rules they must be. The error was
+  the Planner's — the word *state* was used for two different things (a disposition and a
+  reason-flag) in a single object, and an implementer could reasonably have built the strict
+  five-cell version and produced a coverage line that silently understates ranked coverage by
+  16%. **The distinction being drawn is the one D-024 exists to protect:** *disposition* is
+  what a target contributes to a ranking claim; *tier* and *topology* are why it was routed as
+  it was. They are orthogonal, per §(iv), and flattening them into one partition re-introduces
+  exactly the tier/comparability conflation §(iv) forbids.
 
   **(ii) The denominator is 82 — and 79/3 was never a competing number.**
   `data/cohort_82_accessions.txt` records *79 clean single-hit + 3 resolved by the primary-match
@@ -272,8 +295,17 @@ So the rule is not "be careful" — it is:
   correctness fix. Recorded, not scheduled.
 
 - **Test surface fixed by this ruling** (written before the manifest, per the project rule):
-  - **Partition invariant** — all 82 accessions land in exactly one state; states sum to 82;
-    the measured distribution is 40 / 16 / 13 / 13.
+  - **Partition invariant** — every accession has exactly one **disposition**, and
+    `ranked + held_out + excluded == 82` (measured: 67 / 13 / 2). Asserted on the disposition
+    partition **only**; `unmeasured_tier` and `no_topology` are breakout subsets and must NOT
+    be summed into it. A test that adds all five fields and expects 82 encodes the ambiguity
+    corrected in §(i) and would force the 13 out of `ranked`.
+  - **Breakout containment** — `unmeasured_tier` ⊆ `ranked` and `no_topology` ⊆ `held_out`,
+    asserted as set containment rather than count equality, so the relationship survives a
+    change in either number.
+  - **Source-bucket distribution** — the `bucket_by_largest` tally in `cohort_82_ecd.csv` is
+    40 / 16 / 13 / 13. This is the **input** measurement, distinct from the disposition
+    partition above; pinned so a change in the CSV reddens rather than silently re-routes.
   - **Named exclusions present, not absent** — MUC16 (`Q8WXI7`) and FAT2 (`Q9NYQ8`) appear as
     **excluded rows with a stated reason**. A test asserting they are *missing* would encode
     the exact bug D-022 exists to prevent.
