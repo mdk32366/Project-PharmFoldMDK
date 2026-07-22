@@ -80,6 +80,156 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-031 — The Fly transport: HTTP realization of the loop's discovered protocol
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)**
+- **Context:** D-030 ruled the topology and deliberately deferred the transport, sequencing the
+  loop first so the protocol would be *discovered by construction* rather than designed in the
+  abstract. That worked: `worker/orchestrator.py` is built and green against an injected client,
+  and the interface it needed is now known rather than imagined.
+
+  **The contract the loop defined, reported untidied by the Builder:**
+  - `claim()` → job **with the fold spec inline** (sequence, slice coords, tier params) or `None`
+  - `upload(job, artifacts)` → returns nothing; **must be idempotent**
+  - `complete(job)` / `fail(job, err)` — separate calls, *mergeable with upload* (flagged)
+  - `TransportError` is the retry signal
+  - **no `renew`** — the heartbeat D-030 flagged does not exist yet
+  - route handlers **inherit the seam-1 obligation** (`docs/HAZARD-search-path-seams.md`)
+
+  This entry rules the HTTP realization of exactly that. **It adds no capability the loop did
+  not ask for.**
+
+---
+
+- **Decision — four routes, one auth scheme, one idempotency rule:**
+
+  | Route | Method | Body | Returns |
+  |---|---|---|---|
+  | `/jobs/claim` | POST | `{worker_id}` | job + fold spec, or 204 |
+  | `/jobs/{id}/artifacts` | POST | multipart: pdb, plddt, pae?, provenance | 204 |
+  | `/jobs/{id}/complete` | POST | — | 204 |
+  | `/jobs/{id}/fail` | POST | `{error}` | 204 |
+
+  **(1) Claim carries the fold spec inline, as the loop requires.** The worker never queries for
+  its input. This preserves D-026's guarantee that the job is self-contained against UniProt
+  changing: the sequence the worker folds is the sequence the manifest reviewed, delivered with
+  the claim. The route delegates to `PostgresJobQueue.claim()` — **FIFO and `SKIP LOCKED`
+  atomicity are the primitive's, unchanged, and D-017's proof stands** (D-030 §1).
+
+  **(2) Artifact upload is idempotent, as the loop requires.** A retried upload after a
+  transport failure must not duplicate or corrupt. Idempotency key is the job id: **re-uploading
+  overwrites** rather than appending or erroring, because the worker cannot distinguish "upload
+  failed" from "upload succeeded but the response was lost," and the safe reading of an
+  ambiguous failure is to retry.
+
+  **(3) Upload and complete stay SEPARATE — this entry rules against merging them.**
+  The Builder flagged them as mergeable. They should not be merged, for a reason D-030 §3
+  already ruled and merging would quietly reverse: **status flips server-side only after
+  artifacts are persisted.** A single call that accepts artifacts *and* flips status makes the
+  ordering an implementation detail of one handler rather than a property of the protocol —
+  and the forbidden state (a `complete` job with no structure behind it) becomes reachable by a
+  handler bug rather than by protocol violation. Two calls make the ordering **externally
+  observable and testable**. The extra round-trip is cheap against a fold measured in minutes.
+
+  **(4) Authentication: a single shared bearer token, worker→Fly only.**
+  D-004's requirement is no inbound exposure of the home machine; the Fly tier is already public.
+  A shared secret in the `Authorization` header is sufficient at **single-worker scale (D-004)**
+  and is the smallest thing that works. **`worker_id` is a label, not a credential** — it
+  identifies which worker holds a lease, and D-030 already flagged that under HTTP it drifts
+  toward being an auth concern. **This entry keeps them separate deliberately**: the token
+  authenticates, the id labels. The shared bearer token is **RULED
+  TERMINAL (2026-07-22), not a placeholder** — sufficient by design at single-worker scale
+  (D-004), not an interim step toward something more. **Reopening conditions, named:** a second
+  worker, or any need to attribute or revoke access per-worker, reopens this as its own entry;
+  absent those, the shared token stands.
+
+---
+
+- **RULED (2026-07-22) — PAE is compressed (worker-side gzip) and stored; not discarded, not
+  uploaded raw.** `worker/runner.py:200` emits PAE for **every** fold — `esmfold_v1` always
+  returns `predicted_aligned_error`; `dtype`/`chunk_size` do not gate it (verified by the Builder
+  against `main`) — so what to do with PAE was a ruling to make, not an outcome the model would
+  spare us.
+
+  Raw, a 2213 aa PAE is L×L ≈ 4.9M floats ≈ **75–100 MB of JSON**, which over a residential
+  uplink is plausibly 30–80 minutes on its own and could exceed the 3600 s provisional lease
+  (D-030) *before the fold is even counted*. A larger body limit does not fix that; **gzip
+  does** — gzip on float-heavy JSON typically achieves 5–10×, putting a 75–100 MB PAE at roughly
+  **10–20 MB — an estimate, not a measurement**. The actual ratio is observed on the first large
+  fold, the same measurement that makes D-030's threshold interpretable. At that size the upload
+  is a few minutes, inside the lease. So the **worker compresses** PAE and the **endpoint stores the compressed bytes**
+  (the compression is client-side work, not a route concern).
+
+  **Store rather than discard:** nothing consumes PAE today (see the Builder note), so discard
+  was viable and free — but D-027 deferred-not-dismissed a PAE-derived feature, and recovering a
+  discarded PAE means a **paid re-fold** of the cohort. Compress-and-store buys that optionality
+  cheaply. This also **settles what was upstream of D-030's threshold measurement:** a large-
+  target upload is now bounded (~compressed PAE), so claim-stamp → upload-complete is
+  interpretable.
+
+  > **Builder note (verified against `main`, 2026-07-22): nothing downstream consumes PAE.** The
+  > only references in the tree are the producer (`worker/runner.py`) and a nullable
+  > `pae_json_path` column (`db/models.py:100`) that **no code reads**; D-027 rejected the one
+  > PAE-derived feature considered. So "discard at the worker" does not merely make the item
+  > *nearly* free — it **dissolves** the transfer, the lease interaction, and the compression
+  > question at once, because there is no consumer to serve. The residual decision is only
+  > whether to preserve PAE against a *future* consumer: D-027 deferred-not-dismissed a PAE
+  > feature, and recovering a discarded PAE means a **paid re-fold**, so compress-and-store (PAE
+  > gzips well) buys that optionality cheaply. But nothing today needs the bytes on the wire.
+
+- **⚠ The route handlers are new application code touching the database — seam 1 applies
+  again.** D-026's real-Postgres test closed the commit/rollback seam for the *enqueue* entry
+  point. **The route handlers are a different entry point and inherit the obligation to prove it
+  for themselves** — a write through a handler, re-read on a **fresh connection**. Per
+  `docs/HAZARD-search-path-seams.md`, this is seam 1 only: no route here touches a vector
+  column, so **seam 2 remains open with its trigger unchanged** (the first
+  `analysis_embeddings` write, downstream of D-027).
+
+- **No `renew` route.** D-030 ruled the heartbeat as a later entry; adding the route now would
+  be building against an unruled design. When the heartbeat is ruled, it lands as a fifth route
+  and the loop gains a renewal call — **not as a widening of `complete`.**
+
+---
+
+- **Test surface, written before the transport (project rule):**
+  - **The loop's tests do not change.** If wiring the real client requires editing
+    `worker/orchestrator.py`'s tests, the client does not implement the protocol the loop
+    defined — that is the signal, and the client is wrong, not the tests.
+  - **Idempotent upload** — the same artifacts posted twice leaves one set of files and no error.
+  - **Ordering is protocol-observable** — a test posting `complete` for a job with no artifacts
+    persisted **fails at the endpoint**, not merely in the loop. This is what makes §(3)'s
+    separation load-bearing rather than stylistic.
+  - **Auth** — an unauthenticated or wrong-token request is rejected on every route, asserted
+    per route rather than once, so a route added later cannot silently inherit no check.
+  - **Seam 1 for handlers** — a write through a real handler, re-read on a fresh connection,
+    against real Postgres. **Marked `pytest.mark.postgres`; it cannot be hermetic** — SQLite has
+    no schemas, so a hermetic version would pass and prove nothing.
+  - **`TransportError` mapping** — non-2xx and connection failures both surface as the loop's
+    retry signal, so the loop's already-proven failure taxonomy (D-030 §4) keeps working
+    unchanged across the real transport.
+  - **Claim returns the fold spec inline**, asserted explicitly — a route that returned a bare
+    job id would compile and would silently reintroduce the worker-fetches-input design that
+    D-026 ruled against.
+
+- **Deep-learning justification:** indirect and structural, same as D-030. This is the last
+  component between a reviewable manifest and executed inference; its correctness is what makes
+  fold provenance trustworthy downstream. A job marked complete with no structure behind it
+  corrupts the coverage line (D-024) and the extractor's inputs (D-027) at once, and neither
+  would show as an error — only as a target that quietly has no data.
+
+- **Consequences / follow-ups:**
+  - **`app/` is created by this entry** — the first application code on Fly. It is also the
+    first component the `search_path` seam applies to *as a service* rather than as a script.
+  - **PAE is compressed and stored (ruled above)** — settled before the first large rental fold,
+    which also unblocks D-030's threshold measurement (a large-target upload is now bounded to a
+    compressed PAE, so claim-stamp → upload-complete becomes interpretable).
+  - **Per-worker credentials** when a second worker exists.
+  - **Lease heartbeat** (D-030's flag) lands as a fifth route, not by widening an existing one.
+  - **Nothing here is deployed to Fly until the full suite passes**, functional and user tests
+    both.
+
+---
+
 ### D-030 — The worker's job-pull orchestration: HTTP transport over the proven claim primitive
 - **Date:** 2026-07-22
 - **Status:** **Accepted (2026-07-22)** — topology ruled; the pure orchestration loop is built
@@ -202,6 +352,417 @@ So the rule is not "be careful" — it is:
     authentication concern, not a label. Flagged, ruled in D-031.
   - **The stale-threshold measurement** is an owner action, gated on the first end-to-end
     rental-tier fold.
+
+---
+
+### D-029 — The approved-ADC reference: openFDA for approval, a reviewed file for antigens, and two freshness dates
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)**
+- **Context:** D-015 §2 leaves an item marked **blocking §2's completeness**:
+
+  > **Open, blocking §2's completeness:** the reconciliation of the full approved-ADC target set
+  > against the 82 has **not been run**. Group C is currently the three exclusions the authors
+  > named; there may be others they did not. A mechanical reconciliation script closes this and
+  > must run before the cohort is called final.
+
+  Group C is the sharpest test the project has — targets the baseline pipeline filtered out
+  that turned out to be validated. It is currently **three targets the paper itself named**
+  (TROP2, HER3, CLDN18.2). Whether there are others the paper did not name is unknown, and
+  "unknown" is doing load-bearing work in a claim the project intends to make.
+
+  Closing it requires answering: *which UniProt accessions are targeted by approved ADCs?*
+  **That question has no single authoritative source**, and this entry rules how it is answered.
+
+---
+
+- **Finding: the FDA database answers half the question, and the half it answers is not the
+  hard half.**
+
+  `https://api.fda.gov/drug/drugsfda.json` — free, no authentication required, updated daily
+  Monday–Friday, full bulk download available. Its **five searchable top-level fields** are
+  `application_number`, `openfda`, `products`, `sponsor_name`, `submissions`
+  (verified 2026-07-22 against openFDA's own field reference).
+
+  **There is no target-antigen field. There is no ADC flag.** Drugs@FDA records that a
+  product was approved; it does not record what the molecule binds. So the query the project
+  actually needs — accession-level — is **not answerable from FDA data alone**, and no amount
+  of query construction changes that. This is a structural property of the dataset, not a gap
+  to be worked around.
+
+  **A second, narrower boundary:** Drugs@FDA excludes products regulated by CBER. Most
+  oncology ADCs sit with CDER, so the practical impact is small — but it is a stated coverage
+  limit, not an assumed-complete list.
+
+  **The secondary literature disagrees with itself, and is stale by construction.** Reviews
+  surveyed 2026-07-22 variously report 14 or 15 approved ADCs and describe belantamab
+  mafodotin as withdrawn — but it was re-approved in October 2025 in combination, and a
+  CD123-directed ADC was approved in May 2026. **Any count taken from a review paper is wrong
+  the moment the field moves, and the field has moved twice in the last year.** A single-paper
+  source is therefore rejected: it is simpler, but it inherits a cutoff with no way to detect
+  that it has passed.
+
+---
+
+- **Decision — a three-part reference, with the seam between the parts stated:**
+
+  **(1) openFDA is the authority for APPROVAL STATUS.** Queried by application number,
+  recorded with the query date. Reproducible, citable, and refreshable.
+
+  **(2) A checked-in mapping file is the authority for DRUG → TARGET ANTIGEN → UniProt
+  ACCESSION.** Roughly 16 rows. **Each row cites its own source** for the antigen assignment —
+  label, primary literature, or reference database — and the file is reviewed by hand.
+
+  **Its smallness is a feature, not an embarrassment.** Sixteen rows can be read in full by a
+  reviewer, which is the correct level of scrutiny for a set that determines what counts as a
+  Group C finding. A computed mapping at this scale would be less trustworthy, not more.
+
+  **(3) The mapping is NOT FDA-sourced, and the reference must say so wherever it is used.**
+  This is the seam. Part (1) is authoritative and dated; part (2) is a reviewed human judgement.
+  Presenting them as one "FDA-derived target list" would attribute to the FDA a claim it does
+  not make — the same error class as the two `search_path` seams sharing a name
+  (`docs/HAZARD-search-path-seams.md`), and as D-024's `tier=rental` needing `tier_reason` so a
+  conservative routing could not read as a measured one.
+
+---
+
+- **Detection is automatable; assignment is not. The refresh is built accordingly.**
+
+  A scheduled job queries openFDA and **diffs against the checked-in file**, reporting: new
+  approvals absent from the mapping, withdrawals or marketing-status changes, and rows whose
+  application number no longer resolves.
+
+  **What it cannot do is extend the mapping** — assigning a target antigen to a new approval is
+  a human read every time. So the job's output is *"the mapping is stale, and here is exactly
+  which rows are missing,"* which is the useful half:
+
+  > **The failure mode being guarded against is not INCOMPLETE — it is SILENTLY incomplete.**
+  > A file with a freshness date and a job that detects drift is a materially different artefact
+  > from a file someone compiled once and stopped thinking about. This entry does not claim the
+  > list will be complete. It claims its incompleteness will be **dated and detectable.**
+
+- **⚠ The refresh job is ADVISORY and MUST NOT be able to redden the gate.** It runs as a
+  separate scheduled workflow that **opens an issue**; it is not a required check and not part
+  of the test suite.
+
+  **Rationale, and it is the same argument D-018 made** about `worker/requirements.txt` sitting
+  outside the lock-file guarantee: a check that depends on an external service can go red for
+  reasons unrelated to any change in this repository. If openFDA is unreachable, rate-limits, or
+  renames a field, a gating check would redden the build on a day nobody touched the code —
+  which trains everyone to ignore red, and a gate that is routinely ignored is worse than no
+  gate. **The gate stays hermetic. Freshness is advisory.**
+
+- **Two dates are surfaced in the UI, never collapsed into one.** They go stale at different
+  rates and conflating them would overstate the weaker one:
+
+  | Date | Meaning | Refresh |
+  |---|---|---|
+  | **Approvals reconciled** | last successful openFDA diff | automated, could be days old |
+  | **Antigen mapping reviewed** | last human review of drug → accession | manual, will lag, and is the genuinely incomplete one |
+
+  A single "last updated" stamp would take the automated date and imply it covers the manual
+  one. **The mapping's review date is the honest one to show most prominently**, because it
+  bounds what the reference can actually support.
+
+---
+
+- **Test surface, written before the script (project rule):**
+  - **The reconciliation is pure given a fixture** — the openFDA response and the mapping file
+    in, the diff out. **No network in the test suite.** A recorded fixture response is checked
+    in; the live query happens only in the scheduled workflow.
+  - **A new approval absent from the mapping is DETECTED**, and the diff names it. This is the
+    job's entire purpose and it is the test that proves it works.
+  - **A stale application number is detected** rather than silently dropped.
+  - **Every mapping row has a non-empty source citation** — a row without one fails, so an
+    uncited antigen assignment cannot enter the file.
+  - **Accessions in the mapping resolve against the cohort** — a Group C candidate is either in
+    the 82 or explicitly outside it, never ambiguous.
+  - **The two dates are distinct fields** and no code path writes one from the other.
+
+- **Deep-learning justification:** indirect but real. Group C is the project's sharpest
+  evaluation instrument — a target the baseline filtered out and the world subsequently
+  validated is worth more than any aggregate correlation. **The instrument is only as good as
+  the set that defines it**, and D-015 §2 already carries the caveat that three named
+  exclusions are *a single instance and not a demonstrated pattern*. This entry is what would
+  let that caveat ever be lifted or strengthened by evidence rather than by assertion.
+
+- **Consequences / follow-ups:**
+  - **Closes D-015 §2's blocking item** once the reconciliation runs — the cohort cannot be
+    called final before it does.
+  - **Group C may grow.** If reconciliation finds approved-ADC targets among the 82 that the
+    baseline did not name, Group C expands and D-015 §2's single-instance caveat weakens in the
+    project's favour. **If it finds none, that is also a result** and must be reported as such
+    rather than quietly leaving Group C at three.
+  - **RULED (2026-07-22): the mapping file's owner is the project owner; the review cadence is
+    diff-triggered with a floor of one review per iteration.** The scheduled openFDA diff is the
+    trigger — a detected new approval prompts a review — and even with no trigger, the mapping is
+    reviewed at least once per project iteration, so the "antigen mapping reviewed" date cannot
+    silently outlive an iteration.
+  - **This entry does not rule the antigen sources themselves** — which label, which database,
+    which paper per row. That is per-row and belongs in the file's own citations, not here.
+
+---
+
+### D-028 — The system detects and classifies disagreement; it does not explain it
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)**
+- **Numbering note:** drafted as D-027, renumbered to D-028 when the Builder claimed D-026 for
+  the enqueue step and the feature-set entry moved to D-027.
+- **Context:** D-015 §1 asks *which disagreements are checkable against outcomes the world has
+  already decided, and which are hypotheses.* D-015 §1a requires disagreement classes to be
+  visually distinct. D-024 makes coverage a first-class surface.
+
+  **None of them says what the system may claim about WHY two rankings disagree** — and the
+  gap is not neutral. A comparative ranking view showing baseline rank, structural rank, and
+  delta invites exactly one question from any reader, grader included: *why?* Left unruled,
+  that question gets answered by whatever the UI happens to render next to the delta, and
+  the most natural thing to render is the feature that moved most. **That would be a causal
+  claim the system cannot support.**
+
+  D-027's six features are *interpretable* — a disagreement can be attributed to a feature.
+  **Attribution is not explanation, and the gap between them is one sentence wide in a UI.**
+  *"Feature 6 accounts for most of this target's structural rank"* is a statement about the
+  model, and true. *"This target ranks higher because its epitope is more accessible"* is a
+  statement about biology, and the system has no standing to make it. The second is what a
+  reader will write in their notes after reading the first, unless the interface is explicit
+  about which one it is asserting.
+
+- **Decision:** The system's claim is bounded at **detection and classification**.
+
+  **In scope:**
+  - **Detect** disagreement between the structural ranking and the comparator's evidence
+    score — the delta, the movers, the direction.
+  - **Classify** it per D-015 §1a: **class-1** (checkable against decided outcomes) or
+    **class-2** (hypothesis on an axis never measured), rendered visually distinct.
+  - **Attribute** it to features — which of the six moved this target, and by how much. A
+    statement about the model, labelled as such.
+
+  **Explicitly OUT of scope, as a named non-goal:**
+  - Any claim about the **biological cause** of a disagreement.
+  - Any ranking, scoring, or ordering of disagreements by "interestingness" or "promise" —
+    which is an explanation wearing a number.
+  - Any generated prose that narrates a disagreement into a mechanism.
+
+  **A non-goal is a commitment, not an omission.** It is recorded here so that a later
+  iteration adding explanation does so as a ruled change with its own entry, rather than as a
+  feature that arrived because the UI had space for it.
+
+  **This is a scope ruling, not a modesty clause.** The system is *more* defensible for
+  stopping here, not less ambitious: a detected, classified, feature-attributed disagreement is
+  a claim that can be checked. An explained one cannot be, at this cohort size, on this
+  evidence. The boundary is drawn where the artefact's support ends — which is the same
+  discipline D-016 applies to documents, applied to the product's output.
+
+- **The quality of each disagreement class travels with the result.** Per owner's ruling, and
+  in the same discipline as D-024's coverage line: the honest reading is rendered *with* the
+  finding, not on a separate page a reader may not reach. Every disagreement class carries an
+  inline explanation of **what that class can and cannot support**:
+
+  | Class | What it supports | What it does not |
+  |---|---|---|
+  | **Class-1 — checkable** | The comparator's ranking can be tested against an outcome already decided (e.g. an approved ADC target the baseline filtered out). A disagreement here is **evidence about the comparator**. | It is a *single instance*, not a demonstrated pattern (D-015 §2's own caveat about Trop-2). |
+  | **Class-2 — hypothesis** | The structural axis orders this target differently. That is a **generated hypothesis**, on an axis no one has measured against outcome. | Nothing about whether the structural ordering is *right*. There is no outcome to check it against. |
+
+  Rendered as inline tooltips or equivalent, not as a footnote or a separate methods page.
+
+- **A third quality note is required, and it is the one most likely to be omitted: structure
+  and sequence disagree for well-understood reasons that have nothing to do with this
+  project's question.** Convergent folds, divergent sequences within a family, domain
+  shuffling — all produce structure/annotation divergence, and all predate this work by
+  decades. A disagreement explicable by known homology relationships is **class-2 with a
+  known confound**, and the UI must say so where the disagreement is shown.
+
+  **Why this note specifically:** the headline *"structure and sequence disagree"* invites the
+  response *"yes, and?"* — because that is the premise of structural biology, not a result of
+  this project. The finding this project can support is narrower and therefore stronger:
+  *these particular targets are ordered differently on a structural axis, here is the class of
+  that difference, and here is what the class supports.* Without the confound note, the
+  system's most eye-catching output is a rediscovery presented as a finding, and a reader who
+  knows the field will notice — the same failure mode D-022 avoided by making MUC16's absence
+  visible rather than silent.
+
+- **Deep-learning justification:** This entry is about the boundary of the model's claim,
+  which is part of understanding the model. D-015 §3 pre-registered two negative results
+  precisely so the project could report a null honestly; D-027 does the same work one level
+  up, by preventing the *presentation layer* from upgrading a detected difference into an
+  explained one. A system that says "these disagree, here is the class, here is what the
+  class supports" is making a defensible claim. One that says "these disagree because…" is
+  making an indefensible one with the same data.
+
+- **Consequences / follow-ups:**
+  - **The UI Plan needs this**, alongside D-024's coverage surface. Both are Iteration-1
+    scope; neither is in `docs/UI_Plan.md`, which predates both.
+  - **A future "analyse disagreement" affordance is anticipated and deliberately deferred.**
+    The owner's framing: an LLM with domain grounding could *suggest* why a disagreement
+    exists and what axes of investigation it opens. **That is a different system making a
+    different kind of claim**, and it needs: its own entry, a clear visual separation from
+    the structural result, and explicit labelling as generated suggestion rather than
+    finding. Recorded now so that when it is built it is built as a ruled addition — and so
+    that its absence in this version is a **decision**, not an oversight.
+  - **This entry constrains D-027's attribution output.** Feature attribution is in scope and
+    must be rendered as a statement about the model ("feature 6 accounts for most of this
+    target's structural rank"), never as a statement about the target ("this target has a
+    more accessible epitope").
+
+---
+
+### D-027 — The scorer's feature set, fixed before fitting; and the extractor that computes it
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)**
+- **Numbering note:** drafted as D-026, renumbered to D-027 when the Builder claimed D-026 for
+  the enqueue step. Recorded because a renumbered entry is otherwise indistinguishable from a
+  misfiled one.
+- **Context:** D-015 §3 ruled the scorer — *a learned model over structure-derived features,
+  fit against Group B* — and named four features: **pocket geometry, surface accessibility,
+  epitope-region pLDDT, ECD size/shape**. It then imposed a pre-registration condition it did
+  not itself discharge:
+
+  > **Feature count fixed before fitting**, and recorded in this entry when chosen. Growing the
+  > feature set after seeing results is how 22 positives get overfit.
+
+  That count has never been recorded. Until it is, the pre-registration is incomplete and any
+  fit is unfalsifiable in the specific way D-015 §3 was written to prevent — because "we used
+  the structural features" can absorb any number of additions after the fact.
+
+  `docs/TDD_v3_ADC_Focused.md` **predates D-015 and does not specify feature computation.** It
+  names `adc_suitability_score` and `surface_accessibility_notes` as schema fields and
+  describes pocket identification as a product capability, but contains no method. So this is
+  open, not a restatement.
+
+  **Provenance of this entry's scope (D-016).** Before drafting, the Planner proposed an
+  alternative framing — a composite structural axis with the ranking target left open — over
+  several exchanges. **That framing contradicted D-015 §3, which had already ruled the scorer,
+  named the four features, and pre-registered the evaluation.** The error was inferring what
+  the log was building toward rather than reading what it says; it is the same class as the
+  three errors recorded in `docs/PREWORK-2026-07-22.md`, and the only one that a single
+  existing entry would have prevented outright. Recorded here because this entry's *narrowness*
+  is the finding: **the open question was never "what should the scorer rank by," it was only
+  "how many features, computed how."**
+
+  **What the fold actually yields** (`worker/runner.py`, `FoldResult` / `write_artifacts`):
+  `structure.pdb`, per-residue `plddt` (0–100, rescaled), and `pae` when the model returns it.
+  Every feature below must be computable from those three artefacts plus the D-023 manifest
+  row. **A feature that needs anything else is out of scope for this entry**, because it would
+  need a data source the project has not ruled.
+
+---
+
+- **Decision — the feature set is SIX features, fixed as of this entry:**
+
+  | # | Feature | Computed from | Which D-015 §3 name it discharges |
+  |---|---|---|---|
+  | 1 | **ECD length** (residues folded) | manifest row | ECD size/shape |
+  | 2 | **Radius of gyration**, normalised by length | `structure.pdb` CA coords | ECD size/shape |
+  | 3 | **Mean pLDDT over the folded ECD** | `plddt.json` | epitope-region pLDDT |
+  | 4 | **Membrane-proximal pLDDT** — mean over the C-terminal 25% of the ECD | `plddt.json` + manifest boundary | epitope-region pLDDT |
+  | 5 | **Solvent-accessible surface area**, normalised by length | `structure.pdb` | surface accessibility |
+  | 6 | **Largest contiguous accessible surface patch**, as a fraction of total SASA | `structure.pdb` | pocket geometry + surface accessibility |
+
+  **Six, and the count is now fixed.** Adding a seventh after any fit has been run
+  invalidates the pre-registration and must be recorded as such in a new entry — not folded
+  in silently.
+
+- **Why six, argued rather than asserted.** Group B is 22 positives. Six features is ~3.7
+  positives per feature, which is already generous and is the upper end of what this labelled
+  set supports. Fewer would be defensible; more would not. **The number is a judgement, not a
+  derivation** — there is no threshold that makes six correct and seven wrong. What makes it
+  binding is that it is fixed *now*, before any result exists to be tempted by, which is
+  precisely the condition D-015 §3 imposed and did not discharge. The four D-015 names
+  map to six computed quantities because two of them (ECD size/shape, epitope-region pLDDT)
+  are each naturally two numbers — a size and a shape, a global and a regional pLDDT — and
+  collapsing either pair would discard the distinction that makes it informative.
+
+- **Why these and not a learned embedding.** Ruled in D-015 §3 and restated here because it
+  is the entry's load-bearing constraint: *interpretability is what lets a disagreement be
+  attributed to a feature rather than shrugged at.* An embedding-distance model could rank
+  well and would leave every disagreement unexplainable, which would make D-015 §1's actual
+  research question unanswerable.
+
+- **Two features that were considered and REJECTED, recorded so they are not quietly added
+  later:**
+  - **Predicted pocket volume via a pocket-detection algorithm** (fpocket-style). Rejected for
+    this iteration: it introduces a third-party tool with its own parameters and failure
+    modes, and feature 6 captures the ADC-relevant part (is there a large contiguous surface
+    an antibody can reach) without it. *An antibody binds a surface patch, not a cavity* —
+    small-molecule pocket detection is answering a different question.
+  - **PAE-derived domain-boundary confidence.** Genuinely informative, and `pae` is already
+    persisted — but it is not returned by every model path (`runner.py` guards it as
+    optional), so a feature depending on it would be **absent for some targets and present
+    for others**, which is a coverage problem D-024 would then have to express. Deferred, not
+    dismissed.
+
+---
+
+- **The extractor's contract:**
+
+  **Pure given `(structure.pdb, plddt, manifest_row)`.** No network, no GPU, no database. This
+  is deliberate and matches the D-023 manifest's design: it makes the extractor **fully
+  fixture-testable**, which for a component that feeds a 22-positive fit is not a convenience
+  but a correctness requirement.
+
+  **Output:** one row per target — six named floats, plus the `target_id`, the fold's
+  provenance hash, and an explicit `feature_version`. The version exists so that a refit
+  against changed feature code is detectable rather than silent.
+
+  **Failure is explicit, never imputed.** If a feature cannot be computed for a target (a
+  malformed PDB, a zero-length span), the row records `null` **with a reason**, in the same
+  discipline as D-024's `tier_reason`. **Imputing a mean would be the worst available
+  option** — it manufactures a plausible number for a target we failed on, and the fit would
+  never know.
+
+- **Test surface, written before the extractor (project rule):**
+  - **Determinism** — the same PDB and pLDDT yield byte-identical features across runs. The
+    fit is only reproducible if this holds.
+  - **A hand-checkable fixture** — a small synthetic structure with known geometry, so radius
+    of gyration and SASA are verified against a computed expectation rather than against
+    whatever the code happened to emit first.
+  - **Feature count is SIX** — an explicit test asserting the extractor emits exactly six
+    features, so the pre-registration is enforced by the gate rather than by memory. **This is
+    the test that makes this entry real.**
+  - **Null-with-reason, never imputed** — a malformed input produces a null and a reason
+    string, and no test fixture anywhere substitutes a mean.
+  - **Membrane-proximal region is derived from the manifest boundary**, not from a fixed
+    residue count, so a `whole`-method target and a `sliced_ecd` target are not silently
+    treated alike.
+  - **`feature_version` changes when feature code changes** — pinned by a test over the
+    extractor's own source hash, in the D-009 §1 red-on-change manner.
+
+- **Properties the leave-one-out is expected to expose (appended at ruling, 2026-07-22).**
+  Named now, before the fit, so a result that reveals them reads as anticipated rather than
+  excused after the fact:
+  - **The count is a judgement, not a derivation.** Six is ~3.7 positives per feature; the
+    leave-one-out will show whether any single feature is load-bearing or whether the set is
+    redundant. Neither outcome invalidates the pre-registration — both are informative.
+  - **Feature 6 is the fragile one.** The largest-contiguous-accessible-patch fraction depends
+    on a SASA threshold and a contiguity definition; it is the feature most sensitive to those
+    choices, and the leave-one-out is where that sensitivity should surface.
+  - **Features 1 and 2 are collinear.** ECD length and length-normalised radius of gyration are
+    geometrically related; expect overlapping signal — dropping one may barely move the fit,
+    which is a finding about the feature set, not a failure of it.
+  - **Feature 4 is cross-method incomparable.** Membrane-proximal pLDDT means a different thing
+    for a `whole`-method target than for a `sliced_ecd` one (D-021); the leave-one-out over the
+    held-out whole set may behave differently and must not be read as though comparable.
+
+- **Deep-learning justification:** This entry is what makes D-015 §3's pre-registration
+  binding rather than aspirational. A fixed feature count, enforced by a test, is the
+  difference between a small-sample fit that can produce a falsifiable negative result and one
+  that can absorb any outcome. D-015 §3 named **two** negative results — including the
+  non-obvious one, that a strong correlation with the comparator's evidence score is *also*
+  null, because it means the features proxy attention-and-precedent rather than structure.
+  Neither negative is interpretable if the feature set moved during fitting.
+
+- **Consequences / follow-ups:**
+  - **The extractor needs folds**, and folds need the enqueue step and worker. This entry is
+    rulable now and buildable only after the pipeline runs end to end. Ruling it now is
+    deliberate: the feature count must be fixed **before** any fit, and the cheapest moment to
+    fix it is before there is a result to be tempted by.
+  - **Feature 4 depends on the boundary method.** For `whole`-method targets (the 13 held out
+    per D-024) the "membrane-proximal 25%" is a different thing than for a sliced ECD. Those
+    targets are already held out of cross-method ranking claims (D-021), so this is consistent
+    — but the extractor must not silently compute it as though it were comparable.
+  - **`feature_version` should be persisted alongside `inference_settings`**, so a stored score
+    can always be traced to both the fold that produced it and the feature code that read it.
+  - **Group C (TROP2, HER3, CLDN18.2) runs through the identical extractor**, with no
+    special-casing — otherwise the out-of-cohort probe is not a probe.
 
 ---
 
