@@ -373,10 +373,26 @@ S-002 Q1, now testable against a config that genuinely fits.
   `*.py`: data layer, inference logic, API, worker contract) and **user-based** (structured
   human scenarios) — see [`docs/Test_Plan.md`](docs/Test_Plan.md). The **test DB is SQLite**
   (in-memory/temp); external calls and ESMFold inference are **mocked** for speed/determinism.
-  **Gap:** SQLite can't exercise pgvector/Postgres-specific paths — those are mocked now and
-  get a separate Postgres integration job at Iteration 3.
+  ~~**Gap:** SQLite can't exercise pgvector/Postgres-specific paths~~ — **the Postgres
+  integration job now exists (D-017):** a `postgres` CI job applies the real Alembic chain and
+  exercises `SKIP LOCKED` against Postgres 16. The **fold-runner** adds a parallel split
+  (D-018): its pure logic (provenance, pLDDT rescale, truncation recording) is unit-tested on
+  the gate, while the GPU-bound `fold` auto-skips without torch+CUDA (`@pytest.mark.gpu`) and is
+  validated on a GPU host — there is no GPU CI runner.
 - **Reproducibility (course expectation):** pin model weights/versions, seed where
   relevant, and record any training/fine-tuning config so results can be reproduced.
+  - Serving-tier deps are locked and hash-verified in CI (D-013 Amendment A).
+  - **GPU-tier deps are a named, accepted gap (D-018):** `worker/requirements.txt`
+    (`torch==2.11.0+cu128`, `transformers==5.14.1`, `bitsandbytes==0.49.2`, measured in S-003) is
+    **never installed by CI** and so is **not covered by the lock-file guarantee** — a breaking
+    release there is discovered at fold time, not by a red gate. Reproducibility of the GPU tier
+    therefore rests on these pins plus the ESMFold weight revision pinned in `worker/runner.py`
+    (`MODEL_REVISION`). `accelerate` has no measured pin yet (D-016: named, not invented) — pinned
+    from the first GPU install.
+  - **Every fold records its own provenance (D-018):** dtype, chunk_size, model revision,
+    sliced-ECD-vs-whole, ECD bounds, and any length-cap truncation — written beside the artifacts.
+    The truncation flag is load-bearing: D-015 §1a excludes truncated folds from ranking claims,
+    which is unenforceable unless captured at fold time.
 
 ---
 
@@ -389,7 +405,9 @@ Project-PharmFoldMDK/
 ├── CLAUDE.md                # living-doc governance rules
 ├── app/                     # Streamlit + FastAPI application code (deployed to Fly) — later
 ├── core/                    # queue contract + pure logic + PostgresJobQueue (core/queue.py)
-├── worker/                  # LOCAL GPU worker: pulls jobs, runs ESMFold (NOT deployed to Fly) — later
+├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (the D-018 fold-runner)
+│                            #   + requirements.txt (CUDA deps, never installed by CI). Job-pull
+│                            #   orchestration is later.
 ├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
 ├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
@@ -407,8 +425,10 @@ Today the repo holds the governance files, `docs/`, the **keel** (D-007), the **
 locked dependency graph** (D-013), and — as of PR A (D-009 §1 implementation) — the **job
 queue**: `core/queue.py` (the `JobQueue` seam, the pure `is_stale` predicate, and
 `PostgresJobQueue`), `db/models.py` (`JobRecord`), and the first Alembic migration under
-`db/migrations/`. The rest — `app/`, `worker/`, `Dockerfile`, and the remaining Database Plan
-tables — is created as iterations land, and this layout section is updated when it changes.
+`db/migrations/`, plus the **fold-runner** (`worker/runner.py` + `worker/requirements.txt`,
+D-018 — first GPU-tier code). The rest — `app/`, the worker's job-pull orchestration,
+`Dockerfile`, and the remaining Database Plan tables — is created as iterations land, and this
+layout section is updated when it changes.
 
 The GPU tier's dependencies (`torch`, `transformers`, `bitsandbytes`) are **not** in these
 manifests and will live in a separate one under `worker/` — CI runs on a CPU runner and must
