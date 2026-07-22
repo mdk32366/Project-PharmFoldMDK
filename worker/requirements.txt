@@ -25,3 +25,9 @@ bitsandbytes==0.49.2
 # from the first successful GPU install and record the resolved version here — do not
 # invent one. Left unpinned until then, on purpose.
 accelerate
+
+# The worker's HTTP client to the Fly transport (D-031, worker/http_client.py). Same
+# library and pin as requirements-dev.txt, where the client's tests run on the CPU gate;
+# repeated here because the GPU tier is outside the root lock guarantee (D-018) and its
+# reproducibility rests on these pins alone.
+httpx==0.28.1

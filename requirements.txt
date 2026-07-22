@@ -12,6 +12,15 @@
 SQLAlchemy==2.0.51
 alembic==1.18.5
 
+# The Fly serving tier (D-031): FastAPI app + the four worker→Fly routes. `uvicorn`
+# is the ASGI server prod runs the app under; `python-multipart` is REQUIRED for
+# FastAPI to parse the `/artifacts` multipart upload (pdb / plddt / pae / provenance).
+# Plain `uvicorn` (not [standard]): the uvloop/httptools extras have no universal
+# wheel set and Fly's linux runtime does not need them for single-worker scale (D-004).
+fastapi==0.121.2
+uvicorn==0.38.0
+python-multipart==0.0.20
+
 # Postgres driver for prod (D-012). psycopg 3, not psycopg2 — actively developed
 # and the current SQLAlchemy 2.0 recommendation. [binary] ships a wheel with libpq
 # bundled, so no system headers are needed at install time.

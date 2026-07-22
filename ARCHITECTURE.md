@@ -19,9 +19,13 @@ residues + UniProt release + folded span) and a `pending` `jobs` row carrying th
 recipe — 80 of 82 enqueue, the 2 named exclusions get none, idempotent per cohort version. The
 **worker's job-pull loop** (D-030, `worker/orchestrator.py`) is built as a pure, transport-agnostic
 loop over an injected client protocol (claim → fold → upload → complete, with server-side
-done-ordering and the transport/fold-failure taxonomy). **Next:** D-031 — the Fly serving-tier
-HTTP endpoint that realizes the loop's protocol (auth, routes, upload limits); `app/` not yet
-built. The stale-lease threshold was raised to 60 min (PROVISIONAL, D-030) for the HTTP topology.
+done-ordering and the transport/fold-failure taxonomy). The **Fly transport** (D-031, `app/` +
+`worker/http_client.py`) now realizes that protocol over HTTP: four routes (claim / artifacts /
+complete / fail), one shared bearer token, the upload route writing the post-fold columns in a
+compensated Volume+DB transaction, and `/complete` enforcing done-ordering server-side (409 until
+`pdb_path` commits). It merged as the first PR under the now-**required** Postgres check (D-032).
+**Next:** the real Fly deploy wiring (flyctl + `FLY_API_TOKEN`) and the first end-to-end large
+rental fold — which retires the PROVISIONAL 60-min lease threshold (D-030) with a measured value.
 
 ---
 
@@ -100,6 +104,7 @@ opened on the local machine.
 |-------|----------------|--------------|
 | **Frontend** | Interactive UI, 3D visualization, onboarding | Streamlit; `py3Dmol`/`stmol` for 3D |
 | **Backend API** | Auth, request handling, **job queue** management, results | FastAPI + Uvicorn (on Fly) |
+| **Worker transport** (D-031) | The four worker→Fly routes realizing the D-030 loop's protocol: claim → inline `FoldSpec`; artifacts → post-fold columns written in a compensated Volume+DB transaction (idempotent, PAE stored gzipped); complete → 409 until `pdb_path` commits; fail → terminal. Shared bearer token per route. Client-side is `worker/http_client.py` (gzips PAE, maps non-2xx → `TransportError`) | `app/` (FastAPI, on Fly) + `worker/http_client.py` (httpx, GPU tier); hermetic route/boundary/client tests + a real-Postgres seam-1 handler-write test |
 | **Orchestration** (D-023, D-026) | `manifest.py`: measured cohort → deterministic routing table + D-024 coverage object, **reviewable before any job is created**. `enqueue.py`: foldable rows → `protein_analyses` (exact residues + UniProt release + folded span) + `pending` `jobs` (tier fold recipe); idempotent, 80/82 (2 named exclusions get none) | `core/manifest.py`, `core/enqueue.py` — CPU-side; hermetic on SQLite + a real-Postgres commit test |
 | **Local GPU worker** | Polls Fly for jobs, runs **ESMFold** on the local NVIDIA GPU for targets **under the length ceiling**, uploads artifacts back (D-004) — **not deployed to Fly** | Python worker; PyTorch + Hugging Face (`facebook/esmfold_v1`), int8 trunk |
 | **Rented-GPU batch** (D-011) | One-time offline fold of **above-ceiling** targets (HER2-class ~630 aa); artifacts uploaded to the Fly Volume | RunPod RTX A6000 48 GB, fp16 unquantised/unchunked; committed repo code, not a one-off script |
@@ -423,13 +428,16 @@ Project-PharmFoldMDK/
 ├── ARCHITECTURE.md          # this file — living source of truth
 ├── README.md                # how to run / deploy (kept current in Phase 6)
 ├── CLAUDE.md                # living-doc governance rules
-├── app/                     # Streamlit + FastAPI application code (deployed to Fly) — later
+├── app/                     # Fly serving tier (FastAPI): main.py (create_app factory),
+│                            #   routes.py (D-031 four worker→Fly routes), artifacts.py (FoldSpec
+│                            #   projection + compensated Volume+DB persist), deps.py, config.py
 ├── core/                    # queue.py (JobQueue seam + is_stale), manifest.py (D-023 routing
 │                            #   table + D-024 coverage), enqueue.py (D-026 manifest → analyses+jobs)
 ├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
 │                            #   orchestrator.py (D-030 job-pull loop, pure/transport-agnostic),
+│                            #   http_client.py (D-031 concrete HTTP QueueClient, gzips PAE),
 │                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run),
-│                            #   requirements.txt (CUDA deps, never installed by CI)
+│                            #   requirements.txt (CUDA deps + httpx, never installed by CI)
 ├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
 ├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
@@ -448,9 +456,11 @@ locked dependency graph** (D-013), and — as of PR A (D-009 §1 implementation)
 queue**: `core/queue.py` (the `JobQueue` seam, the pure `is_stale` predicate, and
 `PostgresJobQueue`), `db/models.py` (`JobRecord`), and the first Alembic migration under
 `db/migrations/`, plus the **fold-runner** (`worker/runner.py` + `worker/requirements.txt`,
-D-018 — first GPU-tier code). The rest — `app/`, the worker's job-pull orchestration,
-`Dockerfile`, and the remaining Database Plan tables — is created as iterations land, and this
-layout section is updated when it changes.
+D-018 — first GPU-tier code), the **job-pull loop** (`worker/orchestrator.py`, D-030), and the
+**Fly transport** (`app/` + `worker/http_client.py`, D-031 — first application code on Fly). The
+rest — the `Dockerfile` and real Fly deploy wiring, the Streamlit frontend, and the remaining
+Database Plan tables — is created as iterations land, and this layout section is updated when it
+changes.
 
 The GPU tier's dependencies (`torch`, `transformers`, `bitsandbytes`) are **not** in these
 manifests and will live in a separate one under `worker/` — CI runs on a CPU runner and must
