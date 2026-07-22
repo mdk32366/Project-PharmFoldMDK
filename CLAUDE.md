@@ -29,6 +29,14 @@ use it in a defensible way?"** See `ARCHITECTURE.md` §1.
 3. **This log wins over the original planning docs.** The TDD/UI/DB/test plans in `docs/`
    are original intent; where a `docs/README.md` decision diverges, the log is authoritative.
 
+4. **Every claim names how it is known (provenance, D-016).** A written record does not make a
+   claim true. Before a number or a status enters the log, `ARCHITECTURE.md`, or a PR, name the
+   artefact behind it — the raw log line, the query output, the run URL. If you cannot name it,
+   you are recording a belief, not a finding. A summary is not knowing: prefer the breakdown to
+   the total, and prefer the query whose answer could disqualify you. Four claims were reversed
+   across 2026-07-19/21, each true as stated and wrong in what it implied, each caught only by
+   returning to the raw artefact.
+
 ## Working clone
 
 Do all commits/PRs in `C:\Projects\Project-PharmFoldMDK` (remote:

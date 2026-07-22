@@ -7,6 +7,14 @@
 > change, or discard something and the reasoning is not yet here, stop and record it
 > first. A PR whose work is not reflected in a decision entry is incomplete.
 >
+> **THE SECOND RULE (provenance, D-016):** *Every claim names how it is known.* A written
+> record fixes a claim in place; it does not make it true. Before a number or a status enters
+> this log, ARCHITECTURE, or a PR, name the artefact it came from — the raw log line, the query
+> output, the run URL. If you cannot name it, you are recording a belief, not a finding. A
+> summary is not knowing: prefer the breakdown to the total, and **prefer the query whose answer
+> could disqualify you** (`pg_available_extensions` tells you a thing *exists*; `pg_extension`
+> only that it is *on* — a zero from the second cannot distinguish *absent* from *off*).
+>
 > Companion documents:
 > - [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — the current-state architecture (must be
 >   updated in the same PR as any architectural change, and before any PR is filed).
@@ -148,6 +156,59 @@ So the rule is not "be careful" — it is:
   - `ARCHITECTURE.md` §5 (deploy gate) updated in this PR.
   - The open-questions "largest coverage hole" item is closed (see below), with the pgvector
     caveat carried forward.
+
+---
+
+### D-016 — The provenance principle: every claim names how it is known
+- **Date:** 2026-07-21
+- **Status:** Accepted (standing rule)
+- **Context:** THE RULE at the top of this file governs **durability** — a decision made in a
+  chat window and never written down does not exist. Today exposed a different failure the rule
+  did not cover: **every claim that got reversed was already written down.** The record was
+  faithful; the record was the problem, because it preserved a claim nobody had checked in a
+  form indistinguishable from one that had been. A durable record of an unverified claim is
+  *worse* than no record — it reads like evidence.
+
+  Four cases in two days, each a written claim **true as stated and wrong in what it implied**,
+  each overturned only by returning to the raw artefact:
+
+  | Written claim | Artefact that overturned it |
+  |---|---|
+  | `params_all_on_cuda=True` | resident 8116 MiB vs **7043 MiB free** — spilled before folding (S-001) |
+  | "217 WHEA events since May" | 213 corrected / **4 fatal** — severity hidden by the total (F-001) |
+  | "pgvector isn't enabled" (`pg_extension` → 0 rows) | `pg_available_extensions` → 0 rows: **not on the image at all** (D-014) |
+  | placeholder commit SHAs in D-013 §6 | invented to fill a template before the runs existed — caught pre-merge, corrected in `8e177ad` |
+
+  This is the discipline the *Method note* above already gestured at, now made a first-class
+  standing rule rather than a lesson buried mid-file. It is also KEEL's proposed 8th principle
+  (drafted from this session); the KEEL documents themselves live in the Keel project and are
+  updated there separately.
+
+- **Decision:** A **second standing rule**, added beneath THE RULE at the top of this file and
+  mirrored as a living-documentation rule in `CLAUDE.md`:
+
+  > **Every claim names how it is known.** Before a number or a status enters the log,
+  > ARCHITECTURE, or a PR, name the artefact it came from — the raw log line, the query output,
+  > the run URL. If you cannot name it, you are recording a belief, not a finding. A summary is
+  > not knowing: prefer the breakdown to the total, and **prefer the query whose answer could
+  > disqualify you** (`pg_available_extensions` answers "does it exist?"; `pg_extension` only
+  > "is it on?" — a zero from the second cannot tell *absent* from *off*).
+
+- **Deep-learning justification:** Indirect but load-bearing. The graded deliverable rests
+  entirely on *measured* claims — `inference_settings` reproducibility (D-004), the int8 fit and
+  length-ceiling findings (S-003/S-004/S-005), and the scorer's pre-registered evaluation
+  (D-015 §1a/§3). Every one of those is a number that will be trusted later. A fabricated or
+  unverified figure in this log corrupts the exact record the DL evaluation is judged against —
+  the D-015 §1a diagnostics (rule out "our pipeline is wrong" before any claim) are this
+  principle applied to the science. Protecting claim provenance protects the deliverable.
+
+- **Consequences:**
+  - Applies as a **standard going forward**, not a retroactive rewrite. Existing entries that
+    already cite artefacts (S-00x, D-014, D-013 §6) are the model.
+  - `CLAUDE.md` gains a fourth living-documentation rule; the top-of-file RULE block gains its
+    second rule. No code change.
+  - The KEEL provenance-principle draft and the `KEEL-*-v5` documents are **Keel-project**
+    artefacts, deferred to a Keel-focused pass (not migrated into this repo).
 
 ---
 
