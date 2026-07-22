@@ -83,13 +83,18 @@ So the rule is not "be careful" — it is:
 > **D-021 and D-022 are a PAIR, logged together on purpose (D-020's measurement raised both).**
 > They interact: decomposition (D-022) and the no-topology boundary rule (D-021) are both "this
 > protein needs boundaries UniProt topology does not give us," so a decomposition mechanism, if
-> built, may also serve some of D-021's targets. Scope them together, not sequentially. Both are
-> **Proposed — the orchestrator (routing) must not be built until they are ruled**, because right
-> now "route to a tier" assumes every target *has* a tier, and MUC16 does not.
+> built, would serve both — it supersedes D-022's first-pass exclusions and part of D-021's
+> `whole` subset. Scope them together, not sequentially. **Both were ruled Accepted 2026-07-21**
+> (see each entry's Ruling). Routing is now defined for every target — `local` / `gpi_predicted` /
+> `whole` / rental / **named-excluded** — closing the gap that "route to a tier" assumed every
+> target had a tier when MUC16 did not. **Remaining prerequisite before the orchestrator's rental
+> routing is exact:** the A6000 single-fold ceiling (D-022), a GPU-host measurement.
 
-### D-022 — Oversize targets: decompose or exclude (Proposed)
+### D-022 — Oversize targets: decompose or exclude
 - **Date:** 2026-07-21
-- **Status:** **Proposed** — awaiting a ruling before the orchestrator routes the rental bucket.
+- **Status:** **Accepted (2026-07-21)** — exclude the definitively-oversize for the first pass,
+  **named in this entry**; measure the A6000 ceiling to route the borderline; defer decomposition.
+  See "Ruling" below.
 - **Context:** D-020 measured the rental bucket (16 targets, largest ECD span ≥ 630 aa) and found
   it **non-uniform**. Two targets exceed single-sequence ESMFold feasibility on **any** card —
   **MUC16 (14 451 aa; CA-125)** and **FAT2 (4 030 aa)** — because the limit is **sequence length,
@@ -112,9 +117,31 @@ So the rule is not "be careful" — it is:
 - **Deep-learning justification:** indirect — this determines which targets have folds at all, and
   therefore which the D-015 scorer can rank; an unnamed exclusion would silently bias the ranking.
 
-### D-021 — A second ECD-boundary method for the no-topology targets (Proposed)
+#### Ruling (2026-07-21)
+
+**First-pass exclusions, named here so they are visible in the record, not silently missing:**
+
+| Accession | Gene | Largest ECD span | Why excluded (first pass) |
+|---|---|---|---|
+| `Q8WXI7` | **MUC16** | 14 451 aa | Oversize — unfoldable as one sequence on any card. **This is CA-125, the most-used ovarian-cancer biomarker in clinical practice**; a field reviewer will notice its absence immediately, so it is named "excluded, oversize, first pass" rather than left quietly missing. |
+| `Q9NYQ8` | **FAT2** | 4 030 aa | Oversize — beyond single-sequence fold feasibility. |
+
+- **The A6000 single-fold ceiling is measured next** (same shape and method as the local ceiling,
+  S-004/S-005; cheap on per-second billing) to route the borderline targets (NOTCH2 1652,
+  PTPRZ1 1612, LRP6 1351, JAG1 1034, …). Until it is known, only the two definitely-oversize are
+  excluded; the borderline are unrouted, not assumed.
+- **Coverage is always reported as "82 minus the named exclusions"** — never a silently smaller
+  ranked cohort (this ties to D-021's reporting constraint).
+- **Decomposition is deferred, not rejected.** It is real work with its own boundary-selection
+  problem, and — per the pairing note — a decomposition mechanism would also subsume part of
+  D-021's `whole` subset (the multi-domain giants). So if it is ever built, it is scoped to serve
+  **both** D-021 and D-022, and it supersedes both the first-pass exclusions here and the `whole`
+  method there.
+
+### D-021 — A second ECD-boundary method for the no-topology targets
 - **Date:** 2026-07-21
-- **Status:** **Proposed** — awaiting a ruling before the orchestrator routes these.
+- **Status:** **Accepted (2026-07-21)** — ruled with a **three-way method distinction** (not the
+  two-way lean originally proposed) and a hard reporting constraint. See "Ruling" below.
 - **Context:** D-020 measured **13 of 82 (16%)** with no usable extracellular topological-domain
   annotation, so D-009 §2 cannot slice them. At 16% this is a **routine path, not an edge case** —
   D-009 §2's "fold whole sequence + warn" fallback was written for a rarity. The 13 are **not
@@ -152,6 +179,38 @@ So the rule is not "be careful" — it is:
 - **Deep-learning justification:** direct if (a) — a learned signal-peptide/GPI predictor is
   itself load-bearing neural work; and either way this governs whether 16% of the cohort produces
   comparable structural features, which is a precondition for the D-015 ranking meaning anything.
+
+#### Ruling (2026-07-21)
+
+**A three-way method distinction, not two.** The 13 are not one class, and a GPI-anchored ECD is
+not a whole-chain fold — it is a **domain slice by a different route** (mature chain after signal-
+peptide and GPI-anchor-signal removal), closer to a topology slice than to folding a whole
+multi-domain protein. So the boundary **method** each fold used is recorded three ways, not two —
+free to record and more informative for §1a:
+
+| `source` | method | comparability |
+|---|---|---|
+| `sliced_ecd` | UniProt `Topological domain` = Extracellular (D-009 §2) | the reference class |
+| `gpi_predicted` | SignalP + GPI-anchor prediction → mature-chain ECD (the GPI subset: MSLN, GPC1, …) | a domain slice; **comparable** to `sliced_ecd`, pending validation |
+| `whole` | whole mature chain, no domain boundary available (IGF2R, TLR3, transporters, SDK1) | **not** comparable to a domain slice |
+
+- The GPI-predicted method is its **own** method with its own name — not a variant of "predicted
+  boundary." Building the SignalP/GPI predictor is a separate scoped piece (a DL component the
+  Prime Directive welcomes).
+- **`whole` is the CURRENT method for its subset, not the permanent one.** If domain decomposition
+  is ever built (D-022), it likely **supersedes** part of the `whole` subset — the multi-domain
+  giants especially. Written as current-not-permanent so that supersession is expected, not a
+  reversal.
+- SDK1 (extracellular annotation, no numeric bounds) is `whole` for now and flagged as its own
+  small case.
+
+**The reporting constraint — the real cost, and it is binding.** Holding `whole` folds out of
+cross-method ranking claims means **D-015's ranking runs on a reduced cohort**, and that reduction
+is **part of the result, not a footnote.** Wherever a ranking is reported — UI, report, or log —
+it states the split explicitly, e.g. *"N ranked, 13 held out (whole-chain method)."* "82 targets"
+silently becoming a smaller ranked set is exactly the drift that invalidates a comparison. The
+exact N is whatever the GPI-predicted method recovers into the comparable set; it belongs next to
+every ranking.
 
 ---
 
