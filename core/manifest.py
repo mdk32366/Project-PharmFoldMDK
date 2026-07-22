@@ -21,14 +21,16 @@ D-024 ruling (2026-07-22) fixes the shape this emits. Traceability:
 - **MUC16 (Q8WXI7)** and **FAT2 (Q9NYQ8)** are the named exclusions (D-022).
 - The 3 primary-match accessions carry a provenance flag (D-020).
 
-COVERAGE OBJECT (D-024 i). The three DISPOSITIONS — ranked / held_out / excluded —
-partition the cohort and sum to the denominator (82). `unmeasured_tier` and
-`no_topology` are breakout visibility counts (subsets of ranked and held_out
-respectively), surfaced because "an unlabelled rental looks measured" — NOT extra
-partition cells. This resolves the entry's five-field object against its own
-test-surface item #7 (the 13 `untested` are RANKED): a strict five-cell partition
-would place them outside `ranked`, contradicting that test. Recorded here as the
-interpretation rather than smoothed over.
+COVERAGE OBJECT (D-024 i, corrected 2026-07-22). The three DISPOSITIONS —
+ranked / held_out / excluded — are the binding partition: mutually exclusive,
+exhaustive, `ranked + held_out + excluded == denominator`, and only that.
+`unmeasured_tier` and `no_topology` are breakout SUBSETS that cut ACROSS the
+partition (unmeasured_tier ⊆ ranked, no_topology ⊆ held_out); they are NOT summed
+into it. The entry's §(i) first read this as a five-cell partition — the Planner's
+error of flattening a disposition and a reason-flag into one object — which would
+force the 13 `untested` out of `ranked` and understate coverage by 16%. The §(i)
+correction (raised by the Builder against the entry, per D-024) rules the
+three-cell-plus-breakouts shape this module implements.
 
 What this module deliberately does NOT decide: the exact local ceiling within
 (440, 630) aa (D-024 leaves it open and cheap); and the A6000 single-fold ceiling
