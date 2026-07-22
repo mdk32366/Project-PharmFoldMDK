@@ -121,6 +121,15 @@ So the rule is not "be careful" — it is:
   principle applied to the queue: the claim path now has an artefact — a passing real-Postgres CI
   run — behind the assertion that it works.
 
+- **It earned its keep on its first run.** The job immediately caught a real bug that a green
+  SQLite suite could never have: env.py ran the `search_path` SET *before*
+  `context.begin_transaction()`, auto-opening a SQLAlchemy-2.0 transaction alembic did not own,
+  so `alembic upgrade head` logged "Running upgrade → 0001_create_jobs", exited 0, and the
+  CREATE TABLE **silently rolled back** (`relation "jobs" does not exist` at the first test).
+  Every production migration would have no-op'd invisibly. Fixed by moving the SET inside
+  alembic's committed transaction; the artefact (run `29879472591`) is cited in env.py so it is
+  not reintroduced. This is precisely the JARVIS-H2 class of failure the job exists to catch.
+
 - **Consequences:**
   - The D-012 §4 seam is now proven on **both** sides. The unproven surface is no longer "claim
     atomicity" but only the narrower "pgvector type resolution," gated to the vector-column PR.

@@ -43,7 +43,16 @@ target_metadata = Base.metadata
 
 def _set_search_path(connection) -> None:
     """D-012 §5a: make the `extensions` schema (pgvector) resolvable for the whole
-    migration. Postgres-only — a no-op on SQLite, which has no schemas or `vector`."""
+    migration. Postgres-only — a no-op on SQLite, which has no schemas or `vector`.
+
+    MUST be called INSIDE alembic's ``context.begin_transaction()`` block, not before
+    it. Running this ``SET`` before alembic begins its transaction auto-opens a
+    separate SQLAlchemy-2.0 transaction that alembic does not own and never commits —
+    the migration then logs "Running upgrade …", exits 0, and the DDL silently rolls
+    back on connection close (caught by the D-017 postgres job on its first run:
+    `relation "jobs" does not exist` after a "successful" upgrade). Kept as its own
+    function with this note so it is not moved back out.
+    """
     if connection.dialect.name == "postgresql":
         connection.execute(text("SET search_path TO public, extensions"))
 
@@ -66,9 +75,11 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        _set_search_path(connection)
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
+            # Inside alembic's owned transaction — see _set_search_path's note. The
+            # SET and the DDL then commit together.
+            _set_search_path(connection)
             context.run_migrations()
 
 
