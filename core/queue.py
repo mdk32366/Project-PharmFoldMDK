@@ -31,9 +31,15 @@ CLAIMED = "claimed"
 COMPLETE = "complete"
 FAILED = "failed"
 
-# D-009 §1: "a claimed job older than a threshold (initially 30 min)". 30 min is
-# stated in the decision, so 1800 is faithful — NOT an invented number.
-DEFAULT_STALE_SECONDS = 30 * 60
+# Stale-lease threshold. RAISED to 60 min under D-030 and labelled PROVISIONAL —
+# unmeasured under HTTP transport. Under D-030 the lease clock starts when the Fly
+# endpoint stamps `claimed_at`, BEFORE the worker has folded or uploaded, so the old
+# 30 min (D-009 §1's "initially 30 min", faithful for the direct-DB topology it was
+# chosen for) could reap live, PAID work — folding a rental-tier target twice. 60 min
+# is a safe upper bound chosen on the cost asymmetry, NOT a measured value; retired by
+# the first end-to-end large-rental fold timing, and structurally by a lease heartbeat
+# (its own entry). A fixed timeout has no correct value once folds are long/variable.
+DEFAULT_STALE_SECONDS = 60 * 60
 
 # Retry budget (D-009 §1 Amendment 1). NOT a round number: the host reliability
 # floor is ~1 fatal bugcheck per several weeks (survive one host loss → retry), and

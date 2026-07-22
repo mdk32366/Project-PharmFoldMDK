@@ -160,7 +160,7 @@ def test_reap_requeues_then_caps_on_real_pg(pg_engine):
     with pg_engine.begin() as c:
         c.execute(text("UPDATE jobs SET status='claimed', claimed_at=:t, worker_id='w1' WHERE id=:id"),
                   {"t": BASE, "id": jid})
-    reaper = PostgresJobQueue(pg_engine, clock=lambda: BASE + timedelta(minutes=31))
+    reaper = PostgresJobQueue(pg_engine, clock=lambda: BASE + timedelta(minutes=61))
 
     for expected in range(1, MAX_ATTEMPTS):          # reaps 1 .. MAX-1: requeued
         assert reaper.reap_stale() == 1
@@ -181,6 +181,6 @@ def test_reap_leaves_a_fresh_claim_untouched_on_real_pg(pg_engine):
         c.execute(text("UPDATE jobs SET status='claimed', claimed_at=:t, worker_id='w1' WHERE id=:id"),
                   {"t": BASE, "id": jid})
     # exactly at the threshold — strict boundary, not stale
-    reaper = PostgresJobQueue(pg_engine, clock=lambda: BASE + timedelta(minutes=30))
+    reaper = PostgresJobQueue(pg_engine, clock=lambda: BASE + timedelta(minutes=60))
     assert reaper.reap_stale() == 0
     assert _row(pg_engine, jid)["status"] == "claimed"

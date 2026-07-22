@@ -68,7 +68,7 @@ def test_fail_runs_as_real_sql_and_preserves_attempts(engine):
 
 def test_reap_requeues_stale_below_cap(engine):
     jid = _insert(engine, status="claimed", attempts=0, claimed_at=BASE, worker_id="w1")
-    q = _queue(engine, now=BASE + timedelta(minutes=30, seconds=1))     # just over
+    q = _queue(engine, now=BASE + timedelta(minutes=60, seconds=1))     # just over
     assert q.reap_stale() == 1
     row = _row(engine, jid)
     assert row["status"] == "pending" and row["attempts"] == 1 and row["claimed_at"] is None
@@ -77,7 +77,7 @@ def test_reap_requeues_stale_below_cap(engine):
 def test_reap_terminates_at_cap_with_marker(engine):
     # Amendment 1: the reap that reaches MAX_ATTEMPTS is terminal + [reaped-out].
     jid = _insert(engine, status="claimed", attempts=MAX_ATTEMPTS - 1, claimed_at=BASE, worker_id="w1")
-    q = _queue(engine, now=BASE + timedelta(minutes=31))
+    q = _queue(engine, now=BASE + timedelta(minutes=61))
     assert q.reap_stale() == 1
     row = _row(engine, jid)
     assert row["status"] == "failed"
@@ -88,7 +88,7 @@ def test_reap_terminates_at_cap_with_marker(engine):
 def test_reap_boundary_exactly_at_threshold_is_not_reaped(engine):
     # Strict boundary shared with is_stale: 30:00 exactly is not yet stale.
     _insert(engine, status="claimed", attempts=0, claimed_at=BASE, worker_id="w1")
-    q = _queue(engine, now=BASE + timedelta(minutes=30))
+    q = _queue(engine, now=BASE + timedelta(minutes=60))
     assert q.reap_stale() == 0
 
 

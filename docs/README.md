@@ -80,6 +80,131 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-030 — The worker's job-pull orchestration: HTTP transport over the proven claim primitive
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)** — topology ruled; the pure orchestration loop is built
+  here against an injected protocol; the concrete HTTP client + Fly endpoint API is deferred to
+  D-031 (see §Consequences). The stale-threshold open item is ruled below: **raised
+  provisionally**, not left unexamined.
+- **Context:** D-026 built the enqueue and explicitly deferred what consumes it: *"the worker's
+  job-pull orchestration (claim → the input is already stored → fold → upload) is the next
+  build; D-004's pull contract governs it."* This entry rules it and re-opens nothing.
+
+  Two facts read as a contradiction and are not one. `PostgresJobQueue.claim()` takes a
+  **SQLAlchemy engine** and runs `UPDATE jobs … WHERE id = (SELECT … FOR UPDATE SKIP LOCKED
+  LIMIT 1)`; D-004 specifies the worker **polls Fly over authenticated outbound HTTPS**, with
+  *"no inbound exposure of the home machine; no tunnel required."* **Different layers:** the
+  first is the atomic claim *primitive*, the second the *transport* by which a worker reaches
+  it. A direct worker→Fly-Postgres connection would need the DB exposed or a tunnel — both
+  rejected in that same D-004 sentence.
+
+  **Ground truth on `main` (verified by the Builder):** no `app/` directory exists, and
+  `PostgresJobQueue.claim()` is referenced only by `core/queue.py` and the test suite — never a
+  worker or a route. The primitive is real and proven (D-017); the HTTP wrapper D-004 implies
+  has never been built.
+- **Decision — the topology:**
+
+        worker (home GPU box)
+          └── authenticated outbound HTTPS ──▶ Fly serving tier (FastAPI)
+                                                └── PostgresJobQueue.claim() ──▶ Postgres
+                                                └── Fly Volume (artifacts)
+
+  **The engine lives on Fly, never on the worker.** The worker holds no database connection, no
+  Volume mount, no inbound port.
+
+  **(1) Claim is an authenticated HTTP call onto the existing SQL — not a re-implementation.**
+  The endpoint invokes `PostgresJobQueue.claim(worker_id)` server-side. FIFO ordering (D-009 §1
+  Amendment 3) and `SKIP LOCKED` atomicity live entirely in the primitive and are preserved
+  unchanged; D-017's proof stays valid because the SQL it proved is the SQL that runs. Any
+  future re-implementation of claim logic in the route rather than delegating to the primitive
+  invalidates that proof and needs its own entry.
+
+  **(2) Artifact transport is the same channel.** The worker uploads `structure.pdb`,
+  `plddt.json`, `pae.json`, `provenance.json` over HTTPS; the endpoint writes the Volume.
+  `runner.write_artifacts` keeps writing locally and knowing nothing about the DB (D-018).
+
+  **(3) Done-ordering — the correctness heart.** The worker uploads artifacts, then calls
+  complete; the status flip happens **server-side in complete, and only after the upload has
+  persisted** — `upload → persist → complete`, never the reverse. A worker that dies between a
+  persisted upload and complete leaves a `claimed` job that reaps and re-folds — wasteful but
+  safe. The forbidden state is a `complete` job with no structure behind it, which no later
+  process can detect as missing. **The loop encodes this by calling complete only after upload is
+  confirmed** — the test that inverts it (upload raises ⟹ complete never called) is the guard.
+
+  **(4) Failure taxonomy, split along the transport boundary:**
+
+  | Failure | Handled by | DB state |
+  |---|---|---|
+  | Transport / connectivity (claim or submit fails) | worker's poll loop retries | none — job stays as it was |
+  | Fold failure (deterministic: CUDA OOM, malformed) | worker reports → `fail()` | terminal `failed`, `attempts` untouched (D-009 §1 Amendment 2) |
+  | Vanished worker (claimed, then silent) | `reap_stale()` + `MAX_ATTEMPTS`, already built | requeued, or terminal with `REAPED_OUT_REASON` |
+
+  A submit that fails on transport is **retried, not re-folded** — re-uploading is cheap; a
+  rental-tier re-fold is *paid*. This requires the submit to be **idempotent server-side**
+  (completing an already-complete job is a no-op) — a route-contract obligation carried to D-031.
+- **⚠ The stale threshold — RULED: `DEFAULT_STALE_SECONDS` is raised to 3600 (60 min),
+  PROVISIONAL.** It was `30*60`, chosen when the implied topology was a worker holding a DB
+  connection. Under HTTP the lease clock starts when the endpoint stamps `claimed_at` — before
+  the worker has received the response, folded, or uploaded.
+
+  The asymmetry is one-directional: too short requeues live work and pays to fold a rental-tier
+  target twice; too long delays recovery from a rare vanish, on a workload that is offline batch
+  cache-generation (D-011) and not latency-sensitive. 60 min sits above the worst plausible
+  end-to-end for the largest folds (1652–2213 aa plus a large PAE upload over residential
+  bandwidth) while the cost of the raise stays negligible.
+
+  Labelled **`PROVISIONAL — unmeasured under HTTP transport`** in the D-023 (iii) manner, retired
+  by the named measurement: first end-to-end large-rental fold, claim-stamp → upload-complete.
+  This is not a claim about the right number — it is a safe upper bound chosen on the cost
+  asymmetry.
+
+  **⚠ The measurement will not settle this, and the entry should not imply it will.** A fixed
+  timeout has no correct value once fold durations are long or variable: a timeout large enough
+  never to reap a live fold is necessarily large enough to make a genuine vanish slow to recover.
+  The two constraints pull opposite ways and no constant satisfies both. The structural fix is a
+  lease **heartbeat** — the worker renews `claimed_at` while folding — which decouples "is this
+  fold alive" from "how long do we wait before recovering." Flagged for its own entry. The
+  provisional 60 min covers immediate safety; it does not make the design correct.
+- **⚠ The worker is the first component that spends money.** Every fold dispatched to the rented
+  A6000 is billed; a retry bug re-folds NOTCH2 (1652 aa) up to three times on a paid card. The
+  failure taxonomy is a cost-control decision as much as a correctness one.
+- **Test surface (written before the loop):** the loop is **pure given injected collaborators**
+  (a fake queue-client and a fake fold); a successful fold submits a result and never a failure;
+  a deterministic fold failure routes to `fail()` and never submits a result; a transport
+  failure at claim touches no DB state and is retried by the loop alone; a transport failure at
+  submit is retried **without re-folding** (fold called once, submit called more than once); no
+  GPU in the suite (`fold` injected, real fold owner-validated on the GPU host as
+  `ceiling_probe.py` already is); and the claim seam stays where D-012 §5 put it — a hermetic
+  test asserting the route "claims correctly" against SQLite would prove nothing about
+  `SKIP LOCKED` and is not written.
+- **Deep-learning justification:** this is the component that turns a reviewable manifest into
+  executed inference — where *"we run ESMFold ourselves"* (D-003) becomes artifacts on a Volume.
+  A job marked complete with no structure behind it would corrupt the coverage line (D-024) and
+  the extractor's inputs (D-027) at once, so its correctness properties are what make fold
+  provenance trustworthy downstream.
+- **Consequences / follow-ups:**
+  - **D-031 (the Fly endpoint) is deliberately sequenced AFTER this entry's loop.** The loop is
+    transport-agnostic — it operates on a minimal client protocol (`claim() → job|None`,
+    `upload(job, artifacts)`, `complete(job)`, `fail(job, err)`) and is fully buildable against
+    injected doubles. The protocol the loop defines *by needing it* becomes the route list D-031
+    must expose, so D-031 arrives as the HTTP realization of a proven interface rather than a
+    design from scratch. **This is the reverse of D-023/D-024's supplier-before-contract
+    ordering, and deliberately so:** there the manifest could not know the coverage line's shape
+    without a ruling; here the loop discovers its own contract by construction. Auth, worker
+    identity, route shape, upload size limits, and the §(4) idempotency obligation are all D-031.
+  - **Lease heartbeat — its own entry,** triggered by the threshold measurement or by any
+    observed reap of live work, whichever comes first.
+  - **`app/` does not exist.** Creating it (the route handlers) is a new entry point that
+    inherits the app-runtime `search_path` obligation (`docs/HAZARD-search-path-seams.md`): the
+    claim/submit routes touch no vector column, so it is seam 1 again, proven for the route
+    handlers on their own real-Postgres test — a D-031 concern.
+  - **Worker identity (`worker_id`)** is free-form today; under HTTP it becomes an
+    authentication concern, not a label. Flagged, ruled in D-031.
+  - **The stale-threshold measurement** is an owner action, gated on the first end-to-end
+    rental-tier fold.
+
+---
+
 ### D-026 — Enqueue: the manifest becomes protein_analyses + jobs (the pull queue is fed)
 - **Date:** 2026-07-22
 - **Status:** **Accepted (2026-07-22)** — ruled by the Builder; the three forks below decided
