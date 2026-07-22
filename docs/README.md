@@ -80,6 +80,63 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-019 — protein_analyses + ranking_runs + FK closure + pgvector: the last unproven point
+- **Date:** 2026-07-21
+- **Status:** Accepted; implemented in this PR (migration `0002`).
+- **Context:** Three deferred obligations converge on exactly this migration: D-009 §1
+  Amendment 4 (the `jobs.analysis_id` FK lands *in the migration that creates
+  `protein_analyses`*), D-015 §4 (`ranking_runs` + a nullable `protein_analyses.ranking_run_id`
+  FK, created in that same migration), and D-017 (pgvector `extensions`-schema resolution — the
+  **single remaining unproven point in the system**). This PR discharges all three in one
+  migration, because Amendment 4 requires the FK and its target in the same migration.
+
+- **Decisions:**
+  - **Scope.** `protein_analyses` (Database Plan §2.2 columns) and `ranking_runs` (D-015 §4:
+    `target_list_version`, `scorer_version`, `created_at`) become ORM models — both
+    SQLite-creatable, so the `create_all` test path is unaffected. `analysis_embeddings`
+    (`embedding vector(384)` + HNSW) is created **in the migration only, as raw SQL** — kept out
+    of `Base.metadata` so SQLite `create_all` never sees a Postgres vector type and **no
+    `pgvector` Python dependency is added**. `mutations`/`reports` are **deferred** (Iteration
+    2/3 children, nothing to do with FK-closure or pgvector).
+  - **FK closure (Amendment 4).** `jobs.analysis_id` gains its FK → `protein_analyses(id)`.
+    Per the standing "fail on the event" discipline, `test_analysis_id_has_no_fk_yet` was run
+    *after* adding the FK and **confirmed to fail specifically on the FK-exists assertion** (not
+    a collateral schema error) before being replaced with a positive test asserting the FK is
+    present and references `protein_analyses`. Same for the postgres job's `fks == 0` assertion.
+  - **A SECOND deferred FK, named not hidden.** `protein_analyses.user_id` is a nullable integer
+    with **no FK yet** — `users`/auth is unbuilt, so the FK would have no target. Deferred
+    exactly as `analysis_id` was (Amendment 4), and closes in the migration that creates
+    `users`. The column matches the plan so it is forward-compatible; only the constraint waits.
+  - **pgvector — D-012 §5a's tabled choice, finally made.** Rely on the env.py `search_path`
+    seam (already in place): the migration runs `CREATE SCHEMA IF NOT EXISTS extensions;
+    CREATE EXTENSION IF NOT EXISTS vector SCHEMA extensions;` then a **bare** `vector(384)`,
+    which resolves because `extensions` is on the migration's search_path. Both statements are
+    idempotent on prod, where D-014 measured the schema and the v0.8.2 extension already present
+    — so this is a no-op there and a create in CI. NOT schema-qualifying every column and NOT
+    `ALTER DATABASE` (D-012 §5a's rejected options).
+  - **CI image switch.** The `postgres` job moves `postgres:16` → `pgvector/pgvector:pg16` so
+    `CREATE EXTENSION vector` succeeds and the pgvector path is exercised **for real** — which
+    is what closes the last unproven point rather than merely asserting it closed.
+
+- **Deep-learning justification:** direct on two axes. `analysis_embeddings` is where learned
+  embeddings become a load-bearing capability (D-015's semantic axis), and pgvector is what
+  makes that a real deliverable rather than a lookup — the exact thing the unmanaged Postgres
+  product could not host (D-014). `protein_analyses` is the durable record every fold and score
+  attaches to; `ranking_runs` versions the ranking the D-015 scorer produces, so a result can be
+  tied to the target-list and scorer that produced it (reproducibility, §7).
+
+- **Consequences:**
+  - Migration `0002_protein_analyses`; `ARCHITECTURE.md` §4 updated.
+  - **The last unproven point is closed** — the pgvector `extensions` resolution now runs in the
+    `postgres` job against a pgvector-enabled Postgres 16.
+  - New deferred obligation logged: the `protein_analyses.user_id` FK, closing with `users`.
+  - `mutations`/`reports` remain to come; the orchestrator (cohort → UniProt → ECD slice → tier
+    route) and the D-015 scorer are the multi-day builds after this. The orchestrator's
+    prerequisite — the 82's measured ECD-length distribution + GPI-anchored count (cheap, no GPU)
+    — is slotted before/alongside it.
+
+---
+
 ### D-018 — PR B is a pure fold-runner: sequence in, structure + provenance out
 - **Date:** 2026-07-21
 - **Status:** Accepted; scopes PR B. Implements the D-011 cache-generation entry point, narrowed.

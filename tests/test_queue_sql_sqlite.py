@@ -108,10 +108,11 @@ def test_claim_is_unsupported_on_sqlite(engine):
         _queue(engine).claim("w1")
 
 
-def test_analysis_id_has_no_fk_yet(engine):
-    # D-009 §1 Amendment 4 closure guard: goes RED when the FK lands, forcing the
-    # migration that creates protein_analyses to add the constraint deliberately.
-    assert not JOBS.c.analysis_id.foreign_keys, (
-        "analysis_id must stay unconstrained until the migration that creates "
-        "protein_analyses adds the FK in that same migration (D-009 §1 Amendment 4)"
-    )
+def test_analysis_id_fk_closes_amendment_4(engine):
+    # D-009 §1 Amendment 4 CLOSED in D-019. The prior guard (test_analysis_id_has_no_fk_yet)
+    # was confirmed to fail on exactly the FK-exists assertion before this replaced it — the
+    # "fail on the event" discipline. Now assert the positive: the FK is present and points at
+    # protein_analyses.
+    fks = JOBS.c.analysis_id.foreign_keys
+    assert len(fks) == 1
+    assert next(iter(fks)).target_fullname == "protein_analyses.id"

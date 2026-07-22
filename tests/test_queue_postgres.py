@@ -28,11 +28,18 @@ BASE = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 def _enqueue(engine, n=1, created_base=BASE):
     ids = []
     with engine.begin() as c:
+        # jobs.analysis_id now has an enforced FK -> protein_analyses (D-019), so each job
+        # needs a real parent on Postgres (unlike SQLite, where FKs aren't enforced). One
+        # shared parent analysis is enough — the queue only needs a valid analysis_id.
+        parent = c.execute(
+            text("INSERT INTO protein_analyses (input_type, input_value) "
+                 "VALUES ('fasta', 'test') RETURNING id")
+        ).scalar_one()
         for i in range(n):
             rid = c.execute(
                 text("INSERT INTO jobs (analysis_id, status, attempts, inference_settings, created_at) "
                      "VALUES (:a, 'pending', 0, '{}', :ts) RETURNING id"),
-                {"a": 100 + i, "ts": created_base + timedelta(seconds=i)},
+                {"a": parent, "ts": created_base + timedelta(seconds=i)},
             ).scalar_one()
             ids.append(rid)
     return ids
@@ -61,10 +68,35 @@ def test_migration_chain_built_the_jobs_table(pg_engine):
             "SELECT COUNT(*) FROM information_schema.table_constraints "
             "WHERE table_name='jobs' AND constraint_type='FOREIGN KEY'"
         )).scalar_one()
-    assert fks == 0, "analysis_id FK is deferred until protein_analyses exists (D-009 §1 Amendment 4)"
+    # D-019 closed Amendment 4: migration 0002 adds jobs.analysis_id FK -> protein_analyses.
+    assert fks == 1, "jobs.analysis_id FK -> protein_analyses should exist after 0002 (D-019)"
 
 
 # ── (2) SKIP LOCKED atomicity — the thing nothing else in the repo can prove ──
+
+def test_pgvector_resolved_through_the_extensions_schema(pg_engine):
+    """D-019 closes the last unproven point. A green `alembic upgrade head` already implies the
+    seam worked (or `vector(384)` would have failed to resolve), but assert it directly rather
+    than infer from the absence of an error (D-016): the extension is in the `extensions` schema
+    (D-014, not public), and analysis_embeddings' `embedding` column is the vector type."""
+    with pg_engine.connect() as c:
+        ext_schema = c.execute(text(
+            "SELECT n.nspname FROM pg_extension e JOIN pg_namespace n ON n.oid = e.extnamespace "
+            "WHERE e.extname = 'vector'"
+        )).scalar_one_or_none()
+        assert ext_schema == "extensions"       # not public — the D-014 arrangement
+
+        cols = set(c.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'analysis_embeddings'"
+        )).scalars().all())
+        assert {"id", "analysis_id", "embedding"} <= cols
+
+        udt = c.execute(text(
+            "SELECT udt_name FROM information_schema.columns "
+            "WHERE table_name = 'analysis_embeddings' AND column_name = 'embedding'"
+        )).scalar_one()
+        assert udt == "vector"                   # the bare vector(384) resolved via search_path
+
 
 def test_claim_skips_a_locked_row(pg_engine):
     """The crown jewel. Hold a lock on the oldest pending row in one open
