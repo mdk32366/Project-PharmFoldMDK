@@ -9,11 +9,14 @@
 
 **Project**: PharmFoldMDK — an Antibody-Drug Conjugate (ADC) target exploration platform.
 **Context**: Graded coursework for a **Deep Learning** class in an ML Master's program.
-**Status (2026-07-21)**: Infrastructure complete and proven on real engines — the job queue
+**Status (2026-07-22)**: Infrastructure complete and proven on real engines — the job queue
 (D-009 §1, proven on Postgres 16 incl. `SKIP LOCKED`), migrations + pgvector (D-017/D-019), and
 the GPU-tier **fold-runner** (`worker/runner.py`, D-018). Cohort measured (D-020); boundary/tier
-decisions ruled (D-021/D-022). **Next:** the orchestrator (D-023, scoping) that turns the 82-target
-cohort into fold jobs. Serving-tier app (`app/`) not yet built.
+decisions ruled (D-021/D-022). The **orchestrator manifest** (D-023, `core/manifest.py`) is built:
+it turns the measured cohort into a deterministic, reviewable routing table (target → boundary
+method, span, tier, held-out flag, exclusion reason) plus the D-024 structured coverage object.
+**Next:** the enqueue step (manifest → `jobs`) and the D-004 pull contract. Serving-tier app
+(`app/`) not yet built.
 
 ---
 
@@ -92,6 +95,7 @@ opened on the local machine.
 |-------|----------------|--------------|
 | **Frontend** | Interactive UI, 3D visualization, onboarding | Streamlit; `py3Dmol`/`stmol` for 3D |
 | **Backend API** | Auth, request handling, **job queue** management, results | FastAPI + Uvicorn (on Fly) |
+| **Orchestration** (D-023) | Turns the measured cohort into a deterministic routing table — boundary method, span, tier, held-out/excluded — plus the D-024 structured coverage object, **reviewable before any job is created**; supplies the coverage line to the UI | `core/manifest.py` — pure, CPU-side, fixture-tested end to end |
 | **Local GPU worker** | Polls Fly for jobs, runs **ESMFold** on the local NVIDIA GPU for targets **under the length ceiling**, uploads artifacts back (D-004) — **not deployed to Fly** | Python worker; PyTorch + Hugging Face (`facebook/esmfold_v1`), int8 trunk |
 | **Rented-GPU batch** (D-011) | One-time offline fold of **above-ceiling** targets (HER2-class ~630 aa); artifacts uploaded to the Fly Volume | RunPod RTX A6000 48 GB, fp16 unquantised/unchunked; committed repo code, not a one-off script |
 | **DL / Inference core** | The neural work: **ESMFold structure prediction (D-003)**, plus pocket/druggability scoring, embeddings, mutation impact | PyTorch + Hugging Face; `biopython` for parsing |
@@ -415,7 +419,8 @@ Project-PharmFoldMDK/
 ├── README.md                # how to run / deploy (kept current in Phase 6)
 ├── CLAUDE.md                # living-doc governance rules
 ├── app/                     # Streamlit + FastAPI application code (deployed to Fly) — later
-├── core/                    # queue contract + pure logic + PostgresJobQueue (core/queue.py)
+├── core/                    # queue.py (JobQueue seam + is_stale) and manifest.py (D-023
+│                            #   orchestrator manifest: cohort → routing table + D-024 coverage)
 ├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
 │                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run),
 │                            #   requirements.txt (CUDA deps, never installed by CI). Job-pull
