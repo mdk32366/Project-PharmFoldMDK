@@ -80,6 +80,59 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-023 — The orchestrator: cohort → boundary → tier → job (Proposed / scope)
+- **Date:** 2026-07-21
+- **Status:** **Proposed (scope)** — ruling wanted on choice (i) before the build.
+- **Context:** D-018 split the **runner** (folds one sequence) from the **orchestrator** (selects
+  the right sequences, slices them at the right boundaries, routes them to the right tier) on
+  correctness-condition grounds. Every input the orchestrator needs now exists: the cohort of
+  record (D-020), the three-way boundary methods (D-021), the routing tiers incl. named
+  exclusions and the ceiling-as-measurement (D-022), and the queue + `protein_analyses` (D-019).
+  This scopes the orchestrator; it is not built until the choices below are ruled.
+- **Correctness condition (D-018, restated):** the orchestrator is right iff the *right set* of
+  sequences is selected, each sliced at the *right boundary by the right method*, and routed to
+  the *right tier* — independently of whether any fold succeeds (that is the runner's condition).
+- **Pieces:**
+  1. Load the cohort of record (`data/cohort_82_accessions.txt`).
+  2. Per target: fetch UniProt (sequence + `Topological domain` features) — reuse
+     `scripts/ecd_lengths.py`'s fetch/parse rather than re-derive it.
+  3. **Boundary method (D-021, three-way):** an extracellular topological span → `sliced_ecd`;
+     the GPI-anchored subset → `gpi_predicted` (**predictor deferred — see choice (ii)**);
+     otherwise → `whole`.
+  4. **Route to tier (D-020/D-022):** largest sliceable span ≤ 440 → **local**; the named
+     oversize (MUC16, FAT2) → **excluded**; between the local ceiling and the A6000 ceiling →
+     **rental**; borderline decided by the **A6000 ceiling config** (iii); `whole`/unsliceable →
+     folded but **held out of cross-method ranking claims** (D-021's binding constraint).
+  5. Emit the result — **choice (i)**.
+- **Choices for a ruling:**
+  - **(i) Output: a routing MANIFEST first, or enqueue jobs directly?** *Recommend: manifest
+    first* — a deterministic, reviewable table (target → method, span, tier, held-out flag,
+    exclusion reason) that is **fully testable with UniProt fixtures, no queue/GPU/DB needed**,
+    and can be reviewed before a single job is created. A thin enqueue step (into the D-019 queue
+    + `protein_analyses`) and the worker↔app pull contract (D-004) are a *separate* build on top.
+    The manifest is also where D-021's "N ranked, 13 held out" coverage line is computed.
+  - **(ii) The `gpi_predicted` predictor: in scope, or deferred?** *Recommend: deferred* — D-021
+    ruled it a separate scoped build (a SignalP/GPI DL component). Until it lands, the orchestrator
+    routes the GPI subset (MSLN, GPC1, …) as `whole` (held out of ranking), and **upgrades** them
+    to `gpi_predicted` when the predictor exists. This keeps the orchestrator shippable without
+    blocking on a new model.
+  - **(iii) The A6000 ceiling is config, not hard-coded.** Default conservative until
+    `worker/ceiling_probe.py` (D-022, owner-run) measures it; borderline targets route on the
+    config value, and the manifest records which ceiling produced the routing.
+- **Testing:** the routing/slicing **decision** is pure and deterministic given a UniProt
+  response, so it is fixture-tested on the gate — no live UniProt, no GPU, no DB for the manifest
+  path. This is the whole payoff of the D-018 split: the orchestrator's correctness surface is
+  exactly the part CI can cover.
+- **Deferred / depends on:** the A6000 ceiling (probe, owner-run) for exact borderline routing;
+  the SignalP/GPI predictor (D-021) for `gpi_predicted`; the worker↔app pull contract (D-004) +
+  the enqueue step for the manifest→fold path.
+- **Deep-learning justification:** it is the mechanism that turns the 82 into the folds the D-015
+  scorer consumes; its correctness (right boundary method per target, held-out set reported) is
+  what keeps the ranking comparing like with like rather than mixing domain slices and whole
+  chains.
+
+---
+
 > **D-021 and D-022 are a PAIR, logged together on purpose (D-020's measurement raised both).**
 > They interact: decomposition (D-022) and the no-topology boundary rule (D-021) are both "this
 > protein needs boundaries UniProt topology does not give us," so a decomposition mechanism, if
