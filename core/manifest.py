@@ -41,6 +41,7 @@ action). Both are recorded as pending, not estimated here.
 from __future__ import annotations
 
 import csv
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -78,7 +79,9 @@ class ManifestRow:
     gene: str
     label: str
     boundary_method: str        # sliced_ecd | gpi_predicted | whole
-    span: int | None            # largest ECD span (sliced_ecd), else None
+    span: int | None            # largest ECD span LENGTH (sliced_ecd), else None
+    ecd_start: int | None       # 1-based bounds of the folded span (sliced_ecd), else None
+    ecd_end: int | None         # inherited: the LARGEST span, per D-024/D-026 (ii)
     tier: str                   # local | rental
     tier_reason: str | None     # required whenever tier == "rental"
     held_out: bool              # boundary-method incomparable (D-021 §1a)
@@ -100,6 +103,23 @@ class ManifestRow:
 def _int_or_none(value: str) -> int | None:
     value = (value or "").strip()
     return int(value) if value else None
+
+
+_SPAN_RE = re.compile(r"^(\d+)-(\d+)\((\d+)\)$")
+
+
+def _largest_span_bounds(spans: str, largest: int | None) -> tuple[int | None, int | None]:
+    """From the CSV `spans` field ('215-671(457); 34-39(6)'), return the 1-based
+    [start, end] of the span whose length equals `largest`. Inherited from the
+    same measurement the cohort was bucketed on (D-020), so routing and fold agree
+    on WHICH span. None when there is no numeric span (whole-method)."""
+    if largest is None or not spans:
+        return None, None
+    for seg in spans.split(";"):
+        m = _SPAN_RE.match(seg.strip())
+        if m and int(m.group(3)) == largest:
+            return int(m.group(1)), int(m.group(2))
+    return None, None
 
 
 def _sliced_tier(span: int) -> tuple[str, str | None]:
@@ -135,10 +155,12 @@ def build_manifest(csv_path: Path | str = DEFAULT_CSV) -> list[ManifestRow]:
                 boundary_method = "whole"
                 tier, tier_reason = _whole_tier(seq_len)
                 held_out = True
+                ecd_start, ecd_end = None, None
             else:
                 boundary_method = "sliced_ecd"
                 tier, tier_reason = _sliced_tier(span)
                 held_out = False
+                ecd_start, ecd_end = _largest_span_bounds(src["spans"], span)
 
             rows.append(
                 ManifestRow(
@@ -147,6 +169,8 @@ def build_manifest(csv_path: Path | str = DEFAULT_CSV) -> list[ManifestRow]:
                     label=src["label"],
                     boundary_method=boundary_method,
                     span=span,
+                    ecd_start=ecd_start,
+                    ecd_end=ecd_end,
                     tier=tier,
                     tier_reason=tier_reason,
                     held_out=held_out,

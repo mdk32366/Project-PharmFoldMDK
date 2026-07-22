@@ -80,6 +80,91 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-026 — Enqueue: the manifest becomes protein_analyses + jobs (the pull queue is fed)
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)** — ruled by the Builder; the three forks below decided
+  here with justification, not inherited.
+- **Context:** D-023's manifest produces a reviewable routing table but writes nothing. D-004's
+  pull queue can be *claimed* but has no `enqueue` — the seam is claim/complete/fail/reap_stale
+  only. This entry is the step between: turn each foldable manifest row into a `protein_analyses`
+  row (WHAT to fold) plus a `jobs` row (a pending unit the local worker claims). It is **the first
+  code in the project to write application rows** — which makes it the first exercise of a seam
+  named-but-never-run (see Hazard).
+- **Decision — who is enqueued.** The 80 targets with disposition `ranked` or `held_out` are
+  folded; the 2 `excluded` (MUC16 `Q8WXI7`, FAT2 `Q9NYQ8`) get **no job** (D-022 — they fold on no
+  card). **Held-out means held out of the RANKING, not of folding** (D-021/D-024): the 13
+  `whole`-method targets are folded — they populate the coverage surface and the single-target
+  view — but do not enter cross-method ranking claims.
+
+  **Named as a deliberate spend:** those 13 held-out folds run on rented hardware
+  (whole-sequence, mostly rental-tier) and contribute **nothing to the ranking**. That is the
+  intended cost of an honest coverage surface and a working single-target view, recorded so it is
+  not a surprise on the invoice. If cost ever forces a cut, the held-out folds are the first
+  candidates — never the ranked ones.
+- **Ruling (2026-07-22), forks decided by the Builder with justification:**
+
+  **(i) The sequence and its UniProt release are fetched and STORED at enqueue — the job is
+  self-contained.** Not "store the accession and let the worker fetch at fold time."
+  Reproducibility is this project's differentiator, and **UniProt revises sequences**: a worker
+  fetching months later could fold a *different molecule* than the manifest reviewed, silently.
+  The analysis records the exact residues folded **and the release they came from**, so provenance
+  names *which* UniProt. Cost: 80 one-time REST fetches — cheap, and it keeps new network code out
+  of the not-yet-built worker orchestration. The fetcher is injected, so tests stay hermetic.
+
+  **(ii) The fold target is the LARGEST extracellular span — inherited, not a fresh choice.**
+  `largest_span_aa` is what the whole cohort was bucketed on (D-020) and what every routing and
+  coverage decision keys on (D-024). Folding any *other* span would make the routing and the fold
+  disagree about what was measured, so this is consistent-by-construction, not a new rule. The
+  span folded (`[start,end]`, or `whole`) is **recorded on each row**, so the deferred
+  ADC-relevant-span refinement can later identify exactly what changed. Multi-span selection beyond
+  "largest" is out of scope here.
+
+  **(iii) One `ranking_runs` row per enqueue; idempotent on (cohort version, accession).** Each
+  enqueue mints a `ranking_runs` row stamped with the cohort's `target_list_version` (the
+  Kathad-82 revision, D-020). Analyses/jobs are keyed idempotently, so a **second run reports
+  "exists" and writes nothing new** — the enqueue is the irreversible step D-023's manifest-first
+  guard existed to protect, so re-running it must be safe.
+- **`inference_settings` per tier (D-018 / S-003 — recorded, not re-decided):** `local` →
+  `int8`/`chunk_size=64`; `rental` → `fp16`/`chunk_size=None`; `MODEL_REVISION` pinned
+  (`75a3841…`), `source ∈ {sliced_ecd, whole}`, and the ECD `[start,end]` when sliced. These are
+  the reproducibility fields D-004/D-015 §1a require; the worker fills the post-fold half (pLDDT,
+  CA count, folded_at).
+- **Deep-learning justification:** this is the plumbing that turns a reviewed routing table into
+  actual neural-inference work — where "we run ESMFold ourselves" (D-003/D-004) becomes jobs a GPU
+  claims. Storing the exact input + release + fold parameters is what makes each fold
+  **reproducible and legible to a grader** (D-015/D-016).
+- **⚠ HAZARD — the app-runtime `search_path` seam, first exercised here.** env.py's `search_path`
+  is proven on real Postgres (D-017); the **app-runtime connection is a different connection and
+  has never written a row.** The enqueue is the first to do so. Its writes
+  (`protein_analyses`/`jobs`/`ranking_runs`) do **not** reference the `vector` type, so they do not
+  by themselves exercise the pgvector `extensions`-schema resolution — that specific seam stays
+  unproven until vector-touching app code runs, stated so it is not mistaken for covered. What IS
+  newly exercised is the app-runtime **write/commit path on real Postgres**, and it is tested on a
+  **real connection, not a mock** (`test_enqueue_commits_on_real_postgres` re-reads on a fresh
+  connection — the env.py-bug class: a green insert that silently rolled back).
+
+  **Related, owner's call:** the Postgres integration job is **still not a required check**. Under
+  D-025 merge-on-green, a migration bug can merge green — in the session most likely to produce
+  one. **This PR writes no migration** (the tables exist, D-019), so it adds no such exposure; but
+  the promotion decision remains the owner's, and it is the live constraint on D-025's value.
+- **Test surface (written before the code):** 80 enqueued / the 2 excluded get no job; a re-run is
+  idempotent (reports "exists", counts unchanged, one `ranking_run`); `inference_settings` is
+  tier-correct (int8/64 local, fp16/None rental, revision pinned); slice provenance recorded
+  (source + ECD bounds, or whole) and the UniProt release stored; every `jobs.analysis_id` FKs a
+  real `protein_analyses` row; and — on a **real** connection — the rows commit.
+- **Provenance (D-016).** Ruled against `db/models.py` (the jobs/protein_analyses/ranking_runs
+  schema), `worker/runner.py` (`FoldProvenance` fields + `MODEL_REVISION`), `core/manifest.py` (the
+  dispositions + slice bounds), and D-004/D-018/D-019/D-020/D-021/D-022/D-024 — read from HEAD.
+- **Consequences / follow-ups:**
+  - The worker's job-pull orchestration (claim → the input is already stored → fold → upload) is
+    the next build; D-004's pull contract governs it.
+  - `analysis_embeddings` (the vector path) is written later, by the scorer — that is when the
+    app-runtime `search_path` seam finally bites and must be handled.
+  - Group C reconciliation and any approved-ADC-list authority are out of scope here (owner-named
+    source pending).
+
+---
+
 ### D-025 — Merge-on-green authorization, and what it does not authorize
 - **Date:** 2026-07-22
 - **Status:** Accepted
