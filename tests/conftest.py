@@ -53,7 +53,9 @@ def pg_engine():
         pytest.skip(f"PostgreSQL not reachable: {e}")
 
     with engine.begin() as c:
-        c.execute(text("TRUNCATE TABLE jobs RESTART IDENTITY"))
+        # CASCADE + all accumulating tables: jobs FK -> protein_analyses FK -> ranking_runs,
+        # and analysis_embeddings FK -> protein_analyses (D-019). One clean slate per test.
+        c.execute(text("TRUNCATE TABLE jobs, protein_analyses, ranking_runs RESTART IDENTITY CASCADE"))
     try:
         yield engine
     finally:

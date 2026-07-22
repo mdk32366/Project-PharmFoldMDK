@@ -51,7 +51,10 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        # pgvector-enabled Postgres 16 (D-019): migration 0002 runs CREATE EXTENSION vector +
+        # a vector(384) column, so the extension must be available. Stock postgres:16 has no
+        # pgvector; this image bundles it. Matches prod (D-014: PG16 + pgvector v0.8.2).
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

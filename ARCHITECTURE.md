@@ -106,18 +106,26 @@ opened on the local machine.
 
 Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](docs/Database_Plan_v2_Postgres.md)):
 
-- **`users`** — auth (username + hashed password), JSONB `preferences`.
-- **`protein_analyses`** — core entity: input type/value, structure source, `pdb_path`,
-  `mean_plddt`, `pae_json_path`, JSONB `metadata`, notes. ADC-specific fields
-  (e.g. `adc_suitability_score`) to be added as extensions.
-- **`mutations`** — 1:N from an analysis; position, original/new AA, impact score + notes.
-- **`reports`** — 1:N from an analysis; report type, `content_path`, timestamps.
-- **`analysis_embeddings`** — `vector(384)` with an HNSW cosine index for semantic search
-  (Iteration 3+). ⚠️ pgvector lives in the **`extensions`** schema (D-014), so the migration
-  that creates this column must resolve the type via `search_path`, not a bare `vector(384)`.
-  The migration-side seam is already in place: `db/migrations/env.py` sets `search_path TO
-  public, extensions` on Postgres (D-012 §5a). The **app-runtime** connection needs the same
-  search_path — a *separate* seam in the engine config, not handled by env.py (D-012 §5a).
+- **`users`** — auth (username + hashed password), JSONB `preferences`. **Not built yet** (no
+  auth code); this is why `protein_analyses.user_id` carries no FK yet (D-019).
+- **`protein_analyses`** (D-019, `db.models.ProteinAnalysis`) — core durable record: input
+  type/value, structure source, `pdb_path`, `mean_plddt`, `pae_json_path`, JSONB `metadata`
+  (attr `meta` — "metadata" is reserved on the ORM Base), notes, and a nullable
+  `ranking_run_id` FK → `ranking_runs` (D-015 §4). `user_id` is a nullable integer with **no FK
+  yet** — deferred until `users` exists, the same pattern as the old `analysis_id` deferral.
+- **`ranking_runs`** (D-019, `db.models.RankingRun`) — versions one cohort ranking
+  (`target_list_version`, `scorer_version`, `created_at`), so a result ties to the target-list
+  and scorer that produced it (D-015 §4, §7).
+- **`analysis_embeddings`** — `vector(384)` + HNSW cosine index for semantic search
+  (Iteration 3+). **Created in migration 0002 as raw SQL only — deliberately NOT an ORM model**
+  (D-019), so the Postgres `vector` type never reaches SQLite `create_all` and no `pgvector`
+  Python dep is added. This is the **first vector column, and it closes the last unproven point
+  (D-017):** the migration runs `CREATE SCHEMA IF NOT EXISTS extensions; CREATE EXTENSION IF NOT
+  EXISTS vector SCHEMA extensions;` then a **bare** `vector(384)` that resolves via env.py's
+  `search_path` seam — exercised for real in the `postgres` CI job (now on a `pgvector/pgvector:pg16`
+  image). Idempotent no-ops on prod (D-014). The **app-runtime** connection will need the same
+  search_path — a separate seam in the engine config when the app queries embeddings (D-012 §5a).
+- **`mutations`** / **`reports`** — 1:N from an analysis; **deferred** (Iteration 2/3, D-019).
 - **`jobs`** (D-009 §1, **implemented in PR A** as `db.models.JobRecord`) — **transient**
   fold-queue state, kept **separate** from the durable `protein_analyses` record: `analysis_id`
   (see FK note), `status` (`pending`/`claimed`/`complete`/`failed`), `claimed_at`, `worker_id`,
@@ -128,9 +136,9 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
   Stale `claimed` jobs (age **strictly** > 30 min) are requeued, `attempts++`, up to
   **`MAX_ATTEMPTS = 3`** then terminal `[reaped-out]` (D-009 §1 Amendment 1); an explicit `fail`
   is terminal and leaves `attempts` untouched (Amendment 2); claim order is explicit FIFO by
-  `created_at` (Amendment 3). **`analysis_id` carries no FK yet** — a plain indexed integer
-  until the migration that creates `protein_analyses` adds the constraint in that same migration
-  (Amendment 4). This is the durable queue the local GPU worker (D-004) pulls from.
+  `created_at` (Amendment 3). **`analysis_id` FK → `protein_analyses` — CLOSED in D-019** (was
+  deferred under Amendment 4; the migration that created `protein_analyses` added it in the same
+  migration). This is the durable queue the local GPU worker (D-004) pulls from.
 
 **Relationships:** `users` 1:N `protein_analyses` 1:N (`mutations`, `reports`, `jobs`).
 **Migrations:** Alembic, versioned. Any schema change ships with a migration.
