@@ -138,6 +138,22 @@ def test_every_target_has_one_valid_boundary_method():
         assert r.boundary_method in ("sliced_ecd", "gpi_predicted", "whole")
 
 
+def test_sliced_rows_carry_the_largest_span_bounds():
+    """D-026 (ii): a sliced_ecd row records the folded span's 1-based [start,end] —
+    the LARGEST span, inherited from the bucketing (D-020), so routing and fold
+    agree on which span. whole rows carry no bounds."""
+    egfr = BY_ACC["P00533"]              # spans '25-645(621)'
+    assert (egfr.boundary_method, egfr.span, egfr.ecd_start, egfr.ecd_end) \
+        == ("sliced_ecd", 621, 25, 645)
+    assert BY_ACC["Q7Z5N4"].ecd_start is None   # SDK1 whole → no bounds
+    for r in ROWS:
+        if r.boundary_method == "sliced_ecd":
+            assert r.ecd_start is not None and r.ecd_end is not None
+            assert r.ecd_end - r.ecd_start + 1 == r.span   # length consistency
+        else:
+            assert r.ecd_start is None and r.ecd_end is None
+
+
 def test_ranked_is_not_defined_as_local_tier():
     """D-024 (iv): tier is orthogonal to comparability. The rental-tier sliced_ecd
     targets are RANKED, so `ranked` must never be conflated with local-tier."""
