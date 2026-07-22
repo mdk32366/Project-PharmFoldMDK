@@ -103,10 +103,22 @@ So the rule is not "be careful" — it is:
   check**. Two reasons: branch protection is owner-set (D-008 established it, `enforce_admins`),
   and a *required* job with a service container that flakes would deadlock every PR with no admin
   bypass — the exact hazard D-013 §3 declined pip caching to avoid. Interim gate: `deploy: needs
-  postgres`, so a broken migration cannot **deploy** even if a PR merged. **Recommendation to the
-  owner:** once the job has shown itself stable across a handful of PRs, add `postgres` to the
-  required status checks — that makes it a true PR gate and fully closes the hole. Recorded as a
-  recommendation, not silently done, because it is a repo-settings change with a real downside.
+  postgres`, so a broken migration cannot **deploy** even if a PR merged.
+
+  **Promotion criterion — a specific bar, not a vibe.** The owner adds `postgres` to branch
+  protection's required checks once **all** of the following hold, so "stable" is falsifiable:
+  1. The job has completed on **≥ 5 consecutive PRs** since this one.
+  2. On every one of those, any red was **attributable to a genuine code/migration fault** — the
+     job doing its work (like the env.py bug on run one) — and **never to service-container
+     infrastructure**: container-startup timeout, `pg_isready` health-check failure, or
+     connection-refused. An infra flake is the precise signal that a *required* version would
+     have deadlocked a PR with no bypass.
+  3. **Any infra-attributable failure resets the count to zero.** One flake in five PRs means
+     not yet — the counter measures the thing that matters (would "required" have blocked
+     honest work?), not elapsed time.
+
+  Recorded as a recommendation with a bar, not silently done: it is a repo-settings change
+  (owner-only, like branch protection itself, D-008) with a real downside if promoted early.
 
 - **Still unexercised, stated not hidden:** the service image is stock `postgres:16`. There is no
   vector column yet, so env.py's `search_path`→`extensions` *resolution* is proven only insofar
