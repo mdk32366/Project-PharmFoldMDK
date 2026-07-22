@@ -26,8 +26,11 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass
 from typing import Any, Callable, Protocol
+
+from core.contracts import FoldSpec  # re-exported: FoldSpec now lives in the tier-neutral
+# contracts module (DEP-001) so `app/` imports it without pulling `worker/` into the Fly
+# image. The loop and its tests still `from worker.orchestrator import FoldSpec` unchanged.
 
 log = logging.getLogger(__name__)
 
@@ -42,21 +45,9 @@ class FoldError(Exception):
     raise this for its known failure modes."""
 
 
-@dataclass(frozen=True)
-class FoldSpec:
-    """What `claim()` returns — the fold INPUT carried INLINE, because the worker
-    holds no database connection (D-030 topology). It is the denormalized join of
-    a job's `inference_settings` and its analysis's stored sequence; the `/claim`
-    route (D-031) must produce this, not a bare job id."""
-
-    job_id: int
-    sequence: str
-    model_revision: str
-    dtype: str
-    chunk_size: int | None
-    source: str            # sliced_ecd | whole
-    ecd_start: int | None
-    ecd_end: int | None
+# FoldSpec is defined in core/contracts.py (DEP-001 relocation) and imported at the top of
+# this module; it remains part of the orchestrator's public surface by re-export, so the
+# claim contract still reads as "what the loop's client returns" right here.
 
 
 class QueueClient(Protocol):

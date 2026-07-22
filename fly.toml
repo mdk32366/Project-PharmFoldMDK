@@ -1,0 +1,26 @@
+# Fly serving-tier config (DEP-001…004). `fly deploy --app pharmfoldmdk` builds the Dockerfile
+# and releases the transport API. Always-on, no GPU (D-004). A green deploy means the transport
+# is up and the queue accepts work — NOT that any fold has run (DEP-004); folds happen only when
+# the owner starts the worker on the GPU box.
+app = "pharmfoldmdk"
+primary_region = "iad"   # OWNER: confirm this matches the MPG Postgres cluster's region (D-014).
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080          # matches the Dockerfile CMD (uvicorn --port 8080)
+  force_https = true
+  auto_stop_machines = "off"    # always-on serving tier (D-004): the worker polls it, so it
+  auto_start_machines = true    # must stay reachable rather than scale to zero
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"              # OWNER-tunable; the transport is I/O-bound, not compute
+
+# Fold artifacts (structure.pdb / plddt.json / pae.json.gz / provenance.json) are written to a
+# Fly Volume by the upload route (D-031); ARTIFACT_ROOT defaults to this mount (app/config.py).
+[mounts]
+  source = "artifacts"
+  destination = "/data/artifacts"

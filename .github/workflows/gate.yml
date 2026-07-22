@@ -82,12 +82,39 @@ jobs:
       - name: Postgres integration tests
         run: python -m pytest -m postgres -q
 
+  # DEP-001…004: build the serving-tier image and release it to Fly. Stays `needs: [test,
+  # postgres]` (both required, D-032) — it cannot run until the gate is green. The doc-only
+  # guard is on the JOB, never the trigger (DEP-002): `test`/`postgres` still run on docs PRs,
+  # only the deploy STEP is skipped when a push changed nothing outside docs/ and *.md.
   deploy:
     needs: [test, postgres]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      # Placeholder only: real Fly deploy (flyctl + FLY_API_TOKEN secret) is
-      # wired in a later decision once the application exists. No app code yet.
-      - run: echo "gate passed; deploy placeholder (Fly wiring pending — docs/README.md D-005)"
+        with:
+          fetch-depth: 0            # need history to diff the pushed range for the guard
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Doc-only guard (DEP-002)
+        id: guard
+        run: |
+          before="${{ github.event.before }}"
+          # first push / force-push can leave `before` unresolvable — fall back to HEAD~1.
+          if ! git cat-file -e "${before}^{commit}" 2>/dev/null; then before="$(git rev-parse HEAD~1)"; fi
+          changed="$(git diff --name-only "$before" "${{ github.sha }}")"
+          echo "changed paths:"; echo "$changed"
+          docs_only="$(printf '%s\n' "$changed" | python scripts/deploy_guard.py)"
+          echo "docs_only=$docs_only"
+          echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
+      - name: Set up flyctl
+        if: steps.guard.outputs.docs_only == 'false'
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      # DEP-001 image, DEP-003 app-scoped token, DEP-004 meaning. --remote-only builds on Fly's
+      # builders (no docker-in-CI). Requires the FLY_API_TOKEN secret (owner-provisioned, DEP-003).
+      - name: Deploy to Fly
+        if: steps.guard.outputs.docs_only == 'false'
+        run: flyctl deploy --app pharmfoldmdk --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
