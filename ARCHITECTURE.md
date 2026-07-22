@@ -441,7 +441,8 @@ Project-PharmFoldMDK/
 │                            #   routes.py (D-031 four worker→Fly routes), artifacts.py (FoldSpec
 │                            #   projection + compensated Volume+DB persist), deps.py, config.py
 ├── core/                    # queue.py (JobQueue seam + is_stale), manifest.py (D-023 routing
-│                            #   table + D-024 coverage), enqueue.py (D-026 manifest → analyses+jobs),
+│                            #   table + D-024 coverage), enqueue.py (D-026 manifest → analyses+jobs;
+│                            #   `python -m core.enqueue` CLI, subset-capable for the first fold),
 │                            #   contracts.py (FoldSpec — tier-neutral claim contract, DEP-001)
 ├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
 │                            #   orchestrator.py (D-030 job-pull loop, pure/transport-agnostic),
