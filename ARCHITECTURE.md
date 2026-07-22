@@ -9,8 +9,11 @@
 
 **Project**: PharmFoldMDK — an Antibody-Drug Conjugate (ADC) target exploration platform.
 **Context**: Graded coursework for a **Deep Learning** class in an ML Master's program.
-**Status (2026-07-21)**: First application code landed — the job queue (D-009 §1) in `core/`
-+ `db/`. Serving-tier app (`app/`) and GPU worker (`worker/`) not yet built.
+**Status (2026-07-21)**: Infrastructure complete and proven on real engines — the job queue
+(D-009 §1, proven on Postgres 16 incl. `SKIP LOCKED`), migrations + pgvector (D-017/D-019), and
+the GPU-tier **fold-runner** (`worker/runner.py`, D-018). Cohort measured (D-020); boundary/tier
+decisions ruled (D-021/D-022). **Next:** the orchestrator (D-023, scoping) that turns the 82-target
+cohort into fold jobs. Serving-tier app (`app/`) not yet built.
 
 ---
 
