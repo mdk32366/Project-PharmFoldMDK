@@ -80,6 +80,119 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-032 — Promoting the Postgres job to a required check: the D-017 bar, met
+- **Date:** 2026-07-22
+- **Status:** **Accepted (2026-07-22)** — criterion 2 confirmed by the Builder against the
+  job's run history (see below). The promotion itself is an owner-only repo-settings change
+  (D-008) and is the owner's to apply.
+- **Context:** D-025 authorized merge-on-green. Its own consequences named the constraint on its
+  value: *"merge-on-green is only as strong as the set of required checks, and the Postgres
+  integration job is still not one of them… until it is promoted, a migration bug can merge
+  green."* Every merge on 2026-07-22 — including `core/enqueue.py` and `worker/orchestrator.py` —
+  rode that authorization with the guard advisory.
+
+  **A correction to how this item has been described, recorded because it was repeated all day.**
+  Several documents in this session — the pre-work, the close-out draft, and the Planner's
+  summaries — called the D-017 promotion bar *"still a vibe, not a number."* **That was wrong.**
+  D-017 §"How far" sets an explicit, falsifiable three-part bar:
+
+  1. the job completes on **≥ 5 consecutive PRs** since D-017;
+  2. on every one, any red was attributable to a **genuine code/migration fault** and
+     **never to service-container infrastructure** (startup timeout, `pg_isready` failure,
+     connection-refused);
+  3. **any infra-attributable failure resets the count to zero.**
+
+  D-017 even says why the bar is shaped that way: *"the counter measures the thing that matters
+  (would 'required' have blocked honest work?), not elapsed time."* **The item was not missing a
+  number; nobody had checked the number against the runs.** That is a different failure — and a
+  more embarrassing one, since the artefact was in the repo the whole time.
+
+---
+
+- **The bar, checked (D-016 — this is the part that needs an artefact, not an assertion):**
+
+  **Criterion 1 — ≥ 5 consecutive PRs.** D-017 landed at PR #30. Since then: **#31 through #45**,
+  fifteen PRs. `paths-ignore` was removed by D-008 precisely so **every** PR triggers the
+  workflow, including docs-only ones — so all fifteen are countable, not just the code PRs.
+  **Criterion 1 is met roughly threefold.**
+
+  **Criterion 2 — no infra-attributable reds. CONFIRMED by the Builder, 2026-07-22.** This
+  criterion cannot be established from the tree: the distinction D-017 draws — a red that was the
+  job *doing its work* versus a red from a flaking service container — lives in **GitHub Actions
+  run logs, not in the repository.** The Builder pulled the failed step and log for each red
+  rather than inferring from branch names, which is the distinction the bar actually turns on.
+
+  **42 runs across #31–#45** (the job's entire history since D-017 added it). **Exactly two
+  reds, both genuine faults, zero infra flakes:**
+
+  | Run | Branch | Failed step | Nature |
+  |---|---|---|---|
+  | 29879472591 | `postgres-integration-job` (D-017) | Postgres integration tests | **code** — caught the env.py transaction bug (a migration silently rolling back) |
+  | 29882471328 | `protein-analyses-migration` (D-019) | Apply migrations (`alembic upgrade head`) | **migration** — caught 0002 re-creating an existing index |
+
+  In both, `Initialize containers` succeeded, `pg_isready` health checks ran, and there was no
+  startup timeout, connection-refused, or health failure. **The failure was strictly downstream,
+  in the migration or test step** — the job doing its work.
+
+  **Criterion 3 — reset on infra flake.** Not triggered; the count is intact.
+
+  **Additional evidence beyond the bar, and it is stronger than the bar itself:** the two reds
+  above are not merely *not-flakes* — they are the **two production-grade bugs the close-outs
+  credit this job with catching**, now traced to their run IDs rather than recalled. The job also
+  confirmed the re-anchored reap boundaries on real PG (#43). **A check that has fired correctly
+  twice and falsely zero times in 42 runs is better evidenced than one that has merely been green
+  five times.** D-017's bar measures the absence of flakes; this measures the presence of value.
+  Both point the same way, which is the comfortable case.
+
+---
+
+- **Decision: add `postgres` to branch protection's required checks, effective BEFORE the
+  transport PR.**
+
+  **The timing is the substance of this entry, not a detail.** The alternative — naming a future
+  threshold ("promote after N more clean runs") — would mean the transport PR merges first. That
+  PR creates `app/`, the first FastAPI route handlers, and is the **largest new
+  database-touching surface the project has produced**. It is precisely what the job exists to
+  guard. Promoting after it inverts the point of having a guard.
+
+  **What promotion changes:** a red `postgres` job blocks merge, with **no admin bypass**
+  (D-008's `enforce_admins`). That is the intended cost. D-017 declined to promote early for a
+  specific, still-valid reason — *"a required job with a service container that flakes would
+  deadlock every PR with no admin bypass"* — which is exactly why criterion 2 is the one that
+  matters and why it is the Builder's to confirm rather than the Planner's to assume.
+
+- **What this does NOT change, stated so promotion is not mistaken for wider coverage:**
+  - **The pgvector `extensions`-schema resolution is still unproven.** D-017 says so directly:
+    the service image is stock `postgres:16`, there is no vector column, so `search_path`
+    → `extensions` is proven only insofar as the SET executes without error. Per
+    `docs/HAZARD-search-path-seams.md` this is **seam 2**, and its trigger is unchanged — the
+    first `analysis_embeddings` write, downstream of D-027. **A required Postgres job does not
+    close it.**
+  - **`worker/requirements.txt` remains outside the lock-file guarantee** (D-018, by design;
+    `accelerate` unpinned). No CI job reddens on a breaking upstream release there.
+  - **`--require-hashes` tamper rejection remains asserted, not demonstrated.**
+
+- **Deep-learning justification:** indirect, and the same shape D-017 gave. The queue dispatches
+  every neural inference; a broken migration or a silently-non-atomic claim corrupts the fold
+  cache the deliverable is served from, invisibly, under a green SQLite suite. Making the guard
+  *required* is what converts D-025's merge-on-green from a throughput convenience into a safe
+  one.
+
+- **Consequences / follow-ups:**
+  - **Closes the standing constraint D-025 named on itself.** D-025's consequence block should be
+    updated to reference this entry rather than leaving the promotion open.
+  - **The transport PR (D-031) is held until this lands** — the owner's sequencing, and the point
+    of the entry.
+  - ~~If criterion 2 fails…~~ **Criterion 2 passed.** Retained as a note on method: the check was
+    run against logs with the answer genuinely open, not to ratify a decision already taken. Had
+    a red been infra-attributable, the count would have reset per D-017 (3) and this entry would
+    have become a dated record of a bar checked and not met.
+  - **The image switches to `pgvector/pgvector:pg16`** when the first vector-column migration
+    lands (D-017). That is a change to a *required* check and therefore must be proven
+    RED→GREEN per D-008, not merged on the strength of a passing run (D-025).
+
+---
+
 ### D-031 — The Fly transport: HTTP realization of the loop's discovered protocol
 - **Date:** 2026-07-22
 - **Status:** **Accepted (2026-07-22)**
@@ -879,12 +992,14 @@ So the rule is not "be careful" — it is:
   its *absence* from the log was the defect: the Builder was blocked on an unwritten rule, and
   the next session would have been blocked identically.
 - **Consequences:**
-  - The **D-017 promotion bar is now the live constraint on this entry's value.** Merge-on-green
-    is only as strong as the set of *required* checks, and the Postgres integration job is still
-    not one of them despite having caught **two** production-grade migration bugs without
-    flaking. Until it is promoted, a migration bug can merge green. **This is the one open
-    action that most weakens D-025**, and it needs a number, not "once it's stable across a few
-    PRs."
+  - The **D-017 promotion bar was the live constraint on this entry's value — now CLOSED by
+    D-032 (2026-07-22).** Merge-on-green is only as strong as the set of *required* checks, and
+    the Postgres integration job was not one of them, so until it was promoted a migration bug
+    could merge green. D-032 checked the D-017 bar against the job's actual run history (criterion
+    2 confirmed by the Builder, not assumed) and promotes the job to a required check, effective
+    before the transport PR — lifting the cap this consequence named on itself. *(The bar was
+    never "a vibe without a number": D-017 §"How far" stated it explicitly; it had simply gone
+    unchecked. See D-032.)*
   - Two seams remain outside any gate and are unaffected by this entry: the **app-runtime
     `search_path`** (never run) and **`worker/requirements.txt`** (outside the lock-file
     guarantee by design, D-018; `accelerate` unpinned).
