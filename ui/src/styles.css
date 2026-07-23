@@ -1,0 +1,77 @@
+/* Clarity over decoration (D-033): the honest coverage line and the provenance panel are the
+   design's substance, not chrome. Neutral surface, one accent per confidence band (from D-039). */
+
+:root {
+  --bg: #0b1020;
+  --panel: #141b2e;
+  --ink: #e6ecf5;
+  --muted: #93a0b8;
+  --line: #26304a;
+  --link: #7ca8e8;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+
+.app-header {
+  display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+  padding: 1rem 1.5rem; border-bottom: 1px solid var(--line);
+}
+.app-header .brand h1 { margin: 0; font-size: 1.25rem; color: var(--ink); }
+.tagline { color: var(--muted); font-size: 0.9rem; }
+
+main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
+.loading, .error { color: var(--muted); }
+.error { color: #f0a0a0; }
+
+/* target list */
+.target-list .lede { color: var(--muted); }
+.target-list table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+.target-list th, .target-list td {
+  text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line);
+}
+.target-list th { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
+.dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.4rem; }
+
+/* target view */
+.target-header h2 { margin: 0 0 0.1rem; }
+.target-header .subtitle { margin: 0 0 1rem; color: var(--muted); }
+
+.viewer-wrap { position: relative; width: 100%; height: 480px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #0b1020; }
+.viewer { position: absolute; inset: 0; width: 100%; height: 100%; }
+.viewer-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+.viewer-fallback { padding: 2rem; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); }
+
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+@media (max-width: 720px) { .panels { grid-template-columns: 1fr; } }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem; }
+.panel h3 { margin: 0 0 0.6rem; font-size: 1rem; }
+
+/* confidence */
+.band-headline { display: flex; align-items: baseline; gap: 0.6rem; padding-left: 0.6rem; border-left: 4px solid; }
+.plddt-num { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.band-label { font-weight: 600; }
+.caveat { color: #f0c674; font-size: 0.85rem; margin: 0.5rem 0 0; }
+.self-report { color: var(--muted); font-size: 0.85rem; }
+.band-legend { list-style: none; padding: 0; margin: 0.5rem 0 0; display: grid; gap: 0.25rem; }
+.band-legend li { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--muted); }
+.band-legend .swatch { width: 0.8rem; height: 0.8rem; border-radius: 2px; display: inline-block; }
+
+/* provenance */
+.provenance dl { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.8rem; margin: 0; }
+.provenance dt { color: var(--muted); font-size: 0.85rem; }
+.provenance dd { margin: 0; font-size: 0.85rem; word-break: break-word; }
+.note { color: var(--muted); font-size: 0.82rem; margin-top: 0.6rem; }

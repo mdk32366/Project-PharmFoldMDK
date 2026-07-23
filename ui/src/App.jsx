@@ -1,13 +1,28 @@
-// PR A is the plumbing only (orders §1): one hardcoded line that proves the bundle builds,
-// ships in the two-stage image (DEP-006), and serves at pharmfoldmdk.fly.dev with /api and
-// /jobs intact (route ordering). The API client + target view (structure viewer coloured by
-// pLDDT, provenance panel) are PR B; the coverage view is PR C. No data is fetched here yet —
-// deliberately, so PR A stays tiny and the deploy path is what's under test.
+import { Routes, Route, Link, useParams, Navigate } from 'react-router-dom'
+import TargetList from './components/TargetList.jsx'
+import TargetView from './components/TargetView.jsx'
+
+function TargetRoute() {
+  const { id } = useParams()
+  return <TargetView id={id} />
+}
+
+// PR B: the shell + single-target experience. The ranking table (the demo's centrepiece) is step 6
+// and waits on the scorer — deliberately not mocked. The coverage view is PR C.
 export default function App() {
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: '42rem', margin: '4rem auto', padding: '0 1rem' }}>
-      <h1>PharmFoldMDK</h1>
-      <p>ADC target exploration — serving tier live. UI arc: PR A (shell).</p>
-    </main>
+    <div className="app">
+      <header className="app-header">
+        <Link to="/" className="brand"><h1>PharmFoldMDK</h1></Link>
+        <span className="tagline">ADC target exploration — structures we folded ourselves</span>
+      </header>
+      <main>
+        <Routes>
+          <Route path="/" element={<TargetList />} />
+          <Route path="/target/:id" element={<TargetRoute />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </div>
   )
 }

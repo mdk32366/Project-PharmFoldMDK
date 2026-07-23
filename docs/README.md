@@ -80,6 +80,52 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-039 — pLDDT confidence bands: 50/60/70, convention-anchored and cohort-justified
+- **Date:** 2026-07-23
+- **Status:** **Accepted (2026-07-23)** — owner-ruled on review of the Builder's proposal (the
+  boundaries and two-source justification approved; two label corrections applied below).
+- **Context:** The target view (UI Plan v2 §3.2) renders `mean_plddt`, and §2/§10 rule a bare
+  number is insufficient — a 34.78 structure must not read like NECTIN4's 77.26 (the D-024 failure
+  in miniature). The bands are the interpretive frame; their boundaries carry a claim about how far
+  to trust a structure and are **cited by the UI**, so they are a decision, not a component
+  constant — a later change must be visible.
+- **Decision — four bands, boundaries at 50 / 60 / 70:**
+
+  | Band | Label |
+  |---|---|
+  | **>= 70** | Confident backbone (cohort max 81.4 - no target reaches the high-confidence range) |
+  | **60-69** | Moderate |
+  | **50-59** | Low - backbone unreliable |
+  | **< 50** | Very low - not reliably interpretable |
+
+- **Two-source justification (stronger than either alone).** Convention anchors the edges —
+  ESMFold/AlphaFold treat >= 70 as a reliable backbone and < 50 as very low — while the **60 line
+  is justified by this cohort's own measured mass**: of the 42 folded targets, **24% fall below 50,
+  45% below 60, 57% below 70** (computed over all 42 `mean_plddt`, live `/api/analyses`). 60 is the
+  honest "how far to trust this" divider the D-024 coverage story turns on, and it is the cohort's,
+  not a convention's.
+- **Two label disciplines (owner corrections to the proposal):**
+  - **"Confident backbone," not "Confident."** pLDDT is a *self-reported* confidence about *local
+    backbone geometry*; it says nothing about whether the fold is *correct*, and ESMFold's
+    confidence is not calibrated against experimental structures for these targets. The qualifier
+    keeps the claim where the metric lives — the same attribution-not-explanation discipline as
+    D-028.
+  - **The cohort-max caveat travels in the band, not only here.** No target exceeds **81.4**, so
+    ">= 70" in this cohort means 70-81.4 and **there is no high-confidence tier at all.** A reader
+    seeing "Confident" on the top band could assume some targets are excellent; none are. The caveat
+    is surfaced where it is read (the target view's confidence element), not buried in this entry.
+- **Deep-learning justification:** direct, via D-024/D-028. pLDDT is the network's *own* confidence
+  output; rendering it as a bare number invites ranking on it and reading it as correctness. The
+  bands make the model's self-report legible *as a self-report*, with its ceiling visible — which is
+  what keeps the structure viewer honest about a network output this project runs itself.
+- **Consequences:** cited by the target view's confidence element (PR B) and available to the
+  coverage view (PR C). Per-residue colouring uses the same band scheme, **from the `/plddt`
+  array — never the PDB B-factor column**, whose 0-100-vs-0-1 scale is unverified (S-001 cost real
+  confusion on exactly that rescaling, D-016 method note). A later change to a boundary is a
+  visible, ruled change, not a silent constant edit.
+
+---
+
 ### DEP-006 — The serving image gains a build stage and a static-serve path
 
 - **Date:** 2026-07-23

@@ -48,7 +48,11 @@ FastAPI app under `/` — **one process, two things** — with `/api`/`/jobs` ma
 fallback (route ordering, asserted). Its JS toolchain is pinned by `package-lock.json` + `npm ci`
 (D-037): a **third dependency world** outside D-013's hash guarantee, acceptable because it is
 build-time only (like D-018's GPU tier). **A green deploy now means a UI is reachable** (DEP-004
-amended). PR A ships the shell; the target view (3Dmol.js) and coverage view follow (PR B/C).
+amended). PR A shipped the shell; **PR B the single-target view** — a 3Dmol.js structure coloured
+per-residue by pLDDT from the `/plddt` array (**not** the PDB B-factor column, whose scale is
+unverified — S-001), a confidence element with the D-039 bands and the cohort-max caveat, and a
+provenance panel that makes "we ran ESMFold ourselves, at a named revision" checkable. 3Dmol is a
+lazy-loaded chunk (the list page stays ~57 KB gzip). The coverage view is PR C.
 **Next (owner-gated):** the app-scoped token + Fly app/Postgres/secrets provisioning so the first
 real deploy goes green; then starting the worker for the first end-to-end large rental fold — which
 retires the PROVISIONAL 60-min lease threshold (D-030) and D-031's estimated PAE ratio with measured
