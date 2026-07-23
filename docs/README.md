@@ -2725,6 +2725,15 @@ Three findings, each reportable in its own right:
 ### D-018 — PR B is a pure fold-runner: sequence in, structure + provenance out
 - **Date:** 2026-07-21
 - **Status:** Accepted; scopes PR B. Implements the D-011 cache-generation entry point, narrowed.
+- **Amendment 1 (2026-07-23) — the `accelerate` gap is closed and the full GPU env is captured.**
+  `worker/requirements.txt` left `accelerate` unpinned *"until the first successful GPU install"*
+  (D-016: name what is not known, do not invent a pin). That install happened on the first-fold
+  night; the resolved version is **`accelerate==1.14.0`**, now pinned. Its complete resolved
+  environment is captured in **`worker/requirements-frozen.txt`** — re-saved UTF-8 (it was UTF-16
+  and untracked) and now tracked as a **reference snapshot, not a hash-locked guarantee**. The GPU
+  tier stays outside D-013's lock by design (this entry's own ruling), so the freeze reproduces the
+  working install for a GPU-box rebuild without pretending to CI enforcement: a breaking upstream
+  release still reddens no gate — the freeze is simply what a rebuild pins against.
 - **Context:** PR B was defined (session pre-work) as "the cache-generation entry point:
   host-agnostic, dtype and chunk_size as parameters, local defaults int8/chunk 64" — *before*
   D-015 turned single-target folding into the input to a cohort ranking. That raises the

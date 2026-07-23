@@ -20,11 +20,12 @@ torch==2.11.0+cu128
 transformers==5.14.1
 bitsandbytes==0.49.2
 
-# accelerate is REQUIRED for the int8 device_map load (S-003 recipe) but its exact
-# version was NOT recorded in the spike venv (D-016: name what is not known). Pin it
-# from the first successful GPU install and record the resolved version here — do not
-# invent one. Left unpinned until then, on purpose.
-accelerate
+# accelerate is REQUIRED for the int8 device_map load (S-003 recipe). Its exact version was NOT
+# recorded in the spike venv (D-016: name what is not known), so it was left unpinned until the
+# first successful GPU install. That install happened (first-fold night); the resolved version is
+# recorded here rather than invented, and the full resolved env is captured in
+# worker/requirements-frozen.txt (D-018 Amendment 1).
+accelerate==1.14.0
 
 # The worker's HTTP client to the Fly transport (D-031, worker/http_client.py). Same
 # library and pin as requirements-dev.txt, where the client's tests run on the CPU gate;
