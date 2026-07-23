@@ -9,7 +9,7 @@
 
 **Project**: PharmFoldMDK — an Antibody-Drug Conjugate (ADC) target exploration platform.
 **Context**: Graded coursework for a **Deep Learning** class in an ML Master's program.
-**Status (2026-07-22)**: Infrastructure complete and proven on real engines — the job queue
+**Status (2026-07-23)**: Infrastructure complete and proven on real engines — the job queue
 (D-009 §1, proven on Postgres 16 incl. `SKIP LOCKED`), migrations + pgvector (D-017/D-019), and
 the GPU-tier **fold-runner** (`worker/runner.py`, D-018). Cohort measured (D-020); boundary/tier
 decisions ruled (D-021/D-022). The **orchestrator manifest** (D-023, `core/manifest.py`) turns the measured cohort into a
@@ -30,7 +30,13 @@ image-contents test), a `fly.toml`, and a `deploy` job that runs `flyctl deploy 
 behind a doc-only guard on the job (DEP-002) with an app-scoped `FLY_API_TOKEN` (DEP-003). A green
 deploy means **the transport API is up and the queue accepts work — not** that any fold has run
 (DEP-004); the worker is hand-started on the GPU box. The UI was ruled **React**, superseding
-D-004's Streamlit clause (D-033) — not yet built.
+D-004's Streamlit clause (D-033). The **read API** (D-034, `app/read_routes.py` + `app/reads.py`)
+is the UI arc's first build — the supplier React consumes: four public `GET /api/*` routes over the
+42 landed local folds (a light `analyses` list, a full `analyses/{id}` record with `fold_provenance`,
+a streamed `analyses/{id}/structure` serving the stored `pdb_path` as `text/plain`, and an
+`analyses/{id}/plddt` array). **Reads are unauthenticated** (public UniProt structures, no PII); the
+four worker routes stay bearer-guarded — an asymmetric posture pinned by a route-introspecting test
+(`/jobs` guarded, `/api` open, no third category). No PAE route (D-034 decision 3).
 **Next (owner-gated):** the app-scoped token + Fly app/Postgres/secrets provisioning so the first
 real deploy goes green; then starting the worker for the first end-to-end large rental fold — which
 retires the PROVISIONAL 60-min lease threshold (D-030) and D-031's estimated PAE ratio with measured
@@ -114,6 +120,7 @@ opened on the local machine.
 | **Frontend** | Interactive UI, 3D visualization, onboarding | Streamlit; `py3Dmol`/`stmol` for 3D |
 | **Backend API** | Auth, request handling, **job queue** management, results | FastAPI + Uvicorn (on Fly) |
 | **Worker transport** (D-031) | The four worker→Fly routes realizing the D-030 loop's protocol: claim → inline `FoldSpec`; artifacts → post-fold columns written in a compensated Volume+DB transaction (idempotent, PAE stored gzipped); complete → 409 until `pdb_path` commits; fail → terminal. Shared bearer token per route. Client-side is `worker/http_client.py` (gzips PAE, maps non-2xx → `TransportError`) | `app/` (FastAPI, on Fly) + `worker/http_client.py` (httpx, GPU tier); hermetic route/boundary/client tests + a real-Postgres seam-1 handler-write test |
+| **Read API** (D-034) | Four public `GET /api/*` routes the React UI (D-033) consumes: `analyses` (light list — `id`/`accession`/`label`/`gene`/`mean_plddt`/`disposition`/`held_out`/`tier`/`tier_reason`/`boundary_method`/`fold_length`/`full_length`, **no `sequence`/`fold_provenance`**); `analyses/{id}` (full record incl. `sequence` + `fold_provenance`); `analyses/{id}/structure` (streams the stored `pdb_path`, `text/plain`); `analyses/{id}/plddt` (per-residue array). **Unauthenticated by design** — writes stay bearer-guarded; the asymmetry is pinned by a route-prefix auth test (`/jobs` guarded, `/api` open, no third category). No PAE route. | `app/read_routes.py` (thin handlers) + `app/reads.py` (query/projection); hermetic SQLite `TestClient` tests |
 | **Orchestration** (D-023, D-026) | `manifest.py`: measured cohort → deterministic routing table + D-024 coverage object, **reviewable before any job is created**. `enqueue.py`: foldable rows → `protein_analyses` (exact residues + UniProt release + folded span) + `pending` `jobs` (tier fold recipe); idempotent, 80/82 (2 named exclusions get none) | `core/manifest.py`, `core/enqueue.py` — CPU-side; hermetic on SQLite + a real-Postgres commit test |
 | **Local GPU worker** | Polls Fly for jobs, runs **ESMFold** on the local NVIDIA GPU for targets **under the length ceiling**, uploads artifacts back (D-004) — **not deployed to Fly** | Python worker; PyTorch + Hugging Face (`facebook/esmfold_v1`), int8 trunk |
 | **Rented-GPU batch** (D-011) | One-time offline fold of **above-ceiling** targets (HER2-class ~630 aa); artifacts uploaded to the Fly Volume | RunPod RTX A6000 48 GB, fp16 unquantised/unchunked; committed repo code, not a one-off script |

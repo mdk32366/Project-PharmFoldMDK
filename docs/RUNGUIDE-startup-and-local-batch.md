@@ -1,7 +1,7 @@
 # Run Guide — Starting the App, and Folding the Local Cohort
 
 Two parts: **(A)** how to bring the system up from cold tomorrow, and **(B)** how to fold the
-40 local-tier targets tonight. Both assume the deploy is live on Fly (it is — it stays up).
+42 local-tier targets tonight. Both assume the deploy is live on Fly (it is — it stays up).
 
 ---
 
@@ -74,48 +74,56 @@ from the app side: `fly logs -a pharmfoldmdk` should show `POST /jobs/claim ... 
 
 ---
 
-## B. Fold the 40 local-tier targets (tonight)
+## B. Fold the 42 local-tier targets (tonight)
 
-**Only the 40 `local` targets.** NOT all 82 — the 13 `untested` (440–630 aa) route to rental
-(D-024) and could exceed the local ceiling and take the host down (S-004); the 16 rental and 13
-no-topology are not for local hardware. Idempotency (D-026 iii) means NECTIN4 (already folded)
-is skipped automatically.
+**42 `local`-tier rows.** `--bucket local` filters on **tier**, and tier is orthogonal to
+disposition (D-024 iv, as `core/manifest.py`'s own docstring states): the bucket is 40 `ranked`
+(`sliced_ecd`) **plus 2 `held_out` (`whole`)** — verified
+`Counter({('ranked','local','sliced_ecd'): 40, ('held_out','local','whole'): 2})`. The guide
+previously said 40; that counted only *ranked-and-local* and dropped the two held-out local rows
+(`Q9NV96`/TMEM30A, `O14798`). NOT all 82 — the 13 `untested` (440–630 aa) route to rental (D-024)
+and could exceed the local ceiling and take the host down (S-004); the 16 rental and 13
+no-topology are not for local hardware. Idempotency (D-026 iii) means NECTIN4 (already folded) is
+skipped automatically.
 
 **The one command** (#50's enqueue CLI has a tier filter, confirmed — the flag is `--bucket`):
 ```powershell
-python -m core.enqueue --bucket local        # enqueues the 40 local targets; --dry-run to preview
+python -m core.enqueue --bucket local        # enqueues the 42 local targets; --dry-run to preview
 ```
 Each foldable row prints `created=1` (or `existed=1` for NECTIN4, already folded). Run
 `python -m core.enqueue --help` to see all flags (`--accession`, `--bucket`, `--limit`, `--dry-run`).
 
-**Fallback — enqueue the 40 explicitly** (if you'd rather list them; NECTIN4 harmlessly skipped):
+**Fallback — enqueue the 42 explicitly** (if you'd rather list them; NECTIN4 harmlessly skipped).
+The first 40 are the `ranked` local rows; the last two (`Q9NV96`/TMEM30A, `O14798`) are the
+`held_out` local rows `--bucket local` also lands:
 ```
 Q5BKX6 P55064 Q8TDU6 Q8IYL9 P51810 Q3KNW5 Q9NRM0 Q01814 Q9BXS9 O95832
 P32302 Q9UPC5 Q9NQ40 P19397 P24530 Q15858 P09693 O75954 O60637 O95858
 Q9UP95 O75841 Q8ND94 Q53GD3 Q99835 Q14CZ8 Q9GZU1 O00478 P42081 Q9BXP2
 Q5VUB5 Q13433 Q96NY8 Q9BY67 P22607 O95196 P08195 P50281 Q5ZPR3 O00592
+Q9NV96 O14798
 ```
 PowerShell loop:
 ```powershell
-$local = "Q5BKX6 P55064 Q8TDU6 Q8IYL9 P51810 Q3KNW5 Q9NRM0 Q01814 Q9BXS9 O95832 P32302 Q9UPC5 Q9NQ40 P19397 P24530 Q15858 P09693 O75954 O60637 O95858 Q9UP95 O75841 Q8ND94 Q53GD3 Q99835 Q14CZ8 Q9GZU1 O00478 P42081 Q9BXP2 Q5VUB5 Q13433 Q96NY8 Q9BY67 P22607 O95196 P08195 P50281 Q5ZPR3 O00592".Split(" ")
+$local = "Q5BKX6 P55064 Q8TDU6 Q8IYL9 P51810 Q3KNW5 Q9NRM0 Q01814 Q9BXS9 O95832 P32302 Q9UPC5 Q9NQ40 P19397 P24530 Q15858 P09693 O75954 O60637 O95858 Q9UP95 O75841 Q8ND94 Q53GD3 Q99835 Q14CZ8 Q9GZU1 O00478 P42081 Q9BXP2 Q5VUB5 Q13433 Q96NY8 Q9BY67 P22607 O95196 P08195 P50281 Q5ZPR3 O00592 Q9NV96 O14798".Split(" ")
 foreach ($a in $local) { python -m core.enqueue --accession $a }
 ```
-Each prints `created=1` (or `existed=1` for NECTIN4). All 40 land as `pending` jobs.
+Each prints `created=1` (or `existed=1` for NECTIN4). All 42 land as `pending` jobs.
 
 **Then let the worker chew through them.** With the worker running, it claims and folds them
-one at a time, FIFO (D-009). 40 folds × ~1–2 min each (cold weights on the first, warm after)
-≈ **under an hour**, unattended. Watch progress:
+one at a time, FIFO (D-009). 42 folds × ~1–2 min each (cold weights on the first, warm after)
+≈ **about an hour**, unattended. Watch progress:
 ```powershell
 python -c "import os,sqlalchemy as sa; c=sa.create_engine(os.environ['DATABASE_URL']).connect(); import collections; print(collections.Counter(r[0] for r in c.execute(sa.text('SELECT status FROM jobs')).fetchall()))"
 ```
-`Counter({'complete': 40})` = done.
+`Counter({'complete': 42})` = done.
 
 **⚠ The tunnel must stay up for the whole batch** — the enqueue writes need it, though the
 *folds* run worker↔Fly and don't. If the tunnel drops mid-enqueue, some targets won't land;
 re-run the loop (idempotent, safe) once it's back.
 
 **Leave the worker and tunnel running** until the counter shows all complete, then Ctrl+C both.
-Tomorrow you wake to 40 real structures for the UI to render.
+Tomorrow you wake to 42 real structures for the UI to render.
 
 ---
 

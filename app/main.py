@@ -15,6 +15,7 @@ from typing import Any, Optional
 from fastapi import FastAPI
 
 from app.config import settings_from_env
+from app.read_routes import read_router
 from app.routes import router
 
 
@@ -32,7 +33,8 @@ def create_app(*, engine: Any, artifact_root: str, auth_token: str,
     app.state.queue = queue
     app.state.artifact_root = artifact_root
     app.state.auth_token = auth_token
-    app.include_router(router)
+    app.include_router(router)              # /jobs — bearer-guarded worker routes (D-031)
+    app.include_router(read_router)         # /api  — public read routes (D-034)
     return app
 
 

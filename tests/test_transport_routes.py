@@ -244,18 +244,14 @@ def test_fail_delegates_to_queue(engine, tmp_path):
     assert queue.failed == [(job_id, "CUDA OOM")]
 
 
-# ── auth: asserted on EVERY route (D-031 §4) ─────────────────────────────────
-
-@pytest.mark.parametrize("method,path,kw", [
-    ("post", "/jobs/claim", {"json": {"worker_id": "w"}}),
-    ("post", "/jobs/1/artifacts", {"files": _upload_files()}),
-    ("post", "/jobs/1/complete", {}),
-    ("post", "/jobs/1/fail", {"json": {"error": "e"}}),
-])
-def test_every_route_rejects_missing_token(engine, tmp_path, method, path, kw):
-    client = _client(engine, tmp_path, StubQueue())
-    r = getattr(client, method)(path, **kw)                  # no Authorization header
-    assert r.status_code == 401
+# ── auth (D-031 §4, restated by D-034 decision 5) ────────────────────────────
+# The hardcoded per-path parametrize that used to live here was REPLACED, not extended:
+# D-034 adds deliberately-open `/api` read routes, so "every route is guarded" is no
+# longer true, and a hardcoded list of `/jobs` paths would silently stop covering the
+# surface the moment a route is added. The property now lives in
+# `tests/test_read_routes.py::test_auth_property_jobs_guarded_api_open_no_third_category`,
+# which introspects the real route table (`/jobs` guarded, `/api` open, no third
+# category). The behavioural wrong-token check stays here.
 
 
 def test_wrong_token_rejected(engine, tmp_path):
