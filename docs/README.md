@@ -80,6 +80,164 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-034 — The read API: route shape, PDB serving, and an asymmetric auth posture
+- **Date:** 2026-07-23
+- **Status:** **Accepted (2026-07-23)** — owner-ruled on auth posture and co-serving; the
+  route shape and payload split are ruled against the measured cohort below.
+- **Context:** D-033 ruled the UI is React consuming the FastAPI API. **There is no API for it
+  to consume.** `app/` exposes exactly the four worker→Fly routes (claim/artifacts/complete/fail,
+  D-031) and zero read routes — verified against the tree at `0bc9258`: `app/routes.py` defines
+  four `@router.post` handlers and no `@router.get`. React cannot be specced against an API that
+  does not exist, so the read API is the UI arc's first build, and its shape is ruled before it
+  is written.
+
+  **Provenance (D-016) — this entry is ruled against the landed cohort, not against intent.**
+  Every number below comes from the production database and Volume, queried 2026-07-23:
+
+  | Claim | How it is known |
+  |---|---|
+  | 42 jobs, all `complete`, zero `failed` | `Counter(SELECT status FROM jobs)` → `{'complete': 42}` |
+  | 42 `protein_analyses` rows, no null artifacts | `SELECT id,input_value,mean_plddt,pdb_path,pae_json_path…` — all 42 populated |
+  | 40 `ranked`/`sliced_ecd` + 2 `held_out`/`whole`, all `local` | `Counter` over `metadata->>'disposition'`, `->>'tier'`, `->>'boundary_method'` |
+  | `structure.pdb` 194 KB (318 aa) / 232 KB (361 aa) | `fly ssh console -C "ls -l /data/artifacts/1/ /data/artifacts/37/"` |
+  | `pae.json.gz` 824 KB / 1.07 MB; `plddt.json` ~6 KB; total Volume 21 MB | same `ls -l`; `du -sh /data/artifacts` → `21M` |
+  | mean pLDDT range 34.78–81.40 across the 42 | the `mean_plddt` column, all rows |
+
+- **A correction to a number this project has repeated (D-016 pattern, fourth instance).**
+  `docs/RUNGUIDE-startup-and-local-batch.md` says the local batch is **40 targets**. The batch
+  landed **42**, and the two extras (`Q9NV96`/TMEM30A, `O14798`) are not errors: they are
+  `held_out: true`, `boundary_method: "whole"`, `tier: "local"`. The guide's 40 counted
+  *ranked-and-local*; `core.enqueue --bucket local` correctly filters on **tier**, and tier is
+  orthogonal to disposition (D-024 iv, as `core/manifest.py`'s own docstring states). The
+  number was true and its denominator was wrong — the same failure class as
+  `params_all_on_cuda=True`. **`--bucket local` means 42, not 40**; the run guide is corrected
+  in this change.
+
+---
+
+- **Decision (1) — two payload shapes, because `meta` is rich and `sequence` is heavy.**
+  `metadata` carries a uniform key set on every row (verified on ids 1 and 37): `gene`, `label`,
+  `tier`, `source`, `held_out`, `disposition`, `boundary_method`, `fold_length`, `full_length`,
+  `ecd_start`/`ecd_end`, `uniprot_release`, `sequence`, and a complete `fold_provenance`
+  (`model_id`, `model_revision`, `dtype`, `chunk_size`, `truncated`, `folded_at`, `mean_plddt`,
+  `input_length`, `ca_atom_count`).
+
+  - **`GET /api/analyses` — a light list.** Per row: `id`, `accession` (`input_value`), `label`,
+    `gene`, `mean_plddt`, `disposition`, `held_out`, `tier`, `tier_reason`, `boundary_method`,
+    `fold_length`, `full_length`. **Excludes `sequence` and `fold_provenance`.**
+  - **`GET /api/analyses/{id}` — the full record**, including `sequence` and `fold_provenance`.
+
+  **Why split rather than return the row:** `meta.sequence` is the entire folded sequence —
+  318 and 361 residues on the two rows inspected, and rental-tier targets run to ~1600. Returning
+  full `meta` for 42 rows ships tens of KB of sequence that a ranking table never renders, and
+  scales with the cohort exactly where the UI least wants it. The split is measured, not stylistic.
+
+- **Decision (2) — the PDB is its own streaming route, never inline.**
+  **`GET /api/analyses/{id}/structure`** streams the file at the row's stored `pdb_path` as
+  `text/plain`. Not embedded in the detail JSON, not base64.
+
+  **Why:** `structure.pdb` measured **194 KB / 232 KB** — ~640 B per residue, so a 1600-residue
+  rental fold is ~1 MB. Inlining it in `/api/analyses/{id}` would make every provenance-panel
+  render pay the viewer's cost. A separate route also matches 3Dmol.js, which accepts a URL
+  directly, and lets the browser cache the structure independently of the metadata.
+
+  **⚠ Serve the stored path, never a reconstructed one.** Artifacts are written to
+  `{artifact_root}/{job_id}/` (`app/artifacts.py:79`) and `pdb_path` is stored **absolute**
+  (`/data/artifacts/1/structure.pdb`). In this cohort `job_id == analysis_id` coincidentally;
+  they are different keys and nothing guarantees it. The route looks the row up by integer id and
+  serves `row.pdb_path` — it never builds a path from a client-supplied value.
+
+- **Decision (3) — `plddt.json` is served; PAE is not.**
+  **`GET /api/analyses/{id}/plddt`** returns the per-residue array (~6 KB) — this is what colours
+  the structure viewer by confidence (D-033).
+  **No PAE route this session.** `pae.json.gz` is **824 KB–1.07 MB per target and ~85% of the
+  21 MB Volume**, and nothing in the ruled scope renders it. Named here so its absence is a
+  decision rather than an omission.
+
+- **Decision (4) — reads are unauthenticated; writes stay bearer-guarded. Asymmetric by design.**
+  The four worker routes keep `require_token`. The read routes carry **no credential**.
+
+  **Why this is safe here, stated so it is checkable rather than assumed:** the data is 42
+  ESMFold structures of **public UniProt targets**. No PII, nothing proprietary, nothing whose
+  disclosure is a harm. Against that, every alternative adds machinery that can fail: a
+  build-injected read token is published the moment the bundle ships (a browser bundle holds no
+  secrets), and a session mechanism is login code, expiry, and storage for a dataset that does
+  not need protecting. **The most robust posture is the one with the least to get wrong.**
+
+  **D-004's no-inbound-exposure constraint is not violated, and the distinction matters.** That
+  constraint governs the **GPU box** — the worker accepts no inbound connections, which is why
+  the coupling is pull-based. It says nothing about Fly's public surface, which is already
+  publicly reachable today (`pharmfoldmdk.fly.dev` answers 404 on `/` and 401 on
+  `/jobs/claim`). Public reads on Fly leave the worker's posture untouched.
+
+  **A cost of D-033 that D-033 did not trace, recorded here rather than discovered later:**
+  under Streamlit this question would not have arisen. Streamlit renders server-side — the Python
+  process holds the token and the browser receives only HTML. React is a client-side bundle, so
+  **the credential problem is created by the React switch itself.** D-033 weighed the tradeoff as
+  speed-to-demo; this is a second, unlisted item on that ledger. It is cheap here because the
+  data is public, and it would not have been cheap if it were not.
+
+- **Decision (5) — the auth *test property* changes shape, and must not silently weaken.**
+  `app/deps.py` attaches `require_token` per-route via `dependencies=[...]` specifically so that
+  "a route added later cannot silently inherit no check." **This entry adds routes that
+  deliberately have no check** — which would turn a passing "every route is guarded" test into a
+  false one, or force its deletion.
+
+  The property is therefore **restated, not dropped**: *every route under `/jobs` requires the
+  bearer token; every route under `/api` does not; there is no third category.* A route matching
+  neither prefix fails the test. This keeps the guard's original strength — a new write route
+  cannot appear unguarded — while making the read surface explicit.
+
+- **Decision (6) — one app, `/api` prefix, static React co-served.**
+  The React bundle is served by the same Fly app as FastAPI; read routes live under `/api`.
+  **Why:** D-033 already argued the serving tier should be "one process serving two things";
+  co-serving also means **no CORS, no second deploy path, no second machine's cost**, and the
+  bundle is same-origin with its API by construction. **DEP-001 is amended when the bundle
+  lands** (a build step + a static-serve path), which is that PR's work, not this entry's.
+
+---
+
+- **The coverage line this cohort actually produces (D-024), and why it is worth rendering.**
+  Of the 82-target cohort: **40 ranked and folded, 2 held-out folded, 40 unfolded** (29
+  rental-tier awaiting the A6000, 11 remaining held-out). The UI's coverage line shows a real,
+  partial denominator on day one — which is the condition the pre-work sequenced the first fold
+  *before* the UI to obtain.
+
+  **And the confidence spread is a live D-024 concern, not a later one.** Measured mean pLDDT
+  runs **34.78 (Q9UP95) to 81.40 (Q5VUB5)**, with a substantial fraction below 60 — a region
+  where an ESMFold structure is not reliably interpretable. A list payload that returns
+  `mean_plddt` as a bare number invites ranking on it. **The read API therefore returns
+  `mean_plddt` alongside `disposition` and `held_out` on every row**, so the surface that renders
+  a target always has the qualifiers that say how far to trust it. Rendering a 34.78 structure
+  identically to a 77.26 one is the D-024 failure this shape exists to prevent.
+
+- **Deep-learning justification.** Direct, via D-015 §3 and D-024. The read API is the only path
+  by which the network's output becomes visible: `mean_plddt` and `fold_provenance`
+  (`model_id`, `model_revision`, `dtype`, `truncated`) are what let a reader confirm **we ran
+  ESMFold ourselves, at a named revision, and know how confident it was** — rather than that a
+  structure appeared. Serving provenance as a first-class field, not a footnote, is what makes
+  the deep-learning claim auditable. It is also the supplier for the scorer's surface (D-027):
+  the ranking table (D-028) consumes this same list route once a structural ranking exists.
+
+- **Consequences / follow-ups.**
+  - **Tests first, per project rule.** The surface under test: light-list field set (asserting
+    `sequence` and `fold_provenance` are **absent**); detail includes both; 404 on unknown id;
+    structure route serves the stored `pdb_path` and 404s when the row has none; plddt route
+    returns the array; **the restated auth property** (`/jobs` guarded, `/api` open, no third
+    category); and that no read route mutates state.
+  - **No PAE route** — revisit only when something renders PAE.
+  - **`docs/RUNGUIDE-startup-and-local-batch.md` corrected**: `--bucket local` enqueues **42**
+    (40 ranked + 2 held-out), not 40.
+  - **`ARCHITECTURE.md` updated in this same PR** (CLAUDE.md rule 2): the read routes join the
+    component table and the serving-tier description.
+  - **DEP-004's meaning changes when the bundle ships, not now.** This PR adds read routes to a
+    transport that is still API-only; a green deploy still does not mean a UI is reachable.
+  - **The rental-tier path (29 targets) is a separate entry**, later this session. The read API
+    is tier-agnostic — a rental fold lands in the same table with the same `meta` shape, so
+    nothing here needs revisiting when those 29 land.
+
+---
+
 ### DEP-005 — Applying the production schema: supervised first, automated after
 - **Date:** 2026-07-22
 - **Status:** **Accepted (2026-07-22)** — owner-ruled via the deployment-arc orders (the Planner's
