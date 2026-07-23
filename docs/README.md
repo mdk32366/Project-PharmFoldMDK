@@ -80,6 +80,156 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-040 — Group B and the evidence score: what the paper actually publishes, and how each is established
+- **Date:** 2026-07-23
+- **Status:** Proposed → Accepted on merge.
+- **Extends:** D-029 (the approved-ADC reference and its reviewed mapping file). Same seam,
+  same discipline, one column wider — see §4.
+- **Blocks:** the scorer arc entirely. Without Group B there is nothing to fit; without the
+  evidence score there is no comparator, hence no disagreement, no classes, and no ranking view.
+
+---
+
+- **Context — a supplier gap in the *data*, found the same way the code gaps were.**
+  D-015 §3 fits the scorer against **Group B**; D-015 §2 compares the structural ranking against
+  the comparator's **1–5 evidence score**. **Neither is in the repo.** Verified 2026-07-23
+  against the committed cohort files: `cohort_82_mapping.csv` carries
+  `symbol, accession, primary, protein, status, note, candidates`; `cohort_82_ecd.csv` carries
+  geometry and bucketing. **No evidence-score column, no positive-label column.**
+
+- **⚠ Correction to D-015 §2, from the source (D-016).** D-015 §2 states the target list and
+  expression matrices are published as supplementary files S2 and S3. **True of the target list
+  and the expression matrices; false of the evidence scores.** Read from the article text
+  (`10.1371/journal.pone.0308604`, CC-BY, 2026-07-23):
+
+  - **S2** — expression levels of the 82 prioritized targets across **44 normal tissues** (Fig 2A).
+  - **S3** — expression levels across **20 tumor tissues** (Fig 2B).
+  - **The 1–5 evidence scores are Fig 4A/4B** — a radar plot and a wordcloud. **The paper names
+    no supplementary file for them.**
+
+  So the scores exist as *figures*, not as a table. Recorded because the project has been
+  carrying "the scores are in the supplement" as a fact, and it is not one.
+
+- **What the article text does publish, exactly and quotably:**
+  - **Score 5 — eight targets:** CD276, EDNRB, EGFR, ERBB2, FGFR3, MUC16, SLC39A6, SLC44A4.
+  - **Score 4 — nine targets:** CLDN1, CXCR5, GPC1, ITGB5, MERTK, MMP14, MSLN, NECTIN4, SLC3A2.
+  - **17 of 82 have exact scores from text. The remaining 65 do not.**
+  - **Group B: the count is confirmed, the membership is not.** The paper states 22 of the 82
+    have already been tested as ADCs preclinically or clinically, **naming only HER2, NECTIN4,
+    and EGFR**, with 60 additional targets not used for ADC development. 22 + 60 = 82 partitions
+    cleanly, so the count is sound and the roster is absent.
+  - The five scoring criteria are fully specified in the methods (literature, antibody, protein
+    family, preclinical, clinical; a target is kept if it meets at least one, and the score is
+    the count of criteria met).
+
+---
+
+- **Decision (1) — Group B is DERIVED HERE, pre-registered, then CHECKED against the paper's 22.**
+
+  Not inherited. The paper does not publish the roster, so inheriting is not available — but the
+  ruling would be the same if it did, for a reason worth stating: **D-015 already treats the
+  comparator as comparator-not-oracle**, and the labels the scorer fits against are the one place
+  an inherited judgement would silently determine the result.
+
+  **The definition is fixed before any target is classified** (the D-015 §3 pre-registration
+  discipline, applied to labels rather than features):
+
+  > **A cohort target is Group B if a molecule directed against that antigen has entered
+  > preclinical or clinical development as an antibody-drug conjugate**, evidenced by a named
+  > agent with a citable source. Antibodies that are not ADCs do **not** qualify (the paper
+  > counts these under its *antibody* criterion, which is a different thing). Protein-family
+  > precedent does **not** qualify — an ADC against a family member is not an ADC against this
+  > target, and the paper scores that separately too.
+
+  **Each label cites its own source**, exactly as D-029 requires of the antigen mapping.
+
+  **The check is the finding.** If independent derivation lands on **22** and contains HER2,
+  NECTIN4, and EGFR, that is mutual validation and **better provenance than an inherited list** —
+  two independently-derived rosters agreeing. If it lands on a different number, **that is a
+  result to record, not a discrepancy to reconcile away**: it means our definition and theirs
+  differ, and the difference is nameable. Either outcome is reportable; neither is a failure.
+
+- **Decision (2) — the evidence score is used at the resolution the source supports, and the
+  gap is carried explicitly.**
+
+  **17 targets carry a score from the article text.** The other 65 carry **null with a reason**
+  (`score_not_published_in_text`) — the same discipline D-027 rules for uncomputable features and
+  D-024 rules for `tier_reason`. **No score is read off a radar plot or a wordcloud into the
+  dataset.** Figure extraction is estimation presented as measurement; a comparator built partly
+  from pixel-reading would be a fabricated axis, and a disagreement computed against it would be
+  uninterpretable.
+
+  **Consequence, and it is severe enough to state plainly: the comparator covers 17 of 82.**
+  Intersected with the 40 `ranked ∧ folded` targets, the set on which a *disagreement* can be
+  computed at all is smaller still and **must be computed before the ranking view is designed**.
+  D-024's coverage discipline applies to the comparator exactly as it applies to folds: the
+  denominator travels with the claim.
+
+  **Two ways to widen it, neither blocking, both preferred to estimation:**
+  - **Ask the authors.** CC-BY, corresponding author published (`umesh@lanternpharma.com`). The
+    scores are a small table they already computed. **Cheapest path to the full 82 and the
+    highest-provenance one.**
+  - **Recompute from the published criteria.** The five criteria are fully specified in the
+    methods, so the score is reproducible in principle — but doing so makes it *our* score, not
+    theirs, and it would then need its own entry and its own defence. **Not a substitute for the
+    published values**; a separate instrument if ever built.
+
+- **Decision (3) — one curated file, not two.** Group B labels and D-029's approved-ADC mapping
+  are **the same judgement** — drug → target antigen → UniProt accession, hand-reviewed, each row
+  cited — differing only in whether the accession falls inside the 82. Curating them separately
+  would produce two files that can disagree about the same antigen.
+
+  **`data/adc_reference_mapping.csv` gains the columns to carry both**, extending D-029's schema:
+
+  | Column | From | Meaning |
+  |---|---|---|
+  | `drug`, `application_number`, `antigen`, `uniprot_accession`, `source_citation`, `marketing_status` | D-029 | unchanged |
+  | `development_stage` | **this entry** | `approved` / `clinical` / `preclinical` — Group B admits preclinical; Group C is approvals |
+  | `in_cohort_82` | **this entry** | computed against the cohort, not curated — **Group B ⊆ in-cohort; Group C ⊆ out-of-cohort** |
+
+  **`in_cohort_82` is computed, never typed.** It is a join against `cohort_82_mapping.csv`, so
+  a curation error cannot silently move a target between Group B and Group C — which are the
+  labelled set and the sharpest evaluation instrument respectively.
+
+  **D-029's seam is preserved and extended:** openFDA is authority for **approval status only**;
+  every antigen assignment and every development-stage judgement is **a reviewed human judgement,
+  not FDA-sourced**, and must be labelled as such wherever surfaced. Group B rows are further
+  from FDA data than Group C rows are — a preclinical ADC has no application number at all — so
+  the seam matters *more* here, not less.
+
+---
+
+- **⚠ Recorded before the labels exist: how many Group B positives fall inside the folded 40 is
+  UNKNOWN.** D-027 sized six features against 22 positives (~3.7 per feature, called "the upper
+  end of what this labelled set supports"). **The scorer can only be fit on targets that are both
+  labelled and folded.** If materially fewer than 22 Group B targets are in the folded 40, the
+  fit is thinner than the pre-registration assumed. **Compute this number immediately after the
+  labels land, before any fitting**, and if it is small, that is a finding for the log and
+  possibly a reason to wait on the rental fold — not a reason to proceed quietly.
+
+- **Deep-learning justification.** Direct and load-bearing. Group B **is** the training signal:
+  every property of the fit — what it learns, whether leave-one-out means anything, whether a
+  disagreement is real — is downstream of these labels. A pre-registered, independently derived,
+  per-row-cited label set is what makes the fit falsifiable rather than circular. And the
+  evidence score is the axis the structural ranking is compared against; **a comparator estimated
+  from a figure would make every disagreement uninterpretable**, which would defeat D-015 §1's
+  research question entirely.
+
+- **Consequences / test surface:**
+  - **Tested first:** the Group B definition is applied by a pure function over the curated file
+    (fixture-testable, no network); `in_cohort_82` is computed by join and a hand-typed value is
+    rejected; a row without `source_citation` fails; targets with no published evidence score
+    carry **null with a reason** and **no imputation exists anywhere in the pipeline**.
+  - **A test pinning the derived Group B count**, so a curation change that moves it is visible.
+  - **The comparator's coverage — 17 of 82, and the labelled ∧ folded intersection — is reported
+    with any ranking** (D-024), not stated once in a methods note.
+  - **D-015 §2's S2/S3 claim is corrected in this change.**
+  - **The reconciliation core (D-029) is unaffected** — it gains columns, not new behaviour.
+  - **Attribution:** Kathad et al. 2024, `10.1371/journal.pone.0308604`, CC-BY 4.0. Reuse
+    permitted with credit; the citation travels with the data file, not only the log.
+
+---
+
 ### D-039 — pLDDT confidence bands: 50/60/70, convention-anchored and cohort-justified
 - **Date:** 2026-07-23
 - **Status:** **Accepted (2026-07-23)** — owner-ruled on review of the Builder's proposal (the
@@ -3094,6 +3244,17 @@ UI**. Conflating them would be the same error as a test double that reads as cov
 | **A — the 82** | 82 | Baseline cohort. Kathad et al.'s prioritised targets, with their published 1–5 evidence score as the **baseline ranking to compare against**. |
 | **B — in-cohort positives** | 22 | Targets within A already tested as ADCs preclinically or clinically (incl. ERBB2, NECTIN4, EGFR). **The labelled set.** |
 | **C — baseline exclusions** | ≥3 | Approved/advanced targets the baseline pipeline **filtered out** — TROP2, HER3, CLDN18.2. Folded and scored as an **out-of-cohort probe**, never mixed into A. |
+
+> **⚠ Corrected by D-040 (2026-07-23) — what the paper actually publishes.** *(a)* Group A's
+> "published 1–5 evidence score" is available for only **17 of the 82**: the article *text* gives
+> exact scores for 17 (score 5 — 8 targets; score 4 — 9 targets), while the full set appears only
+> as **Fig 4A/4B** (a radar plot + wordcloud) with **no supplementary file named**. The scores are
+> **not** in S2/S3 — S2/S3 are the expression matrices (44 normal / 20 tumour tissues). The other
+> 65 carry **null-with-reason** (`score_not_published_in_text`), never a figure-read value. *(b)*
+> Group B's **roster is not published** — the paper names only ERBB2/NECTIN4/EGFR and the count 22
+> — so B is **derived here, pre-registered, cited per row, then checked against the 22** (D-040), not
+> inherited. Group B and Group C are one curated file (`data/adc_reference_mapping.csv`), split only
+> by a computed `in_cohort_82`.
 
 **Why B is better than "the 23 approved ADCs":** the labels sit *inside* the same cohort, so
 evaluation is a within-cohort comparison rather than a join across two differently-derived
