@@ -219,3 +219,7 @@ __marimo__/
 
 # Editor-local settings (personal, not shared project config)
 .vscode/
+
+# Node / React UI (DEP-006). The lockfile IS committed (D-037); build outputs are not.
+ui/node_modules/
+ui/dist/

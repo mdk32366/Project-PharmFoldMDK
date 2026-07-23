@@ -17,3 +17,8 @@ scripts/
 *.zip
 requirements-dev.txt
 requirements-dev.lock
+
+# DEP-006: ui/ source is needed by build stage 1, but never its node_modules or dist —
+# stage 1 runs npm ci + npm run build itself; shipping them would balloon the build context.
+ui/node_modules/
+ui/dist/

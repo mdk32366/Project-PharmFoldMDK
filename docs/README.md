@@ -80,6 +80,109 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### DEP-006 — The serving image gains a build stage and a static-serve path
+
+- **Date:** 2026-07-23
+- **Status:** Proposed → Accepted on merge with the bundle.
+- **Amends:** DEP-001 (*"what the Fly image contains, and what it must never contain"*), whose
+  own consequence named this: *"When Streamlit lands, both this entry and the image change
+  together"* — now React per D-033, which said the same: *"A React UI adds a build step (bundle)
+  and a static-serve path, which is a DEP-001 amendment at that time."*
+- **Context:** The image today is single-stage: `python:3.11-slim`, `requirements.lock` with
+  `--require-hashes`, then `COPY app/ core/ db/`. A React bundle needs Node at **build** time and
+  nothing at **run** time — a distinction the image must express, or the CUDA-free serving tier
+  acquires a JS toolchain it never executes.
+
+- **Decision — a two-stage build; the runtime stage stays exactly as ruled.**
+  1. **Stage 1 (`node:20-slim`, build only):** `COPY ui/package.json ui/package-lock.json`,
+     `npm ci`, `COPY ui/`, `npm run build` → static assets.
+  2. **Stage 2 (`python:3.11-slim`, the runtime):** unchanged in every respect DEP-001 ruled —
+     runtime lock with `--require-hashes`, `app/` + `core/` + `db/`, **no `worker/`, no torch** —
+     plus `COPY --from=0` of the built assets only.
+
+  **Node never enters the runtime image.** The built assets are static files; the serving tier
+  remains Python + the hash-locked runtime lock.
+
+- **Serving the bundle:** FastAPI mounts the static directory and serves `index.html` as the
+  SPA fallback. **`/api` and `/jobs` are matched first** — a catch-all that swallowed `/api`
+  would break the read API silently, so route ordering is the thing to assert, not eyeball.
+
+- **⚠ Three constraints in the existing tree that this must not break** (verified, not assumed):
+  - **`tests/test_image_contents.py` forbids the literal strings** `torch`, `transformers`,
+    `bitsandbytes`, **and `streamlit`** anywhere in the Dockerfile's non-comment lines. React is
+    none of these, so the test passes unchanged — **and it must keep passing unchanged.** Do not
+    weaken it to accommodate the build stage.
+  - **`test_copies_the_serving_packages`** asserts `copy app`, `copy core`, `copy db` are
+    present. The two-stage rewrite must keep all three in the runtime stage.
+  - **`.dockerignore` excludes `tests/`, `docs/`, `scripts/`, `worker/`.** A new `ui/` directory
+    must **not** be added to it (stage 1 needs it), but `ui/node_modules/` and `ui/dist/`
+    **must** be, or the build context balloons.
+
+- **Test surface:** extend `test_image_contents.py` — the runtime stage still copies
+  `app`/`core`/`db`; **no `npm` or `node` instruction appears after the runtime `FROM`**; the
+  forbidden-string set is unchanged and still passes. Plus a route-ordering test: `GET /api/analyses`
+  returns the API's JSON, **not** `index.html`.
+
+- **Deep-learning justification:** indirect — the same separation-of-worlds DEP-001 exists to
+  enforce, one tier out. A serving image that acquired a JS runtime it never executes is the
+  same invisible-bloat failure as one that acquired CUDA.
+
+- **Consequences:** DEP-004's meaning changes on this merge — **a green deploy will finally mean
+  a UI is reachable**, which it has never meant before. That is DEP-004's own stated trigger
+  (*"the first UI to ship amends what a green deploy means"*) and it is amended in the same PR.
+
+---
+
+### D-037 — The JS toolchain is pinned by lockfile, outside D-013's hash-verified guarantee
+
+- **Date:** 2026-07-23
+- **Status:** Proposed → Accepted on merge with the bundle.
+- **Context:** D-033 flagged this precisely and left it open: *"No new runtime Python dependency.
+  React is a build-time toolchain producing static assets; it does not enter `requirements.lock`.
+  The JS toolchain's own pinning is a question for the entry that builds the UI, and it is
+  **outside D-013's guarantee** in the same way `worker/requirements.txt` is (D-018) — stated now
+  so it is not discovered later."* This is that entry.
+
+- **Decision — `package-lock.json`, committed, installed with `npm ci`.**
+  - **`npm ci`, never `npm install`, in the Dockerfile and in CI.** `ci` installs exactly the
+    lockfile and **fails** if `package.json` and the lock disagree; `install` silently resolves
+    and rewrites. That difference is the whole guarantee.
+  - **The lockfile is committed** and treated as a source file — a dependency change is a
+    reviewable diff, not a build-time surprise.
+
+- **What this does NOT provide, stated plainly so it is not over-read.** D-013 gives the Python
+  runtime tier **hash-verified** installs (`--require-hashes`) enforced identically in CI and the
+  image. `npm ci` gives **version and integrity pinning from the lockfile**, which is weaker:
+  the guarantee is "the same tree the lockfile records," not "hashes verified against a
+  separately committed manifest." **The JS toolchain is therefore a third dependency world**,
+  alongside the hash-locked runtime tier (D-013) and the unlocked GPU tier (D-018).
+
+  **Why accept the weaker guarantee rather than build a stronger one:** the JS toolchain is
+  **build-time only** — nothing it installs ships to the runtime image (DEP-006), so a compromised
+  or drifted build dependency affects the *bundle produced*, not the *server running*. That is a
+  materially smaller blast radius than the runtime tier's, and it is the reason the asymmetry is
+  acceptable rather than an oversight. **It is not zero**, and this entry is where that is
+  recorded rather than discovered.
+
+- **Deep-learning justification:** neutral — build tooling. Recorded because D-013's guarantee is
+  cited elsewhere in this log as though it covered the project's dependencies generally; it
+  covers the runtime tier. **Two named exceptions now exist: D-018 (GPU) and this entry (JS).**
+
+- **Test surface:** CI runs `npm ci` (not `install`); `package-lock.json` exists and is committed;
+  the build fails if the lock and `package.json` disagree — which `npm ci` provides by
+  construction, so the assertion is that the CI step uses `ci`.
+
+- **Consequences:**
+  - **Dependency count is a design constraint, not an afterthought.** Every added JS dependency
+    enters a world with a weaker guarantee than the Python tier's. **3Dmol.js is required**
+    (D-033). Beyond React, the router, and 3Dmol.js, additions should be justified rather than
+    assumed — a chart library for the per-residue pLDDT plot is a real question, and hand-rolled
+    SVG is a legitimate answer for a single plot type.
+  - `requirements.lock` and `requirements-dev.lock` are **unchanged** — no Python dependency is
+    added by the UI.
+
+---
+
 ### D-038 — The coverage supplier: `GET /api/coverage`, computed from the manifest, joined to folds
 - **Date:** 2026-07-23
 - **Status:** Proposed → Accepted on merge.
@@ -103,8 +206,10 @@ So the rule is not "be careful" — it is:
   would misstate the cohort in the direction of completeness.
 
 - **Provenance (D-016):** ruled against `core/manifest.py` (`coverage()` at :185, `ManifestRow`,
-  `build_rows`), `app/read_routes.py` as shipped in #52, and `GET /api/analyses` verified live
-  returning 42 rows with dispositions `ranked` and `held_out` only.
+  `build_manifest`), `app/read_routes.py` as shipped in #52, and `GET /api/analyses` verified live
+  returning 42 rows with dispositions `ranked` and `held_out` only. *(Tidy 2026-07-23: this line
+  originally named `build_rows`; the function is `build_manifest`. Nothing load-bearing rested on
+  it — the ninth correction of the session, recorded per D-016 rather than silently fixed.)*
 
 ---
 
@@ -757,6 +862,12 @@ service" would trade a defensible graded claim for a wrapper around an external 
     which point this entry is amended, not silently outgrown. *(Superseded in part by D-033: the
     UI is React, not Streamlit — but the shape of this consequence is unchanged: the first UI to
     ship amends what a green deploy means.)*
+
+    > **⚠ Amended by DEP-006 (2026-07-23) — this is that merge.** The React bundle now ships in the
+    > two-stage image and is served under `/` (`/api` and `/jobs` matched first). **A green deploy
+    > therefore now means a UI is reachable** at `pharmfoldmdk.fly.dev`, which it never did before.
+    > DEP-004's own stated trigger — *"the first UI to ship amends what a green deploy means"* —
+    > fired. A green deploy still does **not** mean any fold has run (that remains an owner action).
   - **Starting the worker on the GPU box is an owner action**, and it is the precondition for the
     first end-to-end fold (the measurement that retires D-030's provisional lease and D-031's PAE
     ratio).
