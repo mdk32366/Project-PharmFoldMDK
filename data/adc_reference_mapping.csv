@@ -1,0 +1,26 @@
+# D-029 + D-040 — the ONE curated ADC reference: drug -> target antigen -> UniProt accession.
+# Group B (in-cohort ADC positives, the scorer's labels) and Group C (approved ADC targets outside
+# the 82) are the SAME judgement in this one file, split only by the COMPUTED in_cohort_82.
+#
+# ⚠ STATUS: schema + discipline landed; ROSTER NOT YET CURATED. This file is intentionally empty of
+# data rows. Populating it is a per-row HAND REVIEW (D-040 decision 1), not a Builder or computed
+# task — "a computed mapping at this scale would be less trustworthy" (D-029). Each row is added by:
+#
+#   Group B definition (D-040, fixed BEFORE any target is classified): a cohort target is Group B iff
+#   a molecule directed against that antigen has entered PRECLINICAL or CLINICAL development as an
+#   antibody-drug conjugate, evidenced by a NAMED AGENT with a CITABLE SOURCE. Antibodies that are
+#   not ADCs do NOT qualify. Protein-family precedent does NOT qualify. The paper names only
+#   HER2(ERBB2)/NECTIN4/EGFR and the count 22; the roster is DERIVED here and CHECKED against the 22
+#   (a different number is a finding, not a discrepancy to reconcile away).
+#
+# Columns (D-029 schema + D-040's two): every row cites its own source (an uncited row is REJECTED
+# by core.adc_reference.load_mapping). development_stage in {approved, clinical, preclinical}.
+# marketing_status is openFDA's (approval status only); antigen/accession/stage are REVIEWED HUMAN
+# judgements, NOT FDA-sourced, and must be labelled so wherever surfaced (D-029 seam; it matters MORE
+# for Group B — a preclinical ADC has no application number at all).
+#
+# in_cohort_82 is NOT a column here — it is COMPUTED by join against data/cohort_82_mapping.csv
+# (D-040). Adding it as a typed column is a curation slip and load_mapping raises on it.
+#
+# Attribution: Kathad et al. 2024, 10.1371/journal.pone.0308604, CC-BY 4.0.
+drug,application_number,antigen,uniprot_accession,source_citation,marketing_status,development_stage

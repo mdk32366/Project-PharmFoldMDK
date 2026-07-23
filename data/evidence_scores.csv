@@ -1,0 +1,25 @@
+# Kathad et al. 2024 (10.1371/journal.pone.0308604), CC-BY 4.0 — the 1-5 ADC-evidence scores that
+# the ARTICLE TEXT publishes exactly. Only 17 of the 82 have an exact score in the text (score 5:
+# 8 targets; score 4: 9 targets). The full 1-5 set appears only as Fig 4A/4B (radar plot + wordcloud)
+# with NO supplementary file named (D-040). The other 65 cohort targets are NOT listed here — the
+# loader marks them null-with-reason (score_not_published_in_text); no score is read off a figure and
+# no value is imputed. Keyed by gene symbol (the paper's key); accession join is done in code against
+# data/cohort_82_mapping.csv so a join miss is flagged, never silent (D-040 / PREWORK §2).
+symbol,evidence_score,source_citation
+CD276,5,"Kathad et al. 2024 article text (score 5); Fig 4A/4B"
+EDNRB,5,"Kathad et al. 2024 article text (score 5); Fig 4A/4B"
+EGFR,5,"Kathad et al. 2024 article text (score 5); Fig 4A/4B"
+ERBB2,5,"Kathad et al. 2024 article text (score 5); Fig 4A/4B"
+FGFR3,5,"Kathad et al. 2024 article text (score 5); Fig 4A/4B"
+MUC16,5,"Kathad et al. 2024 article text (score 5); Fig 4A/4B"
+SLC39A6,5,"Kathad et al. 2024 article text (score 5); Fig 4A/4B"
+SLC44A4,5,"Kathad et al. 2024 article text (score 5); Fig 4A/4B"
+CLDN1,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
+CXCR5,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
+GPC1,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
+ITGB5,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
+MERTK,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
+MMP14,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
+MSLN,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
+NECTIN4,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
+SLC3A2,4,"Kathad et al. 2024 article text (score 4); Fig 4A/4B"
