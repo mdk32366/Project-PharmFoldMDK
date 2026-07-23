@@ -168,8 +168,50 @@ D-028's non-goals stated as commitments: the system detects and classifies disag
 **not** explain it; no biological causal claim; no ordering of disagreements by "interestingness."
 Plus the class-2 known-confound note (§4.3).
 
+**And the scope-of-claim statement (D-041) — the one a reader most needs and is most likely to
+supply wrongly on their own.** Two halves, and the surface fails if it renders either alone:
+
+**(a) What a high structural score does NOT mean.** The score speaks to *antibody-accessible
+extracellular surface* — one necessary condition among many, and rarely the deciding one. It says
+nothing about **blood-brain-barrier penetration**, internalisation rate, antigen shedding, tumour
+penetration in solid masses, expression heterogeneity within a lesion, linker stability, payload
+choice, or bystander effect. **A high score does not mean an ADC will work in every cancer
+overexpressing that protein.** Different indications impose entirely different delivery
+constraints on the same antigen.
+
+**(b) What it does mean, and why that is worth something.** The structural axis is
+**delivery-agnostic by construction** — whether an accessible epitope exists does not depend on
+how the conjugate reached the tumour. Expression-and-attention rankings quietly encode the
+delivery constraint, because *attempted* and *studied* are downstream of what developers believed
+they could deliver to. **So this axis reframes part of the question from a chemical problem into
+an engineering one**: for a target that scores well but was never attempted, the obstacle may be
+the route rather than the antigen — and routes are moving (convection-enhanced delivery,
+focused-ultrasound BBB opening, intrathecal and intratumoral administration). A ranking computed
+on delivery-independent properties is the one that survives a change in delivery technology.
+
+**⚠ Rendering discipline, binding:** this frame is stated **once, here, as general context**. It
+is **never attached to an individual target row** — *"this ranks high and delivery is the only
+obstacle"* is a causal claim about a specific target, which D-028 rules out. The method note
+explains why class-2 hypotheses are worth generating; it does not license a claim about any one
+of them.
+
 **This does not replace the inline tooltips.** D-028 is explicit that per-class quality renders
 *with* the finding; this page is for the reader who wants the whole frame at once.
+
+### 3.5 Where the scope statement also appears — short form
+
+The method note is the full statement. Two other surfaces carry a **short form**, because a
+reader who lands on a ranking may never open the method page, and D-024's discipline is that the
+honest reading travels *with* the result rather than living on a page they may not reach:
+
+- **With the ranking table**, beside the coverage line.
+- **On the target view**, where a high-scoring target is most easily read as an endorsement.
+
+**The short form must carry both halves** — a caveat alone undersells the finding, and the
+reframing alone overclaims: *the structural score measures antibody-accessible surface, which
+does not account for delivery (BBB, internalisation, shedding, heterogeneity) — but it is
+delivery-agnostic, so it holds as delivery methods change.* Links to the method note for the
+full statement.
 
 ---
 

@@ -80,6 +80,222 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-041 — The scorer: regularized logistic regression, and why the small model is the correct one
+- **Date:** 2026-07-23
+- **Status:** Proposed → Accepted on merge. **Ruled before any fitting code exists** (D-015 §3's
+  pre-registration discipline).
+- **Discharges:** the gap D-027 left open. D-027 fixed the *features*; D-015 §3 ruled a "small
+  trained model" and ruled out both a learned embedding and a hand-weighted sum — but **named no
+  architecture, no loss, no fitting procedure, and no leave-one-out statistic.** Until those are
+  fixed, they get chosen after seeing results, which is what pre-registration exists to prevent.
+
+---
+
+- **Context — what the fit actually has to work with.** Six features (D-027). Group B labels,
+  ~22 positives across the 82 (D-040). **But the fit runs only on targets that are both labelled
+  and folded**, and only **40** targets are `ranked ∧ folded` today (29 rental-tier unfolded).
+  **The labelled ∧ folded intersection is unknown until D-040's curation lands and is computed
+  before fitting** — if it is materially under 22, this entry's sizing arguments tighten further
+  and that is recorded as a finding, not absorbed.
+
+---
+
+#### Decision (1) — The model is **L2-regularized logistic regression** over the six standardized features
+
+Binary target: Group B membership. One coefficient per feature plus an intercept — **seven
+parameters**.
+
+**Why this and not something deeper, argued rather than defaulted:**
+
+- **The parameter budget is the whole argument.** ~22 positives against seven parameters is
+  already ~3 positives per parameter. A 6→8→1 MLP is ~65 parameters — **three times more
+  parameters than there are positive examples.** It would fit the training set perfectly and
+  learn nothing generalizable, and leave-one-out would expose that as noise rather than signal.
+  The small model is not a concession to the data size; **at this data size it is the only model
+  whose output means anything.**
+- **Interpretability is a ruled requirement, not a preference.** D-015 §3 and D-027 both turn on
+  it: *"interpretability is what lets a disagreement be attributed to a feature rather than
+  shrugged at."* D-028 then requires attribution rendered as a statement about the model. **A
+  logistic regression's coefficients are exactly that statement** — feature *k* contributes
+  `β_k · x_k` to this target's score, reportable per target, no post-hoc explainer needed and no
+  approximation layer between the model and the claim.
+- **L2 rather than none:** with six correlated features (D-027 flags 1 and 2 as collinear by
+  construction), unregularized coefficients are unstable — small data changes swing them, and
+  attribution built on a swinging coefficient is attribution of noise. **λ is selected by
+  nested cross-validation inside each leave-one-out fold** (see (3)), never on the full data,
+  because tuning on all of it leaks the held-out target into its own evaluation.
+- **L2 rather than L1:** L1 would zero features out, silently reducing the pre-registered
+  six-feature set to whatever survived — **a post-hoc feature selection wearing a regularizer's
+  clothes**, and a direct violation of D-027's fixed count. L2 shrinks without eliminating, so
+  all six remain in the model and the pre-registration holds.
+
+---
+
+#### Decision (2) — ⚠ Where the deep learning is, stated plainly because this entry is where it looks weakest
+
+**A reader who opens the scorer file and finds logistic regression will ask where the neural
+network is. The answer must be in the log before the question is asked.**
+
+**ESMFold is the deep learning, and it is load-bearing under any reading of ARCHITECTURE §1 and
+CLAUDE.md's Prime Directive:**
+
+1. **The project runs the network itself** — own hardware, pinned checkpoint
+   (`facebook/esmfold_v1`, revision `75a3841ee059…`), chosen precision and chunking, 42 folds
+   through a production path (D-003, D-011). Not a hosted API, not retrieved structures — the
+   distinction D-004 §5 rules on.
+2. **Every one of D-027's six features is computed from that network's output** — CA coordinates
+   for radius of gyration and SASA, per-residue pLDDT for features 3 and 4. **Without ESMFold
+   there are no features; without features there is no scorer.** The network is upstream of the
+   entire deliverable.
+3. **pLDDT is the network's own uncertainty, used as signal** (features 3 and 4) rather than
+   averaged away — the model's self-reported confidence is a model output doing work.
+4. **D-015 §3's framing is explicit:** *"ESMFold stops being the deliverable and becomes the
+   input to one. The network's output is now a judgement that can be wrong — which is the
+   point."*
+
+**The inversion worth naming: a bigger scorer would make the deep-learning claim WEAKER, not
+stronger.** An MLP overfitting 22 positives would produce a ranking that could not be defended,
+attributions that could not be trusted, and a leave-one-out distribution indistinguishable from
+noise. **The graded contribution is a defensible judgement built on inference this project ran** —
+and defensibility is what the parameter count buys. Choosing a large model to look like deep
+learning, at a data size that cannot support it, would be **decoration in the opposite
+direction** from the hand-weighted sum D-015 §3 rejected: both substitute the appearance of
+rigour for rigour.
+
+**If a larger model is ever wanted, the honest route is more labelled data, not more parameters** —
+and that would be its own entry.
+
+---
+
+#### Decision (3) — Leave-one-out, and the statistic fixed **now**
+
+D-015 §3 pre-registered LOO *"reported as a distribution, never a single CV number"* and did not
+say what is distributed. **Fixed here, before any result:**
+
+- **Procedure:** hold out one Group B positive; fit on the remainder (**λ selected by inner CV on
+  that remainder only**); score all unlabelled-or-held-out targets; **record the held-out
+  target's rank percentile** among the folded cohort.
+- **The reported object is the distribution of those percentiles across all held-out positives** —
+  shown as the full distribution, with median and spread. **No single summary number is the
+  headline.**
+- **"Ranks it highly" is defined as: the held-out positive's percentile, reported.** Not
+  thresholded into a hit rate — a threshold chosen after seeing the distribution is exactly the
+  degree of freedom pre-registration removes.
+
+**The comparison that decides D-015 §3's first negative outcome:** the same percentile
+distribution computed for the **comparator's evidence score** on the same held-out targets. If
+the structural score's distribution is **not distinguishable** from the comparator's, *"the
+structural axis adds nothing measurable at this cohort size. That is the result."*
+
+**⚠ The comparator baseline is only computable where an evidence score exists — 17 of 82 (D-040).**
+Intersected with folded-and-labelled targets it is smaller still. **Compute and report that
+denominator with the comparison**; a baseline comparison over a handful of targets is weak
+evidence and must be labelled as such rather than presented as a head-to-head.
+
+---
+
+#### Decision (4) — The second negative outcome is computed, not left to inspection
+
+D-015 §3's subtler pre-registered null:
+
+> *"If the structural score correlates **strongly** with the comparator's evidence score, that is
+> **also** a null result — it means our features are proxying for attention-and-precedent rather
+> than measuring structure. **Check this explicitly.**"*
+
+**Ruled: Spearman rank correlation between the structural score and the evidence score, over the
+targets carrying both, reported alongside the ranking — always, not on request.** Rank
+correlation rather than Pearson because both quantities are ordinal by construction.
+
+**No threshold is set for what counts as "strong," deliberately.** Setting one now would be
+arbitrary; setting one later would be after seeing it. **The number is reported and interpreted
+in prose against the pre-registered warning**, which is what D-015 asked for. A high correlation
+arrives looking like validation and is not, and the entry that says so is dated before the
+number exists.
+
+---
+
+#### Decision (5) — Ordering: the diagnostics gate the claim
+
+D-015 §1a: *"Ruling out (3) is a precondition for claiming (1) or (2)."* **The four diagnostics
+run and are reported BEFORE any disagreement is characterised:** fold sanity per target
+(CA count vs sequence length, no NaN coordinates, radius of gyration consistent with a compact
+globular expectation), boundary sanity (ECD from a UniProt topological-domain annotation, not
+silently truncated), the pLDDT floor, and score stability under leave-one-out refitting.
+
+**⚠ The pLDDT floor is now a live problem, not a formality.** Measured over the 42 folds: **24%
+below 50, 45% below 60, 57% below 70**. D-015 §1a requires targets folding below a **pre-set**
+threshold to be *"reported separately, not silently ranked."* **That threshold must be set before
+the fit** — and D-039's bands (50/60/70, ruled against this cohort's own mass) are the natural
+candidate. **Setting the floor at 50** — the "very low / not reliably interpretable" edge —
+separates the 10 targets whose structures cannot support a structural claim at all.
+
+**This is a real cost and is stated as one:** a floor at 50 removes ~24% of the folded cohort
+from ranking claims, on a set that is already 40 of 82. **The alternative — ranking a 34.78
+structure alongside a 77.26 one — is exactly the failure D-024 exists to prevent**, and it would
+put the project's sharpest instrument on top of its weakest data.
+
+---
+
+- **Deep-learning justification.** Direct, and §2 is the entry's substance. The scorer converts
+  ESMFold's output into a judgement that can be checked and can be wrong — the transition D-015
+  §3 identified as where the Prime Directive is actually discharged. The model's smallness is
+  what makes that judgement defensible at 22 positives, and its interpretability is what makes
+  D-028's attribution honest rather than a post-hoc story.
+
+- **Consequences / test surface:**
+  - **Tested first:** the fit is deterministic given a fixed seed and fixture data; **exactly six
+    coefficients plus an intercept** (the pre-registration enforced by the gate, as D-027's
+    feature-count test does); λ is selected **inside** each LOO fold and never on full data
+    (asserted, since leakage here is invisible in the output); LOO returns a distribution of
+    percentiles, not a scalar; a target below the pLDDT floor is **excluded from ranking claims
+    and reported separately**; standardization statistics are computed on the training fold only.
+  - **`scorer_version`** alongside D-027's `feature_version`, so a refit against changed model
+    code is detectable rather than silent.
+  - **⚠ The honest claim is bounded, and "viable" is the wrong word for it.** D-015 §3 phrases
+    the claim as *"does our score recover targets already known to be viable."* **Viable in what
+    respect is doing unearned work there**, and the bound is tightened here:
+
+    > **Does our structural score recover targets that have already been ATTEMPTED as ADCs?**
+
+    "Attempted" is what the Group B label actually records (D-040) — someone built an ADC
+    against this antigen and took it into development. **Never** *"does our score predict
+    clinical success."* Group B is small, non-random, and survivorship-selected; the fit
+    inherits all three.
+
+  - **⚠ What the six features do NOT measure — a named non-goal, because the omissions are
+    mostly the binding constraints.** The structural axis speaks to **antibody-accessible
+    extracellular surface**, which is *one necessary condition among many* and rarely the
+    deciding one. Absent from the feature set, and from any claim the system may make:
+    **blood-brain-barrier penetration**, internalisation rate, antigen turnover and shedding,
+    tumour penetration in solid masses, expression heterogeneity within a lesion, linker
+    stability, payload choice, and bystander effect. **A structurally excellent antigen in a
+    CNS indication may be undeliverable by a systemically administered ~150 kDa immunoconjugate
+    regardless of how accessible its epitope is** — the paper's own glioma discussion reasons
+    about *payload* brain penetration, not antigen quality, which is the distinction exactly.
+
+  - **The axis is delivery-agnostic by construction, and that is the reason a class-2 hypothesis
+    is worth generating at all.** Whether an antibody-accessible epitope exists does not depend
+    on how the conjugate reached the tumour. Expression-and-attention rankings quietly encode
+    the delivery constraint — *attempted* and *studied* are downstream of what developers
+    believed they could deliver to. **So a structurally strong target that was never attempted
+    may be absent from Group B because the delivery route did not exist when the field looked**,
+    and delivery routes are moving: convection-enhanced delivery, focused-ultrasound BBB
+    opening, intrathecal and intratumoral routing. **When delivery becomes a mechanical problem
+    rather than a chemical one, a ranking computed on delivery-independent properties is the one
+    that survives the change.**
+
+    **⚠ Two limits on this argument, stated so it is not over-read:**
+    1. **It does not rescue the labels.** The fit still trains on what was attempted, so the
+       model still learns from a delivery-biased positive set. The argument bears on what the
+       *structural score* means, not on what the *labels* mean.
+    2. **The system may not make this claim per target.** *"This ranks high and delivery is the
+       only obstacle"* is a biological causal claim about a specific target, which D-028 rules
+       out. **The frame is stated once, in the method note, as the reason class-2 hypotheses are
+       generated — never attached to an individual row.**
+  - **Blocked by D-040** (labels and evidence scores). **Blocks** UI Plan v2 step 6.
+
+---
+
 ### D-040 — Group B and the evidence score: what the paper actually publishes, and how each is established
 - **Date:** 2026-07-23
 - **Status:** Proposed → Accepted on merge.
