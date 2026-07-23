@@ -1,12 +1,12 @@
 """D-031 — the concrete HTTP ``QueueClient`` the worker loop drives.
 
 This is the realization of the protocol ``worker/orchestrator.py`` defined by needing
-it (D-030). It implements exactly the four methods, over the four routes, and does the
-two pieces of transport work the loop deliberately left to it: it **gzips the PAE**
-into the multipart body (D-031 PAE ruling — compression is client-side work, not a
-route concern) and it maps **every** non-2xx response and connection failure to
-``TransportError``, the loop's already-proven retry signal (D-030 §4). The loop's tests
-do not change; if they had to, this client would be implementing the protocol wrongly.
+it (D-030). It implements exactly the four methods and does the transport work the loop
+deliberately left to it: it maps **every** non-2xx response and connection failure to
+``TransportError``, the loop's already-proven retry signal (D-030 §4), and sets an explicit
+``httpx.Timeout`` (D-035 §3a). **PAE no longer travels through ``upload``** (D-035 part 2) — it is
+persisted on the rental box and transferred out-of-band via the D-036 route. The loop's tests do
+not change; if they had to, this client would be implementing the protocol wrongly.
 
 Runtime dependency: ``httpx`` (worker/requirements.txt — the GPU tier is outside the
 root lock, D-018). Importable on the CI gate too (httpx is in requirements-dev.lock),
@@ -15,7 +15,6 @@ which is why the client's tests run there without a GPU.
 
 from __future__ import annotations
 
-import gzip
 import json
 from dataclasses import asdict
 from typing import Any, Optional
@@ -52,8 +51,13 @@ class HttpQueueClient:
         return FoldSpec(**r.json())
 
     def upload(self, job_id: int, artifacts: Any) -> None:
-        """POST /jobs/{id}/artifacts as multipart. Serializes the FoldResult: pdb text,
-        plddt json, provenance json, and — when present — the PAE gzipped here."""
+        """POST /jobs/{id}/artifacts as multipart: pdb text, plddt json, provenance json.
+
+        **PAE is deliberately NOT sent** (D-035 part 2). It left the claim→complete cycle: on the
+        rental box it is persisted locally by the fold wrapper and transferred out-of-band via the
+        D-036 route; the runner still *produces* `artifacts.pae` (untouched) — the client just
+        stops putting it on the wire. The route's `pae` field stays `Optional` and simply arrives
+        empty."""
         files: dict[str, tuple[str, Any, str]] = {
             "pdb": ("structure.pdb", artifacts.pdb, "text/plain"),
             "plddt": ("plddt.json", json.dumps(artifacts.plddt), "application/json"),
@@ -61,10 +65,6 @@ class HttpQueueClient:
                            json.dumps(asdict(artifacts.provenance) if artifacts.provenance else {}),
                            "application/json"),
         }
-        if artifacts.pae is not None:
-            files["pae"] = ("pae.json.gz",
-                            gzip.compress(json.dumps(artifacts.pae).encode("utf-8")),
-                            "application/gzip")
         self._post(f"/jobs/{job_id}/artifacts", files=files, ok=(204,))
 
     def complete(self, job_id: int) -> None:

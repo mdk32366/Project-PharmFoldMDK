@@ -80,6 +80,58 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-036 — The PAE transfer route: a fifth worker route, not a widened upload
+- **Date:** 2026-07-23
+- **Status:** **Accepted (2026-07-23)** — the transfer-shape ruling D-035 §4 deferred; the route
+  (option A) over a `fly ssh sftp` script.
+- **Context:** D-035 rules PAE leaves the claim→complete cycle (option C) and is retrieved
+  out-of-band, but deferred the *mechanism*. The rented A6000 is **not** a Fly machine, so PAE
+  reaches the Volume only through one. Two shapes were weighed (D-035 §4 ruling 2): a dedicated
+  route vs an `fly ssh sftp` script.
+- **Decision:** a **fifth** worker→Fly route, **`POST /jobs/{job_id}/pae`**, bearer-guarded under
+  `/jobs`.
+  - **Body:** the gzipped PAE (`pae.json.gz`) — the same wire form the upload route accepted
+    before D-035 part 2 stripped it.
+  - **Semantics:** writes the Volume file **and** `pae_json_path` in the compensated Volume+DB
+    boundary `persist_fold` already establishes (D-031 (a)) — file first, then the DB row,
+    compensating by deleting the file if the DB write fails. **File and column cannot diverge.**
+    Scoped to the PAE file: the `{job_id}/` dir already holds the fold's
+    structure/plddt/provenance from the original upload, so compensation removes only
+    `pae.json.gz`, never the directory.
+  - **Idempotent:** a retried transfer re-writes the same path and re-stamps the same column
+    (D-031's obligation, unchanged) — the property the retrieval script's re-run relies on.
+  - **Not by widening (D-030 discipline):** the upload route keeps `pae` as an unused `Optional`
+    and no longer receives it; the transfer is **its own route**, not an overload of `/artifacts`.
+    *"A fifth route, not by widening an existing one."*
+  - **Auth / prefix property (D-034 decision 5):** bearer-guarded under `/jobs`, so the
+    introspecting auth test still classifies every route (`/jobs` guarded, `/api` open, no third
+    category) — now with **five** `/jobs` routes and **four** `/api` routes. **Asserted, not
+    assumed** (D-035 part 2 test surface §3).
+- **Why a route rather than sftp:** reuses the compensated boundary (file/column cannot diverge),
+  hermetically testable, idempotent by construction. The cost is a permanent surface for a
+  one-time batch — accepted, because an untestable transfer that silently half-completes is the
+  worse failure (D-035 §4 ruling 2).
+- **Deep-learning justification:** indirect. PAE is the retained confidence artifact that keeps a
+  future PAE-derived feature (D-027, deferred-not-dismissed) reachable without a **paid re-fold**
+  of the cohort. The route is what makes the rental cohort's PAE durable under D-011's
+  no-network-volumes rule.
+- **Consequences:**
+  - Lands with **D-035 part 2 as one PR** — the rental-scoped local persist, this route, and the
+    upload change are only safe together (removing PAE from the upload before the local write and
+    this route exist is the silent-drop window).
+  - `app/artifacts.persist_pae` mirrors `persist_fold`'s compensation, scoped to `pae.json.gz`;
+    `app/routes.py` gains the thin handler; `worker/http_client.upload` stops sending PAE (the
+    runner still *produces* it — untouched).
+  - Local persist is **rental-scoped/opt-in** (`WORKER_ARTIFACT_DIR`), **PAE-only**, wired into
+    `worker/main.py`'s fold wrapper so `orchestrator.run_worker` stays pure; **non-fatal** on a
+    local write error (logged) so it cannot cascade into a paid re-fold — the retrieval-verify
+    step is the backstop.
+  - The retrieval script (`scripts/retrieve_rental_pae.py`) POSTs each local `pae.json` gzipped to
+    this route; the run guide states the **blocking pre-termination retrieval** in loss terms.
+  - ARCHITECTURE's transport row becomes **five routes**.
+
+---
+
 ### D-035 — The rental tier: PAE leaves the lease, and three hazards the measured gzip ratio exposed
 - **Date:** 2026-07-23
 - **Status:** **Accepted (2026-07-23)** — owner-ruled on the PAE path (§4, option C); §1 stands

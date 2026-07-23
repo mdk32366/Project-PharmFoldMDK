@@ -160,6 +160,64 @@ def persist_fold(
     return paths
 
 
+# ── the D-036 out-of-band PAE transfer (same boundary, pae-file-scoped) ───────
+
+def _write_pae_file(artifact_root: str, job_id: int, pae_gz: bytes) -> str:
+    """Write the gzipped PAE to ``{artifact_root}/{job_id}/pae.json.gz`` (verbatim — the body
+    arrives already compressed) and return the path. ``mkdir`` is idempotent; the directory may
+    already hold the fold's structure/plddt/provenance from the original upload."""
+    out = Path(artifact_root) / str(job_id)
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / "pae.json.gz"
+    path.write_bytes(pae_gz)
+    return str(path)
+
+
+def _update_pae_path(engine: Any, analysis_id: int, *, pae_json_path: str) -> None:
+    """Set ``pae_json_path`` in one transaction (D-036). Nothing else on the row is touched — the
+    fold's columns and meta were written by the original upload (``persist_fold``)."""
+    with engine.begin() as conn:
+        conn.execute(
+            update(ProteinAnalysis)
+            .where(ProteinAnalysis.id == analysis_id)
+            .values(pae_json_path=pae_json_path)
+        )
+
+
+def _remove_pae_file(artifact_root: str, job_id: int) -> None:
+    """Compensating delete for a failed DB write — removes **only** ``pae.json.gz``, never the
+    directory, so the fold's sibling artifacts under ``{job_id}/`` survive. (Unlike
+    ``persist_fold``, which owns the whole directory it created and rmtrees it.)"""
+    Path(artifact_root, str(job_id), "pae.json.gz").unlink(missing_ok=True)
+
+
+def persist_pae(
+    engine: Any,
+    artifact_root: str,
+    job_id: int,
+    *,
+    pae_gz: bytes,
+    write_pae: Callable[..., str] = _write_pae_file,
+    update_pae_path: Callable[..., None] = _update_pae_path,
+) -> str:
+    """Land one target's out-of-band PAE (D-036): write the Volume file, then set
+    ``pae_json_path``, compensating by removing the file if the DB write fails so the two cannot
+    diverge. Idempotent — a retried transfer re-writes the same path and re-stamps the same
+    column (D-031's obligation, unchanged). Raises ``AnalysisNotFound`` if the job has no
+    analysis (the route maps that to 404)."""
+    analysis_id = _analysis_id_for(engine, job_id)
+    if analysis_id is None:
+        raise AnalysisNotFound(f"no analysis for job {job_id}")
+
+    path = write_pae(artifact_root, job_id, pae_gz)
+    try:
+        update_pae_path(engine, analysis_id, pae_json_path=path)
+    except Exception:
+        _remove_pae_file(artifact_root, job_id)     # pae-scoped compensation (D-036)
+        raise
+    return path
+
+
 # ── ordering check for /complete (D-031 (c)) ─────────────────────────────────
 
 def _analysis_id_for(engine: Any, job_id: int) -> Optional[int]:

@@ -98,27 +98,25 @@ def _result(pae=None):
     return FoldResult(pdb="ATOM\n", plddt=[88.0, 88.0, 88.0], pae=pae, provenance=prov)
 
 
-def test_upload_sends_pdb_plddt_provenance_and_gzipped_pae():
+def test_upload_sends_pdb_plddt_provenance_and_never_pae():
+    """D-035 part 2: PAE leaves the claim→complete cycle. Even when the FoldResult carries a
+    PAE, `upload` must NOT put it on the wire — it is persisted locally on the pod and
+    transferred out-of-band via the D-036 route. The runner still *produces* it (that is a
+    separate test); the client just stops sending it."""
     seen = {}
 
     def handler(req):
         assert req.headers["Authorization"] == f"Bearer {TOKEN}"
-        # multipart parts are in the body; assert each filename + the gz is real gzip
         body = req.content
         seen["has_pdb"] = b"structure.pdb" in body
         seen["has_plddt"] = b"plddt.json" in body
         seen["has_prov"] = b"provenance.json" in body
-        # extract the raw gz part and confirm it decompresses to the PAE we passed
-        marker = b"pae.json.gz"
-        assert marker in body
-        gz_start = body.index(b"\r\n\r\n", body.index(marker)) + 4
-        gz_end = body.index(b"\r\n--", gz_start)
-        seen["pae"] = json.loads(gzip.decompress(body[gz_start:gz_end]))
+        seen["has_pae"] = b"pae.json.gz" in body
         return httpx.Response(204)
 
-    _client(handler).upload(7, _result(pae=[[1.0, 2.0]]))
+    _client(handler).upload(7, _result(pae=[[1.0, 2.0]]))          # PAE present in the result…
     assert seen["has_pdb"] and seen["has_plddt"] and seen["has_prov"]
-    assert seen["pae"] == [[1.0, 2.0]]                              # client compressed it
+    assert not seen["has_pae"]                                     # …but never on the wire
 
 
 def test_upload_omits_pae_when_absent():

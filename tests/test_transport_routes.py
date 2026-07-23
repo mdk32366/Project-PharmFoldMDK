@@ -259,3 +259,54 @@ def test_wrong_token_rejected(engine, tmp_path):
     r = client.post("/jobs/claim", json={"worker_id": "w"},
                     headers={"Authorization": "Bearer wrong"})
     assert r.status_code == 401
+
+
+# ── /jobs/{id}/pae — the out-of-band PAE transfer route (D-036) ───────────────
+# A fifth /jobs route, NOT a widening of /artifacts. Writes the Volume file + pae_json_path
+# in persist_fold's compensated boundary; idempotent; scoped to pae.json.gz so it never
+# disturbs the fold's structure/plddt/provenance already under {job_id}/.
+
+def _pae_files(pae=None):
+    payload = gzip.compress(json.dumps(pae if pae is not None else [[1.0, 2.0]]).encode())
+    return {"pae": ("pae.json.gz", payload, "application/gzip")}
+
+
+def test_pae_route_persists_file_and_sets_column(engine, tmp_path):
+    analysis_id, job_id = _seed(engine)
+    client = _client(engine, tmp_path, StubQueue())
+    r = client.post(f"/jobs/{job_id}/pae", files=_pae_files(), headers=AUTH)
+    assert r.status_code == 204
+    assert (tmp_path / str(job_id) / "pae.json.gz").is_file()
+    with Session(engine) as s:
+        assert s.get(ProteinAnalysis, analysis_id).pae_json_path.endswith("pae.json.gz")
+
+
+def test_pae_route_is_idempotent(engine, tmp_path):
+    analysis_id, job_id = _seed(engine)
+    client = _client(engine, tmp_path, StubQueue())
+    assert client.post(f"/jobs/{job_id}/pae", files=_pae_files(), headers=AUTH).status_code == 204
+    assert client.post(f"/jobs/{job_id}/pae", files=_pae_files(), headers=AUTH).status_code == 204
+    with Session(engine) as s:                                # a re-run converges, not corrupts
+        assert s.get(ProteinAnalysis, analysis_id).pae_json_path.endswith("pae.json.gz")
+
+
+def test_pae_route_404_on_unknown_job(engine, tmp_path):
+    client = _client(engine, tmp_path, StubQueue())
+    assert client.post("/jobs/9999/pae", files=_pae_files(), headers=AUTH).status_code == 404
+
+
+def test_pae_route_requires_token(engine, tmp_path):
+    client = _client(engine, tmp_path, StubQueue())
+    assert client.post("/jobs/1/pae", files=_pae_files()).status_code == 401   # no AUTH header
+
+
+def test_pae_route_does_not_disturb_existing_fold_files(engine, tmp_path):
+    # a prior fold upload wrote structure/plddt/provenance for this job (PAE stripped, D-035 pt2)
+    analysis_id, job_id = _seed(engine)
+    client = _client(engine, tmp_path, StubQueue())
+    client.post(f"/jobs/{job_id}/artifacts", files=_upload_files(pae=False), headers=AUTH)
+    assert (tmp_path / str(job_id) / "structure.pdb").is_file()
+    client.post(f"/jobs/{job_id}/pae", files=_pae_files(), headers=AUTH)
+    # the transfer adds pae.json.gz WITHOUT rmtree-ing the dir — both coexist
+    assert (tmp_path / str(job_id) / "structure.pdb").is_file()
+    assert (tmp_path / str(job_id) / "pae.json.gz").is_file()
