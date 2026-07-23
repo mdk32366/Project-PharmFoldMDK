@@ -77,6 +77,39 @@ def test_copies_data_for_the_manifest(dockerfile):
         "D-038: the serving image must copy data/ so core/manifest.py can compute coverage"
 
 
+# ── the two-stage build: Node builds the bundle, never enters the runtime (DEP-006) ──
+
+def _runtime_stage(dockerfile: str) -> str:
+    """Non-comment lines from the LAST ``FROM`` onward — the runtime stage. Stage 1 is the Node
+    builder; everything DEP-001 rules about the image is about what runs, i.e. this stage."""
+    lines = dockerfile.splitlines()
+    last_from = max(i for i, ln in enumerate(lines) if ln.lstrip().lower().startswith("from "))
+    return "\n".join(lines[last_from:]).lower()
+
+
+def test_two_stage_build_has_a_node_builder(dockerfile):
+    # DEP-006: stage 1 builds the React bundle on a Node image.
+    assert "node:" in dockerfile.lower(), "DEP-006: a Node build stage builds the bundle"
+
+
+def test_node_and_npm_never_enter_the_runtime_stage(dockerfile):
+    # DEP-006: the built assets arrive via `COPY --from` as static files; the runtime tier stays
+    # Python + the hash-locked lock, with NO npm/node instruction after the runtime FROM. A serving
+    # image that acquired a JS runtime it never executes is the same invisible bloat as one with CUDA.
+    runtime = _runtime_stage(dockerfile)
+    assert "npm" not in runtime, "DEP-006: no npm instruction in the runtime stage"
+    assert "node:" not in runtime and " node " not in runtime, \
+        "DEP-006: no node instruction in the runtime stage"
+
+
+def test_build_uses_npm_ci_not_install(dockerfile):
+    # D-037: `npm ci` installs EXACTLY the committed lockfile and FAILS on drift; `npm install`
+    # silently resolves and rewrites it. That difference is the whole (weaker-than-D-013) guarantee.
+    low = dockerfile.lower()
+    assert "npm ci" in low, "D-037: the build installs with npm ci"
+    assert "npm install" not in low, "D-037: never npm install (it rewrites the lock)"
+
+
 # ── .dockerignore excludes the worker tier at the context level too ───────────
 
 def test_dockerignore_excludes_worker_and_cruft():

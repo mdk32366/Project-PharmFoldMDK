@@ -25,10 +25,11 @@ complete / fail / **pae**), one shared bearer token, the upload route writing th
 in a compensated Volume+DB transaction, `/complete` enforcing done-ordering server-side (409 until
 `pdb_path` commits), and **`pae` (D-036)** storing the rental tier's out-of-band PAE +
 `pae_json_path` in that same compensated boundary. It merged as the first PR under the now-**required** Postgres check (D-032).
-The **deployment arc** (DEP-001…004) then wired the Fly serving tier: a runtime-only Docker image
-(`app/` + `core/` + `db/` + `data/` — the cohort CSVs the D-038 coverage route computes from —
-hash-locked lock, **no `worker/`/CUDA** — DEP-001, enforced by an
-image-contents test), a `fly.toml`, and a `deploy` job that runs `flyctl deploy --app pharmfoldmdk`
+The **deployment arc** (DEP-001…004) then wired the Fly serving tier: a Docker image — **two-stage
+since DEP-006** (a `node:20-slim` stage compiles the React bundle; **Node never enters the runtime
+stage**) — whose runtime tier is `app/` + `core/` + `db/` + `data/` (the cohort CSVs the D-038
+coverage route computes from), the hash-locked lock, **no `worker/`/CUDA** (DEP-001, enforced by an
+image-contents test that also pins the two-stage shape), a `fly.toml`, and a `deploy` job that runs `flyctl deploy --app pharmfoldmdk`
 behind a doc-only guard on the job (DEP-002) with an app-scoped `FLY_API_TOKEN` (DEP-003). A green
 deploy means **the transport API is up and the queue accepts work — not** that any fold has run
 (DEP-004); the worker is hand-started on the GPU box. The UI was ruled **React**, superseding
@@ -42,6 +43,12 @@ object computed from `core/manifest.py` over **all 82**, joined to `protein_anal
 **Reads are unauthenticated** (public UniProt structures, no PII); the
 four worker routes stay bearer-guarded — an asymmetric posture pinned by a route-introspecting test
 (`/jobs` guarded, `/api` open, no third category). No PAE route (D-034 decision 3).
+The **React bundle** (DEP-006; `ui/`, Vite build) now ships in that image and is served by the same
+FastAPI app under `/` — **one process, two things** — with `/api`/`/jobs` matched *before* the SPA
+fallback (route ordering, asserted). Its JS toolchain is pinned by `package-lock.json` + `npm ci`
+(D-037): a **third dependency world** outside D-013's hash guarantee, acceptable because it is
+build-time only (like D-018's GPU tier). **A green deploy now means a UI is reachable** (DEP-004
+amended). PR A ships the shell; the target view (3Dmol.js) and coverage view follow (PR B/C).
 **Next (owner-gated):** the app-scoped token + Fly app/Postgres/secrets provisioning so the first
 real deploy goes green; then starting the worker for the first end-to-end large rental fold — which
 retires the PROVISIONAL 60-min lease threshold (D-030) and D-031's estimated PAE ratio with measured
