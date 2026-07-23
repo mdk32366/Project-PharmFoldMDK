@@ -33,6 +33,7 @@ from typing import Any, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.manifest import ManifestRow, build_manifest, coverage
 from db.models import ProteinAnalysis
 
 # Meta keys carried into the light list, in payload order (D-034 decision 1 / Orders §1).
@@ -109,3 +110,55 @@ def get_plddt_path(engine: Any, analysis_id: int) -> Optional[str]:
     if not pdb_path:
         return None
     return str(Path(pdb_path).parent / "plddt.json")
+
+
+# ── coverage (D-038): the manifest is the source of 82, the DB is the fold join ─
+
+def _folded_accessions(engine: Any) -> dict[str, int]:
+    """``{accession: analysis_id}`` for every **folded** target — a completed ``protein_analyses``
+    row (``pdb_path`` set). The join key is ``input_value`` for ``input_type == 'uniprot'`` — the
+    accession lives there, there is no accession column (D-034/D-038). Every current row is a
+    uniprot input; a future non-uniprot type would need this widened rather than silently miscount."""
+    with Session(engine) as s:
+        pairs = s.execute(
+            select(ProteinAnalysis.id, ProteinAnalysis.input_value)
+            .where(ProteinAnalysis.pdb_path.is_not(None))
+            .where(ProteinAnalysis.input_type == "uniprot")
+        ).all()
+    return {input_value: pid for pid, input_value in pairs}
+
+
+def _coverage_row(row: ManifestRow, folded: dict[str, int]) -> dict[str, Any]:
+    """One manifest row projected for the coverage drill-down, joined to fold state. ``fold_status``
+    is the one field neither source has alone (D-038); ``exclusion_reason`` carries the *reason*, not
+    just the flag (D-022 — a boolean is not a reason)."""
+    analysis_id = folded.get(row.accession)
+    return {
+        "accession": row.accession,
+        "gene": row.gene,
+        "boundary_method": row.boundary_method,
+        "span": row.span,
+        "tier": row.tier,
+        "tier_reason": row.tier_reason,
+        "disposition": row.disposition,
+        "excluded": row.excluded,
+        "exclusion_reason": row.exclusion_reason,
+        "fold_status": "folded" if analysis_id is not None else "not_folded",
+        "analysis_id": analysis_id,
+    }
+
+
+def coverage_payload(engine: Any) -> dict[str, Any]:
+    """The D-038 coverage supplier: the D-024 ``coverage`` object over the full cohort plus the
+    per-target drill-down, ``fold_status`` joined from the DB.
+
+    The **cohort is the manifest, not the database** — ``build_manifest`` computes all 82 from the
+    committed CSVs deterministically (D-023). Reading the denominator from ``protein_analyses`` would
+    make it a function of how much work has happened, the self-flattering failure D-024 forbids. The
+    DB contributes only which of those 82 have folded."""
+    rows = build_manifest()
+    folded = _folded_accessions(engine)
+    return {
+        "coverage": coverage(rows),
+        "rows": [_coverage_row(r, folded) for r in rows],
+    }

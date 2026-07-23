@@ -65,3 +65,12 @@ def get_plddt(analysis_id: int, engine: Any = Depends(get_engine)) -> list:
     if not plddt_path or not Path(plddt_path).is_file():
         raise HTTPException(status_code=404, detail="no plddt for this analysis")
     return json.loads(Path(plddt_path).read_text(encoding="utf-8"))
+
+
+@read_router.get("/coverage")
+def get_coverage(engine: Any = Depends(get_engine)) -> dict:
+    """The D-038 coverage supplier UI Plan v2 §3.3/§4.1 need — the honest denominator the read
+    list cannot give. The D-024 coverage object (partition over **all 82**, computed from the
+    committed manifest, not the 42 folded rows) plus the per-target drill-down with `fold_status`
+    joined from the DB. No credential (D-034 posture)."""
+    return reads.coverage_payload(engine)

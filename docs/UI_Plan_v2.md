@@ -86,8 +86,16 @@ it is designed against landed folds, not an imagined shape.
 they do not exist yet** (D-027 → fit → step 3).
 
 **⚠ The confidence spread is a design constraint, not a detail.** Measured `mean_plddt` runs
-**34.78 to 81.40**, with a substantial fraction below 60 — a region where an ESMFold structure is
-not reliably interpretable. **Roughly a third of this cohort folded poorly.** A UI that renders a
+**34.78 to 81.40**. The distribution, computed over all 42 rows rather than summarised:
+
+| Band | Count | Share |
+|---|---|---|
+| `< 50` | 10 | **24%** |
+| `< 60` | 19 | **45%** |
+| `< 70` | 24 | **57%** |
+
+**Nearly half this cohort folded below pLDDT 60** — a region where an ESMFold structure is not
+reliably interpretable. A UI that renders a
 34.78 structure identically to a 77.26 one is committing the D-024 failure in the small. Whatever
 surface shows a structure must show how far to trust it, in the same view.
 
@@ -130,13 +138,29 @@ Everything here works against the 42 landed folds with no scorer.
   or `whole` — and for a `whole` fold, the fact that it *has no sliceable ECD* is the reason,
   which is a real limitation and belongs on the screen.
 
-### 3.3 Coverage view — the honest denominator *(buildable today)*
+### 3.3 Coverage view — the honest denominator *(BLOCKED — no supplier exists)*
 
 Reachable from the coverage line anywhere it appears. Shows the full 82: what is ranked, what is
 held out and **why**, what is excluded and **why by name**, what is folded and what is not yet.
 
-**Today it renders 40 ranked-and-folded of 82** — a real, partial, honest coverage line, which is
-precisely what the pre-work sequenced the first fold *before* the UI to obtain.
+**⚠ This surface has no data supplier, and the read API structurally cannot become one.**
+`GET /api/analyses` returns the **42 folded rows** and nothing else. It cannot produce:
+
+- the **denominator 82** — only folded rows exist in `protein_analyses`;
+- the **excluded rows by name** (MUC16, FAT2) — D-026 gives them no `protein_analyses` row at
+  all, so they are not absent from the response, they are absent from the *table*;
+- the **29 rental-tier unfolded** — not enqueued, and a fold-derived table has no way to
+  represent "not yet."
+
+The coverage object lives in `core/manifest.py` and **is served nowhere.** Left unaddressed,
+React would reconstruct a partial line from 42 folded rows and quietly lose the *"of 82"* — which
+is the entire point of D-024.
+
+**This is the same supplier-before-contract failure D-034 was written to avoid, one surface
+over.** It needs its own entry before step 4 — a `GET /api/coverage` route or a build-time
+manifest export — ruled on the same discipline as D-034: shape and payload decided against the
+real object, then built tests-first. **Step 3 (target view) is fully supplied by D-034 and is not
+blocked by this.**
 
 ### 3.4 Method note — what the system claims *(short, static)*
 
@@ -287,7 +311,7 @@ matters. It demonstrably does.
 **⚠ And the success case is a bad prior, which this project's own data already shows.**
 NECTIN4 is well-expressed, accessible, and stable enough not to be simply switched off under
 pressure. **Most candidates are not.** In this cohort of 42 folded targets, `mean_plddt` ranges
-from **34.78 to 81.40**, and roughly a third fold below 60 — a region where the structure is not
+from **34.78 to 81.40**, and **45% fall below 60** — a region where the structure is not
 reliably interpretable. EV proves the *mechanism*; it says nothing about how easy the next target
 is. A tool built in admiration of the one that worked could quietly encode *"find me more
 NECTIN4s"* — and the coverage line (D-024), the disagreement classes (D-015 §1a), and the
@@ -328,15 +352,22 @@ Ruled by the pre-work's dependency chain (read API → shell → single-target �
 
 | Step | What | Blocked by |
 |---|---|---|
-| 1 | **Read API** (D-034) | — *(in flight)* |
+| 1 | **Read API** (D-034) | — *(shipped, #52)* |
 | 2 | App shell + API client | step 1 |
-| 3 | **Target view** — viewer, confidence, provenance, boundary method | step 2 |
-| 4 | **Coverage view + coverage-line component** | step 2 (renders 40/82 today) |
+| 3 | **Target view** — viewer, confidence, provenance, boundary method | step 2 + **the confidence-band ruling (§10), which must land with this step, not "eventually"** |
+| 3b | **The coverage supplier** — `GET /api/coverage` or a manifest export, its own entry | step 1 |
+| 4 | **Coverage view + coverage-line component** | **step 3b** — see §3.3; the read API cannot supply it |
 | 5 | Method-note page + ADC context | step 2 |
 | 6 | **Ranking table + disagreement classes + attribution** | **the scorer** (D-027 → features → fit) |
 
-**Steps 2–5 are this arc. Step 6 is not**, and naming that prevents building a mock ranking that
-gets thrown away. The centrepiece is real work that cannot start until features and a fit exist.
+**Steps 2, 3, 3b, 4, 5 are this arc. Step 6 is not**, and naming that prevents building a mock
+ranking that gets thrown away. The centrepiece is real work that cannot start until features and
+a fit exist.
+
+**Step 3b is a supplier, not UI work** — it is a route on the existing FastAPI app, built
+tests-first through the gate exactly as D-034 was. Sequence it early; step 4 cannot begin without
+it, and building step 4 against the 42 folded rows would produce a coverage line that is
+confidently wrong.
 
 ---
 
@@ -360,14 +391,22 @@ because the UI had space for it."*
 
 ## 10. Open questions for their own entries
 
-- **JS toolchain pinning.** D-033: React is build-time and does not enter `requirements.lock`;
-  its pinning is **outside D-013's guarantee** in the same way `worker/requirements.txt` is
-  (D-018). Needs ruling in the entry that builds the bundle.
-- **DEP-001 amendment.** The image gains a build step and a static-serve path when the bundle
-  lands — that PR's work, not this plan's.
-- **What a green deploy means, again.** DEP-004 is amended by the first UI to ship (its own
-  stated consequence). Today a green deploy still means transport-up-and-queue-accepting, and
-  **not** that a UI is reachable.
-- **The confidence bands.** §2 says a bare `mean_plddt` is insufficient; the exact band
-  boundaries and their justification are a small ruling, not a Planner preference. ESMFold pLDDT
-  convention is a starting point, not an authority.
+- **⚠ The coverage-data supplier (§3.3) — blocks step 4 and is the largest open item.**
+  `GET /api/coverage` or a build-time manifest export. The read API returns 42 folded rows and
+  cannot supply the 82 denominator, the named exclusions, or the unfolded. Ruled before step 4,
+  on D-034's discipline: decide shape and payload against the real `core/manifest.py` object,
+  then build tests-first.
+- **The confidence bands — must land with step 3, not "eventually."** §2's distribution (45%
+  below 60) is why a bare `mean_plddt` is insufficient; the target view needs the bands to render
+  at all. ESMFold pLDDT convention is a starting point, not an authority. A small ruling, but a
+  blocking one.
+- **pLDDT colour source, recorded so it is not reverted by reflex.** §6 colours from the
+  `/plddt` array, **not** from the PDB B-factor column. ESMFold carries pLDDT in B-factors too,
+  but whether the served `structure.pdb`'s B-factors are on the 0–100 or 0–1 scale is
+  **unverified** — and S-001 cost real confusion on exactly that rescaling. The array is the
+  known-good source.
+- **JS toolchain pinning** — ruled in **D-037** (`package-lock.json`, `npm ci`, outside D-013's
+  hash-verified guarantee).
+- **DEP-001 amendment** — ruled in **DEP-006** (two-stage build, static-serve path).
+- **What a green deploy means, again.** DEP-004 is amended by the first UI to ship. Today a green
+  deploy still means transport-up-and-queue-accepting, and **not** that a UI is reachable.

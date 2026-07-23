@@ -80,6 +80,95 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-038 — The coverage supplier: `GET /api/coverage`, computed from the manifest, joined to folds
+- **Date:** 2026-07-23
+- **Status:** Proposed → Accepted on merge.
+- **Context — a supplier gap the Planner specced past, caught by the Builder against the tree.**
+  UI Plan v2 §3.3/§4.1 specify a coverage surface showing *"the full 82: what is ranked, what is
+  held out and why, what is excluded and why by name, what is folded and what is not yet."*
+  **Nothing serves that data.**
+
+  `GET /api/analyses` (D-034) returns the **42 folded rows** and structurally cannot supply:
+  - the **denominator 82** — `protein_analyses` contains only rows that were enqueued;
+  - the **excluded targets by name** (MUC16, FAT2) — D-026 gives them **no `protein_analyses`
+    row at all**, so they are not missing from a response, they are missing from the *table*;
+  - the **29 rental-tier unfolded** — not enqueued, and a fold-derived table has no
+    representation for "not yet."
+
+  **This is the same supplier-before-contract failure D-034 was written to avoid, one surface
+  over** — caught for the target view, missed for the coverage view. Left unfixed, React would
+  reconstruct a partial line from 42 folded rows and quietly lose the *"of 82,"* which is the
+  whole point of D-024. **A coverage line that is confidently wrong is worse than none**: D-024
+  exists because *"N ranked, M held out" travels with every ranking*, and a denominator of 42
+  would misstate the cohort in the direction of completeness.
+
+- **Provenance (D-016):** ruled against `core/manifest.py` (`coverage()` at :185, `ManifestRow`,
+  `build_rows`), `app/read_routes.py` as shipped in #52, and `GET /api/analyses` verified live
+  returning 42 rows with dispositions `ranked` and `held_out` only.
+
+---
+
+- **Decision — `GET /api/coverage`, unauthenticated, under `/api` (D-034's posture unchanged).**
+
+  **The cohort is the manifest, not the database.** The route computes `ManifestRow`s from the
+  committed cohort data (`data/cohort_82_ecd.csv` and its companions) exactly as
+  `core/manifest.py` already does — the same deterministic routing table D-023 made reviewable —
+  and returns `coverage(rows)`'s object plus the per-row detail the drill-down needs.
+
+  **Why the manifest is the source and the DB is the join, not the reverse:** the manifest is the
+  only artefact that knows about all 82. It is deterministic, committed, and already
+  test-covered. `protein_analyses` knows only what was enqueued and folded. **Reading coverage
+  from the DB would make the denominator a function of how much work has happened**, which is
+  precisely the failure D-024 forbids.
+
+  **Payload:**
+  - **`coverage`** — `coverage()`'s object verbatim: `denominator`, the three-cell partition
+    (`ranked` / `held_out` / `excluded`), and the two breakout subsets (`unmeasured_tier`,
+    `no_topology`). **The breakouts are subsets that cut across the partition and are NOT summed
+    into it** — the response must not invite a client to add them.
+  - **`rows`** — per target: `accession`, `gene`, `boundary_method`, `span`, `tier`,
+    `tier_reason`, `disposition`, `excluded`, plus **`fold_status`** and **`analysis_id`**.
+  - **`fold_status`** is the one field neither source has alone, and it is the reason this route
+    joins rather than merely echoing the manifest: `folded` when a completed
+    `protein_analyses` row exists for that accession, `not_folded` otherwise. Today that yields
+    **42 folded, 40 not** — the honest partial state.
+
+  **Exclusion reasons are carried, not just the flag.** D-022's requirement is that named
+  exclusions are *visible*, and a boolean is not a reason. Where the manifest records why a
+  target was excluded, that text travels in the row.
+
+- **⚠ The join key is `accession`, and that is a deliberate choice with a caveat.**
+  `protein_analyses.input_value` holds the accession; there is no accession *column* (the
+  D-034 finding). The join is therefore on `input_value` for `input_type == 'uniprot'`. This is
+  correct for the current cohort — every row is a uniprot input — and it is **stated here so
+  that a future non-uniprot input type does not silently break the coverage count.**
+
+- **Cost:** the manifest computation is CPU-only over 82 rows from committed CSVs, plus one
+  indexed query. No new dependency, no new table.
+
+- **Deep-learning justification:** direct, via D-024. The coverage line is the surface that keeps
+  the scorer's eventual claim honest — *"N of 82 ranked"* is what prevents a ranking over 40
+  folded targets reading as a ranking over the cohort. A supplier that could only report what had
+  already been folded would make the denominator grow as work progressed, which is the
+  self-flattering failure the entry exists to prevent. **The number that disqualifies you is the
+  one worth serving.**
+
+- **Consequences / test surface:**
+  - **Tested first:** the partition sums to `denominator`; the breakouts are **not** summed into
+    it; excluded targets appear **by name** with their reason; `fold_status` reflects the DB join
+    (a seeded folded row reads `folded`, an unenqueued target reads `not_folded`); the route is
+    unauthenticated and **D-034's prefix property still holds** (`/api` open, `/jobs` guarded).
+  - **A test pinning the denominator at 82** — so a cohort-data edit that changes it is a
+    deliberate, visible change rather than a drift.
+  - **Blocks UI Plan v2 step 4** (coverage view). Step 3 (target view) is unaffected.
+  - **`core/manifest.py` is not modified** — the route consumes it. If the manifest needs a
+    change to be importable from `app/`, that is worth noting rather than refactoring past.
+  - **DEP-001/DEP-006:** `data/` must be present in the serving image for the manifest to
+    compute. **The image does not copy `data/` today** — verify and add it in the same PR, or the
+    route works locally and 500s in production.
+
+---
+
 ### D-036 — The PAE transfer route: a fifth worker route, not a widened upload
 - **Date:** 2026-07-23
 - **Status:** **Accepted (2026-07-23)** — the transfer-shape ruling D-035 §4 deferred; the route
