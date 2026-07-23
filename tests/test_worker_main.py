@@ -123,3 +123,43 @@ def test_run_wires_client_adapter_and_config():
     assert calls["worker_id"] == "wid"
     assert calls["poll_interval"] == 2.0
     assert calls["folded"] == "folded:AAA"
+
+
+# ── rental-scoped local PAE persist (D-035 part 2 / D-036) ────────────────────
+# Wired into the fold wrapper (NOT the loop — orchestrator.run_worker stays pure). PAE-only,
+# opt-in on artifact_dir, and NON-FATAL: a local write error must not cascade into a paid re-fold.
+
+def _fold_result(pae=None):
+    from worker.runner import FoldProvenance, FoldResult
+    prov = FoldProvenance(model_id="m", model_revision=MODEL_REVISION, dtype="int8",
+                          chunk_size=64, input_length=3, source="sliced_ecd", mean_plddt=88.0,
+                          ca_atom_count=3, folded_at="2026-07-22T00:00:00+00:00")
+    return FoldResult(pdb="ATOM\n", plddt=[88.0, 88.0, 88.0], pae=pae, provenance=prov)
+
+
+def test_fold_from_spec_persists_pae_only_when_artifact_dir_set(tmp_path):
+    def fake_fold(sequence, **k):
+        return _fold_result(pae=[[1.0]])
+
+    # artifact_dir set → PAE written at {dir}/{job_id}/pae.json, and ONLY pae (PAE-only write)
+    fold_from_spec(_spec(job_id=7), fold_fn=fake_fold, artifact_dir=str(tmp_path))
+    assert (tmp_path / "7" / "pae.json").is_file()
+    assert not (tmp_path / "7" / "structure.pdb").exists()          # not the full four-file write
+
+    # unset → nothing persisted locally (the local tier's behaviour is unchanged)
+    fold_from_spec(_spec(job_id=8), fold_fn=fake_fold, artifact_dir=None)
+    assert not (tmp_path / "8").exists()
+
+
+def test_fold_from_spec_local_persist_is_non_fatal(tmp_path):
+    """A local write error must not propagate — it would crash the fold path before upload and
+    reap the job into a PAID re-fold. The retrieval-verify step is the backstop, not this write."""
+    def fake_fold(sequence, **k):
+        return _fold_result(pae=[[1.0]])
+
+    def boom_write(result, out_dir):
+        raise OSError("disk full")
+
+    out = fold_from_spec(_spec(job_id=9), fold_fn=fake_fold, artifact_dir=str(tmp_path),
+                         write_pae_fn=boom_write)
+    assert out.pae == [[1.0]]                                       # fold result still returned

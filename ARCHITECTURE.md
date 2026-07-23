@@ -20,10 +20,11 @@ recipe — 80 of 82 enqueue, the 2 named exclusions get none, idempotent per coh
 **worker's job-pull loop** (D-030, `worker/orchestrator.py`) is built as a pure, transport-agnostic
 loop over an injected client protocol (claim → fold → upload → complete, with server-side
 done-ordering and the transport/fold-failure taxonomy). The **Fly transport** (D-031, `app/` +
-`worker/http_client.py`) now realizes that protocol over HTTP: four routes (claim / artifacts /
-complete / fail), one shared bearer token, the upload route writing the post-fold columns in a
-compensated Volume+DB transaction, and `/complete` enforcing done-ordering server-side (409 until
-`pdb_path` commits). It merged as the first PR under the now-**required** Postgres check (D-032).
+`worker/http_client.py`) now realizes that protocol over HTTP: **five** routes (claim / artifacts /
+complete / fail / **pae**), one shared bearer token, the upload route writing the post-fold columns
+in a compensated Volume+DB transaction, `/complete` enforcing done-ordering server-side (409 until
+`pdb_path` commits), and **`pae` (D-036)** storing the rental tier's out-of-band PAE +
+`pae_json_path` in that same compensated boundary. It merged as the first PR under the now-**required** Postgres check (D-032).
 The **deployment arc** (DEP-001…004) then wired the Fly serving tier: a runtime-only Docker image
 (`app/` + `core/` + `db/`, hash-locked lock, **no `worker/`/CUDA** — DEP-001, enforced by an
 image-contents test), a `fly.toml`, and a `deploy` job that runs `flyctl deploy --app pharmfoldmdk`
@@ -119,7 +120,7 @@ opened on the local machine.
 |-------|----------------|--------------|
 | **Frontend** | Interactive UI, 3D visualization, onboarding | Streamlit; `py3Dmol`/`stmol` for 3D |
 | **Backend API** | Auth, request handling, **job queue** management, results | FastAPI + Uvicorn (on Fly) |
-| **Worker transport** (D-031) | The four worker→Fly routes realizing the D-030 loop's protocol: claim → inline `FoldSpec`; artifacts → post-fold columns written in a compensated Volume+DB transaction (idempotent, PAE stored gzipped); complete → 409 until `pdb_path` commits; fail → terminal. Shared bearer token per route. Client-side is `worker/http_client.py` (gzips PAE, maps non-2xx → `TransportError`, and sets an **explicit `httpx.Timeout`** — D-035 §3a: the httpx 5 s default would time out a slow upload, retry, exhaust attempts, and re-fold on a **paid** card) | `app/` (FastAPI, on Fly) + `worker/http_client.py` (httpx, GPU tier); hermetic route/boundary/client tests + a real-Postgres seam-1 handler-write test |
+| **Worker transport** (D-031, D-036) | The **five** worker→Fly routes realizing the D-030 loop's protocol: claim → inline `FoldSpec`; artifacts → post-fold columns in a compensated Volume+DB transaction (idempotent; **PAE no longer travels here** — D-035 part 2); complete → 409 until `pdb_path` commits; fail → terminal; **pae → stores the gzipped PAE + `pae_json_path` in the same compensated boundary** (D-036, `persist_pae`, the rental tier's out-of-band transfer). Shared bearer token per route; all five under `/jobs`, so D-034's prefix property is unchanged. Client-side is `worker/http_client.py` (**no longer uploads PAE** — D-035 part 2; maps non-2xx → `TransportError`; sets an **explicit `httpx.Timeout`** — D-035 §3a: the httpx 5 s default would time out a slow upload, retry, exhaust attempts, and re-fold on a **paid** card) | `app/` (FastAPI, on Fly) + `worker/http_client.py` (httpx, GPU tier); hermetic route/boundary/client tests + a real-Postgres seam-1 handler-write test |
 | **Read API** (D-034) | Four public `GET /api/*` routes the React UI (D-033) consumes: `analyses` (light list — `id`/`accession`/`label`/`gene`/`mean_plddt`/`disposition`/`held_out`/`tier`/`tier_reason`/`boundary_method`/`fold_length`/`full_length`, **no `sequence`/`fold_provenance`**); `analyses/{id}` (full record incl. `sequence` + `fold_provenance`); `analyses/{id}/structure` (streams the stored `pdb_path`, `text/plain`); `analyses/{id}/plddt` (per-residue array). **Unauthenticated by design** — writes stay bearer-guarded; the asymmetry is pinned by a route-prefix auth test (`/jobs` guarded, `/api` open, no third category). No PAE route. | `app/read_routes.py` (thin handlers) + `app/reads.py` (query/projection); hermetic SQLite `TestClient` tests |
 | **Orchestration** (D-023, D-026) | `manifest.py`: measured cohort → deterministic routing table + D-024 coverage object, **reviewable before any job is created**. `enqueue.py`: foldable rows → `protein_analyses` (exact residues + UniProt release + folded span) + `pending` `jobs` (tier fold recipe); idempotent, 80/82 (2 named exclusions get none) | `core/manifest.py`, `core/enqueue.py` — CPU-side; hermetic on SQLite + a real-Postgres commit test |
 | **Local GPU worker** | Polls Fly for jobs, runs **ESMFold** on the local NVIDIA GPU for targets **under the length ceiling**, uploads artifacts back (D-004) — **not deployed to Fly** | Python worker; PyTorch + Hugging Face (`facebook/esmfold_v1`), int8 trunk |
@@ -445,7 +446,7 @@ Project-PharmFoldMDK/
 ├── README.md                # how to run / deploy (kept current in Phase 6)
 ├── CLAUDE.md                # living-doc governance rules
 ├── app/                     # Fly serving tier (FastAPI): main.py (create_app factory),
-│                            #   routes.py (D-031 four worker→Fly routes), artifacts.py (FoldSpec
+│                            #   routes.py (D-031/D-036 five worker→Fly routes), artifacts.py (FoldSpec
 │                            #   projection + compensated Volume+DB persist), deps.py, config.py
 ├── core/                    # queue.py (JobQueue seam + is_stale), manifest.py (D-023 routing
 │                            #   table + D-024 coverage), enqueue.py (D-026 manifest → analyses+jobs;

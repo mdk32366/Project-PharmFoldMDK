@@ -118,6 +118,32 @@ def test_write_artifacts_omits_pae_when_absent(tmp_path):
     assert "pae" not in written and not (tmp_path / "pae.json").exists()
 
 
+# ── write_pae — PAE-only local persist for the rental tier (D-035 pt2 / D-036) ─
+
+def test_write_pae_writes_only_pae(tmp_path):
+    from worker.runner import write_pae
+    result = FoldResult(pdb="ATOM\n", plddt=[1.0], pae=[[2.0, 3.0]],
+                        provenance=build_provenance("M", dtype="int8", chunk_size=64,
+                                                    source=WHOLE, ecd_start=None,
+                                                    ecd_end=None, length_cap=None))
+    path = write_pae(result, tmp_path / "j7")
+    import json
+    assert path.endswith("pae.json") and (tmp_path / "j7" / "pae.json").is_file()
+    assert json.loads((tmp_path / "j7" / "pae.json").read_text()) == [[2.0, 3.0]]
+    # PAE ONLY — structure/plddt/provenance persist server-side via upload, not duplicated here
+    assert not (tmp_path / "j7" / "structure.pdb").exists()
+
+
+def test_write_pae_none_is_noop(tmp_path):
+    from worker.runner import write_pae
+    result = FoldResult(pdb="A", plddt=[1.0], pae=None,
+                        provenance=build_provenance("M", dtype="int8", chunk_size=64,
+                                                    source=WHOLE, ecd_start=None,
+                                                    ecd_end=None, length_cap=None))
+    assert write_pae(result, tmp_path / "j8") is None
+    assert not (tmp_path / "j8").exists()
+
+
 # ── the GPU fold — boundary marker, skips without torch+CUDA (validated by owner) ──
 
 @pytest.fixture

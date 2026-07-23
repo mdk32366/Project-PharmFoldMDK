@@ -127,6 +127,48 @@ Tomorrow you wake to 42 real structures for the UI to render.
 
 ---
 
+## C. The rental batch (A6000) — and the ⚠ BLOCKING PAE retrieval (D-035 / D-036)
+
+The 29 above-ceiling targets (13 `unmeasured_local_ceiling` + 16 `over_local_ceiling`) fold on a
+rented A6000 — the **same worker loop**, differing only in the FoldSpec (fp16, unquantised,
+unchunked). Enqueue them with `python -m core.enqueue --bucket rental`.
+
+**On the rented box, set `WORKER_ARTIFACT_DIR`** — this is the D-036 rental switch. Unset (the
+local tier) the worker persists nothing locally; set, each fold's **PAE** is written to
+`{WORKER_ARTIFACT_DIR}/{job_id}/pae.json` so it can be transferred out-of-band. The upload no
+longer carries PAE (D-035 part 2), so **without this the rental cohort's PAE is never persisted
+anywhere.**
+
+```bash
+export WORKER_AUTH_TOKEN=<same as the Fly secret>
+export TRANSPORT_URL=https://pharmfoldmdk.fly.dev
+export WORKER_ARTIFACT_DIR=/workspace/pae          # any pod-local path
+python -m worker.main                               # folds; writes each PAE under $WORKER_ARTIFACT_DIR/{job_id}/
+```
+
+### ⚠ The batch is NOT done when the last fold completes — it is done when PAE is off the box
+
+D-011 rules **no network volumes** (*"download weights, fold, upload artifacts, terminate"*), so
+**PAE on the pod's container disk is destroyed the moment the pod terminates.** structure/plddt/
+provenance are already safe on the Fly Volume (they uploaded during the fold); **PAE is not.**
+Retrieval is a **blocking pre-termination step**, and the failure is silent and costs a paid
+re-fold:
+
+```bash
+# still on the rented box, WORKER_ARTIFACT_DIR / TRANSPORT_URL / WORKER_AUTH_TOKEN set:
+python -m scripts.retrieve_rental_pae
+# → "[pae] transferred 29/29; failed: []"  and  "safe to terminate."   (exit 0)
+# → "[pae] ⚠ INCOMPLETE ... do NOT terminate the pod"                   (exit 1)
+```
+
+It POSTs each `pae.json` gzipped to `POST /jobs/{job_id}/pae` (D-036), which lands it on the
+Volume and sets `pae_json_path` in the same compensated boundary the fold upload uses.
+**Idempotent** — re-run until it exits `0`. **Only then terminate the pod.** Gate termination on
+that exit code; a partial transfer that is silently dropped is the one failure in this design that
+costs real money.
+
+---
+
 ## Reference
 
 - App: `pharmfoldmdk` (`sjc`) · Cluster: `gjpkdonnmkeoyln4` / `sentinel-holy-rain-4562`

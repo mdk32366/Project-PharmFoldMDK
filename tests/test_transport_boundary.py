@@ -17,7 +17,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.artifacts import persist_fold
+from app.artifacts import AnalysisNotFound, persist_fold, persist_pae
 from db.models import Base, JobRecord, ProteinAnalysis, RankingRun
 
 PROV = {
@@ -111,3 +111,42 @@ def test_failed_db_write_removes_written_files(engine, tmp_path):
     assert not (tmp_path / str(job_id)).exists()
     pdb_path, mean_plddt, pae_path, _ = _cols(engine, analysis_id)
     assert (pdb_path, mean_plddt, pae_path) == (None, None, None)
+
+
+# ── persist_pae — the D-036 out-of-band transfer, same compensated boundary ────
+
+def _pae_gz():
+    return gzip.compress(json.dumps([[1.0, 2.0]]).encode())
+
+
+def test_persist_pae_writes_file_and_column(engine, tmp_path):
+    analysis_id, job_id = _seed(engine)
+    persist_pae(engine, str(tmp_path), job_id, pae_gz=_pae_gz())
+    assert (tmp_path / str(job_id) / "pae.json.gz").is_file()
+    _, _, pae_path, _ = _cols(engine, analysis_id)
+    assert pae_path.endswith("pae.json.gz")
+
+
+def test_persist_pae_unknown_job_raises(engine, tmp_path):
+    with pytest.raises(AnalysisNotFound):
+        persist_pae(engine, str(tmp_path), 9999, pae_gz=_pae_gz())
+
+
+def test_persist_pae_failed_db_write_removes_only_the_pae_file(engine, tmp_path):
+    analysis_id, job_id = _seed(engine)
+    # a sibling from the earlier fold upload that MUST survive the compensation
+    d = tmp_path / str(job_id)
+    d.mkdir(parents=True)
+    (d / "structure.pdb").write_text("ATOM\n")
+
+    def boom(*a, **k):
+        raise RuntimeError("commit failed")
+
+    with pytest.raises(RuntimeError):
+        persist_pae(engine, str(tmp_path), job_id, pae_gz=_pae_gz(), update_pae_path=boom)
+
+    # only pae.json.gz was compensated away; the sibling and the NULL column are intact
+    assert not (d / "pae.json.gz").exists()
+    assert (d / "structure.pdb").is_file()
+    _, _, pae_path, _ = _cols(engine, analysis_id)
+    assert pae_path is None

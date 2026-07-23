@@ -152,6 +152,23 @@ def write_artifacts(result: FoldResult, out_dir: str | Path) -> dict[str, str]:
     return written
 
 
+def write_pae(result: FoldResult, out_dir: str | Path) -> Optional[str]:
+    """Persist **only** ``pae.json`` — the rental tier's local PAE persist (D-035 part 2 / D-036).
+
+    ``structure.pdb`` / ``plddt.json`` / ``provenance.json`` already persist server-side via the
+    upload route, so the pod keeps just PAE — which the upload no longer carries (D-035 part 2) —
+    for out-of-band retrieval before termination. Returns the path, or ``None`` when the fold
+    emitted no PAE. Deliberately not the four-file ``write_artifacts``: duplicating the other
+    three on the pod buys nothing."""
+    if result.pae is None:
+        return None
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / "pae.json"
+    path.write_text(json.dumps(result.pae), encoding="utf-8")
+    return str(path)
+
+
 # ── the GPU-bound fold (import-guarded; validated on a GPU host, not in CI) ────
 
 def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int] = DEFAULT_CHUNK_SIZE,

@@ -88,3 +88,22 @@ def fail(job_id: int, body: FailBody, queue: Any = Depends(get_queue)):
     (D-009 §1 Amendment 2). No re-implementation of queue logic here (D-031)."""
     queue.fail(job_id, body.error)
     return Response(status_code=204)
+
+
+@router.post("/jobs/{job_id}/pae", dependencies=[Depends(require_token)])
+async def upload_pae(
+    job_id: int,
+    pae: UploadFile = File(...),
+    engine: Any = Depends(get_engine),
+    artifact_root: str = Depends(get_artifact_root),
+):
+    """Land the rental tier's out-of-band PAE (D-036) — a **fifth** route, not a widening of
+    ``/artifacts``. Writes the gzipped body to the Volume and sets ``pae_json_path`` in the same
+    compensated boundary ``persist_fold`` uses (idempotent). 404 when the job has no analysis. The
+    upload route stopped carrying PAE (D-035 part 2); this is where it lands instead."""
+    pae_gz = await pae.read()
+    try:
+        A.persist_pae(engine, artifact_root, job_id, pae_gz=pae_gz)
+    except A.AnalysisNotFound:
+        raise HTTPException(status_code=404, detail="unknown job")
+    return Response(status_code=204)
