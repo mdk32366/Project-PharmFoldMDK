@@ -80,6 +80,239 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-035 — The rental tier: PAE leaves the lease, and three hazards the measured gzip ratio exposed
+- **Date:** 2026-07-23
+- **Status:** **Accepted (2026-07-23)** — owner-ruled on the PAE path (§4, option C); §1 stands
+  on measurement alone; §3's hazards ruled as stated.
+- **Supersedes in part:** D-030's PAE upload reasoning (the 5–10× gzip estimate and the
+  "inside the lease" conclusion it supported). D-030's *compress-and-store intent* is preserved
+  and, under this entry, better served.
+- **Closes:** D-011's open follow-up — *"decide where rented-run artifacts land (Fly Volume
+  upload path, D-004 consequence, still open)."*
+
+---
+
+#### 0. Provenance (D-016)
+
+Ruled against tree `0bc9258` (`worker/orchestrator.py`, `worker/http_client.py`,
+`worker/runner.py`, `worker/main.py`, `fly.toml`, `core/manifest.py`), the production database
+and Volume queried 2026-07-23, and D-011 / D-030 / D-031 read in full.
+
+**The A6000 has not been rented and no rental fold has ever run.** Every claim below about
+rental behaviour is *predicted* or *derived*, never *measured*, and is labelled (method note
+item 3). The one measurement is the gzip ratio, and it is measured only at 318/361 aa.
+
+---
+
+#### 1. The 5–10× gzip estimate is falsified, and it was load-bearing
+
+**Not a refinement of an estimate — the collapse of the argument a ruling rested on.**
+
+D-030's PAE ruling reasoned in a chain: raw PAE for 2213 aa ≈ 75–100 MB → *"plausibly 30–80
+minutes on a residential uplink"* → *"could exceed the 3600 s provisional lease before the fold
+is even counted"* → **but gzip achieves 5–10×** → ~10–20 MB → *"at that size the upload is a few
+minutes, **inside the lease**."* The entry labelled the ratio *"an estimate, not a measurement"*
+and named its retirement: the first large fold.
+
+**Measured: 2.2×** — 824,489 B gzipped from ~1.8 MB raw (`ls -l /data/artifacts/1/`, id 1,
+318 aa); 1,070,270 B at id 37 (361 aa).
+
+| Target | Raw PAE (est.) | At 5–10× (assumed) | At 2.2× (measured ratio) |
+|---|---|---|---|
+| 1652 aa (NOTCH2) | ~42–56 MB | 4–11 MB | **~19–25 MB** |
+| 2213 aa | ~75–100 MB | 10–20 MB | **~34–45 MB** |
+
+Applying D-030's own uplink figure (30–80 min for 75–100 MB ≈ 1.0–1.6 MB/min), 34–45 MB is
+**~21–45 minutes of upload alone**, against a 3600 s lease whose clock starts at `claimed_at` —
+*before* the worker has received the response, folded, or begun uploading. The fold is
+unbudgeted in that window.
+
+**The honest reading:** the measurement does not make the lease tighter; it removes the step that
+concluded *"inside the lease."* The 3600 s provisional threshold is **under-justified for exactly
+the tier it was raised to protect.** D-030 anticipated this structurally — *"a fixed timeout has
+no correct value once fold durations are long or variable… the structural fix is a lease
+heartbeat… flagged for its own entry"* — and this measurement is the trigger it named.
+
+> **⚠ Inference status.** 2.2× is **measured** at 318/361 aa. That it holds at 1652–2213 aa is
+> **assumed** — PAE is L×L and compression behaviour on a far larger float matrix is not
+> established by two small samples. The uplink figure is D-030's **estimate**, never measured.
+> The table is therefore *derived from one measurement and two unmeasured inputs*; its
+> conclusion is **"the argument no longer closes,"** not "the upload will take 21–45 minutes."
+
+---
+
+#### 2. What the rental tier is — a framing correction with Prime-Directive stakes
+
+The session opened with "build an API to a rented service." **D-011 does not describe a service
+with an API.** It rules a *one-time batch* of **"committed, reproducible code in this repo"**
+(the binding condition of D-009 §3), and D-004 §5 rules **out** "call a hosted inference API."
+D-011's deep-learning justification turns on precisely this line:
+
+> *"Renting a GPU changes whose silicon executes the model, not who runs it… categorically
+> different from calling a hosted inference API… The graded DL claim is unaffected."*
+
+**So the rental tier is not something we build an API *to*. It is the existing worker loop
+running on a rented box, calling the same four transport routes.** `worker/orchestrator.py` is
+transport-agnostic; `worker/http_client.py` already speaks the protocol; a rented A6000 runs
+`python -m worker.main` against `pharmfoldmdk.fly.dev` exactly as the local box does. The tier
+difference lives in the **FoldSpec** (fp16, unquantised, unchunked — D-011) and in **nothing
+about the transport**.
+
+**Why this is not pedantry:** if the rental tier were a hosted folding API, CLAUDE.md's Prime
+Directive would be in play — it forbids shipping "only a wrapper around an external service."
+The two readings of "rental API" are a defensible graded deliverable and an indefensible one.
+
+---
+
+#### 3. Three hazards the rental tier hits that the local tier structurally cannot expose
+
+Every fold to date is ≤361 aa on a local box. None of these is guarded by a test; none had been
+ruled.
+
+**(a) There is no HTTP timeout anywhere in the client — RULED: set one explicitly.**
+`worker/http_client.py:34` constructs `httpx.Client(base_url=base_url)` with **no `timeout`**.
+httpx defaults to 5 s on connect/read/write/pool. `_post` catches `httpx.HTTPError` → raises
+`TransportError` → the loop treats it as **retryable**, so a slow upload times out, retries,
+exhausts `submit_attempts`, and the job reaps and **re-folds on a paid card** — the exact cost
+D-030 named (*"a retry bug re-folds NOTCH2 up to three times on a paid card"*).
+
+**RULED: `httpx.Timeout(connect=10.0, read=300.0, write=300.0, pool=10.0)`.** A short connect
+timeout (a dead endpoint should fail fast) and a 5-minute read/write (an upload in progress is
+not a hung connection). **This fix lands regardless of §4** — it is independent of PAE size, and
+under option C a ~1 MB upload on a marginal uplink is still where an intermittent retry loop on
+a paid card comes from.
+
+**(b) Fly's request body limit is unruled and unverified — RULED: verify once, cost zero.**
+D-031 listed *"upload size limits"* as its concern and appears not to have ruled a number;
+`fly.toml` sets none. Under option C the rental upload is ~1 MB and any plausible limit passes,
+so this stops being a gate before paid time — **but it is still a fact nobody on this project
+has established.** A synthetic POST to `/jobs/{id}/artifacts` against prod settles it for free.
+
+**(c) The 512 MB transport machine buffers whole bodies — RULED: no change, with the coupling
+recorded.** `app/routes.py:artifacts` does `await pae.read()` (whole body into memory) on a
+`memory = "512mb"` machine. **Option C removes the pressure** — the largest upload becomes ~1 MB.
+The coupling between `[[vm]] memory` and max upload size is written down here so that raising
+one without the other is a visible mistake rather than a silent one. **If PAE ever returns to
+the upload path, this becomes live again.**
+
+---
+
+#### 4. RULED — PAE leaves the lease and is retrieved out-of-band (option C)
+
+**The claim→complete cycle uploads `structure.pdb` + `plddt.json` + `provenance.json` only
+(~1 MB even at 2213 aa). PAE is written to the rented box's local disk by a rental-scoped
+local-persist step wired into the loop — which does not exist today and is built by this entry —
+and transferred separately, in bulk, before pod termination via a dedicated retrieval route.**
+
+**⚠ Correction, verified at the tree and ratified 2026-07-23 — the seventh correction of the
+day and the most consequential.** `runner.write_artifacts` exists and is tested but has **no
+production caller** (verified: only `tests/test_runner.py:102,117`; `run_worker` folds in memory
+then uploads, `worker/main.py` adds no local write). The Planner's draft asserted this local
+persistence already happened; **it does not.** Had §1(b) landed on that premise, rental PAE would
+have existed only in `FoldResult.pae` and been discarded when the loop claimed the next job —
+**silent, unrecoverable loss on a paid fold**, precisely the §1(c) hazard, one layer deeper than
+the draft looked. *Function exists ≠ function runs* — a true statement with a false implication,
+the pattern this log exists to catch (method note item 4; cf. `params_all_on_cuda=True`). The
+Builder checked the claim against the tree instead of building it, which cost one exchange
+instead of a paid re-fold of 29 targets.
+
+**Why this shape rather than the two obvious alternatives:**
+
+- **vs. building the heartbeat now:** the heartbeat is D-030's correct long-term fix and it is
+  not retired here — but building it to protect an upload the pipeline does not need is solving
+  a self-inflicted problem. **If a real reap of live work occurs, the heartbeat lands then, on
+  evidence.**
+- **vs. simply dropping rental PAE (option B, the Planner's first recommendation):** B was
+  ruled against by the owner **on uniformity grounds**, and the objection is sound. B leaves the
+  cohort split — 42 local rows with `pae_json_path` populated, 29 rental rows null — which is a
+  provenance asymmetry the coverage line would have to carry forever, and it forecloses any
+  future cohort-wide PAE consumer without a **paid re-fold**.
+
+  > **Recorded honestly:** the Planner argued PAE is unread (Builder-verified against `main`:
+  > only the producer and a nullable column no code reads; D-027 rejected the one PAE-derived
+  > feature) and that "uniform" is partly illusory anyway, since **local PAE is int8/chunk-64 and
+  > rental PAE is fp16/unchunked** — a cohort-wide PAE analysis would compare two inference
+  > regimes. Both points stand. The owner's ruling is that preserving the option is worth ~1 hour
+  > of pod time, and **option C obtains uniformity without re-opening §1 or §3 at all**, which is
+  > why it supersedes both earlier options rather than splitting the difference.
+
+**What this buys, stated as the reason it was chosen:** the lease pressure, the write-timeout
+exposure, the body-limit question, and the 512 MB memory coupling are **all consequences of one
+thing — PAE size inside the claim→complete cycle.** Moving PAE out of that cycle dissolves four
+problems at once *and* keeps the artifact. Nothing is traded away except an operational step.
+
+**The operational step is real and is named, not assumed.** D-011 rules **no network volumes**
+(*"download weights, fold, upload artifacts, terminate"*), so PAE on container disk is
+**destroyed on termination**. Retrieval is therefore a **blocking pre-termination step**, not a
+convenience: the batch is not done when the last fold completes; it is done when PAE is off the
+box. The rented machine's uplink is datacentre-grade, so ~0.6–1.3 GB is minutes, not the hours
+the same transfer would take from the house — which is the whole reason this option costs almost
+nothing.
+
+**Ruled mechanism (2026-07-23, three rulings):**
+
+1. **A dedicated fifth transport route — `POST /jobs/{id}/pae` — not a widening of the upload
+   route** (D-030's discipline: *a fifth route, not by widening an existing one*). It writes the
+   gzipped PAE to the Volume and sets `pae_json_path` in the **same `persist_fold`-style
+   compensated Volume+DB boundary** (D-031 (a)), so the file and the column cannot diverge;
+   idempotent (a re-run after a partial transfer converges); bearer-guarded like the other four,
+   so D-034's prefix property holds unchanged (`/jobs` guarded, `/api` open, no third category).
+   Chosen over a `fly ssh sftp` script because the route is **hermetically testable and atomic**
+   where the script is neither; a route that outlives its one-time batch is a smaller cost than an
+   untestable transfer that silently half-completes.
+2. **Local persistence is rental-scoped and opt-in.** The loop persists PAE to
+   `{WORKER_ARTIFACT_DIR}/{job_id}/` **only when `WORKER_ARTIFACT_DIR` is set** — local-tier
+   behaviour and disk cost are unchanged, and `write_artifacts` finally gets its production
+   caller. A **PAE-only** write: `structure`/`plddt`/`provenance` already persist server-side via
+   upload, so duplicating them on the pod buys nothing.
+3. **Sequencing (part 1 / part 2).** §3(a)'s timeout fix, the D-030/D-031 amendments, and the
+   ARCHITECTURE row are independent and land first (**part 1**). §1(b) (upload omits PAE) + the
+   rental-scoped local-persist wiring + the new route land **together** (**part 2**) — removing
+   PAE from the upload before the local write and the route exist is exactly the silent-drop
+   window this correction exposed.
+
+**Landing location:** the Fly Volume, under each analysis's existing artifact directory, so the
+rental cohort's on-disk shape matches the local cohort's. **`pae_json_path` is populated for
+every row in both tiers** — the uniformity the ruling exists to obtain.
+
+---
+
+#### 5. Deep-learning justification
+
+Direct, and it is why §2's correction matters. D-011's DL claim survives renting *silicon*
+because we control the checkpoint, precision, chunking, and code, and we perform the inference —
+the distinction the Prime Directive turns on. An entry that built "an API to a rented folding
+service" would trade a defensible graded claim for a wrapper around an external service (D-004
+§5). The rental tier is also what folds the 29 above-ceiling targets, moving the coverage line
+(D-024) from **40/82 to 69/82 ranked-and-folded** and supplying the extractor (D-027).
+
+---
+
+#### 6. Consequences / follow-ups
+
+- **Coverage is unchanged by the PAE ruling.** All 29 rental targets fold and land either way;
+  PAE is a confidence matrix shipped *alongside* the structure, not the structure. The 13
+  no-topology rows remain unfoldable by any tier (D-021 §1a) — **the rental cohort is 29**
+  (13 `unmeasured_local_ceiling` + 16 `over_local_ceiling`), not 42.
+- **D-030 is amended:** the 5–10× estimate is falsified at 2.2×; `DEFAULT_STALE_SECONDS = 3600`
+  **stays PROVISIONAL with its justification recorded as weakened, not retired.** This entry
+  does not change the number — it removes the reasoning that made it look safe, and option C
+  restores the margin by a different route.
+- **D-031's PAE ruling is amended** with the measured ratio in place of the estimate.
+- **The heartbeat remains unbuilt and its trigger is restated:** any observed reap of live work,
+  or PAE returning to the upload path.
+- **D-034 (the read API) needs no change.** Rental folds land in the same table with the same
+  `meta` shape and a populated `pae_json_path`. No PAE route exists and none is added.
+- **Test surface (written before the code):** the client sets an explicit timeout (assert the
+  configured `httpx.Timeout`, not the default); `upload` omits PAE while a **rental-scoped**
+  local-persist step (`WORKER_ARTIFACT_DIR` set → `write_artifacts`, its first production caller)
+  writes `pae.json` to the pod disk (the two must not be coupled); the loop's existing guarantees
+  are unchanged (fold once per claim; upload before complete).
+- **Sequencing:** §3(a)'s timeout fix and the upload change are ordinary PRs through the gate.
+  **Neither requires the A6000**, so both land before any paid time is bought.
+
+---
+
 ### D-034 — The read API: route shape, PDB serving, and an asymmetric auth posture
 - **Date:** 2026-07-23
 - **Status:** **Accepted (2026-07-23)** — owner-ruled on auth posture and co-serving; the
@@ -778,6 +1011,13 @@ So the rule is not "be careful" — it is:
   is a few minutes, inside the lease. So the **worker compresses** PAE and the **endpoint stores the compressed bytes**
   (the compression is client-side work, not a route concern).
 
+  > **⚠ Amended by D-035 (2026-07-23).** The 5–10× ratio is **falsified — measured 2.2×**
+  > (`ls -l /data/artifacts/1/`: 824,489 B gz from ~1.8 MB raw, 318 aa). The estimate and the
+  > *"a few minutes, inside the lease"* conclusion it supported **do not hold**: a ~34–45 MB
+  > compressed PAE at 2213 aa is ~21–45 min of upload alone. The compress-and-store *intent* is
+  > preserved and better served — **D-035 moves PAE out of the claim→complete cycle entirely**
+  > (retrieved out-of-band, option C). Kept rather than deleted; the reversal is itself evidence.
+
   **Store rather than discard:** nothing consumes PAE today (see the Builder note), so discard
   was viable and free — but D-027 deferred-not-dismissed a PAE-derived feature, and recovering a
   discarded PAE means a **paid re-fold** of the cohort. Compress-and-store buys that optionality
@@ -988,6 +1228,13 @@ So the rule is not "be careful" — it is:
   cache-generation (D-011) and not latency-sensitive. 60 min sits above the worst plausible
   end-to-end for the largest folds (1652–2213 aa plus a large PAE upload over residential
   bandwidth) while the cost of the raise stays negligible.
+
+  > **⚠ Amended by D-035 (2026-07-23).** The clause *"plus a large PAE upload over residential
+  > bandwidth"* rested on the 5–10× gzip estimate, now **falsified at 2.2×** — so this
+  > justification is **weakened, not retired**: `DEFAULT_STALE_SECONDS = 3600` is **unchanged and
+  > still PROVISIONAL**. D-035's option C removes PAE from the upload path, restoring the margin by
+  > a different route; the structural fix (a lease heartbeat) stays unbuilt, its trigger restated
+  > (an observed reap of live work, or PAE returning to the upload path).
 
   Labelled **`PROVISIONAL — unmeasured under HTTP transport`** in the D-023 (iii) manner, retired
   by the named measurement: first end-to-end large-rental fold, claim-stamp → upload-complete.
