@@ -45,6 +45,19 @@ def _client(handler) -> HttpQueueClient:
     return HttpQueueClient("http://fly.test", TOKEN, client=http)
 
 
+# ── unit: the client sets an explicit timeout (D-035 §3a) ─────────────────────
+
+def test_client_sets_an_explicit_timeout_not_the_5s_default():
+    """With no injected client the client builds its own — and it must NOT inherit httpx's 5 s
+    default. A 5 s read/write times out a slow upload → `_post` raises `TransportError` → the loop
+    retries → exhausts `submit_attempts` → the job reaps and **re-folds on a PAID card** (D-030's
+    named cost). Assert the configured values, not merely that a timeout exists — a test that
+    passed against the 5 s default would prove nothing."""
+    qc = HttpQueueClient("http://fly.test", TOKEN)          # no client injected → builds its own
+    t = qc._client._timeout
+    assert (t.connect, t.read, t.write, t.pool) == (10.0, 300.0, 300.0, 10.0)
+
+
 # ── unit: claim ──────────────────────────────────────────────────────────────
 
 def test_claim_parses_inline_fold_spec():

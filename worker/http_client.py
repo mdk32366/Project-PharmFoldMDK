@@ -24,6 +24,14 @@ import httpx
 
 from worker.orchestrator import FoldSpec, TransportError
 
+# Explicit transport timeout (D-035 §3a). httpx defaults to 5 s on ALL of connect/read/write/pool;
+# a 5 s read/write times out a slow upload, `_post` maps it to a (retryable) TransportError, the
+# loop retries → exhausts `submit_attempts` → the job reaps and **re-folds on a PAID card** (the
+# exact cost D-030 named). A short connect (a dead endpoint should fail fast) with a 5-minute
+# read/write (an upload in progress is not a hung connection) chooses every value rather than
+# inheriting a default.
+DEFAULT_TIMEOUT = httpx.Timeout(connect=10.0, read=300.0, write=300.0, pool=10.0)
+
 
 class HttpQueueClient:
     """A ``QueueClient`` over HTTP to the Fly transport. One shared bearer token on
@@ -31,7 +39,7 @@ class HttpQueueClient:
     credential."""
 
     def __init__(self, base_url: str, token: str, *, client: Optional[httpx.Client] = None) -> None:
-        self._client = client or httpx.Client(base_url=base_url)
+        self._client = client or httpx.Client(base_url=base_url, timeout=DEFAULT_TIMEOUT)
         self._headers = {"Authorization": f"Bearer {token}"}
 
     # ── the four QueueClient methods ─────────────────────────────────────────

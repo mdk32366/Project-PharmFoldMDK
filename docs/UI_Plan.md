@@ -1,5 +1,10 @@
 # UI Plan: PharmFoldMDK
 
+> **⚠ SUPERSEDED IN FULL (2026-07-23) by [`docs/UI_Plan_v2.md`](UI_Plan_v2.md).** This July-16
+> document predates D-011/D-015/D-024/D-026/D-028/D-031/D-033 and names Streamlit + `py3Dmol`;
+> the React work is built against v2, not this file. Kept for provenance only. Where this and
+> the decision log or v2 diverge, they win (CLAUDE.md rule 3).
+
 **Project**: PharmFoldMDK – AI-Powered Protein Structure Prediction & Pharmaceutical Analysis Platform  
 **Date**: July 16, 2026  
 **Primary Technology**: Streamlit (with FastAPI backend support)
