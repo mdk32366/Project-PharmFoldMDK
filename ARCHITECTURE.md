@@ -52,7 +52,12 @@ amended). PR A shipped the shell; **PR B the single-target view** — a 3Dmol.js
 per-residue by pLDDT from the `/plddt` array (**not** the PDB B-factor column, whose scale is
 unverified — S-001), a confidence element with the D-039 bands and the cohort-max caveat, and a
 provenance panel that makes "we ran ESMFold ourselves, at a named revision" checkable. 3Dmol is a
-lazy-loaded chunk (the list page stays ~57 KB gzip). The coverage view is PR C.
+lazy-loaded chunk (the list page stays ~57 KB gzip). **PR C the coverage view** — the honest
+`ranked ∧ folded = 40 of 82` line (computed client-side from `/api/coverage`'s `disposition` +
+`fold_status`, never the manifest's 67 or the folded 42, D-024), the full-82 drill-down with
+held-out/excluded reachable by name (D-022), a method note (D-028 non-goals as commitments), and
+the ADC-context onboarding (UI Plan v2 §7). That **closes UI Plan v2 steps 2–5**; the ranking table
+(step 6, the demo centrepiece) waits on the scorer (D-027 → fit) and is deliberately not mocked.
 **Next (owner-gated):** the app-scoped token + Fly app/Postgres/secrets provisioning so the first
 real deploy goes green; then starting the worker for the first end-to-end large rental fold — which
 retires the PROVISIONAL 60-min lease threshold (D-030) and D-031's estimated PAE ratio with measured

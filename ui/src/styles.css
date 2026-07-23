@@ -75,3 +75,38 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .provenance dt { color: var(--muted); font-size: 0.85rem; }
 .provenance dd { margin: 0; font-size: 0.85rem; word-break: break-word; }
 .note { color: var(--muted); font-size: 0.82rem; margin-top: 0.6rem; }
+
+/* header nav (PR C) */
+.app-nav { display: flex; gap: 1rem; margin-left: auto; }
+.app-nav a { color: var(--muted); font-size: 0.9rem; }
+.app-nav a.active { color: var(--ink); }
+
+/* prose pages (method note, ADC context) */
+.prose { max-width: 44rem; }
+.prose h2 { margin-top: 0; }
+.prose h3 { margin-top: 1.6rem; }
+.prose ul { padding-left: 1.1rem; }
+.prose li { margin: 0.3rem 0; }
+.adc-parts { list-style: none; padding-left: 0; }
+.adc-parts li { padding: 0.4rem 0.7rem; border-left: 3px solid var(--line); margin: 0.35rem 0; }
+.prose code { background: var(--panel); padding: 0 0.3rem; border-radius: 3px; }
+
+/* coverage line */
+.coverage-headline { font-size: 1.4rem; margin: 0 0 0.3rem; }
+.coverage-headline strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.coverage-sub { color: var(--muted); font-size: 0.88rem; margin: 0 0 0.8rem; }
+.partition { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+.partition li { display: flex; align-items: baseline; gap: 0.6rem; }
+.partition .cell-n { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right; }
+.partition .cell-detail { color: var(--muted); font-size: 0.85rem; }
+.breakouts { color: var(--muted); font-size: 0.85rem; margin: 0.7rem 0 0; }
+
+/* cohort table */
+.cohort-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.88rem; }
+.cohort-table th, .cohort-table td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--line); }
+.cohort-table th { color: var(--muted); font-weight: 600; }
+.cohort-table .disp-excluded { color: #f0a0a0; }
+.cohort-table .disp-held_out { color: #f0c674; }
+.cohort-table .folded { color: #7fd1a3; }
+.cohort-table .not-folded { color: var(--muted); }
+.cohort-table .note-cell { color: var(--muted); font-size: 0.82rem; }
