@@ -69,6 +69,14 @@ def test_copies_the_serving_packages(dockerfile, pkg_dir):
         f"DEP-001: the serving image must copy {pkg_dir}/"
 
 
+def test_copies_data_for_the_manifest(dockerfile):
+    # D-038: GET /api/coverage computes core/manifest.py from data/cohort_82_ecd.csv at request
+    # time. Without data/ in the image the route passes locally and 500s in prod — so the copy is
+    # pinned here rather than left to a reviewer's eye. (data/ is CSVs, not the GPU world.)
+    assert "copy data" in dockerfile.lower(), \
+        "D-038: the serving image must copy data/ so core/manifest.py can compute coverage"
+
+
 # ── .dockerignore excludes the worker tier at the context level too ───────────
 
 def test_dockerignore_excludes_worker_and_cruft():

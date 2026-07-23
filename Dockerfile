@@ -25,6 +25,10 @@ RUN pip install --no-cache-dir --require-hashes -r requirements.lock
 COPY app/ ./app/
 COPY core/ ./core/
 COPY db/ ./db/
+# data/ — the committed cohort CSVs core/manifest.py reads (D-020). GET /api/coverage (D-038)
+# computes the manifest at request time, so without data/ in the image the route works locally
+# and 500s in production. This is data, not the GPU world — DEP-001's exclusion is worker/CUDA.
+COPY data/ ./data/
 
 EXPOSE 8080
 # app_from_env builds the engine + settings from the environment (D-031); --factory because

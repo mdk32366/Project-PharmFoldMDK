@@ -263,8 +263,9 @@ def test_auth_property_jobs_guarded_api_open_no_third_category(engine, tmp_path)
         else:
             pytest.fail(f"route {path} matches neither /jobs nor /api — third category")
     # Both namespaces are actually present, so the assertions above weren't vacuous.
-    # Five /jobs routes since D-036 (claim/artifacts/complete/fail/pae), four /api since D-034.
-    assert checked["jobs"] >= 5 and checked["api"] >= 4
+    # Five /jobs routes since D-036 (claim/artifacts/complete/fail/pae); five /api since D-038
+    # (analyses, analyses/{id}, .../structure, .../plddt, coverage).
+    assert checked["jobs"] >= 5 and checked["api"] >= 5
 
 
 def test_auth_property_holds_behaviourally(engine, tmp_path):
