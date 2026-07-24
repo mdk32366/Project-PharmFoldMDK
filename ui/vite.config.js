@@ -7,4 +7,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: { outDir: 'dist' },
+  // D-046: the vitest harness. Vite ignores this key; vitest reads it. `plugins` and `build`
+  // above are untouched, so `vite build`'s output is byte-identical with or without vitest
+  // installed. jsdom + globals + the jest-dom setup are what @testing-library/react needs to
+  // assert on rendered output; nothing here is imported by any source module, so none of it
+  // enters the bundle.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test-setup.js',
+  },
 })

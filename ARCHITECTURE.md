@@ -49,7 +49,11 @@ The **React bundle** (DEP-006; `ui/`, Vite build) now ships in that image and is
 FastAPI app under `/` — **one process, two things** — with `/api`/`/jobs` matched *before* the SPA
 fallback (route ordering, asserted). Its JS toolchain is pinned by `package-lock.json` + `npm ci`
 (D-037): a **third dependency world** outside D-013's hash guarantee, acceptable because it is
-build-time only (like D-018's GPU tier). **A green deploy now means a UI is reachable** (DEP-004
+build-time only (like D-018's GPU tier). **D-046 adds a test harness to that world** — `vitest` +
+`@testing-library/react` + `@testing-library/jest-dom` + `jsdom` as **devDependencies**, run by the
+gate's `test` job (`npm ci && npm run test` in `ui/`); these are *weaker still* than build-time deps
+(neither runtime nor bundle-output), and the image-contents test guarantees none of them cross the
+stage boundary into the runtime image. **A green deploy now means a UI is reachable** (DEP-004
 amended). PR A shipped the shell; **PR B the single-target view** — a 3Dmol.js structure coloured
 per-residue by pLDDT from the `/plddt` array (**not** the PDB B-factor column, whose scale is
 unverified — S-001), a confidence element with the D-039 bands and the cohort-max caveat, and a
@@ -311,6 +315,13 @@ green suite until a Postgres CI job exposed it.
   tier and gets its own manifest with `worker/`.
   *Residual:* the lock fixes versions and hashes, not index availability — a PyPI outage still
   reddens the gate and is not attributable to a commit.
+- **UI component tests in the `test` job (D-046).** The `test` job gains a Node step
+  (`actions/setup-node`, Node 20 to match the Dockerfile builder) running **`npm ci && npm run
+  test`** in `ui/` — `npm ci` enforces the committed `package-lock.json` (D-037: fails on drift,
+  never rewrites it), and `vitest run` executes the component suite non-interactively. It runs in
+  the same *required* `test` job, not a separate one, so a red UI test blocks the gate: a UI step
+  that could not fail would read as coverage without being it. The test devDependencies are
+  build-time-only and never reach the runtime image (image-contents test, D-046 §2).
 - **Postgres integration job (D-017) — the seam's other half.** A second CI job, `postgres`,
   stands up a real **Postgres 16** service container (matching prod, D-014), installs the same
   locked deps, applies migrations with **`alembic upgrade head`** (the real chain, *not*

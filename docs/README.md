@@ -80,6 +80,134 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-046 — Component tests for the UI, and the two-population provenance render
+
+- **Date:** 2026-07-24
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-037 (the JS toolchain as a third dependency world — this adds to it),
+  DEP-006 (the two-stage image that makes the addition safe), D-045 (the two populations this
+  renders), D-016 (a claim names how it is known), D-028 (attribution, not explanation).
+- **Amends:** nothing. This closes a gap rather than reversing a ruling.
+
+---
+
+#### 1. Context — the test rule has not been reaching the UI
+
+The project's binding rule is **tests first, code later**, and nothing deploys unmerged-untested
+(D-005/D-008). For Python that holds: 222 tests across 46 files. For the React tier it does not,
+and the reason is mechanical rather than deliberate.
+
+**Provenance (D-016).** `ui/package.json` at `3ccdcc5` declares four dependencies and two
+devDependencies — `@vitejs/plugin-react`, `vite`. **No test runner.** `find ui -name "*.test.*"
+-o -name "*.spec.*"` (excluding `node_modules`) → **zero files.** The one UI-adjacent test,
+`tests/test_ui_serving.py`, is Python and asserts *route ordering and bundle serving* — that
+`/api` and `/jobs` match before the SPA fallback — **not component behaviour**. So every component
+shipped to date (TargetList, TargetView, Confidence, PlddtPlot, StructureViewer, Provenance,
+CoverageView, CoverageLine, MethodNote, AdcContext) is **unverified by any automated test**.
+
+This is stated as a finding, not a fault: PR A–C shipped under a real deadline and the gap was
+invisible while the components were simple renderers. It becomes load-bearing now because
+**UI-depth §3.1–§3.4 queues four more components**, the first of which (this one) must render a
+*correctness-relevant distinction* — captured vs. not-captured environment — where a silent
+render bug produces a **plausible-looking but false provenance claim**. That is the one class of
+UI bug this project cannot tolerate, because the provenance panel exists precisely to make the
+Prime Directive claim checkable.
+
+---
+
+#### 2. Decision (1) — add `vitest` + `@testing-library/react` as devDependencies
+
+- **`vitest`** (not jest): it reads the existing `vite.config.js` and the project's ESM/JSX setup
+  with no second toolchain. A jest install would need its own transform config — a second build
+  description of the same source, and a drift surface.
+- **`@testing-library/react`** + **`jsdom`**: assert on **rendered output as a reader encounters
+  it** (visible text, roles) rather than component internals. This matters for the specific bug
+  class above: the test should fail when a reader would see a wrong claim, not when a prop is
+  renamed.
+- **`npm ci` still governs** (D-037) — new devDependencies land in the committed
+  `package-lock.json` as a reviewable diff.
+
+**Why this is acceptable under D-037's third-dependency-world framing.** D-037 accepted the JS
+toolchain's weaker (lockfile, not hash-verified) guarantee because it is **build-time only** —
+nothing it installs reaches the runtime image, so a drifted dependency affects the bundle
+produced, not the server running. **Test dependencies are strictly weaker still: they are neither
+runtime nor build-output.** They run in CI and on a developer machine; they contribute *nothing*
+to `npm run build`'s output.
+
+**Verified against the artefact, not assumed** (D-016): `Dockerfile` stage 1 runs `npm ci` (which
+does install devDependencies) but stage 2 copies **only `/ui/dist`** — `COPY --from=ui-build
+/ui/dist ./ui_dist`. No `node_modules`, no Node binary, crosses the stage boundary.
+`tests/test_image_contents.py` asserts that shape and reddens if a future edit breaks it. So the
+blast radius of a compromised test dependency is a developer machine and a CI runner — **not the
+deployed image**, which is the property D-037's reasoning turns on.
+
+**What this does NOT provide, stated so it is not over-read.** Component tests assert that a
+component renders correctly *given props*. They do **not** assert that the supplier provides those
+props, that the API contract holds, or that the deployed bundle works — those remain the Python
+tests' and the deploy gate's job. This closes a component-behaviour gap, not an end-to-end one.
+
+---
+
+#### 3. Decision (2) — the two-population render rule (the thing being tested)
+
+D-045 split the cohort: **pre-D-045 folds carry no environment record; post-D-045 folds do.** The
+panel renders that split honestly. Three rules, and each is a test:
+
+1. **An absent field reads as _not captured_, never as a value and never as an em-dash that could
+   be mistaken for "none."** The existing panel renders `'—'` for any null, which is correct for
+   `ecd_start` on a whole-chain fold (genuinely not applicable) but **wrong for `torch_version`**,
+   where the honest statement is *"this fold predates environment capture."* Conflating
+   *not-applicable* with *not-recorded* is the D-024 failure in miniature — the same reason
+   `fold_status` needed three states rather than two (D-043).
+
+2. **The gap is named once, at the population level, not repeated per field.** A pre-D-045 fold
+   shows a single note explaining that environment capture began at D-045 and this fold predates
+   it — with the *reason* (the record is written worker-side and cannot be reconstructed), not just
+   a flag. D-022's rule: a boolean is not a reason.
+
+3. **Environment fields are visually grouped and labelled as the environment**, distinct from the
+   recipe (`dtype`/`chunk_size`) and the weights (`model_id`/`model_revision`). The three answer
+   different questions — *what ran*, *how it ran*, *what it ran on* — and D-028's rule against
+   collapsing distinct classes applies to a provenance panel as much as to a score.
+
+**Deliberately not done:** no per-target "provenance completeness" score, no percentage, no badge
+ranking folds by how well documented they are. That would invite reading a *documentation* property
+as a *quality* property — and it is the pre-work's trap (c): every addition must show more of what
+the system does not know, never manufacture confidence. A fold from an unrecorded torch build is
+not a worse fold; it is a fold we can say less about.
+
+---
+
+#### 4. Deep-learning justification
+
+The provenance panel is where the Prime Directive claim — *"we ran ESMFold ourselves, at a named
+revision"* — is made **checkable rather than asserted** (ARCHITECTURE §1). D-045 established that
+the claim is weaker than it looks without the framework build underneath the weights. This entry
+makes the *rendering* of that claim testable, which is what stops it from silently degrading into
+a stronger claim than the data supports. **A provenance panel that renders a missing field as
+present is worse than no panel**: it converts an honest gap into a false assurance, and a reader
+(a professor, a reviewer) has no way to detect it. The tests exist for exactly that failure.
+
+---
+
+#### 5. Consequences
+
+- `ui/package.json` gains `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`
+  as **devDependencies**; `package-lock.json` updated via `npm ci`-compatible install; a
+  `"test": "vitest run"` script.
+- `vite.config.js` gains a `test` block (jsdom environment). No change to the build output.
+- **CI runs the UI tests** — the gate must execute them or the rule is decorative. The `test` job
+  gains a Node step running `npm ci && npm run test` in `ui/`.
+- **`tests/test_image_contents.py` remains the guarantee** that none of this reaches runtime; if a
+  future edit copies `node_modules` into stage 2, it reddens. No change needed to it now.
+- `ARCHITECTURE.md` updated in the same PR (the dependency-world description and the CI shape).
+- **Follow-on:** §3.2–§3.4 (tier legibility, band recompute, per-residue distribution) are built
+  tests-first under this harness. The existing untested components are **not** retro-tested in this
+  PR — that is a separate, non-blocking cleanup, named here so it is a known debt rather than an
+  omission.
+
+---
+
 ### D-045 — Fold provenance captures the software environment, forward from now
 - **Date:** 2026-07-24
 - **Status:** Proposed → Accepted on merge.
