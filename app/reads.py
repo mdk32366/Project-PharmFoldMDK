@@ -34,7 +34,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.manifest import ManifestRow, build_manifest, coverage
-from db.models import ProteinAnalysis
+from core.queue import FAILED
+from db.models import JobRecord, ProteinAnalysis
 
 # Meta keys carried into the light list, in payload order (D-034 decision 1 / Orders §1).
 _LIST_META_KEYS = (
@@ -128,11 +129,41 @@ def _folded_accessions(engine: Any) -> dict[str, int]:
     return {input_value: pid for pid, input_value in pairs}
 
 
-def _coverage_row(row: ManifestRow, folded: dict[str, int]) -> dict[str, Any]:
+def _failed_accessions(engine: Any) -> dict[str, str | None]:
+    """``{accession: error}`` for every target whose latest job is **terminally** ``failed`` (D-043).
+
+    The mirror of ``_folded_accessions``: a ``failed`` job is *attempted-and-failed*, a state D-024
+    requires be shown as distinct from *never-attempted*. Same accession-in-``input_value`` join key
+    (uniprot inputs only). **Only the terminal ``FAILED`` status counts** — ``claimed``/``pending``
+    are in-flight (D-030's status machine), so a target being re-folded never reads as a failure.
+    Ordered by job ``id`` so that where multiple failed jobs share an accession the **latest** wins;
+    a ``folded`` row overrides this entirely at the call site (fold success is the truth)."""
+    with Session(engine) as s:
+        pairs = s.execute(
+            select(ProteinAnalysis.input_value, JobRecord.error)
+            .join(JobRecord, JobRecord.analysis_id == ProteinAnalysis.id)
+            .where(ProteinAnalysis.input_type == "uniprot")
+            .where(JobRecord.status == FAILED)
+            .order_by(JobRecord.id)
+        ).all()
+    return {input_value: error for input_value, error in pairs}
+
+
+def _coverage_row(row: ManifestRow, folded: dict[str, int],
+                  failed: dict[str, str | None]) -> dict[str, Any]:
     """One manifest row projected for the coverage drill-down, joined to fold state. ``fold_status``
-    is the one field neither source has alone (D-038); ``exclusion_reason`` carries the *reason*, not
-    just the flag (D-022 — a boolean is not a reason)."""
+    is the one field neither source has alone (D-038), now three-valued (D-043):
+    ``folded`` (a completed row exists) ▸ ``failed`` (else a terminal failed job exists) ▸
+    ``not_folded``. ``fail_reason``/``exclusion_reason`` carry the *reason*, not just a flag (D-022 —
+    a boolean is not a reason). Precedence puts ``folded`` first so a target that failed once and
+    later folded reads ``folded``."""
     analysis_id = folded.get(row.accession)
+    if analysis_id is not None:
+        fold_status, fail_reason = "folded", None
+    elif row.accession in failed:
+        fold_status, fail_reason = "failed", failed[row.accession]
+    else:
+        fold_status, fail_reason = "not_folded", None
     return {
         "accession": row.accession,
         "gene": row.gene,
@@ -143,7 +174,8 @@ def _coverage_row(row: ManifestRow, folded: dict[str, int]) -> dict[str, Any]:
         "disposition": row.disposition,
         "excluded": row.excluded,
         "exclusion_reason": row.exclusion_reason,
-        "fold_status": "folded" if analysis_id is not None else "not_folded",
+        "fold_status": fold_status,
+        "fail_reason": fail_reason,
         "analysis_id": analysis_id,
     }
 
@@ -155,10 +187,18 @@ def coverage_payload(engine: Any) -> dict[str, Any]:
     The **cohort is the manifest, not the database** — ``build_manifest`` computes all 82 from the
     committed CSVs deterministically (D-023). Reading the denominator from ``protein_analyses`` would
     make it a function of how much work has happened, the self-flattering failure D-024 forbids. The
-    DB contributes only which of those 82 have folded."""
+    DB contributes only which of those 82 have folded, and (D-043) which were attempted and failed.
+
+    ``failed`` is a **sibling** of ``coverage``, deliberately outside its partition: the ``coverage``
+    object stays pure-manifest and keeps ``ranked + held_out + excluded == denominator`` (D-038's
+    invariant). ``failed`` is a DB-join fact — a subset of what used to count as ``not_folded`` — so
+    it is reported alongside, never summed in."""
     rows = build_manifest()
     folded = _folded_accessions(engine)
+    failed = _failed_accessions(engine)
+    projected = [_coverage_row(r, folded, failed) for r in rows]
     return {
         "coverage": coverage(rows),
-        "rows": [_coverage_row(r, folded) for r in rows],
+        "failed": sum(1 for r in projected if r["fold_status"] == "failed"),
+        "rows": projected,
     }

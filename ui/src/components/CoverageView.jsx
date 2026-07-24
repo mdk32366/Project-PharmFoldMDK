@@ -4,9 +4,10 @@ import { getCoverage } from '../api.js'
 import CoverageLine from './CoverageLine.jsx'
 
 // The full cohort (UI Plan v2 §3.3): all 82 reachable — what is ranked, held out and why, excluded
-// and why by name, folded and not-yet. Held-out and excluded rows are PRESENT, not silently absent
-// (D-022: "MUC16 is CA-125; a reviewer who knows the field notices its absence immediately"). The
-// data is served nowhere by the read list — it comes from GET /api/coverage (D-038).
+// and why by name, folded, failed (with reason), and not-yet. Held-out and excluded rows are PRESENT,
+// not silently absent (D-022: "MUC16 is CA-125; a reviewer who knows the field notices its absence
+// immediately"). fold_status is three-valued (D-043): attempted-and-failed is shown as distinct from
+// never-attempted, with jobs.error as the reason. Served by GET /api/coverage (D-038), not the list.
 const ORDER = { excluded: 0, held_out: 1, ranked: 2 }
 
 export default function CoverageView() {
@@ -45,10 +46,14 @@ export default function CoverageView() {
               <td className="mono">{r.accession}</td>
               <td>{r.disposition}</td>
               <td>{r.tier}{r.tier_reason ? ` · ${r.tier_reason}` : ''}</td>
-              <td>{r.fold_status === 'folded'
-                ? <span className="folded">folded</span>
+              <td>{
+                r.fold_status === 'folded' ? <span className="folded">folded</span>
+                : r.fold_status === 'failed' ? <span className="failed">failed</span>
                 : <span className="not-folded">not yet</span>}</td>
-              <td className="note-cell">{r.excluded ? r.exclusion_reason : ''}</td>
+              <td className="note-cell">{
+                r.excluded ? r.exclusion_reason
+                : r.fold_status === 'failed' ? r.fail_reason
+                : ''}</td>
             </tr>
           ))}
         </tbody>

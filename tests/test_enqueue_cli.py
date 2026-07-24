@@ -13,8 +13,9 @@ import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
-from core.enqueue import FetchedSequence, _build_engine, run, select_rows
+from core.enqueue import FetchedSequence, _build_engine, requeue_jobs, run, select_rows
 from core.manifest import build_manifest
+from core.queue import CLAIMED, COMPLETE, FAILED, PENDING
 from db.models import Base, JobRecord, ProteinAnalysis
 
 ROWS = build_manifest()
@@ -109,6 +110,85 @@ def test_subset_then_full_cohort_idempotent_on_overlap(engine):
         assert len(jobs) == 1
         # full cohort is 80 foldable jobs total (2 excluded), not 81
         assert s.scalar(select(func.count()).select_from(JobRecord)) == 80
+
+
+# ── requeue: the deliberate re-fold path (D-044) ──────────────────────────────
+
+def _seed_job(engine, accession: str, status: str, *, attempts: int = 3,
+              error: str | None = "boom", pdb_path: str | None = None) -> int:
+    """A protein_analyses row + a jobs row in `status` — the enqueue's output, reproduced
+    directly so a requeue can act on it. Returns the job id."""
+    with Session(engine) as s:
+        pa = ProteinAnalysis(input_type="uniprot", input_value=accession,
+                             structure_source="esmfold", pdb_path=pdb_path, meta={"gene": "SEED"})
+        s.add(pa)
+        s.flush()
+        job = JobRecord(analysis_id=pa.id, status=status, attempts=attempts,
+                        error=error, worker_id="w-old", inference_settings={})
+        s.add(job)
+        s.flush()
+        jid = job.id
+        s.commit()
+    return jid
+
+
+def test_requeue_resets_a_failed_job_to_pending(engine):
+    jid = _seed_job(engine, "P11717", FAILED, attempts=3, error="CUDA OOM: 230 GiB")
+    summary = requeue_jobs_on(engine, ["P11717"])
+    assert summary.requeued == 1 and summary.skipped_complete == 0 and summary.not_found == []
+    with Session(engine) as s:
+        job = s.get(JobRecord, jid)
+        assert job.status == PENDING          # claimable again
+        assert job.attempts == 0              # a deliberate retry gets a full budget (D-044)
+        assert job.error is None and job.claimed_at is None and job.worker_id is None
+
+
+def test_requeue_resets_a_stuck_claimed_job(engine):
+    # the real state of last night's five: crashed mid-fold, left claimed, no prod reaper
+    jid = _seed_job(engine, "Q04721", CLAIMED, error=None)
+    assert requeue_jobs_on(engine, ["Q04721"]).requeued == 1
+    with Session(engine) as s:
+        assert s.get(JobRecord, jid).status == PENDING
+
+
+def test_requeue_never_touches_a_complete_job(engine):
+    jid = _seed_job(engine, "Q96NY8", COMPLETE, attempts=1, error=None,
+                    pdb_path="/data/artifacts/1/structure.pdb")
+    summary = requeue_jobs_on(engine, ["Q96NY8"])
+    assert summary.requeued == 0 and summary.skipped_complete == 1
+    with Session(engine) as s:
+        assert s.get(JobRecord, jid).status == COMPLETE     # a good fold is never destroyed
+
+
+def test_requeue_reports_an_unknown_accession(engine):
+    summary = requeue_jobs_on(engine, ["NOPE"])
+    assert summary.requeued == 0 and summary.not_found == ["NOPE"]
+
+
+def test_run_requeue_exits_nonzero_on_unknown_and_zero_on_success(engine):
+    _seed_job(engine, "P11717", FAILED)
+    assert run(["--requeue", "P11717"], engine_factory=lambda: engine, fetch=_fake_fetch) == 0
+    assert run(["--requeue", "NOPE"], engine_factory=lambda: engine, fetch=_fake_fetch) == 1
+
+
+def test_run_requeue_never_fetches_and_creates_nothing(engine):
+    # requeue only moves existing jobs — it must not fetch a sequence or write a new row
+    def _boom_fetch(acc):
+        raise AssertionError("requeue must not fetch sequences")
+    _seed_job(engine, "P23471", FAILED)
+    before = _job_count(engine)
+    run(["--requeue", "P23471"], engine_factory=lambda: engine, fetch=_boom_fetch)
+    assert _job_count(engine) == before             # no new job/analysis rows
+
+
+def _job_count(engine) -> int:
+    with Session(engine) as s:
+        return s.scalar(select(func.count()).select_from(JobRecord))
+
+
+def requeue_jobs_on(engine, accessions):
+    with Session(engine) as s:
+        return requeue_jobs(s, accessions)
 
 
 # ── env wiring builds a real engine, with scheme normalization (D-012) ────────
