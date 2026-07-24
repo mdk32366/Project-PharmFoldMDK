@@ -69,7 +69,9 @@ def test_inference_settings_are_tier_correct(session):
     local = _job_for(session, "P55064")     # AQP5, largest span 18 <= 440 -> local
     assert (local.inference_settings["dtype"], local.inference_settings["chunk_size"]) == ("int8", 64)
     rental = _job_for(session, "P00533")    # EGFR, 621 in (440,630) -> rental
-    assert (rental.inference_settings["dtype"], rental.inference_settings["chunk_size"]) == ("fp16", None)
+    # D-042: rental chunks like local now — the trunk's O(L^3) attention OOMs unchunked even on a
+    # 95 GiB card (IGF2R asked 230 GiB), so chunk_size is 64, not None.
+    assert (rental.inference_settings["dtype"], rental.inference_settings["chunk_size"]) == ("fp16", 64)
     revs = {j.inference_settings["model_revision"]
             for j in session.execute(select(JobRecord)).scalars()}
     assert revs == {MODEL_REVISION}          # pinned on every job (reproducibility)

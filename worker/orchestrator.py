@@ -39,6 +39,13 @@ class TransportError(Exception):
     """A connectivity failure talking to the Fly endpoint. Retryable, no DB effect."""
 
 
+class AuthError(TransportError):
+    """The bearer token was REJECTED (401). A `TransportError` subclass but deliberately
+    NOT retried — a wrong or truncated token never becomes right, so the loop stops LOUDLY on
+    the first one rather than polling 401 forever (closeout §4b: a token truncated to 12 chars
+    polled and was rejected every 5 s for 70 minutes while the worker looked perfectly healthy)."""
+
+
 class FoldError(Exception):
     """A deterministic fold failure (CUDA OOM, malformed sequence). The same recurs
     on retry, so it is reported via `fail()`, not retried. The real runner must
@@ -101,8 +108,15 @@ def run_worker(
     while not should_stop():
         try:
             spec = client.claim(worker_id)
+        except AuthError as e:
+            # A 401 is not a transient blip — a wrong/truncated token never becomes right, so
+            # polling on is pointless. Stop LOUD on the FIRST one (closeout §4b), turning a
+            # 70-minute silent failure into a 5-second obvious one.
+            log.error("AUTH REJECTED — the worker's bearer token was rejected (%s). The token is "
+                      "wrong or truncated; stopping instead of polling 401 forever.", e)
+            return
         except TransportError:
-            sleep(poll_interval)          # §4: DB untouched, retry next poll
+            sleep(poll_interval)          # §4: transient — DB untouched, retry next poll
             continue
         if spec is None:
             sleep(poll_interval)          # empty queue
@@ -110,8 +124,23 @@ def run_worker(
 
         try:
             artifacts = fold(spec)
-        except FoldError as e:            # §4: deterministic → terminal fail()
+        except FoldError as e:            # §4: deterministic → terminal fail(), continue
+            log.warning("fold failed (deterministic) for job %s: %s", spec.job_id, e)
             _submit(client.fail, spec.job_id, str(e),
+                    attempts=submit_attempts, sleep=sleep, interval=poll_interval)
+            continue
+        except Exception as e:            # noqa: BLE001 — batch resilience (closeout §3a)
+            # A single oversized/broken target must NOT take down the batch. An UNEXPECTED fold
+            # exception (a CUDA OOM the runner did not classify, a torch-internal error)
+            # previously propagated fold → run_worker → main and KILLED the process — losing
+            # every good fold queued behind it, four times over the first rental night. D-030
+            # §4's spirit is that a fold failure is reported and the loop continues; this extends
+            # it to the unforeseen. Logged LOUDLY with a traceback so a real bug stays visible in
+            # the logs rather than being silently swallowed, while the batch survives.
+            log.error("UNEXPECTED fold failure for job %s: %r — failing this job to protect the "
+                      "batch (this used to crash the worker; closeout §3a).", spec.job_id, e,
+                      exc_info=True)
+            _submit(client.fail, spec.job_id, f"unexpected fold failure: {e}",
                     attempts=submit_attempts, sleep=sleep, interval=poll_interval)
             continue
 

@@ -7,8 +7,11 @@ boundaries, or route to a compute tier — that is the orchestrator, a later ste
 
 HOST-AGNOSTIC by construction: `dtype` and `chunk_size` are parameters, defaulting
 to the S-003-measured local recipe (int8 trunk / chunk 64) that fits the 8 GB GPU;
-the rented A6000 (D-011) passes `dtype="fp16"`, `chunk_size=None` for a full-precision
-unchunked fold. Nothing here assumes which host it runs on.
+the rented tier (D-011) passes `dtype="fp16"`, and `chunk_size=64` — the trunk's
+triangular attention is O(L³), so even a 95 GiB card OOMs on large L unchunked, and
+chunking is mandatory, not optional (D-042, correcting D-011). Nothing here assumes
+which host it runs on. A CUDA OOM is raised as `FoldError` (D-030 §4) so the loop
+reports it and continues rather than crashing (closeout §3a).
 
 torch/transformers are imported **lazily inside `fold`**, so this module imports on
 a machine with no CUDA stack (the CI gate has none — D-013 §4/D-018): every function
@@ -29,6 +32,10 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+from worker.orchestrator import FoldError   # the shared fold-failure contract (D-030 §4); a plain
+# Exception, torch-free — safe to import on the CI gate, which has no CUDA (D-018). orchestrator
+# imports only core.contracts + stdlib, so there is no import cycle with runner.
 
 # The only released ESMFold checkpoint (S-001), pinned by revision for reproducibility
 # (ARCHITECTURE §7). The worker manifest pins the libraries; this pins the weights.
@@ -171,21 +178,23 @@ def write_pae(result: FoldResult, out_dir: str | Path) -> Optional[str]:
 
 # ── the GPU-bound fold (import-guarded; validated on a GPU host, not in CI) ────
 
-def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int] = DEFAULT_CHUNK_SIZE,
-         source: str = SLICED_ECD, ecd_start: Optional[int] = None, ecd_end: Optional[int] = None,
-         length_cap: Optional[int] = None) -> FoldResult:
-    """Fold one sequence and return structure + provenance. GPU-bound.
+# Loaded models, keyed by (dtype, revision) and reused across folds (closeout §3c: the weights
+# were reloading once PER TARGET on the first rental run — `Loading weights: 4498` per fold — a
+# direct, measurable cost on rented silicon). A single-recipe batch now loads the weights ONCE.
+_MODEL_CACHE: dict = {}
 
-    torch/transformers are imported HERE so the module stays importable without a CUDA
-    stack (the CI gate — D-018). This function is validated on a GPU host by the owner;
-    the int8 recipe it uses is the one measured in S-003.
-    """
-    import torch  # noqa: PLC0415 — lazy on purpose (see docstring)
+
+def _load_model(dtype: str):
+    """Load the ESMFold tokenizer+model for ``dtype``, CACHED across folds. GPU-bound; validated
+    on the owner's GPU host, not CI (no CUDA, D-018). ``chunk_size`` is NOT part of the key — it
+    is a runtime trunk setting, not a weight, so it is set per fold on the reused model."""
+    import torch  # noqa: PLC0415 — lazy on purpose (see module docstring)
     from transformers import AutoTokenizer, EsmForProteinFolding
 
-    prov = build_provenance(sequence, dtype=dtype, chunk_size=chunk_size, source=source,
-                            ecd_start=ecd_start, ecd_end=ecd_end, length_cap=length_cap)
-    folded_seq, _ = apply_length_cap(sequence, length_cap)
+    key = (dtype, MODEL_REVISION)
+    cached = _MODEL_CACHE.get(key)
+    if cached is not None:
+        return cached
 
     tok = AutoTokenizer.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
     if dtype == "int8":
@@ -195,20 +204,49 @@ def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int]
         model = EsmForProteinFolding.from_pretrained(
             MODEL_ID, revision=MODEL_REVISION, quantization_config=quant, device_map={"": 0})
     else:
-        model = EsmForProteinFolding.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
-        model = model.to("cuda")
+        model = EsmForProteinFolding.from_pretrained(MODEL_ID, revision=MODEL_REVISION).to("cuda")
         if dtype == "fp16":
             model.esm = model.esm.half()
         elif dtype == "bf16":
             model.esm = model.esm.to(torch.bfloat16)
     model.eval()
-    if chunk_size is not None:
-        model.trunk.set_chunk_size(chunk_size)
+    _MODEL_CACHE[key] = (tok, model)
+    return tok, model
 
-    inputs = tok([folded_seq], return_tensors="pt", add_special_tokens=False)["input_ids"].to("cuda")
-    with torch.no_grad():
-        out = model.infer_pdb(folded_seq) if hasattr(model, "infer_pdb") else None
-        outputs = model(inputs)
+
+def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int] = DEFAULT_CHUNK_SIZE,
+         source: str = SLICED_ECD, ecd_start: Optional[int] = None, ecd_end: Optional[int] = None,
+         length_cap: Optional[int] = None) -> FoldResult:
+    """Fold one sequence and return structure + provenance. GPU-bound.
+
+    torch/transformers are imported lazily (module docstring). The model is loaded once per
+    recipe and reused (`_load_model`, §3c); a CUDA OOM is raised as `FoldError` so the loop
+    reports `fail()` and continues instead of the process crashing (closeout §3a).
+    """
+    import torch  # noqa: PLC0415 — lazy on purpose (see module docstring)
+
+    prov = build_provenance(sequence, dtype=dtype, chunk_size=chunk_size, source=source,
+                            ecd_start=ecd_start, ecd_end=ecd_end, length_cap=length_cap)
+    folded_seq, _ = apply_length_cap(sequence, length_cap)
+
+    tok, model = _load_model(dtype)                 # cached across folds (§3c)
+    if chunk_size is not None:
+        model.trunk.set_chunk_size(chunk_size)      # runtime trunk setting, not a weight — per fold
+
+    try:
+        inputs = tok([folded_seq], return_tensors="pt", add_special_tokens=False)["input_ids"].to("cuda")
+        with torch.no_grad():
+            out = model.infer_pdb(folded_seq) if hasattr(model, "infer_pdb") else None
+            outputs = model(inputs)
+    except torch.OutOfMemoryError as e:
+        # D-030 §4 named CUDA OOM a deterministic FoldError; classify it HERE (near torch) so the
+        # loop calls fail() and continues instead of the process crashing (closeout §3a). OOM on a
+        # fixed (sequence, recipe) is deterministic — a retry would OOM again on a PAID card — so it
+        # is terminal, not retried. The batch resilience catch in run_worker is the backstop for any
+        # OOM this misses on a torch build without OutOfMemoryError.
+        raise FoldError(
+            f"CUDA OOM folding {len(folded_seq)} aa at chunk_size={chunk_size} — the trunk's "
+            f"triangular attention is O(L^3); chunking is the mitigation (D-042): {e}") from e
 
     pdb = out if isinstance(out, str) else model.output_to_pdb(outputs)[0]
     # pLDDT lives in the B-factor column on the 0–1 scale — rescale (S-001).

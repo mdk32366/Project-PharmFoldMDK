@@ -21,7 +21,7 @@ from typing import Any, Optional
 
 import httpx
 
-from worker.orchestrator import FoldSpec, TransportError
+from worker.orchestrator import AuthError, FoldSpec, TransportError
 
 # Explicit transport timeout (D-035 §3a). httpx defaults to 5 s on ALL of connect/read/write/pool;
 # a 5 s read/write times out a slow upload, `_post` maps it to a (retryable) TransportError, the
@@ -87,6 +87,8 @@ class HttpQueueClient:
             r = self._client.post(path, json=json, files=files, headers=self._headers)
         except httpx.HTTPError as e:                       # connect/read/timeout → retryable
             raise TransportError(f"POST {path} failed: {e}") from e
+        if r.status_code == 401:                           # bearer rejected → fatal, not retried
+            raise AuthError(f"POST {path} -> 401 (bearer token rejected)")
         if r.status_code not in ok:
             raise TransportError(f"POST {path} -> {r.status_code}")
         return r

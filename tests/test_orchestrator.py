@@ -5,7 +5,7 @@ never the reverse), the failure taxonomy (transport retried / fold-failure repor
 nothing re-folded), and the empty-queue poll. `fold` and the queue-client are injected.
 """
 
-from worker.orchestrator import FoldError, FoldSpec, TransportError, run_worker
+from worker.orchestrator import AuthError, FoldError, FoldSpec, TransportError, run_worker
 
 SPEC = FoldSpec(job_id=1, sequence="MELLKAAR", model_revision="abc123",
                 dtype="fp16", chunk_size=None, source="whole",
@@ -25,15 +25,18 @@ def _stop_after(n):
 class FakeClient:
     """Records the ORDER of upload/complete/fail so the done-ordering is assertable."""
 
-    def __init__(self, specs, *, upload_fails_first=0, claim_raises_first=0):
+    def __init__(self, specs, *, upload_fails_first=0, claim_raises_first=0, claim_raises_auth=False):
         self._specs = list(specs)
         self._upload_fails_first = upload_fails_first
         self._claim_raises_first = claim_raises_first
+        self._claim_raises_auth = claim_raises_auth
         self.claim_calls = 0
         self.uploaded, self.completed, self.failed, self.events = [], [], [], []
 
     def claim(self, worker_id):
         self.claim_calls += 1
+        if self._claim_raises_auth:
+            raise AuthError("POST /jobs/claim -> 401 (bearer token rejected)")
         if self._claim_raises_first > 0:
             self._claim_raises_first -= 1
             raise TransportError("claim endpoint down")
@@ -103,6 +106,38 @@ def test_claim_transport_failure_touches_nothing_then_recovers():
                "w1", sleep=NOSLEEP, should_stop=_stop_after(2))
     assert folded == [1]
     assert c.events == [("upload", 1), ("complete", 1)]
+
+
+def test_auth_error_stops_the_loop_on_the_first_401_not_after_70_minutes():
+    """closeout §4b: a truncated token polled and was rejected 401 every 5 s for 70 minutes,
+    looking healthy. An AuthError is fatal — the loop stops on the FIRST one, loudly, rather
+    than retrying forever."""
+    folded = []
+    c = FakeClient([SPEC], claim_raises_auth=True)
+    run_worker(c, lambda s: folded.append(1), "w1", sleep=NOSLEEP, should_stop=_stop_after(5))
+    assert c.claim_calls == 1                              # stopped on the FIRST 401
+    assert folded == [] and c.failed == []                # never folded, never failed a job — just stopped
+
+
+def test_unexpected_fold_exception_fails_the_job_and_the_batch_survives():
+    """closeout §3a: an UNEXPECTED fold exception (a torch OOM/internal error the runner did not
+    classify as FoldError) previously propagated and KILLED the worker — taking down every good
+    fold queued behind it. It must fail the one job and let the batch continue."""
+    spec2 = FoldSpec(job_id=2, sequence="MKKK", model_revision="abc123", dtype="fp16",
+                     chunk_size=None, source="whole", ecd_start=None, ecd_end=None)
+    c = FakeClient([SPEC, spec2])
+    folded = []
+
+    def fold(s):
+        folded.append(s.job_id)
+        if s.job_id == 1:
+            raise RuntimeError("CUDA error: an illegal memory access was encountered")  # NOT FoldError
+        return {"pdb": "x"}
+
+    run_worker(c, fold, "w1", sleep=NOSLEEP, should_stop=_stop_after(2))
+    assert folded == [1, 2]                                # job 1's crash did NOT stop the loop
+    assert c.failed and c.failed[0][0] == 1 and "unexpected fold failure" in c.failed[0][1]
+    assert c.completed == [2]                              # the good fold behind the bad one still landed
 
 
 def test_empty_queue_polls_without_folding():
