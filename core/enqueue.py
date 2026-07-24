@@ -50,9 +50,13 @@ from worker.runner import (
 TARGET_LIST_VERSION = "Kathad-2024-PLOSONE-S3-82"
 
 # Per-tier fold recipe (D-018 / S-003) — recorded here, not re-decided.
+# D-042: rental `chunk_size` was `None` (D-011's assumption: more VRAM makes chunking
+# unnecessary). The first rental run FALSIFIED that — the ESMFold trunk's triangular attention
+# (`tri_att_start`) is O(L³), so IGF2R (2,491 aa) asked 230 GiB on a 95 GiB card. No rentable
+# card closes that gap; chunking is the only mitigation, so rental now chunks like local.
 TIER_RECIPE: dict[str, dict] = {
     "local":  {"dtype": DEFAULT_DTYPE, "chunk_size": DEFAULT_CHUNK_SIZE},  # int8 / 64
-    "rental": {"dtype": "fp16", "chunk_size": None},                      # A6000, D-011
+    "rental": {"dtype": "fp16", "chunk_size": 64},                        # D-011 → D-042 (was None)
 }
 
 

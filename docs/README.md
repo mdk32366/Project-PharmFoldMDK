@@ -80,6 +80,73 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-042 — Rental-tier hardening: chunking is mandatory, and no single fold may take down the batch
+- **Date:** 2026-07-23
+- **Status:** **Accepted** — the first rental run (`CLOSEOUT-2026-07-23-full.md`) exposed these; the
+  fixes land in this change.
+- **Amends:** D-011 (the rental recipe, and the hardware/cost estimate), D-022 (the A6000-class
+  ceiling — now measured), D-030 (the loop's failure taxonomy, and the lease-heartbeat trigger),
+  D-035 (PAE size at scale).
+- **Context — five findings only the rental tier could expose.** 42 → 80 folds landed on a rented
+  RTX PRO 6000 (95 GiB, $2/hr — **not** the A6000/48 GB/$0.49 D-011 specified); **5 failed**;
+  coverage moved 40 → ~63 ranked ∧ folded. What the run taught, and what this change does:
+
+#### 1. Chunking is not optional — D-011's core assumption is falsified
+D-011's rental recipe set `chunk_size=None` on the premise that a large card "runs fp16 unquantised
+and unchunked, so the local mitigation stack stops binding." **Measured false.** The ESMFold trunk's
+triangular attention (`tri_att_start`) is **O(L³)**, not O(L²): **IGF2R (2,491 aa) asked 230 GiB** on
+a 95 GiB card; LRP6 (~1,351 aa) asked 67 GiB against 37 free. No rentable card closes a 230 GiB gap.
+**The unchunked ceiling on 95 GiB sits between 1,034 aa (JAG1, folded) and ~1,350 aa (does not).**
+Chunking is the only mitigation — the local tier already uses it. **`TIER_RECIPE["rental"].chunk_size`:
+`None` → `64`** (`core/enqueue.py`). Chunking trades speed for memory; the oversized targets run
+slower and succeed.
+
+#### 2. A fold failure must not crash the batch (closeout §3a)
+D-030 §4 rules a fold failure calls `fail()`, records the error, and the loop continues. **It didn't:**
+a `torch.OutOfMemoryError` propagated `fold → run_worker → main` and **killed the process — four
+times over the night**, each taking down every good fold queued behind it (invisible on the local
+tier, whose folds never OOM). Two-layer fix:
+- **`runner.fold` classifies CUDA OOM as `FoldError`** — the classification D-030 §4 always intended
+  but never implemented. OOM on a fixed (sequence, recipe) is deterministic, so it is terminal, not
+  retried on a paid card.
+- **`run_worker` gains a batch-resilience catch:** any *unexpected* fold exception is logged **loudly
+  with a traceback** and the one job is failed — the batch survives. Loud-not-silent, so a real bug
+  stays visible rather than masked.
+
+#### 3. A rejected token stops the worker loudly (closeout §4b)
+A `WORKER_AUTH_TOKEN` truncated to 12 chars (of 69, mangled by shell quoting) polled and was rejected
+**401 every 5 s for 70 minutes** while the worker looked healthy — process alive, no stderr. Fly
+logged every rejection; nobody watched, because the worker said nothing. **A 401 is now a distinct
+`AuthError`** (a `TransportError` subclass, but **not** retried): the loop stops on the **first** one
+with a loud log naming the cause. 70 minutes → 5 seconds.
+
+#### 4. The model loads once per batch, not once per target (closeout §3c)
+`fold` reconstructed the model on every call (`Loading weights: 4498` per target) — invisible on owned
+hardware, a ~10–20% cost on rented silicon. **`_load_model` caches by `(dtype, revision)`**; a
+single-recipe batch loads the weights once.
+
+- **Deep-learning justification.** Direct: the rental tier is how the network folds the 29
+  above-ceiling targets, and a tier that crashes on its largest inputs or silently burns paid time
+  folds nothing. #1 is the load-bearing correction — the graded deliverable's coverage depends on
+  these folds landing, and they cannot land unchunked.
+
+- **Consequences / test surface:**
+  - **Tested first (CI, no GPU):** the rental recipe is fp16/**64**; an `AuthError` from claim stops
+    the loop on the first 401 (not a retry loop); an unexpected fold exception fails the one job and
+    the batch continues (a good fold behind a bad one still lands); a 401 maps to `AuthError` while a
+    500 stays `TransportError`. The OOM→`FoldError` line and the model cache are **GPU-validated on
+    the owner's host** — no CUDA in CI (D-018).
+  - **Rerun list (closeout §8):** ADAM17 (crashed mid-flight — retry as-is) + PTPRZ1/NOTCH2/SDK1/IGF2R
+    (needed chunking — now fold under the new recipe). ~$2, coverage → 67 of 82. Not urgent; the
+    scorer proceeds at 63.
+  - **Ops (in the a6000 guide, not code):** run the worker **detached** (`nohup … &`, not a browser
+    terminal foreground — closeout §4a lost ~1 hr of billing); **`WORKER_ARTIFACT_DIR` set** or rental
+    PAE is silently lost; **`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`** a candidate against
+    fragmentation (§3d, untested); **delete the network volume** after termination (attached against
+    D-011, bills monthly).
+
+---
+
 ### D-041 — The scorer: regularized logistic regression, and why the small model is the correct one
 - **Date:** 2026-07-23
 - **Status:** Proposed → Accepted on merge. **Ruled before any fitting code exists** (D-015 §3's
@@ -2802,6 +2869,9 @@ service" would trade a defensible graded claim for a wrapper around an external 
 - **Date:** 2026-07-21
 - **Status:** **Accepted (2026-07-21)** — exclude the definitively-oversize for the first pass,
   **named in this entry**; measure the A6000 ceiling to route the borderline; defer decomposition.
+- **⚠ Amended by D-042 (2026-07-23): the ceiling is measured.** On a 95 GiB card, **unchunked**,
+  the ceiling sits between **1,034 aa (folds) and ~1,350 aa (does not)** — and the limit is the
+  trunk's O(L³) triangular attention, not raw VRAM, so *chunking*, not a bigger card, is the fix.
   See "Ruling" below.
 - **Context:** D-020 measured the rental bucket (16 targets, largest ECD span ≥ 630 aa) and found
   it **non-uniform**. Two targets exceed single-sequence ESMFold feasibility on **any** card —
@@ -4123,6 +4193,11 @@ merges. *Result recorded below on observation.*
 ### D-011 — Split compute: local tier under the ceiling, rented GPU for large-ECD cache generation
 - **Date:** 2026-07-19
 - **Status:** Accepted
+- **⚠ Amended by D-042 (2026-07-23), after the first rental run.** Three claims here are corrected:
+  the **unchunked** rental recipe (`chunk_size=None`) is **falsified** — the trunk is O(L³), so it
+  OOMs on large L on any rentable card; rental now chunks (64). The **hardware/cost** was an RTX PRO
+  6000 (95 GiB) at **$2/hr**, not an A6000 (48 GB) at $0.49, and the run cost ~$10–14, not ~$0.25.
+  **Network volumes are billed monthly even after termination** — delete separately.
 - **Context:** S-004/S-005 bracketed the local sequence-length ceiling to **(440, 630) aa**.
   440 aa folds clean at chunk 64 (28.6 s, peak 6665 MiB, no spill, host stable);
   630 aa is **4-for-4 fatal host crashes**. HER2's full ECD (~630 aa) — the flagship ADC

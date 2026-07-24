@@ -224,3 +224,28 @@ For the D-030 / D-011 / D-035 amendments:
 | A fold OOMs | The A6000 ceiling, at last measured | **This is a result** (D-022 left it open). Record it, let the loop continue |
 | Pod dies mid-batch | Claimed jobs go stale | The lease reaps them; re-run the worker. Folds already complete are not repeated (D-026) |
 | You are unsure whether to terminate | | **Do not.** Check Step 9's `with_pae` count first. An extra hour is $0.49; a lost PAE set is a paid re-fold |
+
+---
+
+## ⚠ Amendment — lessons from the first run (D-042, 2026-07-23)
+
+The body above was written before the first rental run. What it taught, and what changed:
+
+- **Chunk. The recipe now sets `chunk_size=64` for rental (D-042).** The unchunked assumption was
+  falsified: the trunk's triangular attention is O(L³), so IGF2R (2,491 aa) asked **230 GiB** on a
+  95 GiB card. No card closes that; chunking is the fix. The four oversized targets
+  (PTPRZ1/NOTCH2/SDK1/IGF2R) fold under the new recipe.
+- **Run the worker DETACHED — `nohup python -m worker.main &` — not in a browser terminal's
+  foreground.** A dropped tab killed the shell and the worker, burning ~1 hr of billing for zero
+  folds.
+- **`WORKER_ARTIFACT_DIR` must be set** or rental PAE lives only in memory and is discarded on the
+  next claim — recoverable only by a paid re-fold. The single most expensive omission.
+- **A wrong/truncated token now fails LOUDLY in ~5 s** (D-042 §3): the worker stops on the first 401
+  instead of polling silently. If you see it stop with "AUTH REJECTED", re-check the token length
+  (69 chars) — shell quoting truncated it to 12 last time.
+- **A fold that OOMs no longer crashes the worker (D-042 §2)** — it is failed and the batch
+  continues. An OOM is a *result* (the ceiling), not a disaster.
+- **`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`** — a candidate against fragmentation
+  (a 67 GiB OOM held 35 GiB reserved-but-unallocated). Untested; try it if a borderline fold OOMs.
+- **Cost reality:** the card was an RTX PRO 6000 at **$2/hr**, not an A6000 at $0.49. Budget
+  accordingly, and **delete the network volume after termination** — it bills monthly even stopped.

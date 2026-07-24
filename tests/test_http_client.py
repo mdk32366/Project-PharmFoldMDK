@@ -80,6 +80,15 @@ def test_claim_non_2xx_is_transport_error():
         _client(lambda req: httpx.Response(500)).claim("w1")
 
 
+def test_401_is_auth_error_not_a_retryable_transport_error():
+    # closeout §4b: a 401 is a rejected token, not a transient blip. It must be a distinct
+    # (fatal) AuthError so the loop stops loudly rather than polling 401 forever. AuthError is a
+    # TransportError subclass, so this also stays caught anywhere TransportError is.
+    from worker.orchestrator import AuthError
+    with pytest.raises(AuthError):
+        _client(lambda req: httpx.Response(401)).claim("w1")
+
+
 def test_connection_failure_is_transport_error():
     def handler(req):
         raise httpx.ConnectError("refused")
