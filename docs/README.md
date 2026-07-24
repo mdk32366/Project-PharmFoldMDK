@@ -80,6 +80,64 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-045 — Fold provenance captures the software environment, forward from now
+- **Date:** 2026-07-24
+- **Status:** Proposed → Accepted on merge.
+- **Amends:** D-018 (the fold-runner's provenance record — `FoldProvenance` gains four optional
+  environment fields). Relates to D-015 §1a (provenance the diagnostics depend on), D-016 (every
+  claim names how it is known), D-042 (no diagnostic may fail the batch).
+- **Context — what the record does not name, and the grep that proves it.** `FoldProvenance`
+  (`worker/runner.py`) captures `model_id`, `model_revision`, `dtype`, `chunk_size`, the
+  slice/truncation flags, `mean_plddt`, `ca_atom_count`, `folded_at`. It captures the *weights and
+  the recipe* — **not the software environment that produced the fold.**
+  `rg -rn "torch.__version__|transformers.__version__" --glob '*.py' .` → **zero hits, whole tree**
+  (re-verified on branch). So the **80 landed folds came from two different torch builds** — 2.11.0
+  local, 2.8.0 rental (closeout 2026-07-23 §7) — and **nothing in the database records which.**
+- **Why the 80 are unbackfillable.** The record is written **worker-side, at fold time**, from a
+  process that no longer exists. There is no server-side reconstruction path: the DB stores what the
+  worker sent, and the worker did not send a torch version because the field did not exist. **The
+  five rerun targets are the last chance to make the gap bounded rather than open-ended** — after
+  them the cohort is folded and the door closes.
+- **Provenance (D-016):** ruled against `worker/runner.py` (`FoldProvenance` at :62, `build_provenance`,
+  `fold` filling `mean_plddt`/`ca_atom_count` post-fold at :257) and the zero-hit grep above.
+
+---
+
+- **Decision — capture forward from now; the cohort becomes two honest populations.** Add four
+  `Optional[str] = None` fields to `FoldProvenance`: **`torch_version`**, **`transformers_version`**,
+  **`device_name`** (`torch.cuda.get_device_name(0)`), **`cuda_version`** (`torch.version.cuda`).
+  Populated inside `fold()` where torch is already imported, via a small `_capture_environment()`
+  helper — **`build_provenance` stays torch-free** (the D-018 property that lets the whole module
+  import and unit-test on the CI gate with no CUDA). The cohort splits into **pre-D-045 (no
+  environment record) and post-D-045 (with)**, and the UI renders that split **honestly rather than
+  hiding it** — an absent field reads as *"not captured"*, never as a fabricated value.
+  - **All fields optional, none required** — so the 80 old records (whose provenance dicts lack these
+    keys) deserialize unchanged. A required field would break the read API on every existing fold.
+  - **`_capture_environment()` never raises** — every probe is guarded and defaults to `None`. A
+    provenance-capture failure must never fail a fold (D-042's spirit: no diagnostic takes down the
+    batch). An absent torch, an unavailable CUDA device, or a missing attribute yields `None`.
+- **Deep-learning justification — this is a Prime Directive claim made checkable.** *"We ran ESMFold
+  ourselves, at a named revision"* is the claim the provenance panel exists to support. A model
+  revision **without the framework build underneath it is a weaker claim than it appears**: the same
+  pinned weights on a different torch/CUDA build are the same numerics through different kernels.
+  Recording the build closes the distance between the claim and what is actually verifiable.
+- **Consequences / test surface:**
+  - **Tested first** (`tests/test_runner.py`, CI gate, no GPU): `build_provenance` still imports and
+    runs **with no torch present** and the four new fields are `None` on the pure path (the D-018
+    guarantee); a `FoldProvenance` with the fields set `asdict()`s and JSON-round-trips; an
+    **old-shaped provenance dict (no new keys) still constructs** without error (the one that would
+    break the read API if wrong); `_capture_environment()` **returns the four keys and never raises**
+    when torch/CUDA are absent (every value `None`-or-`str`). The GPU-populated path is validated on
+    the owner's host (no CUDA in CI, D-018).
+  - **Scope boundaries (per orders):** the read API, coverage, and the UI are **untouched** — a
+    separate concern for a later PR. **No backfill of the 80** — there is no honest source.
+  - **`ARCHITECTURE.md`** updated in this PR — the provenance record's shape is part of the data model.
+- **Definition of done:** green gate, merged to `main`, **and the rerun's pod runs the merged worker
+  code** — confirm the pod's checkout SHA is the post-merge commit, not `5bce970`. If the worker is
+  behind the merge, the five land in the pre-D-045 population and this was wasted.
+
+---
+
 ### D-044 — `core.enqueue --requeue`: a deliberate re-fold path, because idempotency has no reverse
 - **Date:** 2026-07-24
 - **Status:** Proposed → Accepted on merge.

@@ -91,6 +91,54 @@ def test_provenance_rejects_an_unknown_source():
                          ecd_start=None, ecd_end=None, length_cap=None)
 
 
+# ── environment capture: the framework build under the weights (D-045) ────────
+
+def test_env_fields_are_none_on_the_pure_torch_free_path():
+    # build_provenance stays torch-free (the D-018 CI property) — the four env fields are
+    # filled post-fold by _capture_environment, so on the pure path they are None.
+    p = build_provenance("M" * 10, dtype="int8", chunk_size=64, source=WHOLE,
+                         ecd_start=None, ecd_end=None, length_cap=None)
+    assert p.torch_version is None and p.transformers_version is None
+    assert p.device_name is None and p.cuda_version is None
+
+
+def test_provenance_with_env_fields_asdict_and_json_round_trips():
+    import json
+    from dataclasses import asdict
+    p = build_provenance("M" * 5, dtype="fp16", chunk_size=64, source=SLICED_ECD,
+                         ecd_start=1, ecd_end=5, length_cap=None)
+    p.torch_version = "2.8.0+cu128"
+    p.transformers_version = "4.44.0"
+    p.device_name = "NVIDIA RTX A6000"
+    p.cuda_version = "12.8"
+    back = json.loads(json.dumps(asdict(p)))
+    assert back["torch_version"] == "2.8.0+cu128" and back["cuda_version"] == "12.8"
+    assert back["device_name"] == "NVIDIA RTX A6000" and back["transformers_version"] == "4.44.0"
+
+
+def test_an_old_shaped_provenance_dict_without_env_keys_still_loads():
+    # The 80 pre-D-045 records carry no env keys. New code MUST construct from them without error —
+    # if this fails, the read API breaks on every existing fold. Defaults fill; old data preserved.
+    old = {
+        "model_id": runner.MODEL_ID, "model_revision": runner.MODEL_REVISION,
+        "dtype": "int8", "chunk_size": 64, "input_length": 248, "source": SLICED_ECD,
+        "ecd_start": 27, "ecd_end": 274, "truncated": False, "length_cap": None,
+        "original_length": 248, "mean_plddt": 74.7, "ca_atom_count": 248,
+        "folded_at": "2026-07-20T00:00:00+00:00",
+    }
+    p = FoldProvenance(**old)
+    assert p.torch_version is None and p.device_name is None      # new fields default in
+    assert p.mean_plddt == 74.7 and p.model_revision == runner.MODEL_REVISION  # old data intact
+
+
+def test_capture_environment_never_raises_and_returns_the_four_keys():
+    # The contract that protects the fold: capture returns, never raises, whether or not torch/CUDA
+    # are present. On the CI gate torch is absent → all None; on a GPU host some are populated str.
+    env = runner._capture_environment()
+    assert set(env) == {"torch_version", "transformers_version", "device_name", "cuda_version"}
+    assert all(v is None or isinstance(v, str) for v in env.values())
+
+
 # ── artifact writing (paths recorded in the DB later — runner knows no DB) ────
 
 def test_write_artifacts_persists_all_four_and_round_trips(tmp_path):

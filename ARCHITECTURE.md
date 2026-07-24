@@ -457,7 +457,12 @@ S-002 Q1, now testable against a config that genuinely fits.
   - **Every fold records its own provenance (D-018):** dtype, chunk_size, model revision,
     sliced-ECD-vs-whole, ECD bounds, and any length-cap truncation — written beside the artifacts.
     The truncation flag is load-bearing: D-015 §1a excludes truncated folds from ranking claims,
-    which is unenforceable unless captured at fold time.
+    which is unenforceable unless captured at fold time. **Since D-045, the record also names the
+    software environment under the weights** — `torch_version`, `transformers_version`, `device_name`,
+    `cuda_version` — all optional (the 80 pre-D-045 folds carry none; the cohort is two honest
+    populations, and the UI shows the split rather than inventing values). Captured post-fold in
+    `fold()` and never fatal (a capture failure can't take down the batch, D-042); `build_provenance`
+    stays torch-free so the module still unit-tests on the no-CUDA CI gate.
 
 ---
 

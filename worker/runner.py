@@ -78,6 +78,13 @@ class FoldProvenance:
     mean_plddt: Optional[float] = None       # on the 0–100 scale (rescaled — see rescale_plddt)
     ca_atom_count: Optional[int] = None      # for the §1a fold-sanity diagnostic
     folded_at: Optional[str] = None          # ISO-8601 UTC
+    # The software environment under the weights (D-045). Optional so the 80 pre-D-045 records,
+    # whose provenance dicts lack these keys, still deserialize. Filled post-fold in `fold()` (like
+    # mean_plddt/ca_atom_count) — build_provenance stays torch-free (the D-018 CI property).
+    torch_version: Optional[str] = None          # e.g. "2.8.0+cu128" — same weights, different kernels
+    transformers_version: Optional[str] = None
+    device_name: Optional[str] = None            # e.g. "NVIDIA RTX A6000"
+    cuda_version: Optional[str] = None           # torch.version.cuda, e.g. "12.8"
 
 
 @dataclass
@@ -214,6 +221,38 @@ def _load_model(dtype: str):
     return tok, model
 
 
+def _capture_environment() -> dict[str, Optional[str]]:
+    """The software environment that produced a fold — torch/transformers build, device, CUDA
+    version (D-045). A model *revision* pins the weights; this pins the *kernels underneath them*.
+
+    **Never raises.** A provenance-capture failure must not fail a fold (D-042's spirit: no
+    diagnostic takes down the batch). Every field defaults to ``None`` and each probe is guarded, so
+    an absent torch, an unavailable CUDA device, or a missing attribute yields ``None``, not an
+    exception. torch is imported lazily here, exactly as in ``fold``/``_load_model``, so this module
+    still imports on the CI gate (no CUDA — D-018)."""
+    env: dict[str, Optional[str]] = {
+        "torch_version": None, "transformers_version": None,
+        "device_name": None, "cuda_version": None,
+    }
+    try:
+        import torch  # noqa: PLC0415 — lazy on purpose (see module docstring)
+        env["torch_version"] = getattr(torch, "__version__", None)
+        env["cuda_version"] = getattr(getattr(torch, "version", None), "cuda", None)
+        try:
+            if torch.cuda.is_available():
+                env["device_name"] = torch.cuda.get_device_name(0)
+        except Exception:
+            pass   # CUDA present-but-unqueryable must not fail the fold
+    except Exception:
+        pass       # no torch (the CI gate) → versions stay None
+    try:
+        import transformers  # noqa: PLC0415
+        env["transformers_version"] = getattr(transformers, "__version__", None)
+    except Exception:
+        pass
+    return env
+
+
 def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int] = DEFAULT_CHUNK_SIZE,
          source: str = SLICED_ECD, ecd_start: Optional[int] = None, ecd_end: Optional[int] = None,
          length_cap: Optional[int] = None) -> FoldResult:
@@ -256,4 +295,9 @@ def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int]
 
     prov.mean_plddt = round(sum(plddt) / len(plddt), 2) if plddt else None
     prov.ca_atom_count = pdb.count(" CA ")   # cheap CA count for the §1a fold-sanity diagnostic
+    env = _capture_environment()             # the framework build under the weights (D-045)
+    prov.torch_version = env["torch_version"]
+    prov.transformers_version = env["transformers_version"]
+    prov.device_name = env["device_name"]
+    prov.cuda_version = env["cuda_version"]
     return FoldResult(pdb=pdb, plddt=plddt, pae=pae, provenance=prov)
