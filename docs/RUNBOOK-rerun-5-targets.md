@@ -102,15 +102,22 @@ RunPod console steps are in `GUIDE-renting-the-a6000.md` (Steps 1–7). Two note
   (48 GB, ~$0.49/hr) is plenty and cheaper than the Blackwell that got auto-provisioned last time.
 - Leave **SSH off**; the web terminal is enough. Container disk **50 GB**. **No network volume.**
 
-Once the pod's web terminal is open, paste this block. **Match the SHA to Phase 0.**
+Once the pod's web terminal is open, paste this block.
 
 ```bash
 cd /workspace
 git clone https://github.com/mdk32366/Project-PharmFoldMDK.git
 cd Project-PharmFoldMDK
-git log --oneline -1        # ← MUST equal the Phase 0 SHA. STOP if not.
+git log --oneline -1        # ← see the SHA note below. STOP if it does not match.
 pip install -r worker/requirements.txt
 ```
+
+**⚠ The SHA check — compare against `main`'s current head, not a branch commit.** The provenance
+capture (D-045) landed via a **squash** merge, so the pod's HEAD must **equal the current `origin/main`
+head** — the SHA from Phase 0's `git pull` (the value Planner/Code hands you, e.g. `c3c92e6`). It will
+**not** "contain" the feature-branch commit (`fc6d9a5`) — that commit was squashed away and its branch
+deleted. So: `git log --oneline -1` on the pod **== Phase 0 SHA**. If it is behind, `git pull` before
+folding — otherwise the five land in the **pre-D-045 population** and the merge bought nothing.
 
 **Environment — paste the token inside SINGLE quotes** (double quotes are what truncated it to 12
 chars and cost 70 minutes last time), then let the box *prove* it before you spend anything:
@@ -129,6 +136,21 @@ test ${#WORKER_AUTH_TOKEN} -eq 69 && echo "OK" || echo "STOP — re-paste the to
 
 nvidia-smi                  # confirm the card and that it is idle
 ```
+
+**⚠ Prove D-045 capture actually works — the tests can't.** Every provenance test runs on CI, which
+has **no CUDA**, so `_capture_environment()` returning *real* values under real torch has never
+executed anywhere. The tests prove it doesn't raise and returns `None`s cleanly when torch is absent;
+they cannot prove it returns `2.8.0` when torch is present. Five seconds at the pod prompt settles it:
+
+```bash
+python -c "from worker.runner import _capture_environment; print(_capture_environment())"
+#   → {'torch_version': '2.8.0+cu128', 'transformers_version': '4.x.y',
+#      'device_name': 'NVIDIA RTX A6000', 'cuda_version': '12.8'}
+```
+
+**All four must be populated.** If any come back `None`, capture is silently no-opping — the five
+would fold into the **old population anyway**, with the merge having bought nothing. Catch it here,
+not after the folds land and the pod is gone. (Helper name per D-045's PR — `_capture_environment`.)
 
 **Start the worker DETACHED** so a dropped browser tab can't kill it, and confirm it's alive:
 
@@ -213,6 +235,19 @@ Then the live surface — the coverage endpoint should climb with no redeploy:
 ```
 https://pharmfoldmdk.fly.dev/api/coverage
 ```
+
+**⚠ Confirm D-045 capture actually landed in the record (not just at the prompt).** The Phase-2 check
+proved the helper works live; this proves the *stored* fold carries it — the difference between "the
+path can work" and "the path ran" (D-016). For one of the five (grab its `analysis_id` from the query
+above), before terminating:
+
+```
+https://pharmfoldmdk.fly.dev/api/analyses/<analysis_id>
+```
+
+`fold_provenance.torch_version` (and `device_name`) must be **non-null**. Null here means the five
+landed in the pre-D-045 population despite everything — and the pod is your last chance to re-fold
+cheaply, so check it **before** you terminate.
 
 **Then, and only then:**
 1. **Pane C / RunPod console → Terminate** the pod (trash icon, not "Stop" — Stop keeps billing).
