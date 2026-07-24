@@ -41,6 +41,19 @@ jobs:
           python -m pip install --require-hashes -r requirements-dev.lock
       - run: python -m pytest -q
 
+      # D-046: the UI test harness runs in the SAME required `test` job so a red component
+      # test blocks the gate — a separate always-green job would read as coverage without
+      # being it. `npm ci` installs EXACTLY the committed lock and fails on drift (D-037,
+      # never `npm install`); `npm run test` is `vitest run` (non-interactive, no watch mode).
+      # Node 20 matches the Dockerfile's build stage. These devDependencies are build/CI-time
+      # only and never enter the runtime image (tests/test_image_contents.py, D-046 §2).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: UI component tests (D-046)
+        working-directory: ui
+        run: npm ci && npm run test
+
   # D-017: the seam's other half. The `test` job builds schema with create_all and
   # never runs the migration chain, and SKIP LOCKED is a syntax error on SQLite — so
   # PostgresJobQueue.claim's atomicity and the Alembic chain are unproven there (the
