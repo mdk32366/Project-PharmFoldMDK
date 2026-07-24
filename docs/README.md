@@ -80,6 +80,131 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-044 — `core.enqueue --requeue`: a deliberate re-fold path, because idempotency has no reverse
+- **Date:** 2026-07-24
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-026 (enqueue idempotency — the thing this works *around*), D-030 (the job status
+  machine and the reaper), D-009 §1 Am. 2 (attempts semantics). Motivated by the 5-target rerun
+  (`RUNBOOK-rerun-5-targets.md`).
+- **Context — the rerun exposed a one-way door.** D-026's enqueue is idempotent on
+  `(target_list_version, accession)` via the **`protein_analyses` row** (`core/enqueue.py:123`):
+  a second `enqueue` for a target that already has an analysis writes **nothing** — no new job.
+  That is correct for *"one now, the rest later."* But it means enqueue **cannot re-offer a target
+  that failed**: the five failed reruns already have analysis rows, so `enqueue --bucket rental`
+  reports them `existed` and creates zero jobs. Their `jobs` rows are stuck non-`pending` (`claimed`,
+  from the pre-D-042 mid-fold crashes), the worker claims only `pending` (`app/routes.py`), and
+  **`reap_stale` has no production caller** (verified — no Fly cron, no app startup hook, no claim-
+  path reap; it runs only in tests). So there is **no path, manual or automatic, back to `pending`**
+  short of hand-run SQL against prod. That is a fragile step to leave in a runbook (the same class
+  of by-hand-against-prod fiddliness that truncated a token and cost 70 minutes on the first run).
+- **Provenance (D-016):** ruled against `core/enqueue.py` (idempotency at :123, the `run()` CLI),
+  `core/queue.py` (`PENDING`/`COMPLETE` constants, the `claim` filter `WHERE status='pending'`,
+  `reap_stale`), and the confirmed absence of any `reap_stale` prod caller.
+
+---
+
+- **Decision — add `python -m core.enqueue --requeue ACC [ACC …]`.** A pure `requeue_jobs(session,
+  accessions)` + a CLI flag that short-circuits before the manifest/fetch path (requeue neither
+  fetches sequences nor creates rows — it only moves existing jobs). For each accession, joined to
+  its jobs via `protein_analyses.input_value` (the D-038 uniprot key):
+  - a **non-`complete`** job → `pending`, clearing the stale claim (`claimed_at`/`worker_id`), the
+    `error`, and **resetting `attempts` to 0** — a deliberate operator retry gets a full budget,
+    distinct from `fail()`'s attempts-untouched rule (D-009 §1 Am. 2), which is about *automatic*
+    history. This is an explicit override, and it says so.
+  - a **`complete`** job is **left untouched** — re-folding a target whose structure already exists
+    is paid and pointless. Requeue never destroys a good fold.
+  - an accession with **no job at all** is **reported, not silently dropped** (understating what was
+    requeued is the D-024-adjacent failure), and makes the CLI exit non-zero so a typo is loud.
+  - **Idempotent:** requeuing a `pending` job is a no-op-shaped write; safe to re-run.
+- **Deep-learning justification:** indirect but real — the reruns are how the network folds the
+  above-ceiling targets the coverage surface (D-024) needs, and without a re-fold path a failed
+  target is permanently stuck failed. The scorer's eventual denominator depends on these landing.
+- **Consequences / test surface:**
+  - **Tested first** (`tests/test_enqueue_cli.py`, hermetic SQLite): a `failed` job → `pending`
+    with `attempts` reset and `error`/claim cleared; a `complete` job is **not** touched; an unknown
+    accession is reported and the exit code is non-zero; requeue does **not** fetch (the fake fetcher
+    asserts if called) and creates no new analysis/job rows.
+  - **Runbook:** `RUNBOOK-rerun-5-targets.md` Phase 1 switches from the hand-run SQL snippet to this
+    one guarded command.
+  - **Not built:** a standing reaper / scheduled requeue (out of scope — the operational need is a
+    one-time, operator-initiated re-fold, not an automatic recovery loop; the silent-hang/heartbeat
+    question stays with D-030).
+
+---
+
+### D-043 — Coverage `fold_status` is three states: a failed fold is not an unattempted one
+- **Date:** 2026-07-24
+- **Status:** Proposed → Accepted on merge.
+- **Amends:** D-038 (the coverage supplier payload — `fold_status` gains a third value and a reason
+  field; the `coverage` partition object is untouched).
+- **Context — D-024 says the reader must see what the system could not do, and today the coverage
+  surface cannot.** Five targets (ADAM17, IGF2R, NOTCH2, PTPRZ1, SDK1) exist as enqueued work that
+  did **not** fold — four exceeded the unchunked memory ceiling (D-042 §1: `tri_att_start` is O(L³);
+  IGF2R asked 230 GiB on a 95 GiB card), one was interrupted mid-fold. D-038's supplier joins only
+  the **folded** set (`_folded_accessions`, a completed `protein_analyses` row with `pdb_path` set)
+  and collapses **everything else to `not_folded`**. So *attempted-and-failed* and *never-attempted*
+  render identically — which is exactly the flattening D-024 forbids: a reader cannot tell a hardware
+  ceiling the system hit from a target it never touched.
+- **Provenance (D-016):** ruled against `app/reads.py` (`coverage_payload`, `_folded_accessions`,
+  `_coverage_row` as shipped in #55), `db/models.py` (`JobRecord.status`/`.error`, `analysis_id` FK
+  to `protein_analyses`), `core/queue.py`'s status machine (`PENDING → CLAIMED → COMPLETE | FAILED`,
+  `REAPED_OUT_REASON`), and live `GET /api/coverage` returning the five as `not_folded`.
+
+---
+
+- **Decision — the supplier joins `jobs` and emits `fold_status ∈ {folded, failed, not_folded}` plus
+  a `fail_reason`.** Precedence, in order, so the honest state always wins:
+  1. **`folded`** — a completed `protein_analyses` row exists (`pdb_path` set). `fail_reason` null.
+     A target that failed an early attempt and later folded reads `folded`; the success is the truth.
+  2. **`failed`** — no completed row, but a **terminally `failed`** job exists for the accession.
+     `fail_reason` carries `jobs.error` verbatim.
+  3. **`not_folded`** — neither. `fail_reason` null.
+
+  **Only the terminal `failed` status counts — `claimed`/`pending` are in-flight, not failures.** A
+  target being re-folded right now (a fresh `pending` job) must not read `failed`; the moment its row
+  completes it flips to `folded`. This is the D-030 status machine's own boundary, honoured here.
+
+  **The join is `jobs.analysis_id → protein_analyses.id → input_value`**, the same accession-in-
+  `input_value` key D-038 already documented (uniprot inputs only; a future non-uniprot type widens
+  it rather than silently miscounting). Where multiple failed jobs share an accession, the **latest**
+  (highest `id`) supplies the reason.
+
+  **`fail_reason` is served verbatim, not prettified.** For the current five that means whatever the
+  DB actually holds — and today, honestly, that may be nothing clean: four OOM'd by **crashing the
+  worker before D-042's `fail()` path existed** (left `claimed`, then either stuck or reaped to
+  `failed` with the generic `REAPED_OUT_REASON` marker, *not* the OOM text). **That is the correct
+  behaviour, not a gap:** the supplier surfaces the truth of the record. The specific, presentable
+  reason ("CUDA OOM, O(L³) attention") is written only when D-042's `fold → FoldError → fail(error)`
+  path runs — i.e. **on the rerun** (D-042 rerun list). This entry builds the *mechanism*; the rerun
+  supplies the *content*. The component is therefore built blind to which rows fail and renders
+  **zero failures correctly** — so it does not depend on, and cannot be invalidated by, the rerun.
+- **A payload-level `failed` count** sits beside `coverage` (not inside its partition): the `coverage`
+  object stays pure-manifest and continues to sum `ranked + held_out + excluded == denominator`
+  (D-038's invariant, untouched). `failed` is a DB-join fact, a subset of `not_folded`'s old count,
+  and is documented as such so no client sums it into the denominator.
+- **Deep-learning justification:** direct, via D-024. The coverage line is what keeps the eventual
+  ranking honest; a surface that hides *attempted-and-failed* inside *not-yet* understates what the
+  fold pipeline was asked to do and where the hardware ceiling actually bit. **Showing the failures —
+  with reasons — is the honest-denominator discipline applied one level deeper.**
+- **Consequences / test surface:**
+  - **Tested first** (`tests/test_coverage_route.py`, hermetic — real manifest + in-memory SQLite):
+    a terminal `failed` job with no completed row → `fold_status == "failed"`, `fail_reason == error`,
+    `analysis_id is None`; a **`claimed`** job (in-flight) → `not_folded`, **not** `failed`; a folded
+    row that also has a failed job → `folded` (precedence); `fail_reason` is null unless `failed`; the
+    payload `failed` count equals the number of failed rows; the empty-DB default stays all
+    `not_folded`. D-038's existing invariants (partition sums, denominator pinned at 82, exclusions by
+    name) are unchanged and still pass.
+  - **UI (`CoverageView.jsx`):** the two-way Fold cell becomes three-way (`folded` / `failed` /
+    `not yet`); the note cell shows `fail_reason` for a failed row as it already shows
+    `exclusion_reason` for an excluded one; a `.failed` style is added beside `.folded`/`.not-folded`.
+  - **No supplier schema change, no migration:** `jobs` already carries `status` and `error`
+    (D-009/D-012). CPU-only join over ≤82 rows; no new dependency, no new table.
+  - **Not built:** a `failed` cell in the `coverage` partition object (would break D-038's sum
+    invariant); prettifying the reaped marker (the UI may soften presentation later, the supplier
+    stays literal).
+
+---
+
 ### D-042 — Rental-tier hardening: chunking is mandatory, and no single fold may take down the batch
 - **Date:** 2026-07-23
 - **Status:** **Accepted** — the first rental run (`CLOSEOUT-2026-07-23-full.md`) exposed these; the

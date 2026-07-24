@@ -35,6 +35,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.manifest import ManifestRow, build_manifest
+from core.queue import COMPLETE, PENDING
 from db.models import JobRecord, ProteinAnalysis, RankingRun
 from worker.runner import (
     DEFAULT_CHUNK_SIZE,
@@ -181,6 +182,51 @@ def enqueue_cohort(
     )
 
 
+# ── Requeue: the deliberate re-fold path enqueue idempotency cannot give (D-044) ──
+
+@dataclass
+class RequeueSummary:
+    requeued: int              # non-complete jobs reset to pending
+    skipped_complete: int      # already folded — left untouched (re-folding is paid, pointless)
+    not_found: list[str]       # accessions with no job at all — reported, never silently dropped
+
+
+def requeue_jobs(session: Session, accessions: Iterable[str]) -> RequeueSummary:
+    """Reset the jobs for ``accessions`` to ``pending`` so a worker can claim them again (D-044).
+
+    Works around D-026's one-way idempotency: enqueue keys on the ``protein_analyses`` row, so it
+    cannot re-offer a target that already has one but failed. Joined to jobs via
+    ``protein_analyses.input_value`` (the D-038 uniprot key). A **non-``complete``** job → ``pending``
+    with the stale claim/error cleared and ``attempts`` reset to 0 (a deliberate operator retry gets
+    a full budget — distinct from ``fail()``'s attempts-untouched rule, D-009 §1 Am. 2, which is
+    about *automatic* history). A **``complete``** job is left untouched: requeue never destroys a
+    good fold. An accession with **no job** is reported, not dropped. Idempotent."""
+    requeued = skipped = 0
+    not_found: list[str] = []
+    for accession in accessions:
+        jobs = session.execute(
+            select(JobRecord)
+            .join(ProteinAnalysis, JobRecord.analysis_id == ProteinAnalysis.id)
+            .where(ProteinAnalysis.input_type == "uniprot")
+            .where(ProteinAnalysis.input_value == accession)
+        ).scalars().all()
+        if not jobs:
+            not_found.append(accession)
+            continue
+        for job in jobs:
+            if job.status == COMPLETE:
+                skipped += 1
+                continue
+            job.status = PENDING
+            job.claimed_at = None
+            job.worker_id = None
+            job.error = None
+            job.attempts = 0
+            requeued += 1
+    session.commit()
+    return RequeueSummary(requeued=requeued, skipped_complete=skipped, not_found=not_found)
+
+
 # ── Real UniProt sequence fetcher (network; injected, never used in tests) ────
 def uniprot_fetcher(accession: str) -> FetchedSequence:
     """Fetch a reviewed sequence and name the UniProt release it came from. Mirrors
@@ -217,6 +263,7 @@ def uniprot_fetcher(accession: str) -> FetchedSequence:
 #   python -m core.enqueue --bucket local --limit 1
 #   python -m core.enqueue --dry-run               # show the selection, touch nothing
 #   python -m core.enqueue                         # the full cohort (80 foldable / 82)
+#   python -m core.enqueue --requeue P78536 P11717 # deliberate re-fold: reset these jobs to pending (D-044)
 
 def select_rows(
     rows: Iterable[ManifestRow],
@@ -272,7 +319,19 @@ def run(
                         help="enqueue at most N foldable rows (after --accession/--bucket)")
     parser.add_argument("--dry-run", action="store_true",
                         help="print the selected targets; do not touch the database")
+    parser.add_argument("--requeue", nargs="+", metavar="ACCESSION",
+                        help="reset these targets' jobs to pending and exit (D-044) — a deliberate "
+                             "re-fold; no fetch, no new rows. A complete fold is left untouched")
     args = parser.parse_args(argv)
+
+    # --requeue short-circuits before the manifest/fetch path: it only moves existing jobs.
+    if args.requeue:
+        engine = engine_factory()
+        with Session(engine) as session:
+            summary = requeue_jobs(session, args.requeue)
+        print(f"requeued: requeued={summary.requeued} "
+              f"skipped_complete={summary.skipped_complete} not_found={summary.not_found}")
+        return 1 if summary.not_found else 0   # an unknown accession is loud, per D-044
 
     rows = build_manifest()
     selected = select_rows(rows, accession=args.accession, bucket=args.bucket, limit=args.limit)

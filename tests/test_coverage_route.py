@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.main import create_app
-from db.models import Base, ProteinAnalysis
+from db.models import Base, JobRecord, ProteinAnalysis
 
 TOKEN = "test-secret-token"
 
@@ -48,6 +48,24 @@ def _seed_folded(engine, accession: str, pdb_path: str = "/data/artifacts/1/stru
         rid = row.id
         s.commit()
     return rid
+
+
+def _seed_job(engine, accession: str, status: str, error: str | None = None,
+              pdb_path: str | None = None) -> int:
+    """A `protein_analyses` shell row (D-043: `pdb_path` NULL unless folded) plus a `jobs`
+    row in `status`. Mirrors production, where `core.enqueue` writes the shell row first and
+    the FK-bound job points at it. Returns the analysis id."""
+    with Session(engine) as s:
+        pa = ProteinAnalysis(input_type="uniprot", input_value=accession,
+                             structure_source="esmfold", pdb_path=pdb_path,
+                             mean_plddt=(77.26 if pdb_path else None),
+                             meta={"gene": "SEED"})
+        s.add(pa)
+        s.flush()
+        aid = pa.id
+        s.add(JobRecord(analysis_id=aid, status=status, error=error, inference_settings={}))
+        s.commit()
+    return aid
 
 
 def _client(engine) -> TestClient:
@@ -114,6 +132,58 @@ def test_fold_status_reflects_the_db_join(engine):
 def test_fold_status_defaults_to_not_folded_with_an_empty_db(engine):
     rows = _get(engine)["rows"]
     assert all(r["fold_status"] == "not_folded" and r["analysis_id"] is None for r in rows)
+
+
+# ── fold_status: the third state — attempted-and-failed ≠ never-attempted (D-043) ─
+
+# Real cohort accessions for the two failure modes the rerun list names (closeout §8).
+IGF2R = "P11717"     # O(L³) OOM — asked 230 GiB
+ADAM17 = "P78536"    # interrupted mid-fold
+
+
+def test_a_terminal_failed_job_reads_failed_with_its_reason(engine):
+    reason = "CUDA OOM: tri_att_start asked 230.33 GiB on a 94.98 GiB card"
+    _seed_job(engine, IGF2R, status="failed", error=reason)
+    row = {r["accession"]: r for r in _get(engine)["rows"]}[IGF2R]
+    # attempted-and-failed is its own state, and it carries the reason, not just a flag (D-024/D-043)
+    assert row["fold_status"] == "failed"
+    assert row["fail_reason"] == reason
+    assert row["analysis_id"] is None          # a failed fold is not a folded one — no drill-down link
+
+
+def test_an_in_flight_job_is_not_a_failure(engine):
+    # claimed/pending are in-flight (D-030 status machine); only a terminal `failed` counts (D-043).
+    _seed_job(engine, IGF2R, status="claimed")
+    row = {r["accession"]: r for r in _get(engine)["rows"]}[IGF2R]
+    assert row["fold_status"] == "not_folded"
+    assert row["fail_reason"] is None
+
+
+def test_a_folded_row_beats_an_earlier_failed_job(engine):
+    # A target that failed once and later folded reads `folded` — the success is the truth (D-043).
+    _seed_job(engine, ADAM17, status="failed", error="interrupted")
+    _seed_job(engine, ADAM17, status="complete", pdb_path="/data/artifacts/9/structure.pdb")
+    row = {r["accession"]: r for r in _get(engine)["rows"]}[ADAM17]
+    assert row["fold_status"] == "folded"
+    assert row["fail_reason"] is None
+    assert row["analysis_id"] is not None
+
+
+def test_fail_reason_is_null_for_non_failed_rows(engine):
+    _seed_folded(engine, NECTIN4)
+    rows = _get(engine)["rows"]
+    assert all(r["fail_reason"] is None for r in rows if r["fold_status"] != "failed")
+
+
+def test_payload_failed_count_matches_the_failed_rows(engine):
+    _seed_job(engine, IGF2R, status="failed", error="OOM")
+    _seed_job(engine, ADAM17, status="failed", error="interrupted")
+    payload = _get(engine)
+    failed_rows = [r for r in payload["rows"] if r["fold_status"] == "failed"]
+    # a sibling of `coverage`, NOT summed into the partition (D-043) — the partition still holds
+    assert payload["failed"] == len(failed_rows) == 2
+    cov = payload["coverage"]
+    assert cov["ranked"] + cov["held_out"] + cov["excluded"] == cov["denominator"]
 
 
 # ── auth: /api/coverage is open, and the prefix property still holds ──────────
