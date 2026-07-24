@@ -9,10 +9,15 @@ spends what they serve.
 
 ## 0. Provenance (D-016)
 
-Planner works from tree at `#60` + live prod. **80 `protein_analyses` rows** (42 local + 38
-rental), **5 failed folds** (§5), coverage ~**63 ranked ∧ folded of 82**. Confirm against
-`GET /api/coverage` at session start — the numbers below are last night's and the rental run
-landed late.
+Planner works from tree at **`#62` / `40a8fc9`** + live prod. **80 `protein_analyses` rows** (42
+local + 38 rental), **5 failed folds** (§5), coverage ~**63 ranked ∧ folded of 82**. Confirm
+against `GET /api/coverage` at session start — the numbers below are last night's and the rental
+run landed late.
+
+**⚠ Drafted at `#60`; updated after `#62`.** After this was written, the evening's fixes landed
+(**D-042**, PR #62; docs PR #61). The rerun's *build* work — §5.1's recipe entry and §5.2's
+OOM-crash fix — is **already shipped**; §5 below is updated to reflect that. The repo is clean and
+`local == origin == 40a8fc9`.
 
 ---
 
@@ -129,6 +134,12 @@ than the current one.**
 
 ## 5. THE RERUN — five targets, and it should come first
 
+> **⚠ UPDATED — the build half of this section is DONE (D-042, PR #62).** §5.1's chunked-rental
+> entry + recipe change (`chunk_size: None → 64`) and §5.2's OOM-crash fix (OOM→`FoldError` +
+> batch resilience) landed tests-first and deployed. **What remains is the owner's rent-and-run
+> (§5.3, from step 3) — no code.** If a fold still OOMs it now fails cleanly and the batch survives,
+> so the manual-restart tax from last night is gone.
+
 **Owner has balance available and wants these tonight-equivalent.** Coverage goes **63 → 67 of
 82** — the entire ranked cohort except the two named exclusions. That is a materially better
 number to present than 63 with unexplained holes.
@@ -143,7 +154,7 @@ number to present than 63 with unexplained holes.
 | **SDK1** (Q7Z5N4) | ~2,213 | same | same |
 | **IGF2R** (P11717) | ~2,491 | same — asked **230 GiB** | same |
 
-### 5.1 — The recipe change needs an entry, not just a line
+### 5.1 — The recipe change needs an entry, not just a line — ✅ DONE (D-042)
 
 `core/enqueue.py` `TIER_RECIPE["rental"]`: `chunk_size: None` → `64`.
 
@@ -160,7 +171,7 @@ the other 38 rental folds (`fp16`/unchunked). **`meta.fold_provenance` already c
 `chunk_size`, so this is visible rather than hidden** — but the UI's provenance panel (§2.2)
 should make it legible, and any cross-target comparison needs to know three recipes exist.
 
-### 5.2 — ⚠ Fix the OOM crash BEFORE renting again
+### 5.2 — ⚠ Fix the OOM crash BEFORE renting again — ✅ DONE (D-042)
 
 Close-out §3a: `torch.OutOfMemoryError` propagates through `fold()` → `fold_from_spec` →
 `run_worker` → `main()` and **kills the process**, where D-030 §4 rules a fold failure should call
@@ -180,8 +191,8 @@ The allocator setting is a **candidate, not a claim** — untested.
 
 ### 5.3 — Sequence
 
-1. **Entry** ruling the chunked rental recipe (justified by the measured ceiling).
-2. **Code:** recipe change + OOM-handling fix, tests-first, through the gate, deployed.
+1. ~~**Entry** ruling the chunked rental recipe~~ — **DONE (D-042).**
+2. ~~**Code:** recipe change + OOM-handling fix, tests-first, through the gate, deployed~~ — **DONE (PR #62).** Start here ↓
 3. **Re-enqueue the five.** `core.enqueue` is idempotent (D-026); confirm it offers exactly 5.
 4. **Rent** — ~30–45 minutes, ~$2. **Use `nohup … &`** (close-out §4a) and **verify the token
    length on the pod before starting** (§4b).
@@ -197,9 +208,10 @@ unchunked ones did. Budget the time, not just the dollars.
 - **⚠ The silent-hang mode** (close-out §3b) — a wedged worker holding 57 GiB at 0% utilisation,
   billing indefinitely while appearing healthy. Strengthens the heartbeat case; watch for it on
   the rerun.
-- **Amendments queued:** D-011 (hardware, cost, falsified unchunked assumption), D-022 (ceiling
-  measured), D-030 (heartbeat trigger extended to the hang mode), D-035 (PAE size at scale).
-- **`tmp_dispo.py`, `tmp_state.py`, `tmp_nopae.py`** — throwaway query scripts; delete.
+- **Amendments:** D-011 and D-022 **amended in place (D-042).** D-030 (heartbeat trigger extended
+  to the silent-hang mode) and D-035 (PAE size at scale) **still queued** — recorded in D-042's
+  body but not yet added as pointers on those two entries.
+- ~~`tmp_dispo.py`, `tmp_state.py`, `tmp_nopae.py`~~ — **deleted.**
 - **Network volume** — confirm deleted; spend rate should read $0.00/hr.
 
 ---

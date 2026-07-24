@@ -65,7 +65,7 @@ through `fold()` → `fold_from_spec` → `run_worker` → `main()` and **kills 
 rules that a fold failure calls `fail()`, records the error, and continues. It does not. **One
 oversized target took down the entire batch** and required manual restart — four times over the
 evening. This is a real bug in the loop's error handling and it is invisible on the local tier,
-where folds are too small to OOM.
+where folds are too small to OOM. **[FIXED this evening — D-042 §2; see §11.]**
 
 **(b) ⚠ A silent hang mode that is worse than a crash.** The final stall was **not** an OOM: three
 `nvidia-smi` samples ten seconds apart showed **identical 57,169 MiB held, 0% utilisation, 87 W**,
@@ -151,15 +151,15 @@ rather than asserted.
 ## 7. Carried hazards and open items
 
 - **⚠ Five folds failed** — see §8 for the rerun list.
-- **The loop's crash-on-OOM (§3a)** — unfixed, and it will recur on any rerun of the oversized
-  targets.
+- ~~The loop's crash-on-OOM (§3a)~~ — **FIXED this evening (D-042 §2 / §11):** an OOM now fails
+  the job and the batch continues; an unexpected exception can no longer take the worker down.
 - **D-030's lease** — still provisional at 3,600 s, justification weakened by the 2.2× measurement
   and now further by the silent-hang mode (§3b).
 - **The network volume** — attached against D-011's ruling; **bills monthly even after pod
   termination.** Must be deleted separately.
 - **`torch 2.8.0+cu128` on the pod vs `2.11.0+cu128` locally** — the rental folds ran on a
   different torch build. Real provenance difference; belongs in the D-011 amendment.
-- **`tmp_dispo.py`, `tmp_state.py`, `tmp_nopae.py`** — throwaway query scripts; delete.
+- ~~`tmp_dispo.py`, `tmp_state.py`, `tmp_nopae.py`~~ — **deleted this evening** (§11).
 
 ---
 
@@ -176,6 +176,8 @@ rather than asserted.
 **The four oversized targets need a `TIER_RECIPE` change** (`core/enqueue.py`: rental
 `chunk_size: None` → `64`), which is a **one-line change with a decision entry**, justified by the
 measured ceiling. Chunking trades speed for memory — those folds run slower and succeed.
+**[DONE this evening — D-042 landed the recipe change AND the OOM fix; the rerun is code-ready and
+needs only the owner's rent-and-run. See §11.]**
 
 **Sequencing recommendation:** make the recipe change, ship it through the gate, *then* rent once
 more and run all five together. ~30–45 minutes, ~$2. **Coverage would reach 67 of 82** — the
@@ -203,3 +205,22 @@ entire ranked cohort except the two named exclusions.
 - PAE: **33/33 transferred and acknowledged before termination.**
 - **Not met:** the cohort is not fully folded (5 failures); the scorer does not exist; the ranking
   table remains unbuilt and unmocked.
+
+---
+
+## 11. Evening addendum — the fixes landed, the repo is clean (post-drafting)
+
+Everything above was drafted before the evening's last work. What happened after:
+
+**PR #61 (docs) + PR #62 (D-042) merged; deploy green; local `main` == `origin/main` == `40a8fc9`.**
+
+**D-042 — rental-tier hardening — fixed all five findings this closeout raised, tests-first through the gate:**
+- **§1 / §8 recipe:** `TIER_RECIPE["rental"].chunk_size: None → 64`. D-011's unchunked assumption is on the record as falsified (O(L³), IGF2R asked 230 GiB); D-011 and D-022 amended **in place**.
+- **§3(a) the loop crash:** fixed two ways — `runner.fold` classifies CUDA OOM as `FoldError` (the D-030 §4 intent, finally implemented), and `run_worker` gained a **batch-resilience catch** so any unexpected fold exception fails the one job and the batch continues. CI-tested (a good fold behind a failing one still lands).
+- **§4(b) the silent token:** a 401 is now a fatal `AuthError` that stops the worker on the **first** poll with a loud log — 70 minutes → 5 seconds.
+- **§3(c) model reload:** `_load_model` caches by `(dtype, revision)`; a batch loads the weights once.
+- **Ops (§4a etc.):** the a6000 guide gained the run-lessons — nohup-detach, `WORKER_ARTIFACT_DIR`, `expandable_segments`, delete the network volume, the $2/hr reality.
+
+**Cleanup:** `tmp_dispo.py` / `tmp_state.py` / `tmp_nopae.py` deleted; 40+ stale remote branches pruned; working tree clean; snapshot regenerated from the committed HEAD.
+
+**Net effect on tomorrow:** the rerun (§8) is no longer a build task — the recipe change and the crash fix are **shipped**. What remains is the owner's rent-and-run (~$2, ~30–45 min), and if a fold still OOMs it now fails cleanly instead of taking down the batch. Full suite: **209 passed, 11 skipped**.
