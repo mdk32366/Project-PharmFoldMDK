@@ -80,6 +80,84 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-048 — UI-depth §3: the two-population provenance panel, tier legibility, per-residue spread, and the band re-pin
+
+- **Date:** 2026-07-25
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-046 (the test harness this builds on, and the two-population render rule it
+  implements — §3), D-045 (the two populations), D-039 (the bands this re-pins), D-043 (failed
+  vs. not-folded, already shipped — the coverage half of UI-depth §2.1), D-024/D-028 (don't
+  collapse distinct classes; a boolean is not a reason), D-016 (name the artefact behind a claim),
+  D-037 (hand-rolled SVG over a chart lib in the weaker-guarantee dep world).
+- **Amends:** nothing structural. Completes the UI layer for the demo; closes UI-depth §3.1–§3.4.
+
+This lands the four UI-depth §3 components the harness (D-046) was built to make testable, all
+tests-first on `vitest`/`@testing-library/react`, all asserting on rendered output as a reader
+encounters it. **26 UI tests across 4 files, green; the `bandFor` smoke test is deleted** (owner
+ruling, prework §3) — its boundary coverage re-homed into `plddt.bands.test.js` first, so nothing
+was lost.
+
+**§3.1 — the two-population provenance render (`Provenance.jsx`).** The panel now renders D-045's
+split honestly (D-046 §3): the four environment fields (`torch_version`, `transformers_version`,
+`device_name`, `cuda_version`) show their real captured values on post-D-045 folds, and read
+**"not captured"** — never a value, never a bare em-dash — on pre-D-045 folds, whose gap is named
+**once** at the population level *with its reason* (the record is written worker-side at fold time
+and cannot be reconstructed), not repeated per field. The three provenance classes are visually
+grouped and labelled — *what ran* (weights), *how it ran* (recipe), *what it ran on* (environment).
+**No completeness score** (§3 "deliberately not done"): a fold we can say less about is not a worse
+fold. This is the one component where a silent render bug produces a *plausible-but-false*
+provenance claim, so it carries the most tests (9).
+
+**§3.2 — tier legibility (`TargetList.jsx`).** The list shows each fold's `tier` per row and is
+filterable by tier, so the two-machine cohort (local int8 vs. rental fp16) is legible without
+opening a JSON payload (UI-depth §2.3). Tiers are **not** blended into a combined quality score
+(D-028). **No supplier change** — `tier`/`tier_reason` are already in the light-list projection
+(`app/reads.py` `_LIST_META_KEYS`), verified before speccing (UI-depth trap a).
+
+**§3.3 — the bands, re-pinned against the enlarged cohort (`plddt.bands.test.js`).** D-039's
+50/60/70 were justified over the 42-fold distribution (24%/45%/57% below 50/60/70). The prework's
+rule (trap b) is *recompute, do not assume*. **Provenance limit stated honestly (D-016):** the
+individual `mean_plddt` values live in production Postgres, not in any repo artefact, so the *new
+distribution percentages cannot be recomputed here without fabricating them.* What this PR pins
+instead is the **band contract as a single source of truth** — boundaries exactly 50/60/70, the
+not-folded sentinel, `colorFor` derived from the same `BANDS` (so structure and legend cannot
+disagree), and the cohort-max 81.4 caveat living only on the top band — plus a concrete check that
+the four new rerun folds (ADAM17 72.78, SDK1 58.01, NOTCH2 57.89, PTPRZ1 30.68) classify sensibly.
+**The numeric re-justification of the 60 line against the full current cohort is a named owner
+action** (a live `GET /api/analyses` query over every `mean_plddt`); if the shape has moved
+materially, D-039 gets amended with the new numbers rather than silently keeping a justification
+that no longer holds.
+
+**§3.4 — per-residue spread (`PlddtSpread.jsx`, rendered by `Confidence.jsx`).** The mean hides
+the spread: NECTIN4 runs 50.1–93.4 on a mean of 77.26 (UI-depth §2.5). Beside the mean the panel
+now states min/median/max, the fraction of residues below the trust divider (60), and a hand-rolled
+SVG sparkline coloured by the same D-039 bands (D-037). It surfaces uncertainty and never
+manufactures a headline confidence number (UI-depth trap c — more informative, not more confident).
+
+- **Deep-learning justification:** every piece makes a *network output* legible as what it is. The
+  provenance panel makes the Prime-Directive claim ("we ran ESMFold ourselves, at a named revision")
+  **checkable** rather than asserted, and refuses to render a missing environment field as present —
+  the exact failure that would convert an honest gap into a false assurance a grader cannot detect
+  (D-046 §4). The per-residue spread surfaces the model's *own* confidence varying across the
+  molecule — the single highest-information-per-pixel view of the DL output. Tier legibility keeps a
+  methodological distinction (int8 vs. fp16, two torch builds) visible instead of blended. The band
+  re-pin keeps the self-reported confidence scheme a single, visible, ruled contract.
+- **Consequences:**
+  - New: `ui/src/components/PlddtSpread.jsx` (+ test), `ui/src/components/Provenance.test.jsx`,
+    `ui/src/components/TargetList.test.jsx`, `ui/src/plddt.bands.test.js`. Rewritten:
+    `Provenance.jsx`, `TargetList.jsx`. Edited: `Confidence.jsx` (renders `PlddtSpread`),
+    `styles.css`. **Deleted:** `ui/src/plddt.test.js` (D-046 smoke test, per owner ruling).
+  - `bandFor`/`colorFor`/`BANDS` in `plddt.js` are unchanged — the scheme was re-pinned, not
+    re-cut. Any future boundary change remains a visible, ruled change (D-039).
+  - **Not built, not mocked:** the ranking table (UI Plan v2 step 6) still waits on the scorer
+    (D-041 → fit). No new runtime dependencies; `test_image_contents.py` still guarantees the test
+    deps never cross into the runtime image (D-046).
+  - **Owner follow-up:** the §3.3 numeric recompute against the live cohort; the small stale-doc
+    fixes carried in the prework §5 (runbook token `69`→`64`, the rent-guide Step 7 install path,
+    the `worker/requirements.txt` `+cu128` pin split).
+
+---
+
 ### D-047 — The fold recipe is resolved at fold-time, not frozen at enqueue
 
 - **Date:** 2026-07-25
