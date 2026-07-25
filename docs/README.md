@@ -80,6 +80,81 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-049 — pLDDT bands re-justified on the 79-fold cohort; the cohort-max caveat corrected (81.4 → 84.23)
+
+- **Date:** 2026-07-25
+- **Status:** Accepted.
+- **Relates:** D-039 (the bands and the original 42-fold justification whose *numbers* this
+  supersedes), D-016 (a claim names how it is known — this entry exists because the naming
+  caught a stale one), D-024/D-028 (the caveat keeps a self-report legible as a self-report),
+  D-048 (the band-contract pin, `plddt.bands.test.js`, whose 81.4 assertion this deliberately
+  reddens-then-greens), D-045 (the two-tier cohort whose upward mass shift moved the distribution).
+- **Amends:** D-039's stated fractions and `COHORT_MAX_PLDDT`. **Does not move a boundary.**
+
+**Named query (provenance chain).** `GET https://pharmfoldmdk.fly.dev/api/analyses` (public read,
+D-034), fetched **2026-07-25** → `200`, 18,502 bytes, **80 analyses** (82 cohort − 2 named
+exclusions, D-022). **79 carry a `mean_plddt`**; the one null is IGF2R, the documented A6000
+ceiling (correctly unfolded, D-047 context). The denominator is **79 folded targets** — the whole
+current cohort, not the historical 42. min 30.68 · median 70.91 · max 84.23.
+
+**Named counts — the shape moved, materially:**
+
+| boundary | 42-fold (D-039) | 79-fold (current) |
+|---|---|---|
+| `< 50` | 24% | **15.2%** (12/79) |
+| `< 60` | 45% | **29.1%** (23/79) |
+| `< 70` | 57% | **44.3%** (35/79) |
+| cohort max | 81.4 | **84.23** |
+
+Every below-fraction fell 9–16 points as the cohort nearly doubled (42→79) and its mass shifted
+up — the rental tier's fp16/unchunked folds scoring higher than the historical local set.
+
+**Ruling — two consequences, ruled separately:**
+
+1. **Keep 50/60/70; correct the justification, don't move the divider.** 50 and 70 are
+   AlphaFold/ESMFold conventions and stand on their own. The 60 "trust divider" was justified in
+   D-039 by the cohort's own mass — *"45% of folds fall below it."* That number is now **29.1%**.
+   The divider still splits real mass and remains a defensible "how far to trust this" line, so the
+   boundary does not move — but the stated justification is now false and must be corrected to the
+   **15.2 / 29.1 / 44.3** fractions over the named query above. This is a *re-justification on the
+   real cohort*, not a re-cut. A boundary whose justifying number no longer holds is a claim the log
+   can no longer stand behind; correcting the number is what keeps 60 honest. The median at 70.91
+   straddling the 70 line is noted — half the cohort now reaches the convention's reliable-backbone
+   threshold, up from the 42-fold picture — but it argues for nothing to move; it's a fact about
+   where the cohort sits, recorded so a later reader sees it.
+
+2. **`COHORT_MAX_PLDDT` 81.4 → 84.23 is a real, visible bug, and it is the load-bearing fix.**
+   `plddt.js` hard-codes 81.4, and the top-band caveat renders *"cohort max 81.4 — no target reaches
+   the high-confidence range."* Three folds now exceed 81.4; the true max is **84.23**. The
+   *conclusion* still holds — nothing reaches ≥90, there is still no high-confidence tier — but the
+   *number* is wrong and would render next to an 84.23 fold, which is precisely the class of visible
+   falsehood the confidence element exists to prevent (a reader seeing "max 81.4" beside a target
+   that scores 84.23 catches the system lying about its own ceiling). The caveat text is corrected to
+   84.23 while keeping the "no high-confidence tier" conclusion, which remains true.
+
+- **Deep-learning justification:** pLDDT is the network's own confidence output; the bands make it
+  legible as a self-report (D-039). A justification citing a fraction that no longer holds, and a
+  caveat citing a max three folds now exceed, both degrade that legibility into stale assertion.
+  Re-grounding both on the live cohort is what keeps the model's self-report honestly rendered — the
+  same reason D-039 existed, applied to the cohort D-039 didn't yet have.
+- **Consequences:**
+  - `ui/src/plddt.js`: `COHORT_MAX_PLDDT` 81.4 → 84.23; the top-band caveat string updated to the
+    new max (conclusion unchanged).
+  - `ui/src/plddt.bands.test.js`: the contract pin asserting 81.4 flips to 84.23 — **red-then-green
+    is the point** (the pin was doing its job by breaking; a change to a ruled constant must be a
+    visible, failing-then-passing test, D-048's whole rationale for pinning it).
+  - **No boundary constant changes** — `BANDS` mins stay `[70, 60, 50, 0]`. `bandFor` behavior is
+    unchanged; only the max constant and the caveat prose move.
+  - This entry **supersedes D-039's numbers, not its scheme.** D-039 stays in the log as the origin;
+    D-049 is where the fractions and the max are now true-as-of the named query.
+  - **The 42-fold vs 79-fold denominator shift is itself the finding:** the honest cohort is the one
+    you can name today, not the one a prior entry was written against. The fractions are true as of
+    the 2026-07-25 fetch of the deployed API; if more folds land (IGF2R on a bigger card, the
+    domain-folded giants), the denominator moves again — so the entry names the query and the date
+    precisely enough that a later reader knows exactly which cohort these numbers describe.
+
+---
+
 ### D-048 — UI-depth §3: the two-population provenance panel, tier legibility, per-residue spread, and the band re-pin
 
 - **Date:** 2026-07-25

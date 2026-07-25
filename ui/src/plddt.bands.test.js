@@ -60,10 +60,10 @@ describe('band scheme is a single source of truth (D-039: structure and legend c
     expect(colorFor(30)).toBe(BANDS[3].color)
   })
 
-  it('the cohort-max caveat lives ONLY on the top band and names 81.4 (no high-confidence tier)', () => {
-    expect(COHORT_MAX_PLDDT).toBe(81.4)
+  it('the cohort-max caveat lives ONLY on the top band and names 84.23 (no high-confidence tier)', () => {
+    expect(COHORT_MAX_PLDDT).toBe(84.23)
     // The caveat travels in the band a reader sees (D-039), and only there.
-    expect(BANDS[0].caveat).toMatch(/81\.4/)
+    expect(BANDS[0].caveat).toMatch(/84\.23/)
     expect(BANDS.slice(1).every((b) => b.caveat == null)).toBe(true)
   })
 })
