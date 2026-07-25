@@ -1,11 +1,13 @@
 // pLDDT confidence bands (D-039). Boundaries 50/60/70: convention anchors 70 and 50, the cohort's
-// own measured mass justifies 60 (45% of folds fall below it). The cohort max is 81.4 — there is
-// NO high-confidence tier, surfaced in the top band's caveat where it is read, not only in the log.
+// own measured mass justifies 60 (D-039 measured 45% below it on 42 folds; D-049 re-justified at
+// 29.1% on the 79-fold cohort — the divider holds, the number moved). The cohort max is 84.23
+// (D-049; was 81.4 on 42 folds) — there is still NO high-confidence tier (nothing ≥90), surfaced in
+// the top band's caveat where it is read, not only in the log.
 //
 // This is the single source of the band scheme; the confidence element, the per-residue plot, and
 // the structure colouring all read it, so the structure and its legend cannot disagree.
 
-export const COHORT_MAX_PLDDT = 81.4
+export const COHORT_MAX_PLDDT = 84.23
 
 export const BANDS = [
   {
