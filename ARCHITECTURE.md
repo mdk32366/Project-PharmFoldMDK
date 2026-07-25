@@ -64,6 +64,15 @@ lazy-loaded chunk (the list page stays ~57 KB gzip). **PR C the coverage view** 
 held-out/excluded reachable by name (D-022), a method note (D-028 non-goals as commitments), and
 the ADC-context onboarding (UI Plan v2 §7). That **closes UI Plan v2 steps 2–5**; the ranking table
 (step 6, the demo centrepiece) waits on the scorer (D-027 → fit) and is deliberately not mocked.
+**D-048 then lands UI-depth §3** on the D-046 harness (tests-first, 26 UI tests green): the
+provenance panel renders D-045's two populations honestly — captured environment shown, absent
+environment read as *"not captured"* with a single population-level note, never as a value or a
+bare em-dash (D-046 §3); tier is legible and filterable in the list (local int8 vs. rental fp16,
+never blended, D-028); a per-residue pLDDT spread sits beside the mean (the model's own confidence
+varying across the chain, hand-rolled SVG, D-037); and the D-039 band scheme is re-pinned as a
+single source of truth (structure and legend cannot disagree), with the numeric re-justification of
+the 60 line against the enlarged live cohort left as a named owner action (D-016 — the individual
+`mean_plddt` values live in Postgres, not a repo artefact, so they are not fabricated here).
 **Next (owner-gated):** the app-scoped token + Fly app/Postgres/secrets provisioning so the first
 real deploy goes green; then starting the worker for the first end-to-end large rental fold — which
 retires the PROVISIONAL 60-min lease threshold (D-030) and D-031's estimated PAE ratio with measured

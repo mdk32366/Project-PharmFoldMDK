@@ -111,3 +111,30 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .cohort-table .failed { color: #f0a0a0; font-weight: 600; }
 .cohort-table .not-folded { color: var(--muted); }
 .cohort-table .note-cell { color: var(--muted); font-size: 0.82rem; }
+
+/* D-048 §3.1 provenance — three labelled groups (weights / recipe / environment) */
+.prov-group { margin: 0.4rem 0 0.9rem; }
+.prov-group h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--muted); margin: 0 0 0.4rem; }
+.prov-group dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 0.8rem; margin: 0; }
+.prov-group dt { color: var(--muted); font-size: 0.85rem; }
+.prov-group dd { margin: 0; font-variant-numeric: tabular-nums; }
+.prov-environment { border-left: 2px solid var(--line); padding-left: 0.7rem; }
+.not-captured { color: #b0895a; font-style: italic; }
+.prov-population-note { color: var(--muted); font-size: 0.82rem; margin: 0.5rem 0 0;
+  border-left: 2px solid #b0895a44; padding-left: 0.6rem; }
+
+/* D-048 §3.2 tier tags + list filter */
+.list-controls { display: flex; align-items: center; gap: 0.5rem; margin: 0.6rem 0; font-size: 0.88rem; }
+.list-controls select { background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 4px; padding: 0.2rem 0.4rem; }
+.tier-tag { font-size: 0.78rem; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid var(--line);
+  text-transform: lowercase; }
+.tier-local { color: #7fb3d1; border-color: #7fb3d155; }
+.tier-rental { color: #d1a97f; border-color: #d1a97f55; }
+
+/* D-048 §3.4 per-residue spread */
+.plddt-spread { margin: 0.6rem 0; padding: 0.5rem 0; border-top: 1px solid var(--line); }
+.spread-stats { display: flex; gap: 1.2rem; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+.spread-k { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; margin-right: 0.25rem; }
+.spread-below { color: var(--muted); font-size: 0.82rem; margin: 0.35rem 0 0; }

@@ -1,5 +1,6 @@
 import { bandFor, BANDS } from '../plddt.js'
 import PlddtPlot from './PlddtPlot.jsx'
+import PlddtSpread from './PlddtSpread.jsx'
 
 function BandLegend() {
   return (
@@ -27,6 +28,7 @@ export default function Confidence({ meanPlddt, plddt }) {
         <span className="band-label" style={{ color: band.color }}>{band.label}</span>
       </div>
       {band.caveat && <p className="caveat">⚠ {band.caveat}</p>}
+      <PlddtSpread plddt={plddt} />{/* D-048 §3.4: the spread the mean hides, beside the mean. */}
       <p className="self-report">
         pLDDT is the model's <em>self-reported</em> confidence in local backbone geometry — not a
         measure of whether the fold is correct, and not calibrated against experimental structures
