@@ -80,6 +80,108 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-047 — The fold recipe is resolved at fold-time, not frozen at enqueue
+
+- **Date:** 2026-07-25
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-042 (the rental recipe change that this incident proved never reached the
+  already-enqueued jobs), D-044 (`--requeue`, which faithfully replayed the stale recipe),
+  D-026 (enqueue stamps `inference_settings`), D-031 (`build_fold_spec`, the claim→FoldSpec
+  projection this moves the resolution into), D-016 (provenance names how it is known),
+  D-045 (the fold captures its real environment — where provenance actually lives).
+- **Amends:** the data-flow of D-026/D-031 — `dtype`/`chunk_size` are no longer *trusted*
+  from the job's stored `inference_settings`; they are resolved from the current
+  `TIER_RECIPE` at claim. Does not reverse a ruling; closes a latent seam.
+
+---
+
+#### Part 1 — the incident (immutable history: what already happened)
+
+The five-target rental rerun (2026-07-24, closeout `CLOSEOUT-2026-07-24-rerun.md`) produced
+**zero folds on first attempt**. Every large target OOM'd with the tell `at chunk_size=None`
+— **unchunked** — despite `TIER_RECIPE['rental']` reading `chunk_size=64` since D-042. IGF2R
+(2491 aa) asked for **230 GiB** on a 44 GiB card.
+
+**Root cause — a recipe frozen at the wrong time.** The fold recipe is snapshotted into the
+job's `inference_settings` **at enqueue** (D-026) and never refreshed. The five were first
+enqueued *before* D-042, when the rental recipe was `chunk_size=None`. **D-042 corrected the
+recipe *table* — not the already-stamped jobs.** `requeue_jobs` (D-044) resets
+status/claim/error/attempts but does **not** re-read `TIER_RECIPE`, so it faithfully replayed
+the pre-D-042 config that had failed these targets the first time. Every component was
+correct in isolation — the table was right, enqueue stamped it right, requeue reset the row
+right — and the *interaction* (a recipe changing *after* jobs are enqueued, then a requeue) was
+the one seam no test covered, because it had never occurred until D-042's change met D-044's
+requeue on these specific pre-D-042 jobs.
+
+**The manual fix that unblocked the live rental (recorded, not hidden — D-016).** With the pod
+on the meter, the owner reached the current recipe into the frozen jobs by a **guarded one-time
+`UPDATE`** of `inference_settings.chunk_size` (`None`→`64`, later →`32` for IGF2R's retry) on
+the requeued rows. The guard was tight: worker **stopped first** (a running worker re-claims a
+`pending` job within its 5-second poll and re-fails it before the edit lands — a second hazard
+worth naming: *never edit a job a live worker can claim*); only `pending` rows; only that one
+key via `jsonb_set`; asserted row count. **This changed an *input* recipe, not a provenance
+record.** The fold still recorded what it *actually* ran (`fold_provenance`), so no provenance
+was faked — the stored `chunk_size` per target is true to each fold (`64` on the three the fix
+reached, `None` on ADAM17 which folded unchunked on the broken first attempt). These hand-edits
+are now live in prod; the cure below makes such edits never necessary again.
+
+#### Part 2 — the cure (the ruling)
+
+**Recipe resolution moves to fold-time.** `build_fold_spec` (`app/artifacts.py`) resolves
+`dtype`/`chunk_size` from the current **`TIER_RECIPE[tier]`** — reading `tier` from the analysis
+`meta` it already loads — **not** from the job's stored `inference_settings`. No enqueued job
+can ever carry a stale recipe again, because the recipe is no longer *stored-then-trusted*: it
+is *resolved at claim*. `build_fold_spec` is **the one authoritative site**.
+
+**The design tension, recorded honestly (D-016/D-004).** Freezing the recipe at enqueue was
+arguably provenance — "what this job was *told* to run." Moving to fold-time trades that stored
+*intent* for **correctness-by-construction**. The resolution: **the job's pre-fold
+`inference_settings` was never the provenance record — `fold_provenance` is** (D-045). The fold
+captures what it *actually* ran (`build_provenance` records the real `chunk_size`/`dtype`, plus
+D-045's environment), so provenance is preserved at the fold, where it belongs. The intent is
+not lost either:
+
+- **Enqueue keeps stamping the recipe into `inference_settings`, now explicitly as a
+  *non-authoritative hint*** — the enqueue-time intent, retained as a record, no longer trusted
+  by the fold path. `inference_settings` remains **authoritative** for the per-target facts that
+  are *not* the tier recipe: `model_revision` (the pinned weights), `source`, and the ECD bounds
+  (`ecd_start`/`ecd_end`) — those are the target's slicing identity, not a compute knob D-042
+  can revise. Only `dtype`/`chunk_size` become hints. (Stopping the stamp entirely was the
+  alternative; keeping it preserves the intent record and the D-026 enqueue tests, at the cost of
+  a field a future reader must know is a hint — so it is labelled one, in the code and here.)
+
+**`TIER_RECIPE` relocates to `core/contracts.py`.** It lived in `core/enqueue.py`, which imports
+`worker.runner` (→ `worker.orchestrator`) at module load. `build_fold_spec` is **serving-tier**
+(`app/`), and the serving image copies only `app/`+`core/`+`db/`+`data/` — **no `worker/`**
+(DEP-001) — so importing `TIER_RECIPE` from `core.enqueue` would crash the serving tier at
+import time in prod. `core/contracts.py` is the serving-safe leaf that already holds `FoldSpec`
+for exactly this reason; `TIER_RECIPE` joins it, with literal values (local `int8`/64, rental
+`fp16`/64) mirroring `worker.runner`'s fold defaults. `test_image_contents.py` stays green — no
+new `worker/`/torch enters the image.
+
+**`requeue_jobs` gains a fail-loud tier guard.** With fold-time resolution, requeue no longer
+needs to re-stamp — it just resets status. But it now **asserts each non-complete job's analysis
+`meta` has a resolvable `tier`**, so a tier-less job fails loud *at requeue* (before the worker
+claims it), not silently at fold. A complete job is still never touched.
+
+- **Deep-learning justification:** the recipe (`dtype`/`chunk_size`) is what decides whether the
+  ESMFold trunk's O(L³) triangular attention fits the card at all (D-042). A frozen-stale recipe
+  is the difference between a fold and a 230 GiB OOM; resolving it at fold-time is what makes the
+  mechanism D-042/D-044/D-045 built actually *reach* the fold.
+- **Consequences:**
+  - `app/artifacts.py` `build_fold_spec` resolves `dtype`/`chunk_size` from `TIER_RECIPE[tier]`;
+    `core/contracts.py` gains `TIER_RECIPE`; `core/enqueue.py` imports it from there.
+  - **Regression test (names the incident):** a job whose stored `inference_settings.chunk_size`
+    is `None` but whose `tier` is `rental` → `build_fold_spec` yields `chunk_size=64` (current
+    recipe wins over stored). Red before the fix, green after.
+  - **Runbook change:** a future failed-target rerun is now just `--requeue` + refold — **no
+    manual recipe patch, no `chunk_size` surgery.** That is the whole point.
+  - **Not a rescue for last session's jobs.** This is the permanent cure for *future* runs; it
+    was not deployed before the rental finished and did not touch the four (five) already-
+    folded/failed jobs (see the incident's manual path). Deliberately uncoupled from the live run.
+
+---
+
 ### D-046 — Component tests for the UI, and the two-population provenance render
 
 - **Date:** 2026-07-24

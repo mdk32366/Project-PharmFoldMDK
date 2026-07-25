@@ -120,7 +120,8 @@ def _seed_job(engine, accession: str, status: str, *, attempts: int = 3,
     directly so a requeue can act on it. Returns the job id."""
     with Session(engine) as s:
         pa = ProteinAnalysis(input_type="uniprot", input_value=accession,
-                             structure_source="esmfold", pdb_path=pdb_path, meta={"gene": "SEED"})
+                             structure_source="esmfold", pdb_path=pdb_path,
+                             meta={"gene": "SEED", "tier": "local"})  # tier as real enqueue writes it (D-047)
         s.add(pa)
         s.flush()
         job = JobRecord(analysis_id=pa.id, status=status, attempts=attempts,
@@ -179,6 +180,20 @@ def test_run_requeue_never_fetches_and_creates_nothing(engine):
     before = _job_count(engine)
     run(["--requeue", "P23471"], engine_factory=lambda: engine, fetch=_boom_fetch)
     assert _job_count(engine) == before             # no new job/analysis rows
+
+
+def test_requeue_raises_loud_on_a_tierless_job(engine):
+    # D-047: with the recipe resolved at fold-time, a non-complete job whose analysis meta has
+    # no resolvable tier must fail loud AT REQUEUE — not be reset to pending, claimed on a paid
+    # card, and only then raise mid-fold. Seed a job whose meta carries no tier.
+    with Session(engine) as s:
+        pa = ProteinAnalysis(input_type="uniprot", input_value="P99999", meta={"gene": "NOTIER"})
+        s.add(pa)
+        s.flush()
+        s.add(JobRecord(analysis_id=pa.id, status=FAILED, inference_settings={}))
+        s.commit()
+    with pytest.raises(ValueError, match="tier"):
+        requeue_jobs_on(engine, ["P99999"])
 
 
 def _job_count(engine) -> int:

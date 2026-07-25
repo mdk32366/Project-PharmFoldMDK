@@ -34,12 +34,11 @@ from typing import Callable, Iterable
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.contracts import TIER_RECIPE
 from core.manifest import ManifestRow, build_manifest
 from core.queue import COMPLETE, PENDING
 from db.models import JobRecord, ProteinAnalysis, RankingRun
 from worker.runner import (
-    DEFAULT_CHUNK_SIZE,
-    DEFAULT_DTYPE,
     MODEL_ID,
     MODEL_REVISION,
     SLICED_ECD,
@@ -50,15 +49,9 @@ from worker.runner import (
 # is always tied to the target-list revision it was computed against.
 TARGET_LIST_VERSION = "Kathad-2024-PLOSONE-S3-82"
 
-# Per-tier fold recipe (D-018 / S-003) — recorded here, not re-decided.
-# D-042: rental `chunk_size` was `None` (D-011's assumption: more VRAM makes chunking
-# unnecessary). The first rental run FALSIFIED that — the ESMFold trunk's triangular attention
-# (`tri_att_start`) is O(L³), so IGF2R (2,491 aa) asked 230 GiB on a 95 GiB card. No rentable
-# card closes that gap; chunking is the only mitigation, so rental now chunks like local.
-TIER_RECIPE: dict[str, dict] = {
-    "local":  {"dtype": DEFAULT_DTYPE, "chunk_size": DEFAULT_CHUNK_SIZE},  # int8 / 64
-    "rental": {"dtype": "fp16", "chunk_size": 64},                        # D-011 → D-042 (was None)
-}
+# TIER_RECIPE moved to core/contracts.py (D-047) so the serving tier can resolve it at
+# fold-time without importing worker/. Re-exported via the import above; enqueue still stamps
+# it into inference_settings as a non-authoritative hint (D-047 Part 2).
 
 
 @dataclass(frozen=True)
@@ -200,23 +193,39 @@ def requeue_jobs(session: Session, accessions: Iterable[str]) -> RequeueSummary:
     with the stale claim/error cleared and ``attempts`` reset to 0 (a deliberate operator retry gets
     a full budget — distinct from ``fail()``'s attempts-untouched rule, D-009 §1 Am. 2, which is
     about *automatic* history). A **``complete``** job is left untouched: requeue never destroys a
-    good fold. An accession with **no job** is reported, not dropped. Idempotent."""
+    good fold. An accession with **no job** is reported, not dropped. Idempotent.
+
+    D-047: a non-complete job whose analysis ``meta`` has no resolvable ``tier`` raises here —
+    a requeue that could not resolve a fold recipe fails loud at the operator action, not
+    silently at fold-time on a claimed (paid) job."""
     requeued = skipped = 0
     not_found: list[str] = []
     for accession in accessions:
-        jobs = session.execute(
-            select(JobRecord)
+        rows = session.execute(
+            select(JobRecord, ProteinAnalysis.meta)
             .join(ProteinAnalysis, JobRecord.analysis_id == ProteinAnalysis.id)
             .where(ProteinAnalysis.input_type == "uniprot")
             .where(ProteinAnalysis.input_value == accession)
-        ).scalars().all()
-        if not jobs:
+        ).all()
+        if not rows:
             not_found.append(accession)
             continue
-        for job in jobs:
+        for job, meta in rows:
             if job.status == COMPLETE:
                 skipped += 1
                 continue
+            # D-047: fail loud HERE on a job whose tier cannot resolve a fold recipe, rather
+            # than letting it fail silently at fold-time. Since D-047 resolves the recipe at
+            # `build_fold_spec`, a tier-less job would otherwise be reset to `pending`, claimed,
+            # and only then raise mid-fold on a paid card — with the failure detached from the
+            # requeue that surfaced it. No mutation happens before this check, so a raise leaves
+            # the transaction unwritten (the caller's Session rolls back).
+            tier = (meta or {}).get("tier")
+            if tier not in TIER_RECIPE:
+                raise ValueError(
+                    f"{accession}: job {job.id} has no resolvable tier (tier={tier!r}); "
+                    f"refusing to requeue a job whose fold recipe cannot be resolved (D-047)."
+                )
             job.status = PENDING
             job.claimed_at = None
             job.worker_id = None

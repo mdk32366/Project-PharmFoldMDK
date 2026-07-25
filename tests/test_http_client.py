@@ -198,7 +198,7 @@ def test_loop_client_app_end_to_end(tmp_path):
         run = RankingRun(target_list_version="t", scorer_version="")
         s.add(run); s.flush()
         a = ProteinAnalysis(input_type="uniprot", input_value="P0", ranking_run_id=run.id,
-                            meta={"sequence": "MKTMKT"})
+                            meta={"sequence": "MKTMKT", "tier": "local"})  # tier → recipe (D-047)
         s.add(a); s.flush()
         job_row = JobRecord(analysis_id=a.id, status="pending", inference_settings={
             "model_revision": "rev", "dtype": "int8", "chunk_size": 64,
