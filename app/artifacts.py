@@ -31,7 +31,7 @@ from typing import Any, Callable, Optional
 
 from sqlalchemy import select, update
 
-from core.contracts import FoldSpec
+from core.contracts import TIER_RECIPE, FoldSpec
 from core.queue import Job
 from db.models import JobRecord, ProteinAnalysis
 
@@ -46,9 +46,19 @@ class AnalysisNotFound(Exception):
 
 def build_fold_spec(queue: Any, engine: Any, worker_id: str) -> Optional[FoldSpec]:
     """Claim a job and assemble the fold spec the worker folds from, inline. Returns
-    ``None`` when the queue is empty. The sequence comes from the analysis D-026
-    stored (``meta["sequence"]`` — the exact residues the manifest reviewed), the tier
-    params from the job's ``inference_settings``; neither is re-fetched."""
+    ``None`` when the queue is empty. The sequence comes from the analysis D-026 stored
+    (``meta["sequence"]`` — the exact residues the manifest reviewed); neither it nor the
+    recipe is re-fetched from the network.
+
+    **The compute recipe (``dtype``/``chunk_size``) is resolved at fold-time (D-047)** from
+    ``TIER_RECIPE[tier]`` — the CURRENT recipe — not from the job's stored
+    ``inference_settings``, which is a non-authoritative enqueue-time *hint* that can be stale.
+    (The 2026-07-24 rerun proved why: five jobs enqueued before D-042's rental
+    ``chunk_size`` ``None``→``64`` were requeued and faithfully replayed the frozen
+    ``chunk_size=None``, so they re-OOM'd unchunked.) A job whose ``tier`` cannot resolve a
+    recipe fails **loud here**, never folds at a silent default. ``model_revision`` (the pinned
+    weights) and ``source``/``ecd_start``/``ecd_end`` (the target's slicing identity) remain
+    authoritative from ``inference_settings`` — they are not a compute knob D-042 revises."""
     job: Optional[Job] = queue.claim(worker_id)
     if job is None:
         return None
@@ -56,13 +66,20 @@ def build_fold_spec(queue: Any, engine: Any, worker_id: str) -> Optional[FoldSpe
         meta = conn.execute(
             select(ProteinAnalysis.meta).where(ProteinAnalysis.id == job.analysis_id)
         ).scalar_one()
+    tier = (meta or {}).get("tier")
+    if tier not in TIER_RECIPE:
+        raise ValueError(
+            f"job {job.id}: analysis meta has no resolvable tier (tier={tier!r}); cannot "
+            f"resolve a fold recipe (D-047). Known tiers: {sorted(TIER_RECIPE)}."
+        )
+    recipe = TIER_RECIPE[tier]
     s = job.inference_settings
     return FoldSpec(
         job_id=job.id,
         sequence=meta["sequence"],
         model_revision=s["model_revision"],
-        dtype=s["dtype"],
-        chunk_size=s["chunk_size"],
+        dtype=recipe["dtype"],           # D-047: current recipe, not the frozen hint
+        chunk_size=recipe["chunk_size"],  # D-047: current recipe, not the frozen hint
         source=s["source"],
         ecd_start=s["ecd_start"],
         ecd_end=s["ecd_end"],

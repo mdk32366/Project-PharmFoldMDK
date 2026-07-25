@@ -84,7 +84,7 @@ def _seed(engine) -> tuple[int, int]:
         s.flush()
         analysis = ProteinAnalysis(
             input_type="uniprot", input_value="P00001", ranking_run_id=run.id,
-            meta={"gene": "TEST", "sequence": SEQ, "source": "sliced_ecd"},
+            meta={"gene": "TEST", "sequence": SEQ, "source": "sliced_ecd", "tier": "local"},
         )
         s.add(analysis)
         s.flush()

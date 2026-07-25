@@ -190,8 +190,17 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 - **`jobs`** (D-009 §1, **implemented in PR A** as `db.models.JobRecord`) — **transient**
   fold-queue state, kept **separate** from the durable `protein_analyses` record: `analysis_id`
   (see FK note), `status` (`pending`/`claimed`/`complete`/`failed`), `claimed_at`, `worker_id`,
-  `attempts`, `error`, and `inference_settings` JSONB (dtype / `chunk_size` / model revision —
-  the reproducibility record). Reached through the `JobQueue` **seam** (`core/queue.py`):
+  `attempts`, `error`, and `inference_settings` JSONB (model revision + `source`/ECD bounds —
+  the per-target slicing identity, authoritative; plus `dtype`/`chunk_size`, which since **D-047
+  are a non-authoritative enqueue-time *hint***). **The fold recipe is resolved at fold-time, not
+  frozen at enqueue (D-047):** `build_fold_spec` (`app/artifacts.py`) reads `dtype`/`chunk_size`
+  from the current `TIER_RECIPE[tier]` (`tier` from the analysis `meta`), never from the stored
+  hint — so a recipe change (e.g. D-042's rental `chunk_size` `None`→`64`) reaches already-enqueued
+  jobs on the next claim, instead of a requeue faithfully replaying a stale recipe. The
+  reproducibility record is `fold_provenance` (D-045), which captures what each fold *actually*
+  ran. `TIER_RECIPE` lives in `core/contracts.py` (the serving-safe leaf, beside `FoldSpec`) so the
+  serving tier resolves it without importing `worker/` (DEP-001). Reached through the `JobQueue`
+  **seam** (`core/queue.py`):
   claimed via `SELECT … FOR UPDATE SKIP LOCKED` (the one Postgres-only, unproven-in-CI
   operation), while `complete`/`fail`/`reap_stale` are portable and tested for real on SQLite.
   Stale `claimed` jobs (age **strictly** > 30 min) are requeued, `attempts++`, up to
