@@ -1,7 +1,22 @@
+import { useEffect, useState } from 'react'
+import { getCoverage } from '../api.js'
+
 // Method note (UI Plan v2 §3.4, D-028): what the system claims and what it does not — the whole
 // frame at once, for a reader who wants it. Non-goals are commitments, not omissions (§9). This
 // does NOT replace the inline per-class tooltips the ranking will carry; it is the standing scope.
 export default function MethodNote() {
+  // D-050: the coverage line is DERIVED from /api/coverage (the authoritative denominator, D-038),
+  // computed the same way CoverageLine does — ranked AND folded, never a hardcoded literal (this
+  // copy once read "40 ranked-and-folded of 82", stale once the cohort reached 67 ranked∧folded).
+  const [cov, setCov] = useState(null)
+  useEffect(() => {
+    getCoverage().then(setCov).catch(() => setCov(null))
+  }, [])
+  const rankedFolded = cov
+    ? cov.rows.filter((r) => r.disposition === 'ranked' && r.fold_status === 'folded').length
+    : null
+  const denominator = cov?.coverage?.denominator
+
   return (
     <div className="prose">
       <h2>What this system claims — and what it does not</h2>
@@ -17,7 +32,9 @@ export default function MethodNote() {
       <ul>
         <li>Renders the structures we folded, coloured by the model's <strong>per-residue</strong> confidence (D-039).</li>
         <li>Surfaces provenance — model revision, precision, boundary method — so "we ran this ourselves, at a named revision" is <strong>checkable</strong>, not asserted.</li>
-        <li>Shows an honest coverage line: <strong>40 ranked-and-folded of 82</strong>, with what is held out and excluded, and why.</li>
+        <li>Shows an honest coverage line: <strong>{rankedFolded != null
+          ? `${rankedFolded} ranked-and-folded of ${denominator}`
+          : 'ranked-and-folded, out of the full cohort'}</strong>, with what is held out and excluded, and why.</li>
       </ul>
 
       <h3>What it will do — not yet, and never mocked</h3>

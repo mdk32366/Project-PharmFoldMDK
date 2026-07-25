@@ -80,6 +80,79 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-050 — Cohort statistics in UI copy must be derived, not hardcoded; the 42-fold-era prose is stale and self-contradicting
+
+- **Date:** 2026-07-25
+- **Status:** Accepted.
+- **Relates:** D-049 (whose named-query figures the visible copy now contradicts), D-024 (the
+  honest-denominator discipline this violates in the worst way — three denominators on screen at
+  once), D-016 (a claim names how it is known — a hardcoded "42" names nothing and rots silently),
+  D-038/D-034 (`/api/coverage` is the authoritative denominator source these components should
+  read), D-048 (the renderers that compute — `CoverageLine`, `TargetList` — are already correct;
+  this brings the prose components up to that standard).
+- **Amends:** the copy in `AdcContext.jsx` and `MethodNote.jsx`; comment hygiene in
+  `CoverageLine.jsx` / `TargetList.jsx`.
+
+**The finding (provenance — the live pre-demo walk, 2026-07-25).** The deployed app shows three
+different "how many did you fold" numbers on grader-visible surfaces: the `/api/coverage`-derived
+`CoverageLine` correctly shows **67** ranked∧folded; `MethodNote` hardcodes *"40 ranked-and-folded
+of 82"*; `AdcContext` hardcodes *"42 folded targets … 45% fall below 60 … 34.78 to 81.40."* The
+cohort grew 42→79 folds (D-045 rental tier, D-049 recompute); every hardcoded 42-fold-era statistic
+in the copy layer is now stale, and two are grader-visible and self-contradicting against the
+live-computed values on the same screens — `AdcContext`'s "45% below 60" directly contradicts
+D-049's 29.1%, and its "81.40" max contradicts the live 84.23 caveat D-049 shipped.
+
+**Root cause — the lesson `CoverageLine` already embodies, not yet applied to prose.** Components
+that compute from `/api/coverage` or `rows.length` (`CoverageLine` → 67, `TargetList` → 79) tracked
+the growth automatically and are correct. Components with hardcoded prose (`AdcContext`,
+`MethodNote`) rotted. This is not a wrong-number bug; it is an **architecture bug** — a cohort
+statistic written as a literal in copy is a claim with no provenance (D-016) that silently falsifies
+as the cohort grows. Re-hardcoding today's numbers resets the same trap; the next fold breaks it
+again.
+
+**Ruling — two parts, in priority order:**
+
+1. **Structural fix (the durable one): derive cohort statistics from the authoritative source.**
+   `AdcContext` and `MethodNote` take their folded-count, ranked∧folded, pLDDT range, and
+   below-divider fraction from the data they already have access to — `/api/coverage` (the
+   authoritative denominator, D-038) and/or the `/api/analyses` rows — the same way `CoverageLine`
+   and `TargetList` already do. **A cohort statistic rendered to a grader is a computed value or it
+   is a bug.** Where a component genuinely cannot reach the data at render time, the fallback is not
+   a literal — it's omitting the specific number and stating the qualitative claim (e.g. "no target
+   reaches the high-confidence range" needs no max literal to be true).
+
+2. **Correctness floor (only if the structural fix can't fully land before the demo):** re-state to
+   the D-049 named-query figures, explicitly dated — the minimum acceptable state is that no two
+   visible surfaces disagree (`AdcContext` → 79 folded, 30.68–84.23, 29.1% below 60; `MethodNote` →
+   67 ranked∧folded of 82). This is a stopgap, not the fix — it re-arms the same rot — so it is only
+   acceptable as a time-boxed fallback, and the structural fix stays queued behind it.
+
+- **Deep-learning justification:** the coverage story is the honesty layer that makes this a
+  defensible DL deliverable rather than a wrapper (D-024). Three contradicting fold-counts on the
+  deployed app don't just look sloppy — they hand a grader direct evidence that the system's
+  self-reported scope can't be trusted, the exact credibility the provenance/coverage work was built
+  to establish. Deriving the numbers is what makes "we folded 79, ranked 67, and here's why the rest
+  didn't" a claim the app can stand behind live.
+- **Consequences:**
+  - `ui/src/components/AdcContext.jsx` (~52–53): folded count, pLDDT range, below-60 fraction →
+    **derived** from `/api/analyses`.
+  - `ui/src/components/MethodNote.jsx` (~20): "40 ranked-and-folded of 82" → **derived** from
+    `/api/coverage`.
+  - **Comment hygiene (D-016, not visible but rots the same way):** `CoverageLine.jsx:3` and
+    `TargetList.jsx:8` ("nothing above 81.4") corrected — the same lesson as the D-049 header-comment
+    fix (source must not grep to a stale number even in a comment).
+  - The `CoverageLine` cosmetic (*"…not the 67 ranked (0 of them awaiting rental fold)"* — reads
+    awkwardly now that all ranked targets are folded, `rankedUnfolded=0`) is a **separate, minor**
+    copy-clarity issue. **Noted, not bundled** — mixing it into a correctness fix muddies the diff.
+    Its own small follow-up.
+  - **Tests-first, on the D-046 harness.** `AdcContext` and `MethodNote` are currently in the
+    untested-components debt (D-046 §5); this fix pulls them out of it — the derived-number behaviour
+    gets component tests (a fixture coverage/analyses payload → asserts the rendered numbers derive
+    from the payload, so a future cohort change cannot silently break the copy). Structural fix plus
+    a dent in the known debt, in one move.
+
+---
+
 ### D-049 — pLDDT bands re-justified on the 79-fold cohort; the cohort-max caveat corrected (81.4 → 84.23)
 
 - **Date:** 2026-07-25
