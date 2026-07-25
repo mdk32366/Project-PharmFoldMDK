@@ -1,9 +1,33 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { listAnalyses } from '../api.js'
 
 // ADC framing / onboarding (UI Plan v2 §7): keep the metaphor (it is mechanism, not decoration),
 // bound the outcome claims, and let the honest limits sharpen the purpose rather than soften it.
 // The through-line: conviction about the mechanism, precision about the limits.
 export default function AdcContext() {
+  // D-050: the cohort statistics below are DERIVED from the live cohort, never hardcoded — a literal
+  // count rots silently as the cohort grows (this copy once read "42 … 34.78 to 81.40 … 45%", stale
+  // by 42->79). Folded = analyses carrying a numeric mean_plddt; 60 is the D-039 trust divider.
+  const [stats, setStats] = useState(null)
+  useEffect(() => {
+    listAnalyses()
+      .then((rows) => {
+        const vals = rows
+          .map((r) => r.mean_plddt)
+          .filter((v) => typeof v === 'number' && !Number.isNaN(v))
+        if (!vals.length) return
+        const below = vals.filter((v) => v < 60).length
+        setStats({
+          n: vals.length,
+          min: Math.min(...vals),
+          max: Math.max(...vals),
+          belowPct: Math.round((below / vals.length) * 100),
+        })
+      })
+      .catch(() => setStats(null))
+  }, [])
+
   return (
     <div className="prose">
       <h2>What an ADC is, and why target choice is the hard part</h2>
@@ -48,10 +72,17 @@ export default function AdcContext() {
 
       <h3>⚠ The success case is a bad prior — and this cohort's own data shows it</h3>
       <p>
-        NECTIN4 is well-expressed, accessible, and stable. <strong>Most candidates are not.</strong>
-        Across the 42 folded targets, mean pLDDT runs from <strong>34.78 to 81.40</strong>, and{' '}
-        <strong>45% fall below 60</strong> — a region where the structure is not reliably
-        interpretable. Enfortumab vedotin proves the <em>mechanism</em>; it says nothing about how easy
+        NECTIN4 is well-expressed, accessible, and stable. <strong>Most candidates are not.</strong>{' '}
+        {stats ? (
+          <>Across the {stats.n} folded targets, mean pLDDT runs from{' '}
+          <strong>{stats.min.toFixed(2)} to {stats.max.toFixed(2)}</strong>, and{' '}
+          <strong>{stats.belowPct}% fall below 60</strong> — a region where the structure is not
+          reliably interpretable.</>
+        ) : (
+          <>Across the folded targets, mean pLDDT spans a wide range and a substantial fraction fall
+          below 60 — a region where the structure is not reliably interpretable.</>
+        )}{' '}
+        Enfortumab vedotin proves the <em>mechanism</em>; it says nothing about how easy
         the next target is. A tool built in admiration of the one that worked could quietly encode
         "find me more NECTIN4s" — and the{' '}
         <Link to="/coverage">honest coverage line</Link>, the confidence bands, and the

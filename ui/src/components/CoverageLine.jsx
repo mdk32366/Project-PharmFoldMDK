@@ -1,11 +1,11 @@
 // The D-024 coverage line — the honest denominator that travels with every ranking.
 //
-// ⚠ CORRECTNESS REQUIREMENT (D-024, amendment §3). The headline is `ranked AND folded` — 40 of 82.
-// NEVER `coverage.ranked` alone (67, which counts 27 rental targets not yet folded) and NEVER the
-// folded count alone (42, which counts 2 held-out rows that are not in the ranking). Both are true
-// numbers and both overstate the cohort in the direction of completeness — exactly what D-024
-// forbids. The rows carry both `disposition` and `fold_status`, so the intersection is computed
-// here client-side; no route change was needed.
+// ⚠ CORRECTNESS REQUIREMENT (D-024, amendment §3). The headline is `ranked AND folded`, NEVER
+// `coverage.ranked` alone (counts ranked targets not yet folded) and NEVER the folded count alone
+// (counts held-out rows that are not in the ranking). Both are true numbers and both overstate the
+// cohort in the direction of completeness — exactly what D-024 forbids. The rows carry both
+// `disposition` and `fold_status`, so the intersection is computed here client-side; no route
+// change was needed. (No literal counts in this comment — they rot as the cohort grows; D-050.)
 //
 // The three-cell partition (ranked/held_out/excluded) sums to the denominator; the two breakouts
 // (unmeasured_tier ⊆ ranked, no_topology ⊆ held_out) are SUBSETS that cut across it and are shown
@@ -16,10 +16,10 @@ function count(rows, disposition, foldStatus) {
 }
 
 export default function CoverageLine({ coverage, rows }) {
-  const rankedFolded = count(rows, 'ranked', 'folded')          // 40 — the number that matters
-  const rankedUnfolded = count(rows, 'ranked', 'not_folded')    // 27 — rental, awaiting the A6000
-  const heldFolded = count(rows, 'held_out', 'folded')          // 2
-  const heldUnfolded = count(rows, 'held_out', 'not_folded')    // 11
+  const rankedFolded = count(rows, 'ranked', 'folded')          // the number that matters (D-024)
+  const rankedUnfolded = count(rows, 'ranked', 'not_folded')    // ranked, awaiting a fold
+  const heldFolded = count(rows, 'held_out', 'folded')          // folded but held out of ranking (D-021)
+  const heldUnfolded = count(rows, 'held_out', 'not_folded')    // held out and not folded
 
   return (
     <section className="coverage-line panel">

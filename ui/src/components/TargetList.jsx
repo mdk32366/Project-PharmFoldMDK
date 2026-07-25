@@ -5,7 +5,8 @@ import { bandFor } from '../plddt.js'
 
 // The picker over the folded targets (light list, D-034). mean pLDDT carries its band inline, so the
 // list tells the confidence story before a structure is opened. Sorted by pLDDT desc so the most-
-// interpretable folds lead — and the reader sees the ceiling (nothing above 81.4) at a glance.
+// interpretable folds lead — and the reader sees the ceiling (no target reaches the high-confidence
+// range) at a glance. (No literal max here — that rots as the cohort grows; see D-049/D-050.)
 //
 // D-048 §3.2 (UI-depth §2.3): tier is shown per row and filterable, so the two-machine cohort
 // (local int8 vs rental fp16) is legible without opening a JSON payload. Tiers are NOT blended into a
