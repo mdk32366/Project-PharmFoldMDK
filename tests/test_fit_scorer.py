@@ -104,3 +104,85 @@ def test_run_path_does_not_touch_the_db_without_being_asked():
     def exploding_engine():
         raise AssertionError("--fixture must not build a database engine")
     assert fs.run(["--fixture"], engine_factory=exploding_engine) == 0
+
+
+# ── D-061: the scores tables and their persistence ───────────────────────────
+def test_scores_tables_build_on_sqlite():
+    from sqlalchemy import create_engine, inspect
+
+    from db.models import Base
+
+    engine = create_engine("sqlite://", future=True)
+    Base.metadata.create_all(engine)
+    names = set(inspect(engine).get_table_names())
+    assert {"target_scores", "ranking_results"} <= names
+    ts_cols = {c["name"] for c in inspect(engine).get_columns("target_scores")}
+    assert {"ranking_run_id", "analysis_id", "score", "attributions", "rank"} <= ts_cols
+    rr_cols = {c["name"] for c in inspect(engine).get_columns("ranking_results")}
+    assert {"structural_percentiles", "spearman", "n_ranking_set", "excluded", "scorer_version"} <= rr_cols
+
+
+def test_persist_results_writes_scores_and_the_distribution():
+    """D-061: one target_scores row per ranked target (descending rank, six attributions) and one
+    ranking_results row carrying the LOO distribution + denominators. The pre-registered distribution
+    lands as a JSON list, not a scalar."""
+    from sqlalchemy import create_engine, select
+    from sqlalchemy.orm import Session
+
+    from core.scorer import run_scorer
+    from db.models import Base, ProteinAnalysis, RankingResult, TargetScore
+
+    engine = create_engine("sqlite://", future=True)
+    Base.metadata.create_all(engine)
+
+    report = run_scorer(fs._fixture_rows())
+    ranked_symbols = [s for s, _, _ in report.ranking]
+    # create a protein_analyses row per ranked fixture symbol; map symbol -> analysis_id
+    symbol_to_analysis_id: dict[str, int] = {}
+    with Session(engine) as s:
+        for sym in ranked_symbols:
+            a = ProteinAnalysis(input_type="uniprot", input_value=sym)
+            s.add(a)
+            s.flush()
+            symbol_to_analysis_id[sym] = a.id
+        s.commit()
+
+    rid = fs.persist_ranking_run(engine, report, target_list_version="test-tl")
+    n_scores, n_results = fs.persist_results(engine, rid, report, symbol_to_analysis_id)
+    assert n_scores == len(ranked_symbols)
+    assert n_results == 1
+
+    with Session(engine) as s:
+        scores = s.execute(select(TargetScore).order_by(TargetScore.rank)).scalars().all()
+        assert [t.rank for t in scores] == list(range(1, len(ranked_symbols) + 1))   # 1..N
+        assert all(len(t.attributions) == 6 for t in scores)                          # six β_k·x_k
+        top = scores[0]
+        assert top.rank == 1                                                          # descending by score
+        results = s.execute(select(RankingResult)).scalars().all()
+        assert len(results) == 1
+        rr = results[0]
+        assert isinstance(rr.structural_percentiles, list)                            # a distribution, not a scalar
+        assert len(rr.structural_percentiles) == report.n_fit_positives
+        assert rr.n_ranking_set == report.n_ranking_set
+        assert rr.plddt_floor == fs.PLDDT_FLOOR
+        assert rr.scorer_version == report.scorer_version
+
+    # idempotent: a second persist replaces, does not duplicate
+    fs.persist_results(engine, rid, report, symbol_to_analysis_id)
+    with Session(engine) as s:
+        assert len(s.execute(select(RankingResult)).scalars().all()) == 1
+        assert len(s.execute(select(TargetScore)).scalars().all()) == len(ranked_symbols)
+
+
+@pytest.mark.postgres
+def test_migration_0004_created_the_scores_tables(pg_engine):
+    """0004 verified by querying information_schema, not by alembic's exit code
+    (docs/HAZARD-search-path-seams.md). Runs in the postgres CI job."""
+    from sqlalchemy import text
+
+    with pg_engine.connect() as c:
+        present = {r[0] for r in c.execute(text(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema='public' AND table_name IN ('target_scores','ranking_results')"
+        ))}
+    assert present == {"target_scores", "ranking_results"}, "0004 must create both tables (proven by query)"

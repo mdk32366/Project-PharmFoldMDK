@@ -1,10 +1,22 @@
-# D-029 + D-040 — the ONE curated ADC reference: drug -> target antigen -> UniProt accession.
+# D-029 + D-040 - the ONE curated ADC reference: drug -> target antigen -> UniProt accession.
 # Group B (in-cohort ADC positives, the scorer's labels) and Group C (approved ADC targets outside
 # the 82) are the SAME judgement in this one file, split only by the COMPUTED in_cohort_82.
 #
-# ⚠ STATUS: schema + discipline landed; ROSTER NOT YET CURATED. This file is intentionally empty of
-# data rows. Populating it is a per-row HAND REVIEW (D-040 decision 1), not a Builder or computed
-# task — "a computed mapping at this scale would be less trustworthy" (D-029). Each row is added by:
+# STATUS: CURATED 2026-07-27 (owner pass). 12 in-cohort positives. INCOMPLETE - see the carve-out.
+#
+# ABSENCE IS A NEGATIVE, WITH ONE NAMED EXCEPTION: a cohort symbol with no row here was searched
+# and no qualifying ADC was found. It does NOT mean unexamined. EXCEPTION - CXCR5, MSLN and MUC16
+# were routed probable-positive by the registry pass and have NOT yet been verified; they are
+# absent because unverified, NOT because negative. Until they are curated this roster is
+# incomplete and its count is a floor, not a total.
+#
+# SOURCES SEARCHED:
+#   - ClinicalTrials.gov via scripts/curate_group_b.py (2026-07-26, registry pass, all 82 symbols
+#     under UniProt aliases).
+#   - Peer-reviewed literature + patent databases (2026-07-27, targeted per-symbol pass, 20 symbols).
+#   - ADC clinical-landscape reviews covering the >50 antigens in the >200-candidate clinical
+#     pipeline (2026-07-27, survey-level, 19 symbols). A survey-level negative is weaker evidence
+#     than a target-specific one and is recorded as such.
 #
 #   Group B definition (D-040, fixed BEFORE any target is classified): a cohort target is Group B iff
 #   a molecule directed against that antigen has entered PRECLINICAL or CLINICAL development as an
@@ -13,14 +25,52 @@
 #   HER2(ERBB2)/NECTIN4/EGFR and the count 22; the roster is DERIVED here and CHECKED against the 22
 #   (a different number is a finding, not a discrepancy to reconcile away).
 #
+# EXCLUSION CLASSES APPLIED (each observed in this pass, not hypothetical):
+#   radioimmunoconjugate (OSMR 67-Cu); peptide-drug conjugate (SORT1 TH1902); naked antibody
+#   (PCDH7, ENTPD1, BTN3A3, FLT1); family-member ADC (NOTCH2<-Notch3, EPHA4<-EphA2/A5,
+#   CDH11<-P-cadherin, TSPAN15<-TSPAN8, ITGB5<-ITGB6); research-reagent conjugate (FITC/HRP/saporin);
+#   patent boilerplate naming no agent and no payload (LRP6).
+#   NOTE: primary sources sometimes call a radioimmunoconjugate an "ADC". PAYLOAD was checked, not
+#   the source's terminology.
+#
+# OWNER RULING 2026-07-27: a target-specific patent claiming antibodies AND conjugates COUNTS, even
+# without a named clinical agent (applied to UPK1B and CDH11). A generic ADC-embodiment paragraph
+# inside an antibody patent does NOT (LRP6).
+#
+# ACCEPTED RISK 2026-07-27: citations on CDCP1 and JAG1 were supplied by the Planner and verified by
+# the owner; citations on CD276/SLC39A6/EGFR/MERTK/SLC3A2/FGFR3/UPK1B/CDH11 are Planner-supplied and
+# NOT yet opened by the owner. Recorded, not silent. Amendable.
+#
+# GRIN1: its registry pass ran on reduced aliases (a [NMDA] bracket-syntax query error, 400).
+# Closed by a targeted literature pass 2026-07-27 - neurology only, no oncology conjugate.
+#
+# GROUP C IS ABSENT, WITH REASON: no out-of-cohort approved-ADC rows are curated yet, so group_c()
+# returns []. D-027's out-of-cohort probe (TROP2/HER3/CLDN18.2) additionally requires those targets
+# to be FOLDED, and they were never enqueued (out of cohort). Deferred with reason, not omitted.
+#
 # Columns (D-029 schema + D-040's two): every row cites its own source (an uncited row is REJECTED
 # by core.adc_reference.load_mapping). development_stage in {approved, clinical, preclinical}.
 # marketing_status is openFDA's (approval status only); antigen/accession/stage are REVIEWED HUMAN
 # judgements, NOT FDA-sourced, and must be labelled so wherever surfaced (D-029 seam; it matters MORE
-# for Group B — a preclinical ADC has no application number at all).
+# for Group B - a preclinical ADC has no application number at all).
+# application_number is blank on non-approved rows by definition, and on the two ERBB2 rows pending
+# openFDA reconciliation (D-029) - do not type it from recall.
 #
-# in_cohort_82 is NOT a column here — it is COMPUTED by join against data/cohort_82_mapping.csv
+# in_cohort_82 is NOT a column here - it is COMPUTED by join against data/cohort_82_mapping.csv
 # (D-040). Adding it as a typed column is a curation slip and load_mapping raises on it.
 #
 # Attribution: Kathad et al. 2024, 10.1371/journal.pone.0308604, CC-BY 4.0.
 drug,application_number,antigen,uniprot_accession,source_citation,marketing_status,development_stage
+enfortumab vedotin,761137,NECTIN4,Q96NY8,Padcev US label (BLA 761137),approved,approved
+ado-trastuzumab emtansine,,ERBB2,P04626,Kadcyla US label; application_number pending openFDA reconciliation (D-029),approved,approved
+trastuzumab deruxtecan,,ERBB2,P04626,Enhertu US label; application_number pending openFDA reconciliation (D-029),approved,approved
+ifinatamab deruxtecan,,CD276,Q5ZPR3,"Lancet Oncol 2026 IDeate-PanTumor01 ph1/2; JCO IDeate-Lung01 ph2; Daiichi Sankyo/Merck BLA Priority Review 2026-04-13, PDUFA 2026-10-10 (not approved as of retrieval)",,clinical
+ladiratuzumab vedotin,,SLC39A6,Q13433,Mol Cancer Ther 2014;13(12):2991 (SGN-LIV1A); NCT03310957; NCT04032704; discontinued from clinical development per Mol Cancer Ther 2026;25(2):322,,clinical
+depatuxizumab mafodotin,,EGFR,P00533,"ABT-414 / Depatux-M; INTELLANCE-1 phase 3, glioblastoma",,clinical
+LY3076226,,FGFR3,P22607,"Eli Lilly phase 1, NCT02529553",,clinical
+ch10D7-MMAE,,CDCP1,Q9H5V8,Theranostics 2022;12(15):6915; JCO 2023;41:e15012 (TNBC); US12371507B2. NB same antibody also used as an 89-Zr imaging conjugate - only the MMAE arm qualifies,,preclinical
+RGX-019-MMAE,,MERTK,Q12866,Cancer Res 2026;86(8):2024; JCO 2023;41:e15103; Blood 2023;142(Suppl 1):5955,,preclinical
+19G4-MMAE,,SLC3A2,P08195,"ScienceDirect S1936523324001086 (HNSCC); PMC8941813 (anti-CD98hc-DM1, TNBC); WO2017214458A2",,preclinical
+4D11-MMAE,,JAG1,P78504,"US9127053; US9688748; US11548943 (activatable anti-Jagged DM4). NB 4D11 is JAG1/JAG2 cross-reactive - binds JAG1, not family precedent",,preclinical
+anti-UPK1B ADC (WO2017112829A1),,UPK1B,O75841,WO2017112829A1 - target-specific antibodies AND ADCs; no named clinical agent found (owner ruling 2026-07-27: counts),,preclinical
+anti-CDH11 immunoconjugate (US12522657),,CDH11,P55287,US12522657 - anti-CDH11 antibodies and immunoconjugates; no named clinical agent found (owner ruling 2026-07-27: counts),,preclinical

@@ -88,9 +88,24 @@ def test_typed_in_cohort_82_column_is_rejected(tmp_path):
         load_mapping(path)
 
 
-def test_the_committed_scaffold_loads_empty_and_valid():
-    # the real file is the schema + discipline with no roster yet — loads to [] without error
-    assert load_mapping(ADC_MAPPING) == []
+def test_the_committed_roster_is_curated_and_valid():
+    """The roster was curated in the 2026-07-27 owner pass (D-040 dec 1; D-061 lands the file, F-003
+    records it). This is the rewrite of the empty-scaffold tripwire, which fired the moment a roster
+    landed — pinned now to F-003's measured shape: **13 drug rows, 12 label accessions** (two ERBB2
+    drugs collapse to one label — drugs are not targets), the three antigens the paper names present,
+    and Group C empty (deferred with reason). `load_mapping` rejects any uncited row.
+
+    ⚠ 12 is the current FLOOR, not a total — CXCR5/MSLN/MUC16 are carved out pending verification
+    (F-003 Finding 6). When that carve-out is curated these pins move, and updating them here IS the
+    deliberate acknowledgement D-040 requires — a curation change is a finding, not a number to
+    reconcile away silently."""
+    rows = load_mapping(ADC_MAPPING)
+    accs = cohort_accessions()
+    assert len(rows) == 13                                    # 13 drug rows (F-003 Finding 1)
+    assert len(group_b_accessions(rows, accs)) == 12          # 12 label ACCESSIONS, not rows
+    antigens = {r["antigen"] for r in group_b(rows, accs)}
+    assert {"ERBB2", "NECTIN4", "EGFR"} <= antigens           # the three the paper names
+    assert group_c(rows, accs) == []                          # Group C absent with reason (F-003)
 
 
 # ── Group B / Group C by pure function; in_cohort_82 computed by join (D-040 dec. 1/3) ──
