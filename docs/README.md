@@ -80,6 +80,96 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-060 — The scorer's remaining free parameters, fixed before the fit
+- **Date:** 2026-07-27
+- **Status:** Proposed → Accepted on merge. **Ruled before any fitting code exists and before the
+  labels are curated** (D-015 §3's pre-registration discipline).
+- **Discharges:** the operational choices D-041 delegated. D-041 fixed the architecture, the loss,
+  the regularizer, the evaluation statistic and both negative outcomes. **It did not fix the
+  optimizer, the λ grid, the inner-CV shape, the percentile's reference set, or tie handling** —
+  and the reported result is sensitive to all five. Left open, they get chosen after seeing the
+  leave-one-out distribution, which is what pre-registration exists to prevent.
+
+---
+
+- **Context — what F-002 changed.** D-041 was written when the ranking set and the folded set were
+  not yet distinguished, and when the labelled∧folded intersection was unknown. F-002 measured both:
+  the ranking set is **56** (`folded ∧ ranked ∧ pLDDT ≥ 50`), the provisional fit set is **12**, and
+  the head-to-head denominator is **8**. Two of the decisions below exist because those numbers are
+  now known.
+
+#### Decision (1) — Optimizer: Newton–Raphson (IRLS) on the L2-penalized log-likelihood, pure Python
+The penalized objective is strictly convex, so Newton converges; a step-halving guard handles the
+early iterations. **Convergence criterion: maximum absolute coefficient change < 1e-8, or 100
+iterations.** ⚠ **Non-convergence raises. It never returns a silent estimate.** A quietly
+unconverged fit is a result that looks like a result.
+
+#### Decision (2) — No RNG anywhere in the scorer
+Fold assignment is deterministic: targets sorted by symbol, assigned round-robin within stratum.
+**This is stronger than D-041's "deterministic given a fixed seed"** and deliberately so — a
+seed-dependent result can move silently when a seed changes for an unrelated reason. **Determinism
+here is structural, and a test asserts no `random` import.**
+
+#### Decision (3) — The λ grid is fixed: 13 log-spaced points from 1e-3 to 1e3
+Pinned by a test. **Not widened, shifted, or re-centred after any fit.** If the selected λ lands at
+a grid edge, that is a **finding to report** — it means the grid was wrong — and it is reported, not
+silently fixed by extending the grid.
+
+#### Decision (4) — Inner CV: 5-fold, stratified on the label, on the LOO training remainder only
+If the remainder holds fewer than 5 positives, fall back to leave-one-positive-out inner CV and
+**record which was used in the run's provenance.** At 12 positives the remainder is 11, so 5-fold
+holds — but the fallback is specified now rather than improvised if curation moves the count.
+
+#### Decision (5) — The percentile's reference set is the ranking set (56), not "the folded cohort"
+D-041 said *"rank percentile among the folded cohort"* when the two were not distinguished.
+**Ranking claims are made on `ranked ∧ folded ∧ pLDDT ≥ 50` (D-041 §5, D-021, F-002)**, so that is
+the reference set. Recorded as a clarification of D-041, not a change to it.
+
+#### Decision (6) — Ties take average rank
+Stated because it is load-bearing — see (8).
+
+#### Decision (7) — The score is the fitted model's predicted probability, ranked descending
+
+#### Decision (8) — ⚠ The head-to-head is computed on a common reference set, and the comparator is two-valued
+Measured 2026-07-27 from `data/evidence_scores.csv`: the evidence score takes **exactly two
+values across all 17 targets** — nine 4s and eight 5s — and **six 4s and six 5s** among the 12 that
+fall in the ranking set. **The comparator is not a ranking. It is a two-tier grouping.**
+
+Two consequences, both fixed here:
+
+- **Both percentiles in the head-to-head are computed within the same reference set** — the 12
+  targets carrying a structural score *and* an evidence score — over the 8 held-out positives in
+  that set. A structural percentile computed among 56 and an evidence percentile computed among 12
+  are not comparable quantities, and comparing them would be a bug that reads as a result.
+  **The primary structural distribution (reported as the headline) is separately computed on the
+  full ranking set of 56. Two statistics, both reported, never conflated.**
+- **⚠ The comparator's percentile distribution is degenerate by construction.** With two values and
+  average-rank ties, every held-out positive receives one of two percentiles. **D-041's first
+  negative outcome — "not distinguishable from the comparator" — must be read against a comparator
+  that can only sort targets into two bins over twelve targets.** That bound is recorded **before
+  the result exists**, so it reads as a property of the source rather than an excuse for an
+  outcome. **The pre-registered comparison is unchanged; only its interpretation is bounded.**
+
+- **Deep-learning justification.** Every parameter above, left unfixed, is one that would otherwise
+  be chosen after seeing the leave-one-out distribution. D-041's two pre-registered negative
+  outcomes are falsifiable only if nothing in the procedure moves once a result exists. **This
+  entry is the difference between a pre-registration and the appearance of one.** The scorer
+  converts ESMFold's structural output into a judgement that can be checked and can be wrong (D-041
+  §2) — its smallness (seven parameters, implementable from scratch in stdlib) is what makes that
+  judgement defensible at 12 positives.
+
+- **Consequences / test surface:** each of (1)–(8) pinned by a test; non-convergence raises; no
+  `random` import (source assertion, in D-027's feature-count manner); `scorer_version` alongside
+  `feature_version`. The label (Group B) and the comparator (evidence score) stay different
+  quantities — a fixture that scrambles the evidence scores must produce byte-identical coefficients
+  (§3.1); standardization and λ selection use the training fold only (§3.2/§3.3); perfect separation
+  is expected and L2 keeps coefficients finite (§3.4); below-floor/held_out targets are reported
+  separately with reasons, never dropped (§3.5); every statistic carries its denominator (§3.6).
+  **This PR ships a tested scorer and driver; it does NOT run the fit** — the first fit is an
+  owner-authorised run against curated labels that do not exist yet.
+
+---
+
 ### D-058 — The extractor's open parameters, and where features are computed and stored
 - **Date:** 2026-07-27
 - **Status:** Proposed → Accepted on merge. **Ruled before any extraction code exists** (D-015 §3's
