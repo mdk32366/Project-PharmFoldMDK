@@ -357,7 +357,8 @@ class LOOFold:
     lam: float
     scheme: str
     lam_at_grid_edge: bool
-    scores: dict[str, float]        # predicted probability for every ranking-set target, this fold
+    converged: bool                          # did this fold's fit converge? (D-063 dec 2)
+    scores: Optional[dict[str, float]]       # per-target predicted probability, or None if it raised
 
 
 def leave_one_out(
@@ -367,16 +368,26 @@ def leave_one_out(
 ) -> list[LOOFold]:
     """Hold out one Group B positive at a time; select λ by inner CV on the remainder ONLY; refit;
     predict a probability for every ranking-set target under that fold's model (D-041 dec 3).
+
+    **A fold that fails to converge is recorded as producing no percentile (`converged=False`,
+    `scores=None`) and does NOT abort the loop (D-063 dec 2)** — each fold trains on the same
+    separable geometry that raised the full-data fit, so one bad fold must not discard the others.
     `lambda_selector` is injected so a test can assert it never receives the held-out target
-    (D-060 §3.3). The held-out row IS dropped from training but scored like the rest."""
+    (D-060 §3.3)."""
     positives = sorted((r for r in ranking_rows if r.label == 1), key=lambda r: r.symbol)
     folds: list[LOOFold] = []
     for held in positives:
         train = [r for r in ranking_rows if r.symbol != held.symbol]
         choice = lambda_selector(train)
-        model = irls_fit(train, choice.lam)
-        scores = {r.symbol: model.predict_proba(r.features) for r in ranking_rows}
-        folds.append(LOOFold(held.symbol, choice.lam, choice.scheme, choice.at_grid_edge, scores))
+        try:
+            model = irls_fit(train, choice.lam)
+            scores = {r.symbol: model.predict_proba(r.features) for r in ranking_rows}
+            converged = True
+        except ScorerNonConvergence:
+            scores = None
+            converged = False
+        folds.append(LOOFold(held.symbol, choice.lam, choice.scheme, choice.at_grid_edge,
+                             converged, scores))
     return folds
 
 
@@ -385,20 +396,27 @@ def leave_one_out(
 class ScorerReport:
     scorer_version: str
     n_ranking_set: int
-    n_fit_positives: int
-    # headline: held-out-positive percentiles among the full ranking set (D-060 dec 5)
+    n_fit_positives: int                     # total positives in the ranking set (the LOO denominator)
+    # headline: held-out-positive percentiles, over the folds that CONVERGED (D-063 dec 2)
     structural_percentiles: list[float]
-    # head-to-head, both within the common reference set (D-060 dec 8)
+    nonconvergent_folds: list[str]           # held-out targets whose fold raised — named, not dropped
+    # head-to-head, both within the common reference set (D-060 dec 8), over converged folds
     headto_reference_n: int
     headto_structural_percentiles: list[float]
     headto_evidence_percentiles: list[float]
-    spearman: float
+    spearman: Optional[float]                # None if the full-data fit did not converge (or n<2)
     spearman_n: int
-    lambda_per_fold: list[float]
+    lambda_per_fold: list[tuple[str, float, bool]]   # (held-out symbol, λ, converged)
     lambda_at_grid_edge: bool
-    excluded: list[tuple[str, str]]        # (symbol, reason) — reported, never dropped (D-060 §3.5)
-    final_model: Model
-    ranking: list[tuple[str, float, list[float]]]   # (symbol, score, contributions), descending
+    excluded: list[tuple[str, str]]          # (symbol, reason) — reported, never dropped (D-060 §3.5)
+    final_fit_converged: bool                # did the ranking-table full-data fit converge?
+    final_fit_lambda: float
+    final_model: Optional[Model]             # None if the full-data fit did not converge
+    ranking: list[tuple[str, float, list[float]]]    # (symbol, score, contributions); empty if no final fit
+
+    @property
+    def converged_fold_count(self) -> int:
+        return len(self.structural_percentiles)
 
 
 def run_scorer(
@@ -406,28 +424,27 @@ def run_scorer(
     *,
     lambda_selector: LambdaSelector = select_lambda,
 ) -> ScorerReport:
-    """The full pre-registered evaluation. Fits on the ranking set, runs LOO with nested-CV λ,
-    computes the headline percentile distribution over the ranking set and the head-to-head over
-    the common reference set, the Spearman over the targets carrying both scores, and reports every
-    statistic with its denominator and every exclusion with its reason. **Does not persist
-    anything and is not the fit run** — that is `scripts/fit_scorer.py`, owner-authorised."""
+    """The full pre-registered evaluation. **The LOO runs FIRST and independently** (D-063 dec 1):
+    the pre-registered percentile distribution does not depend on the ranking-table full-data fit,
+    so a full-data non-convergence must not abort it. A fold that raises is recorded as producing no
+    percentile and the distribution is reported over the survivors, with the non-convergent count
+    and names carried (D-063 dec 2). The full-data fit (ranking table + Spearman) runs after and is
+    non-fatal. **Does not persist anything and is not the fit run** — that is `scripts/fit_scorer.py`."""
     ranking_rows = [r for r in all_rows if r.in_ranking_set]
     excluded = sorted(
         [(r.symbol, r.exclusion_reason or "not in ranking set")
          for r in all_rows if not r.in_ranking_set]
     )
 
-    # Final full-data fit (for the ranking table + Spearman): λ by inner CV on all ranking rows.
-    final_choice = lambda_selector(ranking_rows)
-    final_model = irls_fit(ranking_rows, final_choice.lam)
-
-    # LOO headline distribution over the full ranking set.
+    # ── LOO FIRST and independently (D-063 dec 1). Per-fold non-convergence is survived (dec 2). ──
     folds = leave_one_out(ranking_rows, lambda_selector=lambda_selector)
+    converged = [f for f in folds if f.converged]
+    nonconvergent_folds = sorted(f.held_out_symbol for f in folds if not f.converged)
     structural_percentiles = [
-        percentile_within(f.scores[f.held_out_symbol], list(f.scores.values())) for f in folds
+        percentile_within(f.scores[f.held_out_symbol], list(f.scores.values())) for f in converged
     ]
 
-    # Head-to-head: the common reference set = ranking targets carrying an evidence score.
+    # Head-to-head over the converged folds within the common reference set (D-060 dec 8).
     common = [r for r in ranking_rows if r.evidence_score is not None]
     common_symbols = {r.symbol for r in common}
     headto_structural: list[float] = []
@@ -435,31 +452,38 @@ def run_scorer(
     if common:
         evidence_by_symbol = {r.symbol: r.evidence_score for r in common}
         evidence_values = list(evidence_by_symbol.values())
-        for f in folds:
+        for f in converged:
             if f.held_out_symbol not in common_symbols:
                 continue
-            # structural percentile within the common reference set, under this fold's model
             common_scores = [f.scores[s] for s in common_symbols]
             headto_structural.append(percentile_within(f.scores[f.held_out_symbol], common_scores))
             headto_evidence.append(
                 percentile_within(evidence_by_symbol[f.held_out_symbol], evidence_values)
             )
 
-    # Spearman between the FINAL structural score and the evidence score over the common set.
-    spearman_val = 0.0
-    if len(common) >= 2:
-        struct = [final_model.predict_proba(r.features) for r in common]
-        evid = [r.evidence_score for r in common]
-        spearman_val = spearman(struct, evid)
+    # ── The ranking-table full-data fit, AFTER the LOO and NON-FATAL to it (D-063 dec 1). ──
+    final_choice = lambda_selector(ranking_rows)
+    final_model: Optional[Model] = None
+    try:
+        final_model = irls_fit(ranking_rows, final_choice.lam)
+    except ScorerNonConvergence:
+        final_model = None                    # ranking + Spearman unavailable; the LOO still stands
 
-    ranking = sorted(
-        [(r.symbol, final_model.predict_proba(r.features), final_model.contributions(r.features))
-         for r in ranking_rows],
-        key=lambda t: t[1],
-        reverse=True,
-    )
+    spearman_val: Optional[float] = None
+    ranking: list[tuple[str, float, list[float]]] = []
+    if final_model is not None:
+        if len(common) >= 2:
+            struct = [final_model.predict_proba(r.features) for r in common]
+            evid = [r.evidence_score for r in common]
+            spearman_val = spearman(struct, evid)
+        ranking = sorted(
+            [(r.symbol, final_model.predict_proba(r.features), final_model.contributions(r.features))
+             for r in ranking_rows],
+            key=lambda t: t[1],
+            reverse=True,
+        )
 
-    lam_per_fold = [f.lam for f in folds]
+    lam_per_fold = [(f.held_out_symbol, f.lam, f.converged) for f in folds]
     lam_edge = final_choice.at_grid_edge or any(f.lam_at_grid_edge for f in folds)
 
     return ScorerReport(
@@ -467,6 +491,7 @@ def run_scorer(
         n_ranking_set=len(ranking_rows),
         n_fit_positives=sum(1 for r in ranking_rows if r.label == 1),
         structural_percentiles=structural_percentiles,
+        nonconvergent_folds=nonconvergent_folds,
         headto_reference_n=len(common),
         headto_structural_percentiles=headto_structural,
         headto_evidence_percentiles=headto_evidence,
@@ -475,6 +500,8 @@ def run_scorer(
         lambda_per_fold=lam_per_fold,
         lambda_at_grid_edge=lam_edge,
         excluded=excluded,
+        final_fit_converged=final_model is not None,
+        final_fit_lambda=final_choice.lam,
         final_model=final_model,
         ranking=ranking,
     )

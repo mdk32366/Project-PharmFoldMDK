@@ -80,6 +80,116 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-063 — The LOO ordering defect, the per-fold non-convergence ruling, and the λ-degeneracy finding
+- **Date:** 2026-07-27
+- **Status:** Proposed → Accepted on merge. **Ruled after observing the full-data fit raise at
+  λ=0.001, and before observing any LOO fold outcome** — the provenance is stated precisely because
+  the ruling was made with partial knowledge and that matters (D-016).
+- **Discharges:** three things the scorer spec (D-041/D-060) left unfixed, surfaced when the first
+  `--run` raised instead of producing a distribution.
+
+---
+
+- **Context — the first fit run raised, and the raise is real.** `fit_scorer.py --run --persist`,
+  run once against prod (80 features loaded, 12 of 12 label accessions feature-complete, confirmed by
+  querying `protein_features` directly), raised `ScorerNonConvergence: IRLS Hessian became singular
+  at iteration 39 (lam=0.001)`. Two correctness facts were verified by reading the code before any
+  interpretation:
+  1. **The penalty enters the Hessian correctly** (`core/scorer.py:214-216`: `hess[j][j] += lam *
+     penalty[j]`, `penalty = [0, 1,1,1,1,1,1]`). The six coefficient diagonals carry `+λ`; the
+     **intercept is deliberately unpenalized**. Under quasi-complete separation `w = p(1−p) → 0`, so
+     `XᵀWX → 0`; the six coefficient directions stay pinned at `λ > 0`, but the intercept diagonal
+     `Σwᵢ + 0 → 0` and the Hessian goes singular **in that one unpenalized direction**. The MLE
+     intercept is genuinely at ±∞ under separation, so the raise is **correct behaviour, not a bug**.
+     (Objective is `½λ‖β‖²`, so the Hessian adds `λ`, not `2λ` — a consistent L2 convention.)
+  2. **The raise came from the FULL-DATA fit, and the LOO never ran.** `run_scorer` computed the
+     ranking-table full-data fit (`core/scorer.py:421-422`) **before** `leave_one_out`
+     (`:425`), so the raise aborted the function before the pre-registered evaluation executed.
+     **There is no percentile distribution yet — nothing ran.**
+
+  **⚠ A phrasing error, retracted and recorded (D-016):** an earlier draft called the raise "a
+  defensible negative" and reasoned that the features "separate the positives strongly." **Both are
+  withdrawn.** A singular Hessian under separation is **expected from dimensionality** — twelve points
+  in a six-dimensional space are almost always linearly separable from a modest complement — not from
+  ADC biology, and it is near-uninformative about signal. And a non-convergence raise is **not** one
+  of D-041's two pre-registered negatives (percentile-distribution-indistinguishable-from-comparator;
+  strong Spearman). **It is a failure to produce the statistic — absence of evidence, not evidence of
+  absence.** The honest headline is narrow: at n=12 with six features, the pre-registered procedure
+  could not produce an estimate it could stand behind, and the machinery said so rather than emitting
+  one.
+
+#### Decision (1) — The LOO ordering defect is the spec's, and the fix makes the evaluation independent of the ranking fit
+D-060's build order ("fit, then LOO") was transcribed faithfully into `run_scorer`, and **neither
+D-041 nor D-060 said the LOO must execute independently of the full-data fit.** The coupling — a
+full-data non-convergence aborting the pre-registered evaluation that does not depend on it — is a
+**gap in the spec, recorded here as such, not a defect in the build.** The fix: **`leave_one_out`
+runs first and independently**; the full-data fit (needed only for the ranking table and the
+Spearman) runs after and its failure is non-fatal to the pre-registered distribution.
+
+#### Decision (2) — A fold that raises is a fold that produced no percentile; the distribution is reported over the folds that converged
+D-041/D-060 never specified what happens when a LOO fold fails to converge, and each fold trains on
+**11 positives in the same six-dimensional space**, so folds may raise for the same reason the
+full-data fit did. `leave_one_out` had **no per-fold guard**, so one fold's raise would abort all
+twelve. **Ruling:**
+
+- **A non-convergent fold is recorded as producing no percentile** — null-with-a-reason at the fold
+  level (D-027/D-024 applied one layer down), never a fabricated value.
+- **The percentile distribution is reported over the folds that converged**, with **the
+  non-convergent count and the named held-out targets stated alongside it**, and the **denominator
+  travels with the claim** (D-024): "distribution over K of 12 folds; N did not converge: [names]".
+- **The alternative — all-or-nothing, one bad fold discarding eleven good ones — is worse
+  epistemically** and would be chosen for the same reason the intercept temptation is (see the
+  refusals).
+
+**⚠ Provenance, stated exactly (D-016):** this ruling was made **after** the full-data raise at
+λ=0.001 was observed and **before** any LOO fold outcome was observed. One cannot un-know the
+full-data result; one can state precisely what was known when the rule was fixed. The rule is the
+epistemically-correct one independent of the outcome, but the honest record is *when* it was set.
+
+#### Decision (3) — The λ-selection degeneracy under separation, and why "don't extend the grid" is now also a technical rule
+The inner CV selected the grid's **low edge, 0.001** — and that is **structurally guaranteed by the
+separation geometry, not bad luck.** Under quasi-complete separation the least-regularized fit
+predicts the inner held-out folds near-perfectly, so it wins on validation log-likelihood, every
+time. **The λ-selection procedure is itself degenerate when the data separates.**
+
+**Consequence:** extending the grid **downward** would make it strictly worse — a smaller λ wins
+the CV and raises harder. So D-060's rule against extending the grid is not only a pre-registration
+constraint here; **there is an independent technical reason it is correct.** This turns "we didn't
+tune" from a discipline claim into a technical one, and it belongs in the write-up.
+
+- **⚠ Two model changes stay REFUSED, and both are more tempting now than an hour ago:**
+  - **Do not penalize the intercept.** It would make the Hessian invertible and the raise disappear —
+    by changing the model after seeing the result. The unpenalized intercept is the standard, correct
+    choice; the raise it produces is information, not a defect.
+  - **Do not extend the λ grid** (in either direction). Downward is degenerate (Decision 3); any
+    change is a model change after seeing a result. If a converged full-data fit is later needed for
+    the ranking table, **that is a new decision in a new entry, dated after the pre-registered
+    result** — never a number found tonight. (The "λ at which the full-data fit would converge" was
+    explicitly not computed, for this reason.)
+
+- **Deep-learning justification.** D-041's pre-registration is only meaningful if the procedure is
+  fixed before the result and the result is reported whatever it is — including "the procedure could
+  not produce the statistic on this fold." This entry makes the evaluation robust to per-fold
+  non-convergence *without* changing the model, which is the only way the eventual distribution
+  (however partial) is an honest read of the pre-registered procedure rather than a tuned one.
+
+- **Consequences / test surface (written before the fix, project rule):**
+  - **`leave_one_out` runs first and independently** in `run_scorer`; a full-data non-convergence is
+    non-fatal to the LOO distribution (tested with a fixture where the full-data fit raises but the
+    folds converge, and the distribution is still returned).
+  - **Per-fold non-convergence is caught, recorded (held-out name + λ + `converged=False`), and does
+    NOT abort the loop** — tested with a fixture that forces a fold to raise; the loop completes and
+    the distribution covers the survivors.
+  - **The denominator travels:** the report carries the converged-fold count, the non-convergent
+    count, and the named non-convergent targets; `structural_percentiles` length equals the
+    converged count.
+  - **No model change:** a source assertion that the intercept penalty coefficient stays `0` and the
+    λ grid stays the 13 pinned points — the refusals enforced by the gate, not by memory.
+  - **The run then executes through tested code, once, and persists to `ranking_results`** — the
+    per-fold convergence status and λ-per-fold are outputs of that run, not separate diagnostics.
+
+---
+
 ### F-003 — The Group B curation pass: 12 labels against 22, and what the instrument got wrong
 
 - **Date:** 2026-07-27

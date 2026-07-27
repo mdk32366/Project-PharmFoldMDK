@@ -224,16 +224,17 @@ def persist_results(
 
         s.add(RankingResult(
             ranking_run_id=ranking_run_id,
-            structural_percentiles=list(report.structural_percentiles),
+            structural_percentiles=list(report.structural_percentiles),   # over CONVERGED folds (D-063)
             headto_structural_percentiles=list(report.headto_structural_percentiles),
             headto_evidence_percentiles=list(report.headto_evidence_percentiles),
-            spearman=report.spearman,
+            spearman=report.spearman,                                       # None if full-data fit raised
             spearman_n=report.spearman_n,
             n_ranking_set=report.n_ranking_set,
-            n_fit_positives=report.n_fit_positives,
+            n_fit_positives=report.n_fit_positives,                         # the LOO denominator (total positives)
             headto_reference_n=report.headto_reference_n,
             plddt_floor=PLDDT_FLOOR,
-            lambda_per_fold=list(report.lambda_per_fold),
+            # per fold: [held-out symbol, λ, converged] — the non-convergent folds are named here (D-063)
+            lambda_per_fold=[[s, lam, bool(c)] for (s, lam, c) in report.lambda_per_fold],
             lambda_at_grid_edge=report.lambda_at_grid_edge,
             excluded=[list(pair) for pair in report.excluded],
             scorer_version=report.scorer_version,
@@ -264,22 +265,39 @@ def print_report(report: ScorerReport) -> None:
     print(f"scorer_version={report.scorer_version}")
     print(f"ranking set (ranked & folded & pLDDT>=50): N={report.n_ranking_set}, "
           f"positives={report.n_fit_positives}")
+    # The pre-registered headline: the LOO distribution over the folds that CONVERGED (D-063 dec 2).
+    conv = report.converged_fold_count
     med = _median(report.structural_percentiles)
-    print(f"headline LOO structural percentiles (N={len(report.structural_percentiles)}, "
-          f"median={med:.3f}): {[round(p, 3) for p in report.structural_percentiles]}"
-          if med is not None else "headline LOO: no positives")
+    if conv:
+        print(f"headline LOO structural percentiles (over {conv} of {report.n_fit_positives} folds; "
+              f"median={med:.3f}): {[round(p, 3) for p in report.structural_percentiles]}")
+    else:
+        print(f"headline LOO: 0 of {report.n_fit_positives} folds converged - NO distribution produced")
+    if report.nonconvergent_folds:
+        print(f"  non-convergent folds ({len(report.nonconvergent_folds)}, produced no percentile): "
+              f"{report.nonconvergent_folds}")
     print(f"head-to-head over the common reference set (N={report.headto_reference_n}, "
-          f"{len(report.headto_structural_percentiles)} held-out positives):")
+          f"{len(report.headto_structural_percentiles)} converged held-out positives):")
     print(f"  structural: {[round(p, 3) for p in report.headto_structural_percentiles]}")
     print(f"  evidence  : {[round(p, 3) for p in report.headto_evidence_percentiles]}  "
           f"(two-valued comparator - degenerate by construction, D-060 dec 8)")
-    print(f"Spearman(structural, evidence) over N={report.spearman_n}: {report.spearman:.4f}")
+    if report.spearman is None:
+        print(f"Spearman(structural, evidence): UNAVAILABLE - "
+              f"{'full-data fit did not converge' if report.spearman_n >= 2 else 'n<2 common targets'} "
+              f"(N={report.spearman_n})")
+    else:
+        print(f"Spearman(structural, evidence) over N={report.spearman_n}: {report.spearman:.4f}")
     if report.lambda_at_grid_edge:
-        print("WARNING: a selected lambda landed at a grid edge - FINDING to report, not to fix by widening (D-060 dec 3)")
+        print("WARNING: a selected lambda landed at a grid edge - FINDING, not to fix by widening; "
+              "under separation the low edge is structurally forced (D-063 dec 3)")
     print(f"excluded (reported, never dropped): {report.excluded}")
-    print("top of ranking (symbol, score, contributions):")
-    for symbol, score, contribs in report.ranking[:10]:
-        print(f"  {symbol:12s} {score:.4f}  " + " ".join(f"{c:+.3f}" for c in contribs))
+    if report.final_fit_converged:
+        print("top of ranking (symbol, score, contributions):")
+        for symbol, score, contribs in report.ranking[:10]:
+            print(f"  {symbol:12s} {score:.4f}  " + " ".join(f"{c:+.3f}" for c in contribs))
+    else:
+        print(f"ranking table: UNAVAILABLE - the full-data fit did not converge at "
+              f"lam={report.final_fit_lambda:g} (ranking is a NEW decision if needed, D-063 refusals)")
     print("NOTE: --run --persist writes these to target_scores + ranking_results (D-061); "
           "without --persist they are report-only.")
 
