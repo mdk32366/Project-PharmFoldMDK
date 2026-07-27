@@ -39,10 +39,9 @@ export default function AdcContext() {
       <h2>What an <Term name="ADC">ADC</Term> is, and why target choice is the hard part</h2>
 
       <p>
-        Conventional cytotoxic chemotherapy is an <strong>area weapon</strong>: it acts on rapidly
-        dividing cells wherever they are, which is why its toxicity reads as a war of attrition — the
-        treatment's reach is not the disease's shape. An <strong>antibody–drug conjugate</strong> is a
-        guided munition:
+        Standard chemotherapy is a blunt weapon: it attacks fast-dividing cells all over the body,
+        so it harms healthy tissue along with the tumour. An <strong>antibody–drug conjugate</strong>
+        is a guided one:
       </p>
       <ul className="adc-parts">
         <li><strong>Antibody</strong> — guidance. It binds a protein the tumour over-expresses.</li>
@@ -56,12 +55,12 @@ export default function AdcContext() {
 
       <h3>What the mechanism does not license</h3>
       <p>
-        The metaphor describes <strong>delivery</strong>, not <strong>outcomes</strong>. ADCs are a
-        real and substantial advance — enfortumab vedotin targets <strong>NECTIN4</strong> and changed
-        outcomes in urothelial carcinoma — but the payload is still cytotoxic, linkers deconjugate in
-        circulation, and the class carries its own dose-limiting toxicities (interstitial lung disease,
-        ocular effects, peripheral neuropathy, varying by agent). Resistance develops, notably through
-        <strong> antigen downregulation</strong>: an ADC is only as good as its target.
+        The metaphor is about delivery, not cure. ADCs are a real advance — enfortumab vedotin
+        targets <strong>NECTIN4</strong> and changed outcomes in bladder cancer — but the payload is
+        still toxic, the linker can release it too early in the blood, and each drug brings its own
+        serious side effects (harm to the lungs, eyes, and nerves, depending on the agent). Tumours
+        also fight back, often by making less of the target protein. So an ADC is only as good as its
+        target.
       </p>
 
       <h3>Why this project exists</h3>

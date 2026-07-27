@@ -80,6 +80,42 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-056 — The plain-language pass, and a readability tripwire calibrated to what we actually wrote
+
+- **Date:** 2026-07-26
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-055 (the register rule this executes), D-049 (pin to observed values, not
+  aspirations), D-051 Constraint A (which this pass is the single most likely thing to break).
+- **Depends on:** D-055 merged — the copy references terms that must already exist.
+
+**Context.** D-055 defines the terms. The surrounding sentences are still written at postgraduate
+level in places — e.g. *"where a disagreement is explicable by known homology (convergent folds,
+divergent sequences within a family)"* — which no glossary entry rescues, because the problem is the
+sentence, not the word.
+
+**Decision 1 — rewrite the domain copy; leave the ML copy alone.** D-055's register rule, executed
+across every component that renders prose. Meaning is preserved exactly; only the reading level
+moves. **Nothing that is currently precise becomes vague.** A shorter sentence that says less is a
+failure of this pass, not a success of it.
+
+**Decision 2 — a readability tripwire, ceiling set after the fact.** Flesch–Kincaid grade level is
+computed over rendered text, with numerals stripped and glossary terms and gene symbols exempted
+from the syllable count. **The ceiling is calibrated from the measured value once the rewrite is
+done, plus a small margin** (the D-049 pattern: pin to what is observably true).
+
+**⚠ What this test is and is not.** Flesch–Kincaid counts syllables and sentence lengths. **It does
+not measure comprehension**, it is trivially gameable by chopping sentences, and it penalises terms
+that cannot be avoided. It is a **regression tripwire** — it catches copy drifting back toward
+density — and it is **not evidence that the writing is clear.** That claim is made by a human
+reading it; a green test does not stand in for one.
+
+- **Deep-learning justification:** none directly, and stated rather than manufactured. This pass
+  makes the deep-learning claims *readable by the reader who has to assess them*.
+- **Consequences:** copy edits across `Story`, `MethodNote`, `AdcContext`, `CoverageView`,
+  `TargetView`, `CoverageLine`, `Provenance`, `PlddtSpread`, `CancerAssociations`; one new test.
+
+---
+
 ### D-055 — A glossary, and a contract test that reddens when an undefined term reaches the screen
 
 - **Date:** 2026-07-26

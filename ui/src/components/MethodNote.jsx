@@ -64,7 +64,7 @@ export default function MethodNote() {
         <li><strong>It classifies disagreement; it does not explain it.</strong> Attribution is a statement about the <em>model</em> ("feature 6 drives this rank"), never about the target's biology.</li>
         <li><strong>No causal biological claim</strong> — the system has no standing to make one.</li>
         <li><strong>No ordering of disagreements by "interestingness"</strong> — that is an explanation wearing a number.</li>
-        <li>Where a disagreement is explicable by known homology (convergent folds, divergent sequences within a family), it is labelled a <strong>known confound where it is shown</strong>. The supportable finding is narrower, and therefore stronger.</li>
+        <li>Some disagreements have a known explanation — two proteins can fold into similar shapes without sharing much of their sequence. Where that is the case, it is <strong>labelled as a known confound</strong>. The claim we can stand behind is narrower, and so it is stronger.</li>
       </ul>
       <p className="note">
         A non-goal here is a commitment, not an omission: a later iteration adding one of these does
