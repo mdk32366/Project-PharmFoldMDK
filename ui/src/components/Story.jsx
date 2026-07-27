@@ -33,9 +33,10 @@ export default function Story() {
     <div className="prose story">
       <h1>We folded a cohort of ADC targets with ESMFold — and the interface is honest about what came out.</h1>
       <p>
-        <strong>The question:</strong> does a ranking of antibody–drug-conjugate targets built from{' '}
-        <em>structure</em> — folds we computed ourselves — differ from one built from expression and
-        prior evidence? Answering it begins with the structures, and{' '}
+        <strong>The question:</strong> if we rank these cancer targets by their 3D shape — shapes we
+        folded ourselves — do we get a different answer than ranking them by how strongly they appear
+        in tumours and how much they have already been studied? To find out, we start with the shapes,
+        and{' '}
         <strong>we ran the neural network ourselves</strong>: every structure here is an{' '}
         <strong><Term name="ESMFold">ESMFold</Term></strong> prediction (<code>facebook/esmfold_v1</code>,
         at a pinned revision), computed on our own <Term name="GPU">GPU</Term> tier — <em>not</em>{' '}
@@ -68,9 +69,9 @@ export default function Story() {
         </p>
       )}
       <p>
-        <strong>What is deliberately not built:</strong> the comparative ranking and the learned
-        scorer it needs. It waits on that scorer and is <strong>not mocked</strong> — a fake ranking
-        would be thrown away (D-028: a non-goal is a commitment, not an omission).
+        <strong>What is deliberately not built:</strong> the comparison ranking and the learned
+        scorer it needs. It waits on that scorer, and we will <strong>not fake it</strong> — a
+        stand-in ranking would be thrown away rather than shown.
       </p>
       <p className="story-cta">
         <Link to="/targets">See the folded targets →</Link>
