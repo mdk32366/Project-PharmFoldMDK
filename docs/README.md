@@ -80,6 +80,80 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-066 — `ranked` names two different quantities, and a shared component asserted a claim it cannot verify
+
+- **Date:** 2026-07-29
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-024 (the partition, and the denominator travelling with the claim), D-050 (derived,
+  never hardcoded), F-002 (the cascade), F-006 (the count that exposed it).
+
+**Context — the defect, on the deployed surface.** `CoverageLine.jsx` asserts *"The ranking … covers
+these {rankedFolded}"*, which computes to **67**, **directly above a 56-row ranking table** on
+`/scorer`. On `/coverage` the same 67 is correct.
+
+**Root cause — one word, two referents:**
+
+| Usage | Meaning | Value |
+|---|---|---|
+| `ranked` on `/coverage` | the **D-024 disposition** — ranked / held_out / excluded, over all 82 | **67** |
+| `ranked` on `/scorer` | **membership in the actual ranking**, after the pLDDT-50 floor | **56** |
+
+**⚠ Same class as the 67-vs-67 collision recorded in F-002** — two different quantities sharing a
+word, and on that occasion sharing a *value*, which is what concealed it. **This is the fifth
+instance of *two paths to one quantity, never compared*, and the first where the collision is
+lexical rather than computational.**
+
+**The tell was in the copy the whole time:** *"The ranking — once the scorer exists — covers these
+67"* was written **before a ranking existed.** It was a forward-looking promise. It became a false
+claim on one surface and an unverifiable one on the other the moment the scorer ran.
+
+#### Decision (1) — `CoverageLine` states the partition and stops claiming what the ranking covers
+
+**A coverage component cannot know what a ranking covers.** It knows the D-024 partition; the
+ranking's membership is decided downstream by the pLDDT floor, which the component has no visibility
+into. **The forward-looking clause is removed, not re-tensed.**
+
+This fixes both surfaces at once: `/coverage` keeps a true partition statement, `/scorer` stops
+carrying a false one.
+
+#### Decision (2) — the scorer supplies the reconciliation beside its own table
+
+Rendered in the right column, immediately above the table, **all three numbers derived**:
+
+> **67** ranked · **56** above the pLDDT-50 floor · **these 56 are ranked below**
+
+**The missing step was never wrong, only absent from where it was needed** — it exists in cascade A,
+in the left column, disconnected from the box making the claim. **A denominator in another column is
+a denominator that does not travel with its claim** (D-024).
+
+#### Decision (3) — ⚠ REJECTED: a prop supplying the post-floor count to the shared component
+
+It would work and it is the smaller diff. **Rejected because it preserves the defect's shape:** the
+component would continue to assert what the ranking covers, using a number handed to it, with no way
+to verify the claim. **The next surface that reuses it inherits the same trap.**
+
+#### Decision (4) — the vocabulary is fixed
+
+- **`ranked`** — the D-024 disposition. Over 82. **Never means "in the ranking."**
+- **`rankable`** — folded ∧ ranked ∧ above the pLDDT floor. The set the ranking covers. Already the
+  term used in F-002 and cascade A.
+
+**Any surface using `ranked` to mean the ranking's membership is a defect.**
+
+- **Deep-learning justification:** none directly; this is a denominator-honesty decision. It bears
+  on the model's reporting because **a ranking presented over the wrong denominator overstates its
+  own coverage**, which is the failure D-024 exists to prevent.
+
+- **Consequences / test surface:**
+  - `CoverageLine` **no longer contains a ranking-coverage claim** — asserted by absence, on both
+    surfaces.
+  - The scorer's reconciliation line renders all three numbers **derived**, and a fixture with
+    distinctive values proves none is typed.
+  - **`/coverage` is unchanged in meaning** — its partition test stays green.
+  - **The stale tense disappears with the clause**, so no separate tense fix is needed.
+
+---
+
 ### F-006 — The fitted scores are compressed toward the base rate, and are not calibrated probabilities
 
 - **Date:** 2026-07-29
