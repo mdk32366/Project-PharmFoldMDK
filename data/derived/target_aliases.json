@@ -1,0 +1,582 @@
+{
+  "ADAM17": [
+    "ADAM17",
+    "CSVP",
+    "Snake venom-like protease",
+    "TACE",
+    "TNF-alpha convertase",
+    "TNF-alpha-converting enzyme"
+  ],
+  "AQP5": [
+    "AQP5"
+  ],
+  "ATP2B2": [
+    "ATP2B2",
+    "PMCA2",
+    "Plasma membrane calcium ATPase isoform 2",
+    "Plasma membrane calcium pump isoform 2"
+  ],
+  "BTN3A3": [
+    "BTF3",
+    "BTN3A3"
+  ],
+  "CADM1": [
+    "CADM1",
+    "IGSF4",
+    "IGSF4A",
+    "IgSF4",
+    "Immunoglobulin superfamily member 4",
+    "NECL-2",
+    "NECL2",
+    "Nectin-like protein 2",
+    "SYNCAM",
+    "SgIgSF",
+    "Spermatogenic immunoglobulin superfamily",
+    "SynCAM",
+    "Synaptic cell adhesion molecule",
+    "TSLC-1",
+    "TSLC1",
+    "Tumor suppressor in lung cancer 1"
+  ],
+  "CD276": [
+    "4Ig-B7-H3",
+    "B7 homolog 3",
+    "B7-H3",
+    "B7H3",
+    "CD276",
+    "Costimulatory molecule"
+  ],
+  "CD3G": [
+    "CD3G",
+    "T-cell receptor T3 gamma chain",
+    "T3G"
+  ],
+  "CD53": [
+    "CD53",
+    "Cell surface glycoprotein CD53",
+    "MOX44",
+    "TSPAN25",
+    "Tetraspanin-25",
+    "Tspan-25"
+  ],
+  "CD86": [
+    "Activation B7-2 antigen",
+    "B70",
+    "BU63",
+    "CD28LG2",
+    "CD86",
+    "CTLA-4 counter-receptor B7.2",
+    "FUN-1"
+  ],
+  "CDCP1": [
+    "CDCP1",
+    "Membrane glycoprotein gp140",
+    "SIMA135",
+    "Subtractive immunization M plus HEp3-associated 135 kDa protein",
+    "TRASK",
+    "Transmembrane and associated with src kinases"
+  ],
+  "CDH11": [
+    "CDH11",
+    "OB-cadherin",
+    "OSF-4",
+    "Osteoblast cadherin"
+  ],
+  "CLCNKB": [
+    "CLCNKB",
+    "ClC-K2"
+  ],
+  "CLDN1": [
+    "CLD1",
+    "CLDN1",
+    "SEMP1",
+    "Senescence-associated epithelial membrane protein"
+  ],
+  "CSF1R": [
+    "CSF-1 receptor",
+    "CSF-1-R",
+    "CSF-1R",
+    "CSF1R",
+    "FMS",
+    "M-CSF-R",
+    "Proto-oncogene c-Fms"
+  ],
+  "CSPG5": [
+    "Acidic leucine-rich EGF-like domain-containing brain protein",
+    "CALEB",
+    "CSPG5",
+    "NGC",
+    "Neuroglycan C"
+  ],
+  "CXCR5": [
+    "BLR1",
+    "Burkitt lymphoma receptor 1",
+    "CXCR5",
+    "MDR-15",
+    "MDR15",
+    "Monocyte-derived receptor 15"
+  ],
+  "EDNRB": [
+    "EDNRB",
+    "ETRB",
+    "Endothelin receptor non-selective type"
+  ],
+  "EGFR": [
+    "EGFR",
+    "ERBB",
+    "ERBB1",
+    "HER1",
+    "Proto-oncogene c-ErbB-1",
+    "Receptor tyrosine-protein kinase erbB-1"
+  ],
+  "ENPP5": [
+    "ENPP5"
+  ],
+  "ENTPD1": [
+    "ATP diphosphohydrolase",
+    "ATP-DPH",
+    "ATPDase",
+    "CD39",
+    "ENTPD1",
+    "Ecto-ATP diphosphohydrolase 1",
+    "Ecto-ATPDase 1",
+    "Ecto-ATPase 1",
+    "Ecto-apyrase",
+    "Lymphoid cell activation antigen",
+    "NTPDase1",
+    "Nucleoside triphosphate diphosphohydrolase 1"
+  ],
+  "EPHA4": [
+    "EK8",
+    "EPH-like kinase 8",
+    "EPHA4",
+    "HEK8",
+    "SEK",
+    "TYRO1",
+    "Tyrosine-protein kinase TYRO1",
+    "Tyrosine-protein kinase receptor SEK",
+    "hEK8"
+  ],
+  "ERBB2": [
+    "ERBB2",
+    "HER2",
+    "MLN 19",
+    "MLN19",
+    "Metastatic lymph node gene 19 protein",
+    "NEU",
+    "NGL",
+    "Proto-oncogene Neu",
+    "Proto-oncogene c-ErbB-2",
+    "Tyrosine kinase-type cell surface receptor HER2",
+    "p185erbB2"
+  ],
+  "FAM171A1": [
+    "APCN",
+    "Astroprincin",
+    "C10orf38",
+    "FAM171A1"
+  ],
+  "FAT2": [
+    "CDHF8",
+    "Cadherin family member 8",
+    "FAT2",
+    "KIAA0811",
+    "MEGF1",
+    "Multiple EGF-like domains protein 1",
+    "Multiple epidermal growth factor-like domains protein 1"
+  ],
+  "FGFR3": [
+    "FGFR3",
+    "JTK4"
+  ],
+  "FLT1": [
+    "FLT",
+    "FLT-1",
+    "FLT1",
+    "FRT",
+    "Fms-like tyrosine kinase 1",
+    "Tyrosine-protein kinase FRT",
+    "Tyrosine-protein kinase receptor FLT",
+    "VEGFR1",
+    "Vascular permeability factor receptor"
+  ],
+  "FRRS1": [
+    "FRRS1",
+    "Ferric-chelate reductase 1",
+    "SDFR2",
+    "SDR-2",
+    "SDR2",
+    "Stromal cell-derived receptor 2"
+  ],
+  "GPBAR1": [
+    "BG37",
+    "G protein-coupled receptor GPCR19",
+    "GPBAR1",
+    "M-BAR",
+    "Membrane-type receptor for bile acids",
+    "TGR5",
+    "hBG37",
+    "hGPCR19"
+  ],
+  "GPC1": [
+    "GPC1"
+  ],
+  "GPR143": [
+    "GPR143",
+    "OA1",
+    "Ocular albinism type 1 protein"
+  ],
+  "GPR34": [
+    "GPR34"
+  ],
+  "GPR65": [
+    "GPR65",
+    "Psychosine receptor",
+    "T-cell death-associated gene 8 protein",
+    "TDAG8"
+  ],
+  "GRIN1": [
+    "GRIN1",
+    "Glutamate [NMDA] receptor subunit zeta-1",
+    "N-methyl-D-aspartate receptor subunit NR1",
+    "NMD-R1",
+    "NMDAR1",
+    "hNR1"
+  ],
+  "HEPACAM": [
+    "HEPACAM",
+    "Hepatocyte cell adhesion molecule",
+    "Protein hepaCAM"
+  ],
+  "IGF2R": [
+    "300 kDa mannose 6-phosphate receptor",
+    "IGF-II receptor",
+    "IGF2R",
+    "Insulin-like growth factor 2 receptor",
+    "Insulin-like growth factor II receptor",
+    "M6P/IGF2 receptor",
+    "M6P/IGF2R",
+    "MPR 300",
+    "MPRI"
+  ],
+  "INSR": [
+    "INSR"
+  ],
+  "ITGB5": [
+    "ITGB5"
+  ],
+  "JAG1": [
+    "JAG1",
+    "JAGL1"
+  ],
+  "LRFN3": [
+    "LRFN3",
+    "SALM4",
+    "Synaptic adhesion-like molecule 4"
+  ],
+  "LRFN4": [
+    "LRFN4",
+    "SALM3"
+  ],
+  "LRP6": [
+    "LRP6"
+  ],
+  "LRRN1": [
+    "KIAA1497",
+    "LRRN1",
+    "NLRR-1",
+    "Neuronal leucine-rich repeat protein 1"
+  ],
+  "LRRN4CL": [
+    "LRRN4CL"
+  ],
+  "MCOLN1": [
+    "MCOLN1",
+    "MG-2",
+    "ML4",
+    "Mucolipidin",
+    "TRPML1",
+    "Transient receptor potential channel mucolipin 1"
+  ],
+  "MEP1A": [
+    "Endopeptidase-2",
+    "MEP1A",
+    "N-benzoyl-L-tyrosyl-P-amino-benzoic acid hydrolase subunit alpha",
+    "PABA peptide hydrolase",
+    "PPH alpha"
+  ],
+  "MERTK": [
+    "MER",
+    "MERTK",
+    "Proto-oncogene c-Mer",
+    "Receptor tyrosine kinase MerTK"
+  ],
+  "MMP14": [
+    "MMP-X1",
+    "MMP14",
+    "MT-MMP 1",
+    "MT1-MMP",
+    "MT1MMP",
+    "MTMMP1",
+    "Membrane-type matrix metalloproteinase 1",
+    "Membrane-type-1 matrix metalloproteinase"
+  ],
+  "MSLN": [
+    "CAK1 antigen",
+    "MPF",
+    "MSLN",
+    "Pre-pro-megakaryocyte-potentiating factor"
+  ],
+  "MUC16": [
+    "CA-125",
+    "CA125",
+    "MUC16",
+    "Ovarian cancer-related tumor marker CA125",
+    "Ovarian carcinoma antigen CA125"
+  ],
+  "NCAM1": [
+    "NCAM",
+    "NCAM1"
+  ],
+  "NECTIN4": [
+    "Ig superfamily receptor LNIR",
+    "LNIR",
+    "NECTIN4",
+    "Nectin cell adhesion molecule 4",
+    "PRR4",
+    "PVRL4",
+    "Poliovirus receptor-related protein 4"
+  ],
+  "NOTCH2": [
+    "NOTCH2"
+  ],
+  "OSMR": [
+    "IL-31 receptor subunit beta",
+    "IL-31R subunit beta",
+    "IL-31R-beta",
+    "IL-31RB",
+    "Interleukin-31 receptor subunit beta",
+    "OSMR",
+    "OSMRB"
+  ],
+  "PCDH7": [
+    "BH-Pcdh",
+    "BHPCDH",
+    "Brain-heart protocadherin",
+    "PCDH7"
+  ],
+  "PDGFRB": [
+    "Beta platelet-derived growth factor receptor",
+    "Beta-type platelet-derived growth factor receptor",
+    "CD140 antigen-like family member B",
+    "PDGFR",
+    "PDGFR-1",
+    "PDGFR1",
+    "PDGFRB",
+    "Platelet-derived growth factor receptor 1"
+  ],
+  "PODXL": [
+    "GCTM-2 antigen",
+    "Gp200",
+    "PCLP",
+    "PCLP-1",
+    "PCLP1",
+    "PODXL",
+    "Podocalyxin-like protein 1"
+  ],
+  "PTPRZ1": [
+    "HTPZP2",
+    "PTPRZ",
+    "PTPRZ1",
+    "PTPRZ2",
+    "PTPZ",
+    "Protein-tyrosine phosphatase receptor type Z polypeptide 1",
+    "Protein-tyrosine phosphatase receptor type Z polypeptide 2",
+    "R-PTP-zeta-2"
+  ],
+  "SCN9A": [
+    "NENA",
+    "Neuroendocrine sodium channel",
+    "PN1",
+    "Peripheral sodium channel 1",
+    "SCN9A",
+    "Sodium channel protein type IX subunit alpha",
+    "Voltage-gated sodium channel subunit alpha Nav1.7",
+    "hNE-Na"
+  ],
+  "SCNN1A": [
+    "Alpha-NaCH",
+    "Amiloride-sensitive sodium channel subunit alpha",
+    "Nonvoltage-gated sodium channel 1 subunit alpha",
+    "SCNEA",
+    "SCNN1",
+    "SCNN1A",
+    "Sodium channel epithelial 1 subunit alpha"
+  ],
+  "SDK1": [
+    "SDK1"
+  ],
+  "SLC10A6": [
+    "SLC10A6",
+    "SOAT",
+    "Solute carrier family 10 member 6"
+  ],
+  "SLC12A4": [
+    "Electroneutral potassium-chloride cotransporter 1",
+    "Erythroid K-Cl cotransporter 1",
+    "KCC1",
+    "SLC12A4",
+    "hKCC1"
+  ],
+  "SLC12A9": [
+    "CCC-interacting protein 1",
+    "CCC6",
+    "CIP1",
+    "Cation-chloride cotransporter 6",
+    "Cation-chloride cotransporter-interacting protein 1",
+    "Potassium-chloride transporter 9",
+    "SLC12A9",
+    "WO3.3",
+    "hCCC6",
+    "hCIP1"
+  ],
+  "SLC26A6": [
+    "Anion exchange transporter",
+    "Pendrin-L1",
+    "Pendrin-like protein 1",
+    "SLC26A6"
+  ],
+  "SLC2A9": [
+    "GLUT-9",
+    "GLUT9",
+    "Glucose transporter type 9",
+    "SLC2A9",
+    "Urate transporter"
+  ],
+  "SLC39A6": [
+    "Estrogen-regulated protein LIV-1",
+    "LIV1",
+    "SLC39A6",
+    "Solute carrier family 39 member 6",
+    "ZIP-6",
+    "ZIP6",
+    "Zrt- and Irt-like protein 6"
+  ],
+  "SLC3A2": [
+    "4F2 cell-surface antigen heavy chain",
+    "4F2 heavy chain antigen",
+    "4F2hc",
+    "Lymphocyte activation antigen 4F2 large subunit",
+    "MDU1",
+    "SLC3A2",
+    "Solute carrier family 3 member 2"
+  ],
+  "SLC44A3": [
+    "CTL3",
+    "SLC44A3",
+    "Solute carrier family 44 member 3"
+  ],
+  "SLC44A4": [
+    "C6orf29",
+    "CTL4",
+    "NG22",
+    "SLC44A4",
+    "Solute carrier family 44 member 4",
+    "TPPT1",
+    "Thiamine pyrophosphate transporter 1",
+    "hTPPT1"
+  ],
+  "SLC45A4": [
+    "KIAA1126",
+    "SLC45A4",
+    "Solute carrier family 45 member 4"
+  ],
+  "SLC52A3": [
+    "C20orf54",
+    "RFT2",
+    "RFVT3",
+    "Riboflavin transporter 2",
+    "SLC52A3",
+    "hRFT2"
+  ],
+  "SMO": [
+    "Protein Gx",
+    "SMO",
+    "SMOH"
+  ],
+  "SORT1": [
+    "100 kDa NT receptor",
+    "Glycoprotein 95",
+    "Gp95",
+    "NT3",
+    "NTR3",
+    "Neurotensin receptor 3",
+    "SORT1"
+  ],
+  "TLR3": [
+    "TLR3"
+  ],
+  "TMEM108": [
+    "KIAA1690",
+    "RTLN",
+    "Retrolinkin",
+    "TMEM108"
+  ],
+  "TMEM30A": [
+    "C6orf67",
+    "CDC50A",
+    "P4-ATPase flippase complex beta subunit TMEM30A",
+    "TMEM30A",
+    "Transmembrane protein 30A"
+  ],
+  "TNFRSF10C": [
+    "Antagonist decoy receptor for TRAIL/Apo-2L",
+    "DCR1",
+    "DcR1",
+    "Decoy TRAIL receptor without death domain",
+    "Decoy receptor 1",
+    "LIT",
+    "Lymphocyte inhibitor of TRAIL",
+    "TNF-related apoptosis-inducing ligand receptor 3",
+    "TNFRSF10C",
+    "TRAIL receptor 3",
+    "TRAIL receptor without an intracellular domain",
+    "TRAIL-R3",
+    "TRAILR3",
+    "TRID"
+  ],
+  "TSPAN15": [
+    "NET7",
+    "TM4SF15",
+    "TSPAN15",
+    "Tetraspan NET-7",
+    "Transmembrane 4 superfamily member 15"
+  ],
+  "TSPAN3": [
+    "TM4SF8",
+    "TSPAN3",
+    "Tetraspanin TM4-A",
+    "Transmembrane 4 superfamily member 8"
+  ],
+  "TSPAN9": [
+    "NET5",
+    "TSPAN9",
+    "Tetraspan NET-5"
+  ],
+  "UGT8": [
+    "CGT",
+    "Ceramide UDP-galactosyltransferase",
+    "Cerebroside synthase",
+    "UDP-galactose-ceramide galactosyltransferase",
+    "UGT4",
+    "UGT8"
+  ],
+  "UPK1B": [
+    "TSPAN20",
+    "Tetraspanin-20",
+    "Tspan-20",
+    "UPIb",
+    "UPK1B",
+    "Uroplakin Ib"
+  ]
+}
