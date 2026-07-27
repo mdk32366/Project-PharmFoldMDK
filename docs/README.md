@@ -80,6 +80,50 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-055 — A glossary, and a contract test that reddens when an undefined term reaches the screen
+
+- **Date:** 2026-07-26
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-051 (the narrative surfaces this makes legible), D-016 (a claim names how it is
+  known — a term nobody can decode is a claim nobody can check), D-024 (the honest denominator,
+  unreadable if the reader cannot parse its units), D-053 decision 5 (which kind of number may be a
+  literal).
+- **Amends:** nothing. Additive.
+
+**Context.** The UI puts **pLDDT, PAE, ESMFold, ECD, ADC, quasi H-score, TCGA, IHC** and `int8` in
+front of a reader (an **ML expert, oncology novice**), mostly undefined. pLDDT carries the entire
+honesty argument, and nothing on screen says what it is. **A reader who cannot decode the term cannot
+evaluate the honesty built on it.**
+
+**Decision 1 — two registers, by domain.** Biology/oncology/chemistry → plain ~8th-grade language;
+machine learning/statistics → peer level, unchanged. pLDDT sits on the boundary and gets both (the
+precise form and the plain one). **⚠ This register split is a human judgement — no test enforces it**
+(stated so the green contract test is not over-read, D-016).
+
+**Decision 2 — the glossary is `ui/src/glossary.js`, definitions are literals.** Each entry carries
+`expansion` and `plain`. Applying D-053 decision 5 (*would it change if our data changed?*) — a
+definition would not, so it is correctly a literal and needs no route.
+
+**Decision 3 — the contract test reddens when an undefined term reaches the screen.** A test renders
+the prose surfaces through the D-046 harness and fails if a term the reader must decode is rendered
+without a glossary entry. **Implementation note (orders §5.1 fallback, invoked):** an open scan for
+acronym-shaped tokens proved impractical — rendered copy also carries decision references
+(`D-045`, `DEP-001`), UniProt accessions (`Q96NY8`), cancer names and units, none of which are
+glossary terms and none cleanly exemptible without weakening the assertion. So the contract is a
+**curated `MUST_DEFINE` watchlist**, not an open scan. The gene-symbol exemption is **derived from
+`data/cohort_82.txt`**, not typed. `<Term>` exposes each definition by **keyboard focus and tap**,
+not hover alone.
+
+- **Deep-learning justification:** pLDDT is the network's own uncertainty, and this project's whole
+  argument is that it renders that uncertainty honestly. **An honest rendering of a term the reader
+  cannot decode is not honest in any sense that matters.** This is the last step of making the
+  model's output legible to the person judging it.
+- **Consequences:** `ui/src/glossary.js`, `Term.jsx`, `Glossary.jsx` (a block on `/method`), inline
+  `<Term>` on the narrative surfaces, and `Term.test.jsx` / `Glossary.test.jsx` /
+  `glossary.contract.test.jsx`. No new dependency, no route, no supplier change.
+
+---
+
 ### D-054 — The evidence baseline is deferred, on purpose, with a trigger
 
 - **Date:** 2026-07-26
