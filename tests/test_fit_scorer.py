@@ -22,10 +22,11 @@ from core.features import FEATURE_NAMES  # noqa: E402
 SIX = (1.13, 2.27, 3.41, 4.59, 5.73, 6.87)
 
 
-def _rec(symbol, f0, disp="ranked", plddt=71.5, features=None):
+def _rec(symbol, f0, disp="ranked", plddt=71.5, features=None, accession=None):
     feats = features if features is not None else (f0, *SIX[1:])
-    return fs.FeatureRecord(symbol=symbol, features=feats, disposition=disp,
-                            mean_plddt=plddt, below_plddt_floor=(plddt < 50 if plddt is not None else None))
+    return fs.FeatureRecord(symbol=symbol, accession=accession or symbol, features=feats,
+                            disposition=disp, mean_plddt=plddt,
+                            below_plddt_floor=(plddt < 50 if plddt is not None else None))
 
 
 def test_build_rows_keeps_label_and_comparator_separate():
@@ -33,7 +34,8 @@ def test_build_rows_keeps_label_and_comparator_separate():
     positive regardless of its evidence score, and a non-Group-B symbol with a high evidence score
     is still a negative (D-060 §3.1)."""
     records = [_rec("GB_HIGH", 1.4), _rec("NOTGB_HIGH", 1.9)]
-    rows = fs.build_scorer_rows(records, group_b_symbols={"GB_HIGH"},
+    # label joins on ACCESSION (D-064); _rec sets accession == symbol here for brevity
+    rows = fs.build_scorer_rows(records, {"GB_HIGH"},
                                 evidence_by_symbol={"GB_HIGH": 5.0, "NOTGB_HIGH": 5.0})
     by = {r.symbol: r for r in rows}
     assert by["GB_HIGH"].label == 1 and by["GB_HIGH"].evidence_score == 5.0
@@ -66,7 +68,9 @@ def test_build_rows_never_imputes_a_mean_for_a_failed_target():
     assert row.exclusion_reason == "not_folded"
 
 
-def test_persist_ranking_run_stamps_scorer_version():
+def test_create_ranking_run_makes_a_new_run_each_time():
+    """D-064 dec 3: the corrected run writes a NEW ranking_run and never overwrites a prior one, so a
+    false artifact cannot vanish. Two calls create two distinct runs, both stamped."""
     from sqlalchemy import create_engine, select
     from sqlalchemy.orm import Session
 
@@ -76,16 +80,15 @@ def test_persist_ranking_run_stamps_scorer_version():
     engine = create_engine("sqlite://", future=True)
     Base.metadata.create_all(engine)
     report = run_scorer(fs._fixture_rows())
-    rid = fs.persist_ranking_run(engine, report, target_list_version="test-tl")
+    rid = fs.create_ranking_run(engine, report, target_list_version="test-tl")
     with Session(engine) as s:
         run = s.get(RankingRun, rid)
         assert run.scorer_version == report.scorer_version
         assert run.target_list_version == "test-tl"
-    # idempotent-ish: a second call updates the same run's version, does not duplicate
-    rid2 = fs.persist_ranking_run(engine, report, target_list_version="test-tl")
-    assert rid2 == rid
+    rid2 = fs.create_ranking_run(engine, report, target_list_version="test-tl")
+    assert rid2 != rid                                       # a NEW run, not an overwrite (D-064 dec 3)
     with Session(engine) as s:
-        assert len(s.execute(select(RankingRun)).scalars().all()) == 1
+        assert len(s.execute(select(RankingRun)).scalars().all()) == 2
 
 
 def test_fixture_run_end_to_end_returns_zero(capsys):
@@ -97,6 +100,26 @@ def test_fixture_run_end_to_end_returns_zero(capsys):
     assert "scorer_version=" in out
     assert "ranking set" in out
     assert "head-to-head" in out
+
+
+def test_driver_label_path_loads_twelve_positives_from_the_real_file():
+    """D-064 dec 4a: the function that parses the committed label file is tested against THAT file,
+    not only a fixture. The driver's label path must return the 12 curated Group B accessions — this
+    is the test that would have caught the zero-positive bug (`read_group_b_labels` returned 0 and was
+    never once run against `data/adc_reference_mapping.csv`)."""
+    accessions = fs.load_labels(fs.DEFAULT_LABELS)
+    assert len(accessions) == 12
+    assert {"Q96NY8", "P04626", "P00533"} <= accessions   # NECTIN4, ERBB2, EGFR — by accession
+
+
+def test_the_fit_label_path_agrees_with_the_completeness_path():
+    """D-064 dec 4b: two paths to one quantity must be compared. The fit driver's label accessions
+    and the completeness check's Group B accessions (both from `core.adc_reference`) must be
+    identical — the disagreement that hid the bug was 12 vs 0, uncompared."""
+    from core.adc_reference import cohort_accessions, group_b_accessions, load_mapping
+    driver_path = fs.load_labels(fs.DEFAULT_LABELS)
+    completeness_path = group_b_accessions(load_mapping(fs.DEFAULT_LABELS), cohort_accessions())
+    assert driver_path == completeness_path
 
 
 def test_run_path_does_not_touch_the_db_without_being_asked():
@@ -120,6 +143,46 @@ def test_scores_tables_build_on_sqlite():
     assert {"ranking_run_id", "analysis_id", "score", "attributions", "rank"} <= ts_cols
     rr_cols = {c["name"] for c in inspect(engine).get_columns("ranking_results")}
     assert {"structural_percentiles", "spearman", "n_ranking_set", "excluded", "scorer_version"} <= rr_cols
+    assert {"loo_status", "fulldata_status", "status_detail"} <= rr_cols   # D-064 dec 5 survivorship status
+
+
+def test_driver_evidence_path_loads_from_the_real_file():
+    """D-064 dec 4a (applied to the comparator): the evidence path is tested against the committed
+    file. `read_evidence_scores` was a second path to this quantity and is deleted; `load_evidence`
+    routes through the tested `core.adc_reference` function. The published subset is 17, two-valued."""
+    evidence = fs.load_evidence(fs.DEFAULT_EVIDENCE)
+    assert len(evidence) == 17                              # the 17 published scores (D-040 / F-002)
+    assert set(evidence.values()) <= {4.0, 5.0}             # two-valued comparator (D-060 dec 8)
+
+
+def test_persist_records_survivorship_status_when_full_data_raises():
+    """D-064 dec 5: a full-data raise blocks Spearman + ranking, and the block is recorded WITH its
+    reason (status_detail), never null-without-explanation. The LOO distribution still persists."""
+    from sqlalchemy import create_engine, select
+    from sqlalchemy.orm import Session
+
+    from core.scorer import LambdaChoice, run_scorer
+    from db.models import Base, RankingResult
+
+    engine = create_engine("sqlite://", future=True)
+    Base.metadata.create_all(engine)
+    rows = fs._fixture_rows()
+    n_all = sum(1 for r in rows if r.in_ranking_set)
+    def selector(train):                                    # raise ONLY the full-data fit; folds converge
+        return LambdaChoice(0.0, "5fold", True) if len(train) == n_all else LambdaChoice(5.0, "5fold", False)
+    report = run_scorer(rows, lambda_selector=selector)
+    assert report.fulldata_status == "raised" and report.loo_status == "complete"
+    assert report.spearman is None
+
+    rid = fs.create_ranking_run(engine, report, target_list_version="t")
+    n_scores, n_results = fs.persist_results(engine, rid, report, {})
+    assert n_scores == 0 and n_results == 1                 # ranking empty (full-data raised)
+    with Session(engine) as s:
+        rr = s.execute(select(RankingResult)).scalars().one()
+        assert rr.fulldata_status == "raised" and rr.loo_status == "complete"
+        assert rr.spearman is None and "BLOCKED" in rr.status_detail
+        assert isinstance(rr.structural_percentiles, list) and len(rr.structural_percentiles) == 4
+        assert all(set(d) == {"symbol", "lam", "converged"} for d in rr.lambda_per_fold)   # dict form (D-063)
 
 
 def test_persist_results_writes_scores_and_the_distribution():
@@ -147,7 +210,7 @@ def test_persist_results_writes_scores_and_the_distribution():
             symbol_to_analysis_id[sym] = a.id
         s.commit()
 
-    rid = fs.persist_ranking_run(engine, report, target_list_version="test-tl")
+    rid = fs.create_ranking_run(engine, report, target_list_version="test-tl")
     n_scores, n_results = fs.persist_results(engine, rid, report, symbol_to_analysis_id)
     assert n_scores == len(ranked_symbols)
     assert n_results == 1
@@ -186,3 +249,16 @@ def test_migration_0004_created_the_scores_tables(pg_engine):
             "WHERE table_schema='public' AND table_name IN ('target_scores','ranking_results')"
         ))}
     assert present == {"target_scores", "ranking_results"}, "0004 must create both tables (proven by query)"
+
+
+@pytest.mark.postgres
+def test_migration_0005_added_the_status_columns(pg_engine):
+    """0005 verified by querying information_schema.columns, not by alembic's exit code (D-064 dec 5)."""
+    from sqlalchemy import text
+
+    with pg_engine.connect() as c:
+        cols = {r[0] for r in c.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name='ranking_results'"
+        ))}
+    assert {"loo_status", "fulldata_status", "status_detail"} <= cols, \
+        "0005 must add the three status columns (proven by query)"

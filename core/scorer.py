@@ -60,6 +60,13 @@ class ScorerNonConvergence(ScorerError):
     """IRLS did not reach `max|Δβ| < 1e-8` within 100 iterations (D-060 dec 1)."""
 
 
+class DegenerateLabelSet(ScorerError):
+    """The fit set has zero positives or zero negatives (D-064 dec 2). Raised BEFORE any IRLS
+    iteration, distinctly from `ScorerNonConvergence`, because a degenerate *input* fails with the
+    identical signature as a degenerate *geometry* — and a meaningless input must never produce a
+    raise that reads like a result about the data (the zero-positive artifact of D-064)."""
+
+
 # ── a row the scorer consumes (decoupled from the DB / the read API) ─────────
 @dataclass(frozen=True)
 class ScorerRow:
@@ -406,13 +413,17 @@ class ScorerReport:
     headto_evidence_percentiles: list[float]
     spearman: Optional[float]                # None if the full-data fit did not converge (or n<2)
     spearman_n: int
-    lambda_per_fold: list[tuple[str, float, bool]]   # (held-out symbol, λ, converged)
+    lambda_per_fold: list[dict]              # {symbol, lam, converged} per fold (D-063 dec 2)
     lambda_at_grid_edge: bool
     excluded: list[tuple[str, str]]          # (symbol, reason) — reported, never dropped (D-060 §3.5)
     final_fit_converged: bool                # did the ranking-table full-data fit converge?
     final_fit_lambda: float
     final_model: Optional[Model]             # None if the full-data fit did not converge
     ranking: list[tuple[str, float, list[float]]]    # (symbol, score, contributions); empty if no final fit
+    # the survivorship status (D-064 dec 5): which pre-registered statistics were producible
+    loo_status: str                          # complete | partial | none
+    fulldata_status: str                     # converged | raised
+    status_detail: str                       # human reason for any blocked statistic
 
     @property
     def converged_fold_count(self) -> int:
@@ -435,6 +446,16 @@ def run_scorer(
         [(r.symbol, r.exclusion_reason or "not in ranking set")
          for r in all_rows if not r.in_ranking_set]
     )
+
+    # ── Degenerate-input guard, BEFORE any IRLS iteration (D-064 dec 2). Zero positives or zero
+    # negatives fails with the identical signature as separation; refuse distinctly rather than
+    # let a meaningless input raise a ScorerNonConvergence that reads like a result about the data. ──
+    n_pos = sum(1 for r in ranking_rows if r.label == 1)
+    n_neg = sum(1 for r in ranking_rows if r.label == 0)
+    if n_pos == 0 or n_neg == 0:
+        raise DegenerateLabelSet(
+            f"degenerate label set: {n_pos} positives, {n_neg} negatives in the ranking set "
+            f"(N={len(ranking_rows)}) - the fit is meaningless and is refused before iterating (D-064 dec 2)")
 
     # ── LOO FIRST and independently (D-063 dec 1). Per-fold non-convergence is survived (dec 2). ──
     folds = leave_one_out(ranking_rows, lambda_selector=lambda_selector)
@@ -483,8 +504,28 @@ def run_scorer(
             reverse=True,
         )
 
-    lam_per_fold = [(f.held_out_symbol, f.lam, f.converged) for f in folds]
+    lam_per_fold = [{"symbol": f.held_out_symbol, "lam": f.lam, "converged": f.converged} for f in folds]
     lam_edge = final_choice.at_grid_edge or any(f.lam_at_grid_edge for f in folds)
+
+    # ── Survivorship status (D-064 dec 5): which pre-registered statistics were producible. ──
+    n_converged = len(structural_percentiles)
+    if n_converged == 0:
+        loo_status = "none"
+    elif n_converged == n_pos:
+        loo_status = "complete"
+    else:
+        loo_status = "partial"
+    fulldata_status = "converged" if final_model is not None else "raised"
+    detail_parts: list[str] = []
+    if loo_status != "complete":
+        detail_parts.append(
+            f"LOO {loo_status}: {n_converged} of {n_pos} folds converged"
+            + (f"; non-convergent: {nonconvergent_folds}" if nonconvergent_folds else ""))
+    if final_model is None:
+        detail_parts.append(
+            f"full-data fit did not converge at lam={final_choice.lam:g} - Spearman and ranking table "
+            f"BLOCKED (D-064 dec 5), reported null with this reason")
+    status_detail = "; ".join(detail_parts) if detail_parts else "all pre-registered statistics produced"
 
     return ScorerReport(
         scorer_version=scorer_version(),
@@ -504,6 +545,9 @@ def run_scorer(
         final_fit_lambda=final_choice.lam,
         final_model=final_model,
         ranking=ranking,
+        loo_status=loo_status,
+        fulldata_status=fulldata_status,
+        status_detail=status_detail,
     )
 
 
