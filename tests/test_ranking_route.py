@@ -137,6 +137,29 @@ def test_ranking_result_fields_are_projected(engine, tmp_path):
     assert result["paper_published_count"] == 22                 # source constant, served not typed
 
 
+def test_invalid_run_excluded_even_when_newer_and_preregistered(engine, tmp_path):
+    """The predicate is validity ∧ run_kind, not one replacing the other. After 0006 the backfill
+    tags every existing run (incl. the invalid id=1) `preregistered`, so run_kind alone would NOT
+    exclude it. A NEWER invalid `preregistered` run must still be filtered out — proving validity is
+    still ANDed. Ordering alone cannot catch this (the invalid row here is the newest); only the
+    validity clause can, so a regression that dropped it would redden."""
+    _seed(engine)                                            # id=2 valid preregistered (good-91e6)
+    with Session(engine) as s:
+        bad = RankingRun(target_list_version="v", scorer_version="newer-invalid",
+                         run_kind="preregistered")           # explicitly preregistered, like the backfill
+        s.add(bad)
+        s.flush()
+        s.add(RankingResult(
+            ranking_run_id=bad.id, n_fit_positives=0, structural_percentiles=[],
+            lambda_per_fold=[], excluded=[],
+            status_detail="invalid - zero-positive label set (D-064)",
+        ))
+        s.commit()
+    body = _client(engine, tmp_path).get("/api/ranking").json()
+    assert body["run"]["scorer_version"] == "good-91e6"      # the VALID run, not the newer invalid one
+    assert body["run"]["scorer_version"] != "newer-invalid"
+
+
 def test_sensitivity_run_is_never_served_as_the_result(engine, tmp_path):
     """D-065 dec 4: the route filters on run_kind — a NEWER, valid `sensitivity` ablation run must
     never be served where the pre-registered result is expected."""
