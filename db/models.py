@@ -17,7 +17,18 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Float, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -108,6 +119,56 @@ class ProteinAnalysis(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+class ProteinFeatures(Base):
+    """The six D-027 structure-derived features for one fold, computed offline by
+    `core.features` and loaded by `scripts/extract_features.py` (D-058 decision 3).
+
+    An ORM model (not migration-only like `analysis_embeddings`) because every column is a
+    plain type — no pgvector — so it builds cleanly under both the SQLite `create_all` test
+    path (D-005) and the real `0003` migration on Postgres.
+
+    Six named nullable Float columns hold the features; `null_reasons` records **why** any of
+    them is null (D-027's null-with-a-reason — *never* an imputed mean). `mean_plddt` and
+    `below_plddt_floor` store the D-041 §5 floor decision as read from the fold, not recomputed.
+    `feature_version` is D-027's source-hash pin, so a refit against changed feature code is
+    detectable rather than silent. A row can exist with all six features null and a reason (a
+    failed fold with an analysis row but no structure, e.g. IGF2R — D-058 Addendum 2 §1)."""
+
+    __tablename__ = "protein_features"
+    __table_args__ = (
+        Index("ix_protein_features_analysis_id", "analysis_id"),
+        Index("ix_protein_features_ranking_run_id", "ranking_run_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    analysis_id: Mapped[int] = mapped_column(
+        ForeignKey("protein_analyses.id"), nullable=False
+    )
+    ranking_run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("ranking_runs.id"), nullable=True, default=None
+    )
+
+    # D-027's six features (fixed count). Nullable — a target we failed on records null + reason.
+    ecd_length: Mapped[float | None] = mapped_column(Float, nullable=True)                # 1
+    radius_of_gyration: Mapped[float | None] = mapped_column(Float, nullable=True)        # 2 (length-normalised)
+    mean_plddt_ecd: Mapped[float | None] = mapped_column(Float, nullable=True)            # 3
+    membrane_proximal_plddt: Mapped[float | None] = mapped_column(Float, nullable=True)   # 4
+    sasa_normalized: Mapped[float | None] = mapped_column(Float, nullable=True)           # 5
+    largest_patch_fraction: Mapped[float | None] = mapped_column(Float, nullable=True)    # 6
+
+    # Why any feature is null (D-027): {feature_name: reason}. Empty when all six computed.
+    null_reasons: Mapped[dict] = mapped_column(JSON_VARIANT, nullable=False, default=dict)
+
+    # The D-041 §5 floor, stored as read from the fold — not recomputed (D-058 dec 3).
+    mean_plddt: Mapped[float | None] = mapped_column(Float, nullable=True)  # 0–100
+    below_plddt_floor: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    feature_version: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
 
 # NOTE: `analysis_embeddings` (embedding vector(384) + HNSW) is intentionally NOT an ORM model
 # — it is created in migration 0002 as raw SQL only (D-019). Keeping the Postgres `vector` type

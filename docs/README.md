@@ -80,6 +80,319 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-058 — The extractor's open parameters, and where features are computed and stored
+- **Date:** 2026-07-27
+- **Status:** Proposed → Accepted on merge. **Ruled before any extraction code exists** (D-015 §3's
+  pre-registration discipline, applied to the two parameters D-027 named and did not fix).
+- **Discharges:** the gap D-027 left open in feature 6, and the topology question D-027's purity
+  contract deliberately did not answer.
+
+---
+
+- **Context — two things are unfixed, and the fit is sensitive to both.**
+
+  **(a) Feature 6's parameters.** D-027 fixed the feature — *largest contiguous accessible surface
+  patch, as a fraction of total SASA* — and flagged it in the same entry as **the fragile one**:
+
+  > *"The largest-contiguous-accessible-patch fraction depends on a SASA threshold and a
+  > contiguity definition; it is the feature most sensitive to those choices, and the
+  > leave-one-out is where that sensitivity should surface."*
+
+  It named the sensitivity and fixed neither value. **Until they are fixed, D-027's
+  pre-registration does not bind on feature 6** — a threshold chosen after seeing a ranking is
+  precisely the degree of freedom the entry exists to close, and it is the cheapest one in the
+  project to move without anyone noticing.
+
+  **(b) Where extraction runs and where its output lives.** D-027 fixed the extractor as *"pure
+  given `(structure.pdb, plddt, manifest_row)` — no network, no GPU, no database"*, which is a
+  contract on the **function** and says nothing about the **program that calls it** or the
+  artefact it produces. That gap is a D-047-class trap in a new place: resolve the wrong thing at
+  the wrong time and the failure is latent. Specifically — **a scientific-computing dependency
+  reaching the serving path reddens `test_image_contents.py`** (DEP-001), and a feature computed
+  at request time makes every page load depend on a numerical routine.
+
+- **Provenance of the all-atom premise (D-016).** `worker/runner.py:278–290` writes the PDB from
+  `model.infer_pdb()` (falling back to `model.output_to_pdb()`), which is ESMFold's **all-atom**
+  output path. **This is inferred from the library's contract, not measured on a stored
+  artefact.** Features 5 and 6 as specified require side-chain atoms; if the persisted structures
+  turn out to be backbone- or CA-only, both features change shape. **The probe below runs before
+  any extraction code is written**, and its result is recorded here as an amendment either way.
+
+---
+
+#### Decision (1) — SASA is Shrake–Rupley, implemented in-repo, with conventional parameters fixed now
+
+- **Probe radius 1.4 Å** (water). **Sphere sampling: 92 points per atom** — Shrake & Rupley's
+  published value, golden-spiral distributed. **Atomic radii: a fixed table committed alongside
+  the code**, not read from a library at runtime.
+- **Implemented in `core/features.py` with ZERO third-party imports**, not taken from `freesasa` /
+  `biotite` / `MDAnalysis`, and **not** written against numpy.
+
+  **⚠ The dependency constraint is measured, not assumed (D-016).** Verified 2026-07-27: `numpy`
+  and `scipy` appear in **neither** `requirements.lock` **nor** `requirements-dev.lock`, and
+  `.github/workflows/gate.yml` installs `requirements-dev.lock --require-hashes` and nothing else.
+  **`worker/` is not an alternative home** — `worker/requirements.txt` states *"THE GATE NEVER
+  INSTALLS THIS"*, so code placed there is code the gate cannot test, and D-027 requires the
+  feature-count test to run in the gate (*"this is the test that makes this entry real"*).
+
+  **Argued, because "hand-roll it" is normally the wrong instinct.** The usual reason to prefer a
+  library — it is tested and you are not — is answered here by D-027's own test requirement: the
+  fixture must be *"verified against a computed expectation rather than against whatever the code
+  happened to emit first."* **We are obliged to verify the output against an independent
+  expectation regardless of who wrote the algorithm**, so the library buys less than it usually
+  does. Against that, admitting numpy means regenerating a hash-pinned lock (D-013) two days before
+  delivery. **The deciding factor is the anchor:** an isolated atom's SASA is exactly
+  `4π(r + r_probe)²`, so the implementation can be checked against a closed-form value rather than
+  against another implementation's opinion.
+
+  **The pure-Python constraint has a measured trigger, not an assumption of adequacy.** The kernel
+  is timed on a ~5,000-atom synthetic cloud **before the rest of the extractor is built on it**.
+  **Above 60 seconds, the ruling reverses:** numpy enters `requirements-dev.txt` with a regenerated
+  hash lock, recorded as a reversal. Extraction is a one-shot offline job and can afford to be
+  slow; it cannot afford to be unrunnable, and the difference is cheap to measure in advance.
+
+- **⚠ Rejected: choosing the library *because* the extractor runs offline and the dependency would
+  never reach the image.** True of `scripts/`, and not a reason. **The extractor itself ships** —
+  `core/` is in the runtime tier (ARCHITECTURE §5) — so a module-scope third-party import there is
+  a latent landmine the image-contents test does not catch: the module is present and its
+  dependency is not.
+
+#### Decision (2) — Feature 6's two parameters, fixed by convention rather than by our data
+
+- **A residue is `accessible` if its relative SASA ≥ 0.25** — its computed SASA over its
+  theoretical maximum for that residue type. **0.25 is the standard exposed/buried cutoff in the
+  structural-biology literature**, not a value this project selected.
+- **Two accessible residues are contiguous if their CA atoms are within 8 Å.** A patch is a
+  connected component under that relation. **8 Å is the conventional CA–CA residue-contact
+  distance**, likewise inherited rather than chosen.
+- **Feature 6 = (summed SASA of the largest connected component) / (total SASA over the folded
+  span).**
+
+  **Why convention-anchored is the load-bearing property, not the specific numbers.** This is the
+  same move D-039 made for the pLDDT bands: *anchor to an external convention, then check it
+  against our cohort* — never *choose against our cohort and present it as a convention*. Neither
+  0.25 nor 8 Å is uniquely correct. What makes them defensible is that **they were fixed before a
+  ranking existed, and their source is outside this project**, so no reviewer needs to take our
+  word that they were not tuned.
+
+- **⚠ Explicitly rejected, recorded so it cannot arrive later as a refinement:** selecting either
+  parameter by which value improves the fit, the LOO distribution, or agreement with the
+  comparator. **That is feature engineering against the evaluation**, and it would invalidate
+  D-027's pre-registration exactly as adding a seventh feature would. If a sensitivity analysis
+  is ever wanted, it is run *after* the pre-registered fit is reported, presented as a
+  sensitivity analysis, and does not replace the headline result.
+
+- **Pre-registered expectation (D-027 already said this; restated because this entry is where it
+  becomes checkable):** feature 6 is the feature most likely to prove unstable under leave-one-out.
+  **That is an anticipated finding, not a defect** — and it is only readable as anticipated
+  because this entry is dated before the number exists.
+
+#### Decision (3) — Extraction is an offline client of the public read API; features and scores persist in Postgres, on the tables the schema already anticipated
+
+**⚠ Owner ruling, 2026-07-27, reversing the Planner's draft.** The draft deferred the table and
+shipped a CSV snapshot, on risk grounds. **The owner ruled the table.** Two findings made after the
+draft show the owner's call was better supported than the draft assumed, and they are recorded here
+rather than folded in silently:
+
+- **`ranking_runs` already exists** (`db/models.py`, migration `0002`), carrying
+  `target_list_version` and `scorer_version`, with the committed rationale *"created here so the
+  schema anticipates ranking without retrofitting a live migration chain."* **D-019's foresight
+  was aimed at exactly this moment**, and the CSV path would have walked around it.
+- **The migration is `0003` and is purely additive** — one new table, no `ALTER` on a populated
+  table, no backfill, no data movement. **The lowest-risk migration class**, and the `postgres` CI
+  job already exercises the chain end to end.
+
+**The Planner's risk objection was calibrated to a migration that does not exist here.** Recorded
+as a correction against the Planner (D-016): the objection was reasoned from a category
+(*"a migration two days out"*) rather than from the artefact (*which migration, against what*).
+
+- **The extractor function stays pure** (D-027, unchanged).
+- **The driver — `scripts/extract_features.py` — is a client of the public read API**, consuming
+  `GET /api/analyses`, `/api/analyses/{id}/structure`, and `/api/analyses/{id}/plddt`, joined to
+  the local D-023 manifest for the boundary and ECD length. **No database credentials, no Volume
+  access, no `worker/` import.**
+
+  **This mirrors the shape the project already trusts:** the worker is a client of the `/jobs`
+  API rather than a database peer (D-030/D-031), and the same reasoning applies — *the seam that
+  makes the component testable is the seam that keeps its dependencies out of the serving tier.*
+  It also means feature extraction runs from any laptop with network access, against the same
+  public surface a grader can open.
+
+- **Persistence is migration `0003`, one additive table, `protein_features`:**
+
+  | Column | Meaning |
+  |---|---|
+  | `id` | PK |
+  | `analysis_id` → `protein_analyses.id` | the fold these features were read from |
+  | `ranking_run_id` → `ranking_runs.id` | the run they belong to (the table already exists) |
+  | six named `Float` columns, **nullable** | D-027's features |
+  | `null_reasons` (JSON) | **why** any feature is null — D-027's *null-with-a-reason*, **never an imputed mean** |
+  | `mean_plddt`, `below_plddt_floor` | the D-041 §5 floor, stored not recomputed |
+  | `feature_version` | D-027's source-hash pin |
+  | `computed_at` | when |
+
+  **Scores hang off `ranking_runs`, which already carries `scorer_version`.** Per target: the
+  structural score, the six attribution contributions (`β_k · x_k`, D-041 decision 1), and the rank.
+
+- **The loader writes to Postgres directly, exactly as `core/enqueue.py` does.** `enqueue` is the
+  precedent and it is an exact one: a local CLI that builds an engine from `DATABASE_URL` via
+  `db.dburl.normalize_db_url` and writes `ranking_runs` + `protein_analyses` rows. **A one-shot
+  loader is the same shape as a one-shot enqueue**, so no new credential posture and no new seam
+  is invented — the serving tier still never computes a feature, and the extractor function is
+  still pure.
+
+- **⚠ The ranking is still a snapshot, and the surface still must say so.** Moving the storage into
+  Postgres does not make the score a live computation — it is the output of a named script over a
+  named fold set at a named time. **The ranking surface renders the `ranking_run`'s
+  `scorer_version` and `created_at` and its fold-set size, derived (D-050), never typed.** A
+  snapshot presented as live is the same class of error as a hardcoded cohort count.
+
+- **⚠ The migration's known hazard, named because this project has the scar.**
+  `docs/HAZARD-search-path-seams.md` records `alembic upgrade head` **silently rolling back** —
+  a `search_path SET` running before `context.begin_transaction()`, so SQLAlchemy 2.0 auto-opened
+  a transaction Alembic did not own. **`0003` must be verified by querying for the table after the
+  upgrade, not by reading the upgrade's exit code.** A zero exit status is exactly what that
+  failure looked like.
+
+#### Decision (4) — The ranking supplier is a new route, and it will redden the architecture contract test
+
+`GET /api/ranking` serves the snapshot. **Adding it turns D-051's architecture contract test red
+until `ui/src/system-model.json` is updated in the same PR.**
+
+**Named in advance so it is not debugged as a surprise**, and because it is the third independent
+instance of the mechanism firing (D-053's `/api/associations` was the first, unstaged). **This one
+is staged, which makes it weaker evidence than D-053's and it should be described that way** — but
+it is also the cheapest possible live demonstration of the claim, and it costs one line.
+
+---
+
+- **Deep-learning justification.** Every one of D-027's six features is computed from ESMFold's
+  output; this entry is what makes two of them reproducible rather than merely specified. Feature
+  6 in particular is the one whose value could have been quietly steered toward a nicer result,
+  and fixing its parameters against external convention — before a fit exists — is what makes
+  D-041's pre-registered negative outcomes falsifiable. **A pre-registration with a free parameter
+  inside it is not a pre-registration.**
+
+- **Consequences / test surface (written before the extractor, project rule):**
+  - **All-atom is asserted by a test, not confirmed by a one-time probe.** Owner-confirmed
+    2026-07-27 that stored structures are all-atom; the fixture test asserts distinct side-chain
+    atom names on a **real stored structure**, so the premise is captured permanently rather than
+    checked once and forgotten. **If it ever fails, features 5 and 6 need an amendment** (a coarse
+    per-residue sphere model, recorded as an approximation, never presented as atomic SASA).
+  - **Migration `0003` is verified by querying for the table**, not by alembic's exit code
+    (`docs/HAZARD-search-path-seams.md`). Exercised in the `postgres` CI job.
+  - **`null_reasons` is populated whenever a feature column is null** — asserted, so a silent
+    null cannot pass as a computed one.
+  - **The SASA anchor:** an isolated atom returns `4π(r + r_probe)²` within sampling tolerance;
+    two atoms separated beyond `2(r + r_probe)` return exactly twice that. **A closed-form check,
+    not a self-consistency check.**
+  - **The two parameters are pinned by a test** — 0.25 and 8 Å asserted as named constants, so
+    changing either reddens the gate rather than passing silently. Same discipline as D-027's
+    feature-count test: *the test is what makes the entry real.*
+  - **Feature count is exactly six** (D-027, restated because this entry is where the extractor
+    that must satisfy it gets built).
+  - **Determinism** — identical inputs yield byte-identical features across runs.
+  - **Null-with-reason, never imputed** — a malformed structure produces a null and a reason
+    string, and no fixture anywhere substitutes a mean.
+  - **`feature_version` changes when feature code changes**, pinned over the extractor's source
+    hash (D-027).
+  - **Snapshot provenance test** — a ranking response carries its `ranking_run`'s
+    `scorer_version` and `created_at`, so a surface cannot render a ranking without its
+    provenance.
+  - **`test_image_contents.py` still passes** — no SASA-adjacent dependency, no `scripts/` in the
+    runtime stage. **The feature code lives in `core/` and ships**, but nothing in the serving
+    path calls it.
+
+---
+
+### D-059 — The ranking surface's comparator coverage: what a row without a published evidence score renders
+- **Date:** 2026-07-27
+- **Status:** Proposed → Accepted on merge.
+- **Discharges:** the requirement D-040 decision 2 imposed and left to the ranking view —
+  *"the set on which a disagreement can be computed at all is smaller still and **must be computed
+  before the ranking view is designed**."* This is that entry, written before the view.
+
+---
+
+- **Context — the comparator covers 17 of 82, and the ranking table's design assumes otherwise.**
+  UI Plan v2 §3.1 specifies each row as *"target, baseline rank, structural rank, delta,
+  disagreement class rendered visually distinct, and feature attribution."* **Three of those six
+  are undefined without a baseline**, and D-040 decision 2 established that a baseline exists for
+  **17 targets only** — the eight score-5 and nine score-4 targets named in the article text. The
+  remaining 65 carry `score_not_published_in_text`. Verified 2026-07-27: `data/evidence_scores.csv`
+  holds 17 data rows.
+
+  Intersected with folded targets and then with D-041 §5's pLDDT floor at 50, **the set carrying
+  both a structural score and a comparator is smaller still, and is not yet computed.**
+
+  **This is not a defect in the comparator; it is a property of the source.** D-040 already ruled
+  out the two ways of widening it by estimation, and this entry restates the ruling because
+  **deadline pressure is exactly when reading a number off a radar plot starts to feel
+  reasonable.**
+
+---
+
+#### Decision (1) — The primary axis is the structural score, and it is defined for every ranked row
+
+The table ranks `ranked ∧ folded ∧ above-floor` targets by structural score. **Every row in that
+set has a structural rank and a feature attribution.** The comparator is a second axis over a
+subset, not a prerequisite for appearing.
+
+#### Decision (2) — Comparator columns populate only where a published score exists; the rest render the reason, not a blank
+
+- `baseline rank`, `delta`, and `disagreement class` populate **only** for targets carrying a
+  published evidence score.
+- Every other row renders **`no comparator published`** — the D-040 reason
+  `score_not_published_in_text`, surfaced.
+- **Not blank, not `—`, not omitted, and never imputed.** A blank cell reads as *zero* or as
+  *missing data*; the honest statement is that **the paper did not publish this number**, which is
+  a fact about the source rather than a hole in ours. Same discipline as D-024's three-valued
+  `fold_status`: *attempted-and-failed is not never-attempted*, and *unpublished is not
+  disagreement-free*.
+
+#### Decision (3) — The disagreement denominator travels with the claim, and is derived
+
+The surface states the count on which disagreement is computed — `N of 82` — **derived from the
+artefacts at render time, never hardcoded** (D-050). If `N` is small, the surface says so in the
+same breath as the comparison, per D-041 decision 3's warning that *a baseline comparison over a
+handful of targets is weak evidence and must be labelled as such rather than presented as a
+head-to-head.*
+
+**No row is assigned a disagreement class it cannot support**, and no aggregate disagreement claim
+is made over a denominator the reader cannot see.
+
+#### Decision (4) — Two ways of widening coverage, rejected again and specifically rejected today
+
+- **Reading the scores off Fig 4A/4B.** Already ruled out in D-040 (*"figure extraction is
+  estimation presented as measurement"*). Restated here.
+- **Recomputing the scores from the five published criteria.** D-040 ruled this makes it *our*
+  score, not theirs, needing its own entry and its own defence. **Rejected again, and rejected
+  specifically as a today action:** building a comparator under deadline, then comparing our
+  ranking against it, is how a comparator quietly becomes a fabrication. **The remaining honest
+  path is the one D-040 named — ask the corresponding author** — and it is not a today path.
+
+---
+
+- **Deep-learning justification.** D-041 decision 3's first pre-registered negative outcome is a
+  comparison of two percentile distributions on the held-out positives, and decision 4's second is
+  a Spearman correlation — **both computed on exactly the intersection this entry rules on.** If
+  the denominator is unstated, neither negative result is interpretable, and a pre-registered null
+  that cannot be read is not a null. **This entry is what makes D-041's evaluation reportable.**
+
+- **Consequences / test surface:**
+  - **Compute the intersection before the view is built** and record it, whatever it is. **A
+    materially small number is a finding to report, not a reason to widen the comparator.**
+  - **Tested:** a target without a published score renders the reason string, not an empty cell;
+    the disagreement denominator on the surface equals the computed intersection (a fixture with
+    a deliberately distinctive count, per the false-green discipline); no disagreement class is
+    emitted for a row lacking a baseline; the denominator is absent from the source as a literal
+    (the Constraint-A absence pattern from D-051/D-053).
+  - **Blocks nothing upstream** — the fit, the LOO, and the Spearman are all computable before
+    this view exists. **This entry governs presentation, and is written now only because D-040
+    required it before the design, not before the fit.**
+
+---
+
 ### D-057 — A curation script that gathers evidence and refuses to draw the conclusion
 
 - **Date:** 2026-07-26
