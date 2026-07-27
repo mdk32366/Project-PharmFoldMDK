@@ -80,6 +80,45 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-057 — A curation script that gathers evidence and refuses to draw the conclusion
+
+- **Date:** 2026-07-26
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-040 (Group B's definition, and the reservation of the judgement to the owner),
+  D-016 (a claim names how it is known), D-024/D-027 (null with a reason), D-053 (curated file in
+  `data/`, no live retrieval in the product).
+- **Blocks nothing. Unblocks:** the labelling pass that D-041's fit waits on.
+
+**Context.** Group B needs 82 rows and a first pass produced 16, with 66 unassessed. The bottleneck
+is search recall across 82 targets under many aliases — mechanical work, done badly by hand and well
+by a query. The judgement that follows is not mechanical and is not automated here.
+
+**Decision 1 — the script gathers evidence; it never labels.** `is_group_b` is emitted **blank on
+every row**; there is no code path that writes a label, and a test asserts no input produces one
+(D-040 decision 1 reserves the classification to the owner).
+
+**Decision 2 — a registry miss is `needs_literature_check`, never `false`.** ClinicalTrials.gov holds
+no preclinical work. PODXL is a Group B positive on the strength of a preclinical ADC in no registry.
+If silence became `false`, the script would manufacture confident wrong labels — worse than a blank,
+which announces its own ignorance.
+
+**Decision 3 — exclusion markers take precedence over ADC phrasing, found by a test not by design.**
+`radioimmunoconjugate` contains the substring `immunoconjugate`; on first run IGF2R — a radiolabelled
+antibody D-040 excludes — routed as a probable positive. The calibration test caught it before any
+network call. The fix is a precedence rule that would look arbitrary without this note.
+
+**Decision 4 — offline tooling, not a runtime dependency.** The product retrieves nothing live
+(D-053). The script runs once, emits a review sheet, and the artefact of record stays a committed,
+cited file. `requests` is imported *deferred* so it never enters CI or the serving image.
+
+- **Deep-learning justification:** none, stated plainly. This is label-acquisition tooling for a
+  model that is pre-registered and unfit; its value is that it does **not** contaminate the labels —
+  D-041's last free parameter — with an automated judgement.
+- **Consequences:** `scripts/curate_group_b.py`, `tests/test_curate_group_b.py`, and a dated review
+  sheet under `data/derived/`. No dependency reaches the serving image.
+
+---
+
 ### D-056 — The plain-language pass, and a readability tripwire calibrated to what we actually wrote
 
 - **Date:** 2026-07-26
