@@ -13,11 +13,11 @@ tested against **fixture** labels — `build_scorer_rows` is pure and fixture-te
 `--fixture` runs the whole pipeline end to end on a tiny built-in cohort with no real label. The
 `--run` path (real DB + real labels) is owner-only and refuses to read the label file unless asked.
 
-⚠ **Per-target scores are computed and reported, not yet persisted.** D-058 decision 3 anticipated
-scores hanging off `ranking_runs`, but no per-target *scores* table exists and `db/` migrations are
-out of this PR's scope (D-060). So the driver persists the `ranking_run` (its `scorer_version`) and
-prints the per-target score + β_k·x_k attribution + rank; persisting them waits for an additive
-scores table in the `/api/ranking` PR. Named here rather than hacked into `protein_features`.
+**Per-target scores persist to the D-061 tables** (`target_scores` + `ranking_results`, migration
+`0004`) on the `--run --persist` path. D-058 decision 3 said scores "hang off `ranking_runs`", but
+that is a run-level table with no per-target rows (a gap in the ruling, D-061); `0004` gives the
+per-target score + β_k·x_k attribution + rank a home in `target_scores`, and D-041's headline
+*distribution* + Spearman + denominators a home in `ranking_results`. `--fixture` reports only.
 
 `httpx` is not needed — this reads the database directly (like `core/enqueue.py`), not the read API,
 because features already live in Postgres. Pure standard library plus SQLAlchemy.
@@ -40,7 +40,7 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from core.features import FEATURE_NAMES  # noqa: E402
+from core.features import FEATURE_NAMES, feature_version  # noqa: E402
 from core.scorer import ScorerRow, ScorerReport, run_scorer  # noqa: E402
 
 PLDDT_FLOOR = 50.0
@@ -60,6 +60,7 @@ class FeatureRecord:
     disposition: Optional[str]              # ranked | held_out | excluded
     mean_plddt: Optional[float]
     below_plddt_floor: Optional[bool]
+    analysis_id: Optional[int] = None       # the fold row these features came from (for persistence)
 
 
 def _exclusion_reason(rec: FeatureRecord, features_complete: bool) -> Optional[str]:
@@ -157,6 +158,7 @@ def read_feature_records(engine) -> list[FeatureRecord]:
                 disposition=meta.get("disposition"),
                 mean_plddt=feat.mean_plddt,
                 below_plddt_floor=feat.below_plddt_floor,
+                analysis_id=analysis.id,
             ))
     return records
 
@@ -182,6 +184,63 @@ def persist_ranking_run(engine, report: ScorerReport, *, target_list_version: st
             run.scorer_version = report.scorer_version
         s.commit()
         return run.id
+
+
+def persist_results(
+    engine,
+    ranking_run_id: int,
+    report: ScorerReport,
+    symbol_to_analysis_id: dict[str, int],
+) -> tuple[int, int]:
+    """Write the D-061 tables: one `target_scores` row per ranked target (score, β_k·x_k
+    attributions, descending rank) and one `ranking_results` row per run (the LOO distribution, the
+    head-to-head, the Spearman, every denominator, the excluded set). A ranked target with no
+    resolvable `analysis_id` is skipped with a warning, never given a fabricated row. Returns
+    (n_target_scores, n_ranking_results)."""
+    from sqlalchemy import delete
+    from sqlalchemy.orm import Session
+
+    from db.models import RankingResult, TargetScore
+
+    with Session(engine) as s:
+        # Idempotent: replace any prior rows for this run rather than duplicate them.
+        s.execute(delete(TargetScore).where(TargetScore.ranking_run_id == ranking_run_id))
+        s.execute(delete(RankingResult).where(RankingResult.ranking_run_id == ranking_run_id))
+
+        written = 0
+        for position, (symbol, score, contributions) in enumerate(report.ranking, start=1):
+            analysis_id = symbol_to_analysis_id.get(symbol)
+            if analysis_id is None:
+                print(f"WARNING: no analysis_id for ranked target {symbol!r} - skipped (not fabricated)")
+                continue
+            s.add(TargetScore(
+                ranking_run_id=ranking_run_id,
+                analysis_id=analysis_id,
+                score=score,
+                attributions=list(contributions),
+                rank=position,
+            ))
+            written += 1
+
+        s.add(RankingResult(
+            ranking_run_id=ranking_run_id,
+            structural_percentiles=list(report.structural_percentiles),
+            headto_structural_percentiles=list(report.headto_structural_percentiles),
+            headto_evidence_percentiles=list(report.headto_evidence_percentiles),
+            spearman=report.spearman,
+            spearman_n=report.spearman_n,
+            n_ranking_set=report.n_ranking_set,
+            n_fit_positives=report.n_fit_positives,
+            headto_reference_n=report.headto_reference_n,
+            plddt_floor=PLDDT_FLOOR,
+            lambda_per_fold=list(report.lambda_per_fold),
+            lambda_at_grid_edge=report.lambda_at_grid_edge,
+            excluded=[list(pair) for pair in report.excluded],
+            scorer_version=report.scorer_version,
+            feature_version=feature_version(),
+        ))
+        s.commit()
+    return written, 1
 
 
 def _build_engine():
@@ -221,7 +280,8 @@ def print_report(report: ScorerReport) -> None:
     print("top of ranking (symbol, score, contributions):")
     for symbol, score, contribs in report.ranking[:10]:
         print(f"  {symbol:12s} {score:.4f}  " + " ".join(f"{c:+.3f}" for c in contribs))
-    print("NOTE: per-target scores are reported, not persisted — no scores table yet (D-060 / see module docstring).")
+    print("NOTE: --run --persist writes these to target_scores + ranking_results (D-061); "
+          "without --persist they are report-only.")
 
 
 # ── a tiny built-in fixture cohort, so --fixture runs end to end with no labels ──
@@ -270,7 +330,10 @@ def run(argv: Optional[list[str]] = None, *, engine_factory: Callable[[], object
     print_report(report)
     if args.persist:
         rid = persist_ranking_run(engine, report)
-        print(f"stamped ranking_run id={rid} with scorer_version={report.scorer_version}")
+        symbol_to_analysis_id = {r.symbol: r.analysis_id for r in records if r.analysis_id is not None}
+        n_scores, n_results = persist_results(engine, rid, report, symbol_to_analysis_id)
+        print(f"stamped ranking_run id={rid} (scorer_version={report.scorer_version}); "
+              f"wrote {n_scores} target_scores + {n_results} ranking_results row(s)")
     return 0
 
 

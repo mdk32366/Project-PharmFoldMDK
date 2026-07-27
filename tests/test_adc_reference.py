@@ -88,9 +88,21 @@ def test_typed_in_cohort_82_column_is_rejected(tmp_path):
         load_mapping(path)
 
 
-def test_the_committed_scaffold_loads_empty_and_valid():
-    # the real file is the schema + discipline with no roster yet — loads to [] without error
-    assert load_mapping(ADC_MAPPING) == []
+def test_the_committed_roster_is_curated_and_valid():
+    """The roster was curated in the 2026-07-27 owner pass (D-040 dec 1; D-061 lands the file). It
+    loads without error — `load_mapping` rejects any uncited row — and the D-040 pre-registered
+    check holds: the in-cohort Group B count is a **finding** (12, not the paper's 22), and the
+    three antigens the paper names (ERBB2/NECTIN4/EGFR) are present.
+
+    ⚠ The count 12 is the current FLOOR, not a total — CXCR5/MSLN/MUC16 are carved out pending
+    verification (see the file header). When that carve-out is curated this pin moves, and updating
+    it here IS the deliberate acknowledgement D-040 requires — a curation change is a finding to
+    record, not a number to reconcile away silently."""
+    rows = load_mapping(ADC_MAPPING)
+    assert len(rows) >= 12                                    # curated — no longer the empty scaffold
+    antigens = {r["antigen"] for r in group_b(rows, cohort_accessions())}
+    assert len(antigens) == 12                                # D-040 pre-registered count (floor; a change is a finding)
+    assert {"ERBB2", "NECTIN4", "EGFR"} <= antigens           # the three the paper names
 
 
 # ── Group B / Group C by pure function; in_cohort_82 computed by join (D-040 dec. 1/3) ──

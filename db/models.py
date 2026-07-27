@@ -170,6 +170,61 @@ class ProteinFeatures(Base):
     )
 
 
+class TargetScore(Base):
+    """One ranked target's scorer output for one run (D-061 decision 1). The predicted probability
+    (`score`), the six `β_k·x_k` attributions (`attributions`, JSON, D-041 dec 1), and the
+    descending `rank`. Only ranking-set targets get a row — an excluded target is carried on the
+    run result with its reason, never given a fabricated score."""
+
+    __tablename__ = "target_scores"
+    __table_args__ = (
+        Index("ix_target_scores_ranking_run_id", "ranking_run_id"),
+        Index("ix_target_scores_analysis_id", "analysis_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ranking_run_id: Mapped[int] = mapped_column(ForeignKey("ranking_runs.id"), nullable=False)
+    analysis_id: Mapped[int] = mapped_column(ForeignKey("protein_analyses.id"), nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)              # predicted probability
+    attributions: Mapped[list] = mapped_column(JSON_VARIANT, nullable=False, default=list)  # six β_k·x_k
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)               # 1 = highest score
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class RankingResult(Base):
+    """The run-level pre-registered result for one scoring run (D-061 decision 2). D-041's headline
+    is a *distribution*, so `structural_percentiles` (the LOO percentiles) is JSON, not a scalar;
+    the head-to-head lives on one common reference set (D-060 dec 8); every denominator travels with
+    the claim (D-024/D-041); and the excluded set carries its reasons (D-060 §3.5)."""
+
+    __tablename__ = "ranking_results"
+    __table_args__ = (
+        Index("ix_ranking_results_ranking_run_id", "ranking_run_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ranking_run_id: Mapped[int] = mapped_column(ForeignKey("ranking_runs.id"), nullable=False)
+    structural_percentiles: Mapped[list] = mapped_column(JSON_VARIANT, nullable=False, default=list)
+    headto_structural_percentiles: Mapped[list] = mapped_column(JSON_VARIANT, nullable=False, default=list)
+    headto_evidence_percentiles: Mapped[list] = mapped_column(JSON_VARIANT, nullable=False, default=list)
+    spearman: Mapped[float | None] = mapped_column(Float, nullable=True)
+    spearman_n: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    n_ranking_set: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    n_fit_positives: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    headto_reference_n: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    plddt_floor: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lambda_per_fold: Mapped[list] = mapped_column(JSON_VARIANT, nullable=False, default=list)
+    lambda_at_grid_edge: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    excluded: Mapped[list] = mapped_column(JSON_VARIANT, nullable=False, default=list)  # [[symbol, reason], ...]
+    scorer_version: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    feature_version: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 # NOTE: `analysis_embeddings` (embedding vector(384) + HNSW) is intentionally NOT an ORM model
 # — it is created in migration 0002 as raw SQL only (D-019). Keeping the Postgres `vector` type
 # out of Base.metadata is what lets the SQLite create_all test path stay clean and avoids adding
