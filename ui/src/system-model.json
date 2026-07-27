@@ -19,7 +19,8 @@
       {"path": "/api/analyses/{analysis_id}", "methods": ["GET"]},
       {"path": "/api/analyses/{analysis_id}/structure", "methods": ["GET"]},
       {"path": "/api/analyses/{analysis_id}/plddt", "methods": ["GET"]},
-      {"path": "/api/coverage", "methods": ["GET"]}
+      {"path": "/api/coverage", "methods": ["GET"]},
+      {"path": "/api/associations", "methods": ["GET"]}
     ],
     "worker_jobs": [
       {"path": "/jobs/claim", "methods": ["POST"]},

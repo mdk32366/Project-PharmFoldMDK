@@ -80,6 +80,105 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-054 — The evidence baseline is deferred, on purpose, with a trigger
+
+- **Date:** 2026-07-26
+- **Status:** Accepted — **a deferral, not an omission.**
+- **Relates:** D-040 (the evidence scores and their 17-of-82 curation gap), D-024 (the honest
+  denominator), D-028 (non-goals as commitments), UI Plan v2 §8 (the ranking centrepiece).
+
+**Context.** `data/evidence_scores.csv` holds 17 curated, cited rows — 9 scoring 4, 8 scoring 5 —
+and is reachable from no route and no component. It is the published comparator half of the research
+question, and it is invisible in the deployed product.
+
+**Decision.** It stays invisible **this session**, and this entry exists so that fact is a recorded
+choice rather than an oversight discovered later.
+
+- **It is not blocked by the scorer.** A supplier and one view would ship it. It is blocked by
+  judgement: it is one half of the centrepiece, and this project has declined to build the
+  centrepiece in halves every session since UI Plan v2 §8. Doing it days before delivery would break
+  that discipline at the exact moment the discipline is worth most.
+- **The misreading risk is live.** Seventeen rows scoring only 4 and 5 read as *"these are the good
+  ones."* The other 65 are **unpublished, not low.** Rendering the 17 without that denominator
+  hard-wired into the surface would teach a reader something false — and the reader in question is a
+  grader.
+
+**Trigger — the next session, or the scorer fit, whichever comes first.** When built, it carries
+D-024's denominator treatment: 17 of 82, the 65 rendered null-with-reason, and it is labelled the
+**published comparator**, never "our ranking."
+
+- **Deep-learning justification:** none, and that is the point. This surface would show a
+  *published expression-derived* baseline. Its whole value is as the thing the structure-derived
+  ranking is measured *against* — which means it is worth little until there is a ranking to
+  compare, and actively misleading if shown alone.
+- **Consequences:** none in code. A named debt with a trigger, so it cannot quietly vanish.
+
+---
+
+### D-053 — Per-target cancer associations, derived from the cohort's own source, including where the derivation disagrees
+
+- **Date:** 2026-07-26
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-040 (curated-and-cited discipline; *a different number is a finding, not a
+  discrepancy to reconcile away*), D-016 (a claim names how it is known), D-050 (derived, not
+  hardcoded), D-038 (a new supplier is its own route), D-024 (the honest denominator), D-052 (the
+  boundary between what we produced and what we illustrate).
+- **Amends:** the 2026-07-25 pre-work §4, which scoped this as a hand-curated literature roster
+  requiring an owner curation pass. **Superseded:** a better source was found — the cohort's own
+  paper — making the roster derivable rather than assembled. Recording the reversal explicitly.
+
+**Context.** ESMFold says how confidently it folded a chain. It says nothing about why the chain
+matters. Without that, a reader cannot weigh a pLDDT of 30.68 against one of 84.23 — both are just
+numbers about proteins they have no reason to care about.
+
+**Decision 1 — derive from the source paper, do not assemble from literature.** The Kathad
+supplementary S3 File publishes a complete 82 × 20 grid of per-target, per-tumour-type **quasi
+H-scores** (0–300; %low×1 + %med×2 + %high×3, from HPA IHC data). Applying **the paper's own stated
+150 cutoff** yields **337 target–tumour pairs covering all 82 targets**. This is strictly better
+provenance than a hand-assembled literature roster: one source, one citation, uniform coverage, no
+selection by us, and reproducible from a file anyone can download.
+
+**Decision 2 — the claim is an EXPRESSION claim, and the surface says so.** A row means *"highly
+expressed in this tumour type, by the paper's measure."* It is **not** causal, **not** a claim the
+target drives the disease, and **not** a clinical indication. This bound is rendered, not assumed.
+
+**Decision 3 — record the disagreement; do not reconcile it away.** The disqualifying check was
+run before the artefact was trusted: the paper states OSMR overexpressed in **10** indications (this
+derivation: **10**, reproduced exactly); **290** target–indication combinations (this derivation:
+**337**, not reproduced); **16** targets above cutoff in >7 tumour types (this derivation: **17**,
+not reproduced). A strict `>150` cutoff gives 285 pairs — nearer the headline — but breaks OSMR
+(7, not 10), so it is the *wrong* reading despite the closer number. Dropping any single tumour type
+yields 296–334, never 290. S7 File has 213 rows, also not 290. **Conclusion: 290 is a different
+quantity, produced by a filtering step the published files do not expose.** Therefore this is *our*
+derivation from the paper's published scores — agreeing with one named claim, disagreeing with two —
+and it is labelled that way wherever it appears. It is never rendered as "the paper's 290
+combinations."
+
+**Decision 4 — every association renders, ranked.** No top-N truncation (owner ruling). BTN3A3 has
+16. Legibility is bought by **descending quasi H-score with the score shown**, which makes the list
+ordered evidence rather than an unordered dump — so the ordering is a **tested contract**, not
+styling.
+
+**Decision 5 — a citation may be a literal; a statistic may not.** This sharpens D-050. The paper's
+`290` and `16` are facts about a published document: static, and correct as literals. Our `337`,
+`82`, and every per-target count are statistics over a file that can change: they derive from
+`/api/associations`. **The test of which kind a number is: would it change if our data changed?**
+
+- **Deep-learning justification:** the network's output is a confidence surface over a structure;
+  its significance to a reader is entirely external to it. This supplies that significance from a
+  cited source while stating precisely what the citation does and does not support — keeping the
+  domain claim and the model claim separable, the same boundary D-052 defends in pictures.
+- **Consequences:** `data/cancer_associations.csv` (337 rows + provenance header);
+  `core/cancer_associations.py`; `GET /api/associations`; a `CancerAssociations` component in
+  `TargetView`; tests at both tiers. `data/` is already in the image (`Dockerfile:38`) — no
+  packaging change, no new dependency. **Migration trigger:** moves to a DB table **only** if it
+  becomes a scorer feature or a query filter. **Correction folded in:** `data/cohort_82.txt` cited
+  its source as sheet `Target_expression_in_normal`; S3's only sheet is `Target_expression_in_tumor`
+  (the normal-tissue grid is S2). The 82 symbols are identical either way, so the cohort of record is
+  unaffected — a provenance-label error, fixed and noted.
+
+---
+
 ### D-052 — The ADC mechanism schematic is an illustration, and is structurally prevented from reading as model output
 
 - **Date:** 2026-07-26
