@@ -80,6 +80,87 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-065 — Two pre-specified ablations to test whether the structural signal is carried by pLDDT
+- **Date:** 2026-07-29
+- **Status:** Proposed → Accepted on merge. **Ruled before either ablation runs**, after the
+  pre-registered result was reported (F-004) and rendered (D-062) — D-058 decision 2's condition.
+- **Relates:** F-004 caveat (b) — the confound this addresses; D-027 (the fixed six, and its
+  anticipation of feature-level ablation); D-058 decision 2 (sensitivity analyses are permitted
+  *after* the pre-registered result is reported and never replace it); D-041 (the model, unchanged).
+
+**Context — the sharpest open question in F-004.** Two of the six features are pLDDT-derived (feature
+3, mean pLDDT over the folded ECD; feature 4, membrane-proximal pLDDT). **pLDDT is partly a function
+of how well-represented a protein's family is in ESMFold's training data**, which tracks research
+attention, which tracks having been attempted as an ADC. So F-004's modest above-chance shift could
+arise from the network's confidence proxying attention rather than from structure. F-004 records this
+as an **open** confound; it is **testable**, and leaving a testable confound untested when the test is
+one run is not defensible. **D-027 anticipated exactly this:** *"the leave-one-out will show whether
+any single feature is load-bearing or whether the set is redundant. Neither outcome invalidates the
+pre-registration — both are informative."*
+
+#### Decision (1) — exactly two ablations, named now, both reported regardless of outcome
+| Set | Features | Parameters |
+|---|---|---|
+| **`no_plddt`** | 1 (ECD length), 2 (Rg), 5 (SASA), 6 (patch fraction) | 4 + intercept = **5** |
+| **`plddt_only`** | 3 (mean pLDDT), 4 (membrane-proximal pLDDT) | 2 + intercept = **3** |
+
+Both run, both reported, neither chosen after seeing the other. `no_plddt` asks *does the shift
+survive without pLDDT?*; `plddt_only` asks *does pLDDT alone reproduce it?* — together they
+triangulate. **⚠ No third ablation may be added after seeing these** — that requires its own entry,
+dated after these results.
+
+#### Decision (2) — everything else is held identical
+Same 12 labels · same 56-target ranking set · same 13-point λ grid · same 5-fold stratified inner CV
+· same LOO folds · same pLDDT floor of 50 · no RNG · same convergence criterion and raise. **Only the
+feature columns change**, so a difference in outcome is attributable to the features and nothing else.
+
+#### Decision (3) — ⚠ the interpretation is fixed BEFORE either run
+| Outcome | Reading |
+|---|---|
+| **`no_plddt` shift ≈ full, `plddt_only` ≈ chance** | **Confound weakened** — signal is geometry, not confidence. Caveat (b) → tested. |
+| **`no_plddt` ≈ chance, `plddt_only` ≈ full** | **Confound strengthened** — the axis is pLDDT-driven; the attention pathway is live. **Reported prominently as the finding.** |
+| **Both below full** | The six are **jointly informative**; neither half carries it alone. Silent on the confound. |
+| **Both ≈ full** | The set is **redundant**. Silent on the confound. |
+| **Either raises** | Recorded as a raise with its status (D-063 dec 2). Fewer parameters make convergence *more* likely. |
+
+**"≈" is deliberately not thresholded** (D-041 dec 4's precedent). The distributions are reported
+side by side and read in prose against this table.
+
+#### Decision (4) — the ablations are structurally prevented from becoming the headline
+- **A named set is REQUIRED.** `--ablate` accepts only `no_plddt` or `plddt_only`; **arbitrary
+  feature subsets are refused by the code** (`DegenerateLabelSet`'s sibling — a `ValueError`), so
+  fishing is prevented by construction.
+- Each ablation writes **its own `ranking_run`**, tagged `run_kind='sensitivity'`. **The
+  pre-registered run (id=2) is `run_kind='preregistered'`** (migration `0006`, backfilled).
+- **D-062's route filters on `run_kind`, not only validity** — it serves the latest valid
+  **preregistered** run; a sensitivity run is never served where the pre-registered result is
+  expected. A test asserts this.
+- **F-004 is not amended by these results.** They land in a new finding entry (**F-005**), dated
+  after the ablation runs, which cites F-004 and does not modify it.
+
+#### Decision (5) — D-027's fixed six is NOT violated
+D-027 fixed the count for **the pre-registered model** and anticipated ablation as a diagnostic. **The
+pre-registered model remains six features and seven parameters, unchanged, already reported.** The
+test asserting exactly six features on the pre-registered path must remain green; if it reddens, the
+ablation has leaked into the pre-registered path and the PR is wrong.
+
+- **Deep-learning justification.** F-004's result is bounded by a confound about **what the network's
+  own uncertainty encodes.** pLDDT is a deep-learning output used as signal (D-041 §2 item 3), so
+  whether it carries structure or training-set representation is a question *about the network*. This
+  is the most directly deep-learning-relevant follow-up available, and it is one run against an
+  existing pipeline.
+
+- **Consequences / test surface:** `--ablate` refuses any set not in the named two (arbitrary subset
+  raises); the six-feature assertion on the pre-registered path stays green; **5** parameters for
+  `no_plddt`, **3** for `plddt_only`; `run_kind` persisted and a sensitivity run never returned where
+  the pre-registered run is expected (fixture holding both kinds); the three leakage guards (D-060)
+  re-assert on the ablation path; determinism holds. **Also folds in the D-063 all-folds-raise fixture**
+  (the `loo_status='none'` path, handled but previously unpinned) — worth pinning before an ablation
+  that fits 2 features against 12 positives, the regime where odd geometry is most plausible.
+  **No run in this PR.**
+
+---
+
 ### F-004 — The pre-registered result: the structural axis is modestly above chance, indistinguishable from the comparator, and not a proxy for it
 
 - **Date:** 2026-07-28
