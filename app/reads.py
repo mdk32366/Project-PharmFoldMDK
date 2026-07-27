@@ -30,12 +30,17 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional
 
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from core.manifest import ManifestRow, build_manifest, coverage
 from core.queue import FAILED
-from db.models import JobRecord, ProteinAnalysis
+from db.models import JobRecord, ProteinAnalysis, RankingResult, RankingRun, TargetScore
+
+# The paper's published Group B count (Kathad et al. 2024, D-040 / F-003). A SOURCE CONSTANT served
+# by the API so the surface derives it rather than typing it (D-062 Constraint-A). It never changes;
+# the DERIVED count (n_fit_positives = 12) is what the roster produced and is stored per run.
+PAPER_PUBLISHED_GROUP_B = 22
 
 # Meta keys carried into the light list, in payload order (D-034 decision 1 / Orders §1).
 _LIST_META_KEYS = (
@@ -202,3 +207,99 @@ def coverage_payload(engine: Any) -> dict[str, Any]:
         "failed": sum(1 for r in projected if r["fold_status"] == "failed"),
         "rows": projected,
     }
+
+
+# ── ranking (D-062): the persisted scorer result (F-004), latest VALID run only ─
+
+def _score_projection(score: TargetScore, row: ProteinAnalysis) -> dict[str, Any]:
+    """One ranked target row: rank · symbol · structural score · the six β_k·x_k attributions
+    (stored, D-061; the surface may defer rendering them — a display gap, not a data gap)."""
+    meta = row.meta or {}
+    return {
+        "rank": score.rank,
+        "accession": row.input_value,
+        "gene": meta.get("gene"),
+        "score": score.score,
+        "attributions": score.attributions,
+    }
+
+
+def _result_status(loo_status: Optional[str], fulldata_status: Optional[str]) -> str:
+    """The surface's four-valued run status (D-062 Amendment 1). `raised` = the LOO produced no
+    distribution; `partial` = a distribution exists but a pre-registered statistic is blocked (LOO
+    partial, or the full-data fit raised → Spearman/ranking blocked, D-064 dec 5); `complete` = all
+    produced."""
+    if loo_status == "none":
+        return "raised"
+    if loo_status == "partial" or fulldata_status == "raised":
+        return "partial"
+    return "complete"
+
+
+def _latest_valid_result(session: Session) -> Optional[RankingResult]:
+    """The newest `ranking_results` row whose `status_detail` does NOT start with 'invalid' (D-064
+    dec 3: the zero-positive artifact id=1 is marked invalid and must never be served)."""
+    return session.scalars(
+        select(RankingResult)
+        .where(
+            (RankingResult.status_detail.is_(None))
+            | (~RankingResult.status_detail.startswith("invalid"))
+        )
+        .order_by(desc(RankingResult.computed_at), desc(RankingResult.id))
+    ).first()
+
+
+def ranking_payload(engine: Any) -> dict[str, Any]:
+    """The D-062 supplier: the latest VALID ranking run's pre-registered result + per-target scores.
+    Always 200 with a `result_status`; when no valid run exists it is `not_run` with empty rows, so
+    the surface renders the not-run panel rather than a fetch error. Reads persisted rows only —
+    nothing is recomputed (F-004: the result is recorded, never re-run)."""
+    with Session(engine) as s:
+        result = _latest_valid_result(s)
+        if result is None:
+            return {"result_status": "not_run", "run": None, "result": None, "rows": []}
+
+        run = s.get(RankingRun, result.ranking_run_id)
+        pairs = s.execute(
+            select(TargetScore, ProteinAnalysis)
+            .join(ProteinAnalysis, ProteinAnalysis.id == TargetScore.analysis_id)
+            .where(TargetScore.ranking_run_id == result.ranking_run_id)
+            .order_by(TargetScore.rank)
+        ).all()
+
+        # Pair the LOO distribution to its held-out targets, over the CONVERGED folds only (D-063).
+        lpf = result.lambda_per_fold or []
+        converged_syms = [f["symbol"] for f in lpf if f.get("converged")]
+        distribution = [
+            {"symbol": sym, "percentile": pct}
+            for sym, pct in zip(converged_syms, result.structural_percentiles or [])  # noqa: B905
+        ]
+        nonconvergent = [f["symbol"] for f in lpf if not f.get("converged")]
+
+        return {
+            "result_status": _result_status(result.loo_status, result.fulldata_status),
+            "run": {
+                "id": run.id,
+                "target_list_version": run.target_list_version,
+                "scorer_version": run.scorer_version,
+            },
+            "result": {
+                "loo_status": result.loo_status,
+                "fulldata_status": result.fulldata_status,
+                "status_detail": result.status_detail,
+                "spearman": result.spearman,
+                "spearman_n": result.spearman_n,
+                "n_ranking_set": result.n_ranking_set,
+                "n_fit_positives": result.n_fit_positives,
+                "headto_reference_n": result.headto_reference_n,
+                "plddt_floor": result.plddt_floor,
+                "lambda_at_grid_edge": result.lambda_at_grid_edge,
+                "distribution": distribution,                 # [{symbol, percentile}], converged folds
+                "nonconvergent": nonconvergent,               # named, never dropped (D-063)
+                "headto_structural": result.headto_structural_percentiles or [],
+                "headto_evidence": result.headto_evidence_percentiles or [],
+                "excluded": result.excluded or [],            # [[symbol, reason], ...] (D-060 §3.5)
+                "paper_published_count": PAPER_PUBLISHED_GROUP_B,   # source constant, served not typed
+            },
+            "rows": [_score_projection(sc, row) for sc, row in pairs],
+        }

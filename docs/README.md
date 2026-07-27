@@ -80,6 +80,132 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-004 — The pre-registered result: the structural axis is modestly above chance, indistinguishable from the comparator, and not a proxy for it
+
+- **Date:** 2026-07-28
+- **Type:** The pre-registered result (D-041). **A finding, not a decision** — nothing is ruled here.
+- **How known (D-016):** one authorised run of `scripts/fit_scorer.py --run --persist` against
+  `main` after #89 (D-064's label fix). Persisted as **`ranking_run` id=2**,
+  `scorer_version=91e646e4a289`, `ranking_results` id=2, 56 `target_scores`.
+  **Run exactly once. No re-run, no parameter changed after the result existed.**
+- **Provenance chain:** an earlier run under the D-064 defect produced `ranking_results` id=1 with
+  a **zero-positive label set**. That row is **retained and marked invalid**, not overwritten
+  (D-064 decision 3). `ranking_runs` id=1 is the enqueue's anchor for 80 folds and is untouched.
+
+---
+
+#### The inputs, all fixed before the run
+
+Six features (D-027) · L2 logistic regression, seven parameters (D-041) · 13-point λ grid, 5-fold
+stratified inner CV, no RNG (D-060) · pLDDT floor 50 (D-041 §5) · **12 curated label accessions**
+(F-003) · ranking set **56** · comparator **12** · head-to-head **8** (F-002, recomputed against the
+curated file).
+
+#### Result (1) — the pre-registered object: the leave-one-out percentile distribution
+
+**`loo_status = complete`. 12 of 12 folds converged. No non-convergent targets.**
+
+| Target | Percentile | | Target | Percentile |
+|---|---|---|---|---|
+| EGFR | 0.955 | | SLC3A2 | 0.634 |
+| CDCP1 | 0.902 | | JAG1 | 0.580 |
+| ERBB2 | 0.866 | | CD276 | 0.562 |
+| NECTIN4 | 0.848 | | CDH11 | 0.384 |
+| MERTK | 0.812 | | FGFR3 | 0.384 |
+| | | | UPK1B | 0.312 |
+| | | | SLC39A6 | 0.170 |
+
+**Median 0.607 · mean 0.617 · 8 of 12 above 0.5**, against a null expectation of 0.5.
+
+**A modest upward shift.** D-041 decision 3 fixed the reported object as *the full distribution with
+median and spread* and barred a single summary number as the headline. **No significance test was
+pre-registered and none is computed** — at n=12 one would be underpowered, and choosing a test after
+seeing the distribution is the degree of freedom pre-registration exists to remove.
+
+#### Result (2) — D-041 decision 3's first negative outcome: **FIRES**
+
+On the 8 held-out positives carrying an evidence score, percentiles computed within the common
+reference set of 12 (D-060 decision 8):
+
+| | structural | comparator |
+|---|---|---|
+| mean | **0.573** | **0.5625** |
+| median | **0.625** | **0.750** |
+
+**Not distinguishable — and the direction reverses between mean and median.** That reversal is the
+cleanest possible statement of the finding: which axis looks better depends on which summary you
+choose, which is what *"not distinguishable"* means at this size. D-041's own words for this case:
+
+> *"the structural axis adds nothing measurable at this cohort size. That is the result."*
+
+**⚠ The comparator's degeneracy was predicted and held.** The evidence percentiles came back as
+**exactly two values, 0.75 and 0.25** — because the published evidence score takes only two values
+(nine 4s, eight 5s across 17 targets). D-060 decision 8 recorded this **before any number existed**,
+and it bounds what this comparison could ever have shown in either direction.
+
+#### Result (3) — D-041 decision 4's second negative outcome: **DOES NOT FIRE**
+
+**Spearman(structural, evidence) = −0.0483 over N=12.**
+
+D-015 §3 pre-registered that a **strong** correlation with the evidence score would *also* be a null
+— it would mean the features proxy attention-and-precedent rather than measuring structure.
+**Near-zero says they do not.** The structural axis is measuring something largely orthogonal to the
+comparator.
+
+#### Result (4) — the two together, which is the finding
+
+> **The structural score ranks attempted-ADC targets modestly above chance, is not distinguishable
+> from an expression-and-attention comparator, and is not a proxy for it. At twelve positives, the
+> axis measures something different and cannot be shown to add anything.**
+
+That combination is more informative than either null alone: **orthogonal but unproven** is a
+different result from *"the features just re-learned the comparator,"* and the second was the more
+likely prior.
+
+---
+
+#### ⚠ Three caveats that travel with this result, always
+
+**(a) The design is conservative and biases toward the null.** Each held-out positive is ranked
+among a pool that still contains the eleven training positives the model was fit to score highly.
+That pushes held-out percentiles **down**. Five targets nonetheless exceeded 0.80, so the training
+positives do not uniformly dominate — but **the bias runs toward understating, not overstating.**
+
+**(b) An open confound: pLDDT may carry attention.** Two of the six features are pLDDT-derived, and
+**pLDDT is partly a function of how well-represented a protein's family is in ESMFold's training
+data — which tracks research attention, which tracks having been attempted as an ADC.** That is a
+path by which the score could proxy attention *through the network's own confidence* rather than
+through structure. Result (3) argues against it, **but the evidence score is a weak stand-in for
+attention** (two values, 17 targets). **Recorded as an open confound, not as resolved.** (Tested by
+D-065.)
+
+**(c) The top of the distribution is the famous targets.** EGFR, ERBB2 and NECTIN4 sit in the top
+four. **Consistent with signal and equally consistent with (b).** It is not narrated as validation.
+
+#### What this result does NOT claim
+
+- **Not** that the score predicts clinical success. The label is *attempted*, not *viable* (D-041).
+- **No per-target biological or clinical claim** (D-028). The delivery-agnostic framing appears once
+  in the method note, never on a row.
+- **Not** agreement with the paper: 12 derived labels against 22 published, with the gap recorded as
+  a finding and its explanations named-but-unresolved (F-003 Finding 1).
+- **Not** a significance claim. None was pre-registered; none is made.
+
+#### Consequences
+
+- **`fulldata_status = converged`**, 56 `target_scores` exist. **Both of D-041's negative-outcome
+  tests are computable; neither is blocked** (D-064 decision 5's blocked branch does not apply).
+- **The ranking table is buildable on real scores** — the first time in the project's history that
+  has been true. It is still not mocked and still not required to be complete.
+- **The honest route to a stronger result is more labelled data, not more parameters** (D-041).
+  The roster's floor of 12 (F-003 Finding 6) is the binding constraint.
+- **Deep-learning justification.** This is where the graded deliverable's claim actually resolves:
+  ESMFold's structural output, turned into a judgement (D-041 §2), produces a pre-registered result
+  that is falsifiable and honestly bounded — a modest, orthogonal, unproven signal, reported as
+  such rather than dressed up. The rendering surface (D-062) makes that legible to a grader.
+
+---
+
 ### D-064 — The fit driver read a schema the curated file never adopted, and ran on zero positives
 - **Date:** 2026-07-28
 - **Status:** Proposed → Accepted on merge.
