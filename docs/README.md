@@ -80,7 +80,145 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-064 — The fit driver read a schema the curated file never adopted, and ran on zero positives
+- **Date:** 2026-07-28
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-040 / D-029 (the curated file's schema), D-060 (the convergence raise), D-016
+  (prefer the query whose answer could disqualify you), D-043 / D-027 (a degenerate state is
+  reported, never imputed).
+- **Invalidates:** D-063's original context paragraph and its Decision (3). See the amendment below.
+
+**Context — what was actually run.** `data/adc_reference_mapping.csv` carries D-029/D-040's
+**drug-centric** schema: `drug, application_number, antigen, uniprot_accession, source_citation,
+marketing_status, development_stage`. **It has no `is_group_b` and no `symbol` column** — Group B is
+*computed* by `core.adc_reference.group_b()` (in-cohort accession join × development stage).
+
+`scripts/fit_scorer.py::read_group_b_labels` keyed on **`is_group_b` / `symbol`** — the
+symbol-centric schema **proposed in `PREWORK-2026-07-27 §2` and never adopted.** It returned **zero
+positives.** All 56 rankable rows entered the fit labelled negative. **The twelve curated labels
+never reached the scorer.** The defect shipped in the D-061 PR and was present in **both** authorised runs.
+
+#### Finding (1) — ⚠ a non-convergence raise does not identify its own cause
+With zero positives the MLE intercept is at −∞; `p → 0`, the IRLS weights `w = p(1−p) → 0`,
+`XᵀWX → 0`, and the Hessian goes singular **in the unpenalized intercept direction.** **That is the
+identical failure signature as quasi-complete separation** — same iteration behaviour, same singular
+direction, same message, same λ at the grid's low edge. **The raise text cannot distinguish "no
+positives" from "perfect separation," and the Planner's entire interpretation followed from assuming
+the second.** This is the finding, not the bug: a degenerate *input* and a degenerate *geometry* fail
+identically, so the raise must never be read as evidence about the data without first measuring the input.
+
+#### Decision (1) — one label path: `core.adc_reference.group_b()`, joined on accession
+The driver reads labels through the same function the completeness check used and that
+`tests/test_adc_reference.py` already exercises. **`read_group_b_labels`'s bespoke parsing is
+deleted, not repaired** — a second path to the same quantity is what produced this. (Applied to the
+comparator too: the driver's `read_evidence_scores` is likewise deleted for
+`core.adc_reference.load_evidence_scores`, so evidence is one path as well.)
+
+#### Decision (2) — a degenerate label set raises a DISTINCT named error, before fitting
+**Zero positives, or zero negatives, raises `DegenerateLabelSet` with the counts in the message —
+before any IRLS iteration.** D-060 decision 1 built the convergence raise so a meaningless *estimate*
+could not be emitted silently. **This is the same principle one step earlier: a meaningless *input*
+must not be allowed to produce a raise that reads like a result about the data.** The guard is cheap,
+and its absence cost this project a full interpretive arc.
+
+#### Decision (3) — the invalid artifact is MARKED, not overwritten
+`ranking_results` **id=1** (zero positives, empty distribution) **stays in place.** Its
+`status_detail` is set to name it invalid and why — **an owner action after merge, not part of this
+PR.** The corrected run writes a **NEW `ranking_run`.** `persist_results` being idempotent per
+`ranking_run` would silently erase the evidence that a false artifact existed; **this log records
+corrections explicitly and never quietly fixes them (D-002), and the database is held to the same
+standard.** Consequence: any surface reading `ranking_results` must filter on validity — D-062's
+`/api/ranking` must never serve the invalid row.
+
+#### Decision (4) — two test disciplines, generalised from this defect
+- **(a) Any function that parses a committed artifact gets one test that loads THAT artifact**, not
+  only a fixture. `build_scorer_rows` was fixture-tested with labels injected; `read_group_b_labels`
+  **was never once run against `data/adc_reference_mapping.csv` in a test.**
+- **(b) Where two code paths compute the same quantity, a test asserts they AGREE.** The completeness
+  check and the fit driver computed the label count by different routes and disagreed **12 versus 0**,
+  and nothing compared them.
+
+#### Decision (5) — which pre-registered statistics survive a full-data non-convergence
+Ruled here rather than in D-063 because it was not in the D-063 that merged — it existed only in a
+Planner orders draft the main line never received. Recorded as a new decision rather than retrofitted,
+so the date reflects when it was actually made.
+
+| Statistic | Depends on | Survives a full-data raise? |
+|---|---|---|
+| LOO percentile distribution (D-041 dec. 3) | per-fold models | **YES** |
+| Head-to-head vs comparator (D-041 dec. 3) | per-fold percentiles + evidence scores | **YES** |
+| Spearman vs evidence score (D-041 dec. 4) | full-data per-target scores | **NO — blocked** |
+| Ranking table (UI Plan v2 §6) | full-data per-target scores | **NO — blocked** |
+
+A full-data raise therefore yields a **partial** pre-registered result: one of D-041's two
+negative-outcome tests computable, the other not. **The blocked half is reported as blocked, with the
+reason — never omitted, never null-without-explanation.** This is a statement about statistical
+dependency, independent of any cause of failure, so it holds equally for the zero-positive artifact
+and for any genuine non-convergence after the fix.
+
+#### Finding (2) — ⚠ the fourth instance of one failure class in a single day
+| # | Two paths to one quantity | Disagreement |
+|---|---|---|
+| 1 | `/api/analyses` (enqueued) vs `/api/coverage` (folded) | 80 vs 79 |
+| 2 | intersection script's `folded ∧ ≥50` vs `CoverageLine`'s `ranked ∧ folded` | both 67 — **agreed by coincidence, different quantities** |
+| 3 | completeness check via live API vs what the loader would write | asserted equal, verified only on challenge |
+| 4 | completeness check via `group_b()` vs driver via `read_group_b_labels` | **12 vs 0** |
+
+**Named: *two paths to one quantity, never compared.*** The discipline: **when a quantity is computed
+twice, either compare them in a test or stop computing it twice.** Instance 2 is instructive — the two
+paths *agreed*, on different quantities, and the agreement is what concealed the error.
+
+#### Finding (3) — Planner error, recorded
+**The Planner constructed a detailed scientific interpretation — separation geometry, λ degeneracy
+under separation, a deterministic re-raise, a modal outcome of `loo_status='none'` — on a premise it
+never asked to have measured: how many positives the fit actually saw.** That question is the
+disqualifying one, and D-016 names the practice: *prefer the query whose answer could disqualify you.*
+The Planner had, hours earlier, refused to accept a completeness count inferred from code-path
+equivalence and required it be measured against prod — **then applied no such standard to the fit's own
+input.** The rule was known, stated, enforced on others, and not self-applied. (A second Planner error
+followed: an amendment to the merged D-063 was drafted against a six-decision structure that existed
+only in an un-received orders draft, without reading the three-decision entry that shipped — "didn't
+check the artifact before acting on it," the same class again. Recorded.)
+
+#### Consequences
+- **D-063 Decision (3) is VOID** (the λ-degeneracy finding — see the amendment). D-063 Decisions (1)
+  and (2) and its refusals stand.
+- **F-002 and F-003 are unaffected.** Both were written before the fit ran and neither derives from it.
+  F-003 Finding 8's sizing arithmetic (12 positives / 7 parameters ≈ 1.7) comes from the label count,
+  not the run.
+- **The pre-registration is untouched.** Six features, seven parameters, the 13-point grid, both
+  negative outcomes, the pLDDT floor and every refusal were fixed before any of this and none was
+  informed by a bug.
+- **⚠ The pre-registered result has still never run.** What twelve real positives against forty-four
+  negatives in six dimensions produce is **unknown**. It may converge. **No prediction is recorded
+  here, deliberately** — the last one was made without measuring its premise.
+- **Deep-learning justification.** The scorer is the deep-learning deliverable's judgement layer; a
+  fit run on zero positives is not a result about the model, and this entry is what stops that
+  degenerate input from ever again reading as one. The guard and the one-label-path rule are what make
+  the eventual pre-registered result trustworthy.
+
+---
+
+### AMENDMENT to D-063 (recorded 2026-07-28), mapped to what actually merged
+D-063 (#88) shipped a **three-decision** entry; this amendment corrects it against that entry, not the
+six-decision orders draft.
+
+| Merged D-063 | Ruling |
+|---|---|
+| Context ¶ ("quasi-complete separation") | **Superseded** — the run had zero positives (D-064). |
+| Decision (1) — LOO ordering defect | **Stands** — already built; correct irrespective of *why* the full-data fit failed. |
+| Decision (2) — per-fold non-convergence + provenance note | **Stands.** The provenance note is **amended**: the ruling followed an **artifact**, not a real separation result — made with *less* genuine information than the note claimed (no real fold behaviour, no real full-data behaviour informed it), and **stronger for the disclosure**. |
+| Decision (3) — λ-degeneracy under separation | **VOID** — built on the bug; **must not be cited.** D-060 Decision 3's rule against extending the grid stands on its original pre-registration grounds alone. |
+| Refusals bullet (no intercept penalty, no grid change) | **Stands**, and now with **no observed result behind them at all**, which makes them easier to hold. |
+| Everything else | Stands. |
+
+---
+
 ### D-063 — The LOO ordering defect, the per-fold non-convergence ruling, and the λ-degeneracy finding
+> **⚠ AMENDED 2026-07-28 by D-064:** the Context ¶ is **superseded** (the run had **zero positives**,
+> not quasi-complete separation) and **Decision (3) (λ-degeneracy) is VOID** — built on that bug, must
+> not be cited. Decisions (1)/(2) and the refusals stand; Decision (2)'s provenance note is amended
+> (it followed an artifact). See the D-064 amendment above.
 - **Date:** 2026-07-27
 - **Status:** Proposed → Accepted on merge. **Ruled after observing the full-data fit raise at
   λ=0.001, and before observing any LOO fold outcome** — the provenance is stated precisely because

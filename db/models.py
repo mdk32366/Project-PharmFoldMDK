@@ -220,6 +220,11 @@ class RankingResult(Base):
     excluded: Mapped[list] = mapped_column(JSON_VARIANT, nullable=False, default=list)  # [[symbol, reason], ...]
     scorer_version: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
     feature_version: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    # survivorship status (D-064 dec 5) + the invalid-artifact marker (D-064 dec 3). Nullable so the
+    # pre-D-064 row (id=1) reads NULL until the owner marks it, and migration 0005 adds them additively.
+    loo_status: Mapped[str | None] = mapped_column(String(16), nullable=True)        # complete | partial | none
+    fulldata_status: Mapped[str | None] = mapped_column(String(16), nullable=True)   # converged | raised
+    status_detail: Mapped[str | None] = mapped_column(Text, nullable=True)           # reason for a blocked/invalid result
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

@@ -55,7 +55,8 @@ class FeatureRecord:
     """One `protein_features` row joined to its analysis's gene/disposition — the raw material the
     scorer rows are built from. Kept separate from the DB read so assembly is testable offline."""
 
-    symbol: str
+    symbol: str                             # gene (for the evidence-score join)
+    accession: str                          # UniProt accession (for the Group B label join, D-064 dec 1)
     features: tuple[Optional[float], ...]   # six, in FEATURE_NAMES order; any may be None
     disposition: Optional[str]              # ranked | held_out | excluded
     mean_plddt: Optional[float]
@@ -81,12 +82,13 @@ def _exclusion_reason(rec: FeatureRecord, features_complete: bool) -> Optional[s
 
 def build_scorer_rows(
     records: list[FeatureRecord],
-    group_b_symbols: set[str],
+    group_b_accessions: set[str],
     evidence_by_symbol: dict[str, float],
 ) -> list[ScorerRow]:
-    """Assemble `ScorerRow`s. **The label is Group B membership; the evidence score is the
-    comparator — they never mix** (D-060 §3.1). `in_ranking_set` = `ranked ∧ folded ∧ pLDDT ≥ 50`
-    with all six features present; excluded rows keep their reason so the surface can render them."""
+    """Assemble `ScorerRow`s. **The label is Group B membership (joined on ACCESSION, D-064 dec 1);
+    the evidence score is the comparator (joined on gene) — they never mix** (D-060 §3.1).
+    `in_ranking_set` = `ranked ∧ folded ∧ pLDDT ≥ 50` with all six features present; excluded rows
+    keep their reason so the surface can render them."""
     rows: list[ScorerRow] = []
     for rec in records:
         features_complete = all(v is not None for v in rec.features)
@@ -98,7 +100,7 @@ def build_scorer_rows(
         rows.append(ScorerRow(
             symbol=rec.symbol,
             features=feats,
-            label=1 if rec.symbol in group_b_symbols else 0,
+            label=1 if rec.accession in group_b_accessions else 0,   # by ACCESSION (D-064 dec 1)
             in_ranking_set=in_ranking,
             evidence_score=evidence_by_symbol.get(rec.symbol),
             exclusion_reason=reason,
@@ -106,34 +108,24 @@ def build_scorer_rows(
     return rows
 
 
-# ── readers (invoked only on the real --run path; not exercised by fixtures) ──
-def read_group_b_labels(path: Path | str) -> set[str]:
-    """Group B positive symbols from the owner-curated mapping CSV (schema per PREWORK-2026-07-27
-    §2: `symbol, is_group_b, agent_name, development_stage, source_citation, exclusion_reason`).
-    A positive with no citation is rejected — an uncited label is not a label (D-040)."""
-    positives: set[str] = set()
-    with open(path, encoding="utf-8") as fh:
-        reader = csv.DictReader(ln for ln in fh if not ln.startswith("#"))
-        for r in reader:
-            if str(r.get("is_group_b", "")).strip().lower() in ("1", "true", "yes"):
-                if not (r.get("source_citation") or "").strip():
-                    raise ValueError(f"{r.get('symbol')}: Group B positive without a citation (D-040)")
-                positives.add(r["symbol"].strip())
-    return positives
+# ── label + comparator, ONE path each through core.adc_reference (D-064 dec 1) ──
+# The bespoke `read_group_b_labels` / `read_evidence_scores` are DELETED, not repaired: a second
+# path to the same quantity is what returned zero positives (D-064). These route through the
+# functions `tests/test_adc_reference.py` already exercises against the real files.
+def load_labels(path: Path | str = DEFAULT_LABELS) -> set[str]:
+    """The Group B label accessions — `core.adc_reference.group_b_accessions` over the curated
+    mapping (in-cohort join × development stage, D-040). One path, the tested one."""
+    from core.adc_reference import cohort_accessions, group_b_accessions, load_mapping
+    return group_b_accessions(load_mapping(path), cohort_accessions())
 
 
-def read_evidence_scores(path: Path | str) -> dict[str, float]:
-    """The comparator: {symbol: evidence_score} from the published 17 (D-040). Two-valued in
-    practice (4s and 5s) — D-060 dec 8."""
-    out: dict[str, float] = {}
-    with open(path, encoding="utf-8") as fh:
-        reader = csv.DictReader(ln for ln in fh if not ln.startswith("#"))
-        for r in reader:
-            symbol = (r.get("symbol") or r.get("gene") or "").strip()
-            raw = (r.get("evidence_score") or r.get("score") or "").strip()
-            if symbol and raw:
-                out[symbol] = float(raw)
-    return out
+def load_evidence(path: Path | str = DEFAULT_EVIDENCE) -> dict[str, float]:
+    """The comparator: {gene: evidence_score} for the published subset — via
+    `core.adc_reference.load_evidence_scores` (the one path), keeping only targets with a score."""
+    from core.adc_reference import load_evidence_scores
+    payload = load_evidence_scores(path)
+    return {e["symbol"]: float(e["evidence_score"])
+            for e in payload["scores"] if e["evidence_score"] is not None}
 
 
 def read_feature_records(engine) -> list[FeatureRecord]:
@@ -154,6 +146,7 @@ def read_feature_records(engine) -> list[FeatureRecord]:
             meta = analysis.meta or {}
             records.append(FeatureRecord(
                 symbol=meta.get("gene") or analysis.input_value,
+                accession=analysis.input_value,          # the Group B label joins on this (D-064 dec 1)
                 features=tuple(getattr(feat, name) for name in FEATURE_NAMES),
                 disposition=meta.get("disposition"),
                 mean_plddt=feat.mean_plddt,
@@ -163,25 +156,18 @@ def read_feature_records(engine) -> list[FeatureRecord]:
     return records
 
 
-# ── persistence: stamp the ranking_run's scorer_version (per-target scores deferred) ──
-def persist_ranking_run(engine, report: ScorerReport, *, target_list_version: str = TARGET_LIST_VERSION) -> int:
-    """Stamp the `scorer_version` onto the cohort's `ranking_run` (creating one if none exists).
-    Per-target scores are NOT persisted here — no scores table exists yet (see module docstring).
-    Returns the ranking_run id."""
-    from sqlalchemy import select
+# ── persistence ──────────────────────────────────────────────────────────────
+def create_ranking_run(engine, report: ScorerReport, *, target_list_version: str = TARGET_LIST_VERSION) -> int:
+    """Create a **NEW** `ranking_run` for this scoring run and return its id. D-064 decision 3: the
+    corrected run never overwrites a prior run — the invalid `ranking_run`/`ranking_results` from the
+    zero-positive fit stays in place (marked, not erased), so a false artifact cannot vanish silently."""
     from sqlalchemy.orm import Session
 
     from db.models import RankingRun
 
     with Session(engine) as s:
-        run = s.execute(
-            select(RankingRun).where(RankingRun.target_list_version == target_list_version)
-        ).scalars().first()
-        if run is None:
-            run = RankingRun(target_list_version=target_list_version, scorer_version=report.scorer_version)
-            s.add(run)
-        else:
-            run.scorer_version = report.scorer_version
+        run = RankingRun(target_list_version=target_list_version, scorer_version=report.scorer_version)
+        s.add(run)
         s.commit()
         return run.id
 
@@ -233,10 +219,14 @@ def persist_results(
             n_fit_positives=report.n_fit_positives,                         # the LOO denominator (total positives)
             headto_reference_n=report.headto_reference_n,
             plddt_floor=PLDDT_FLOOR,
-            # per fold: [held-out symbol, λ, converged] — the non-convergent folds are named here (D-063)
-            lambda_per_fold=[[s, lam, bool(c)] for (s, lam, c) in report.lambda_per_fold],
+            # per fold: {symbol, lam, converged} — the non-convergent folds are named here (D-063 dec 2)
+            lambda_per_fold=list(report.lambda_per_fold),
             lambda_at_grid_edge=report.lambda_at_grid_edge,
             excluded=[list(pair) for pair in report.excluded],
+            # the three status fields (D-064 dec 5): a blocked statistic is null WITH the reason here
+            loo_status=report.loo_status,
+            fulldata_status=report.fulldata_status,
+            status_detail=report.status_detail,
             scorer_version=report.scorer_version,
             feature_version=feature_version(),
         ))
@@ -265,6 +255,7 @@ def print_report(report: ScorerReport) -> None:
     print(f"scorer_version={report.scorer_version}")
     print(f"ranking set (ranked & folded & pLDDT>=50): N={report.n_ranking_set}, "
           f"positives={report.n_fit_positives}")
+    print(f"status: loo={report.loo_status}, fulldata={report.fulldata_status} - {report.status_detail}")
     # The pre-registered headline: the LOO distribution over the folds that CONVERGED (D-063 dec 2).
     conv = report.converged_fold_count
     med = _median(report.structural_percentiles)
@@ -337,21 +328,30 @@ def run(argv: Optional[list[str]] = None, *, engine_factory: Callable[[], object
         print_report(report)
         return 0
 
-    # --run: the owner-authorised path. Reads real labels; refuses silently otherwise handled by argparse.
+    # --run: the owner-authorised path. Reads real labels; produces a RECORDED result the moment it runs.
+    from core.scorer import DegenerateLabelSet
+
     print("WARNING: --run reads the owner-curated labels and produces a RECORDED result the moment it exists (D-060).")
     engine = engine_factory()
     records = read_feature_records(engine)
-    group_b = read_group_b_labels(args.labels)
-    evidence = read_evidence_scores(args.evidence)
+    group_b = load_labels(args.labels)                    # one path (D-064 dec 1), joined on accession
+    evidence = load_evidence(args.evidence)               # one path
     rows = build_scorer_rows(records, group_b, evidence)
-    report = run_scorer(rows)
+    try:
+        report = run_scorer(rows)
+    except DegenerateLabelSet as exc:
+        # A meaningless input must not produce a raise that reads like a result (D-064 dec 2).
+        print(f"REFUSING TO FIT (degenerate label set): {exc}")
+        return 1
     print_report(report)
     if args.persist:
-        rid = persist_ranking_run(engine, report)
+        # The corrected run writes a NEW ranking_run; the invalid id=1 stays in place (D-064 dec 3).
+        rid = create_ranking_run(engine, report)
         symbol_to_analysis_id = {r.symbol: r.analysis_id for r in records if r.analysis_id is not None}
         n_scores, n_results = persist_results(engine, rid, report, symbol_to_analysis_id)
-        print(f"stamped ranking_run id={rid} (scorer_version={report.scorer_version}); "
-              f"wrote {n_scores} target_scores + {n_results} ranking_results row(s)")
+        print(f"wrote ranking_run id={rid} (scorer_version={report.scorer_version}, "
+              f"loo_status={report.loo_status}, fulldata_status={report.fulldata_status}); "
+              f"{n_scores} target_scores + {n_results} ranking_results row(s)")
     return 0
 
 

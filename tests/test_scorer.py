@@ -274,8 +274,8 @@ def test_a_fold_that_raises_is_recorded_and_does_not_abort_the_loop():
     assert report.converged_fold_count == 3
     assert len(report.structural_percentiles) == 3         # distribution over the survivors
     assert report.n_fit_positives == 4                     # denominator travels: 3 of 4
-    pa = next(t for t in report.lambda_per_fold if t[0] == "PA")
-    assert pa[2] is False                                  # PA flagged non-convergent in the per-fold record
+    pa = next(t for t in report.lambda_per_fold if t["symbol"] == "PA")
+    assert pa["converged"] is False                        # PA flagged non-convergent in the per-fold record
 
 
 def test_full_data_nonconvergence_does_not_abort_the_loo():
@@ -297,6 +297,25 @@ def test_full_data_nonconvergence_does_not_abort_the_loo():
     assert report.converged_fold_count == 4                # the LOO still ran, all four folds
     assert len(report.structural_percentiles) == 4
     assert report.nonconvergent_folds == []
+
+
+def test_zero_positives_raises_degenerate_label_set():
+    """D-064 dec 2: a fit set with no positives is refused DISTINCTLY, before any IRLS iteration —
+    so a meaningless input can never masquerade as a non-convergence result about the data (the
+    zero-positive artifact that cost a full interpretive arc)."""
+    from core.scorer import DegenerateLabelSet
+    rows = [_row(f"N{i}", -2.0 + 0.3 * i, 0) for i in range(8)]     # all negatives, all in ranking set
+    with pytest.raises(DegenerateLabelSet) as exc:
+        run_scorer(rows)
+    assert "0 positives" in str(exc.value) and "8 negatives" in str(exc.value)
+
+
+def test_zero_negatives_raises_degenerate_label_set():
+    from core.scorer import DegenerateLabelSet
+    rows = [_row(f"P{i}", 0.3 * i, 1) for i in range(8)]            # all positives
+    with pytest.raises(DegenerateLabelSet) as exc:
+        run_scorer(rows)
+    assert "0 negatives" in str(exc.value)
 
 
 def test_intercept_stays_unpenalized_source_pin():
