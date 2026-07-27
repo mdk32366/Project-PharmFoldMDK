@@ -80,6 +80,64 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-061 — Where per-target scores and the pre-registered result live: migration 0004, two additive tables
+- **Date:** 2026-07-27
+- **Status:** Proposed → Accepted on merge. **Owner ruling**, folded into the label PR as migration
+  `0004` (two additive tables, no `ALTER`).
+- **Discharges — and this is a correction against the Planner (D-016):** D-058 decision 3 said
+  *"scores hang off `ranking_runs`, which already carries `scorer_version`."* `ranking_runs` is a
+  **run-level** table with no per-target rows, and the ruling never said where a per-target score
+  actually goes. **That is a gap in the ruling, not in the build** — the D-060 driver was right to
+  report scores and defer persistence rather than invent a home. Recorded as the Planner's gap.
+
+---
+
+- **Context — an unpersisted fit produces no durable artifact, and that is a delivery risk.** The
+  scorer (D-041/D-060) computes a per-target score, its six `β_k·x_k` attributions, and a rank, plus
+  a **run-level** result that D-041 fixed as a *distribution, not a scalar* (the LOO percentiles),
+  a Spearman, and a set of denominators. None of these has a column anywhere. If the ranking-table
+  PR does not land, the fit result must still be **queryable in the database** — persistence is the
+  insurance on the last PR, so it lands now rather than with the route (a deliberate departure from
+  D-058 decision 4's "with the route" framing, on delivery grounds, ruled by the owner).
+
+#### Decision (1) — `target_scores`: one row per ranked target, per run
+`ranking_run_id` → `ranking_runs`, `analysis_id` → `protein_analyses`, `score` (Float, the predicted
+probability, D-060 dec 7), `attributions` (JSON — the six `β_k·x_k`, D-041 dec 1, in `FEATURE_NAMES`
+order), `rank` (Integer, descending; average-rank ties are a display concern, the stored rank is the
+ordinal position). Only ranking-set targets get a row; excluded targets are carried on the run
+result with their reason, never given a fabricated score.
+
+#### Decision (2) — `ranking_results`: one row per run, the pre-registered object's home
+`ranking_run_id` → `ranking_runs`, and the D-041/D-060 result: `structural_percentiles` (JSON — the
+**LOO distribution**, D-041 dec 3's headline), `headto_structural_percentiles` /
+`headto_evidence_percentiles` (JSON — the common-reference-set head-to-head, D-060 dec 8), `spearman`
++ `spearman_n`, the denominators (`n_ranking_set`, `n_fit_positives`, `headto_reference_n`,
+`plddt_floor`), `lambda_per_fold` (JSON) + `lambda_at_grid_edge`, `excluded` (JSON — `[symbol,
+reason]`, D-060 §3.5), and `scorer_version` + `feature_version`. **D-041's headline is a
+distribution; without this table it has no home** — a scalar column would silently discard exactly
+the object the pre-registration is about.
+
+#### Decision (3) — Additive only, verified by query
+Migration `0004` creates the two tables and touches nothing else — no `ALTER`, no backfill (the
+lowest-risk class, as `0003` was). **Verified by querying `information_schema.tables`, not by
+alembic's exit code** (`docs/HAZARD-search-path-seams.md`); the `postgres` CI job runs the chain.
+One prod `alembic upgrade head` then covers `0003` and `0004` together. Both are plain ORM models
+(no pgvector), so they build under SQLite `create_all` too.
+
+- **Deep-learning justification.** D-041's pre-registered negative outcomes ARE the deliverable's
+  scientific content, and a result that exists only in a process's stdout is not a result anyone can
+  audit on Wednesday. This entry gives the distribution, the Spearman, and every denominator a
+  durable, queryable home — which is what makes the pre-registration checkable after the fit runs.
+
+- **Consequences / test surface:** migration `0004` proven by `information_schema` query; both ORM
+  models build under SQLite; the driver's persistence writes one `target_scores` row per ranked
+  target and one `ranking_results` row per run, round-tripped in a test; the stored `rank` is
+  descending by score; excluded targets never receive a `target_scores` row. **The fit itself is
+  still not run here** — persistence is exercised on the fixture cohort; the first real fit is the
+  owner-authorised run (D-060).
+
+---
+
 ### D-060 — The scorer's remaining free parameters, fixed before the fit
 - **Date:** 2026-07-27
 - **Status:** Proposed → Accepted on merge. **Ruled before any fitting code exists and before the
