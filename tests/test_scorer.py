@@ -318,9 +318,72 @@ def test_zero_negatives_raises_degenerate_label_set():
     assert "0 negatives" in str(exc.value)
 
 
+# ── D-065: the two named ablations, and the refusal of everything else ──
+def test_ablation_refuses_any_unnamed_feature_set():
+    """D-065 dec 4: only `no_plddt` and `plddt_only` are permitted — an arbitrary subset raises, so
+    fishing is prevented by construction, not by discipline."""
+    rows = _separable_ranking_set()
+    for bad in ("ecd_only", "feature_3", "", "all_but_one"):
+        with pytest.raises(ValueError, match="D-065"):
+            run_scorer(rows, feature_set=bad)
+
+
+def test_ablation_parameter_counts():
+    """D-065 dec 1: `no_plddt` fits 5 parameters (4 features + intercept), `plddt_only` fits 3
+    (2 + intercept); the pre-registered path is unchanged at 7."""
+    rows = _separable_ranking_set()
+    assert len(run_scorer(rows, feature_set="preregistered").final_model.coefficients) == 6  # 7 params
+    assert len(run_scorer(rows, feature_set="no_plddt").final_model.coefficients) == 4         # 5 params
+    assert len(run_scorer(rows, feature_set="plddt_only").final_model.coefficients) == 2       # 3 params
+
+
+def test_ablation_path_reasserts_the_comparator_leakage_guard():
+    """D-065: the leakage guards are not exempted by a narrower feature set. Scrambling the evidence
+    scores must still leave the ablation's coefficients byte-identical (§3.1, one layer over)."""
+    rows = _separable_ranking_set()
+    base = run_scorer(rows, feature_set="no_plddt").final_model
+    ev = [r.evidence_score for r in rows]
+    scrambled = [ScorerRow(r.symbol, r.features, r.label, r.in_ranking_set, ev[::-1][i], r.exclusion_reason)
+                 for i, r in enumerate(rows)]
+    after = run_scorer(scrambled, feature_set="no_plddt").final_model
+    assert after.coefficients == base.coefficients and after.intercept == base.intercept
+
+
+def test_ablation_is_deterministic():
+    rows = _separable_ranking_set()
+    a = run_scorer(rows, feature_set="plddt_only")
+    b = run_scorer(rows, feature_set="plddt_only")
+    assert a.final_model.coefficients == b.final_model.coefficients
+    assert a.structural_percentiles == b.structural_percentiles
+
+
+def test_all_folds_raise_produces_no_distribution_without_crashing():
+    """D-063's all-folds-raise path, pinned here (folded into D-065): when every fold raises,
+    `loo_status='none'`, the distribution is empty, every fold is named non-convergent, and
+    `run_scorer` does not crash — the regime a two-feature ablation is most likely to reach."""
+    rows = _separable_ranking_set()
+    def selector(train):
+        return LambdaChoice(0.0, "5fold", True)          # λ=0 on separable data → every fit raises
+    report = run_scorer(rows, lambda_selector=selector)
+    assert report.loo_status == "none"
+    assert report.structural_percentiles == []
+    assert report.converged_fold_count == 0
+    assert len(report.nonconvergent_folds) == report.n_fit_positives   # all named
+    assert report.final_fit_converged is False
+
+
+def test_preregistered_path_stays_at_six_features():
+    """D-065 dec 5: the ablations must not touch the pre-registered count. The default fit is still
+    six coefficients + intercept."""
+    model = run_scorer(_separable_ranking_set()).final_model      # default feature_set='preregistered'
+    assert len(model.coefficients) == 6
+    assert len(model.contributions((1.0,) * 6)) == 6
+
+
 def test_intercept_stays_unpenalized_source_pin():
     """D-063 refusal: the intercept penalty coefficient stays 0 — penalizing it would make the
     Hessian invertible and the raise disappear by changing the model after seeing a result. Pinned
     over the source so that change reddens the gate."""
     source = Path(scorer.__file__).read_text(encoding="utf-8")
-    assert "penalty = [0.0] + [1.0] * N_FEATURES" in source
+    # the intercept coefficient stays 0.0 (unpenalized); the count is dynamic for the D-065 ablations
+    assert "penalty = [0.0] + [1.0] * (n_params - 1)" in source

@@ -137,6 +137,27 @@ def test_ranking_result_fields_are_projected(engine, tmp_path):
     assert result["paper_published_count"] == 22                 # source constant, served not typed
 
 
+def test_sensitivity_run_is_never_served_as_the_result(engine, tmp_path):
+    """D-065 dec 4: the route filters on run_kind — a NEWER, valid `sensitivity` ablation run must
+    never be served where the pre-registered result is expected."""
+    _seed(engine)                                            # id=2 is the valid preregistered run
+    with Session(engine) as s:
+        sen = RankingRun(target_list_version="v", scorer_version="ablation-no_plddt",
+                         run_kind="sensitivity")
+        s.add(sen)
+        s.flush()
+        s.add(RankingResult(
+            ranking_run_id=sen.id, n_fit_positives=3, n_ranking_set=7,
+            structural_percentiles=[0.9], lambda_per_fold=[{"symbol": "X", "lam": 1.0, "converged": True}],
+            excluded=[], loo_status="complete", fulldata_status="converged",
+            status_detail="all pre-registered statistics produced",   # valid, but sensitivity
+        ))
+        s.commit()
+    body = _client(engine, tmp_path).get("/api/ranking").json()
+    assert body["run"]["scorer_version"] == "good-91e6"      # the preregistered run, NOT the ablation
+    assert body["run"]["scorer_version"] != "ablation-no_plddt"
+
+
 def test_no_valid_run_reports_not_run(engine, tmp_path):
     # only the invalid run exists → result_status not_run, empty rows, no crash
     with Session(engine) as s:

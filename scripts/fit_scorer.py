@@ -157,16 +157,20 @@ def read_feature_records(engine) -> list[FeatureRecord]:
 
 
 # ── persistence ──────────────────────────────────────────────────────────────
-def create_ranking_run(engine, report: ScorerReport, *, target_list_version: str = TARGET_LIST_VERSION) -> int:
+def create_ranking_run(engine, report: ScorerReport, *, target_list_version: str = TARGET_LIST_VERSION,
+                       run_kind: str = "preregistered") -> int:
     """Create a **NEW** `ranking_run` for this scoring run and return its id. D-064 decision 3: the
     corrected run never overwrites a prior run — the invalid `ranking_run`/`ranking_results` from the
-    zero-positive fit stays in place (marked, not erased), so a false artifact cannot vanish silently."""
+    zero-positive fit stays in place (marked, not erased), so a false artifact cannot vanish silently.
+    `run_kind` is `preregistered` for the fit or `sensitivity` for a D-065 ablation, so the surface
+    never serves an ablation as the result (D-065 dec 4)."""
     from sqlalchemy.orm import Session
 
     from db.models import RankingRun
 
     with Session(engine) as s:
-        run = RankingRun(target_list_version=target_list_version, scorer_version=report.scorer_version)
+        run = RankingRun(target_list_version=target_list_version, scorer_version=report.scorer_version,
+                         run_kind=run_kind)
         s.add(run)
         s.commit()
         return run.id
@@ -321,6 +325,10 @@ def run(argv: Optional[list[str]] = None, *, engine_factory: Callable[[], object
     parser.add_argument("--evidence", default=str(DEFAULT_EVIDENCE), help="evidence scores CSV (--run only)")
     parser.add_argument("--persist", action="store_true",
                         help="stamp the ranking_run's scorer_version (--run only)")
+    parser.add_argument("--ablate", choices=["no_plddt", "plddt_only"],
+                        help="D-065 sensitivity ablation: fit one NAMED feature set (only these two; "
+                             "arbitrary subsets are refused). Writes a run_kind='sensitivity' run, "
+                             "never the pre-registered result. Owner-authorised, once each.")
     args = parser.parse_args(argv)
 
     if args.fixture:
@@ -331,27 +339,31 @@ def run(argv: Optional[list[str]] = None, *, engine_factory: Callable[[], object
     # --run: the owner-authorised path. Reads real labels; produces a RECORDED result the moment it runs.
     from core.scorer import DegenerateLabelSet
 
-    print("WARNING: --run reads the owner-curated labels and produces a RECORDED result the moment it exists (D-060).")
+    feature_set = args.ablate or "preregistered"          # D-065: the ablation, or the full six
+    run_kind = "sensitivity" if args.ablate else "preregistered"
+    print(f"WARNING: --run reads the owner-curated labels and produces a RECORDED result the moment "
+          f"it exists (D-060). feature_set={feature_set}, run_kind={run_kind}.")
     engine = engine_factory()
     records = read_feature_records(engine)
     group_b = load_labels(args.labels)                    # one path (D-064 dec 1), joined on accession
     evidence = load_evidence(args.evidence)               # one path
     rows = build_scorer_rows(records, group_b, evidence)
     try:
-        report = run_scorer(rows)
+        report = run_scorer(rows, feature_set=feature_set)   # ValueError on any unnamed set (D-065 dec 4)
     except DegenerateLabelSet as exc:
         # A meaningless input must not produce a raise that reads like a result (D-064 dec 2).
         print(f"REFUSING TO FIT (degenerate label set): {exc}")
         return 1
     print_report(report)
     if args.persist:
-        # The corrected run writes a NEW ranking_run; the invalid id=1 stays in place (D-064 dec 3).
-        rid = create_ranking_run(engine, report)
+        # A NEW ranking_run; the invalid id=1 stays in place (D-064 dec 3); tagged by kind (D-065 dec 4).
+        rid = create_ranking_run(engine, report, run_kind=run_kind)
         symbol_to_analysis_id = {r.symbol: r.analysis_id for r in records if r.analysis_id is not None}
         n_scores, n_results = persist_results(engine, rid, report, symbol_to_analysis_id)
-        print(f"wrote ranking_run id={rid} (scorer_version={report.scorer_version}, "
-              f"loo_status={report.loo_status}, fulldata_status={report.fulldata_status}); "
-              f"{n_scores} target_scores + {n_results} ranking_results row(s)")
+        print(f"wrote ranking_run id={rid} (run_kind={run_kind}, feature_set={feature_set}, "
+              f"scorer_version={report.scorer_version}, loo_status={report.loo_status}, "
+              f"fulldata_status={report.fulldata_status}); {n_scores} target_scores + "
+              f"{n_results} ranking_results row(s)")
     return 0
 
 
