@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listAnalyses } from '../api.js'
+import AdcSchematic from './AdcSchematic.jsx'
 
 // ADC framing / onboarding (UI Plan v2 §7): keep the metaphor (it is mechanism, not decoration),
 // bound the outcome claims, and let the honest limits sharpen the purpose rather than soften it.
@@ -48,6 +49,9 @@ export default function AdcContext() {
         <li><strong>Payload</strong> — the warhead. A cytotoxic released at the target cell.</li>
       </ul>
       <p>That is a genuine change in <em>delivery mechanism</em>, and the metaphor names it accurately.</p>
+
+      <AdcSchematic />
+
 
       <h3>What the mechanism does not license</h3>
       <p>
