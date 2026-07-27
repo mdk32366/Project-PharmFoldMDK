@@ -255,3 +255,53 @@ def test_scorer_version_is_the_source_hash():
     expected = hashlib.sha256(Path(scorer.__file__).read_bytes()).hexdigest()[:12]
     assert scorer_version() == expected
     assert len(scorer_version()) == 12
+
+
+# ── D-063: per-fold non-convergence, and the LOO independent of the full-data fit ──
+def test_a_fold_that_raises_is_recorded_and_does_not_abort_the_loop():
+    """D-063 dec 2: a fold that fails to converge produces no percentile, is NAMED, and the loop
+    completes over the survivors — one bad fold must not discard the other eleven. Forced by an
+    injected selector that hands PA's fold λ=0 on separable data (→ singular) and everyone else a
+    safe λ."""
+    rows = _separable_ranking_set()                        # 4 positives: PA, PB, PC, PD
+    def selector(train):
+        symbols = {r.symbol for r in train}
+        if "PA" not in symbols:                            # PA held out → this is PA's fold
+            return LambdaChoice(0.0, "5fold", True)        # λ=0 on separable data → raises
+        return LambdaChoice(5.0, "5fold", False)           # everyone else converges
+    report = run_scorer(rows, lambda_selector=selector)
+    assert report.nonconvergent_folds == ["PA"]            # named, not dropped
+    assert report.converged_fold_count == 3
+    assert len(report.structural_percentiles) == 3         # distribution over the survivors
+    assert report.n_fit_positives == 4                     # denominator travels: 3 of 4
+    pa = next(t for t in report.lambda_per_fold if t[0] == "PA")
+    assert pa[2] is False                                  # PA flagged non-convergent in the per-fold record
+
+
+def test_full_data_nonconvergence_does_not_abort_the_loo():
+    """D-063 dec 1: the pre-registered LOO does not depend on the ranking-table full-data fit, so a
+    full-data non-convergence must leave the distribution intact. Forced by a selector that raises
+    ONLY the full-data fit (the call that sees all rows) while every fold converges."""
+    rows = _separable_ranking_set()
+    n_all = len(rows)
+    def selector(train):
+        if len(train) == n_all:                            # the full-data fit sees every row
+            return LambdaChoice(0.0, "5fold", True)        # λ=0 on separable data → raises
+        return LambdaChoice(5.0, "5fold", False)           # each fold (one row fewer) converges
+    report = run_scorer(rows, lambda_selector=selector)
+    # the ranking table is gone, but the pre-registered distribution stands
+    assert report.final_fit_converged is False
+    assert report.final_model is None
+    assert report.ranking == []
+    assert report.spearman is None                         # Spearman needs the full-data model
+    assert report.converged_fold_count == 4                # the LOO still ran, all four folds
+    assert len(report.structural_percentiles) == 4
+    assert report.nonconvergent_folds == []
+
+
+def test_intercept_stays_unpenalized_source_pin():
+    """D-063 refusal: the intercept penalty coefficient stays 0 — penalizing it would make the
+    Hessian invertible and the raise disappear by changing the model after seeing a result. Pinned
+    over the source so that change reddens the gate."""
+    source = Path(scorer.__file__).read_text(encoding="utf-8")
+    assert "penalty = [0.0] + [1.0] * N_FEATURES" in source
