@@ -3,6 +3,7 @@ import Story from './components/Story.jsx'
 import TargetList from './components/TargetList.jsx'
 import TargetView from './components/TargetView.jsx'
 import CoverageView from './components/CoverageView.jsx'
+import ScorerView from './components/ScorerView.jsx'
 import MethodNote from './components/MethodNote.jsx'
 import AdcContext from './components/AdcContext.jsx'
 
@@ -23,6 +24,7 @@ export default function App() {
           <NavLink to="/" end>Story</NavLink>
           <NavLink to="/targets">Targets</NavLink>
           <NavLink to="/coverage">Coverage</NavLink>
+          <NavLink to="/scorer">Scorer</NavLink>
           <NavLink to="/method">Method</NavLink>
           <NavLink to="/about">About ADCs</NavLink>
         </nav>
@@ -33,6 +35,7 @@ export default function App() {
           <Route path="/targets" element={<TargetList />} />
           <Route path="/target/:id" element={<TargetRoute />} />
           <Route path="/coverage" element={<CoverageView />} />
+          <Route path="/scorer" element={<ScorerView />} />
           <Route path="/method" element={<MethodNote />} />
           <Route path="/about" element={<AdcContext />} />
           <Route path="*" element={<Navigate to="/" replace />} />

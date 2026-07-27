@@ -68,6 +68,15 @@ def get_plddt(analysis_id: int, engine: Any = Depends(get_engine)) -> list:
     return json.loads(Path(plddt_path).read_text(encoding="utf-8"))
 
 
+@read_router.get("/ranking")
+def get_ranking(engine: Any = Depends(get_engine)) -> dict:
+    """D-062: the latest VALID ranking run — the persisted pre-registered result (F-004) plus the
+    56 per-target scores. Filters on validity so the zero-positive artifact (`ranking_results` id=1,
+    marked invalid — D-064 dec 3) is never served; when no valid run exists, `result_status` is
+    `not_run` (200, empty rows). No credential (D-034 posture). Reads persisted rows only."""
+    return reads.ranking_payload(engine)
+
+
 @read_router.get("/coverage")
 def get_coverage(engine: Any = Depends(get_engine)) -> dict:
     """The D-038 coverage supplier UI Plan v2 §3.3/§4.1 need — the honest denominator the read
