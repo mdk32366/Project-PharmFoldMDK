@@ -184,6 +184,7 @@ opened on the local machine.
 | **Read API** (D-034, D-038) | Five public `GET /api/*` routes the React UI (D-033) consumes: `analyses` (light list — `id`/`accession`/`label`/`gene`/`mean_plddt`/`disposition`/`held_out`/`tier`/`tier_reason`/`boundary_method`/`fold_length`/`full_length`, **no `sequence`/`fold_provenance`**); `analyses/{id}` (full record incl. `sequence` + `fold_provenance`); `analyses/{id}/structure` (streams the stored `pdb_path`, `text/plain`); `analyses/{id}/plddt` (per-residue array); **`coverage`** (D-038 — the D-024 coverage object over **all 82** from `core/manifest.py`, joined to `protein_analyses` and `jobs` for a three-valued `fold_status` `folded`/`failed`/`not_folded` (D-043, `fail_reason` from `jobs.error`); the honest denominator the fold-derived list cannot supply). **Unauthenticated by design** — writes stay bearer-guarded; the asymmetry is pinned by a route-prefix auth test (`/jobs` guarded, `/api` open, no third category). No PAE route. | `app/read_routes.py` (thin handlers) + `app/reads.py` (query/projection, incl. the read-only `core/manifest.py` consume); hermetic SQLite `TestClient` tests |
 | **Orchestration** (D-023, D-026) | `manifest.py`: measured cohort → deterministic routing table + D-024 coverage object, **reviewable before any job is created**. `enqueue.py`: foldable rows → `protein_analyses` (exact residues + UniProt release + folded span) + `pending` `jobs` (tier fold recipe); idempotent, 80/82 (2 named exclusions get none). `--requeue ACC…` (D-044) is the deliberate re-fold path idempotency cannot give — resets non-complete jobs to `pending`, leaves a completed fold untouched | `core/manifest.py`, `core/enqueue.py` — CPU-side; hermetic on SQLite + a real-Postgres commit test |
 | **ADC reference** (D-029, D-040) | The scorer arc's *label* + *comparator* data. `evidence_scores.csv`: the **17 of 82** exact 1-5 scores the paper text publishes (Fig 4A/4B only; the other 65 are null-with-reason, no imputation). `adc_reference_mapping.csv`: one curated drug→antigen→accession file for **Group B** (in-cohort ADC positives, the labels) and **Group C** (approved ADC targets outside the 82), split by a **computed** `in_cohort_82` (never typed). Group B is derived & per-row-cited, not inherited; roster curation is a reserved hand-review. Pure functions: symbol→accession join (misses surfaced), Group B/C classification, openFDA reconciliation (live query only in the advisory scheduled job, never the gate). | `core/adc_reference.py` — pure, fixture-tested; `data/*.csv` |
+| **Feature extraction** (D-027, D-058) | The scorer arc's *inputs*. `core/features.py`: the **pure** extractor — six D-027 features (ECD length, length-normalised Rg, mean & membrane-proximal pLDDT, length-normalised SASA, largest accessible-patch fraction) from `(structure.pdb, plddt, boundary_method)`, **zero third-party imports** (SASA is an in-repo Shrake–Rupley kernel — 92 golden-spiral points, 1.4 Å probe, committed vdW-radii table, spatial-grid neighbour search; `numpy`/`scipy` are in no lock file and `core/` ships — DEP-001). Never raises: an uncomputable feature is **null with a reason**, never imputed. `scripts/extract_features.py`: an **offline client of the public read API** (`/api/analyses`, `/{id}/structure`, `/{id}/plddt`, joined to the D-023 manifest for the boundary), computing features for **every** folded row — `held_out` included, filtered late (D-058 Addendum 2 §2) — and handling a structure-less row (a failed fold, e.g. IGF2R) as null-with-a-reason without crashing the batch. The loader writes `protein_features` via `DATABASE_URL`, exactly as `core/enqueue.py` builds its engine. **Serving tier never computes a feature.** | `core/features.py` (pure, ships, fixture-tested incl. a closed-form SASA anchor); `scripts/extract_features.py` (offline, excluded from the image); `httpx` |
 | **Local GPU worker** | Polls Fly for jobs, runs **ESMFold** on the local NVIDIA GPU for targets **under the length ceiling**, uploads artifacts back (D-004) — **not deployed to Fly** | Python worker; PyTorch + Hugging Face (`facebook/esmfold_v1`), int8 trunk |
 | **Rented-GPU batch** (D-011, D-035) | One-time offline fold of the **29 above-ceiling** targets — the **same `worker/` loop** on a rented box calling the same transport routes, differing only in the FoldSpec (fp16, unquantised, unchunked), **not** an API to a hosted folder (Prime Directive, D-035 §2). Claim→complete uploads `structure.pdb`/`plddt.json`/`provenance.json` (~1 MB even at 2213 aa); **PAE is persisted to the pod's local disk (rental-scoped, `WORKER_ARTIFACT_DIR`) and transferred out-of-band via a dedicated retrieval route** into the analysis's Volume dir, so `pae_json_path` is populated for **both tiers** — asymmetric in transport, identical on disk. Retrieval is a **blocking pre-termination step** (no network volumes, D-011: pod-disk PAE is destroyed on termination). | RunPod RTX A6000 48 GB; committed repo code, not a one-off script |
 | **DL / Inference core** | The neural work: **ESMFold structure prediction (D-003)**, plus pocket/druggability scoring, embeddings, mutation impact | PyTorch + Hugging Face; `biopython` for parsing |
@@ -211,6 +212,19 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
 - **`ranking_runs`** (D-019, `db.models.RankingRun`) — versions one cohort ranking
   (`target_list_version`, `scorer_version`, `created_at`), so a result ties to the target-list
   and scorer that produced it (D-015 §4, §7).
+- **`protein_features`** (D-058, `db.models.ProteinFeatures`, migration **`0003`**) — the six
+  D-027 structure-derived features for one fold: six nullable `Float` columns (`ecd_length`,
+  `radius_of_gyration`, `mean_plddt_ecd`, `membrane_proximal_plddt`, `sasa_normalized`,
+  `largest_patch_fraction`), a JSONB `null_reasons` recording **why** any is null (D-027's
+  null-with-a-reason — *never* an imputed mean), the stored D-041 §5 floor decision
+  (`mean_plddt`, `below_plddt_floor`), a source-hash `feature_version`, and FKs to
+  `protein_analyses` (the fold read) and `ranking_runs` (the run). **A plain ORM model** (no
+  pgvector) so it builds under both SQLite `create_all` and the `0003` migration. Migration
+  `0003` is **purely additive** — one new table, no `ALTER`, no backfill — and is **verified by
+  querying `information_schema.tables`, not by alembic's exit code** (`docs/HAZARD-search-path-seams.md`:
+  a `SET search_path` before `begin_transaction()` once let a rolled-back upgrade exit 0); the
+  `postgres` CI job runs the chain end to end. Features are computed **offline** by `core.features`
+  and written by `scripts/extract_features.py`; the serving tier never computes one (D-058 dec 3).
 - **`analysis_embeddings`** — `vector(384)` + HNSW cosine index for semantic search
   (Iteration 3+). **Created in migration 0002 as raw SQL only — deliberately NOT an ORM model**
   (D-019), so the Postgres `vector` type never reaches SQLite `create_all` and no `pgvector`
@@ -533,7 +547,9 @@ Project-PharmFoldMDK/
 ├── core/                    # queue.py (JobQueue seam + is_stale), manifest.py (D-023 routing
 │                            #   table + D-024 coverage), enqueue.py (D-026 manifest → analyses+jobs;
 │                            #   `python -m core.enqueue` CLI, subset-capable for the first fold),
-│                            #   contracts.py (FoldSpec — tier-neutral claim contract, DEP-001)
+│                            #   contracts.py (FoldSpec — tier-neutral claim contract, DEP-001),
+│                            #   features.py (D-027/D-058 pure six-feature extractor + in-repo
+│                            #   Shrake-Rupley SASA, zero third-party imports; ships, never served)
 ├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
 │                            #   orchestrator.py (D-030 job-pull loop, pure/transport-agnostic),
 │                            #   http_client.py (D-031 concrete HTTP QueueClient, gzips PAE),
@@ -541,7 +557,9 @@ Project-PharmFoldMDK/
 │                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run),
 │                            #   requirements.txt (CUDA deps + httpx, never installed by CI)
 ├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
-├── scripts/                 # ecd_lengths.py, map_genes_to_uniprot.py, deploy_guard.py (DEP-002)
+├── scripts/                 # ecd_lengths.py, map_genes_to_uniprot.py, deploy_guard.py (DEP-002),
+│                            #   curate_group_b.py (D-057), extract_features.py (D-058 offline
+│                            #   feature driver + protein_features loader; excluded from the image)
 ├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
 ├── .github/workflows/       # CI: test + postgres gates → Fly deploy job (D-005/DEP-002)
