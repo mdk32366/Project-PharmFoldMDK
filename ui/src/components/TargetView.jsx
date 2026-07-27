@@ -3,6 +3,7 @@ import { getAnalysis, getPlddt } from '../api.js'
 import StructureViewer from './StructureViewer.jsx'
 import Confidence from './Confidence.jsx'
 import Provenance from './Provenance.jsx'
+import CancerAssociations from './CancerAssociations.jsx'
 
 // The single-target experience (UI Plan v2 §3.2): structure coloured by pLDDT, confidence with its
 // band, provenance that makes the DL claim checkable. NECTIN4 (id 1) is the first rendered target.
@@ -36,6 +37,7 @@ export default function TargetView({ id }) {
         <Confidence meanPlddt={detail.mean_plddt} plddt={plddt} />
         <Provenance detail={detail} />
       </div>
+      <CancerAssociations symbol={detail.gene} />
     </article>
   )
 }
