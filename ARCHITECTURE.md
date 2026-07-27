@@ -77,7 +77,14 @@ attributions are stored in `target_scores`, a display gap not a data gap). Every
 8, the median, the Spearman — is derived from `/api/ranking`, never typed (Constraint A); the
 mean/median reversal is rendered and caveat (b) (the pLDDT-attention confound) travels with the
 result. The route is the **fourth** firing of the D-051 architecture-contract test (live route →
-`system-model.json` updated in the same PR).
+`system-model.json` updated in the same PR). **D-055/D-062 amendment (2026-07-29):** the surface is
+**two-column** (explanation A–D left, the ranking table + coverage line right; stacks on narrow, with
+the coverage line still preceding its table and caveat (b) still following the result in DOM order),
+terms decode via **in-situ `Term` tooltips** (a focusable `<button>` + `role="tooltip"`, keyboard/tap
+not hover-alone; the glossary page is retained as a secondary index and its contract guard unchanged),
+and caveat (b) is updated per **F-005** — the specific attention mechanism is **not supported** and an
+order-versus-disorder question replaces it; the ranking is noted as substantially pLDDT-driven so the
+`structural score` definition does not imply the geometry features do the work.
 **D-048 then lands UI-depth §3** on the D-046 harness (tests-first, 26 UI tests green): the
 provenance panel renders D-045's two populations honestly — captured environment shown, absent
 environment read as *"not captured"* with a single population-level note, never as a value or a
