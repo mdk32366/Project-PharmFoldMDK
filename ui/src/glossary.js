@@ -63,15 +63,16 @@ export const GLOSSARY = {
   // D-055/D-062 amendment (2026-07-29): three definitions ruled in by the owner (§1.2). The
   // `structural score` final sentence is a CLAIM BOUNDARY and must never be trimmed from the tooltip.
   'structural score': {
-    // ⚠ Owner-ruled draft (§1.2), rendered VERBATIM. F-005 flagged for owner ruling at merge: the
-    // ranking is substantially pLDDT-driven, and F-005 says a surface must not imply the geometry
-    // features do the work — so "predicted shape resembles the shapes" is the phrase to read against
-    // the finding. Not silently edited; the claim boundary (final sentence) must never be trimmed.
+    // Owner-ruled (2026-07-29). Corrected from the §1.2 draft: the six features are NOT alike — four
+    // are shape/size, TWO are the model's confidence about the structure (features 3–4), not the
+    // structure. This describes what the score IS (F-004, the six-feature result); F-005 (a sensitivity
+    // analysis of it) stays OUT of the definition and lives in the adjacent, labelled note. The final
+    // sentence is a claim boundary and must never be trimmed.
     expansion: 'the learned ADC-suitability score',
-    plain: "how much a target's predicted shape resembles the shapes of targets people have already " +
-      'built ADCs against. It comes from six measurements of the folded structure. It is not a ' +
-      'prediction that a drug will work: it says nothing about delivery, internalisation, or how much ' +
-      'of the target a tumour makes.',
+    plain: 'how much a target resembles the ones people have already built ADCs against. The model ' +
+      'judges this from six measurements of the predicted structure: four of shape and size, two of ' +
+      'how confident the folding model was. It is not a prediction that a drug will work — it says ' +
+      'nothing about delivery, internalisation, or how much of the target a tumour makes.',
   },
   backbone: {
     expansion: 'the protein backbone',

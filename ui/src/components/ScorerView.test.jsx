@@ -111,7 +111,7 @@ describe('ScorerView', () => {
     // the definition renders in a role="tooltip" node (Term), and its FINAL sentence — the claim
     // boundary — must be present in the DOM, not trimmed (D-055 amendment §2, the key test)
     const tips = [...container.querySelectorAll('[role="tooltip"]')].map((n) => n.textContent)
-    const structural = tips.find((t) => t.includes('resembles the shapes'))
+    const structural = tips.find((t) => t.includes('four of shape and size, two of how confident'))
     expect(structural).toBeTruthy()
     expect(structural).toMatch(/not a prediction that a drug will work/)
     expect(structural).toMatch(/how much of the target a tumour makes/)   // the final sentence, intact
