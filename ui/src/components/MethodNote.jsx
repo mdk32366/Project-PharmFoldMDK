@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getCoverage } from '../api.js'
+import ArchitectureDiagram from './ArchitectureDiagram.jsx'
 
 // Method note (UI Plan v2 §3.4, D-028): what the system claims and what it does not — the whole
 // frame at once, for a reader who wants it. Non-goals are commitments, not omissions (§9). This
@@ -27,6 +28,16 @@ export default function MethodNote() {
         deliverable, and every structure here was <em>produced by it</em>, not retrieved from a
         database.
       </p>
+
+      <h3>Where the deep learning runs (D-051)</h3>
+      <p>
+        Inference runs on a GPU tier <strong>outside Fly</strong> (D-004): the local worker and the
+        rented A6000 pull jobs over outbound HTTPS, fold, and upload results. The always-on Fly
+        serving tier holds <strong>no <code>worker/</code> and no CUDA</strong> (DEP-001). The diagram
+        is rendered from a committed system model and pinned to the live route table by a test, so it
+        cannot drift from the running system.
+      </p>
+      <ArchitectureDiagram />
 
       <h3>What it does today</h3>
       <ul>

@@ -1,0 +1,32 @@
+{
+  "$comment": "D-051: the system model ArchitectureDiagram renders and tests/test_architecture_contract.py pins against the live FastAPI route table. The route lists MUST equal the live /api+/jobs routes in BOTH directions or the gate reddens. Topology: GPU/worker tiers are zone=external (outside Fly, D-004); every Fly-zone node is gpu=false (no CUDA in the serving image, DEP-001).",
+  "nodes": [
+    {"id": "fly", "label": "Fly serving tier — FastAPI + React SPA", "zone": "fly", "gpu": false},
+    {"id": "postgres", "label": "Postgres 16 + pgvector (MPG)", "zone": "fly", "gpu": false},
+    {"id": "volume", "label": "Fly Volume — PDB / pLDDT / PAE artifacts", "zone": "fly", "gpu": false},
+    {"id": "worker", "label": "Local GPU worker — ESMFold int8", "zone": "external", "gpu": true},
+    {"id": "rental", "label": "Rented A6000 — batch folds, fp16", "zone": "external", "gpu": true}
+  ],
+  "edges": [
+    {"from": "worker", "to": "fly", "label": "pulls /jobs, uploads artifacts (HTTPS, outbound)"},
+    {"from": "rental", "to": "fly", "label": "pulls /jobs, uploads artifacts (HTTPS, outbound)"},
+    {"from": "fly", "to": "postgres", "label": "queue + analyses (SQLAlchemy)"},
+    {"from": "fly", "to": "volume", "label": "structure / PAE files"}
+  ],
+  "routes": {
+    "public_api": [
+      {"path": "/api/analyses", "methods": ["GET"]},
+      {"path": "/api/analyses/{analysis_id}", "methods": ["GET"]},
+      {"path": "/api/analyses/{analysis_id}/structure", "methods": ["GET"]},
+      {"path": "/api/analyses/{analysis_id}/plddt", "methods": ["GET"]},
+      {"path": "/api/coverage", "methods": ["GET"]}
+    ],
+    "worker_jobs": [
+      {"path": "/jobs/claim", "methods": ["POST"]},
+      {"path": "/jobs/{job_id}/artifacts", "methods": ["POST"]},
+      {"path": "/jobs/{job_id}/complete", "methods": ["POST"]},
+      {"path": "/jobs/{job_id}/fail", "methods": ["POST"]},
+      {"path": "/jobs/{job_id}/pae", "methods": ["POST"]}
+    ]
+  }
+}
