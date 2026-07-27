@@ -80,6 +80,71 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-006 — The fitted scores are compressed toward the base rate, and are not calibrated probabilities
+
+- **Date:** 2026-07-29
+- **Type:** A finding. **Nothing is ruled here.**
+- **How known (D-016):** read-only SQL against `target_scores` where `ranking_run_id = 2` (the
+  pre-registered run), over the live proxy on `localhost:16380` — `MIN`, `PERCENTILE_CONT(0.5)`,
+  `MAX`, `COUNT(*)`.
+
+| | |
+|---|---|
+| min | **0.116** |
+| median | **0.220** |
+| max | **0.285** |
+| count | **56** |
+| labelled fraction (12 / 56) | **0.214** |
+
+---
+
+#### Finding (1) — the median sits on the base rate, and nothing reaches 0.3
+
+**Median 0.220 against a labelled fraction of 0.214.** The typical target is lifted almost nothing
+off the prior. The whole field spans **0.116–0.285**; rank 1 is the ceiling and sits ~0.065 above
+the median.
+
+**⚠ A reader shown "rank 1 = 0.285" with no framing will read it as a middling probability**, when
+it is the top of a field that never clears 0.3.
+
+#### Finding (2) — ⚠ this is the expected signature of L2 shrinkage at n=12, not necessarily a weak ordering
+
+**Compression of absolute scores toward the base rate is what an L2-penalized fit on twelve
+positives is expected to produce.** D-041 chose L2 precisely to shrink unstable coefficients, and
+shrunk coefficients yield outputs pulled toward the prior.
+
+**The absolute spread is therefore weak evidence about the ordering, in either direction.** The
+evidence about the ordering is **F-004's leave-one-out percentile distribution** — median 0.607, 8
+of 12 above chance — which is computed on **positions, not values**, and is unaffected by
+compression.
+
+**Stated plainly: compressed scores do not by themselves make the ranking uninformative, and they
+are not evidence that it is informative either.** The two questions are separate and only the second
+was pre-registered.
+
+#### Finding (3) — ⚠ the score is NOT a calibrated probability
+
+A logistic model outputs a number in [0,1], **but calibration was never tested** and no calibration
+claim was pre-registered. **Nothing on any surface may present 0.285 as "a 28.5% chance"**, and the
+`Score` tooltip must say so explicitly.
+
+**Recorded as a Planner correction:** an earlier draft of that tooltip read *"the model's estimated
+probability that a target belongs to the labelled set."* **Withdrawn** — it implied calibration that
+was never established.
+
+---
+
+#### Consequences
+
+- The `Score` column tooltip carries **the scale, the observed range, the labelled fraction, and the
+  non-calibration statement**, all derived from `/api/ranking`, none typed (D-050).
+- **`COUNT(*) = 56` is what surfaced D-066** — the cross-check earned its place and is recorded as
+  having done so.
+- **No re-fit, no re-scaling, no calibration step.** Any of those would be a model change after
+  seeing a result. If calibration is ever wanted it is a new entry, dated after this one.
+
+---
+
 ### F-005 — The sensitivity analysis: the above-chance signal is carried by ESMFold's confidence, not by the geometry — and the attention explanation is not supported
 
 - **Date:** 2026-07-29
