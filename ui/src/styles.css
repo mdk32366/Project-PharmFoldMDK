@@ -138,3 +138,41 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .spread-stats { display: flex; gap: 1.2rem; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
 .spread-k { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; margin-right: 0.25rem; }
 .spread-below { color: var(--muted); font-size: 0.82rem; margin: 0.35rem 0 0; }
+
+/* D-051 Story (cold-open) */
+.story h1 { line-height: 1.2; }
+.story-cta a { font-weight: 600; }
+
+/* D-051 architecture diagram — rendered from system-model.json */
+.arch-diagram { margin: 1rem 0 1.5rem; }
+.arch-diagram figcaption { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.4rem; }
+.arch-diagram svg { width: 100%; height: auto; }
+.arch-zone rect { fill: none; stroke: var(--line); stroke-dasharray: 4 4; }
+.arch-zone-label { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+.arch-zone-external rect { stroke: #d1a97f; }
+.arch-node rect { fill: var(--panel); stroke: #7fb3d1; }
+.arch-node-gpu rect { stroke: #d1a97f; }              /* GPU tier: distinct from the Fly tier */
+.arch-node text { fill: var(--ink); font-size: 12px; text-anchor: middle; dominant-baseline: middle; }
+.arch-edge line { stroke: var(--muted); stroke-width: 1.5; marker-end: url(#a); }
+.arch-edge text { fill: var(--muted); font-size: 10px; text-anchor: middle; }
+.arch-routes { display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.85rem; }
+.arch-routes code { font-size: 0.8rem; }
+
+/* D-052 ADC mechanism schematic — an illustration, labelled as such */
+.adc-schematic svg { max-width: 460px; width: 100%; height: auto; }
+.adc-schematic line, .adc-schematic circle, .adc-schematic rect { stroke: var(--ink); fill: none; }
+.adc-payload circle { fill: #b7791f; }
+.adc-schematic text { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+.adc-schematic figcaption { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
+
+/* D-053 cancer associations — DELIBERATELY NOT the pLDDT band palette (orders §2a): a warm/amber
+   expression treatment, a different quantity from a different source than model confidence. */
+.assoc { margin: 1rem 0; padding: 0.8rem 1rem; border-left: 3px solid #b08a4a; background: #b08a4a11; }
+.assoc h3 { margin: 0 0 0.4rem; }
+.assoc-boundary { font-size: 0.9rem; }
+.assoc-list { margin: 0.5rem 0; padding-left: 1.1rem; }
+.assoc-list li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.1rem 0; }
+.assoc-cancer { color: var(--ink); }
+.assoc-score { color: #b08a4a; font-variant-numeric: tabular-nums; font-size: 0.85rem; }
+.assoc-absent { color: var(--muted); font-style: italic; }
+.assoc-provenance { font-size: 0.8rem; }

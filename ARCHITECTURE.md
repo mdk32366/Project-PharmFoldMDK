@@ -34,7 +34,8 @@ behind a doc-only guard on the job (DEP-002) with an app-scoped `FLY_API_TOKEN` 
 deploy means **the transport API is up and the queue accepts work — not** that any fold has run
 (DEP-004); the worker is hand-started on the GPU box. The UI was ruled **React**, superseding
 D-004's Streamlit clause (D-033). The **read API** (D-034, `app/read_routes.py` + `app/reads.py`)
-is the UI arc's first build — the supplier React consumes: five public `GET /api/*` routes. Four
+is the UI arc's first build — the supplier React consumes: **six** public `GET /api/*` routes (the
+sixth, `associations`, added by D-053). Four
 over the 42 landed local folds (a light `analyses` list, a full `analyses/{id}` record with
 `fold_provenance`, a streamed `analyses/{id}/structure` serving the stored `pdb_path` as
 `text/plain`, and an `analyses/{id}/plddt` array); and **`coverage`** (D-038) — the D-024 coverage
@@ -86,6 +87,17 @@ load-bearing claim is the **topology**, pinned too: inference runs on the GPU ti
 (D-004); the serving image is GPU-free (DEP-001). Two D-050 follow-ups close here — `AdcContext`'s
 NECTIN4 pLDDT is now derived (the last hardcoded per-target literal), and `CoverageLine`'s
 zero-`rankedUnfolded` wording.
+**D-053 adds per-target cancer associations** — a sixth public read route `GET /api/associations`
+served by the pure file-derived supplier `core/cancer_associations.py` (mirrors `adc_reference.py`:
+rejects an uncited row, validates `qh_score`, groups sorted-descending, flags cohort-join misses),
+rendered by a `CancerAssociations` panel in `TargetView`. Derived from the Kathad S3 quasi-H-score
+grid at the paper's 150 cutoff — **337 pairs across all 82 targets**; *our* derivation, agreeing with
+the paper's OSMR figure and disagreeing with its 290/16 headline (recorded as a finding, not
+reconciled away, D-053 dec 3). An **expression** claim, labelled as such on screen — not causation,
+not indication — in a palette deliberately distinct from the pLDDT bands (a different quantity, §2a).
+**D-054 records the evidence baseline as a deliberate deferral with a trigger** (the published 17-of-82
+comparator stays unsurfaced until there is a ranking to compare it against; no code). `cohort_82.txt`'s
+S3-sheet provenance label corrected in passing (`Target_expression_in_tumor`; the 82 are unchanged).
 **Next (owner-gated):** the app-scoped token + Fly app/Postgres/secrets provisioning so the first
 real deploy goes green; then starting the worker for the first end-to-end large rental fold — which
 retires the PROVISIONAL 60-min lease threshold (D-030) and D-031's estimated PAE ratio with measured

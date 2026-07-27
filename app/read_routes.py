@@ -27,6 +27,7 @@ from fastapi.responses import FileResponse
 
 from app import reads
 from app.deps import get_engine
+from core.cancer_associations import load_associations
 
 read_router = APIRouter(prefix="/api")
 
@@ -74,3 +75,12 @@ def get_coverage(engine: Any = Depends(get_engine)) -> dict:
     committed manifest, not the 42 folded rows) plus the per-target drill-down with `fold_status`
     joined from the DB. No credential (D-034 posture)."""
     return reads.coverage_payload(engine)
+
+
+@read_router.get("/associations")
+def get_associations() -> dict:
+    """D-053: per-target cancer associations, DERIVED from the Kathad S3 grid (the whole map — 337
+    pairs is ~30 KB, one route for one picture, per D-038). No engine: it is a pure file-derived
+    supplier (``core/cancer_associations.py``); counts are computed from what loaded, never
+    constants. No credential (D-034 posture)."""
+    return load_associations()

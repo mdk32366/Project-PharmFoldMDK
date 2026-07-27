@@ -276,6 +276,19 @@ def test_auth_property_holds_behaviourally(engine, tmp_path):
     assert client.post("/jobs/claim", json={"worker_id": "w"}).status_code == 401
 
 
+# ── D-053: the associations route — open, and serving the derived map ──────────
+
+def test_associations_route_is_open_and_serves_the_derived_map(engine, tmp_path):
+    r = _client(engine, tmp_path).get("/api/associations")   # no auth header — /api is open (D-034)
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("application/json")
+    body = r.json()
+    # counts are computed from the loaded file, not constants (D-053 dec. 5)
+    assert body["pair_count"] == 337 and body["targets_covered"] == 82
+    assert body["unmatched_symbols"] == []
+    assert isinstance(body["associations"], dict) and "ADAM17" in body["associations"]
+
+
 # ── reads never mutate (D-034 consequences) ───────────────────────────────────
 
 def test_reads_do_not_mutate_state(engine, tmp_path):

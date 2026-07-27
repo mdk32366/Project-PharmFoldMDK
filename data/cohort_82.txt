@@ -1,6 +1,9 @@
 # PharmFoldMDK cohort of record — Group A, the 82 prioritised ADC targets.
 # Source: Kathad et al. 2024, PLOS ONE 10.1371/journal.pone.0308604 (CC-BY),
-#   supplementary S3, sheet 'Target_expression_in_normal', unique 'Gene name'.
+#   supplementary S3, sheet 'Target_expression_in_tumor', unique 'Gene name'.
+#   (Label corrected D-053: S3's only sheet is 'Target_expression_in_tumor'; the
+#   normal-tissue grid is S2. The 82 symbols are identical either way — a provenance-label
+#   fix, not a data change. D-040 was right to flag it.)
 # Retrieved 2026-07-21. Gene SYMBOLS only — the supplementary carries no UniProt
 #   accessions; symbol->accession mapping is scripts/map_genes_to_uniprot.py (D-020).
 # 82 symbols.
