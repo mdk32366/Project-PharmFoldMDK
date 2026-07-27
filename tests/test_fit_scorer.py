@@ -91,6 +91,25 @@ def test_create_ranking_run_makes_a_new_run_each_time():
         assert len(s.execute(select(RankingRun)).scalars().all()) == 2
 
 
+def test_create_ranking_run_tags_run_kind():
+    """D-065 dec 4: the fit tags its run_kind (preregistered by default; sensitivity for an ablation)
+    so the surface never serves an ablation as the result."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    from core.scorer import run_scorer
+    from db.models import Base, RankingRun
+
+    engine = create_engine("sqlite://", future=True)
+    Base.metadata.create_all(engine)
+    report = run_scorer(fs._fixture_rows())
+    pre = fs.create_ranking_run(engine, report, target_list_version="t")
+    sen = fs.create_ranking_run(engine, report, target_list_version="t", run_kind="sensitivity")
+    with Session(engine) as s:
+        assert s.get(RankingRun, pre).run_kind == "preregistered"   # default
+        assert s.get(RankingRun, sen).run_kind == "sensitivity"
+
+
 def test_fixture_run_end_to_end_returns_zero(capsys):
     """--fixture runs the whole pipeline on built-in labels — the §6 'able to run end to end against
     fixture labels' criterion, with no DB and no real label file."""
@@ -262,3 +281,15 @@ def test_migration_0005_added_the_status_columns(pg_engine):
         ))}
     assert {"loo_status", "fulldata_status", "status_detail"} <= cols, \
         "0005 must add the three status columns (proven by query)"
+
+
+@pytest.mark.postgres
+def test_migration_0006_added_run_kind(pg_engine):
+    """0006 verified by querying information_schema.columns, not by alembic's exit code (D-065)."""
+    from sqlalchemy import text
+
+    with pg_engine.connect() as c:
+        cols = {r[0] for r in c.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name='ranking_runs'"
+        ))}
+    assert "run_kind" in cols, "0006 must add ranking_runs.run_kind (proven by query)"

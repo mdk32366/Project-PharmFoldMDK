@@ -137,6 +137,50 @@ def test_ranking_result_fields_are_projected(engine, tmp_path):
     assert result["paper_published_count"] == 22                 # source constant, served not typed
 
 
+def test_invalid_run_excluded_even_when_newer_and_preregistered(engine, tmp_path):
+    """The predicate is validity ∧ run_kind, not one replacing the other. After 0006 the backfill
+    tags every existing run (incl. the invalid id=1) `preregistered`, so run_kind alone would NOT
+    exclude it. A NEWER invalid `preregistered` run must still be filtered out — proving validity is
+    still ANDed. Ordering alone cannot catch this (the invalid row here is the newest); only the
+    validity clause can, so a regression that dropped it would redden."""
+    _seed(engine)                                            # id=2 valid preregistered (good-91e6)
+    with Session(engine) as s:
+        bad = RankingRun(target_list_version="v", scorer_version="newer-invalid",
+                         run_kind="preregistered")           # explicitly preregistered, like the backfill
+        s.add(bad)
+        s.flush()
+        s.add(RankingResult(
+            ranking_run_id=bad.id, n_fit_positives=0, structural_percentiles=[],
+            lambda_per_fold=[], excluded=[],
+            status_detail="invalid - zero-positive label set (D-064)",
+        ))
+        s.commit()
+    body = _client(engine, tmp_path).get("/api/ranking").json()
+    assert body["run"]["scorer_version"] == "good-91e6"      # the VALID run, not the newer invalid one
+    assert body["run"]["scorer_version"] != "newer-invalid"
+
+
+def test_sensitivity_run_is_never_served_as_the_result(engine, tmp_path):
+    """D-065 dec 4: the route filters on run_kind — a NEWER, valid `sensitivity` ablation run must
+    never be served where the pre-registered result is expected."""
+    _seed(engine)                                            # id=2 is the valid preregistered run
+    with Session(engine) as s:
+        sen = RankingRun(target_list_version="v", scorer_version="ablation-no_plddt",
+                         run_kind="sensitivity")
+        s.add(sen)
+        s.flush()
+        s.add(RankingResult(
+            ranking_run_id=sen.id, n_fit_positives=3, n_ranking_set=7,
+            structural_percentiles=[0.9], lambda_per_fold=[{"symbol": "X", "lam": 1.0, "converged": True}],
+            excluded=[], loo_status="complete", fulldata_status="converged",
+            status_detail="all pre-registered statistics produced",   # valid, but sensitivity
+        ))
+        s.commit()
+    body = _client(engine, tmp_path).get("/api/ranking").json()
+    assert body["run"]["scorer_version"] == "good-91e6"      # the preregistered run, NOT the ablation
+    assert body["run"]["scorer_version"] != "ablation-no_plddt"
+
+
 def test_no_valid_run_reports_not_run(engine, tmp_path):
     # only the invalid run exists → result_status not_run, empty rows, no crash
     with Session(engine) as s:

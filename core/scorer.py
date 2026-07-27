@@ -37,13 +37,25 @@ from __future__ import annotations
 import hashlib
 import math
 from dataclasses import dataclass
+from dataclasses import replace
 from pathlib import Path
 from typing import Callable, Optional
 
 from core.features import FEATURE_NAMES
 
-N_FEATURES = len(FEATURE_NAMES)          # 6 (D-027, fixed)
+N_FEATURES = len(FEATURE_NAMES)          # 6 (D-027, fixed) — the PRE-REGISTERED count
 N_PARAMS = N_FEATURES + 1                # 7 = six coefficients + intercept (D-041 / D-060)
+
+# Named feature sets (D-065). The pre-registered model is all six; the two ablations subset the
+# columns to test whether the signal is carried by pLDDT (features 3,4). No arbitrary subset is
+# permitted — `run_scorer` refuses any name not in this map (D-065 dec 4), so fishing is prevented
+# by construction. Indices into FEATURE_NAMES: 0 ecd_length · 1 radius_of_gyration · 2 mean_plddt_ecd
+# · 3 membrane_proximal_plddt · 4 sasa_normalized · 5 largest_patch_fraction.
+FEATURE_SETS: dict[str, tuple[int, ...]] = {
+    "preregistered": (0, 1, 2, 3, 4, 5),     # all six — 7 parameters (unchanged, D-027/D-065 dec 5)
+    "no_plddt": (0, 1, 4, 5),                # ecd_length, Rg, SASA, patch — 5 parameters
+    "plddt_only": (2, 3),                    # mean & membrane-proximal pLDDT — 3 parameters
+}
 
 # λ grid: 13 log-spaced points from 1e-3 to 1e3 (D-060 dec 3). Pinned by a test; never re-centred.
 LAMBDA_GRID = tuple(10.0 ** (-3.0 + 6.0 * i / 12.0) for i in range(13))
@@ -144,9 +156,10 @@ def fit_standardizer(rows: list[ScorerRow]) -> Standardizer:
     held-out target into its own evaluation (D-060 §3.2) — invisible in the output, so it is a
     tested property, not a convention."""
     n = len(rows)
+    n_features = len(rows[0].features)       # dynamic: 6 (pre-registered) or fewer (D-065 ablation)
     means = []
     stds = []
-    for j in range(N_FEATURES):
+    for j in range(n_features):
         col = [r.features[j] for r in rows]
         mu = sum(col) / n
         var = sum((v - mu) ** 2 for v in col) / n
@@ -170,7 +183,7 @@ class Model:
     def _linear(self, features: tuple[float, ...]) -> float:
         z = self.intercept
         std = self.standardizer.apply(features)
-        for k in range(N_FEATURES):
+        for k in range(len(self.coefficients)):      # dynamic: 6, 4, or 2 (D-065)
             z += self.coefficients[k] * std[k]
         return z
 
@@ -181,7 +194,7 @@ class Model:
         """The per-feature attribution β_k · x_k on standardized features (D-041 decision 1) — the
         statement 'feature k contributes this much to this target's score', no post-hoc explainer."""
         std = self.standardizer.apply(features)
-        return [self.coefficients[k] * std[k] for k in range(N_FEATURES)]
+        return [self.coefficients[k] * std[k] for k in range(len(self.coefficients))]
 
 
 def _penalized_neg_loglik(design: list[list[float]], y: list[int], beta: list[float], lam: float) -> float:
@@ -190,7 +203,7 @@ def _penalized_neg_loglik(design: list[list[float]], y: list[int], beta: list[fl
         z = _dot(row, beta)
         ll += y[i] * z - _log1pexp(z)
     # intercept (index 0) is unpenalized
-    reg = 0.5 * lam * sum(beta[j] * beta[j] for j in range(1, N_PARAMS))
+    reg = 0.5 * lam * sum(beta[j] * beta[j] for j in range(1, len(beta)))
     return -ll + reg
 
 
@@ -200,25 +213,26 @@ def irls_fit(rows: list[ScorerRow], lam: float, *, standardizer: Optional[Standa
     **Raises `ScorerNonConvergence` at 100 iterations** — never a silent estimate (D-060 dec 1)."""
     if standardizer is None:
         standardizer = fit_standardizer(rows)
-    design = [[1.0] + standardizer.apply(r.features) for r in rows]   # intercept column + 6 std feats
+    design = [[1.0] + standardizer.apply(r.features) for r in rows]   # intercept column + std feats
     y = [r.label for r in rows]
-    beta = [0.0] * N_PARAMS
-    penalty = [0.0] + [1.0] * N_FEATURES     # do not penalize the intercept
+    n_params = len(design[0])                # dynamic: 7 (pre-registered), or 5/3 (D-065 ablation)
+    beta = [0.0] * n_params
+    penalty = [0.0] + [1.0] * (n_params - 1)     # do not penalize the intercept
     prev_obj = _penalized_neg_loglik(design, y, beta, lam)
 
     for iteration in range(1, MAX_ITER + 1):
-        grad = [0.0] * N_PARAMS
-        hess = [[0.0] * N_PARAMS for _ in range(N_PARAMS)]
+        grad = [0.0] * n_params
+        hess = [[0.0] * n_params for _ in range(n_params)]
         for i, row in enumerate(design):
             p = _sigmoid(_dot(row, beta))
             w = p * (1.0 - p)
             resid = y[i] - p
-            for a in range(N_PARAMS):
+            for a in range(n_params):
                 grad[a] += row[a] * resid
                 wa = w * row[a]
-                for b in range(N_PARAMS):
+                for b in range(n_params):
                     hess[a][b] += wa * row[b]
-        for j in range(N_PARAMS):
+        for j in range(n_params):
             grad[j] -= lam * penalty[j] * beta[j]
             hess[j][j] += lam * penalty[j]
 
@@ -233,11 +247,11 @@ def irls_fit(rows: list[ScorerRow], lam: float, *, standardizer: Optional[Standa
         step = 1.0
         candidate = beta
         for _ in range(60):
-            candidate = [beta[j] + step * delta[j] for j in range(N_PARAMS)]
+            candidate = [beta[j] + step * delta[j] for j in range(n_params)]
             if _penalized_neg_loglik(design, y, candidate, lam) <= prev_obj + 1e-12:
                 break
             step *= 0.5
-        max_change = max(abs(candidate[j] - beta[j]) for j in range(N_PARAMS))
+        max_change = max(abs(candidate[j] - beta[j]) for j in range(n_params))
         beta = candidate
         prev_obj = _penalized_neg_loglik(design, y, beta, lam)
         if max_change < CONVERGENCE_TOL:
@@ -434,14 +448,30 @@ def run_scorer(
     all_rows: list[ScorerRow],
     *,
     lambda_selector: LambdaSelector = select_lambda,
+    feature_set: str = "preregistered",
 ) -> ScorerReport:
     """The full pre-registered evaluation. **The LOO runs FIRST and independently** (D-063 dec 1):
     the pre-registered percentile distribution does not depend on the ranking-table full-data fit,
     so a full-data non-convergence must not abort it. A fold that raises is recorded as producing no
     percentile and the distribution is reported over the survivors, with the non-convergent count
     and names carried (D-063 dec 2). The full-data fit (ranking table + Spearman) runs after and is
-    non-fatal. **Does not persist anything and is not the fit run** — that is `scripts/fit_scorer.py`."""
+    non-fatal. **Does not persist anything and is not the fit run** — that is `scripts/fit_scorer.py`.
+
+    `feature_set` selects which feature columns the model uses (D-065): `preregistered` (all six,
+    the default and the reported result) or one of the two named ablations. **Any name not in
+    `FEATURE_SETS` raises `ValueError`** — arbitrary subsets are refused so fishing is prevented by
+    construction (D-065 dec 4). Only the feature columns change; labels, folds, grid, floor, and RNG
+    policy are identical (D-065 dec 2)."""
+    if feature_set not in FEATURE_SETS:
+        raise ValueError(
+            f"unknown feature set {feature_set!r}; only {sorted(FEATURE_SETS)} are permitted "
+            f"(D-065 dec 4 — arbitrary subsets are refused)")
+    indices = FEATURE_SETS[feature_set]
+
     ranking_rows = [r for r in all_rows if r.in_ranking_set]
+    if indices != FEATURE_SETS["preregistered"]:
+        # Project each row onto the ablation's feature columns; labels/evidence/disposition unchanged.
+        ranking_rows = [replace(r, features=tuple(r.features[i] for i in indices)) for r in ranking_rows]
     excluded = sorted(
         [(r.symbol, r.exclusion_reason or "not in ranking set")
          for r in all_rows if not r.in_ranking_set]

@@ -237,14 +237,18 @@ def _result_status(loo_status: Optional[str], fulldata_status: Optional[str]) ->
 
 
 def _latest_valid_result(session: Session) -> Optional[RankingResult]:
-    """The newest `ranking_results` row whose `status_detail` does NOT start with 'invalid' (D-064
-    dec 3: the zero-positive artifact id=1 is marked invalid and must never be served)."""
+    """The newest VALID, PRE-REGISTERED `ranking_results` row: `status_detail` does NOT start with
+    'invalid' (D-064 dec 3 — the zero-positive artifact id=1 is marked invalid and never served) AND
+    its run is `run_kind='preregistered'` (D-065 dec 4 — a sensitivity ablation is never served where
+    the pre-registered result is expected)."""
     return session.scalars(
         select(RankingResult)
+        .join(RankingRun, RankingRun.id == RankingResult.ranking_run_id)
         .where(
             (RankingResult.status_detail.is_(None))
             | (~RankingResult.status_detail.startswith("invalid"))
         )
+        .where(RankingRun.run_kind == "preregistered")
         .order_by(desc(RankingResult.computed_at), desc(RankingResult.id))
     ).first()
 

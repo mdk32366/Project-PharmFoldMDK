@@ -81,6 +81,10 @@ class RankingRun(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     target_list_version: Mapped[str] = mapped_column(String(64))   # e.g. Kathad-82 revision
     scorer_version: Mapped[str] = mapped_column(String(64))        # the learned scorer's version
+    # preregistered | sensitivity (D-065). The pre-registered run and the two ablation runs are
+    # distinguished so the surface never serves a sensitivity run as the result (D-065 dec 4).
+    # Defaults preregistered so migration 0006 backfills the existing runs correctly.
+    run_kind: Mapped[str] = mapped_column(String(16), nullable=False, server_default="preregistered")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
