@@ -1,4 +1,5 @@
 import { Routes, Route, Link, NavLink, useParams, Navigate } from 'react-router-dom'
+import Story from './components/Story.jsx'
 import TargetList from './components/TargetList.jsx'
 import TargetView from './components/TargetView.jsx'
 import CoverageView from './components/CoverageView.jsx'
@@ -19,7 +20,8 @@ export default function App() {
       <header className="app-header">
         <Link to="/" className="brand"><h1>PharmFoldMDK</h1></Link>
         <nav className="app-nav">
-          <NavLink to="/" end>Targets</NavLink>
+          <NavLink to="/" end>Story</NavLink>
+          <NavLink to="/targets">Targets</NavLink>
           <NavLink to="/coverage">Coverage</NavLink>
           <NavLink to="/method">Method</NavLink>
           <NavLink to="/about">About ADCs</NavLink>
@@ -27,7 +29,8 @@ export default function App() {
       </header>
       <main>
         <Routes>
-          <Route path="/" element={<TargetList />} />
+          <Route path="/" element={<Story />} />
+          <Route path="/targets" element={<TargetList />} />
           <Route path="/target/:id" element={<TargetRoute />} />
           <Route path="/coverage" element={<CoverageView />} />
           <Route path="/method" element={<MethodNote />} />

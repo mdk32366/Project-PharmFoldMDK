@@ -27,10 +27,15 @@ export default function CoverageLine({ coverage, rows }) {
         <strong>{rankedFolded}</strong> ranked &amp; folded of <strong>{coverage.denominator}</strong> targets
       </p>
       <p className="coverage-sub">
-        The ranking — once the scorer exists — covers these {rankedFolded}. Not the {coverage.ranked}{' '}
-        ranked in the manifest ({rankedUnfolded} of them await a rental fold), and not the{' '}
-        {rankedFolded + heldFolded} folded ({heldFolded} are held out of ranking). Both would overstate
-        the cohort.
+        The ranking — once the scorer exists — covers these {rankedFolded}.{' '}
+        {rankedUnfolded > 0 ? (
+          <>Not the {coverage.ranked} ranked in the manifest ({rankedUnfolded} of them await a rental
+          fold), and not the {rankedFolded + heldFolded} folded ({heldFolded} are held out of
+          ranking). Both would overstate the cohort.</>
+        ) : (
+          <>Not the {rankedFolded + heldFolded} folded ({heldFolded} are held out of ranking) — that
+          would overstate the cohort.</>
+        )}
       </p>
       <ul className="partition">
         <li>

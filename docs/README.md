@@ -80,6 +80,111 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-052 — The ADC mechanism schematic is an illustration, and is structurally prevented from reading as model output
+
+- **Date:** 2026-07-26
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-051 (the narrative surfaces this ships alongside), D-016 (a claim names how it is
+  known — a drawing that names nothing is the weakest claim on the site), D-024/D-028 (don't let a
+  reader collapse two distinct classes), D-045/D-048 (the provenance layer whose whole purpose is
+  making "this came from ESMFold, at a named revision" checkable), D-037 (hand-rolled SVG).
+- **Amends:** `AdcContext` only. Nothing structural.
+
+**Context.** UI Plan v2 §7.1 keeps the antibody/linker/payload metaphor because it is *mechanism,
+not decoration*, and `AdcContext` already carries it in prose. A drawn schematic makes it land
+faster for a non-specialist reader, which is the demo audience.
+
+**The risk this entry exists to close.** A reader arrives at `/about` having just seen a 3Dmol
+structure coloured per-residue by pLDDT. A drawn antibody on the next screen is, to that reader,
+plausibly another thing the system produced. **It is not.** Letting that inference stand is a false
+claim about the neural network's output — the precise error the entire provenance layer was built
+to prevent, arriving through the one door provenance does not guard, because a picture has no
+provenance panel.
+
+**Decision — two parts, and the second is the load-bearing one.**
+
+1. The schematic carries a visible label: *"Schematic illustration — not a structure produced by
+   this system."* plus a link to a real folded target.
+2. **It is structurally incapable of being a model output.** The component imports nothing from
+   `api.js`, takes no analysis props, and is a pure function of nothing. A test asserts the
+   mechanism, not just the words: with `api.js` mocked, **no export is invoked**. Labels can be
+   edited away by a later hand; an import that does not exist cannot quietly start lying.
+
+- **Deep-learning justification:** negative and protective. Everything else in this UI works to make
+  the DL claim *checkable*; this works to keep it *bounded*, at the one surface where a reader is
+  most likely to over-attribute. A sharp boundary around what the network produced is part of the
+  claim, not a caveat on it.
+- **Consequences:** `AdcContext.jsx` gains an `AdcSchematic.jsx` child and its test. No route, no
+  supplier, no new dependency. Hand-rolled SVG (D-037) — no chart or diagram library enters the
+  bundle for this.
+
+---
+
+### D-051 — The narrative surfaces: a Story that derives its numbers, and an Architecture diagram pinned to the route table
+
+- **Date:** 2026-07-26
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-050 (derived-not-hardcoded cohort statistics — the trap this entry must not
+  re-arm), D-016 (every claim names how it is known, applied here to the project's account of
+  itself), D-024/D-028 (the honest denominator; non-goals as commitments), D-004/DEP-001 (the
+  topology the diagram must not mis-draw), D-046 (the harness), D-037 (hand-rolled SVG).
+- **Amends:** `UI_Plan_v2.md` §3's *"four surfaces"* — see decision 0. `ARCHITECTURE.md` in the
+  same PR.
+
+**Context.** The UI is demo-ready but has no entry point for a reader meeting the project cold. The
+Prime Directive is graded on whether deep learning does load-bearing work *and whether that is
+defensible* — and a grader who cannot locate the neural network quickly cannot grade it as
+load-bearing. Two surfaces are missing: the narrative that says what was done, and the picture that
+says where inference runs.
+
+**Decision 0 — five surfaces, by absorption, and the divergence from UI Plan v2 is ruled, not
+drifted into.** UI Plan v2 §3 rules *"Four surfaces. No sidebar with six destinations."* That
+constraint is honoured rather than overridden: Story takes `/`, Targets moves to `/targets`, and the
+two new elements are **absorbed** into the pages that already motivate them — the architecture
+diagram into `/method` (*how the system works* is the method), the mechanism schematic into
+`/about`. Five destinations. Recording this because a surface that arrives *because the UI had space
+for it* is exactly what D-028 §9 forbids; this one arrives because the audience changed.
+
+**Decision 1 — the Story surface, and every number on it is derived.** The cold open: the research
+question, that **we ran ESMFold ourselves** rather than retrieving structures, what came out, what
+did not fold and why, and what is deliberately not built (the scorer and the ranking — D-028's
+non-goals as commitments). **No cohort statistic is written as a literal.** D-050 was decided nine
+days before delivery precisely because prose quoting a fold count rots silently; a Story saying "we
+folded 79 targets" re-arms that trap on the most-read screen on the site. Counts, ranges and
+fractions derive from `/api/analyses` and `/api/coverage`, or the claim is made qualitatively with
+no number at all ("no target reaches the high-confidence range" needs no maximum to be true).
+
+**Decision 2 — the architecture diagram is generated from a committed system model, and a test
+asserts that model against the running app.** A hand-drawn system picture is a claim with no
+provenance (D-016): it is wrong one PR after any route change and nothing reddens. So the diagram
+is not drawn — it is **rendered from `ui/src/system-model.json`**, and
+`tests/test_architecture_contract.py` walks the real FastAPI route table and asserts **set equality
+in both directions**: every live route appears in the model, every modelled route is live. Adding a
+route without updating the picture fails the gate. Precedent for a Python test reading a
+non-Python artefact as its subject: `tests/test_image_contents.py` reads the `Dockerfile`.
+
+The diagram's load-bearing content is the **topology**: inference runs on the GPU tier, *not* on Fly
+(D-004); the serving image contains no `worker/` and no CUDA (DEP-001). That is the most-asked and
+most-easily-mis-drawn fact about this system.
+
+- **Deep-learning justification:** the neural network is the graded deliverable, and both surfaces
+  exist to make it *locatable and bounded* — where the model ran, what it produced, what it did not,
+  and where the system's claims stop. That is D-016 and D-024 applied to the project's account of
+  itself rather than to a number inside it. Neither surface asserts anything about the model that
+  the API cannot be asked to confirm live.
+- **Consequences:**
+  - `App.jsx`: `/` → `Story`, `/targets` → `TargetList`; nav is five items. `/target/:id` deep
+    links unchanged.
+  - New: `Story.jsx`, `ArchitectureDiagram.jsx`, `ui/src/system-model.json`, and their tests.
+  - `MethodNote.jsx` renders `ArchitectureDiagram`.
+  - New functional test `tests/test_architecture_contract.py`.
+  - `ARCHITECTURE.md` updated in the same PR — we are shipping a surface that *draws* the
+    architecture, so the prose and the picture must be brought into agreement together.
+  - Follow-ups folded in (§5 of the orders): the `AdcContext` `77.26` literal and the `CoverageLine`
+    zero-case wording, both named in the 2026-07-25 closeout §6.
+
+---
+
 ### D-050 — Cohort statistics in UI copy must be derived, not hardcoded; the 42-fold-era prose is stale and self-contradicting
 
 - **Date:** 2026-07-25

@@ -59,8 +59,8 @@ per-residue by pLDDT from the `/plddt` array (**not** the PDB B-factor column, w
 unverified — S-001), a confidence element with the D-039 bands and the cohort-max caveat, and a
 provenance panel that makes "we ran ESMFold ourselves, at a named revision" checkable. 3Dmol is a
 lazy-loaded chunk (the list page stays ~57 KB gzip). **PR C the coverage view** — the honest
-`ranked ∧ folded = 40 of 82` line (computed client-side from `/api/coverage`'s `disposition` +
-`fold_status`, never the manifest's 67 or the folded 42, D-024), the full-82 drill-down with
+`ranked ∧ folded` line (computed client-side from `/api/coverage`'s `disposition` + `fold_status`,
+never the manifest's ranked count nor the raw folded count, D-024/D-050), the full-82 drill-down with
 held-out/excluded reachable by name (D-022), a method note (D-028 non-goals as commitments), and
 the ADC-context onboarding (UI Plan v2 §7). That **closes UI Plan v2 steps 2–5**; the ranking table
 (step 6, the demo centrepiece) waits on the scorer (D-027 → fit) and is deliberately not mocked.
@@ -73,6 +73,19 @@ varying across the chain, hand-rolled SVG, D-037); and the D-039 band scheme is 
 single source of truth (structure and legend cannot disagree), with the numeric re-justification of
 the 60 line against the enlarged live cohort left as a named owner action (D-016 — the individual
 `mean_plddt` values live in Postgres, not a repo artefact, so they are not fabricated here).
+**D-051 adds the narrative surfaces and moves the nav to five by absorption** (not addition — UI
+Plan v2 §3's four-surface constraint is honoured, D-028 §9): a **Story** cold-open at `/` (the
+research question, that *we ran ESMFold ourselves*, and what came out — every cohort number derived
+from `/api/analyses`+`/api/coverage`, never a literal, Constraint A / D-050), with the target list
+moved to `/targets`; and an **architecture diagram absorbed into `/method`**, rendered from a
+committed **`ui/src/system-model.json`** rather than hand-drawn. `tests/test_architecture_contract.py`
+walks the live FastAPI route table and asserts **set-equality in both directions** with the model's
+declared `/api`+`/jobs` routes — adding or removing a route reddens the gate until the picture is
+updated (the `test_image_contents.py` pattern of reading a non-Python artefact as its subject). Its
+load-bearing claim is the **topology**, pinned too: inference runs on the GPU tier *outside* Fly
+(D-004); the serving image is GPU-free (DEP-001). Two D-050 follow-ups close here — `AdcContext`'s
+NECTIN4 pLDDT is now derived (the last hardcoded per-target literal), and `CoverageLine`'s
+zero-`rankedUnfolded` wording.
 **Next (owner-gated):** the app-scoped token + Fly app/Postgres/secrets provisioning so the first
 real deploy goes green; then starting the worker for the first end-to-end large rental fold — which
 retires the PROVISIONAL 60-min lease threshold (D-030) and D-031's estimated PAE ratio with measured

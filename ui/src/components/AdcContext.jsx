@@ -18,11 +18,15 @@ export default function AdcContext() {
           .filter((v) => typeof v === 'number' && !Number.isNaN(v))
         if (!vals.length) return
         const below = vals.filter((v) => v < 60).length
+        // D-051 §5: NECTIN4's mean pLDDT was the last hardcoded per-target literal (77.26); derive
+        // it from the same fetch. NECTIN4 is id 1 (the prose commits to that); fall back to gene.
+        const nectin = rows.find((r) => r.gene === 'NECTIN4' || r.id === 1)
         setStats({
           n: vals.length,
           min: Math.min(...vals),
           max: Math.max(...vals),
           belowPct: Math.round((below / vals.length) * 100),
+          nectin4: nectin && typeof nectin.mean_plddt === 'number' ? nectin.mean_plddt : null,
         })
       })
       .catch(() => setStats(null))
@@ -66,8 +70,9 @@ export default function AdcContext() {
         urothelial carcinoma — where patients past platinum chemotherapy and a checkpoint inhibitor had
         little left — and later displaced platinum in the first-line setting with pembrolizumab, the
         rarer achievement of a standard of care changing. It is <code>id 1</code> in this cohort, the
-        first target folded through this system's production path, at mean pLDDT{' '}
-        <strong>77.26</strong>. <Link to="/target/1">See its structure →</Link>
+        first target folded through this system's production path{stats?.nectin4 != null && (
+          <>, at mean pLDDT <strong>{stats.nectin4.toFixed(2)}</strong></>
+        )}. <Link to="/target/1">See its structure →</Link>
       </p>
 
       <h3>⚠ The success case is a bad prior — and this cohort's own data shows it</h3>
