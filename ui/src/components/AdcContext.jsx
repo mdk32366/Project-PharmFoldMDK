@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listAnalyses } from '../api.js'
 import AdcSchematic from './AdcSchematic.jsx'
+import Term from './Term.jsx'
 
 // ADC framing / onboarding (UI Plan v2 §7): keep the metaphor (it is mechanism, not decoration),
 // bound the outcome claims, and let the honest limits sharpen the purpose rather than soften it.
@@ -35,7 +36,7 @@ export default function AdcContext() {
 
   return (
     <div className="prose">
-      <h2>What an ADC is, and why target choice is the hard part</h2>
+      <h2>What an <Term name="ADC">ADC</Term> is, and why target choice is the hard part</h2>
 
       <p>
         Conventional cytotoxic chemotherapy is an <strong>area weapon</strong>: it acts on rapidly

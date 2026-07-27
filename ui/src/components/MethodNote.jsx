@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getCoverage } from '../api.js'
 import ArchitectureDiagram from './ArchitectureDiagram.jsx'
+import Glossary from './Glossary.jsx'
+import Term from './Term.jsx'
 
 // Method note (UI Plan v2 §3.4, D-028): what the system claims and what it does not — the whole
 // frame at once, for a reader who wants it. Non-goals are commitments, not omissions (§9). This
@@ -22,8 +24,9 @@ export default function MethodNote() {
     <div className="prose">
       <h2>What this system claims — and what it does not</h2>
       <p>
-        PharmFoldMDK folds a fixed cohort of 82 candidate ADC targets with <strong>ESMFold, run
-        in-project</strong>, and renders each structure with the model's own confidence (pLDDT) and
+        PharmFoldMDK folds a fixed cohort of 82 candidate <Term name="ADC">ADC</Term> targets with{' '}
+        <strong><Term name="ESMFold">ESMFold</Term>, run in-project</strong>, and renders each
+        structure with the model's own confidence (<Term name="pLDDT">pLDDT</Term>) and
         full provenance. This is a deep-learning course project: the neural network is the
         deliverable, and every structure here was <em>produced by it</em>, not retrieved from a
         database.
@@ -67,6 +70,8 @@ export default function MethodNote() {
         A non-goal here is a commitment, not an omission: a later iteration adding one of these does
         so as a ruled change with its own decision entry — not because the UI had space for it.
       </p>
+
+      <Glossary />
     </div>
   )
 }

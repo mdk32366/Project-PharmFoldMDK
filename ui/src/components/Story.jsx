@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listAnalyses, getCoverage } from '../api.js'
+import Term from './Term.jsx'
 
 // D-051 Decision 1: the cold-open Story at `/` — the thirty-second answer to "where is the deep
 // learning." Every cohort number is DERIVED from /api/analyses + /api/coverage (Constraint A);
@@ -36,10 +37,11 @@ export default function Story() {
         <em>structure</em> — folds we computed ourselves — differ from one built from expression and
         prior evidence? Answering it begins with the structures, and{' '}
         <strong>we ran the neural network ourselves</strong>: every structure here is an{' '}
-        <strong>ESMFold</strong> prediction (<code>facebook/esmfold_v1</code>, at a pinned revision),
-        computed on our own GPU tier — <em>not</em> retrieved from a public database. Each carries the
-        model's own per-residue confidence (pLDDT) and full provenance, so "we ran this" is
-        checkable, not asserted.
+        <strong><Term name="ESMFold">ESMFold</Term></strong> prediction (<code>facebook/esmfold_v1</code>,
+        at a pinned revision), computed on our own <Term name="GPU">GPU</Term> tier — <em>not</em>{' '}
+        retrieved from a public database. Each carries the model's own per-residue confidence
+        (<Term name="pLDDT">pLDDT</Term>) and full provenance, so "we ran this" is checkable, not
+        asserted.
       </p>
       {s ? (
         <p>
