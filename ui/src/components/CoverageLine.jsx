@@ -10,6 +10,13 @@
 // The three-cell partition (ranked/held_out/excluded) sums to the denominator; the two breakouts
 // (unmeasured_tier ⊆ ranked, no_topology ⊆ held_out) are SUBSETS that cut across it and are shown
 // as such, never summed in.
+//
+// ⚠ D-066. This component states the PARTITION; it does NOT claim what the RANKING covers. The
+// ranking's membership is decided downstream by the pLDDT floor, which this component cannot see —
+// so a "the ranking covers these N" claim is unverifiable here, and on /scorer it was false (67
+// ranked & folded vs 56 above the floor). The forward-looking clause ("once the scorer exists —
+// covers these N") was removed, not re-tensed; `ranked` here is the D-024 disposition, never
+// "in the ranking". The scorer renders its own 67 → 56 reconciliation beside its own table.
 
 function count(rows, disposition, foldStatus) {
   return rows.filter((r) => r.disposition === disposition && r.fold_status === foldStatus).length
@@ -27,7 +34,7 @@ export default function CoverageLine({ coverage, rows }) {
         <strong>{rankedFolded}</strong> ranked &amp; folded of <strong>{coverage.denominator}</strong> targets
       </p>
       <p className="coverage-sub">
-        The ranking — once the scorer exists — covers these {rankedFolded}.{' '}
+        This intersection is the honest denominator.{' '}
         {rankedUnfolded > 0 ? (
           <>Not the {coverage.ranked} ranked in the manifest ({rankedUnfolded} of them await a rental
           fold), and not the {rankedFolded + heldFolded} folded ({heldFolded} are held out of
