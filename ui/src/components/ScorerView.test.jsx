@@ -89,9 +89,10 @@ describe('ScorerView', () => {
     // the mean/median reversal is rendered (both summaries present), not smoothed
     expect(t).toMatch(/mean/)
     expect(t).toMatch(/median/)
-    // caveat (b): the pLDDT-attention confound appears with the result, and is open not resolved
-    expect(t).toMatch(/may carry attention/)
-    expect(t).toMatch(/not\s+resolved/)
+    // caveat (b) now tested (F-005): the specific attention mechanism is NOT supported, with the result
+    expect(t).toMatch(/Now tested, not open/)
+    expect(t).toMatch(/not supported/)
+    expect(t).toMatch(/order-versus-disorder/)
   })
 
   it('uses no significance language (claim boundary, pinned)', async () => {
@@ -100,6 +101,44 @@ describe('ScorerView', () => {
     const { container } = renderView()
     await waitFor(() => expect(container.textContent).toMatch(/The result/))
     expect(container.textContent).not.toMatch(/significant|p-value|p <|demonstrates/i)
+  })
+
+  it('renders the structural-score tooltip with its claim boundary in the DOM (truncation guard)', async () => {
+    getRanking.mockResolvedValue(RANKING)
+    getCoverage.mockResolvedValue(COVERAGE)
+    const { container } = renderView()
+    await waitFor(() => expect(container.textContent).toMatch(/structural score/))
+    // the definition renders in a role="tooltip" node (Term), and its FINAL sentence — the claim
+    // boundary — must be present in the DOM, not trimmed (D-055 amendment §2, the key test)
+    const tips = [...container.querySelectorAll('[role="tooltip"]')].map((n) => n.textContent)
+    const structural = tips.find((t) => t.includes('resembles the shapes'))
+    expect(structural).toBeTruthy()
+    expect(structural).toMatch(/not a prediction that a drug will work/)
+    expect(structural).toMatch(/how much of the target a tumour makes/)   // the final sentence, intact
+  })
+
+  it('every definition is reachable by keyboard/tap, not hover alone', async () => {
+    getRanking.mockResolvedValue(RANKING)
+    getCoverage.mockResolvedValue(COVERAGE)
+    const { container } = renderView()
+    await waitFor(() => expect(container.textContent).toMatch(/structural score/))
+    // the trigger is a real focusable <button>, the definition a role="tooltip" linked by aria
+    const trigger = [...container.querySelectorAll('button.term-trigger')]
+      .find((b) => b.textContent.includes('structural score'))
+    expect(trigger).toBeTruthy()
+    expect(trigger.getAttribute('aria-describedby')).toBeTruthy()
+  })
+
+  it('when stacked, the coverage line precedes its table and caveat (b) follows the result (DOM order)', async () => {
+    getRanking.mockResolvedValue(RANKING)
+    getCoverage.mockResolvedValue(COVERAGE)
+    const { container } = renderView()
+    await waitFor(() => expect(container.textContent).toMatch(/The result/))
+    const t = container.textContent
+    // caveat (b) comes after the distribution/Spearman (it is the last thing in the result section)
+    expect(t.indexOf('leave-one-out distribution')).toBeLessThan(t.indexOf('Now tested, not open'))
+    // the coverage line (its 'targets' summary) precedes the ranking table's deferred-columns note
+    expect(t.indexOf('E · The ranking table')).toBeLessThan(t.indexOf('Deferred columns'))
   })
 
   it('renders the not_run state', async () => {

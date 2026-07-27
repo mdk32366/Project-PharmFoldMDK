@@ -192,3 +192,13 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .glossary-entry dt { font-weight: 600; }
 .glossary-expansion { color: var(--muted); font-weight: 400; font-size: 0.9rem; }
 .glossary-entry dd { margin: 0.1rem 0 0; color: var(--muted); font-size: 0.92rem; }
+
+/* D-062 scorer two-column layout (amendment 2026-07-29): explanation left, ranking right.
+   Stacks on narrow — and when stacked the coverage line still precedes its table and caveat (b)
+   still follows the result, because that is the source (DOM) order. */
+.scorer-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+.scorer-ranking { position: sticky; top: 1rem; }
+@media (max-width: 900px) { .scorer-cols { grid-template-columns: 1fr; } .scorer-ranking { position: static; } }
+.scorer .caveats { border-left: 3px solid #7fb3d1; padding-left: 0.9rem; margin-top: 1rem; }
+.scorer .ranking-intro { font-size: 0.95rem; color: #b9c4cc; }
+.scorer .dist-table td, .scorer .ranking-table td, .scorer .h2h-table td { padding: 0.15rem 0.6rem; }

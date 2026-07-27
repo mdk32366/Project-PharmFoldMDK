@@ -60,6 +60,30 @@ export const GLOSSARY = {
     expansion: '3Dmol.js',
     plain: 'the in-browser viewer that draws the folded 3D structure',
   },
+  // D-055/D-062 amendment (2026-07-29): three definitions ruled in by the owner (§1.2). The
+  // `structural score` final sentence is a CLAIM BOUNDARY and must never be trimmed from the tooltip.
+  'structural score': {
+    // ⚠ Owner-ruled draft (§1.2), rendered VERBATIM. F-005 flagged for owner ruling at merge: the
+    // ranking is substantially pLDDT-driven, and F-005 says a surface must not imply the geometry
+    // features do the work — so "predicted shape resembles the shapes" is the phrase to read against
+    // the finding. Not silently edited; the claim boundary (final sentence) must never be trimmed.
+    expansion: 'the learned ADC-suitability score',
+    plain: "how much a target's predicted shape resembles the shapes of targets people have already " +
+      'built ADCs against. It comes from six measurements of the folded structure. It is not a ' +
+      'prediction that a drug will work: it says nothing about delivery, internalisation, or how much ' +
+      'of the target a tumour makes.',
+  },
+  backbone: {
+    expansion: 'the protein backbone',
+    plain: 'the chain of atoms running the length of a protein — nitrogen, alpha-carbon, carbonyl ' +
+      'carbon, repeating once per residue. Side chains branch off it.',
+  },
+  accession: {
+    expansion: 'a UniProt accession',
+    plain: 'the stable identifier UniProt gives a protein, like P04626 for HER2. Gene names get ' +
+      'renamed over time; accessions do not, which is why targets are matched on accession here ' +
+      'rather than by name.',
+  },
 }
 
 // The contract-test watchlist (D-055 dec 3, via the orders §5.1 fallback): the acronyms a reader
