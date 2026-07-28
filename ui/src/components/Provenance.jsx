@@ -118,8 +118,18 @@ export default function Provenance({ detail }) {
              values) is a TRUE thing about the project and stays legible: better presentation, not a
              softened distinction (owner). D-070's "what we can say" block travels here. */
           <>
+            {/* ⚠ Unrecoverability is a claim about the MACHINE, and is attached to the ephemeral rental
+                instance specifically — NOT to state 3 in general. State 3 is rental-only in production
+                (all 42 local folds are state 2), but if a local fold ever fell through, the first clause
+                stays true and the second simply does not render — the box is right there, D-071 just
+                recovered it. Asserting unrecoverability about a machine you own would be the D-070
+                failure inverted: claiming less than the record supports. */}
             <p className="prov-not-recorded">
-              <strong>Not recorded at fold time</strong>, and not recoverable — no environment was captured for this fold.
+              <strong>No environment was recorded for this fold</strong>
+              {detail.tier === 'rental' ? (
+                <>, and the machine that ran it — an <strong>ephemeral rental instance</strong> — is
+                gone, so it cannot be reconstructed</>
+              ) : null}.
             </p>
             <div className="note prov-recorded-note">
               <p>
@@ -127,8 +137,7 @@ export default function Provenance({ detail }) {
                 {p.folded_at ? <> on <strong>{String(p.folded_at)}</strong></> : null}. Its software
                 environment is pinned in the repository's worker manifest
                 (<code>worker/requirements.txt</code>), but it was <strong>not recorded per-fold</strong> —
-                capture began later (D-045), and this tier's machine (an ephemeral rental instance) is
-                gone, so the record cannot be reconstructed. <strong>This is what the record holds, not a
+                capture began later (D-045). <strong>This is what the record holds, not a
                 reconstruction</strong> — not a worse fold, just one we can say less about.
               </p>
             </div>

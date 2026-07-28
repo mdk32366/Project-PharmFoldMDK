@@ -147,6 +147,12 @@ different things — and the manifest's contents are still never rendered (D-070
     served from `data/tier_environments.json`, the state-3 statement carries none.
   - D-070's block still renders for state 3. The four-"not captured"-fields grid is replaced there by
     one statement — better presentation, the asymmetry with state 2 (no values vs values) kept legible.
+  - **⚠ Unrecoverability is attached to the ephemeral rental instance, not to state 3 in general.**
+    State 3 is rental-only in production (all 42 local folds are state 2, verified), but the state-3
+    sentence renders *"…cannot be reconstructed"* **only when `tier === 'rental'`**; a local fold that
+    ever fell through would say it was not recorded but **not** that it is unrecoverable — the box
+    exists. Asserting unrecoverability about a machine you own is the D-070 failure inverted (claiming
+    *less* than the record supports); a defensive test pins the conditional.
 
 ---
 

@@ -61,7 +61,7 @@ describe('Provenance — three-valued strength (D-071)', () => {
       const t = container.textContent
       expect(t).toMatch(/tier environment, measured 2026-07-29.*not recorded at fold time/)
       // not dressed as fold-time capture, not collapsed to the state-3 statement
-      expect(t).not.toMatch(/Not recorded at fold time/)
+      expect(t).not.toMatch(/No environment was recorded/)
       expect(t).not.toMatch(/What we can say/)
     })
     it('does NOT leak state-1 fold-time values into a later-measured fold', () => {
@@ -75,21 +75,32 @@ describe('Provenance — three-valued strength (D-071)', () => {
     it('renders ONE clear statement (not a four-field "not captured" grid) plus the D-070 block', () => {
       const { container } = render(<Provenance detail={STATE3} />)
       const t = container.textContent
-      expect(t).toMatch(/Not recorded at fold time.*not recoverable/)
+      expect(t).toMatch(/No environment was recorded for this fold/)
       // the four-"not captured"-fields grid is gone (the polish); no version or device rendered
       expect(t).not.toMatch(/not captured/i)
       expect(t).not.toMatch(/2\.11\.0|2\.8\.0/)
       expect(t).not.toMatch(/RTX PRO 2000|A6000/)
+      // unrecoverability attached to the ephemeral RENTAL instance (this is a rental fold)
+      expect(t).toMatch(/ephemeral rental instance/)
+      expect(t).toMatch(/cannot be reconstructed/)
       // D-070's block still travels, reason preserved, manifest named not shown
       expect(t).toMatch(/What we can say/)
       expect(t).toMatch(/rental tier/)
       expect(t).toMatch(/worker\/requirements\.txt/)
       expect(t).toMatch(/capture began later \(D-045\)/)
-      expect(t).toMatch(/cannot be reconstructed/)
+    })
+    it('⚠ a LOCAL fold in state 3 (defensive) claims NO unrecoverability — the box is yours', () => {
+      // Cannot occur in production (every local fold is state 2), but pins the conditional so a future
+      // edit cannot assert unrecoverability about a machine you own — the D-070 failure, inverted.
+      const STATE3_LOCAL = { ...STATE3, tier: 'local' }
+      const t = render(<Provenance detail={STATE3_LOCAL} />).container.textContent
+      expect(t).toMatch(/No environment was recorded for this fold/)   // first clause: true of it
+      expect(t).not.toMatch(/ephemeral rental instance/)               // second clause: NOT claimed
+      expect(t).not.toMatch(/cannot be reconstructed/)
     })
     it('a LOCAL uncaptured fold is state 2, not state 3 — the tier record fills it', () => {
       const { container } = render(<Provenance detail={STATE2} />)
-      expect(container.textContent).not.toMatch(/Not recorded at fold time/)
+      expect(container.textContent).not.toMatch(/No environment was recorded/)
     })
   })
 
