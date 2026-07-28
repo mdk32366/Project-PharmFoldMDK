@@ -252,8 +252,8 @@ function FullResult({ ranking, coverage, partial }) {
             {/* D-066 dec 2: the reconciliation the box cannot make — all three numbers derived —
                 immediately above the table it explains. 67 (ranked & folded) → 56 (above the floor). */}
             <p className="ranking-reconciliation">
-              <b>{rankedFolded}</b> ranked · <b>{r.n_ranking_set}</b> above the pLDDT-{r.plddt_floor}{' '}
-              floor · these <b>{r.n_ranking_set}</b> are ranked below
+              <b>{rankedFolded}</b> ranked · <b>{r.n_ranking_set}</b> rankable after the pLDDT-{r.plddt_floor}{' '}
+              floor · the table below shows those <b>{r.n_ranking_set}</b>
             </p>
             <table className="ranking-table">
               <thead>

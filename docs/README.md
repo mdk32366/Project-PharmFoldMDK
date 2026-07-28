@@ -120,7 +120,13 @@ carrying a false one.
 
 Rendered in the right column, immediately above the table, **all three numbers derived**:
 
-> **67** ranked · **56** above the pLDDT-50 floor · **these 56 are ranked below**
+> **67** ranked · **56** rankable after the pLDDT-50 floor · **the table below shows those 56**
+
+**⚠ Amended 2026-07-29 (freeze push).** The original copy read *"these 56 are ranked below"* — `ranked`
+in the membership sense **decision 4 forbids.** Planner error: this copy was written before decision 4's
+rule and never checked against it. Reworded to `rankable`; the component (`ranking-reconciliation`) and
+this entry are amended **together**, because a component-only fix would leave the log teaching the wrong
+thing.
 
 **The missing step was never wrong, only absent from where it was needed** — it exists in cascade A,
 in the left column, disconnected from the box making the claim. **A denominator in another column is
