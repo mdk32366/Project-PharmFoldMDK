@@ -90,14 +90,23 @@ export default function Provenance({ detail }) {
           ))}
         </dl>
         {!envCaptured && (
-          // Rule 2: name the gap once, at the population level, WITH the reason (a boolean is not a
-          // reason — D-022). The record is written worker-side at fold time and cannot be
-          // reconstructed after the fact (D-045).
-          <p className="note prov-population-note">
-            Environment capture began at D-045; this fold predates it. The environment record is
-            written worker-side at fold time and cannot be reconstructed from stored data, so this
-            is an honest gap — not a worse fold, just one we can say less about.
-          </p>
+          // D-070: for an uncaptured environment, say what the record DOES hold — tier, folded_at, and
+          // the worker manifest BY NAME — strictly more than "not captured", and NEVER an inferred
+          // version (F-007: an inference would have been wrong on the one fold that could check it). The
+          // four captured fields above stay "not captured" (dec 2); this block is separate and says what
+          // it is — what the record holds, not what ran (dec 1). Names the manifest, never its contents
+          // (dec 3): no version string, no device model appears here — all Constraint-A.
+          <div className="note prov-recorded-note">
+            <p>
+              <strong>What we can say:</strong> this fold ran on the <strong>{detail.tier}</strong> tier
+              {p.folded_at ? <> on <strong>{String(p.folded_at)}</strong></> : null}. Its software
+              environment is pinned in the repository's worker manifest
+              (<code>worker/requirements.txt</code>), but it was <strong>not recorded per-fold</strong> —
+              capture began later (D-045), and the record is written worker-side at fold time and cannot
+              be reconstructed. <strong>This is what the record holds, not a reconstruction</strong> —
+              not a worse fold, just one we can say less about.
+            </p>
+          </div>
         )}
       </div>
 

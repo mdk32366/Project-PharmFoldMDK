@@ -103,12 +103,34 @@ describe('Provenance — two-population environment render (D-046 §3)', () => {
       expect(screen.queryByText('NVIDIA RTX A6000')).not.toBeInTheDocument()
     })
 
-    it('names the gap ONCE at the population level, with the reason (D-046 rule 2 — a boolean is not a reason)', () => {
+    it('names the gap with its reason and what the record DOES hold (D-070 / D-046 rule 2)', () => {
+      const { container } = render(<Provenance detail={PRE_D045} />)
+      const t = container.textContent
+      // the reason survives (D-046 rule 2 — a boolean is not a reason), now inside the D-070 block
+      expect(t).toMatch(/capture began later \(D-045\)/)
+      expect(t).toMatch(/cannot be reconstructed/)
+    })
+
+    it('D-070: renders tier + folded_at + the worker manifest BY NAME, derived — never a version or device', () => {
+      const { container } = render(<Provenance detail={PRE_D045} />)
+      const t = container.textContent
+      expect(t).toMatch(/What we can say/)
+      expect(t).toMatch(/local tier/)                          // tier, derived from the payload (dec 1)
+      expect(t).toMatch(/worker\/requirements\.txt/)           // the manifest, by NAME (dec 1/3)
+      expect(t).toMatch(/what the record holds, not a reconstruction/i)
+      // dec 3 / Constraint-A: never the pinned version or the device model in this block
+      expect(t).not.toMatch(/2\.11\.0|2\.8\.0/)
+      expect(t).not.toMatch(/RTX|A6000|Blackwell|sm_120/)
+    })
+
+    it('D-070: does NOT populate the four captured fields — they still read "not captured" (dec 2)', () => {
       render(<Provenance detail={PRE_D045} />)
-      const notes = screen.getAllByText(/predates environment capture|environment capture began at D-045/i)
-      expect(notes).toHaveLength(1)
-      // The reason, not just a flag: the record is written worker-side and cannot be reconstructed.
-      expect(screen.getByText(/cannot be reconstructed|written worker-side/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/not captured/i).length).toBe(4)   // all four env fields, untouched
+    })
+
+    it('D-070: a captured fold renders NO "what we can say" block (asserted both ways)', () => {
+      const { container } = render(<Provenance detail={POST_D045} />)
+      expect(container.textContent).not.toMatch(/What we can say/)
     })
 
     it('still renders the weights and recipe it DID record (revision, dtype, chunk)', () => {
