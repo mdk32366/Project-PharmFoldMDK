@@ -103,8 +103,11 @@ loop from the ranking table back to the per-target page: the judgement that rank
 case — a **reasoned "no score", never a blank** (dec 1). `targetStatus()` (pure, `ui/src/targetScore.js`)
 resolves a target to one of five states with **fold state preceding disposition** (owner ruling: no
 fold → no measurements → no disposition applies; so IGF2R, fold-failed and held-out, reads *not folded*,
-not *held out*): `not_folded → below_floor → held_out → ranked → unranked_unexplained` (the last a
-defensive named state, asserted empty in prod or rendered as "reason not determined"). Every number is
+not *held out*): `not_folded → held_out → below_floor → ranked → unranked_unexplained` (the last a
+defensive named state; a partition test pins the four buckets summing to the cohort with the fifth at
+zero). **Precedence amended 2026-07-29** — held_out (pLDDT-independent) precedes below_floor, realigning
+the UI with the backend `_exclusion_reason` after the walk caught TMEM108 labelled two ways on two
+surfaces; not_folded still leads (IGF2R). Every number is
 **derived from `/api/ranking` + the target's own record, joined client-side by accession/gene — no route
 change, no `system-model.json` edit** (§1 report). A score never renders without its rank-of-56 and
 min/median/max context (dec 2); a **labelled** target shows both its in-fit score and its out-of-sample
