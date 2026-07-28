@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getCoverage } from '../api.js'
 import ArchitectureDiagram from './ArchitectureDiagram.jsx'
 import Glossary from './Glossary.jsx'
@@ -24,7 +25,8 @@ export default function MethodNote() {
     <div className="prose">
       <h2>What this system claims — and what it does not</h2>
       <p>
-        PharmFoldMDK folds a fixed cohort of 82 candidate <Term name="ADC">ADC</Term> targets with{' '}
+        PharmFoldMDK folds a fixed cohort of {denominator != null ? <>{denominator} </> : null}candidate{' '}
+        <Term name="ADC">ADC</Term> targets with{' '}
         <strong><Term name="ESMFold">ESMFold</Term>, run in-project</strong>, and renders each
         structure with the model's own confidence (<Term name="pLDDT">pLDDT</Term>) and
         full provenance. This is a deep-learning course project: the neural network is the
@@ -51,17 +53,22 @@ export default function MethodNote() {
           : 'ranked-and-folded, out of the full cohort'}</strong>, with what is held out and excluded, and why.</li>
       </ul>
 
-      <h3>What it will do — not yet, and never mocked</h3>
+      <h3>What it does now — the ranking, at reduced scope</h3>
       <p>
-        The centrepiece is a comparative ranking: a learned scorer over structure-derived features,
-        ranking the cohort against an evidence baseline, with the disagreements <strong>detected and
-        classified</strong>. It waits on the scorer (the cohort's features and a fit). It is not
-        built, and it is deliberately <strong>not stubbed</strong> — a mock ranking would be thrown away.
+        The centrepiece shipped: a learned scorer over structure-derived features ranks the cohort
+        against an evidence baseline. The pre-registered leave-one-out result and the per-target scores
+        are on the <Link to="/scorer">Scorer</Link> page.
+      </p>
+      <p>
+        <strong>Deferred, and named rather than mocked:</strong> classifying the disagreements,
+        baseline rank, delta, and per-feature attribution — a display gap, not a data gap (the
+        attributions are computed and stored). It was never stubbed: a mock ranking would have been
+        thrown away.
       </p>
 
       <h3>What it will never do — commitments (D-028)</h3>
       <ul>
-        <li><strong>It classifies disagreement; it does not explain it.</strong> Attribution is a statement about the <em>model</em> ("feature 6 drives this rank"), never about the target's biology.</li>
+        <li><strong>When it classifies disagreement, it will not explain it.</strong> Attribution is a statement about the <em>model</em> ("the model's confidence in the membrane-proximal region drives this rank"), never about the target's biology.</li>
         <li><strong>No causal biological claim</strong> — the system has no standing to make one.</li>
         <li><strong>No ordering of disagreements by "interestingness"</strong> — that is an explanation wearing a number.</li>
         <li>Some disagreements have a known explanation — two proteins can fold into similar shapes without sharing much of their sequence. Where that is the case, it is <strong>labelled as a known confound</strong>. The claim we can stand behind is narrower, and so it is stronger.</li>

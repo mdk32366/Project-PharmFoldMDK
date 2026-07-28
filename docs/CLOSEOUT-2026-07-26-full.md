@@ -152,6 +152,10 @@ were not — they are appended.
 
 **Correction, 2026-07-29** (on §5's *"every acronym a reader meets is decodable"*): this overstated
 the guard. It polices a curated watchlist on scanned surfaces only. A later measurement found **8 of
-11 ruled terms undefined and 5 surfaces unscanned**.
+11 ruled terms undefined and 11 prose-bearing surfaces unscanned** (measured mechanically: components
+rendering user-visible prose, minus the four in `surfaces()`; 2 of the 11 — `Term` and `Glossary` —
+render definitions themselves, so the effective copy-sweep target is ~9). The earlier "5" here was a
+Planner estimate, not a measurement, and was wrong — a correction about unmeasured claims that itself
+carried an unmeasured number.
 
 **Also: it is six surfaces now, not five** — the `Scorer` surface (D-062) was added after this closeout.

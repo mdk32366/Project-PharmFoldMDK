@@ -155,12 +155,14 @@ describe('ScorerView', () => {
     getRanking.mockResolvedValue(RANKING)
     getCoverage.mockResolvedValue(COVERAGE)
     const { container } = renderView()
-    await waitFor(() => expect(container.textContent).toMatch(/above the pLDDT-50 floor/))
+    await waitFor(() => expect(container.textContent).toMatch(/rankable after the pLDDT-50 floor/))
     const recon = container.querySelector('.ranking-reconciliation').textContent
     // rankedFolded from coverage.rows (2 folded∧ranked), ranking set 7, floor 50 — none typed
     expect(recon).toMatch(/2 ranked/)
-    expect(recon).toMatch(/7 above the pLDDT-50 floor/)
-    expect(recon).toMatch(/these 7 are ranked below/)
+    expect(recon).toMatch(/7 rankable after the pLDDT-50 floor/)
+    expect(recon).toMatch(/the table below shows those 7/)
+    // A2 (D-066 amendment): 'ranked' is no longer used in the membership sense decision 4 forbids
+    expect(recon).not.toMatch(/ranked below/)
   })
 
   it('the Score column carries the non-calibration boundary in its tooltip, derived, distinct from `structural score`', async () => {

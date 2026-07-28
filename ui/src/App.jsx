@@ -12,9 +12,10 @@ function TargetRoute() {
   return <TargetView id={id} />
 }
 
-// PR B: shell + single-target view. PR C closes steps 2–5: coverage view (the honest denominator),
-// method note, and ADC context. The ranking table (the centrepiece) is step 6 and waits on the
-// scorer — deliberately not mocked.
+// PR B: shell + single-target view. PR C closed steps 2–5: coverage view (the honest denominator),
+// method note, and ADC context. D-062 landed step 6 — the Scorer surface (the centrepiece),
+// rendering the pre-registered result (F-004) from /api/ranking. No longer forward-looking: it
+// shipped, was never mocked, and is a real route in the nav below.
 export default function App() {
   return (
     <div className="app">

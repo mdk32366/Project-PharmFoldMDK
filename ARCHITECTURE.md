@@ -119,7 +119,12 @@ updated (the `test_image_contents.py` pattern of reading a non-Python artefact a
 load-bearing claim is the **topology**, pinned too: inference runs on the GPU tier *outside* Fly
 (D-004); the serving image is GPU-free (DEP-001). Two D-050 follow-ups close here — `AdcContext`'s
 NECTIN4 pLDDT is now derived (the last hardcoded per-target literal), and `CoverageLine`'s
-zero-`rankedUnfolded` wording.
+zero-`rankedUnfolded` wording. **Named Constraint-A gap, deferred (freeze push 2026-07-29):**
+`plddt.js`'s `COHORT_MAX_PLDDT = 84.23` is a cohort statistic typed as a module constant — it is
+**rendered only** (the top-band caveat string; the band boundaries are 70/60/50/0, so it sets no
+threshold), and deriving it would thread a data source into a currently source-free pure module for a
+value correct today. Recorded here beside the former NECTIN4 `77.26` literal rather than converted on
+freeze day.
 **D-053 adds per-target cancer associations** — a sixth public read route `GET /api/associations`
 served by the pure file-derived supplier `core/cancer_associations.py` (mirrors `adc_reference.py`:
 rejects an uncited row, validates `qh_score`, groups sorted-descending, flags cohort-join misses),
