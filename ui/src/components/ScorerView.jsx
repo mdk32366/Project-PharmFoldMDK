@@ -21,6 +21,32 @@ const median = (xs) => {
 }
 const f3 = (x) => (x == null ? '—' : x.toFixed(3))
 
+// D-062 / F-006 — the Score COLUMN tooltip. Distinct from the `structural score` Term (which defines
+// what the score means); this one carries the observed distribution and the non-calibration boundary.
+// Every number is derived from the ranking payload (Constraint-A, D-050) — no literal 0.116/0.220/
+// 0.285/56 here. The non-calibration sentence is a claim boundary (F-006 Finding 3): it is asserted
+// present in the rendered tooltip DOM and is never trimmed for length. The F-005 pLDDT-driven note
+// lives here now (D-066 §2), not as a standalone intro paragraph.
+function ScoreColumnHeader({ scores, labelledCount, rankingSetCount }) {
+  const lo = f3(Math.min(...scores))
+  const hi = f3(Math.max(...scores))
+  const mid = f3(median(scores))
+  const id = 'gloss-score-column'
+  return (
+    <span className="term">
+      <button type="button" className="term-trigger" aria-describedby={id}>Score</button>
+      <span role="tooltip" id={id} className="term-def score-def">
+        The model's output for each target, between 0 and 1; higher means more like the{' '}
+        {labelledCount} targets people have already built ADCs against. <b>It is not a calibrated
+        probability</b> — calibration was never tested at this cohort size, so read it as a position
+        in the ordering, not a percentage chance. In this run the {scores.length} scores span{' '}
+        {lo}–{hi}, median {mid}, against a labelled fraction of {labelledCount}/{rankingSetCount}. The
+        ordering is substantially pLDDT-driven (F-005).
+      </span>
+    </span>
+  )
+}
+
 export default function ScorerView() {
   const [ranking, setRanking] = useState(null)
   const [coverage, setCoverage] = useState(null)
@@ -67,6 +93,9 @@ function FullResult({ ranking, coverage, partial }) {
   const he = r.headto_evidence || []
   const distSymbols = new Set(dist.map((d) => d.symbol).concat(r.nonconvergent || []))
   const evidenceValues = [...new Set(he)].sort((a, b) => a - b)
+  const scores = ranking.rows.map((row) => row.score)                     // for the Score-column tooltip (derived)
+  const rankedFolded = coverage.rows.filter(                              // the D-024 disposition count (67 live)
+    (x) => x.disposition === 'ranked' && x.fold_status === 'folded').length
 
   return (
     <div className="scorer">
@@ -193,21 +222,48 @@ function FullResult({ ranking, coverage, partial }) {
               <p><b>(c)</b> The top of the distribution is the famous targets — consistent with signal and
                 equally consistent with (b). Not narrated as validation.</p>
             </div>
+
+            {/* D-066 §2: the deferred-columns note lives under section D now, not in the ranking column */}
+            <p className="deferred">
+              Deferred columns, named rather than faked: baseline rank, delta, disagreement class, and
+              per-feature attribution. The <b>β·x attributions are stored</b> in the result and simply
+              not yet rendered — a display gap, not a data gap.
+            </p>
           </section>
         </div>
 
-        {/* ── E — the ranking table (coverage line first, then table) ── */}
+        {/* ── E — the coverage box and the ranking table (D-066: box + table only) ── */}
         <div className="scorer-ranking">
           <section className="scorer-table">
             <h3>E · The ranking table</h3>
-            <p className="ranking-intro">
-              Ranked by <Term name="structural score">structural score</Term>. This ordering is
-              substantially pLDDT-driven (F-005): the model's confidence, not the geometry features,
-              carries most of the signal.
+            {/* the coverage box: the D-024 partition plus the three named exclusions (D-062 requires
+                them reachable) — both are part of the coverage statement, so they travel together */}
+            <div className="coverage-box">
+              <CoverageLine coverage={coverage.coverage} rows={coverage.rows} />
+              <details className="excluded-set">
+                <summary>Excluded from ranking ({(r.excluded || []).length}) — three reasons</summary>
+                <ul>
+                  {(r.excluded || []).map(([sym, reason]) => (
+                    <li key={sym}>{sym} — {reason}</li>
+                  ))}
+                </ul>
+              </details>
+            </div>
+            {/* D-066 dec 2: the reconciliation the box cannot make — all three numbers derived —
+                immediately above the table it explains. 67 (ranked & folded) → 56 (above the floor). */}
+            <p className="ranking-reconciliation">
+              <b>{rankedFolded}</b> ranked · <b>{r.n_ranking_set}</b> above the pLDDT-{r.plddt_floor}{' '}
+              floor · these <b>{r.n_ranking_set}</b> are ranked below
             </p>
-            <CoverageLine coverage={coverage.coverage} rows={coverage.rows} />
             <table className="ranking-table">
-              <thead><tr><th>Rank</th><th>Symbol</th><th>Score</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Rank</th><th>Symbol</th>
+                  <th>{scores.length
+                    ? <ScoreColumnHeader scores={scores} labelledCount={r.n_fit_positives} rankingSetCount={r.n_ranking_set} />
+                    : 'Score'}</th>
+                </tr>
+              </thead>
               <tbody>
                 {ranking.rows.map((row) => (
                   <tr key={row.accession}>
@@ -216,19 +272,6 @@ function FullResult({ ranking, coverage, partial }) {
                 ))}
               </tbody>
             </table>
-            <p className="deferred">
-              Deferred columns, named rather than faked: baseline rank, delta, disagreement class, and
-              per-feature attribution. The <b>β·x attributions are stored</b> in the result and simply
-              not yet rendered — a display gap, not a data gap.
-            </p>
-            <details className="excluded-set">
-              <summary>Excluded from ranking ({(r.excluded || []).length}) — three reasons</summary>
-              <ul>
-                {(r.excluded || []).map(([sym, reason]) => (
-                  <li key={sym}>{sym} — {reason}</li>
-                ))}
-              </ul>
-            </details>
           </section>
         </div>
       </div>

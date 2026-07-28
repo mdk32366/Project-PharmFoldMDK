@@ -72,7 +72,8 @@ describe('ScorerView', () => {
     const { container } = renderView()
     await waitFor(() => expect(container.textContent).toMatch(/0\.309/))
     const t = container.textContent
-    for (const lit of ['0.607', '-0.0483', '56']) expect(t).not.toContain(lit)
+    // D-066 §4 extends the absence set to the F-006 numbers and the 67/56 collision values
+    for (const lit of ['0.607', '-0.0483', '56', '67', '0.116', '0.220', '0.285']) expect(t).not.toContain(lit)
     // 12 and 8 collide with the section-C dates; assert their live composites are absent instead
     expect(t).not.toMatch(/12 curated Group B/)
     expect(t).not.toMatch(/N = 8/)
@@ -137,8 +138,55 @@ describe('ScorerView', () => {
     const t = container.textContent
     // caveat (b) comes after the distribution/Spearman (it is the last thing in the result section)
     expect(t.indexOf('leave-one-out distribution')).toBeLessThan(t.indexOf('Now tested, not open'))
-    // the coverage line (its 'targets' summary) precedes the ranking table's deferred-columns note
-    expect(t.indexOf('E · The ranking table')).toBeLessThan(t.indexOf('Deferred columns'))
+    // coverage box → reconciliation → table: the coverage line stays with its table even stacked
+    // (D-066 §4). Asserted on DOM position, not text order, so it is layout-proof.
+    const box = container.querySelector('.coverage-line')
+    const recon = container.querySelector('.ranking-reconciliation')
+    const table = container.querySelector('.ranking-table')
+    const before = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(before(box, recon)).toBe(true)
+    expect(before(recon, table)).toBe(true)
+    // the deferred-columns note moved OUT of the ranking column into section D (left), so it now
+    // precedes the E heading in source order (D-066 §2)
+    expect(t.indexOf('Deferred columns')).toBeLessThan(t.indexOf('E · The ranking table'))
+  })
+
+  it('reconciles 67 → 56 immediately above the table, every number derived (D-066 dec 2)', async () => {
+    getRanking.mockResolvedValue(RANKING)
+    getCoverage.mockResolvedValue(COVERAGE)
+    const { container } = renderView()
+    await waitFor(() => expect(container.textContent).toMatch(/above the pLDDT-50 floor/))
+    const recon = container.querySelector('.ranking-reconciliation').textContent
+    // rankedFolded from coverage.rows (2 folded∧ranked), ranking set 7, floor 50 — none typed
+    expect(recon).toMatch(/2 ranked/)
+    expect(recon).toMatch(/7 above the pLDDT-50 floor/)
+    expect(recon).toMatch(/these 7 are ranked below/)
+  })
+
+  it('the Score column carries the non-calibration boundary in its tooltip, derived, distinct from `structural score`', async () => {
+    getRanking.mockResolvedValue(RANKING)
+    getCoverage.mockResolvedValue(COVERAGE)
+    const { container } = renderView()
+    await waitFor(() => expect(container.textContent).toMatch(/The result/))
+    // a focusable Score trigger with its OWN tooltip, separate from the structural-score Term
+    const trigger = [...container.querySelectorAll('button.term-trigger')].find((b) => b.textContent.trim() === 'Score')
+    expect(trigger).toBeTruthy()
+    expect(trigger.getAttribute('aria-describedby')).toBe('gloss-score-column')
+    const def = container.querySelector('#gloss-score-column')
+    expect(def.getAttribute('role')).toBe('tooltip')
+    // the non-calibration sentence is a claim boundary — present in the DOM, not trimmed (F-006 Finding 3)
+    expect(def.textContent).toMatch(/not a calibrated probability/)
+    expect(def.textContent).toMatch(/not a percentage chance/)
+    // the F-005 pLDDT-driven note lives here now, not as a standalone intro paragraph (D-066 §2)
+    expect(def.textContent).toMatch(/pLDDT-driven \(F-005\)/)
+    expect(container.querySelector('.ranking-intro')).toBeNull()
+    // derived distribution: fixture scores [0.91,0.63,0.44] -> span 0.440–0.910, median 0.630
+    expect(def.textContent).toMatch(/0\.440/)
+    expect(def.textContent).toMatch(/0\.910/)
+    expect(def.textContent).toMatch(/median 0\.630/)
+    // labelled fraction 3/7 derived (n_fit_positives / n_ranking_set), never the literal 0.214
+    expect(def.textContent).toMatch(/3\/7/)
+    expect(def.textContent).not.toContain('0.214')
   })
 
   it('renders the not_run state', async () => {

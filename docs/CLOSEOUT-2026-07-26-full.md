@@ -141,3 +141,17 @@ afternoon. Everything else is features; that is the argument.
 main `3154c00`, clean. pytest 267 / 11 skipped, UI 60 / 15. Seven decisions closed. The scorer is
 one owner-reserved judgement away from being pure code against a three-session-old spec. Tomorrow is
 a delivery, not a build.
+
+---
+
+## Corrections (appended 2026-07-29 — D-066 §5, NOT edited in place)
+
+**⚠ This section is dated after the closeout.** Everything above is the record of what was believed
+on 2026-07-26; editing it in place would make the log claim these corrections were known then. They
+were not — they are appended.
+
+**Correction, 2026-07-29** (on §5's *"every acronym a reader meets is decodable"*): this overstated
+the guard. It polices a curated watchlist on scanned surfaces only. A later measurement found **8 of
+11 ruled terms undefined and 5 surfaces unscanned**.
+
+**Also: it is six surfaces now, not five** — the `Scorer` surface (D-062) was added after this closeout.
