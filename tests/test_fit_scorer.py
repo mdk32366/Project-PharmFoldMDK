@@ -59,6 +59,46 @@ def test_build_rows_names_the_three_exclusion_mechanisms():
     assert rows["FAILED"].in_ranking_set is False and rows["FAILED"].exclusion_reason == "not_folded"
 
 
+def test_held_out_below_floor_reads_held_out_not_below_floor():
+    """The TMEM108 case (D-068 precedence amendment 2026-07-29). A held-out target that folded BELOW
+    the floor: held_out is pLDDT-independent (a whole-method target is incomparable at any confidence),
+    so it precedes below_floor. The backend has always classified it this way; the UI `targetStatus`
+    was realigned to agree, closing a two-surface disagreement. This pins the backend side so the two
+    implementations cannot silently drift apart."""
+    rec = _rec("TMEM108", 0.9, disp="held_out", plddt=41.03)   # held out AND below the floor
+    (row,) = fs.build_scorer_rows([rec], set(), {})
+    assert row.in_ranking_set is False
+    assert row.exclusion_reason == "held_out"                  # NOT "below_floor"
+
+
+def test_status_classification_partitions_the_cohort_no_eligible_target_left_out():
+    """The partition assertion (owner). Every record classifies into exactly ONE bucket and the buckets
+    sum to the cohort; an ELIGIBLE record (folded, above floor, ranked disposition, all six features) is
+    ALWAYS in the ranking set — so the UI's defensive fifth state ('unranked_unexplained': folded and
+    above-floor and ranked yet absent from the ranking) corresponds to no backend record and cannot
+    occur in production. This is the Python side of the two-implementation agreement: with the same
+    precedence (held_out before below_floor), a target is never scored on one surface and reasoned-away
+    on the other."""
+    from collections import Counter
+    cohort = [
+        _rec("RANK1", 1.2, disp="ranked", plddt=70.0),                              # in_ranking_set
+        _rec("RANK2", 1.3, disp="ranked", plddt=82.0),                              # in_ranking_set
+        _rec("LOW", 0.9, disp="ranked", plddt=40.0),                                # below_floor
+        _rec("WHOLE", 0.4, disp="held_out", plddt=75.0),                            # held_out (above floor)
+        _rec("TMEM108", 0.9, disp="held_out", plddt=41.0),                          # held_out (below floor)
+        _rec("FAILED", 0.0, disp="held_out", plddt=None,
+             features=(None,) * len(FEATURE_NAMES)),                                # not_folded
+    ]
+    rows = fs.build_scorer_rows(cohort, set(), {})
+    counts = Counter("ranked" if r.in_ranking_set else r.exclusion_reason for r in rows)
+    assert sum(counts.values()) == len(cohort)                                      # exactly one bucket each
+    assert counts == Counter(ranked=2, below_floor=1, held_out=2, not_folded=1)     # amendment visible
+    # no eligible-yet-excluded record: every excluded row names one of the known reasons
+    for r in rows:
+        if not r.in_ranking_set:
+            assert r.exclusion_reason in {"below_floor", "held_out", "not_folded", "excluded"}
+
+
 def test_build_rows_never_imputes_a_mean_for_a_failed_target():
     """A feature-less (failed) target is excluded with inert placeholders it is never scored on —
     NOT an imputed mean (D-027/D-060). It must not enter the ranking set."""
