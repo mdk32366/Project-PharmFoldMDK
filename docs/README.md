@@ -80,6 +80,76 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-071 — Provenance strength is three-valued: measured at fold time, measured later, or absent
+
+- **Date:** 2026-07-29
+- **Status:** Proposed → Accepted on merge.
+- **Amends:** D-070 decision 2.
+- **Relates:** D-045, D-048, D-070, F-007, F-008, D-016.
+
+**Context.** 75 of 79 folds carry no environment record. D-070 ruled that **inferred** values never
+enter the captured fields — correct, because F-007 showed the pinned manifest disagreeing with a
+measured fold. **But a reading taken off the fold host is not an inference.** It is a measurement of
+the same machine, taken later. **Weaker than fold-time capture, far stronger than a manifest.** D-070
+collapsed the two; the distinction is worth having.
+
+#### Decision (1) — three states, ordered by strength, each labelled
+
+| Strength | Source | Renders |
+|---|---|---|
+| **1 — measured at fold time** | the fold's own `fold_provenance` (D-045) | the four fields, unqualified |
+| **2 — measured later, same tier** | `data/tier_environments.json`, keyed by `tier` | the four fields, **with date and qualifier** |
+| **3 — absent** | neither | one statement, plus D-070's block |
+
+**⚠ State 2 is visually distinct and says what it is:** *"tier environment, measured {date} — not
+recorded at fold time."* **A reader must never have to work out which kind of claim they are looking
+at.**
+
+#### Decision (2) — ⚠ AMENDS D-070 decision 2
+
+> **Inferred values never enter the captured fields. A measurement may, with its date and scope
+> stated.**
+
+The distinction is **reconstruction versus observation**, not fold-time versus later. D-070's
+reasoning was aimed at the manifest and over-reached to cover a reading off the machine. **Recorded as
+a Planner over-application** — the same shape as the precedence ruling that over-applied from IGF2R to
+TMEM108.
+
+#### Decision (3) — ⚠ the rental tier gets NO state-2 record, deliberately
+
+Local is measurable: the box exists. **The rental pod does not** — RunPod instances are ephemeral and
+the 33 uncaptured rental folds ran on instances that are gone. **⚠ The 4 captured rental folds must
+NOT populate the other 33** — they describe *those* folds, on *that* instance, on 2026-07-25; applying
+them elsewhere is reconstruction wearing a measurement's clothes. **Local fills; uncaptured rental
+stays at state 3.** The asymmetry is correct and informative: **ephemeral compute costs provenance you
+cannot get back.**
+
+#### Decision (4) — the artefact is a measurement with its own provenance, not a copy of the manifest
+
+`data/tier_environments.json` records what was **read off the machine**, with `measured_at` and a note
+that it post-dates the folds. **Not a copy of `worker/requirements.txt`** — F-007 is why those are
+different things — and the manifest's contents are still never rendered (D-070 decision 3 stands).
+`data/` ships in the runtime tier, so no DEP-001 problem.
+
+- **Deep-learning justification.** F-008 established the cohort was folded under two precisions
+  confounded with length, and that features 3–4 — which carry the signal per F-005 — are tier-shifted.
+  **A reader cannot evaluate that without seeing what each tier ran.** This panel makes F-008 checkable
+  rather than asserted.
+
+- **Consequences / test surface:**
+  - All three states render, each pinned by a fixture.
+  - **State 2 never renders without its date and qualifier** — asserted.
+  - **State 1 is never overwritten by state 2** — a captured fold ignores the tier record (asserted by
+    the state-1 branch taking precedence).
+  - **No rental tier record exists** — asserted (a rental detail's `tier_environment` is `None`), so a
+    future edit cannot quietly add one.
+  - Constraint-A: no version string, device name or date typed into a component; the state-2 values are
+    served from `data/tier_environments.json`, the state-3 statement carries none.
+  - D-070's block still renders for state 3. The four-"not captured"-fields grid is replaced there by
+    one statement — better presentation, the asymmetry with state 2 (no values vs values) kept legible.
+
+---
+
 ### F-008 — The cohort was folded under two precisions confounded with length; F-005 gains a third candidate explanation the design cannot rule out
 
 - **Date:** 2026-07-29
@@ -238,6 +308,13 @@ and nothing else would have found it.
 **⚠ The bound, stated:** the pin was measured on the **local** box; the disagreement is on the **rental**
 tier. **No local fold post-dates D-045**, so the local path has no measurement and this finding says
 nothing about it either way. **Unknown, not fine.**
+
+**Amendment (2026-07-29, D-071 §1).** The local path was measured: on the fold host, in the worker
+venv, `torch 2.11.0+cu128 · cuda 12.8 · NVIDIA RTX PRO 2000 Blackwell · transformers 5.14.1` — **an
+exact match to the pin.** The local box agrees with `worker/requirements.txt`; the *"unknown, not
+fine"* bound is closed for the local tier. **The rental disagreement (2.8.0 vs pinned 2.11.0) now
+stands alone as the finding** — the pin is right where it was taken, wrong where the ephemeral pod ran
+a different build.
 
 ---
 

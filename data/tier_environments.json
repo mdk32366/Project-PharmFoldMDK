@@ -1,0 +1,10 @@
+{
+  "_note": "D-071 state 2 — the software environment MEASURED ON EACH TIER'S MACHINE AFTER the folds, keyed by tier. Not fold-time capture (that is state 1, per fold, in fold_provenance) and not the pinned manifest (worker/requirements.txt — F-007 shows the pod disagreed with it). Only the LOCAL tier has an entry: the box still exists and was measured. The RENTAL pods were ephemeral RunPod instances that are gone, so there is deliberately NO rental entry — those folds stay state 3 (D-071 decision 3). One reading covers all 42 local folds: same box, same worker venv, folded within one working week, no reinstall (D-071 decision 1 qualifier carries the residual uncertainty).",
+  "local": {
+    "torch_version": "2.11.0+cu128",
+    "transformers_version": "5.14.1",
+    "device_name": "NVIDIA RTX PRO 2000 Blackwell Generation Laptop GPU",
+    "cuda_version": "12.8",
+    "measured_at": "2026-07-29"
+  }
+}

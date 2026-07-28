@@ -126,6 +126,18 @@ varying across the chain, hand-rolled SVG, D-037); and the D-039 band scheme is 
 single source of truth (structure and legend cannot disagree), with the numeric re-justification of
 the 60 line against the enlarged live cohort left as a named owner action (D-016 — the individual
 `mean_plddt` values live in Postgres, not a repo artefact, so they are not fabricated here).
+**D-070 then D-071 make provenance THREE-valued:** an uncaptured fold first gained a *"what we can
+say"* block (tier + folded_at + the worker manifest **by name**, never its contents — D-070); D-071
+then splits *uncaptured* into **measured-later** and **absent**. The detail projection gains a
+`tier_environment` field (`app/reads.py`, keyed by `tier` from `data/tier_environments.json` — a field
+on the existing route, no new route, no `system-model.json` change). **State 1** (fold-time capture)
+renders the four fields unqualified; **state 2** (the local box measured after the folds — one reading
+for all 42 local folds) renders them **with a "measured {date} — not recorded at fold time" qualifier**
+(D-070 dec 2 amended: a *measurement* may enter the fields, an *inference* never can — F-007 is why);
+**state 3** (the ephemeral rental pods, gone) renders one statement, not a four-field grid, plus D-070's
+block. **Rental gets no state-2 record by construction** (decision 3) — ephemeral compute costs
+provenance you cannot get back. This makes **F-008's two-precision confound checkable on the surface**.
+The local measurement matched the pin exactly, closing F-007's *"unknown, not fine"* local bound.
 **D-051 adds the narrative surfaces and moves the nav to five by absorption** (not addition — UI
 Plan v2 §3's four-surface constraint is honoured, D-028 §9): a **Story** cold-open at `/` (the
 research question, that *we ran ESMFold ourselves*, and what came out — every cohort number derived

@@ -27,6 +27,7 @@ The load-bearing decisions live here:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, Optional
 
@@ -41,6 +42,24 @@ from db.models import JobRecord, ProteinAnalysis, RankingResult, RankingRun, Tar
 # by the API so the surface derives it rather than typing it (D-062 Constraint-A). It never changes;
 # the DERIVED count (n_fit_positives = 12) is what the roster produced and is stored per run.
 PAPER_PUBLISHED_GROUP_B = 22
+
+
+def _load_tier_environments() -> dict[str, Any]:
+    """D-071 state 2 — the per-TIER environment MEASURED ON THE MACHINE AFTER the folds, keyed by
+    tier (never per fold). Only tiers whose machine still exists have an entry; the ephemeral rental
+    pods have none, so those folds stay state 3 (D-071 decision 3). A measurement, not the manifest
+    (F-007) and not an inference (D-070 decision 2, as amended by D-071). Loaded once at import; a
+    missing file yields ``{}`` so the field is simply ``None`` everywhere. Keys ignored: any starting
+    ``_`` (the file's own documentation note)."""
+    path = Path(__file__).resolve().parent.parent / "data" / "tier_environments.json"
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+    return {k: v for k, v in raw.items() if not k.startswith("_")}
+
+
+_TIER_ENVIRONMENTS = _load_tier_environments()
 
 # Meta keys carried into the light list, in payload order (D-034 decision 1 / Orders §1).
 _LIST_META_KEYS = (
@@ -82,6 +101,9 @@ def detail_projection(row: ProteinAnalysis) -> dict[str, Any]:
         out[key] = meta.get(key)
     out["sequence"] = meta.get("sequence")
     out["fold_provenance"] = meta.get("fold_provenance")
+    # D-071 state 2: the tier's measured-later environment, or None. A field on the existing detail
+    # route — no new route, no system-model.json change. `rental` has no entry by design (decision 3).
+    out["tier_environment"] = _TIER_ENVIRONMENTS.get(out.get("tier"))
     return out
 
 
