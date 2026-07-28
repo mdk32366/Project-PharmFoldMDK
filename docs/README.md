@@ -181,6 +181,101 @@ required rather than merely preferred.
 
 ---
 
+### D-067 — The narrative surfaces are told through to the result, including a promise kept and a claim that outran the build
+
+- **Date:** 2026-07-29
+- **Status:** Accepted — the work shipped in **PR #94** (walk-verified live). **This entry is
+  retroactive**; see Consequences for why, because the reason is itself part of the record.
+- **Relates:** D-028 (the commitments this bounds), D-041 §2 (ESMFold is the deep learning; the
+  scorer turns its output into a checkable judgement), D-043 (`failed` vs `not_folded`), D-050
+  (derived, never hardcoded), D-056 (the readability ceiling), D-062 (the scorer surface), D-064 (the
+  zero-positive defect the correction records), D-066 (the `ranked`/`rankable` vocabulary), F-004/F-005
+  (the result and its reversal), D-069 (the self-sufficiency principle this foreshadows).
+
+---
+
+**Context.** The scorer shipped (F-004, F-005), but the two narrative surfaces still stopped before
+the result: Story promised a ranking it said was "deliberately not built," and MethodNote asserted a
+capability the build did not have. This entry tells both surfaces through to the result. Two Planner
+corrections shaped it, and are recorded because they are the reason it reads as it does:
+
+- **The swapped-attribution error.** The Planner reported from a screenshot that Story's
+  IGF2R/FAT2/MUC16 attribution was *swapped*. It was not — `Story.jsx:25-26` derived the groups
+  correctly. The real defect was a **hardcoded reason string contradicting a derived one**. A
+  screenshot supported a suspicion; the source settled it. (Recorded so the next screenshot-driven
+  suspicion is checked against the source before it becomes a claim.)
+- **The audit found the known defect on a second surface.** Story's false claim was already known;
+  the same claim sat on **MethodNote** and nobody had looked. That is why the §1.4 audit ran
+  *mechanically across all prose-bearing components*, not on the surfaces a reviewer happened to open.
+
+---
+
+#### Decision (1) — Story's "deliberately not built" promise RESOLVES, it is not deleted
+
+*"What is deliberately not built… we will not fake it."* The promise was **kept**: the scorer now
+exists and has run, and the ranking is real at reduced scope. The paragraph resolves into a
+commitment-met, not a boast, and is not silently removed — a reader who saw the promise deserves to
+see it honoured.
+
+#### Decision (2) — MethodNote's forward-looking section is FALSE and is SPLIT, not simply updated
+
+*"What it will do — not yet, and never mocked… It waits on the scorer… It is not built."* Two claims
+in one paragraph with **different truth values** now: the ranking **is** built (real scores, reduced
+scope); disagreement classification is **not** (deferred, with baseline rank, delta and per-feature
+attribution). Updating it wholesale would replace one false claim with another, so it is **split**
+into what shipped and what is deferred-with-reason. Related, same file: the D-028 commitments opened
+*"It classifies disagreement; it does not explain it"* — **present tense asserting a capability that
+does not exist**, inside the section whose job is bounding claims. The commitment stands; the tense
+must not assert the build.
+
+#### Decision (3) — Story's hardcoded fail reason is DERIVED; D-043's distinction survives
+
+`Story.jsx:58` hardcoded *"(a documented hardware ceiling)"* for the `failed` group — but IGF2R's
+`tier_reason` is `whole_sequence_fold` (attempted as one sequence, ran out of GPU memory), and
+"ceiling" describes `over_local_ceiling`, which is FAT2/MUC16's `not_folded` reason. **Derive it.**
+D-043's distinction must survive: `failed` (attempted, did not complete) and `not_folded` (never
+attempted) stay separate. *As shipped:* both groups carry a **category derived from `fold_status`**,
+neither carries a hardcoded reason, and the per-target reason lives on Coverage where it is derived
+and where the jargon belongs — the original defect was a *false* reason, not an *absent* one.
+
+#### Decision (4) — `COHORT_MAX_PLDDT` is a cohort statistic typed as a constant; report before changing
+
+`plddt.js`'s `COHORT_MAX_PLDDT = 84.23`: if only rendered, derive it (D-050); **if it also sets a
+band boundary, it is a decision constant, not a statistic**, and converting it changes behaviour, so
+report first. *As found:* rendered-only (the top-band caveat string; boundaries are 70/60/50/0), so
+safe to derive — but **deferred** as a named Constraint-A gap rather than thread a data source into a
+pure, source-free module on freeze day for a value correct today.
+
+#### Decision (5) — the D-066 `ranked`/`rankable` vocabulary is applied across the components
+
+D-066 fixed the vocabulary (`ranked` = the D-024 disposition over 82; `rankable` = the ranking's
+membership after the pLDDT floor); this decision applies it consistently across the surfaces that
+render those quantities. The ScorerView reconciliation was reworded (D-066 A2 amendment) to drop
+`ranked`-as-membership; Story:50 and MethodNote:50 render *"ranked-and-folded"* (the D-024
+denominator, not membership) and were assessed **correct as written** — a confirmation, not a change.
+
+---
+
+- **Deep-learning justification.** **MethodNote is where a reader learns that ESMFold is the deep
+  learning** and that the scorer turns its output into a *checkable judgement* (D-041 §2) — an
+  argument that until now lived only in the log. **Story is where the same reader learns what the
+  result was and what remains unresolved.** Both were telling a story that stopped before the
+  interesting part; this entry tells them through, so the honesty claim is made *on the surfaces*, not
+  reserved for the record.
+
+- **Consequences / test surface:**
+  - **⚠ This entry was written AFTER its code shipped (#94), and that is itself recorded.** The orders
+    file carrying the entry text (`ORDERS-Code-2026-07-29-D-067-narrative-surfaces.md`) **never
+    reached the Builder** — the export channel's **fifth** loss. *"Log leads code" was violated here
+    by a delivery failure, not a decision*, and the record says so rather than papering over the gap.
+  - Story (beats 4–6, the correction, the resolved promise, the derived fail-reason) and MethodNote
+    (the shipped/deferred split, the D-028 tense, the attribution example) shipped in #94; **UI 74/74**,
+    and **readability held at FK 12.12 against the pinned 12.5 ceiling** (D-056), measured after wiring.
+  - The self-sufficiency this reaches for — the explanation living where the impression forms — is
+    generalised the same day by **D-069**.
+
+---
+
 ### D-066 — `ranked` names two different quantities, and a shared component asserted a claim it cannot verify
 
 - **Date:** 2026-07-29
