@@ -80,6 +80,290 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-069 — Every surface is self-sufficient: what a reader needs to understand what they are looking at is on the surface they are looking at
+
+- **Date:** 2026-07-29
+- **Status:** Proposed → Accepted on merge.
+- **Type:** A principle. **It names a pattern the project has already been following inconsistently**
+  and makes it enforceable rather than remembered.
+- **Relates:** D-024 (the denominator travels with the claim), D-055 + its amendment (terms decodable
+  in situ, not on another page), D-062 (caveat (b) renders with the result), D-068 (a score never
+  renders without its distribution context), D-050 (derived, never hardcoded).
+
+---
+
+**Context.** Three separate decisions have independently ruled the same thing: a number needs its
+denominator beside it, a term needs its definition beside it, a result needs its caveat beside it.
+**Each was ruled as a local fix. They are one rule**, and stating it once prevents the fourth
+instance from being argued from scratch.
+
+The immediate case: F-005's finding — that the ordering is carried by the model's confidence rather
+than by geometry, and that this is ambiguous — is currently stated on the Scorer surface. **But a
+reader forms their impression of it on the target page**, seeing the same pattern target after
+target. **The explanation must be where the impression is formed.**
+
+---
+
+#### Decision (1) — the rule
+
+**A reader must be able to understand what they are looking at without leaving the surface they are
+on.** Every rendered number carries its denominator and its scale; every rendered claim carries its
+boundary; every term of art is decodable in place.
+
+**A surface that requires navigation to be understood is incomplete**, regardless of whether the
+missing piece exists elsewhere in the app.
+
+#### Decision (2) — ⚠ self-sufficiency is implemented as SHARED COMPONENTS, never duplicated prose
+
+**This is the trap, and it is the one this project has been bitten by repeatedly.**
+
+If F-005's ambiguity note is written once on Scorer and again on TargetView, **there are now two
+copies of one claim, and they will drift.** That is *two paths to one quantity* — seven instances
+recorded — **applied to prose instead of data**, and prose drift is harder to detect because no test
+naturally compares two sentences.
+
+**Ruled: a claim that appears on more than one surface is a component, not a string.** One source,
+rendered in many places, changed in one. **A claim boundary duplicated as literal text in two
+components is a defect** — the same class as a hardcoded denominator (D-050).
+
+#### Decision (3) — self-sufficiency is LAYERED, so it does not fight readability
+
+**The obvious objection: if everything must be on-surface, copy grows without bound and D-056's
+readability ceiling breaks.** Story is already at FK 12.12 against a 12.5 ceiling.
+
+**Resolved by layering, not by volume:**
+
+- **Body copy carries the claim and its boundary, short.**
+- **Tooltips carry the depth** — definitions, derivations, the F-005 ambiguity in full.
+
+**Self-sufficiency means the reader never has to navigate away. It does not mean every word is in
+the body.** The D-055 amendment already established the mechanism; this entry states why it is
+required rather than merely preferred.
+
+#### Decision (4) — what this promotes from deferred to required
+
+- **⚠ The glossary copy sweep across the unscanned surfaces (11 prose-bearing, ~9 effective) is no
+  longer optional.** A surface carrying undefined terms is not self-sufficient by definition.
+  **Still post-freeze, but no longer discretionary** — it now has a principle behind it rather than
+  a preference.
+- **⚠ The `.term-def` overflow fix becomes load-bearing.** A definition that opens off the right
+  edge of a narrow viewport **is not decodable in place**, which means the surface is not
+  self-sufficient for that reader. **This upgrades the fix from cosmetic to principle-critical.**
+- **Every surface rendering a cohort or result number must render its denominator** — D-024
+  generalised beyond the coverage line.
+
+#### Decision (5) — what this does NOT license
+
+- **Not more claims.** Self-sufficiency is about making existing claims understandable, **not about
+  saying more.** Every claim boundary in D-028, D-041 and D-062 stands unchanged.
+- **Not duplicated numbers.** Numbers stay derived (D-050). A denominator rendered on two surfaces
+  is computed twice from one endpoint, never typed twice.
+- **Not a freeze-day sweep.** Applied **incrementally, per surface, as each is touched.** Attempting
+  it everywhere at once would be exactly the scope creep the freeze exists to prevent.
+
+---
+
+- **Deep-learning justification.** The project's central claim is that the system is **visible about
+  what it cannot do.** Visibility that requires navigation is not visibility — a reader who does not
+  click does not see the bound, and forms an impression the system knows to be unsupported. **This
+  entry is what makes the honesty claim operational rather than aspirational**, and it applies most
+  sharply to F-005, whose finding is ambiguous in a way a casual reader will not infer unaided.
+
+- **Consequences / test surface:**
+  - **A claim rendered on two surfaces is a shared component** — asserted by absence of the
+    duplicate literal in the second component.
+  - **Every surface rendering a score, percentile or cohort count renders its denominator or scale**
+    — asserted per surface as each is touched.
+  - **Readability measured per surface after each application**, against D-056's ceiling. **If a
+    surface breaches, depth moves to tooltips — the claim boundary is never the thing shortened.**
+  - **Applied incrementally.** This entry does not itself change any surface; it governs the ones
+    that follow, beginning with D-068.
+
+---
+
+### D-068 — The target record carries its scorer result, its status, and its attribution — never a bare number
+
+- **Date:** 2026-07-29
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-028 (attribution is a statement about the model, never about the target's biology),
+  D-021 (held-out targets), D-024 (the denominator travels), F-004 (the result), F-005 (what carries
+  it), F-006 (the scores are compressed and uncalibrated), D-062 (the scorer surface).
+
+---
+
+**Context.** A reader clicking a target from the ranking table lands on a page that says nothing about
+the score that ranked it. **The loop does not close.** The target record already carries structure,
+confidence, provenance and cancer associations; the one thing missing is the judgement the project
+exists to produce.
+
+#### Decision (1) — the panel is four-valued, and every target has one of the four
+
+- **ranked** → score, rank, distribution context, attributions.
+- **held out** → no score, and why (boundary-method incomparable, D-021).
+- **below the confidence floor** → no score, and why (mean pLDDT under 50, D-041 §5).
+- **not folded** → no score, and why, with the D-043 category.
+
+**⚠ "No score" is a rendered state with a reason, never a blank or a `—`** — the same discipline as
+D-043's three-valued `fold_status` and D-062's `result_status`. Most targets are not in the ranking,
+so the not-ranked states are the **common case, not the edge case**.
+
+#### Decision (2) — ⚠ the score never appears without its distribution context
+
+On the Scorer page a score sits inside a visible distribution; on a target page it has none, and a
+reader seeing 0.187 alone cannot know whether that is high, low or typical. Every rendered score
+carries, **derived**: its rank of 56, and its position relative to min / median / max (F-006).
+Without that context a bare score is not interpretable, and rendering one would be **the first
+uninterpretable number this project has shipped**.
+
+#### Decision (3) — attribution is a statement about the model, and is framed by F-005
+
+The six β_k · x_k contributions are already stored in `target_scores`, rendered as **which features
+moved this target's score and in which direction**. Bounded per D-028: *"the model's confidence in
+the membrane-proximal region contributed most to this target's rank"* is permitted; *"this target has
+an accessible epitope"* is not. **⚠ F-005 must travel with the panel** — readers will see the pLDDT
+features dominating target after target, and that pattern is ambiguous between structural order and
+study-attention. The panel states the ambiguity **where the impression is formed**, not only on the
+Scorer page.
+
+#### Decision (4) — a labelled target shows BOTH its in-model score and its leave-one-out percentile
+
+For the 12 Group B positives the fitted score is **not out-of-sample** — the model was fitted partly
+on that target. The out-of-sample number exists: F-004's per-target LOO percentile. Both render, the
+difference is stated, and the target is marked as **labelled** so no reader mistakes an in-fit score
+for a prediction. This is the pre-registered statistic rendered per target, and it is **the most
+defensible number on the page**.
+
+#### Decision (5) — ⚠ MethodNote is corrected in the SAME PR
+
+It currently reads that per-feature attribution is *"named but not yet rendered — a display gap, not a
+data gap."* Rendering it here **makes that sentence false**. Shipping the panel without the correction
+would re-introduce, on the same day, the exact defect class this week was spent removing.
+
+#### Decision (6) — what the panel must NOT say
+
+- No biological or clinical claim about the target (D-028).
+- No *"this target is promising"*, and nothing that reads that way for a high-ranking unlabelled
+  target — D-015's research question is about exactly those targets; the surface **poses** it, it does
+  not answer it.
+- No probability language (F-006).
+- No implication that a high score means an ADC would work — the label is **attempted, not viable**
+  (D-041).
+
+---
+
+- **Deep-learning justification.** The attributions are the point at which a neural network's output
+  becomes an **inspectable judgement about one protein**. D-041 chose logistic regression over an
+  embedding model precisely so a disagreement could be attributed to a feature rather than shrugged
+  at — this panel is where that choice pays off, and it is the first surface where a reader sees
+  F-005's finding **target by target** rather than as an aggregate.
+
+- **Consequences / test surface:**
+  - All four statuses render, each with a fixture, **none as a blank or `—`**.
+  - A score never renders without rank and distribution context.
+  - A labelled target renders both numbers and its labelled marker.
+  - F-005's ambiguity note is present whenever attributions render, **asserted so it cannot be
+    trimmed**.
+  - Constraint-A absence for score, rank, median and percentile literals.
+  - MethodNote's *"not yet rendered"* line gone, **asserted by absence**.
+  - Readability delta reported.
+
+---
+
+### D-067 — The narrative surfaces are told through to the result, including a promise kept and a claim that outran the build
+
+- **Date:** 2026-07-29
+- **Status:** Accepted — the work shipped in **PR #94** (walk-verified live). **This entry is
+  retroactive**; see Consequences for why, because the reason is itself part of the record.
+- **Relates:** D-028 (the commitments this bounds), D-041 §2 (ESMFold is the deep learning; the
+  scorer turns its output into a checkable judgement), D-043 (`failed` vs `not_folded`), D-050
+  (derived, never hardcoded), D-056 (the readability ceiling), D-062 (the scorer surface), D-064 (the
+  zero-positive defect the correction records), D-066 (the `ranked`/`rankable` vocabulary), F-004/F-005
+  (the result and its reversal), D-069 (the self-sufficiency principle this foreshadows).
+
+---
+
+**Context.** The scorer shipped (F-004, F-005), but the two narrative surfaces still stopped before
+the result: Story promised a ranking it said was "deliberately not built," and MethodNote asserted a
+capability the build did not have. This entry tells both surfaces through to the result. Two Planner
+corrections shaped it, and are recorded because they are the reason it reads as it does:
+
+- **The swapped-attribution error.** The Planner reported from a screenshot that Story's
+  IGF2R/FAT2/MUC16 attribution was *swapped*. It was not — `Story.jsx:25-26` derived the groups
+  correctly. The real defect was a **hardcoded reason string contradicting a derived one**. A
+  screenshot supported a suspicion; the source settled it. (Recorded so the next screenshot-driven
+  suspicion is checked against the source before it becomes a claim.)
+- **The audit found the known defect on a second surface.** Story's false claim was already known;
+  the same claim sat on **MethodNote** and nobody had looked. That is why the §1.4 audit ran
+  *mechanically across all prose-bearing components*, not on the surfaces a reviewer happened to open.
+
+---
+
+#### Decision (1) — Story's "deliberately not built" promise RESOLVES, it is not deleted
+
+*"What is deliberately not built… we will not fake it."* The promise was **kept**: the scorer now
+exists and has run, and the ranking is real at reduced scope. The paragraph resolves into a
+commitment-met, not a boast, and is not silently removed — a reader who saw the promise deserves to
+see it honoured.
+
+#### Decision (2) — MethodNote's forward-looking section is FALSE and is SPLIT, not simply updated
+
+*"What it will do — not yet, and never mocked… It waits on the scorer… It is not built."* Two claims
+in one paragraph with **different truth values** now: the ranking **is** built (real scores, reduced
+scope); disagreement classification is **not** (deferred, with baseline rank, delta and per-feature
+attribution). Updating it wholesale would replace one false claim with another, so it is **split**
+into what shipped and what is deferred-with-reason. Related, same file: the D-028 commitments opened
+*"It classifies disagreement; it does not explain it"* — **present tense asserting a capability that
+does not exist**, inside the section whose job is bounding claims. The commitment stands; the tense
+must not assert the build.
+
+#### Decision (3) — Story's hardcoded fail reason is DERIVED; D-043's distinction survives
+
+`Story.jsx:58` hardcoded *"(a documented hardware ceiling)"* for the `failed` group — but IGF2R's
+`tier_reason` is `whole_sequence_fold` (attempted as one sequence, ran out of GPU memory), and
+"ceiling" describes `over_local_ceiling`, which is FAT2/MUC16's `not_folded` reason. **Derive it.**
+D-043's distinction must survive: `failed` (attempted, did not complete) and `not_folded` (never
+attempted) stay separate. *As shipped:* both groups carry a **category derived from `fold_status`**,
+neither carries a hardcoded reason, and the per-target reason lives on Coverage where it is derived
+and where the jargon belongs — the original defect was a *false* reason, not an *absent* one.
+
+#### Decision (4) — `COHORT_MAX_PLDDT` is a cohort statistic typed as a constant; report before changing
+
+`plddt.js`'s `COHORT_MAX_PLDDT = 84.23`: if only rendered, derive it (D-050); **if it also sets a
+band boundary, it is a decision constant, not a statistic**, and converting it changes behaviour, so
+report first. *As found:* rendered-only (the top-band caveat string; boundaries are 70/60/50/0), so
+safe to derive — but **deferred** as a named Constraint-A gap rather than thread a data source into a
+pure, source-free module on freeze day for a value correct today.
+
+#### Decision (5) — the D-066 `ranked`/`rankable` vocabulary is applied across the components
+
+D-066 fixed the vocabulary (`ranked` = the D-024 disposition over 82; `rankable` = the ranking's
+membership after the pLDDT floor); this decision applies it consistently across the surfaces that
+render those quantities. The ScorerView reconciliation was reworded (D-066 A2 amendment) to drop
+`ranked`-as-membership; Story:50 and MethodNote:50 render *"ranked-and-folded"* (the D-024
+denominator, not membership) and were assessed **correct as written** — a confirmation, not a change.
+
+---
+
+- **Deep-learning justification.** **MethodNote is where a reader learns that ESMFold is the deep
+  learning** and that the scorer turns its output into a *checkable judgement* (D-041 §2) — an
+  argument that until now lived only in the log. **Story is where the same reader learns what the
+  result was and what remains unresolved.** Both were telling a story that stopped before the
+  interesting part; this entry tells them through, so the honesty claim is made *on the surfaces*, not
+  reserved for the record.
+
+- **Consequences / test surface:**
+  - **⚠ This entry was written AFTER its code shipped (#94), and that is itself recorded.** The orders
+    file carrying the entry text (`ORDERS-Code-2026-07-29-D-067-narrative-surfaces.md`) **never
+    reached the Builder** — the export channel's **fifth** loss. *"Log leads code" was violated here
+    by a delivery failure, not a decision*, and the record says so rather than papering over the gap.
+  - Story (beats 4–6, the correction, the resolved promise, the derived fail-reason) and MethodNote
+    (the shipped/deferred split, the D-028 tense, the attribution example) shipped in #94; **UI 74/74**,
+    and **readability held at FK 12.12 against the pinned 12.5 ceiling** (D-056), measured after wiring.
+  - The self-sufficiency this reaches for — the explanation living where the impression forms — is
+    generalised the same day by **D-069**.
+
+---
+
 ### D-066 — `ranked` names two different quantities, and a shared component asserted a claim it cannot verify
 
 - **Date:** 2026-07-29
