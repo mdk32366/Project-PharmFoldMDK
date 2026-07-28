@@ -80,6 +80,82 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-008 — The cohort was folded under two precisions confounded with length; F-005 gains a third candidate explanation the design cannot rule out
+
+- **Date:** 2026-07-29
+- **Type:** A finding. Nothing ruled — it **bounds** F-005, it does not replace it.
+- **How known (D-016):** read-only SQL over `protein_analyses` (79 folded) grouped by `tier`, plus a
+  within-tier pLDDT~length regression. No re-fold, no mutation.
+
+**Measured — the split.**
+
+| tier | precision | n | fold length (aa) | mean pLDDT |
+|---|---|---|---|---|
+| **local** | int8, chunked | 42 | 13–439 (mean 175) | **61.88** |
+| **rental** | fp16 | 37 | 441–2213 (mean 735) | **71.04** |
+
+Tier was assigned by length (≤440 aa local), so **precision is confounded with length by
+construction** — no protein folded both ways, no overlap in the length ranges.
+
+#### Finding — a third horn for F-005
+
+F-005 Finding 3 named two live explanations for the pLDDT-carried signal (training-set attention;
+genuine order-versus-disorder). There is a third, not previously in the log: **pLDDT is a model
+output, not a physical measurement, and int8 trunk quantization changes the numerics relative to
+fp16.** Because tier = precision = length, and length is feature 1, **features 3–4 (pLDDT) partly
+encode which machine and precision ran the fold, which was decided by size.** The signal F-005
+attributes to confidence could in part be an artifact of the compute split.
+
+#### ⚠ The direction complicates the artifact reading — do not call it an int8 penalty
+
+The rental folds are **longer** (735 vs 175 aa) yet score **higher** (71.04 vs 61.88) — the *opposite*
+of the usual expectation that longer chains fold with more disorder and lower confidence. So the
+between-tier gap is **not straightforwardly an int8 quantization penalty**; something else moves with
+it. **This makes the confound harder to characterise, not easier** — which is the honest position and
+the stronger one.
+
+#### The within-tier texture — "two curves", not "two populations on one line", but still unresolved
+
+Regressing pLDDT on length **within** each tier, the slopes differ in sign:
+
+| tier | slope (pLDDT per 100 aa) | corr(pLDDT, length) |
+|---|---|---|
+| local | **+4.09** | +0.43 |
+| rental | **−1.45** | −0.53 |
+
+The differing slopes **rule out a single straight-line length relationship** ("two populations on one
+line"). But they are consistent **both** with precision changing the length-response **and** with a
+single non-linear, humped pLDDT-length curve peaking near the 440-aa tier boundary. Because the length
+ranges do not overlap, **the data cannot distinguish these.** It distinguishes *two curves from one
+line*; it does not resolve *precision from length*.
+
+#### The label bound — observed-balanced, not confound-free
+
+The 12 labels split **6/6** across tiers (rate 14.3% local vs 16.2% rental). This is **consistent with
+no hardware→label path, but does not establish one:** at n=12, a genuine 2:1 tier skew would produce
+6/6 often enough that it cannot be ruled out. Balanced is what was observed; "no confound path" is more
+than twelve points can carry.
+
+#### Unresolvable by construction — the resolution path
+
+Precision cannot be separated from length in this data (no overlap). The only test of the precision
+effect is a **controlled A/B — re-fold a handful of proteins at the opposite precision as a diagnostic
+spike, never touching the reported cohort** (D-070 dec 4 refuses re-folding the result's folds). Named
+as the only resolution path; not run.
+
+- **Deep-learning justification.** This names a possible measurement artifact in the **load-bearing
+  feature** — the one F-005 shows carries the signal — and it is exactly the confound an examiner looks
+  for in a cohort folded two ways. Naming it, bounded, is a stronger position than leaving it for a
+  reader to notice.
+
+- **Consequences.** F-005's open question gains a third, currently-inseparable candidate; **F-004 /
+  F-005 / F-006 stand — this bounds them.** No code, no re-fold, no change to the reported result.
+  **⚠ Root cause and the design lesson:** the length-threshold tier rule created this confound. A
+  future cohort either folds at a single precision, or **deliberately overlaps the length ranges across
+  precisions** so the effects can be separated — a lesson that generalises past this project.
+
+---
+
 ### D-070 — An uncaptured environment is explained from what IS recorded, and never populated from inference
 
 - **Date:** 2026-07-29
