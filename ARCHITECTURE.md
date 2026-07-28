@@ -98,6 +98,22 @@ non-calibration claim boundary (**F-006** — the score is *not* a calibrated pr
 never tested), and the deferred-columns note moves under section D. Vocabulary fixed (D-066 dec 4):
 **`ranked`** is the D-024 disposition (over 82); the ranking's membership is **`rankable`** (56). The
 absence set (Constraint A) extends to `0.116`/`0.220`/`0.285`/`67`.
+**D-068 lands the target scorer panel.** `TargetView` gains `<TargetScorerPanel>`, which closes the
+loop from the ranking table back to the per-target page: the judgement that ranked it, or — the common
+case — a **reasoned "no score", never a blank** (dec 1). `targetStatus()` (pure, `ui/src/targetScore.js`)
+resolves a target to one of five states with **fold state preceding disposition** (owner ruling: no
+fold → no measurements → no disposition applies; so IGF2R, fold-failed and held-out, reads *not folded*,
+not *held out*): `not_folded → below_floor → held_out → ranked → unranked_unexplained` (the last a
+defensive named state, asserted empty in prod or rendered as "reason not determined"). Every number is
+**derived from `/api/ranking` + the target's own record, joined client-side by accession/gene — no route
+change, no `system-model.json` edit** (§1 report). A score never renders without its rank-of-56 and
+min/median/max context (dec 2); a **labelled** target shows both its in-fit score and its out-of-sample
+LOO percentile, marked labelled (dec 4); F-005's ambiguity is the **shared `<PlddtAmbiguityNote>`
+component** (D-069 dec 2 — one source, also rendering on Scorer's caveat (b), so the claim can't drift).
+Bounded per D-028/F-006/D-041: no biology, no probability, no "promising". **MethodNote's "attribution
+not yet rendered" line is corrected in the same PR** (dec 5) — rendering it here made that sentence
+false. Adjacent: **D-045 Phase-2 pod CUDA verification discharged by measurement** (07-25 folds carry
+`cuda_version`/`device_name`; the `Provenance` post-D-045 test already gate-locks the display path).
 **D-048 then lands UI-depth §3** on the D-046 harness (tests-first, 26 UI tests green): the
 provenance panel renders D-045's two populations honestly — captured environment shown, absent
 environment read as *"not captured"* with a single population-level note, never as a value or a

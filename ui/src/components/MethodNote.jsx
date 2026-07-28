@@ -61,9 +61,9 @@ export default function MethodNote() {
       </p>
       <p>
         <strong>Deferred, and named rather than mocked:</strong> classifying the disagreements,
-        baseline rank, delta, and per-feature attribution — a display gap, not a data gap (the
-        attributions are computed and stored). It was never stubbed: a mock ranking would have been
-        thrown away.
+        baseline rank, and delta. <strong>Per-feature attribution now renders on each target's
+        page</strong> (D-068), bounded as a statement about the model. It was never stubbed: a mock
+        ranking would have been thrown away.
       </p>
 
       <h3>What it will never do — commitments (D-028)</h3>

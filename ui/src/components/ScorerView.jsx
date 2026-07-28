@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getRanking, getCoverage } from '../api.js'
 import CoverageLine from './CoverageLine.jsx'
 import Term from './Term.jsx'
+import PlddtAmbiguityNote from './PlddtAmbiguityNote.jsx'
 
 // D-062 — the scorer surface. Renders the persisted pre-registered result (F-004); it never
 // recomputes and never types a live number — every count and statistic is derived from
@@ -211,23 +212,22 @@ function FullResult({ ranking, coverage, partial }) {
               <h4>Three caveats travel with this result</h4>
               <p><b>(a)</b> The design is conservative and biases toward the null — each held-out positive
                 is ranked among a pool still containing the training positives.</p>
-              <p><b>(b)</b> Now tested, not open (F-005). Two of the six features — the{' '}
-                <Term name="pLDDT">pLDDT</Term> features — carry the result; the four geometry features
-                add little. F-004's specific worry was that <Term name="pLDDT">pLDDT</Term> proxies
-                research attention through <Term name="ESMFold">ESMFold</Term>'s training-set
-                representation. <b>That is not supported</b>: the pLDDT-only ablation aligns <i>less</i>{' '}
-                with the comparator, not more — the opposite of what the attention mechanism predicts.
-                What remains open is whether pLDDT reflects that attention or a genuine
-                order-versus-disorder structural signal, which this design cannot separate.</p>
+              {/* D-069 dec 2: caveat (b)'s core is the shared PlddtAmbiguityNote — one source, also
+                  rendered on the target scorer panel, so the claim can't drift. Scorer frames it; it
+                  does not restate it. */}
+              <div className="caveat-b">
+                <p><b>(b) Now tested, not open (F-005).</b> The sensitivity result, stated where the reader forms the impression:</p>
+                <PlddtAmbiguityNote />
+              </div>
               <p><b>(c)</b> The top of the distribution is the famous targets — consistent with signal and
                 equally consistent with (b). Not narrated as validation.</p>
             </div>
 
             {/* D-066 §2: the deferred-columns note lives under section D now, not in the ranking column */}
             <p className="deferred">
-              Deferred columns, named rather than faked: baseline rank, delta, disagreement class, and
-              per-feature attribution. The <b>β·x attributions are stored</b> in the result and simply
-              not yet rendered — a display gap, not a data gap.
+              Deferred columns, named rather than faked: baseline rank, delta, and disagreement class.
+              <b> Per-feature attribution now renders on each target's page</b> (D-068) — not yet as a
+              column in this table.
             </p>
           </section>
         </div>

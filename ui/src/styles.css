@@ -204,4 +204,15 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
    67 → 56 reconciliation the box cannot make. The reconciliation stays with the table it explains. */
 .scorer .coverage-box { margin-bottom: 0.8rem; }
 .scorer .ranking-reconciliation { font-size: 0.9rem; color: #b9c4cc; margin: 0.4rem 0 0.5rem; }
+
+/* D-068 — the scorer panel on the target record. "No score" is a reasoned muted state, never a blank. */
+.scorer-panel .no-score { color: #b9c4cc; }
+.scorer-panel .score-headline { font-size: 1.05rem; }
+.scorer-panel .score-context { font-size: 0.9rem; color: #b9c4cc; margin-top: 0.2rem; }
+.scorer-panel .labelled-note { border-left: 3px solid #7fb3d1; padding-left: 0.9rem; margin: 0.8rem 0; }
+.scorer-panel .attributions ul { list-style: none; padding: 0; margin: 0.3rem 0; }
+.scorer-panel .attributions li { display: flex; justify-content: space-between; max-width: 22rem; padding: 0.1rem 0; }
+.scorer-panel .attr-pos { color: #63b3ed; }
+.scorer-panel .attr-neg { color: #f6ad55; }
+.scorer-panel .ambiguity-note { font-size: 0.9rem; color: #b9c4cc; margin-top: 0.8rem; }
 .scorer .dist-table td, .scorer .ranking-table td, .scorer .h2h-table td { padding: 0.15rem 0.6rem; }
