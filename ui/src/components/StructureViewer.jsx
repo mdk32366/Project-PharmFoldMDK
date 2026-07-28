@@ -55,9 +55,14 @@ export default function StructureViewer({ id }) {
   // Fallback (orders §3 / UI Plan v2 §6): the target view must not be a blank frame if the viewer
   // fails — provenance, confidence, and the plot render from JSON alone, below this.
   if (error) {
+    // A 404 on the structure means there is no stored fold — for a failed fold that is the honest
+    // statement, not a viewer malfunction, and must not read as a stack trace (D-068 / D-069).
+    const noStructure = /HTTP 404/.test(error)
     return (
       <div className="viewer-fallback">
-        Structure viewer unavailable ({error}). Confidence and provenance below still render.
+        {noStructure
+          ? 'No structure — this fold did not complete. Confidence, provenance, and the scorer result below still render.'
+          : `Structure viewer unavailable (${error}). Confidence and provenance below still render.`}
       </div>
     )
   }

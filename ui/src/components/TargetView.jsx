@@ -22,9 +22,16 @@ export default function TargetView({ id }) {
     setDetail(null)
     setPlddt(null)
     setError(null)
-    Promise.all([getAnalysis(id), getPlddt(id)])
-      .then(([d, p]) => { if (!cancelled) { setDetail(d); setPlddt(p) } })
+    // D-069 earning its keep: a page that errors is maximally NON-self-sufficient. Only getAnalysis is
+    // page-critical — if the target does not exist, that IS the error. Every other fold-dependent
+    // fetch degrades on its own (D-068 fix / owner note): a failed fold (IGF2R) has no plddt.json, and
+    // its 404 must never stop the "not folded" scorer panel from rendering its reason (D-068 dec 1).
+    getAnalysis(id)
+      .then((d) => { if (!cancelled) setDetail(d) })
       .catch((e) => { if (!cancelled) setError(e.message) })
+    getPlddt(id)
+      .then((p) => { if (!cancelled) setPlddt(p) })
+      .catch(() => { if (!cancelled) setPlddt(null) })   // no per-residue plot, but the page stands
     return () => { cancelled = true }
   }, [id])
 
