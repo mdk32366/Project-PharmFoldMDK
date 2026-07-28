@@ -13,22 +13,29 @@
 // So a missing fold here is always D-043 "attempted, did not complete" — never "never attempted",
 // which has no analysis row and no target page to land on.
 export function targetStatus(detail, ranking) {
-  // (1) no fold at all — attempted, did not complete (D-043). Precedes everything.
+  // (1) no fold at all — attempted, did not complete (D-043). Precedes everything: no fold, no
+  // measurements, no disposition applies (IGF2R).
   if (detail.mean_plddt == null) {
     return { status: 'not_folded', category: 'attempted' }
   }
 
-  // (2) folded but below the pre-registered confidence floor (D-041 §5 / D-060). Floor is DERIVED
-  // from the ranking payload, never typed (Constraint-A).
+  // (2) held out of cross-method ranking (D-021) — a STRUCTURAL, pLDDT-INDEPENDENT reason: a whole-
+  // method target is incomparable whatever its confidence (even folded to 95 it is held out). So
+  // held_out precedes below_floor.
+  // ⚠ D-068 precedence amendment (2026-07-29): this SUPERSEDES the original below_floor-before-held_out
+  // sub-order. That order gave a folded, held-out, below-floor target (TMEM108) "below floor" on its
+  // page while the backend `_exclusion_reason` and the Scorer excluded-set said "held out" — two
+  // surfaces, one target, two reasons. Realigning the UI to held_out-first (what the backend already
+  // does) closes that disagreement. `not_folded` still leads, so IGF2R is unaffected.
+  if (detail.disposition === 'held_out') {
+    return { status: 'held_out' }
+  }
+
+  // (3) folded, comparable, but below the pre-registered confidence floor (D-041 §5 / D-060). Floor is
+  // DERIVED from the ranking payload, never typed (Constraint-A).
   const floor = ranking?.result?.plddt_floor
   if (floor != null && detail.mean_plddt < floor) {
     return { status: 'below_floor', floor }
-  }
-
-  // (3) folded, above floor, but held out of cross-method ranking (D-021) — measurements exist but
-  // are not comparable. This is the whole-method design-target case.
-  if (detail.disposition === 'held_out') {
-    return { status: 'held_out' }
   }
 
   // (4) folded, above floor, ranked disposition → it should be in the 56. Join by accession.

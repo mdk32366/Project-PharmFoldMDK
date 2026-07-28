@@ -207,6 +207,17 @@ exists to produce.
 D-043's three-valued `fold_status` and D-062's `result_status`. Most targets are not in the ranking,
 so the not-ranked states are the **common case, not the edge case**.
 
+**⚠ Precedence amendment (2026-07-29).** The resolver's order is **not_folded → held_out → below_floor
+→ ranked** (+ the defensive `unranked_unexplained` fifth state). The owner's original ruling read
+*"not folded → below floor → held out"*; the deployed walk's partition test caught that a folded,
+held-out, below-floor target (**TMEM108**, pLDDT 41) was labelled *below_floor* on its target page
+while the backend `_exclusion_reason` and the Scorer excluded-set said *held_out* — one target, two
+surfaces, two reasons (the ninth *two-paths-to-one-quantity* instance). **`held_out` is
+pLDDT-independent** (a whole-method target is incomparable at any confidence), so it is the primary
+reason and now precedes `below_floor`, realigning the UI with what the backend already produced.
+`not_folded` still leads — no fold, no measurements — so IGF2R is unaffected. Pinned by a partition
+test: the four buckets sum to the cohort and the fifth state falls out at zero.
+
 #### Decision (2) — ⚠ the score never appears without its distribution context
 
 On the Scorer page a score sits inside a visible distribution; on a target page it has none, and a

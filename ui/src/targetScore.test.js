@@ -42,6 +42,31 @@ describe('targetStatus — fold state precedes disposition (D-068)', () => {
     expect(targetStatus(held, RANKING).status).toBe('held_out')
   })
 
+  it('D-068 amendment: a folded, held-out target BELOW the floor reads held_out, not below_floor (TMEM108)', () => {
+    // held_out is pLDDT-independent, so it precedes below_floor. This is the fix for the two-surface
+    // disagreement: the backend _exclusion_reason and the Scorer excluded-set already say held_out.
+    const tmem108 = { accession: 'A-TMEM', gene: 'TMEM108', mean_plddt: 41.03, disposition: 'held_out' }
+    expect(targetStatus(tmem108, RANKING).status).toBe('held_out')
+  })
+
+  it('the four statuses PARTITION the cohort — sum to total, unranked_unexplained empty (D-068)', () => {
+    // The partition assertion (owner: "assert the partition, not just the absence" — D-024's shape).
+    // A target landing in two states or none would break the sum; the fifth state falls out at 0.
+    const cohort = [
+      { accession: 'A-RANK1', gene: 'TOP1', mean_plddt: 70, disposition: 'ranked' },      // ranked
+      { accession: 'A-ERBB2', gene: 'ERBB2', mean_plddt: 82, disposition: 'ranked' },     // ranked + labelled
+      { accession: 'A-LOW', gene: 'LOW1', mean_plddt: 40, disposition: 'ranked' },        // below_floor
+      { accession: 'A-HELD', gene: 'HELD1', mean_plddt: 58, disposition: 'held_out' },    // held_out (above floor)
+      { accession: 'A-TMEM', gene: 'TMEM108', mean_plddt: 41, disposition: 'held_out' },  // held_out (below floor — amendment)
+      { accession: 'A-IGF', gene: 'IGF2R', mean_plddt: null, disposition: 'held_out' },   // not_folded
+    ]
+    const counts = { ranked: 0, below_floor: 0, held_out: 0, not_folded: 0, unranked_unexplained: 0 }
+    for (const t of cohort) counts[targetStatus(t, RANKING).status] += 1
+    expect(counts.ranked + counts.below_floor + counts.held_out + counts.not_folded).toBe(cohort.length)
+    expect(counts.unranked_unexplained).toBe(0)
+    expect(counts).toMatchObject({ ranked: 2, below_floor: 1, held_out: 2, not_folded: 1 })
+  })
+
   it('a folded, above-floor, ranked target present in the 56 reads ranked with its row', () => {
     const top = { accession: 'A-RANK1', gene: 'TOP1', mean_plddt: 70, disposition: 'ranked' }
     const s = targetStatus(top, RANKING)
