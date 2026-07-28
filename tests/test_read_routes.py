@@ -194,6 +194,27 @@ def test_detail_404_on_unknown_id(engine, tmp_path):
     assert _client(engine, tmp_path).get("/api/analyses/9999").status_code == 404
 
 
+def test_detail_tier_environment_local_present_rental_absent(engine, tmp_path):
+    """D-071: the detail record gains `tier_environment` — the tier's MEASURED-LATER environment, or
+    None. A LOCAL row carries the state-2 record (the box still exists and was measured); a RENTAL row
+    carries None (the pods are ephemeral and gone — decision 3), so it stays state 3. A field on the
+    existing detail route — no new route, no `system-model.json` change."""
+    from app.reads import detail_projection
+
+    ids = _seed(engine, tmp_path)
+    body = _client(engine, tmp_path).get(f"/api/analyses/{ids['nectin4']}").json()  # local (NECTIN4)
+    assert body["tier_environment"] is not None
+    assert body["tier_environment"]["torch_version"]        # a measured value, from data/tier_environments.json
+    assert body["tier_environment"]["measured_at"]          # state 2 carries its date (the qualifier)
+
+    rental = ProteinAnalysis(                               # rental has NO entry by design (decision 3)
+        input_type="uniprot", input_value="Q_RENTAL", structure_source="esmfold", mean_plddt=70.0,
+        meta=_meta(gene="RENT", label="r", disposition="ranked", held_out=False, tier="rental",
+                   tier_reason="whole_sequence_fold", boundary_method="whole", source="whole",
+                   fold_length=600, full_length=600, sequence="M", mean_plddt=70.0))
+    assert detail_projection(rental)["tier_environment"] is None
+
+
 # ── structure: serve the STORED pdb_path, never a reconstructed one (§2a) ─────
 
 def test_structure_serves_the_stored_pdb_path(engine, tmp_path):

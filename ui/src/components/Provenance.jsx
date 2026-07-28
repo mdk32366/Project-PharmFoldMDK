@@ -48,9 +48,14 @@ export default function Provenance({ detail }) {
   const p = detail.fold_provenance || {}
   const sliced = detail.boundary_method === 'sliced_ecd' && detail.ecd_start != null
 
-  // The population test: a post-D-045 fold recorded at least one environment key. A pre-D-045 fold
-  // recorded none — the honest statement for it is "predates capture", per field AND once overall.
-  const envCaptured = ENV_FIELDS.some(([k]) => p[k] != null)
+  // D-071 — provenance strength is THREE-valued, ordered strongest to weakest (decision 1):
+  //   state 1 — measured at FOLD TIME     : the fold's own fold_provenance recorded ≥1 env key (D-045).
+  //   state 2 — measured LATER, same tier : no fold-time capture, but the tier's machine was measured
+  //             after the fact (`detail.tier_environment`). The four fields render, WITH a qualifier.
+  //   state 3 — absent                    : neither. One statement + D-070's "what we can say" block.
+  // A reader must never have to work out which kind of claim they are looking at (decision 1).
+  const envCaptured = ENV_FIELDS.some(([k]) => p[k] != null)   // state 1
+  const tierEnv = detail.tier_environment || null              // state 2 (or null → state 3)
 
   return (
     <section className="provenance panel">
@@ -80,33 +85,63 @@ export default function Provenance({ detail }) {
 
       <div role="group" aria-label="Software environment" className="prov-group prov-environment">
         <h4>What it ran on — the environment</h4>
-        <dl>
-          {ENV_FIELDS.map(([k, label]) => (
-            <div key={k}>
-              <dt>{label}</dt>
-              {/* Rule 1: absent env field is "not captured", NEVER a value, NEVER a bare em-dash. */}
-              <dd>{p[k] != null ? String(p[k]) : <span className="not-captured">not captured</span>}</dd>
-            </div>
-          ))}
-        </dl>
-        {!envCaptured && (
-          // D-070: for an uncaptured environment, say what the record DOES hold — tier, folded_at, and
-          // the worker manifest BY NAME — strictly more than "not captured", and NEVER an inferred
-          // version (F-007: an inference would have been wrong on the one fold that could check it). The
-          // four captured fields above stay "not captured" (dec 2); this block is separate and says what
-          // it is — what the record holds, not what ran (dec 1). Names the manifest, never its contents
-          // (dec 3): no version string, no device model appears here — all Constraint-A.
-          <div className="note prov-recorded-note">
-            <p>
-              <strong>What we can say:</strong> this fold ran on the <strong>{detail.tier}</strong> tier
-              {p.folded_at ? <> on <strong>{String(p.folded_at)}</strong></> : null}. Its software
-              environment is pinned in the repository's worker manifest
-              (<code>worker/requirements.txt</code>), but it was <strong>not recorded per-fold</strong> —
-              capture began later (D-045), and the record is written worker-side at fold time and cannot
-              be reconstructed. <strong>This is what the record holds, not a reconstruction</strong> —
-              not a worse fold, just one we can say less about.
+        {envCaptured ? (
+          /* STATE 1 — measured at fold time (D-045). The four fields, UNqualified: the strongest claim. */
+          <dl>
+            {ENV_FIELDS.map(([k, label]) => (
+              <div key={k}>
+                <dt>{label}</dt>
+                <dd>{p[k] != null ? String(p[k]) : <span className="not-captured">not captured</span>}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : tierEnv ? (
+          /* STATE 2 — measured LATER on this tier's machine (D-071). The four fields render FROM the
+             tier record and NEVER without the qualifier — a reader must see this is not fold-time
+             capture (decision 1). A measurement may enter the fields (D-070 dec 2 as amended by D-071);
+             an inference never could. */
+          <>
+            <dl>
+              {ENV_FIELDS.map(([k, label]) => (
+                <div key={k}>
+                  <dt>{label}</dt>
+                  <dd>{tierEnv[k] != null ? String(tierEnv[k]) : <span className="not-captured">not captured</span>}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="prov-tier-qualifier">tier environment, measured {tierEnv.measured_at} — not recorded at fold time</p>
+          </>
+        ) : (
+          /* STATE 3 — absent. No fold-time capture, and no measurable machine (the rental pods are
+             ephemeral and gone — D-071 dec 3). ONE clear statement, not four "not captured" fields
+             stacked like a broken form — a deliberate answer. The asymmetry with state 2 (no values vs
+             values) is a TRUE thing about the project and stays legible: better presentation, not a
+             softened distinction (owner). D-070's "what we can say" block travels here. */
+          <>
+            {/* ⚠ Unrecoverability is a claim about the MACHINE, and is attached to the ephemeral rental
+                instance specifically — NOT to state 3 in general. State 3 is rental-only in production
+                (all 42 local folds are state 2), but if a local fold ever fell through, the first clause
+                stays true and the second simply does not render — the box is right there, D-071 just
+                recovered it. Asserting unrecoverability about a machine you own would be the D-070
+                failure inverted: claiming less than the record supports. */}
+            <p className="prov-not-recorded">
+              <strong>No environment was recorded for this fold</strong>
+              {detail.tier === 'rental' ? (
+                <>, and the machine that ran it — an <strong>ephemeral rental instance</strong> — is
+                gone, so it cannot be reconstructed</>
+              ) : null}.
             </p>
-          </div>
+            <div className="note prov-recorded-note">
+              <p>
+                <strong>What we can say:</strong> this fold ran on the <strong>{detail.tier}</strong> tier
+                {p.folded_at ? <> on <strong>{String(p.folded_at)}</strong></> : null}. Its software
+                environment is pinned in the repository's worker manifest
+                (<code>worker/requirements.txt</code>), but it was <strong>not recorded per-fold</strong> —
+                capture began later (D-045). <strong>This is what the record holds, not a
+                reconstruction</strong> — not a worse fold, just one we can say less about.
+              </p>
+            </div>
+          </>
         )}
       </div>
 
