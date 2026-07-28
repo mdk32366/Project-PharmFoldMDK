@@ -181,6 +181,94 @@ required rather than merely preferred.
 
 ---
 
+### D-068 — The target record carries its scorer result, its status, and its attribution — never a bare number
+
+- **Date:** 2026-07-29
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** D-028 (attribution is a statement about the model, never about the target's biology),
+  D-021 (held-out targets), D-024 (the denominator travels), F-004 (the result), F-005 (what carries
+  it), F-006 (the scores are compressed and uncalibrated), D-062 (the scorer surface).
+
+---
+
+**Context.** A reader clicking a target from the ranking table lands on a page that says nothing about
+the score that ranked it. **The loop does not close.** The target record already carries structure,
+confidence, provenance and cancer associations; the one thing missing is the judgement the project
+exists to produce.
+
+#### Decision (1) — the panel is four-valued, and every target has one of the four
+
+- **ranked** → score, rank, distribution context, attributions.
+- **held out** → no score, and why (boundary-method incomparable, D-021).
+- **below the confidence floor** → no score, and why (mean pLDDT under 50, D-041 §5).
+- **not folded** → no score, and why, with the D-043 category.
+
+**⚠ "No score" is a rendered state with a reason, never a blank or a `—`** — the same discipline as
+D-043's three-valued `fold_status` and D-062's `result_status`. Most targets are not in the ranking,
+so the not-ranked states are the **common case, not the edge case**.
+
+#### Decision (2) — ⚠ the score never appears without its distribution context
+
+On the Scorer page a score sits inside a visible distribution; on a target page it has none, and a
+reader seeing 0.187 alone cannot know whether that is high, low or typical. Every rendered score
+carries, **derived**: its rank of 56, and its position relative to min / median / max (F-006).
+Without that context a bare score is not interpretable, and rendering one would be **the first
+uninterpretable number this project has shipped**.
+
+#### Decision (3) — attribution is a statement about the model, and is framed by F-005
+
+The six β_k · x_k contributions are already stored in `target_scores`, rendered as **which features
+moved this target's score and in which direction**. Bounded per D-028: *"the model's confidence in
+the membrane-proximal region contributed most to this target's rank"* is permitted; *"this target has
+an accessible epitope"* is not. **⚠ F-005 must travel with the panel** — readers will see the pLDDT
+features dominating target after target, and that pattern is ambiguous between structural order and
+study-attention. The panel states the ambiguity **where the impression is formed**, not only on the
+Scorer page.
+
+#### Decision (4) — a labelled target shows BOTH its in-model score and its leave-one-out percentile
+
+For the 12 Group B positives the fitted score is **not out-of-sample** — the model was fitted partly
+on that target. The out-of-sample number exists: F-004's per-target LOO percentile. Both render, the
+difference is stated, and the target is marked as **labelled** so no reader mistakes an in-fit score
+for a prediction. This is the pre-registered statistic rendered per target, and it is **the most
+defensible number on the page**.
+
+#### Decision (5) — ⚠ MethodNote is corrected in the SAME PR
+
+It currently reads that per-feature attribution is *"named but not yet rendered — a display gap, not a
+data gap."* Rendering it here **makes that sentence false**. Shipping the panel without the correction
+would re-introduce, on the same day, the exact defect class this week was spent removing.
+
+#### Decision (6) — what the panel must NOT say
+
+- No biological or clinical claim about the target (D-028).
+- No *"this target is promising"*, and nothing that reads that way for a high-ranking unlabelled
+  target — D-015's research question is about exactly those targets; the surface **poses** it, it does
+  not answer it.
+- No probability language (F-006).
+- No implication that a high score means an ADC would work — the label is **attempted, not viable**
+  (D-041).
+
+---
+
+- **Deep-learning justification.** The attributions are the point at which a neural network's output
+  becomes an **inspectable judgement about one protein**. D-041 chose logistic regression over an
+  embedding model precisely so a disagreement could be attributed to a feature rather than shrugged
+  at — this panel is where that choice pays off, and it is the first surface where a reader sees
+  F-005's finding **target by target** rather than as an aggregate.
+
+- **Consequences / test surface:**
+  - All four statuses render, each with a fixture, **none as a blank or `—`**.
+  - A score never renders without rank and distribution context.
+  - A labelled target renders both numbers and its labelled marker.
+  - F-005's ambiguity note is present whenever attributions render, **asserted so it cannot be
+    trimmed**.
+  - Constraint-A absence for score, rank, median and percentile literals.
+  - MethodNote's *"not yet rendered"* line gone, **asserted by absence**.
+  - Readability delta reported.
+
+---
+
 ### D-067 — The narrative surfaces are told through to the result, including a promise kept and a claim that outran the build
 
 - **Date:** 2026-07-29
