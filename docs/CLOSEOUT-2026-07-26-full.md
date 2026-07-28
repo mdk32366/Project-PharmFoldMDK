@@ -159,3 +159,11 @@ Planner estimate, not a measurement, and was wrong — a correction about unmeas
 carried an unmeasured number.
 
 **Also: it is six surfaces now, not five** — the `Scorer` surface (D-062) was added after this closeout.
+
+**Discharged, 2026-07-29 (measurement, not CI):** the deferred item above — *"D-045 Phase-2 pod CUDA
+verification (needs a GPU)"* — is **discharged by measurement.** The 2026-07-25 pod folds carry the
+full environment provenance: `torch_version 2.8.0+cu128`, `transformers_version 5.14.1`,
+`device_name NVIDIA RTX A6000`, `cuda_version 12.8` (4 of 80 rows captured; pre-D-045 folds honestly
+show "not captured", and the `Provenance` panel's post-D-045 test renders these exact keys). The
+verification that was waiting on a GPU CI runner the project never had, the pod supplied by running.
+Read from stored provenance — **no backfill** (D-016).
