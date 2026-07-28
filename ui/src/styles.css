@@ -200,5 +200,8 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .scorer-ranking { position: sticky; top: 1rem; }
 @media (max-width: 900px) { .scorer-cols { grid-template-columns: 1fr; } .scorer-ranking { position: static; } }
 .scorer .caveats { border-left: 3px solid #7fb3d1; padding-left: 0.9rem; margin-top: 1rem; }
-.scorer .ranking-intro { font-size: 0.95rem; color: #b9c4cc; }
+/* D-066: the coverage box (partition + named exclusions) and, immediately above the table, the
+   67 → 56 reconciliation the box cannot make. The reconciliation stays with the table it explains. */
+.scorer .coverage-box { margin-bottom: 0.8rem; }
+.scorer .ranking-reconciliation { font-size: 0.9rem; color: #b9c4cc; margin: 0.4rem 0 0.5rem; }
 .scorer .dist-table td, .scorer .ranking-table td, .scorer .h2h-table td { padding: 0.15rem 0.6rem; }

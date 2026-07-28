@@ -85,6 +85,19 @@ not hover-alone; the glossary page is retained as a secondary index and its cont
 and caveat (b) is updated per **F-005** — the specific attention mechanism is **not supported** and an
 order-versus-disorder question replaces it; the ranking is noted as substantially pLDDT-driven so the
 `structural score` definition does not imply the geometry features do the work.
+**D-066 amendment (2026-07-29):** `CoverageLine` no longer asserts what the *ranking* covers — the
+forward-looking *"once the scorer exists — covers these N"* clause is **removed** (it was false on
+`/scorer`, 67 ranked & folded above a 56-row table, and unverifiable on `/coverage`), so the shared
+component states only the **D-024 partition** on both surfaces, asserted by an absence test. The
+scorer supplies its own **67 → 56 reconciliation** (ranked & folded → above the pLDDT-50 floor)
+immediately above its table, all three numbers derived — a denominator that travels with its claim.
+The right column is reduced to **coverage box (partition + named exclusions) + table**: the intro
+paragraph is removed, the F-005 pLDDT-driven note and the observed score range (min/median/max) move
+into a new **`Score`-column tooltip** distinct from the `structural score` `Term`, carrying the
+non-calibration claim boundary (**F-006** — the score is *not* a calibrated probability, calibration
+never tested), and the deferred-columns note moves under section D. Vocabulary fixed (D-066 dec 4):
+**`ranked`** is the D-024 disposition (over 82); the ranking's membership is **`rankable`** (56). The
+absence set (Constraint A) extends to `0.116`/`0.220`/`0.285`/`67`.
 **D-048 then lands UI-depth §3** on the D-046 harness (tests-first, 26 UI tests green): the
 provenance panel renders D-045's two populations honestly — captured environment shown, absent
 environment read as *"not captured"* with a single population-level note, never as a value or a
