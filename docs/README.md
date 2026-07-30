@@ -80,6 +80,86 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-074 — A finding against an instrument is not closed until the instrument no longer exhibits it — or carries, in itself, the statement of what it gets wrong
+
+- **Date:** 2026-07-30
+- **Status:** Proposed → Accepted on merge.
+- **Relates:** F-002 (the finding whose instrument drifted), D-073 (the tracking and correction that
+  closed it in the file), D-016 (name how it is known — the citation left dangling), D-038
+  (`/api/coverage` is the folded-set supplier — error class 1), D-043 (a failed fold is not an
+  unattempted one — error class 2, reproduced *inside* the instrument built to measure it), F-001
+  (the adjacent, distinct lesson — Decision 2).
+
+**Context.** `intersection_check.py` computes the pre-registered reports A–I that supply the ranking
+and comparator denominators. **F-002 and this log both cite it by path — `scripts/intersection_check.py`
+— as their D-016 provenance artefact, and that path did not exist**; the file sat untracked at the
+repo root from 2026-07-27 to 2026-07-30. Run as handed over on 2026-07-30, before it was touched, it
+printed **`80` under the label "folded"** and **`13 of 80 = 16.2%` below the floor** — against
+F-002's recorded **`79`** and **`12 of 79 = 15.2%`**, in the same repository. Both were errors
+**F-002 had already found, named, and explained**, and neither had been closed in the file.
+**F-002 was exemplary**: it caught both errors in its own instrument, recorded them *before* the
+numbers, explained how they change the reading, and reported corrected figures. **The gap was not in
+the log. It was that the log is not the instrument's home.** D-073 (`da86e87`) closed both errors in
+the file and verified the correction by exact agreement with F-002's recorded figures.
+
+#### Decision (1) — ⚠ the rule
+
+**When a finding is against an instrument, it is not closed until the instrument no longer exhibits
+the finding — or the instrument carries, in itself, the statement of what it gets wrong.** The second
+is acceptable and sometimes the only option; an instrument that prints its own known limitation is
+honest. **Silence in the file is not.** It converts the log from a record into a trap: the next
+reader finds a tracked script at a cited path, runs it, and gets numbers the log contradicts, **with
+no marker on the file saying so**. For a *claim*, recording it in the log **is** closing it — the log
+is where claims live. For a *tool*, recording a finding against it is **half**.
+
+#### Decision (2) — the boundary against F-001, named so this is not read as a restatement
+
+**F-001** — a metric can be real, well-defined, correctly queried, and still measure the wrong thing
+(WHEA corrected-error rate was *anti-correlated* with the crashes it was used to predict). It is
+about **trusting an instrument's output**. **D-074** — an instrument can diverge from its own written
+record, so that the log and the file disagree and only the log is read. It is about **the instrument
+drifting from the document that describes it**. Adjacent, distinct, both carried. F-001 is about
+whether the number means what you think; D-074 is about whether the tool still does what the log says
+it does.
+
+#### Decision (3) — what this authorizes as standing mechanism, and what it does not
+
+**An instrument cited as provenance carries an in-file assertion that re-derives the finding it is
+cited for, so drift fails loud rather than printing quietly.** `scripts/intersection_check.py`
+**already satisfies this as of D-073**: the F-002 partition must reconcile (asserted, so the reports
+refuse to be trusted if it stops), and F-002 Finding 1 — *every ranked target is folded* — is treated
+as an **observation, not a guarantee**, warning on divergence instead of silently redefining the
+ranking denominator D. **D-074 names that pattern as the rule; it does not commission a new build.**
+
+**⚠ No drift-detection framework, no generic instrument-audit test, no new script, route, or test
+file.** The mechanism is the per-instrument self-assertion, applied when an instrument is cited.
+Building a framework here would add a second thing that can drift and would be its own violation.
+
+#### Decision (4) — scope: the trigger is citation
+
+The rule binds **instruments cited as provenance** — a script, query, or notebook the log names as
+*how a number is known*. **It imposes nothing on throwaway or exploratory scripts.** The moment the
+log points at a tool as authoritative, that tool owes an in-itself statement of what it re-derives or
+what it gets wrong. Until then it owes nothing. This keeps the rule cheap and keeps it from
+decaying into ceremony.
+
+- **Deep-learning justification.** Neutral to the model; load-bearing for the graded claim. Reports
+  D/E/G/H are the **fit and comparator denominators the D-041 scorer is trained and judged on** — an
+  instrument that miscounts the folded set miscounts what the network learns from and what its result
+  is measured against. The project's defensible claim is not that the network is good but that
+  **its inputs and its evaluation are checkable**; an instrument whose known errors live only in the
+  log, while the file keeps printing them, breaks exactly that property.
+
+- **Consequences / test surface:**
+  - **No new executable change.** The mechanism D-074 names is already present as of D-073
+    (`da86e87`); this entry is a rule plus the naming of an existing pattern.
+  - Filed as a **decision, not a finding** — F-entries are findings about the object of study (the
+    cohort, the scorer, the ranking); **D-074 is about the method.** No F-number assigned;
+    F-001…F-007 untouched.
+  - The rule's cost is bounded by Decision (4): it applies on **citation**, not on authorship.
+  - **The next instrument cited as provenance is the test of this entry** — if it is cited without a
+    self-assertion and without an in-file statement of its limits, D-074 was written and not applied.
+
 ### D-073 — The intersection instrument is tracked, and the two errors F-002 recorded against it are closed in it
 
 - **Date:** 2026-07-30
