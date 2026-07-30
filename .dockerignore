@@ -18,6 +18,13 @@ scripts/
 requirements-dev.txt
 requirements-dev.lock
 
+# DEMO-ONLY: the miniature-demo notebook and its GPU dependency world never enter the
+# image (ORDERS 2026-07-30 §1). The Dockerfile already COPYs only app/core/db/data + the
+# runtime lock, so this is belt-and-braces against a future sloppy COPY dragging the
+# notebook's torch/transformers world into the serving tier (DEP-001).
+notebooks/
+requirements-notebook.txt
+
 # DEP-006: ui/ source is needed by build stage 1, but never its node_modules or dist —
 # stage 1 runs npm ci + npm run build itself; shipping them would balloon the build context.
 ui/node_modules/

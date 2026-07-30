@@ -1,0 +1,32 @@
+# requirements-notebook.txt — the DEMO-ONLY dependency world (ORDERS 2026-07-30 §1).
+#
+# This is a FOURTH dependency world, separate from requirements.lock (the serving
+# runtime), requirements-dev.lock (the CI dev tools), and the npm UI world. It exists
+# ONLY to run notebooks/miniature_NECTIN4.ipynb on a local GPU box. It is DEMO-ONLY,
+# GPU-tier, and MUST NEVER be added to requirements.lock, requirements-dev.lock, or the
+# Docker image — the serving tier has no GPU and DEP-001 keeps torch/transformers out of
+# the image (see tests/test_image_contents.py). A notebook import is not a serving dep.
+#
+# Versions match what the worker actually folds with (worker/requirements.txt: the
+# S-003 int8 recipe) so the demo reproduces the deployed fold exactly. torch is a
+# CUDA build — install it from the PyTorch index, not plain PyPI:
+#   pip install torch==2.11.0+cu128 --index-url https://download.pytorch.org/whl/cu128
+#
+# NOTE (repo wins over the order): the order named `esm` as a dependency, but the repo
+# folds through Hugging Face `transformers` (EsmForProteinFolding), NOT the `esm`
+# package — so `esm` is not pinned here. It is not imported anywhere the notebook runs.
+
+# --- the live ESMFold fold (same stack as worker/requirements.txt, S-003 recipe) ---
+torch==2.11.0+cu128
+transformers==5.14.1
+bitsandbytes==0.49.2
+accelerate==1.14.0
+
+# --- the notebook's own render (Step 3: a schematic pLDDT-coloured structure) ---
+matplotlib==3.11.1
+
+# --- running the notebook (Jupyter) ---
+jupyter==1.1.1
+notebook==7.6.1
+ipykernel==7.3.0
+nbconvert==7.17.1

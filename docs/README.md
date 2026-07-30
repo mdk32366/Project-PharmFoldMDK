@@ -80,6 +80,51 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-072 — The miniature demo notebook: the whole pipeline on one live-folded target, no gate, no refit
+
+- **Date:** 2026-07-30
+- **Status:** Accepted
+- **Context:** Delivery-eve, a professor-facing artifact was wanted that shows *the entire
+  pipeline in miniature, on one real target, folded live* — not a screenshot, not a mock. Orders
+  `ORDERS-Code-2026-07-30-miniature-notebook.md`. Target: NECTIN4 (UniProt Q96NY8), whose sliced
+  ECD span 32–349 = 318 aa is under the local known-good ceiling (`core.manifest.CEILING_KNOWN_GOOD`
+  = 440), so it folds on the 8 GB RTX PRO 2000 with the S-003 int8/chunk-64 recipe.
+- **Decision:** `notebooks/miniature_NECTIN4.ipynb` — six steps (question / live fold / structure+pLDDT
+  render / six features / place in the ranking / honest limits), a plain-language (8th-grade)
+  markdown block before every step. It imports the **real** `core.features`, `core.scorer`,
+  `core.contracts`, `core.manifest`, and `worker.runner` and runs them; every structural number is
+  computed in-session. A **fourth dependency world**, `requirements-notebook.txt` (demo-only,
+  GPU-tier), is created at repo root and is **never** added to `requirements.lock` /
+  `requirements-dev.lock` / the image; `notebooks/` + `requirements-notebook.txt` are added to
+  `.dockerignore` as belt-and-braces. Not gated, not in the serving image, **not merged by the
+  builder** — the owner authorizes the drop-in.
+- **Deep-learning justification:** the centrepiece cell is a **live ESMFold fold** — the graded
+  neural core (D-003) doing its load-bearing work in front of the grader, sequence → 3-D structure
+  + per-residue pLDDT, which then feed the real feature extractor and the real ranking. The notebook
+  exists precisely to make the DL deliverable legible end-to-end on one target; it adds no new model.
+- **Consequences / provenance (this session's `jupyter nbconvert --execute` run):**
+  - **Two order-vs-repo discrepancies found; the repo won, both reported.** (1) The order named `esm`
+    as a dependency, but the repo folds through `transformers` (`EsmForProteinFolding`), not the `esm`
+    package — so `requirements-notebook.txt` pins `transformers`/`bitsandbytes`/`accelerate`, not `esm`.
+    (2) Order Step 5 asked to *re-apply the fitted model* to NECTIN4's live features. But no fitted-model
+    coefficients are persisted anywhere loadable — only per-target `score`/`rank`/`attributions`
+    (`target_scores`) and the LOO distribution (`ranking_results`). Since NECTIN4 is itself one of the
+    56 ranked targets, its deployed score/rank/LOO **already exist**; the notebook **loads** them from
+    the live `/api/ranking` (F-004, no refit) and *places* the live-computed features against that given
+    result via the real `core.scorer.percentile_within`. Re-applying a model we would have had to re-fit
+    is both impossible here and forbidden (F-004); the load-the-deployed-result seam preserves the
+    no-refit rule.
+  - **Measured:** NECTIN4 folded live in **52.8 s** on the RTX PRO 2000 (int8/chunk-64), mean pLDDT
+    **77.26** (matches the deployed NECTIN4 stored value — reproduces the deployed fold), all six
+    features computed with `null_reasons` empty. Deployed result loaded: score **0.2655**, rank
+    **8 of 56**, out-of-sample LOO percentile **0.848** (NECTIN4 is a labelled Group B positive, checked
+    from the loaded distribution), reference score min/median/max **0.1163 / 0.2203 / 0.2853**. The score
+    is `membrane_proximal_plddt`-dominated (+0.197 of the attribution) — a live illustration of F-005
+    (ranking is substantially pLDDT-driven).
+  - **Gate untouched and green:** `tests/test_image_contents.py` 15/15 pass (it reads the Dockerfile/
+    `.dockerignore` as text; the explicit `COPY app/core/db/data` never pulls the notebook world in), full
+    suite **340 passed, 15 skipped, 0 failed**. No file under the gate changed to accommodate the demo.
+
 ### D-071 — Provenance strength is three-valued: measured at fold time, measured later, or absent
 
 - **Date:** 2026-07-29

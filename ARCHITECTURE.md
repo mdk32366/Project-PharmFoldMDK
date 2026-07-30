@@ -648,6 +648,9 @@ Project-PharmFoldMDK/
 │                            #   fit_scorer.py (D-060 scorer fit driver; written, not run on real labels)
 ├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
+├── notebooks/               # miniature_NECTIN4.ipynb (D-072) — demo-only live-fold walkthrough of
+│                            #   the whole pipeline on one target; imports real core/+worker/, NOT
+│                            #   gated, NOT in the image (excluded via .dockerignore)
 ├── .github/workflows/       # CI: test + postgres gates → Fly deploy job (D-005/DEP-002)
 ├── Dockerfile               # serving-tier image: runtime tier only, no worker/CUDA (DEP-001)
 ├── .dockerignore            # keeps worker/, venv, tests, docs out of the build context (DEP-001)
@@ -657,7 +660,9 @@ Project-PharmFoldMDK/
 ├── requirements.txt         # runtime deps — human-edited input, exact pins (D-013)
 ├── requirements-dev.txt     # runtime + test deps — human-edited input (D-013)
 ├── requirements.lock        # compiled: every transitive pinned + hashed (Amendment A)
-└── requirements-dev.lock    # compiled; THIS is what the gate installs, --require-hashes
+├── requirements-dev.lock    # compiled; THIS is what the gate installs, --require-hashes
+└── requirements-notebook.txt # DEMO-ONLY 4th dependency world (D-072): the GPU stack for
+                             #   notebooks/, never in requirements.lock/-dev.lock or the image
 ```
 
 Today the repo holds the governance files, `docs/`, the **keel** (D-007), the **pinned +
