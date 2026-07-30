@@ -645,7 +645,9 @@ Project-PharmFoldMDK/
 ├── scripts/                 # ecd_lengths.py, map_genes_to_uniprot.py, deploy_guard.py (DEP-002),
 │                            #   curate_group_b.py (D-057), extract_features.py (D-058 offline
 │                            #   feature driver + protein_features loader; excluded from the image),
-│                            #   fit_scorer.py (D-060 scorer fit driver; written, not run on real labels)
+│                            #   fit_scorer.py (D-060 scorer fit driver; written, not run on real labels),
+│                            #   intersection_check.py (D-073 pre-fit denominators A-I; owner-run
+│                            #   against the LIVE deployment, stdlib only, not gated)
 ├── tests/                   # pytest; SQLite test DB (D-005). doubles.py = test-only fakes
 ├── docs/                    # plans, notes, and the design-decision log (README.md)
 ├── notebooks/               # miniature_NECTIN4.ipynb (D-072) — demo-only live-fold walkthrough of
