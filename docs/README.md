@@ -80,6 +80,56 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-073 — The intersection instrument is tracked, and the two errors F-002 recorded against it are closed in it
+
+- **Date:** 2026-07-30
+- **Status:** Accepted
+- **Context:** `intersection_check.py` had been sitting **untracked at the repo root** since
+  2026-07-27. It is not scratch: it computes the pre-registered reports A–I of
+  `docs/ORDERS-Code-2026-07-27-ADDENDUM-intersection.md`, and **F-002 and this log already cite it
+  by path as their D-016 provenance artefact** — `docs/README.md` §F-002 and
+  `docs/F-002-final-and-F-003-draft.md` both name `scripts/intersection_check.py`, a path that did
+  not exist. Deleting it as a stray would have silently falsified a provenance citation; leaving it
+  untracked leaves the citation dangling. The commit was deliberately deferred — the addenda say
+  *"do not commit `intersection_check.py` until the D-058 features PR is merged and green"* — and
+  **that condition is discharged**: D-058 is `73c0742` (PR #85), contained in `main`.
+- **Decision:** Move it to `scripts/intersection_check.py` and track it, **and fix in the
+  instrument the two errors F-002 recorded against it and never closed.** Re-running the file as
+  handed over reproduced both wrong numbers today (`80`, and `13 of 80 = 16.2%`):
+  1. **`/api/analyses` is the ENQUEUED set, not the folded set** — `core/enqueue.py` writes a
+     `protein_analyses` row at enqueue time. Report A printed its row count under the label
+     *"folded"*. The folded set now comes from `/api/coverage` (the D-038 honest-denominator
+     supplier), whose rows carry a per-target `fold_status`; the enqueued count is still printed,
+     explicitly labelled as not a fold count.
+  2. **A failed fold is not a low-confidence one** — the predicate `plddt is None or plddt < FLOOR`
+     absorbed IGF2R (`fold_status=failed`, null pLDDT) into the below-floor bucket. **This is the
+     D-043 error class reproduced inside the instrument built to measure it.** Failed folds are now
+     reported separately. Below-floor is computed over folded targets only.
+  Two self-checks are added rather than left implicit: the F-002 partition must reconcile
+  (asserted), and F-002 Finding 1 (*every ranked target is folded*) is an **observation, not a
+  guarantee**, so a future divergence prints a warning instead of silently redefining the ranking
+  denominator D. No dated figure is hardcoded, so a later run reports the new truth rather than
+  re-asserting the old one.
+- **How known (D-016):** `scripts/intersection_check.py` run 2026-07-30 against the live
+  deployment. **The corrected instrument reproduces F-002's recorded figures exactly** — 79 folded,
+  **12 of 79 = 15.2%** below floor, 1 failed (IGF2R) separate, D = **56**, comparator = **12**,
+  H = **8**, CXCR5/MSLN/MUC16 falling out by three distinct mechanisms, partition
+  `82 = 67 + 13 + 2` and `79 + 1 + 2 = 82`. That agreement is the verification: the tracked
+  instrument re-derives the finding the log already carries. The uncorrected version's `80` and
+  `13 / 16.2%` are recorded here as what it actually printed today, not as history.
+- **Deep-learning justification:** Neutral to the DL core — this is measurement hygiene, not model
+  work. It is load-bearing *for* the DL core: reports D/E/G/H are the fit and comparator
+  denominators the D-041 scorer is trained and judged on, so an instrument that miscounts the
+  folded set miscounts what the network learns from. An instrument whose known errors live only in
+  the log, while the file keeps printing them, is a trap for the next reader.
+- **Consequences:** `scripts/` is already in `.dockerignore`, so tracking it does not touch the
+  serving image. No gate runs it (it needs the live deployment); it stays owner-run, like
+  `worker/ceiling_probe.py`. The `"(untracked at time of measurement)"` wording in the two
+  citations stays **accurate as a historical statement** and is deliberately not edited — it
+  records the state at measurement time, which is what a provenance note is for. F-002's numbers
+  are unchanged by this entry; only the instrument changed, and it now agrees with them.
+  `ARCHITECTURE.md`'s `scripts/` inventory is updated in this PR.
+
 ### D-072 — The miniature demo notebook: the whole pipeline on one live-folded target, no gate, no refit
 
 - **Date:** 2026-07-30
