@@ -62,6 +62,11 @@ class FeatureRecord:
     mean_plddt: Optional[float]
     below_plddt_floor: Optional[bool]
     analysis_id: Optional[int] = None       # the fold row these features came from (for persistence)
+    # Feature 7 (D-075), CARRIED SEPARATELY and deliberately NOT folded into `features`.
+    # `features` stays the six D-027 values because `features_complete` — which decides
+    # `in_ranking_set` — is computed over it. Appending feature 7 there would let a null feature 7
+    # push a row out of the ranking set and silently move F-004's 56. See `build_rows`.
+    membrane_proximal_sasa: Optional[float] = None
 
 
 def _exclusion_reason(rec: FeatureRecord, features_complete: bool) -> Optional[str]:
@@ -91,12 +96,28 @@ def build_scorer_rows(
     keep their reason so the surface can render them."""
     rows: list[ScorerRow] = []
     for rec in records:
+        # ⚠ `features_complete` is computed over the SIX D-027 features ONLY (D-075). Feature 7 is
+        # deliberately excluded from this predicate: it decides `in_ranking_set`, so letting a null
+        # feature 7 fail it would drop a row from the ranking set and move F-004's 56 — the
+        # pre-registered result changed by an ablation's input. Membership stays defined by the six.
         features_complete = all(v is not None for v in rec.features)
         reason = _exclusion_reason(rec, features_complete)
         in_ranking = reason is None
         # A row that is not in the ranking set may lack features; give it zeros only as inert
         # placeholders it will never be fit or scored on (it is excluded), never an imputed mean.
-        feats = tuple(float(v) for v in rec.features) if features_complete else (0.0,) * len(FEATURE_NAMES)
+        # Rows are assembled SEVEN wide: the six, then feature 7 at index 6 (D-075). `run_scorer`
+        # projects onto its named set's indices, so the pre-registered fit still uses exactly 0-5.
+        if features_complete:
+            feats = (*(float(v) for v in rec.features), float(rec.membrane_proximal_sasa or 0.0))
+        else:
+            feats = (0.0,) * (len(FEATURE_NAMES) + 1)
+        if in_ranking and rec.membrane_proximal_sasa is None:
+            # Not fatal and not imputed: feature 7 comes from the same coordinates as features 5/6,
+            # so a row with the six but no feature 7 means the extractor did not run since D-075.
+            # Named loudly because `geom_proxy` would otherwise fit a 0.0 placeholder as if measured.
+            print(f"WARNING: {rec.symbol} is in the ranking set but has no feature 7 "
+                  f"(membrane_proximal_sasa) - re-run scripts/extract_features.py before "
+                  f"--ablate geom_proxy; a 0.0 placeholder here would be an imputed value (D-027)")
         rows.append(ScorerRow(
             symbol=rec.symbol,
             features=feats,
@@ -148,6 +169,7 @@ def read_feature_records(engine) -> list[FeatureRecord]:
                 symbol=meta.get("gene") or analysis.input_value,
                 accession=analysis.input_value,          # the Group B label joins on this (D-064 dec 1)
                 features=tuple(getattr(feat, name) for name in FEATURE_NAMES),
+                membrane_proximal_sasa=getattr(feat, "membrane_proximal_sasa", None),
                 disposition=meta.get("disposition"),
                 mean_plddt=feat.mean_plddt,
                 below_plddt_floor=feat.below_plddt_floor,
@@ -299,7 +321,9 @@ def print_report(report: ScorerReport) -> None:
 
 # ── a tiny built-in fixture cohort, so --fixture runs end to end with no labels ──
 def _fixture_rows() -> list[ScorerRow]:
-    feats = (1.13, 2.27, 3.41, 4.59, 5.73, 6.87)
+    # SEVEN wide (D-075): the six D-027 values plus feature 7 at index 6, matching what
+    # `build_rows` now assembles, so --fixture exercises the real row shape.
+    feats = (1.13, 2.27, 3.41, 4.59, 5.73, 6.87, 7.91)
     def mk(sym, f0, lab, rank=True, ev=None, reason=None):
         return ScorerRow(sym, (f0, *feats[1:]), lab, rank, ev, reason)
     return [
@@ -325,7 +349,7 @@ def run(argv: Optional[list[str]] = None, *, engine_factory: Callable[[], object
     parser.add_argument("--evidence", default=str(DEFAULT_EVIDENCE), help="evidence scores CSV (--run only)")
     parser.add_argument("--persist", action="store_true",
                         help="stamp the ranking_run's scorer_version (--run only)")
-    parser.add_argument("--ablate", choices=["no_plddt", "plddt_only"],
+    parser.add_argument("--ablate", choices=["no_plddt", "plddt_only", "geom_proxy"],
                         help="D-065 sensitivity ablation: fit one NAMED feature set (only these two; "
                              "arbitrary subsets are refused). Writes a run_kind='sensitivity' run, "
                              "never the pre-registered result. Owner-authorised, once each.")

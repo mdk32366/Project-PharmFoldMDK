@@ -19,6 +19,7 @@ import pytest
 
 from core import scorer
 from core.scorer import (
+    FEATURE_SETS,
     INNER_CV_FOLDS,
     LAMBDA_GRID,
     N_PARAMS,
@@ -378,6 +379,134 @@ def test_preregistered_path_stays_at_six_features():
     model = run_scorer(_separable_ranking_set()).final_model      # default feature_set='preregistered'
     assert len(model.coefficients) == 6
     assert len(model.contributions((1.0,) * 6)) == 6
+
+
+# ── D-075: geom_proxy — the confidence-blind ablation, feature 7 at index 6 ──
+FEAT7 = 7.91                       # feature 7's distinctive shared value (membrane-proximal SASA)
+
+
+def _row7(symbol, f0, label, *, in_ranking=True, evidence=None, reason=None) -> ScorerRow:
+    """A SEVEN-feature row: the six D-027 values plus feature 7 (D-075) at index 6 — the shape
+    `scripts/fit_scorer.py` now assembles, so the tests below exercise the real width."""
+    return ScorerRow(symbol, (f0, *FEATS[1:], FEAT7), label, in_ranking, evidence, reason)
+
+
+def _separable_ranking_set_7() -> list[ScorerRow]:
+    return [
+        _row7("PA", 0.71, 1, evidence=5.0), _row7("PB", 1.33, 1, evidence=4.0),
+        _row7("PC", 1.94, 1), _row7("PD", 2.58, 1, evidence=5.0),
+        _row7("NA", -2.17, 0, evidence=4.0), _row7("NB", -1.61, 0), _row7("NC", -1.19, 0),
+        _row7("ND", -0.73, 0), _row7("NE", -0.34, 0), _row7("NF", 0.22, 0),
+    ]
+
+
+def test_geom_proxy_fits_six_parameters():
+    """D-075 dec 1: `geom_proxy` = features 1,2,5,6 + 7 → five features, SIX parameters. One more
+    than `no_plddt`'s five, because the amputated information is restored rather than dropped."""
+    model = run_scorer(_separable_ranking_set_7(), feature_set="geom_proxy").final_model
+    assert len(model.coefficients) == 5           # 5 features + intercept = 6 parameters
+
+
+def test_geom_proxy_is_refused_if_not_named_and_unnamed_sets_still_raise():
+    """D-075 dec 5 inherits D-065 dec 4: the permitted sets are exactly three. Anything else raises,
+    so no fourth ablation can be run without a new dated entry."""
+    assert sorted(FEATURE_SETS) == ["geom_proxy", "no_plddt", "plddt_only", "preregistered"]
+    rows = _separable_ranking_set_7()
+    for bad in ("geom_proxy_v2", "sasa_only", "feature_7", "no_plddt+7"):
+        with pytest.raises(ValueError):
+            run_scorer(rows, feature_set=bad)
+
+
+def test_geom_proxy_actually_reads_feature_7_not_a_copy_of_no_plddt():
+    """⚠ The test that makes `geom_proxy` real. If index 6 were dropped or mis-indexed, `geom_proxy`
+    would silently BE `no_plddt` — an ablation that looks new and measures the old thing, which
+    would void D-075 while every other test stayed green. Varying ONLY feature 7 must move the
+    `geom_proxy` fit, and must leave `no_plddt` untouched."""
+    rows = _separable_ranking_set_7()
+    varied = [ScorerRow(r.symbol, (*r.features[:6], FEAT7 + (2.5 if r.label == 1 else -2.5)),
+                        r.label, r.in_ranking_set, r.evidence_score, r.exclusion_reason)
+              for r in rows]
+    gp_base = run_scorer(rows, feature_set="geom_proxy").final_model
+    gp_varied = run_scorer(varied, feature_set="geom_proxy").final_model
+    assert gp_base.coefficients != gp_varied.coefficients, (
+        "changing feature 7 did not change the geom_proxy fit - index 6 is not being read, so "
+        "geom_proxy is a relabelled no_plddt and D-075 would be void"
+    )
+    np_base = run_scorer(rows, feature_set="no_plddt").final_model
+    np_varied = run_scorer(varied, feature_set="no_plddt").final_model
+    assert np_base.coefficients == np_varied.coefficients, (
+        "changing feature 7 changed the no_plddt fit - no_plddt is picking up a column it must not"
+    )
+
+
+def test_seven_wide_rows_do_not_leak_feature_7_into_the_preregistered_path():
+    """⚠⚠ THE LEAK GUARD (D-065 dec 5 / D-075 dec 5). Rows now arrive SEVEN features wide. The
+    pre-registered fit must still be six features / seven parameters — it projects onto indices
+    0-5 unconditionally. Before D-075 the projection was skipped for the pre-registered set (a
+    no-op while every row was six long); with a seventh column present that skip would have fit
+    the graded model on seven features and eight parameters, invisibly."""
+    model = run_scorer(_separable_ranking_set_7()).final_model     # default = 'preregistered'
+    assert len(model.coefficients) == 6, (
+        f"pre-registered fit used {len(model.coefficients)} features against a 7-wide row - "
+        "feature 7 leaked into the graded path"
+    )
+    # And the fit is byte-identical to the same rows without a seventh column present at all.
+    six_wide = run_scorer(_separable_ranking_set()).final_model
+    assert model.coefficients == six_wide.coefficients and model.intercept == six_wide.intercept, (
+        "the presence of a seventh column changed the pre-registered result"
+    )
+
+
+def test_geom_proxy_reasserts_the_comparator_leakage_guard():
+    """D-075 dec 5: the three D-060 guards are not exempted by the new feature set. Scrambling the
+    evidence comparator must leave `geom_proxy`'s coefficients byte-identical — label and comparator
+    are different quantities and never mix (D-041)."""
+    rows = _separable_ranking_set_7()
+    base = run_scorer(rows, feature_set="geom_proxy").final_model
+    ev = [r.evidence_score for r in rows]
+    scrambled = [ScorerRow(r.symbol, r.features, r.label, r.in_ranking_set, ev[::-1][i], r.exclusion_reason)
+                 for i, r in enumerate(rows)]
+    after = run_scorer(scrambled, feature_set="geom_proxy").final_model
+    assert after.coefficients == base.coefficients and after.intercept == base.intercept
+
+
+def test_geom_proxy_held_out_features_do_not_reach_the_fold_model():
+    """D-060 guard 2, re-asserted on the geom_proxy path (D-075 dec 5): mutating a HELD-OUT row's
+    features — including feature 7 — must not move any OTHER target's score in the fold that holds
+    it out. The fold's model never saw the held-out row."""
+    def project(rs):
+        idx = FEATURE_SETS["geom_proxy"]
+        return [ScorerRow(r.symbol, tuple(r.features[i] for i in idx), r.label,
+                          r.in_ranking_set, r.evidence_score, r.exclusion_reason) for r in rs]
+
+    rows = _separable_ranking_set_7()
+    before = {f.held_out_symbol: f for f in leave_one_out(project(rows))}
+    mutated = [ScorerRow(r.symbol, (999.9,) * 7 if r.symbol == "PA" else r.features,
+                         r.label, r.in_ranking_set, r.evidence_score, r.exclusion_reason)
+               for r in rows]
+    after = {f.held_out_symbol: f for f in leave_one_out(project(mutated))}
+    for other in ("PB", "PC", "PD", "NA", "NB", "NC", "ND", "NE", "NF"):
+        assert before["PA"].scores[other] == after["PA"].scores[other], (
+            f"{other} moved when held-out PA's features (incl. feature 7) changed - leakage"
+        )
+
+
+def test_geom_proxy_is_deterministic():
+    """D-075 dec: same input, two runs, byte-identical coefficients and distribution. No RNG."""
+    rows = _separable_ranking_set_7()
+    a = run_scorer(rows, feature_set="geom_proxy")
+    b = run_scorer(rows, feature_set="geom_proxy")
+    assert a.final_model.coefficients == b.final_model.coefficients
+    assert a.structural_percentiles == b.structural_percentiles
+
+
+def test_geom_proxy_feature_indices_match_no_plddt_plus_feature_seven():
+    """D-075 dec 1, pinned as a set relation rather than a literal tuple, so the intent survives a
+    reordering: geom_proxy is exactly no_plddt's columns plus index 6, and nothing else."""
+    assert set(FEATURE_SETS["geom_proxy"]) == set(FEATURE_SETS["no_plddt"]) | {6}
+    assert 2 not in FEATURE_SETS["geom_proxy"] and 3 not in FEATURE_SETS["geom_proxy"], (
+        "geom_proxy must contain NEITHER pLDDT feature (3 or 4) - that is the whole point"
+    )
 
 
 def test_intercept_stays_unpenalized_source_pin():

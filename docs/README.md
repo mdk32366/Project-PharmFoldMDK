@@ -185,6 +185,26 @@ what it claims"* failure class, and the same family as D-074 (an instrument dive
 written record). The whole value of `geom_proxy` is that it is confidence-blind; that property must be
 **proven by a biting test, not asserted.**
 
+> **Addendum to Decision 2 — added 2026-08-01, still before any run. Changes no test, no
+> interpretation, and no feature set; it records a structural guarantee that already held.**
+>
+> **Feature 7's confidence-blindness is guaranteed by the parser, not merely tested by the fixture.**
+> `core.features.Atom` carries **no `b_factor` field** and `parse_pdb` never reads columns 60-66, so a
+> feature computed from parsed atoms **cannot reach the confidence column at all**. The leak objection
+> is therefore *architecturally impossible via the coordinate path*, not just unobserved — and that
+> strengthens the eventual result: a `geom_proxy` survival cannot be answered with *"your proxy
+> probably leaked pLDDT somewhere,"* because the type it is built from has nowhere to leak from.
+>
+> Consequences for how the two arms are read, recorded so neither is over-sold:
+> - **Arm B (differing length) is the load-bearing arm.** Sizing the window off `len(plddt)` is the
+>   live, plausible mistake — feature 4 legitimately does exactly that — and no structural guarantee
+>   prevents it, only the fixture.
+> - **Arm A (differing values) guards a future regression**, not today's design: it bites against an
+>   implementation that re-parses the raw PDB text itself, bypassing `Atom`. It passes near-trivially
+>   for the clean design, which is why the guarantee is asserted *directly* by
+>   `test_atom_type_cannot_carry_confidence` — if `Atom` ever gains a `b_factor`, that reddens and
+>   arm A's strength must be re-argued rather than assumed.
+
 #### Decision (3) — the popularity-matched control (the direct attention test)
 
 D-065 tests attention only indirectly, via feature removal. This tests it directly.

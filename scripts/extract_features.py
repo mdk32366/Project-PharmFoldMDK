@@ -46,7 +46,12 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))   # so `core`/`db` import when run as a bare script
 
-from core.features import FEATURE_NAMES, FeatureRow, extract_features  # noqa: E402
+from core.features import (  # noqa: E402
+    EXTENDED_FEATURE_NAMES,
+    FEATURE_NAMES,
+    FeatureRow,
+    extract_features,
+)
 from core.manifest import ManifestRow, build_manifest  # noqa: E402
 
 DEFAULT_API = "https://pharmfoldmdk.fly.dev"
@@ -182,6 +187,9 @@ def load_features(engine, records: list[ExtractedRecord], *, ranking_run_id: Opt
                 membrane_proximal_plddt=r.membrane_proximal_plddt,
                 sasa_normalized=r.sasa_normalized,
                 largest_patch_fraction=r.largest_patch_fraction,
+                # Feature 7 (D-075) — coordinate-only, written alongside the six. It is NOT on the
+                # pre-registered path; it exists for the named `geom_proxy` ablation.
+                membrane_proximal_sasa=r.membrane_proximal_sasa,
                 null_reasons=r.null_reasons,
                 mean_plddt=r.mean_plddt,
                 below_plddt_floor=r.below_plddt_floor,
@@ -196,7 +204,7 @@ def _print_one(rec: ExtractedRecord) -> None:
     print(f"{rec.gene} ({rec.accession})  analysis_id={rec.analysis_id}  "
           f"disposition={rec.disposition}  boundary_method={rec.boundary_method}")
     print(f"  feature_version={rec.row.feature_version}")
-    for name in FEATURE_NAMES:
+    for name in EXTENDED_FEATURE_NAMES:          # the six, then feature 7 (D-075)
         value = getattr(rec.row, name)
         shown = "null" if value is None else f"{value:.4f}"
         reason = rec.row.null_reasons.get(name)
