@@ -80,6 +80,206 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-075 — A confidence-blind structural axis: does the signal survive when pLDDT information is *replaced* rather than removed, and when attention is matched?
+
+- **Date:** 2026-08-01
+- **Status:** Proposed → Accepted on merge. **Ruled before any run.** This entry is the
+  pre-registration; **it is void if code precedes it.**
+- **Type:** A **decision** — it rules a design and freezes an interpretation before a result exists.
+  Exactly D-065's shape, and like D-065 its *result* lands later as its own F-entry (unassigned until
+  it exists). **Numbered D-075, not F-008:** F-008 is taken (the two-precision confound, `754e58f`),
+  and the drafts predate the live log. The six staged 2026-08-01 documents are swept `F-008` → `D-075`
+  in this same commit; all were untracked and never committed, so no published citation is broken
+  (contrast D-011, which could not be renumbered because `c07b95b` already named it).
+- **Relates:** **D-065** (the two feature-drop ablations this extends); **F-005** (their result — the
+  measured baseline below); **F-004** caveat (b) (the confound); **F-008** (the two-precision confound
+  — a *third* candidate explanation this design also cannot separate, see Decision 6); D-058 dec 2
+  (sensitivity is permitted after the pre-registered result and never replaces it); D-041 (the model,
+  unchanged) and **D-041 dec 4** (thresholds are not invented to make a call); D-060 (leakage guards,
+  RNG discipline); D-027 (the fixed six).
+- **Provenance (D-016):** the Grok adversarial second opinion (2026-08-01) escalated the
+  pLDDT-attention confound from open caveat to potentially load-bearing and named the two tests D-065
+  did not run — a confidence-blind *replacement* and a popularity-matched control. Orders:
+  `docs/ORDERS-Code-2026-08-01-D-075-ablation.md`.
+
+**Context — why D-065 alone is not enough.** D-065's `no_plddt` drops features 3 and 4 and asks *does
+the shift survive their removal?* But dropping them also removes the **information** they carried
+(membrane-proximal accessibility), so a null `no_plddt` result is ambiguous: signal gone because pLDDT
+was confounded, or because real geometric information was amputated? This entry resolves the ambiguity
+by **replacing** that information with a confidence-blind measure, and by testing attention directly.
+
+#### Decision (0) — ⚠ the baseline is measured, not hypothetical, and it is not "chance"
+
+**How known (D-016):** read-only `SELECT` over `ranking_results` ⋈ `ranking_runs`, 2026-08-01, against
+the live MPG database. The percentile→symbol pairing is positional against `lambda_per_fold` and was
+**verified, not assumed** — NECTIN4 0.8482→0.6339 and JAG1 0.5804→0.8304 reproduce F-005 Finding 5's
+quoted values exactly, as do EGFR 0.9554, CDCP1 0.9018, ERBB2 0.8661.
+
+| run | set | median | mean | ≥0.5 | Spearman | params |
+|---|---|---|---|---|---|---|
+| **id=2** | FULL (F-004, `run_kind='preregistered'`) | **0.6071** | **0.6176** | **8/12** | −0.04828045 | 7 |
+| **id=3** | `no_plddt` (F-005, `sensitivity`) | **0.5625** | **0.5893** | **6/12** | −0.04828045 | 5 |
+| id=4 | `plddt_only` (F-005, `sensitivity`) | 0.6786 | 0.6295 | 9/12 | −0.28968 | 3 |
+
+Denominators identical across all three (D-065 dec 2): ranking set **56** · positives **12** ·
+head-to-head **8** · floor **50.0**; 12/12 folds converged; no λ at a grid edge.
+
+**⚠ `no_plddt` is NOT "≈ chance", and the drafted interpretation table said so wrongly.** Only the
+**count** (6/12) is exactly even; the **median 0.5625 and mean 0.5893 are both above 0.5.** F-005's
+"falls to exactly even" was a claim about the count alone. Three further properties of this baseline
+bound how finely it can be read, and are recorded here **before** any comparison exists:
+
+1. **The 6/12 count turns on one rank step.** `no_plddt`'s SLC3A2 = 0.4911 = **55/112**; chance is
+   56/112. A single rank position separates 6/12 from 7/12.
+2. **Percentiles are quantised in 1/112 (0.00893); the 12-value median in 1/224 (0.00446).** The
+   FULL→`no_plddt` median gap is 10/224 = **0.0446** — ten steps of the finest available increment.
+3. **Neither median sits on a datum.** `no_plddt`'s 6th/7th sorted values are 0.4911 and 0.6339 — the
+   median is the midpoint of a 0.143-wide gap straddling 0.5, so it moves in large jumps. FULL's
+   (0.5804/0.6339) is comparably placed. **At n=12 the median is not a stable anchor.**
+
+#### Decision (1) — the confidence-blind feature set (frozen before any run)
+
+| Set | Features | Parameters |
+|---|---|---|
+| `no_plddt` (D-065) | 1 (ECD length), 2 (Rg), 5 (SASA), 6 (patch fraction) | 5 |
+| **`geom_proxy`** (new) | 1, 2, 5, 6, **+ 7 (membrane-proximal SASA, coordinate-only)** | **6** (5 features + intercept) |
+
+`geom_proxy` restores the *membrane-proximal accessibility information* feature 4 carried, measured
+from **geometry alone, with zero pLDDT input.** If the signal is real geometric structure, `geom_proxy`
+recovers what `no_plddt` lost. If the signal was pLDDT-as-attention, it does not — the proxy carries no
+confidence information.
+
+#### Decision (2) — ⚠ the proxy MUST be confidence-blind, proven by a **two-armed** biting fixture
+
+Feature 7, membrane-proximal SASA:
+
+- computed on the **raw atomic coordinates** over the **same membrane-proximal window rule** feature 4
+  uses — `k = max(1, ceil(MEMBRANE_PROXIMAL_FRACTION · n_res))`, C-terminal (`core/features.py:48,363`).
+  **The rule is factored into a shared helper and reused; it is not redefined.**
+- **`n_res` is derived from the parsed coordinate residues, never from `len(plddt)`** (strengthened
+  2026-08-01 over the drafted order). Feature 4 sizes its window off the pLDDT array; feature 7 must
+  not, or it inherits a dependency on the pLDDT file's *shape*.
+- **must not read the pLDDT / B-factor column at any point** — no confidence weighting, no
+  pLDDT-based residue filtering, no confidence-derived window adjustment.
+
+**⚠ Tests that MUST go red first — both arms, on a deliberately contaminated implementation:**
+
+| Arm | Fixture | Assertion |
+|---|---|---|
+| **A — values** | two structures, **identical backbone coordinates, different pLDDT/B-factor values** | byte-identical membrane-proximal SASA |
+| **B — shape** | identical coordinates, **differing-length pLDDT array** | byte-identical membrane-proximal SASA |
+
+Arm B exists because **arm A cannot catch a length dependency**: an implementation sizing its window
+off `len(plddt)` passes a same-length/different-values fixture while still reading the pLDDT file.
+Confidence-blindness would then be proven for values but not for shape.
+
+- Build the contaminated impl (reads the B-factor; sizes off `len(plddt)`) → **both arms RED.** Confirm
+  the red.
+- Fix to coordinates-only → **both arms GREEN.**
+- **If either arm cannot be made to go red on a contaminated impl, that fixture is not biting and the
+  proxy's confidence-blindness is unproven — a stop-and-report condition, not a proceed.**
+
+**Why this is the load-bearing test.** A proxy that silently leaked pLDDT would look clean while
+reproducing the exact confound this entry exists to exclude — the *"function exists ≠ function does
+what it claims"* failure class, and the same family as D-074 (an instrument diverging from its
+written record). The whole value of `geom_proxy` is that it is confidence-blind; that property must be
+**proven by a biting test, not asserted.**
+
+#### Decision (3) — the popularity-matched control (the direct attention test)
+
+D-065 tests attention only indirectly, via feature removal. This tests it directly.
+`scripts/attention_control.py` computes, per target, two frozen attention proxies:
+
+| Proxy | Definition | Source | Character |
+|---|---|---|---|
+| **`pdb_present`** | 1 if the target has an experimentally solved structure in the PDB, else 0 | RCSB / UniProt xref, **frozen date recorded** | binary, low-noise, the strong proxy |
+| **`pub_count`** | literature density (PubMed hits for the gene symbol) | PubMed, **frozen query + date recorded** | continuous, noisier; catches attention without a solved structure |
+
+**The control:** re-rank with the structural (ablated) score after covariate-adjusting or stratifying on
+the attention proxy, and test whether positives still enrich. Run against `pdb_present` and `pub_count`
+**separately** — a sensitivity pair, not one blessed number.
+
+**⚠ Both proxies frozen (source + query + date recorded in this entry) BEFORE the control runs.** No
+re-querying after seeing a result. Re-running with the same frozen inputs must be byte-identical.
+
+#### Decision (4) — ⚠ THE FROZEN INTERPRETATION. Fixed before any run.
+
+**No reading anchors on a single statistic.** Every cell below is judged on the **explicit triple —
+median, mean, and count ≥0.5, reported side by side and read in prose.** The comparison is
+three-against-three: **`geom_proxy` toward FULL (0.6071 / 0.6176 / 8-of-12)** versus **`geom_proxy` at
+the `no_plddt` baseline (0.5625 / 0.5893 / 6-of-12)**. There is no threshold and none will be invented
+after the fact — **D-041 decision 4**, D-065 precedent. Decision 0's three fragility properties travel
+with every judgement.
+
+| Outcome | Reading |
+|---|---|
+| **All three of `geom_proxy`'s statistics sit toward FULL** (median ≳0.6071, mean ≳0.6176, count 8-of-12) — the proxy recovers what `no_plddt` lost | **Confound weakened.** The signal is geometric accessibility, not confidence. The membrane-proximal information matters; its *pLDDT encoding* was not what carried it. |
+| **All three sit at the `no_plddt` baseline** (median ≈0.5625, mean ≈0.5893, count 6-of-12) — the proxy does not recover it | **Two live readings, reported as both:** either the signal was pLDDT-as-attention, **or** real membrane-proximal information exists and neither a SASA proxy nor n=12 can capture it. **Ambiguous, and reported ambiguous.** ⚠ Note this is *not* "≈ chance" — the baseline itself is above 0.5 on median and mean (Decision 0). |
+| **The three statistics disagree** (e.g. median toward FULL, count at baseline) | **Reported as a split, not resolved to one number.** Decision 0.1–0.3 make this the *expected* case at n=12: one target's rank moves the count, ten of the finest increments span the whole median gap. A split is a legitimate, reportable outcome. |
+| **Signal survives popularity-matching on BOTH `pdb_present` and `pub_count`** | **Confound substantially excluded.** The strongest available evidence the axis is not attention. Grok's sinking question is answered. |
+| **Signal survives one proxy but not the other** | **Informative split, reported honestly.** Not hidden, not averaged away. |
+| **Signal vanishes under matching** | **Confound strengthened → Branch B.** The enrichment is not separable from research attention. **This is the finding, reported prominently** — it redirects the paper, and it is far better found here than by a reviewer. |
+
+**⚠ Spearman is a dead discriminator here and carries no weight in any cell above.** Against the
+two-valued comparator, FULL (id=2) and `no_plddt` (id=3) agree to **full float precision**
+(−0.04828045495852675) while their per-target percentiles differ by up to 0.25 — exactly what F-005
+Finding 5 predicted, since Spearman then depends only on the rank-sum of the score-5 group and is
+quantised in ~0.024 steps. **If `geom_proxy` returns the same value again, that is not corroboration;
+it is the statistic being blind.** It is reported for completeness and read as evidence of nothing.
+
+#### Decision (5) — structural prevention of fishing and headline-drift (inherits D-065)
+
+- **`--ablate` accepts only named sets:** `no_plddt`, `plddt_only` (D-065), `geom_proxy` (this entry).
+  **Arbitrary subsets refused by the code** (`ValueError`, `core/scorer.py` `FEATURE_SETS`). No new set
+  without a new dated entry.
+- Each run writes its own `ranking_run`, `run_kind='sensitivity'`, set name tagged. The attention
+  control writes its own tagged artifact, `run_kind='attention_control'`, proxy name + frozen date.
+- **The pre-registered run (id=2) stays `run_kind='preregistered'`, is never recomputed, and is read
+  from its row.** Verified read-only this session: `scripts/fit_scorer.py` always mints a *new* run
+  (`create_ranking_run`) and no CLI path targets an existing id. ⚠ `persist_results()` itself is
+  unguarded — handed `2` it would overwrite — so **read-only is a property of the call path, not the
+  function.** Any new persist path added here must not weaken that.
+- **F-004 is not amended.** Results land in this entry's later F-entry, citing F-004 and D-065,
+  modifying neither.
+- **The six-feature assertion on the pre-registered path stays green.** If it reddens, an ablation has
+  leaked into the pre-registered path and the PR is wrong (D-065 dec 5).
+- **No third proxy, no fourth ablation, to clarify an ambiguous result.** That is a new dated entry.
+
+#### Decision (6) — what this design still cannot separate, named up front
+
+**F-008's two-precision confound is a third candidate explanation and this design does not resolve
+it.** Tier was assigned by length (≤440 aa local/int8, above rental/fp16), so precision, length, and
+tier are mutually confounded with no overlap. Feature 7 is computed from coordinates produced under
+that same split, so a `geom_proxy` result — either direction — inherits it. F-008's named resolution
+path (a controlled A/B re-fold at the opposite precision, never touching the reported cohort) is **not
+run here and is not a prerequisite.** Recorded so a survival result is not over-read as excluding
+*all* confounds, only the confidence one.
+
+- **Deep-learning justification.** The question is *what ESMFold's own confidence encodes* — structure,
+  or training-set representation. pLDDT is a network output used as signal (D-041 §2 item 3). Replacing
+  it with a coordinate-only measure and matching on attention directly tests whether the network's
+  uncertainty was carrying structure or carrying popularity. This is the most directly DL-relevant
+  follow-up available: one refit plus one control against an existing pipeline, no new model, no new
+  parameters on the pre-registered path.
+
+- **Consequences / test surface:**
+  - **The confidence-blindness fixture reds on a contaminated impl and greens on the clean one, on
+    BOTH arms (values and length)** — the load-bearing test; a non-biting arm is stop-and-report.
+  - `--ablate` refuses any set not in the named three — asserted; arbitrary subset raises.
+  - Feature-count assertion: `geom_proxy` = **6 parameters** (5 features + intercept).
+  - `run_kind` persisted; sensitivity/attention runs never returned where the pre-registered run is
+    expected — fixture holds all kinds.
+  - The three D-060 leakage guards **re-assert on the `geom_proxy` path**: scrambled comparator →
+    identical coefficients; held-out features unchanged; λ-selector never sees the held-out index.
+  - Determinism: same fixture, two runs, byte-identical coefficients.
+  - ⚠ **Watch λ against the grid edge.** `no_plddt` already moved MERTK 31.6→**100.0** (and CDH11,
+    SLC39A6 10.0→31.6) without hitting an edge; `geom_proxy` restores a feature, so λ moves again.
+    `lambda_at_grid_edge` is the assertion. **The grid is never re-centred** (D-063 refusal).
+  - Attention proxies: frozen date/query persisted; re-running with the same frozen inputs is
+    byte-identical.
+  - **No run in the implementing PR.** Runs are owner-authorised after merge, interpretation already
+    frozen by this entry.
+
 ### D-074 — A finding against an instrument is not closed until the instrument no longer exhibits it — or carries, in itself, the statement of what it gets wrong
 
 - **Date:** 2026-07-30
