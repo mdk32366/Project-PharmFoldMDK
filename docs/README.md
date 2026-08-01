@@ -275,6 +275,59 @@ path (a controlled A/B re-fold at the opposite precision, never touching the rep
 run here and is not a prerequisite.** Recorded so a survival result is not over-read as excluding
 *all* confounds, only the confidence one.
 
+#### Implementation findings — ⚠ TWO invisible pre-registration corruptions, caught and guarded
+
+**Recorded as findings, not as incidental fixes.** Both were latent in code that was green, both
+would have silently changed the **pre-registered** result while every existing test passed, and
+neither was anticipated by the order. *"A pre-registered result was silently corruptible through the
+feature-projection skip and through the completeness check"* is the kind of near-miss this log exists
+to capture. **Same class as the `runner.write_artifacts`-has-no-production-caller correction
+(2026-07-23):** *function exists ≠ function does what it claims* — a true statement with a false
+implication, found by checking the tree rather than trusting the premise.
+
+**How known (D-016):** both found while wiring feature 7 through `run_scorer` and
+`scripts/fit_scorer.py`; the first was **proven by reverting the fix and watching the guard redden**
+(it reported 7 coefficients), the second by reading the predicate that decides ranking-set membership.
+
+**Corruption 1 — the graded fit would have used seven features and eight parameters.**
+`core/scorer.py`'s `run_scorer` projected rows onto the named feature set **only when the set was not
+`preregistered`**:
+
+```python
+if indices != FEATURE_SETS["preregistered"]:      # the skip
+    ranking_rows = [replace(r, features=…) for r in ranking_rows]
+```
+
+That was correct **only while every row carried exactly six features** — an invariant nothing
+asserted. D-075 makes rows arrive **seven** wide, so the skip would have handed the pre-registered
+model all seven columns: **8 parameters where D-041/D-060 pre-registered 7, with feature 7 — an
+ablation input — inside the graded fit.** Nothing in the output would have shown it; the reported
+distribution would simply have been a different model's. **Guarded:** projection is now
+unconditional (a no-op for a six-long row, so no prior behaviour changes), and
+`test_seven_wide_rows_do_not_leak_feature_7_into_the_preregistered_path` asserts 6 coefficients
+against a 7-wide row *and* that the pre-registered fit is byte-identical with and without a seventh
+column present. **The guard is proven, not assumed** — restoring the skip reddens it.
+
+**Corruption 2 — F-004's 56 could have been moved by an ablation's input.** In
+`scripts/fit_scorer.py`, `features_complete = all(v is not None for v in rec.features)` is what
+decides `in_ranking_set`. Appending feature 7 to `FeatureRecord.features` — the obvious way to make
+it available — would have meant **a null feature 7 dropped a target out of the ranking set**,
+changing the pre-registered denominator **56** and therefore F-004 itself, from a column that exists
+only for a sensitivity analysis. **Guarded:** feature 7 is carried in its own field, membership stays
+defined by the six, and a ranking-set row arriving without feature 7 **warns loudly** rather than
+being fitted on a `0.0` placeholder as though measured (D-027 — an imputed value is the worst option).
+
+**The generalisable lesson.** Both corruptions share a shape: **a pre-registered quantity defined
+implicitly, by the width or completeness of a data structure, rather than explicitly by name.** The
+count of features and the membership of the ranking set were both *emergent* properties of a tuple,
+so widening the tuple silently redefined them. **An ablation must not be able to reach the graded path
+through a shared data structure** — which now holds by construction, asserted in both places.
+
+**Process note, recorded plainly (D-016).** While proving corruption 1's guard by reverting the fix,
+`core/scorer.py` was briefly left in the reverted (buggy) state because the backup path failed; it was
+caught immediately, restored, and re-verified green. Recorded because caught-and-corrected process
+facts belong in the record — no inflation, no omission.
+
 - **Deep-learning justification.** The question is *what ESMFold's own confidence encodes* — structure,
   or training-set representation. pLDDT is a network output used as signal (D-041 §2 item 3). Replacing
   it with a coordinate-only measure and matching on attention directly tests whether the network's
