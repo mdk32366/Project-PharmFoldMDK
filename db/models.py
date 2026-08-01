@@ -161,6 +161,13 @@ class ProteinFeatures(Base):
     sasa_normalized: Mapped[float | None] = mapped_column(Float, nullable=True)           # 5
     largest_patch_fraction: Mapped[float | None] = mapped_column(Float, nullable=True)    # 6
 
+    # Feature 7 (D-075, migration `0007`) — membrane-proximal SASA, coordinate-only. NOT one of
+    # D-027's six and never on the pre-registered path; it exists for the named `geom_proxy`
+    # ablation. Nullable, and null on every row written before D-075 — an honest "not computed
+    # yet", never backfilled with a value (D-070 dec 2: a measurement may enter a field, an
+    # inference never can).
+    membrane_proximal_sasa: Mapped[float | None] = mapped_column(Float, nullable=True)   # 7
+
     # Why any feature is null (D-027): {feature_name: reason}. Empty when all six computed.
     null_reasons: Mapped[dict] = mapped_column(JSON_VARIANT, nullable=False, default=dict)
 

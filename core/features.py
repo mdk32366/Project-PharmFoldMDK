@@ -45,7 +45,7 @@ SASA_PROBE_RADIUS = 1.4          # Å, water probe (Shrake & Rupley / D-058 deci
 SASA_SAMPLE_POINTS = 92          # Shrake & Rupley's published value (D-058 decision 1)
 REL_SASA_ACCESSIBLE = 0.25       # relative-SASA exposed/buried cutoff (D-058 decision 2)
 CONTIGUITY_CA_ANGSTROM = 8.0     # CA–CA residue-contact distance for patch contiguity (D-058 dec 2)
-MEMBRANE_PROXIMAL_FRACTION = 0.25   # feature 4: C-terminal 25% of the ECD (D-027)
+MEMBRANE_PROXIMAL_FRACTION = 0.25   # features 4 AND 7: C-terminal 25% of the ECD (D-027, D-075)
 PLDDT_FLOOR = 50.0               # D-041 §5, D-039 bands
 
 # The six D-027 features, in order. The COUNT is the pre-registration (D-027) — a seventh name
@@ -58,6 +58,26 @@ FEATURE_NAMES = (
     "sasa_normalized",
     "largest_patch_fraction",
 )
+
+# ── feature 7 (D-075): the confidence-blind membrane-proximal measure ────────
+# NOT a member of FEATURE_NAMES. D-027's six IS the pre-registration and D-075 dec 5 keeps the
+# pre-registered path at six features / seven parameters; feature 7 exists only for the named
+# `geom_proxy` ablation. Kept in a SEPARATE tuple so `len(FEATURE_NAMES) == 6` stays assertable
+# and a seventh column can never drift into the graded path by being appended to one list.
+GEOM_PROXY_FEATURE_NAME = "membrane_proximal_sasa"
+EXTENDED_FEATURE_NAMES = FEATURE_NAMES + (GEOM_PROXY_FEATURE_NAME,)
+
+
+def membrane_proximal_k(n_res: int) -> int:
+    """The C-terminal membrane-proximal window size: `max(1, ceil(0.25 · n_res))`.
+
+    **The single source of the window rule, shared by feature 4 (pLDDT) and feature 7 (SASA)** —
+    D-075 dec 2 requires feature 7 to *reuse* feature 4's rule, not redefine it. The two features
+    differ only in the `n_res` they pass: feature 4 uses the per-residue pLDDT array's length,
+    feature 7 uses the **parsed coordinate residue count** and never `len(plddt)` (D-075 dec 2,
+    arm B — a length dependency is the plausible leak a values-only fixture cannot catch).
+    """
+    return max(1, math.ceil(MEMBRANE_PROXIMAL_FRACTION * n_res))
 
 # van-der-Waals radii (Å), Bondi 1964 — a committed table, NOT read from a library at runtime
 # (D-058 decision 1). Keyed by element symbol (upper-case). Unknown elements fall back to carbon.
@@ -253,6 +273,10 @@ class FeatureRow:
     membrane_proximal_plddt: Optional[float] = None
     sasa_normalized: Optional[float] = None
     largest_patch_fraction: Optional[float] = None
+    # Feature 7 (D-075) — the confidence-blind membrane-proximal measure. NOT one of the six;
+    # carried on the row but excluded from `as_feature_dict`, so the pre-registered path cannot
+    # pick it up by iterating the row.
+    membrane_proximal_sasa: Optional[float] = None
     null_reasons: dict[str, str] = field(default_factory=dict)
     mean_plddt: Optional[float] = None
     below_plddt_floor: Optional[bool] = None
@@ -260,8 +284,15 @@ class FeatureRow:
     feature_version: str = ""
 
     def as_feature_dict(self) -> dict[str, Optional[float]]:
-        """The six features by name — exactly six keys, the enforced pre-registration (D-027)."""
+        """The six features by name — exactly six keys, the enforced pre-registration (D-027).
+        **Feature 7 is deliberately absent**; ask for it explicitly (D-075 dec 5)."""
         return {name: getattr(self, name) for name in FEATURE_NAMES}
+
+    def as_extended_feature_dict(self) -> dict[str, Optional[float]]:
+        """The six D-027 features **plus** feature 7 (D-075) — seven keys, in
+        `EXTENDED_FEATURE_NAMES` order. Used only to assemble ablation inputs; the pre-registered
+        fit projects back onto the first six by index, never by iterating this."""
+        return {name: getattr(self, name) for name in EXTENDED_FEATURE_NAMES}
 
 
 def _radius_of_gyration(ca_coords: list[tuple[float, float, float]]) -> float:
@@ -337,6 +368,36 @@ def _largest_patch_fraction(atoms: list[Atom], per_atom_sasa: list[float]) -> Op
     return max(component_sasa.values()) / total_sasa
 
 
+def _membrane_proximal_sasa(
+    atoms: list[Atom], per_atom_sasa: list[float]
+) -> Optional[float]:
+    """Feature 7 (D-075): **mean per-residue SASA over the C-terminal membrane-proximal window.**
+
+    The confidence-blind counterpart of feature 4. Feature 4 averages *pLDDT* over the C-terminal
+    25% of the span; this averages *solvent-accessible area* over the C-terminal 25% of the
+    residues, restoring the membrane-proximal accessibility information `no_plddt` amputated
+    without carrying any confidence signal.
+
+    **Confidence-blind by construction (D-075 dec 2):**
+    - inputs are `Atom`s and their areas — `Atom` has no `b_factor` and `parse_pdb` never reads
+      the B-factor columns, so the pLDDT column is structurally unreachable from here;
+    - the window is sized from the **coordinate residue count**, never `len(plddt)`; `plddt` is
+      not a parameter of this function, so a length dependency cannot be written by accident.
+
+    Residue order is by `res_seq` ascending, so "C-terminal" is the tail of the numbered chain —
+    the same end feature 4 takes. Returns `None` (never 0.0) if no residues resolve.
+    """
+    by_res: dict[int, float] = {}
+    for atom, sasa in zip(atoms, per_atom_sasa):
+        by_res[atom.res_seq] = by_res.get(atom.res_seq, 0.0) + sasa
+    if not by_res:
+        return None
+    order = sorted(by_res)                       # ascending res_seq; tail == C-terminal
+    k = membrane_proximal_k(len(order))          # SHARED rule, coordinate-derived n_res
+    window = order[-k:]
+    return sum(by_res[r] for r in window) / len(window)
+
+
 def extract_features(
     pdb_text: Optional[str],
     plddt: Optional[list[float]],
@@ -360,10 +421,12 @@ def extract_features(
         n_res = len(plddt)
         row.ecd_length = float(n_res)                                    # feature 1
         row.mean_plddt_ecd = sum(plddt) / n_res                          # feature 3
-        k = max(1, math.ceil(MEMBRANE_PROXIMAL_FRACTION * n_res))        # C-terminal 25% of the span
+        k = membrane_proximal_k(n_res)                                    # shared rule (D-075 dec 2)
         row.membrane_proximal_plddt = sum(plddt[-k:]) / k                # feature 4
         row.mean_plddt = mean_plddt if mean_plddt is not None else row.mean_plddt_ecd
     else:
+        # NOTE feature 7 is NOT nulled here — it is coordinate-only, so a missing pLDDT array
+        # does not prevent it (D-075 dec 2, arm B: it must not depend on `plddt` at all).
         for name in ("ecd_length", "mean_plddt_ecd", "membrane_proximal_plddt"):
             row.null_reasons[name] = "no per-residue pLDDT (fold produced no plddt.json)"
         row.mean_plddt = mean_plddt
@@ -375,7 +438,8 @@ def extract_features(
     if not atoms:
         reason = "no structure (fold failed - no PDB)" if not pdb_text \
             else "malformed structure (no atoms parsed from PDB)"
-        for name in ("radius_of_gyration", "sasa_normalized", "largest_patch_fraction"):
+        for name in ("radius_of_gyration", "sasa_normalized", "largest_patch_fraction",
+                     GEOM_PROXY_FEATURE_NAME):
             row.null_reasons[name] = reason
         return row
 
@@ -402,6 +466,18 @@ def extract_features(
         row.null_reasons["largest_patch_fraction"] = "zero total residue SASA (degenerate structure)"
     else:
         row.largest_patch_fraction = patch
+
+    # feature 7 (D-075) — membrane-proximal SASA, CONFIDENCE-BLIND.
+    # Reuses feature 4's window rule via `membrane_proximal_k`, but takes `n_res` from the parsed
+    # COORDINATE residues, never `len(plddt)` (D-075 dec 2 arm B). `plddt` is not read here, and
+    # the confidence column is unreachable anyway: `Atom` carries no b_factor and `parse_pdb`
+    # never reads columns 60-66 (the Decision-2 addendum's structural guarantee).
+    mp_sasa = _membrane_proximal_sasa(atoms, per_atom_sasa)
+    if mp_sasa is None:
+        row.null_reasons[GEOM_PROXY_FEATURE_NAME] = \
+            "no residues resolvable from coordinates (degenerate structure)"
+    else:
+        row.membrane_proximal_sasa = mp_sasa
 
     return row
 

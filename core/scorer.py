@@ -55,6 +55,9 @@ FEATURE_SETS: dict[str, tuple[int, ...]] = {
     "preregistered": (0, 1, 2, 3, 4, 5),     # all six — 7 parameters (unchanged, D-027/D-065 dec 5)
     "no_plddt": (0, 1, 4, 5),                # ecd_length, Rg, SASA, patch — 5 parameters
     "plddt_only": (2, 3),                    # mean & membrane-proximal pLDDT — 3 parameters
+    # D-075: `no_plddt` PLUS feature 7 (index 6, membrane-proximal SASA, coordinate-only) — the
+    # confidence-blind replacement for feature 4's information. 5 features, 6 parameters.
+    "geom_proxy": (0, 1, 4, 5, 6),
 }
 
 # λ grid: 13 log-spaced points from 1e-3 to 1e3 (D-060 dec 3). Pinned by a test; never re-centred.
@@ -469,9 +472,15 @@ def run_scorer(
     indices = FEATURE_SETS[feature_set]
 
     ranking_rows = [r for r in all_rows if r.in_ranking_set]
-    if indices != FEATURE_SETS["preregistered"]:
-        # Project each row onto the ablation's feature columns; labels/evidence/disposition unchanged.
-        ranking_rows = [replace(r, features=tuple(r.features[i] for i in indices)) for r in ranking_rows]
+    # ⚠ ALWAYS project, including the pre-registered set (D-075). This was conditional — it skipped
+    # projection when `indices == preregistered` — which was correct only while every row carried
+    # exactly six features. D-075 adds feature 7 at index 6, so rows now arrive SEVEN long, and a
+    # skipped projection would have silently fit the pre-registered model on seven features / eight
+    # parameters: the D-065 dec 5 / D-075 dec 5 leak, in the graded path, invisible in any output.
+    # Projecting unconditionally makes the pre-registered set independent of how many columns a row
+    # happens to carry. It is a no-op for a six-long row, so no prior behaviour changes.
+    # `tests/test_scorer.py` asserting exactly 6 coefficients on the pre-registered path is the guard.
+    ranking_rows = [replace(r, features=tuple(r.features[i] for i in indices)) for r in ranking_rows]
     excluded = sorted(
         [(r.symbol, r.exclusion_reason or "not in ranking set")
          for r in all_rows if not r.in_ranking_set]
