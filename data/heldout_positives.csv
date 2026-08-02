@@ -1,0 +1,57 @@
+# Phase A (held-out validation set) - clinically-validated ADC targets ABSENT from the Kathad 82.
+# Built 2026-08-01 by scripts/build_heldout_set.py. CURATION ONLY - no folds, no scoring, no run.
+#
+# HOW EACH FIELD IS KNOWN (D-016). uniprot_accession: resolved live from the UniProt REST API
+#   (gene_exact + organism_id:9606 + reviewed:true), never recalled. gene_symbol is UniProt's PRIMARY
+#   symbol, which is not always the queried alias (SIGLEC3 -> CD33). clinical_status + source_url:
+#   ClinicalTrials.gov API v2, the furthest-phase study found for that agent.
+#
+# DEFINING PROPERTY: every row is DISJOINT FROM THE 82 BY ACCESSION - asserted in the build, not
+#   eyeballed. Checking by symbol would not do: a cohort member under a different symbol would
+#   masquerade as held-out. This fired in anger - vobramitamab duocarmazine / CD276 (Q5ZPR3) is a
+#   cohort member and was screened out.
+#
+# ONE ROW PER TARGET, carrying the agent that reaches the furthest phase. This is a TARGET set, not
+#   a drug roster; other agents against the same antigen are not listed.
+#
+# INCLUSION: registry-confirmed phase >= 2. Anything below, or with no registry hit, is EXCLUDED and
+#   named in the build log - a recorded exclusion, not an unexamined gap.
+#
+# ⚠ clinical_status CARRIES THE TRIAL'S OVERALL STATUS ON PURPOSE. Reaching phase 3 and FINISHING it
+#   are different claims, and four rows have a TERMINATED lead trial (CEACAM5, DLL3, SLC34A2, IL2RA).
+#   "Clinically validated" here means THE ANTIGEN WAS PROSECUTED INTO LATE-PHASE TRIALS - it does NOT
+#   mean the agent succeeded. Phase alone would have implied a success no source supports.
+#
+# ⚠ ONE BORDERLINE INCLUSION, NAMED: AXL (enapotamab vedotin) is PHASE1/PHASE2. It satisfies
+#   "phase >= 2" only because a phase-1/2 trial contains a phase-2 arm. Flagged for an owner ruling
+#   rather than silently kept or silently dropped.
+#
+# ⚠ THE CANDIDATE LIST IS NOT EXHAUSTIVE. An ADC absent from DRUG_CANDIDATES is invisible to the
+#   build. Absence from this file is NOT evidence of absence from the field.
+#
+# ⚠ NO OVER-CLAIM (order dec 3 / F-009 section 3): this set tests GENERALIZATION. It does not
+#   retroactively validate the scorer, and nothing may say "our method would have caught these".
+#
+# ⚠ PHASE B (fold + validate) IS GATED on D-075 surviving, and needs explicit owner authorisation
+#   citing that survival. Phase A is curation only.
+gene_symbol,uniprot_accession,adc_name,clinical_status,source_url,verified_date
+CD22,P20273,inotuzumab ozogamicin,PHASE4 (COMPLETED),https://clinicaltrials.gov/study/NCT03677596,2026-08-01
+F3,P13726,tisotumab vedotin,PHASE4 (RECRUITING),https://clinicaltrials.gov/study/NCT06952660,2026-08-01
+TACSTD2,P09758,sacituzumab govitecan,PHASE4 (RECRUITING),https://clinicaltrials.gov/study/NCT06230055,2026-08-01
+CD19,P15391,loncastuximab tesirine,PHASE2/PHASE3 (RECRUITING),https://clinicaltrials.gov/study/NCT05991388,2026-08-01
+CD33,P20138,gemtuzumab ozogamicin,PHASE3 (COMPLETED),https://clinicaltrials.gov/study/NCT00962767,2026-08-01
+CD79B,P40259,polatuzumab vedotin,PHASE3 (RECRUITING),https://clinicaltrials.gov/study/NCT06522555,2026-08-01
+CDH6,P55285,raludotatug deruxtecan,PHASE2/PHASE3 (RECRUITING),https://clinicaltrials.gov/study/NCT06161025,2026-08-01
+CEACAM5,P06731,tusamitamab ravtansine,PHASE3 (TERMINATED),https://clinicaltrials.gov/study/NCT04154956,2026-08-01
+DLL3,Q9NYJ7,rovalpituzumab tesirine,PHASE3 (TERMINATED),https://clinicaltrials.gov/study/NCT03033511,2026-08-01
+ERBB3,P21860,patritumab deruxtecan,PHASE3 (RECRUITING),https://clinicaltrials.gov/study/NCT07060807,2026-08-01
+FOLR1,P15328,mirvetuximab soravtansine,PHASE3 (COMPLETED),https://clinicaltrials.gov/study/NCT04209855,2026-08-01
+MET,P08581,telisotuzumab vedotin,PHASE3 (RECRUITING),https://clinicaltrials.gov/study/NCT04928846,2026-08-01
+ROR1,Q01973,zilovertamab vedotin,PHASE3 (RECRUITING),https://clinicaltrials.gov/study/NCT06717347,2026-08-01
+SLC34A2,O95436,upifitamab rilsodotin,PHASE3 (TERMINATED),https://clinicaltrials.gov/study/NCT05329545,2026-08-01
+TNFRSF17,Q02223,belantamab mafodotin,PHASE3 (NOT_YET_RECRUITING),https://clinicaltrials.gov/study/NCT07285239,2026-08-01
+TNFRSF8,P28908,brentuximab vedotin,PHASE3 (RECRUITING),https://clinicaltrials.gov/study/NCT04685616,2026-08-01
+AXL,P30530,enapotamab vedotin,PHASE1/PHASE2 (COMPLETED),https://clinicaltrials.gov/study/NCT02988817,2026-08-01
+CLDN18,P56856,CMG901,PHASE2 (RECRUITING),https://clinicaltrials.gov/study/NCT06219941,2026-08-01
+GPNMB,Q14956,glembatumumab vedotin,PHASE2 (COMPLETED),https://clinicaltrials.gov/study/NCT02487979,2026-08-01
+IL2RA,P01589,camidanlumab tesirine,PHASE2 (TERMINATED),https://clinicaltrials.gov/study/NCT04639024,2026-08-01
