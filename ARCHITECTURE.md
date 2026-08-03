@@ -139,6 +139,23 @@ is not deletion** — every value, band and colour still renders, and the detail
 **The target-quality slot is reserved, not filled:** the structural-suitability score is gated on the
 D-075 result, so this stops confidence *impersonating* it without supplying it — asserted by a denylist
 test (no `suitability score` / `good target` / `recommended` / `promising` language on the list).
+**The list then becomes SORTABLE, and the `?? 0` coercion is removed (2026-08-03).** Every existing
+column is click-to-sort (asc → desc → back to the default, which stays **pLDDT desc** so the
+ceiling-at-a-glance read survives), with the active column and direction announced through `aria-sort`
+on the `<th>` — an unlabelled sort is a silent reordering. Ordering lives in **`ui/src/sortRows.js`**,
+unit-tested away from the DOM, so the census's future columns become new sort keys in a proven
+mechanism instead of a retrofit. **Fold confidence has no sort control of its own** — it is a band *of*
+mean pLDDT, and a second control would be two axes for one quantity. ⚠ **The load-bearing rule is that
+an absent value is a CATEGORY, never a low number.** The previous
+`(b.mean_plddt ?? 0) - (a.mean_plddt ?? 0)` coerced a missing measurement to zero, so an unmeasured
+target sorted as the *worst* — and this was **live, not latent**: IGF2R sits on the deployed list with
+`mean_plddt: null` because its fold hit a CUDA OOM at 2,491 aa. Absent rows now form a trailing cluster
+in **both** directions (absence is off the axis, not at an end of it), are never dropped, and are
+distinguished from a measured `0`. Each states its **real** reason — `fold_status` + `fail_reason` from
+`/api/coverage`, joined client-side by accession (the D-068 `TargetScorerPanel` pattern: **no route
+change, no `system-model.json` edit**) — because a generic dash over a specific failure is exactly the
+smoothing this project refuses. The coverage join is **additive**: a supplier failure degrades the
+reason text, never the list, asserted by test.
 **D-070 then D-071 make provenance THREE-valued:** an uncaptured fold first gained a *"what we can
 say"* block (tier + folded_at + the worker manifest **by name**, never its contents — D-070); D-071
 then splits *uncaptured* into **measured-later** and **absent**. The detail projection gains a

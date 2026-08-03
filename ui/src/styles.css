@@ -53,6 +53,20 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .col-secondary { color: var(--muted); font-size: 0.88rem; }
 .confidence-scope-note { margin-top: 0.2rem; }
 
+/* Sortable headers. The button carries the click target so the header is keyboard-reachable and
+   announced as a control; `aria-sort` on the <th> is what tells a screen reader how the table is
+   currently ordered — an unlabelled sort is a silent reordering. */
+.sort-header {
+  background: none; border: 0; padding: 0; font: inherit; color: inherit;
+  cursor: pointer; text-align: left;
+}
+.sort-header:hover { color: var(--ink); text-decoration: underline; }
+.sort-caret { color: var(--muted); }
+
+/* An absent measurement is a CATEGORY, not a low number. It is rendered as its stated reason rather
+   than a bare dash, so the reader learns why the value is missing instead of guessing. */
+.absent-reason { color: var(--muted); font-style: italic; }
+
 /* target view */
 .target-header h2 { margin: 0 0 0.1rem; }
 .target-header .subtitle { margin: 0 0 1rem; color: var(--muted); }
