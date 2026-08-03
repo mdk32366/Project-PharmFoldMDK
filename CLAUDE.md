@@ -21,6 +21,13 @@ use it in a defensible way?"** See `ARCHITECTURE.md` §1.
    logged yet, log it first (append-at-top `D-NNN` entry with a deep-learning
    justification), then build.
 
+   **⚠ A commit message naming a decision does NOT discharge this rule** (added 2026-08-03 after
+   **D-062**). PR #90 was titled *"F-004 + D-062: the pre-registered result, and the scorer surface
+   that renders it"* and its diff added `### F-004` and **no `### D-062`**. The surface shipped, and
+   **thirteen** later citations treated D-062 as settled authority — pointing at an entry that was
+   never written. **The check is the entry, not the reference to it:** before claiming a decision is
+   logged, confirm a matching `### D-NNN` exists in `docs/README.md`. See method-note item 7.
+
 2. **Architecture doc stays true.** `ARCHITECTURE.md` (repo root) is the single source of
    truth for system shape. Any PR that changes structure, data flow, dependencies, or
    deployment MUST update `ARCHITECTURE.md` in the same PR. **Bring `ARCHITECTURE.md`

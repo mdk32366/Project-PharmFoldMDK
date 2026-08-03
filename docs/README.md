@@ -76,9 +76,128 @@ So the rule is not "be careful" — it is:
    investigation needs no event log at all: *4 crashes in 4 HER2 attempts, 0 in ~93 Trop-2 folds.*
    When a raw outcome count is available, it outranks any derived telemetry.
 
+7. **⚠ A POINTER IS NOT PROOF OF ITS TARGET — and the sharpest case is the record pointing at itself.**
+   (Added 2026-08-03 after **D-062**.) This project keeps re-learning one shape in different clothes:
+   a *reference* to a thing is taken as evidence the thing exists and is sound.
+   - **A green check is not a working system** — the gate proves the tests it has, not the behaviour.
+   - **A summary is not the records** — `params_all_on_cuda=True` was true and missed spill;
+     *"217 WHEA events"* was true and missed severity (S-001/S-002).
+   - **A hash from an hour ago is not the file now** — re-verify immediately before a destructive act.
+   - **A filename is not an identity** — a basename match nearly overwrote the 605 KB decision log with
+     an unrelated project's `README.md`.
+   - **A cited path is not a tracked file** — `intersection_check.py` was cited as provenance from a
+     path that did not exist (D-073/D-074).
+   - **⚠ AND: a commit message naming a decision is NOT evidence the decision was logged.** PR #90 was
+     titled *"F-004 + D-062: … the scorer surface that renders it"*, and its diff added `### F-004` and
+     **no `### D-062`**. Thirteen later citations then referred to D-062 as settled authority. **The
+     record referred to itself into a false sense of completeness** — the most dangerous member of this
+     family, because every other item is a pointer from outside the log into the world, where reality
+     eventually pushes back, while this one is a pointer from the log into the log, where nothing does.
+   - **The general rule: to confirm a thing exists, look at the thing — never at a reference to it.**
+     For log entries that is one command: every cited `D-NNN`/`F-NNN` must have a matching `### ` entry.
+
 ---
 
 ## Log (newest first)
+
+### F-009 — The 82 is Kathad's comparator, not a target census: four clinically-validated ADC targets sit outside it, and that is what motivates the project
+
+- **Date of finding:** 2026-08-01. **Entered this log:** 2026-08-03.
+- **Type:** A finding — a property of the cohort plus a checkable list. Nothing is ruled.
+- **⚠ Why the entry date lags:** the finding was written as a staged document
+  (`docs/F-009-cohort-boundary-false-negatives.md`) and **cited by shipped code before it entered the
+  log** — the `/about` and `/scorer` cohort-boundary note (2026-08-03) and `ARCHITECTURE.md` both name
+  F-009. That made it the **last open instance of D-062's defect**: a citation pointing at an authority
+  the log did not contain. This entry closes it. **Unlike D-062 this is not a reconstruction** — the
+  staged document survives with its own reasoning and provenance, so this entry is *sourced*, not
+  recovered from effects.
+- **Relates:** D-075 (the confound §3's over-claim guard protects), F-004 (the result whose scope this
+  bounds), D-029/D-040 (the curated reference the absences were checked against), D-062 (the defect
+  class this closes), D-054 (the evidence-baseline deferral).
+- **How known (D-016):** cohort membership checked by grep against `data/adc_reference_mapping.csv` and
+  `data/cohort_82.txt` — CD30/TNFRSF8, CEACAM5, CD33/SIGLEC3 and TACSTD2 all **absent**. Accessions
+  since verified from the **UniProt REST API** (see the closed checklist below).
+
+#### The finding
+
+The research question is *does a structure-derived axis reorder an **expression-based** ranking* — and
+the expression-based ranking is **Kathad et al. 2024's**. The 82 is therefore *Kathad's cohort*,
+inherited whole so both rankings cover the same targets and the delta means something. Adding a target
+outside Kathad's ranking would have nothing to compare against: it would **break** the comparison, not
+complete it. So *"why isn't CD30 in the 82"* has a clean answer — **because CD30 is not in Kathad's
+cohort.** The boundary is a property of the comparator, not of this project's biology judgement.
+
+**The sharper point, and the actual finding:** four clinically-validated ADC targets were **excluded by
+Kathad's expression-and-selectivity filters**.
+
+| Target | Accession | ADC | Furthest status | In the 82? |
+|---|---|---|---|---|
+| **Trop-2** (TACSTD2) | **P09758** | sacituzumab govitecan · datopotamab deruxtecan | FDA-approved (2 ADCs) | **No** |
+| **CD33** (SIGLEC3) | **P20138** | gemtuzumab ozogamicin (Mylotarg) | FDA-approved 2000 | **No** |
+| **CD30** (TNFRSF8) | **P28908** | brentuximab vedotin (Adcetris) | FDA-approved 2011 | **No** |
+| **CEACAM5** | **P06731** | tusamitamab ravtansine | Phase 3 (CARMEN-LC03, NCT04154956) | **No** |
+
+**Expression-and-selectivity filtering drops clinically-validated targets.** That is a concrete
+demonstration that the expression axis is *incomplete*, and therefore that stress-testing it against a
+different axis is worth doing at all. **The false negatives motivate the project; they do not undermine
+it.**
+
+#### ⚠ The over-claim guard — the load-bearing constraint
+
+**Do NOT claim the structural method "would have caught" these targets.** Three reasons, all recorded
+before any such claim could be made: (1) they are **unfolded and unscored** — there is no such result;
+(2) CD30's 2011 approval makes it **maximally attention-rich**, so its pLDDT would be inflated for
+exactly the reason D-075 interrogates — using it as validation walks into the confound; (3) the
+defensible claim indicts the **comparator**, not this project's scorer: *the expression axis has
+documented false negatives, therefore expression alone is insufficient, therefore an orthogonal axis is
+worth measuring.* **"The comparator has blind spots" stays strictly separate from "our scorer fills
+them."** Conflating them hands the critic the next punch. **This is now enforced as a denylist test on
+both shipped placements, not as an editorial habit.**
+
+#### An embedded correction (D-016) — the "first ADC" slip
+
+**Adcetris (brentuximab vedotin, 2011) was *Seagen's* first ADC, not the first ADC.** That is
+**Mylotarg** (gemtuzumab ozogamicin, CD33, FDA-approved **2000** — eleven years earlier). The two
+claims share the word *"first"* and fuse in memory; only *"Seagen's first"* survives the record.
+Mylotarg's 2000 approval, **2010 voluntary withdrawal** and 2017 re-approval at lower dose partly
+erased it from the popular ADC narrative, which is why *"Adcetris was first"* is a common slip. **No
+artifact may call Adcetris the first ADC** — a pharma-literate audience will catch it, and a wrong
+historical claim in the setup is disproportionately costly for a project whose credibility rests on
+how-known discipline. The staged deck was checked clean; the claim lived only in conversation.
+
+> **⚠ Citation status, recorded not silent.** The sources for the CD33-was-first claim (Nature *Sig
+> Transduct Target Ther* 2022; AACR *Clin Cancer Res* 2018; and the CEACAM5 phase-3 set) are
+> **Planner-supplied and have not been opened by the builder or owner** — the same convention
+> `data/adc_reference_mapping.csv` uses for its unopened citations. The claim is therefore recorded
+> **as sourced but unverified-at-first-hand**, and — deliberately — **the shipped UI copy states neither
+> the superlative nor the year.** The log carries the claim with its citation status; the user-facing
+> surface makes only the part that needed no superlative. If the superlative is ever wanted on a
+> surface, open the primary sources first.
+
+#### What has happened since the finding was written (artefact-sourced)
+
+- **§5's open accession checks are CLOSED.** All three were verified against the UniProt REST API on
+  2026-08-01: **CD30/TNFRSF8 = P28908 ✓**, **CEACAM5 = P06731 ✓**, **Trop-2/TACSTD2 = P09758 ✓**
+  (CD33 = P20138 re-verified). Every guess in the staged doc was correct — and was still checked.
+- **§4's future-work item has been BUILT**, as the held-out validation set's Phase A:
+  `data/heldout_positives.csv`, **20** clinically-validated ADC targets disjoint from the 82 by
+  accession, each with a ClinicalTrials.gov source URL. The four above are members. **Phase B — folding
+  and validating them — remains sealed behind D-075 surviving.** §4 said *"explicitly NOT claimed as
+  done"*; the curation half now is, the validation half is not.
+- **The framing reached the UI**, with the examples derived from that CSV rather than hardcoded and a
+  drift test binding the two.
+
+- **Deep-learning justification.** This bounds what the graded result *claims*. The scorer re-orders a
+  comparator; without this entry a reader could take the ranking as a statement about the ADC-target
+  space, which the data does not support. It also supplies the strongest available motivation for a
+  structural axis existing at all — the expression axis demonstrably misses clinically-validated
+  targets — while refusing the adjacent, unearned claim that our axis recovers them.
+
+- **Consequences.** F-004/F-005/F-006 unchanged — this bounds scope, not result. The comparator's
+  incompleteness is **not** a defect in the cohort choice: inheriting Kathad whole is what makes the
+  delta meaningful (D-054's deferral rests on the same logic). ⚠ The 20-row held-out set carries its own
+  named limit — **absence from that file is not evidence of absence from the field** — so it must never
+  be presented as a complete census either; that would repeat this finding's error one level out.
 
 ### D-062 — The Scorer surface and the `GET /api/ranking` route ⚠ **BACK-FILLED 2026-08-03 — reconstructed from artifacts, NOT from contemporaneous record**
 
