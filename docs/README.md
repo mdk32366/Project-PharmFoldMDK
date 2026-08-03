@@ -96,6 +96,23 @@ So the rule is not "be careful" — it is:
    - **The general rule: to confirm a thing exists, look at the thing — never at a reference to it.**
      For log entries that is one command: every cited `D-NNN`/`F-NNN` must have a matching `### ` entry.
 
+   **⚠ STATE OF THE INVARIANT — do not assume it has always held.** As of **2026-08-03** every cited
+   `D-NNN`/`F-NNN`/`S-NNN`/`DEP-NNN` in this log and in `ARCHITECTURE.md` resolves to a real `### `
+   entry. `D-010` is the sole exception and is documented above as a deliberate skip.
+
+   **This closed state was RESTORED on that date; it did not hold before it.** Two holes were repaired
+   the same day: **D-062**, cited **13 times** as the authority for a shipped surface with no entry
+   (back-filled from artefacts and permanently marked as such), and **F-009**, cited by shipped UI and
+   by `ARCHITECTURE.md` while existing only as a staged document (landed from that document, so sourced
+   rather than reconstructed). **Both had accumulated citations for days without anything objecting** —
+   which is the asymmetry above in practice.
+
+   **What a future session should take from this:** the invariant is *maintained*, not *guaranteed*.
+   Nothing in the gate enforces it — the check is deliberately **named, not built** (D-074 dec 3: do
+   not answer a finding with a framework that becomes a second thing to drift). So **re-run it rather
+   than trusting this paragraph** — which is itself only a pointer, and therefore not proof of its own
+   target. Running it is one command; it found two holes the first time it was run.
+
 ---
 
 ## Log (newest first)
