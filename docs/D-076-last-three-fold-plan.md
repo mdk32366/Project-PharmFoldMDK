@@ -1,7 +1,9 @@
-# D-072 — The last three unfolded targets: a scoped plan, one tier executed, two on ice behind a named trigger
+# D-076 — The last three unfolded targets: a scoped plan, one tier executed, two on ice behind a named trigger
 
 > **Number check:** live log is ahead of the project snapshot (F-007 / D-070 / D-071 are the most
-> recent seen). This is drafted as **D-072**; confirm the next free integer against `docs/README.md`
+> recent seen). Drafted as **D-072**; that number was already TAKEN by the miniature demo notebook
+> (`d46aa1a`), so this is renumbered **D-076** — verified 2026-08-03 against `docs/README.md`, whose
+> highest decision entry is D-075. The number was checked, not inherited from an estimate
 > before merging and renumber if needed. Log leads code — this entry is written before any re-fold.
 >
 > **Type:** A decision (scope + sequencing), carrying one finding inside it (the MUC16 disorder read).
@@ -144,7 +146,8 @@ its own schedule, because it is the only one with no asterisk and no utility que
 
 ## §6 — Definition of done for this entry
 
-- [ ] Number confirmed against `docs/README.md`, renumbered if D-072 is taken.
+- [x] Number confirmed against `docs/README.md` (2026-08-03): D-072 was taken by the miniature
+      notebook; this entry is **D-076**, the next free decision number.
 - [ ] IGF2R label status checked against the reference file and recorded here **before** its fold.
 - [ ] Tier 1 executed: IGF2R re-enqueued, folded, cohort → 80, results updated through the gate,
       all coverage/ranking numbers re-derived from endpoints (no re-hardcoding).

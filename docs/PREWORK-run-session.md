@@ -117,8 +117,12 @@ decides.
 
 ## §5 — Carried-forward housekeeping (fold in when convenient, not blocking the run)
 
-1. **D-072 → D-076 renumber.** `D-072-last-three-fold-plan.md` needs its number updated; the MANIFEST
-   references it by unsuffixed name, so keep that reference resolving through the rename.
+1. ~~**D-072 → D-076 renumber.**~~ **DONE 2026-08-03** — the file is now
+   `D-076-last-three-fold-plan.md`. D-076 was verified free against the live log (highest decision
+   entry was D-075), not inherited from an estimate. Every reference was updated so the MANIFEST's
+   unsuffixed-name reference still resolves; the historical wording in the housekeeping record is
+   deliberately left naming the old filename, since it documents the state at the time (D-073
+   precedent).
 2. **id=1 `status_detail` mojibake** — its own tiny housekeeping entry.
 3. **Lit-review citations** — verify Site4Drug (arXiv 2606.01816), add PNAS 2026 surfaceome paper,
    before the novelty claim is pitched.

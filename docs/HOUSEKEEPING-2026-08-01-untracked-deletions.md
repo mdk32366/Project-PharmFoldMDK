@@ -51,8 +51,11 @@ references by its unsuffixed name. Deleting both copies would have removed the s
 repo. One copy was therefore **kept as `D-072-last-three-fold-plan.md`** so the MANIFEST reference
 resolves, and the redundant copy deleted.
 
-**⚠ Open TODO carried forward:** this document is **misnumbered**. D-072 is taken by the miniature
-demo notebook (`d46aa1a`). It renumbers to **D-076** — live TODO for the next pre-work, not done here.
+**✅ TODO CLOSED 2026-08-03:** the document was **misnumbered** — D-072 is the miniature demo notebook
+(`d46aa1a`) — and is now `D-076-last-three-fold-plan.md`, D-076 having been verified free against the
+live log rather than inherited from an estimate. **The filename above is left as written**: it records
+the state at the time of the deletion, which is what a provenance note is for (the D-073 precedent for
+not editing historical wording).
 
 ## 3. The near-miss this record belongs beside
 
