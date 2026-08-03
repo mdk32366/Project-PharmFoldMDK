@@ -80,6 +80,132 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-062 — The Scorer surface and the `GET /api/ranking` route ⚠ **BACK-FILLED 2026-08-03 — reconstructed from artifacts, NOT from contemporaneous record**
+
+> ### ⚠ READ THIS BEFORE THE ENTRY
+>
+> **This entry did not exist until 2026-08-03.** D-062 was **cited 13 times** — ten in this log, three
+> in `ARCHITECTURE.md` — as the authority for a *shipped* surface, and there was no `### D-062`. It was
+> the **only** cited decision number with no entry (D-010 excepted; the log documents that one as
+> deliberately skipped).
+>
+> **This is a governance defect on the project's own terms, not housekeeping.** The project rests on
+> *the committed log is ground truth — continuity lives in the repository, not in memory.* Thirteen
+> pointers to an authority that does not exist means anyone following them to learn **why** the ranking
+> route behaves as it does — a later session, a reviewer, the owner in six months — arrives at nothing.
+> The decision was *made* (the code shipped, the surface exists); the reasoning was never inscribed.
+> That is the log's own **"true as reasoned, not true as recorded"** gap in its worst form: not a number
+> that went underived, but an entire decision **referenced into existence without being written**.
+>
+> **How this entry was built, and the line it does not cross.** Everything below is derived from **two
+> artefact classes only**: (1) the 13 surviving citations, which state what D-062 was *claimed* to have
+> ruled, and (2) the **code that shipped under its authority**, which demonstrates what was *actually*
+> decided. **No part of this entry is written from anyone's recollection of the original deliberation.**
+> That deliberation was never logged and is therefore **gone**; reconstructing it from memory would
+> inscribe a recollection as though it were a record — precisely the failure this log exists to prevent.
+> Where reasoning cannot be recovered from an artefact, **this entry says so rather than supplying it.**
+>
+> **When the omission happened, verified.** PR **#90** (`0ed5b1f`, 2026-07-27, *"F-004 + D-062: the
+> pre-registered result, and the scorer surface that renders it"*) added **`### F-004` and zero
+> `### D-062`** to this file. Its own message reads *"Log leads code; the result is the thing D-062
+> renders, landed first in its own commit"* — so the F-004 entry went in first and D-062's was meant to
+> follow. It never did, while the commit title and the `ARCHITECTURE.md` prose were both written as
+> though it had.
+
+- **Date of decision:** 2026-07-27 (from `0ed5b1f`), amended 2026-07-29 (`42a74ad`, jointly with D-055).
+- **Date of this entry:** 2026-08-03. **Status:** Accepted-in-effect — the work shipped and has been in
+  production since 2026-07-27; this entry records it, it does not authorise it.
+- **Relates:** F-004 (the result this surface renders), D-055 (the joint two-column/tooltip amendment),
+  D-064 dec 3 (the invalid run that must never be served), D-065 (the `run_kind` filter), D-066 (the
+  later reduction of the right column), F-005/F-006 (caveats that travel with the result), D-051 (the
+  architecture-contract test this route fires), D-074 (the rule this omission most resembles).
+
+#### What the shipped code demonstrably does (verified 2026-08-03 by reading it)
+
+Stated as behaviour, because behaviour is what survived:
+
+- **`GET /api/ranking` exists** and is declared in `ui/src/system-model.json` (1 occurrence), so the
+  D-051 architecture-contract test — set-equality between the live route table and the model — passes
+  with it present. It is served by `app/reads.py::ranking_payload`.
+- **The route always returns 200 with a `result_status`.** `_result_status()` (`app/reads.py:249`)
+  computes **four values**: `complete` (all pre-registered statistics produced) · `partial` (a
+  distribution exists but a statistic is blocked — LOO partial, or the full-data fit raised so
+  Spearman/ranking is blocked, D-064 dec 5) · `raised` · and **`not_run`**, returned with
+  `run: None`, `result: None`, `rows: []` when no valid run exists (`app/reads.py:286`). An absent
+  result is therefore a *named state*, never an error and never an empty success.
+- **Two independent filters keep the wrong run off the surface** (`_latest_valid_result`): validity
+  (`status_detail` must not begin `invalid`, which is how the zero-positive `ranking_results` id=1 is
+  excluded — D-064 dec 3) **and** `run_kind = 'preregistered'` (D-065, so a sensitivity ablation is
+  never served as the result). Ordering is `computed_at desc`, so id=2 wins on recency as well.
+- **`ScorerView.jsx` renders exactly five sections**, verified present: **A** cascade · **B** labels ·
+  **C** fixed-before-the-run · **D** the result · **E** the ranking table.
+- **The ranking table is real scores at reduced scope** — rank · symbol · score · the excluded set with
+  reasons — with baseline / delta / disagreement **named as deferred rather than mocked.**
+
+#### What the citations CLAIM it decided (their words, not a reconstruction)
+
+The fullest surviving account is `ARCHITECTURE.md:68–88`. Reduced to claims:
+
+1. D-062 **landed UI Plan v2 step 6**, the `Scorer` surface, as the **sixth nav** item.
+2. Every number on it — *"12, 22, 56, 8, the median, the Spearman"* — is **derived from `/api/ranking`,
+   never typed** (Constraint A / D-050).
+3. The **mean/median reversal is rendered**, and **caveat (b)** travels with the result.
+4. β·x attributions are stored in `target_scores`, so the missing attribution column is *"a display gap
+   not a data gap."*
+5. It is the **fourth firing** of the D-051 architecture-contract test.
+6. The **D-055/D-062 amendment** (2026-07-29) made the surface two-column and moved term-decoding to
+   in-situ `Term` tooltips.
+7. Elsewhere in this log it is cited as the owner of `result_status` (`:963`), of the validity filter
+   (`:1639`), of the `run_kind` filter (`:1437`), of the `structural score` tooltip definition
+   (`:1374`), and as *"the rendering surface"* that makes the result legible to a grader (`:1588`).
+
+**Claims 1–7 are all consistent with the code as it stands today.** That is the strongest statement
+available: the citations are *corroborated*, not merely repeated.
+
+#### ⚠ What is NOT recoverable, and is therefore not supplied
+
+- **Why the surface has five sections in that order**, rather than another arrangement. The order is
+  observable; the argument for it is not in any artefact.
+- **Why `result_status` is four-valued rather than three or five.** The four values and their
+  boundaries are in the code and their *meanings* are in its docstring — but the reasoning that chose
+  that partition is unrecorded. (`partial` is tied to D-064 dec 5, which is the closest thing to a
+  recoverable rationale for one of the four.)
+- **What alternatives were rejected** — the log's template calls for this and no artefact preserves it.
+  For a normal entry the rejected options are often the most valuable part; here they are simply lost.
+- **Whether the numbers listed in claim 2 were exhaustive at the time**, or an illustrative subset.
+- **The original deliberation itself.** It was never written down. **It is gone.** This entry does not
+  guess at it.
+
+- **Deep-learning justification** (required of every entry; supplied here as the *shipped* system's
+  justification, not a reconstructed intent). The surface is where the graded neural result becomes
+  checkable by a reader: it renders F-004 — the pre-registered evaluation of a model over features
+  derived from our own ESMFold folds — with every figure derived from the route rather than typed, and
+  with the run-selection filters that stop an invalid or sensitivity run being read as the result. The
+  DL core is only defensible if its result is legible and its provenance inspectable; this is the
+  surface that makes it so.
+
+- **Consequences / what this entry changes and does not change.**
+  - **No code, no test, no route change.** The system is untouched; only the record is repaired.
+  - **The 13 citations now resolve.** That was the defect and it is closed.
+  - ⚠ **The entry is permanently marked back-filled.** A future reader must be able to tell a
+    contemporaneous decision from a reconstruction, or the repair becomes a forgery of history. **This
+    marking must never be removed**, and any later entry citing D-062 should be read knowing its
+    reasoning is recovered from effects, not recorded at the time.
+  - **Adjacent to D-074, and distinct.** D-074: an *instrument* diverges from its written record.
+    D-062's defect: a *decision* was cited as an authority that had no record at all. Both are failures
+    of the log-is-ground-truth principle; D-074 is drift, this is absence.
+  - **The generalisable lesson, and the cheap guard it implies.** A commit whose *title* names a
+    decision is not evidence the decision was *logged* — #90's title named D-062 and its diff did not
+    add it. **The check that would have caught this is mechanical: every cited `D-NNN`/`F-NNN` must have
+    a matching `### ` entry.** Running it over the whole log took one command and found exactly one hole
+    besides the documented D-010 skip. **Not built as a gated test here** (that would be its own
+    decision, and D-074 dec 3 warns against answering a finding with a framework), but named so the
+    next person reaches for it.
+  - ⚠ **A live instance of the same defect is open:** **F-009** is cited by the shipped `/about` and
+    `/scorer` cohort-boundary note (#116) and by `ARCHITECTURE.md`, and it exists only as a **staged
+    document** — it is not yet an entry in this log. It must land as a real `### F-009` in the next
+    docs-placement pass, or the project has shipped a UI note citing a finding the log does not contain.
+
 ### F-010 — `/api/coverage`'s `analysis_id` is sourced only from folded rows, so the one target whose record most needs explaining reports `null`
 
 - **Date:** 2026-08-03
