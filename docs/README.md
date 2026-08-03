@@ -80,6 +80,70 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-010 — `/api/coverage`'s `analysis_id` is sourced only from folded rows, so the one target whose record most needs explaining reports `null`
+
+- **Date:** 2026-08-03
+- **Type:** A finding against an instrument. **Nothing is ruled and nothing is fixed here** — logged
+  deliberately unfixed (owner ruling) so it is not smuggled into an unrelated UI PR. The fix belongs
+  to whoever is next in `app/reads.py` with a reason to be there.
+- **Relates:** **D-043** (a failed fold is not an unattempted one — the same family: a failure falling
+  out of a path that succeeds for every other row); **D-038** (`/api/coverage` as the honest-denominator
+  supplier); **D-073/D-074** (the same error class reproduced *inside* the instrument built to measure
+  it, and the rule that a finding against an instrument is not closed until the instrument stops
+  exhibiting it — see the closing note).
+- **Numbering:** `F-009` is reserved for the cohort-boundary finding; merged `ARCHITECTURE.md` already
+  cites F-009 with that meaning, so this took the next free integer rather than displacing it.
+
+**How known (D-016):** `GET https://pharmfoldmdk.fly.dev/api/coverage`, 2026-08-03, while diagnosing
+IGF2R's null `mean_plddt` for the sortable-list work. IGF2R's coverage row reports
+**`analysis_id: null`** — while `/api/analyses` reports **`id: 57`** for the same target and the
+database confirms `protein_analyses` id=57 exists. Read against `app/reads.py`
+`_folded_accessions` / `_coverage_row`.
+
+**The mechanism, named precisely.** `_folded_accessions()` builds `{accession: analysis_id}` under
+`WHERE pdb_path IS NOT NULL`, and `_coverage_row()` then sets `analysis_id = folded.get(row.accession)`.
+IGF2R's fold hit a CUDA OOM at 2,491 aa, so its `pdb_path` is null and it is absent from that map.
+
+**So this is not a broken join — it is a NAME that does not mean what it says.** The field is called
+`analysis_id`, which reads as *"the id of this target's analysis row"*, but it is populated only when
+the fold **succeeded**. IGF2R *has* an analysis row; it has no *structure*. The value silently answers
+a different question — `folded_analysis_id` — under a name that promises the general one. Adjacent to
+D-074's lesson and distinct from it: D-074 is an instrument drifting from its written record; this is a
+field whose **name over-promises relative to its own population rule**, and the record was never
+written down at all.
+
+#### ⚠ Why this is cosmetic *today* and stops being cosmetic the moment anything consumes it
+
+**Today:** nothing reads `coverage.rows[].analysis_id`. The UI links to targets from `/api/analyses`
+(which carries the real `id`), and the D-075 sortable list joins coverage by **accession**, not by
+`analysis_id`. So the null is currently inert.
+
+**The trap for a future consumer, stated explicitly so it is not inherited silently:** the first code
+that uses `analysis_id` to link a coverage row to its analysis record will work for **79 of 80 rows**
+and return null for the one row a reader is most likely to click — the failure they want explained. A
+null that appears only on the exceptional row is the hardest kind to notice in review and the easiest
+to mistake for "no record exists" when the record does exist. **Anyone reaching for this field should
+either fix the population rule first or join by accession instead.**
+
+**Also recorded:** the failure is *asymmetric by construction*, which is why it survived. Every healthy
+row gets a correct `analysis_id`; only the failed fold gets a null. A test over the folded majority
+passes. This is the D-043 shape again — the exceptional row being the one the code forgets — and it is
+the third time this class has appeared (D-043 in the surface, D-073 inside the instrument, now in the
+coverage projection).
+
+- **Deep-learning justification.** Neutral to the model; measurement hygiene on the route that supplies
+  the **honest denominator** the graded ranking claim rests on. The counts `/api/coverage` serves are
+  correct — `fold_status` and `fail_reason` are right for IGF2R, which is what the denominators use — so
+  no reported figure is affected. What is wrong is a per-row identifier nobody has consumed yet.
+
+- **Consequences / what closing this requires (D-074).** Not fixed here. When it is fixed, the honest
+  options are: populate `analysis_id` for every target that *has* an analysis row (renaming the folded
+  map's role), or **rename the field to `folded_analysis_id`** so the name states its own rule. Either
+  discharges the finding; a null left under the general name does not. **Per D-074, this entry alone
+  does not close anything** — the instrument still exhibits the finding, so until `app/reads.py` changes
+  or carries an in-file statement of this limit, F-010 stays open. **No code, no test, no route change
+  in this entry.**
+
 ### D-075 — A confidence-blind structural axis: does the signal survive when pLDDT information is *replaced* rather than removed, and when attention is matched?
 
 - **Date:** 2026-08-01
