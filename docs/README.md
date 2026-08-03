@@ -76,6 +76,26 @@ So the rule is not "be careful" — it is:
    investigation needs no event log at all: *4 crashes in 4 HER2 attempts, 0 in ~93 Trop-2 folds.*
    When a raw outcome count is available, it outranks any derived telemetry.
 
+7. **⚠ A POINTER IS NOT PROOF OF ITS TARGET — and the sharpest case is the record pointing at itself.**
+   (Added 2026-08-03 after **D-062**.) This project keeps re-learning one shape in different clothes:
+   a *reference* to a thing is taken as evidence the thing exists and is sound.
+   - **A green check is not a working system** — the gate proves the tests it has, not the behaviour.
+   - **A summary is not the records** — `params_all_on_cuda=True` was true and missed spill;
+     *"217 WHEA events"* was true and missed severity (S-001/S-002).
+   - **A hash from an hour ago is not the file now** — re-verify immediately before a destructive act.
+   - **A filename is not an identity** — a basename match nearly overwrote the 605 KB decision log with
+     an unrelated project's `README.md`.
+   - **A cited path is not a tracked file** — `intersection_check.py` was cited as provenance from a
+     path that did not exist (D-073/D-074).
+   - **⚠ AND: a commit message naming a decision is NOT evidence the decision was logged.** PR #90 was
+     titled *"F-004 + D-062: … the scorer surface that renders it"*, and its diff added `### F-004` and
+     **no `### D-062`**. Thirteen later citations then referred to D-062 as settled authority. **The
+     record referred to itself into a false sense of completeness** — the most dangerous member of this
+     family, because every other item is a pointer from outside the log into the world, where reality
+     eventually pushes back, while this one is a pointer from the log into the log, where nothing does.
+   - **The general rule: to confirm a thing exists, look at the thing — never at a reference to it.**
+     For log entries that is one command: every cited `D-NNN`/`F-NNN` must have a matching `### ` entry.
+
 ---
 
 ## Log (newest first)
