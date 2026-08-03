@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getRanking, getCoverage } from '../api.js'
 import CoverageLine from './CoverageLine.jsx'
 import Term from './Term.jsx'
@@ -114,7 +115,16 @@ function FullResult({ ranking, coverage, partial }) {
           <section className="scorer-cascade">
             <h3>A · From the cohort to the fit set</h3>
             <ol className="cascade">
-              <li><b>{coverage.coverage.denominator}</b> cohort targets (Kathad et al.)</li>
+              {/* F-009 — the cohort line presented Kathad as "the cohort" with no comparator/census
+                  distinction. The qualifier LINKS to /about rather than repeating the paragraph, so
+                  the framing has one source and cannot drift between two surfaces. */}
+              <li>
+                <b>{coverage.coverage.denominator}</b> cohort targets (Kathad et al.)
+                <span className="removes">
+                  {' '}— a comparator cohort, not a census; clinically-validated ADC targets fall
+                  outside it (<Link to="/about">see About</Link>)
+                </span>
+              </li>
               <li><b>{coverage.rows.filter((x) => x.fold_status === 'folded').length}</b> folded
                 <span className="removes"> — removes what could not be folded on available hardware</span></li>
               <li><b>{coverage.coverage.ranked}</b> ranked

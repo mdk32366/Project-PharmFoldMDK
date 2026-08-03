@@ -156,6 +156,26 @@ distinguished from a measured `0`. Each states its **real** reason — `fold_sta
 change, no `system-model.json` edit**) — because a generic dash over a specific failure is exactly the
 smoothing this project refuses. The coverage join is **additive**: a supplier failure degrades the
 reason text, never the list, asserted by test.
+**F-009's cohort boundary then reaches the surface (2026-08-03).** Both `/about` and `/scorer` presented
+the Kathad 82 as *"the cohort"* with no statement that it is an **expression-and-selectivity selected
+comparator, not a census** — leaving a reader to assume the ranking speaks to the whole ADC target
+space, when it re-orders a fixed list. `AdcContext.jsx` gains the paragraph (the primary home: it
+already derives its cohort stats live, D-050/D-051) and `ScorerView.jsx` §A's cascade line gains a
+one-line qualifier that **links to About rather than restating it**, so the framing has a single source
+and cannot drift between two surfaces. The four example targets — CD30, CD33, CEACAM5, Trop-2, each the
+antigen of an approved or late-phase ADC — are **derived, not inscribed**: they live in
+`ui/src/heldoutExamples.js` and `heldoutExamples.test.js` asserts every `gene_symbol` + accession
+appears in `data/heldout_positives.csv`, whose accessions came from UniProt. ⚠ **The over-claim guard is
+a denylist test, not an editorial habit** (F-009 §3): the note indicts the *comparator's* completeness
+and must never imply the scorer would surface these targets — they are unfolded and unscored, and
+CD30/CD33 are attention-rich, the exact confound D-075 exists to test, so implying validation would
+pre-empt a sealed pre-registration. Two lessons are recorded in the test itself: the denylist is scoped
+**specifically** to the scorer/axis/ranking (a broad `proves the…` pattern fired on the shipped, correct
+*"enfortumab vedotin proves the mechanism"*), and the copy **avoids the banned vocabulary outright
+rather than negating it**, because a phrase-level guard cannot distinguish a claim from a disclaimer and
+should not have to. The existing confound layer — `PlddtAmbiguityNote`, the *"find me more NECTIN4s"*
+caveat, `ScorerView`'s negative-outcome text — is untouched; no route added, `system-model.json`
+unchanged.
 **D-070 then D-071 make provenance THREE-valued:** an uncaptured fold first gained a *"what we can
 say"* block (tier + folded_at + the worker manifest **by name**, never its contents — D-070); D-071
 then splits *uncaptured* into **measured-later** and **absent**. The detail projection gains a
