@@ -11,10 +11,13 @@ import { render, screen, within, waitFor, fireEvent } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom'
 
 // Mock the API module so the list renders from fixtures, not a live fetch.
+// getCoverage is mocked too: TargetList now joins /api/coverage client-side for the
+// absent-value reason (no route change). It is additive - the list renders without it.
 vi.mock('../api.js', () => ({
   listAnalyses: vi.fn(),
+  getCoverage: vi.fn(),
 }))
-import { listAnalyses } from '../api.js'
+import { getCoverage, listAnalyses } from '../api.js'
 import TargetList from './TargetList.jsx'
 
 const ROWS = [
@@ -29,7 +32,9 @@ function renderList() {
 
 beforeEach(() => {
   listAnalyses.mockReset()
+  getCoverage.mockReset()
   listAnalyses.mockResolvedValue(ROWS)
+  getCoverage.mockResolvedValue({ rows: [] })
 })
 
 describe('TargetList — tier legibility (D-048 §3.2)', () => {

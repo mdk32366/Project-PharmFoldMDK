@@ -19,8 +19,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-vi.mock('../api.js', () => ({ listAnalyses: vi.fn() }))
-import { listAnalyses } from '../api.js'
+// getCoverage is mocked too: TargetList now joins /api/coverage client-side for the
+// absent-value reason (no route change). It is additive - the list renders without it.
+vi.mock('../api.js', () => ({ listAnalyses: vi.fn(), getCoverage: vi.fn() }))
+import { getCoverage, listAnalyses } from '../api.js'
 import TargetList from './TargetList.jsx'
 import { BANDS, COHORT_MAX_PLDDT, bandFor } from '../plddt.js'
 
@@ -36,7 +38,9 @@ const renderList = () => render(<MemoryRouter><TargetList /></MemoryRouter>)
 
 beforeEach(() => {
   listAnalyses.mockReset()
+  getCoverage.mockReset()
   listAnalyses.mockResolvedValue(ROWS)
+  getCoverage.mockResolvedValue({ rows: [] })
 })
 
 describe('confidence demotion — the column header says what the band labels already say', () => {
@@ -126,14 +130,20 @@ describe('confidence demotion — what must NOT change', () => {
     expect(screen.getAllByText(new RegExp(bandFor(58.01).label, 'i')).length).toBeGreaterThan(0)
   })
 
-  it('renders the absent-pLDDT row as an em-dash and "not folded", never as a low number', async () => {
-    // IGF2R is real and live. This order does not fix the SORT coercion (that is order #2) - it only
-    // asserts the row is still displayed honestly as absent rather than as a value.
+  it('renders the absent-pLDDT row as an em-dash and a stated reason, never as a low number', async () => {
+    // IGF2R is real and live. This asserts the row is displayed honestly as ABSENT rather than as a
+    // value, and that the absence carries a reason rather than being left blank.
+    //
+    // NOTE the exact reason wording is deliberately NOT pinned here. This test originally asserted
+    // the band label "not folded"; the sortable-list order supersedes that with the row's REAL cause
+    // (from /api/coverage's fold_status + fail_reason), because a generic label over a specific
+    // failure is the kind of smoothing this project refuses. The INTENT — em-dash, a reason present,
+    // never a coerced number — is what is pinned, so an improvement to the wording cannot redden it.
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     const row = screen.getByText('IGF2R').closest('tr')
     expect(within(row).getByText('—')).toBeInTheDocument()
-    expect(row.textContent).toMatch(/not folded/i)
+    expect(row.textContent).toMatch(/not folded|fold failed|no measurement/i)
     expect(row.textContent).not.toMatch(/\b0\.00\b/)
   })
 })
