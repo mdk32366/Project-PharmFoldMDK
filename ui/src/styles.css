@@ -45,6 +45,14 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .target-list th { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
 .dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.4rem; }
 
+/* Confidence demotion on the target list. The band colour is KEPT (no information removed) but
+   stops being the row's headline element, so a green dot cannot read as "good target". The exact
+   treatment is owner-reserved — prominence was itself an owner ruling (D-039/D-048) — so it is one
+   class here rather than a choice scattered through the markup. Detail-view confidence is untouched. */
+.dot-secondary { width: 0.45rem; height: 0.45rem; opacity: 0.75; }
+.col-secondary { color: var(--muted); font-size: 0.88rem; }
+.confidence-scope-note { margin-top: 0.2rem; }
+
 /* target view */
 .target-header h2 { margin: 0 0 0.1rem; }
 .target-header .subtitle { margin: 0 0 1rem; color: var(--muted); }

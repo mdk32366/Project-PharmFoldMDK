@@ -126,6 +126,19 @@ varying across the chain, hand-rolled SVG, D-037); and the D-039 band scheme is 
 single source of truth (structure and legend cannot disagree), with the numeric re-justification of
 the 60 line against the enlarged live cohort left as a named owner action (D-016 — the individual
 `mean_plddt` values live in Postgres, not a repo artefact, so they are not fabricated here).
+**Confidence is then DEMOTED on the list (2026-08-03, un-gated honesty fix).** The band vocabulary was
+always careful — *"Confident **backbone**"*, *"backbone unreliable"* — but the list undid it: a bare
+`Confidence` header beside a traffic-light dot, as visually prominent as the identity columns, which at
+a glance reads as a verdict on the **target** rather than a check on the **fold**. Three changes, none
+removing a value: the header is qualified (**`Fold confidence`**), the dot becomes visually secondary
+to identity (`.dot-secondary`/`.col-secondary` — one semantic class, because prominence was itself an
+owner ruling under D-039/D-048 and the treatment stays owner-reserved), and one line states what
+confidence is **not** (*"not a judgement of whether the target is a good ADC candidate"*). **Demotion
+is not deletion** — every value, band and colour still renders, and the detail-view confidence layer
+(`Confidence.jsx`, `PlddtPlot`, `PlddtSpread`) is untouched, as are the D-039 boundaries `70/60/50/0`.
+**The target-quality slot is reserved, not filled:** the structural-suitability score is gated on the
+D-075 result, so this stops confidence *impersonating* it without supplying it — asserted by a denylist
+test (no `suitability score` / `good target` / `recommended` / `promising` language on the list).
 **D-070 then D-071 make provenance THREE-valued:** an uncaptured fold first gained a *"what we can
 say"* block (tier + folded_at + the worker manifest **by name**, never its contents — D-070); D-071
 then splits *uncaptured* into **measured-later** and **absent**. The detail projection gains a
