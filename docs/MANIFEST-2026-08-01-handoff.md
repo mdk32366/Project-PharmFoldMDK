@@ -30,7 +30,7 @@ target is now **a publishable paper**, and D-075 is the fork that decides which 
 | File | Type | Number status |
 |---|---|---|
 | `CORRECTION-2026-08-01-nectin4-score.md` | Correction (NECTIN4 score/frame) | place where corrections live |
-| `D-072-last-three-fold-plan.md` | Decision (the last three targets) | ⚠ **D-072 is TAKEN** (miniature notebook, `d46aa1a`) — renumber, next free is **D-076** |
+| `D-076-last-three-fold-plan.md` | Decision (the last three targets) | ✅ **resolved: D-076** — drafted `D-072`, which was taken by the miniature notebook (`d46aa1a`); renumbered and file renamed 2026-08-03 |
 | `D-075-pLDDT-ablation-preregistered.md` | **Decision** spec (reconciled to defer to the order) | ✅ **resolved: D-075** — drafted `F-008`, which was taken (`754e58f`); landed as a decision, not a finding |
 | `F-009-cohort-boundary-false-negatives.md` | Finding (cohort = comparator; 4 false negatives) | ✅ **resolved: F-009** — confirmed free (highest merged finding was F-008) |
 
@@ -81,8 +81,9 @@ These are the things the Planner cannot resolve — they need the repo, UniProt,
 
 1. ~~**Confirm all new entry numbers**~~ — **DONE 2026-08-01.** Verified against the live
    `docs/README.md` (highest merged: **D-074**, **F-008**). Resolved: the ablation → **D-075** (drafted
-   `F-008`, taken); cohort-boundary → **F-009** (free). **Still open: `D-072-last-three-fold-plan.md`
-   is misnumbered** — D-072 is the miniature notebook (`d46aa1a`); next free is **D-076**. The
+   `F-008`, taken); cohort-boundary → **F-009** (free). **Closed 2026-08-03: the last-three plan is now
+   `D-076-last-three-fold-plan.md`** — D-072 was the miniature notebook (`d46aa1a`); D-076 verified
+   free against the live log. The
    held-out entry is unassigned until it lands.
 2. ~~**Confirm D-065's status**~~ — **DONE 2026-08-01.** D-065 is **merged** (`e309545`, PR #91) **and
    its ablations have run** (F-005, `42a74ad`, PR #92; `no_plddt` = `ranking_run` id=3, `plddt_only` =

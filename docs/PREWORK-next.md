@@ -3,7 +3,7 @@
 > **Grounding:** confirm main with `git log --oneline -1` before any work. Read first:
 > `CLOSEOUT-2026-08-01.md`, then `D-075-pLDDT-ablation-preregistered.md`,
 > `F-009-cohort-boundary-false-negatives.md`, the correction note, and
-> `D-072-last-three-fold-plan.md`.
+> `D-076-last-three-fold-plan.md`.
 > **Character of this session, chosen deliberately:** the last session produced *artifacts, a plan,
 > and a second opinion that wrote a test the current result cannot yet pass.* This session's spine is
 > **D-075 — the pLDDT-ablation** — because it is the single highest-leverage thing on the project:
