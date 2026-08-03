@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listAnalyses } from '../api.js'
+import { HELDOUT_EXAMPLES } from '../heldoutExamples.js'
 import AdcSchematic from './AdcSchematic.jsx'
 import Term from './Term.jsx'
 
@@ -97,6 +98,38 @@ export default function AdcContext() {
         <Link to="/coverage">honest coverage line</Link>, the confidence bands, and the
         detection-not-explanation boundary (<Link to="/method">method</Link>) are the discipline that
         prevents exactly that.
+      </p>
+      {/* F-009 — the cohort-boundary paragraph. OWNER-COPY PLACEHOLDER: substance fixed by the order,
+          wording for the owner to finalise. The example targets are DERIVED from heldoutExamples.js,
+          which is drift-tested against data/heldout_positives.csv, so no accession is hand-typed. */}
+      <h3>What the 82 is — a comparator, not a census</h3>
+      <p>
+        The {stats ? stats.n : ''} targets here come from one published cohort (Kathad et al.), selected
+        by <strong>expression and selectivity</strong> in tumour tissue. That makes it a{' '}
+        <strong>comparator set</strong> — the fixed list this project re-orders — and{' '}
+        <strong>not a complete census</strong> of antigens an ADC could target.
+      </p>
+      <p>
+        The boundary is checkable, because clinically-validated ADC targets fall outside it:{' '}
+        {HELDOUT_EXAMPLES.map((e, i) => (
+          <span key={e.uniprot_accession}>
+            {i > 0 ? ', ' : ''}
+            <strong>{e.display}</strong> ({e.adc})
+          </span>
+        ))}
+        . Each is the target of an approved or late-phase ADC, and each is absent because the
+        cohort&rsquo;s <em>expression</em> filter excluded it — not because it is a poor target.
+      </p>
+      {/* ⚠ Phrased to avoid the over-claim vocabulary ENTIRELY, not to negate it. The denylist test
+          matches phrases, so it cannot tell an assertion from a disclaimer — and it should not have
+          to. A guard that must parse negation is a guard that can be talked around, so the copy
+          simply does not use the words. */}
+      <p className="note">
+        Stated plainly: a re-ordering of this comparator is a claim about <em>this</em> list, not about
+        the whole target space. The targets above are unfolded and unscored here, so this project makes
+        no judgement about them either way — the honest point is that the comparator has blind spots,
+        not that anything else fills them. It is the same discipline that resists &ldquo;find me more
+        NECTIN4s&rdquo;: a slice is not the whole.
       </p>
       <p className="note">
         Conviction about the mechanism, precision about the limits. The mechanism is proven and worth

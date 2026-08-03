@@ -71,3 +71,33 @@ landed because they were sought by name in the wrong place; a set of foreign doc
 from local ones by filename; and a README that would have clobbered the log. **Verify identity by
 content before any destructive or overwriting operation.** That is the durable lesson, and it is the
 reason this deletion is written down rather than merely done.
+
+---
+
+## 4. Second round — 2026-08-03 — three binary duplicates removed from `docs/`
+
+Recorded here rather than in a new file because this document's organising principle is its
+*purpose* — deletions git cannot capture — not its date. These three were also **untracked**, so
+again there is no commit, no diff and no revert path for the removal itself; only this record.
+
+| Deleted | Kept | md5 |
+|---|---|---|
+| `PharmFoldMDK_Deck (1).pptx` | `PharmFoldMDK_Deck.pptx` | `cdd83b9c` |
+| `PharmFoldMDK_Held_Out_Logic (1).docx` | `PharmFoldMDK_Held_Out_Logic.docx` | `913f5709` |
+| `slide_lastthree (1).pptx` | `slide_lastthree.pptx` | `1568426a` |
+
+**Byte-identity was re-verified immediately before each deletion**, not carried over from the earlier
+audit — a hash checked an hour ago is a claim about the past, and these are binaries where a
+difference is invisible to inspection. Each pair matched, so in every case the `(1)` copy was pure
+download residue and the content survives in the retained file.
+
+**Why this is more than tidying.** These are exactly the basename collisions that produced §3's
+near-miss: a `(1)`-suffixed twin sitting beside its original, where the suffix carries no reliable
+information about which is newer. This session found a `(2)`-suffixed baton document that *was* the
+newer content (PR #110) and a `(1)`-suffixed order that was a plain re-download — the same shape,
+opposite answers. Removing the ambiguous copies removes the chance of a future sweep guessing wrong.
+
+⚠ **Still present and deliberately untouched:** `PharmFoldMDK_Literature_Review.docx` has no
+duplicate, and remains subject to the standing open action that **Site4Drug (arXiv 2606.01816) must be
+opened before the lit review is used in a novelty claim** — an unverified citation inside a novelty
+argument is precisely what the discipline exists to prevent.
