@@ -37,6 +37,7 @@ import json
 import sys
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Iterable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -108,6 +109,51 @@ class Record:
         if value >= LOCAL_CEILING.rental_bound:
             return "rental"
         return "untested"
+
+
+def read_accession_map(path: str) -> list[dict]:
+    """Read Task B's `accession_map.csv`: entry name -> accession, with status.
+
+    ⚠ Rows whose status is not `resolved` are RETURNED, not skipped. `multi`,
+    `unresolved` and `obsolete` flow through as their own categories all the way
+    to the split (surfaceome-spans-v2 §1) — a census cost model that silently
+    excludes the identifiers it could not resolve is understating the census.
+    """
+    out: list[dict] = []
+    with open(path, encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            out.append({
+                "entry": (row.get("entry") or row.get("entry_name") or "").strip(),
+                "accession": (row.get("accession") or "").strip(),
+                "id_status": (row.get("status") or row.get("id_status") or "resolved").strip().lower(),
+            })
+    return out
+
+
+def fetch_cached(accession: str, cache_dir: str | None, retries: int = 3) -> dict:
+    """`fetch` with a disk cache. Thousands of requests; a re-run reads the cache.
+
+    The cache is keyed by accession and stores the raw UniProt JSON, so a re-run
+    is free and byte-identical. **The run date is recorded either way** by the
+    caller — a cached span is still a span measured on some date, and a histogram
+    that cannot say when its inputs were fetched is not checkable.
+    """
+    if not cache_dir:
+        return fetch(accession, retries=retries)
+
+    cache = Path(cache_dir)
+    cache.mkdir(parents=True, exist_ok=True)
+    hit = cache / f"{accession}.json"
+    if hit.exists():
+        try:
+            return json.loads(hit.read_text(encoding="utf-8"))
+        except ValueError:
+            pass                      # a torn file from a crash — re-fetch, don't die
+
+    data = fetch(accession, retries=retries)
+    hit.write_text(json.dumps(data), encoding="utf-8")
+    time.sleep(REQUEST_PAUSE_S)       # polite only on a real request, not a cache hit
+    return data
 
 
 def fetch(accession: str, retries: int = 3) -> dict:

@@ -59,33 +59,42 @@ PY
 | **D-010** | *Nothing.* A historical skip — the sequence runs D-001…D-009 then D-011. | Pre-2026-07-19 | **Never.** Not renumbered because commit `c07b95b` already names D-011. Permanent, documented in `docs/README.md`. |
 | **D-078** | The F-008 precision A/B pre-registration — the controlled re-fold at the opposite precision | D-077 dec 7, 2026-08-04 | A **raised local ceiling**. If D-077's bisection lifts the ceiling above 440, rental/fp16 targets become locally foldable at int8, creating the first overlap in a partition F-008 recorded as having none. ⚠ **Its outcome can move F-004**, so it is written before any such fold runs. |
 | **D-080** | *A revert proof operates on committed state or on a copy — never on a working tree holding uncommitted work.* | Amendment §3, 2026-08-04 | Nothing — writable now. Prompted by assumption-register item 15, which is at **n=2** (D-075's process note is the first occurrence). |
-| **F-011** | The surfaceome negative class | Planner, 2026-08-04 | Nothing — the staged finding is complete and mergeable. ⚠ **Staged file not yet received by Code** (see status note below). |
+| **F-011** | The surfaceome negative class — SURFY's exclusion is condition-dependent localization, not "cannot be a target" | Planner, 2026-08-04 | Nothing. ✅ **Re-verified 2026-08-04** against the received `F-011-surfaceome-negative-class-v2.md`; the reservation matches the document. ⚠ But the document itself labels **2,216** and **~5,102** as *unverified / Planner arithmetic* — the negative class **has never been counted**, because the membraneome table is an LFS pointer. Mergeable as an argument; its magnitudes are discharged by scale-readiness Task A. |
 | ~~**F-012**~~ | ~~Task 1 — the chunk-invariance verdict~~ | ~~D-077 dec 2 / amendment §1~~ | ✅ **WRITTEN 2026-08-04.** The run happened; row 2 fired (outputs differ, chunk 16 diverges from 64). No longer a reservation — see `### F-012` in the log. |
 | **F-015** | Does an **unchunked** fold (`chunk_size=None`) differ from `chunk_size=64` at fp16? | F-012, 2026-08-04 | **A GPU run that has not been designed yet.** F-012 established that chunk_size can change output (16 vs 64, int8, 114 aa) and that the folded cohort spans three recipes — **34 targets at `('fp16', None)`**, 3 at `('fp16', 64)`, 42 at `('int8', 64)`. It did **not** measure `None` vs `64`, which is the comparison that would decide whether the cohort's rental folds are commensurable with each other. ⚠ Needs its own pre-registration before it runs, because its outcome could bear on every rental-tier feature. |
 | **F-013** | Task 3 Arm A — the measured local ceiling | D-077 dec 3-4 / amendment §1 | **The GPU run.** Bisection in (440, 630) at int8/chunk 64, k=4, step 8. May legitimately return `unstable` at every length. |
 | **F-014** | *Documenting a duplication is not managing it* — the tenth instance of the two-paths-to-one-quantity class, and the first where the drift was **written down and the writing-down substituted for the fix** | Amendment §7, 2026-08-04 | Nothing — writable now, but **held until `d077-local-fold-envelope` merges**, because it describes code that branch changes. |
-| **A-014** | An assumption-register entry cited by F-011's closing line | Planner, 2026-08-04 | **KEEL-4 landing.** `A-` numbers live in the assumption register, not in `docs/README.md`. ⚠ **KEEL-4 not yet received by Code.** |
+| **A-014** | *An upstream model's negative class is a prediction, not a fact* — the assumption F-011 catches | Planner, 2026-08-04 | **KEEL-4 landing.** ✅ Re-verified 2026-08-04 against the received F-011 v2, which cites it as *"reserved in `RESERVED.md`, unwritten until KEEL-4 lands against v6"*. ⚠ **KEEL-4 still not received by Code** — the only one of the four staged documents still missing. |
+| **A-016** | *Any red proves the assertion bites* — the corrected red-then-green formulation | `PAPERS-v2.md` P-001, 2026-08-04 | **KEEL-4 landing.** Cited as the register entry behind P-001's methods-section correction: an error-red and a failure-red are different objects, the revert must be a realistic mistake, and it must fail at the assertion. Originates in the guard Code caught reddening as a collection error (F-012 session). |
 
 ---
 
-## ⚠ Status note, recorded rather than assumed (D-016)
+## Status of the documents this register depends on (D-016)
 
-**As of 2026-08-04, four documents this register depends on have NOT been received in the working
-clone**, and their content is known to Code only through `AMENDMENT-2026-08-04-code-feedback.md`,
-which describes them:
+Four documents were unreceived when this register was created, so the F-011 and A-014 rows were
+sourced from `AMENDMENT-2026-08-04-code-feedback.md`'s *description* of them — the pointer-not-proof
+shape (method-note item 7) — and were flagged for re-verification. **Three have since arrived and
+the flag is discharged:**
 
-- `KEEL-4-The-Assumption-Register-v1.md` — defines `A-` numbering and holds items 15/16/17
-- `F-011-surfaceome-negative-class.md` — the staged finding claiming F-011
-- `PAPERS.md` — where P-001's open item lands
-- `ORDERS-Code-2026-08-04-surfaceome-spans.md` — the base order the amendment patches
+| Document | Received | Outcome of re-verification |
+|---|---|---|
+| `ORDERS-Code-2026-08-04-surfaceome-spans-v2.md` | ✅ 2026-08-04 | Re-issue; **byte-identical** to the 10:37 copy already in `docs/`, so no re-analysis was needed. |
+| `F-011-surfaceome-negative-class-v2.md` | ✅ 2026-08-04 | **Matches the reservation.** Also *strengthens* the caution: it labels its own 2,216 and ~5,102 as unverified. |
+| `PAPERS-v2.md` | ✅ 2026-08-04 | Introduces **A-016** (now reserved above) and the `P-NNN` paper namespace (P-001/P-002/P-003), which live in `PAPERS-v2.md`, not in the decision log. |
+| `KEEL-4-The-Assumption-Register-v1.md` | ❌ **still missing** | Defines `A-` numbering and holds assumption items 15/16/17. **Both A-014 and A-016 are blocked on it**, and neither can be written until it lands. |
 
-**The rows above for F-011 and A-014 are therefore sourced from a description of a document, not from
-the document.** That is precisely the pointer-not-proof shape (method-note item 7), and it is
-recorded here rather than smoothed over: **these two rows must be re-verified against the staged
-files when they arrive**, and corrected here if they disagree.
+### ⟡ One number re-counted rather than inherited
 
-The amendment's own §1 warns that neither claimant on F-011 is merged, so nothing is broken yet.
-This register is what keeps that true.
+F-011 v2's single verified figure was **re-counted from the file** rather than accepted: `surfaceome_ids.txt`
+holds **2,886 non-empty lines, 2,886 unique** — confirmed. And a detail the entry states more softly
+than the data supports: **0 of 2,886 are accession-shaped** and 2,886/2,886 carry `_HUMAN`, so the
+entry-name-versus-accession mapping hazard is **total, not partial**. Every join in this project is
+keyed by accession.
+
+The membraneome table remains an **LFS pointer stub** — 132 bytes declaring
+`oid sha256:2f1b8262…`, `size 6864772`, which matches what the spans order expects and therefore
+confirms *which* file is wanted while proving the content is absent. **The negative class — the
+subject of F-011 — has still never been counted.**
 
 ---
 
