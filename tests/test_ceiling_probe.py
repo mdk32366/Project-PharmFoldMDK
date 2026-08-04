@@ -7,7 +7,7 @@ and burn rental time, and a wrong ceiling would misroute the cohort.
 """
 
 import ast
-import inspect
+import inspect  # noqa: F401 - kept for the source-reading idiom below
 from pathlib import Path
 
 import pytest
@@ -276,10 +276,16 @@ def test_probe_module_imports_no_database_session():
     Proven by revert: add `from db.session import ...` to ceiling_probe and watch
     this redden. It is a static parse, not an import-time check, so it catches the
     import even if it sits inside a function.
+
+    ⚠ The path is resolved from the REPO LAYOUT, not by importing the module. An
+    earlier version used `__import__` to find the file, which meant a revert that
+    added an unimportable database module produced a collection ERROR instead of a
+    failed assertion — the guard appeared to bite while its actual assertion never
+    ran. A static check that cannot survive the thing it is checking for is not
+    static.
     """
-    source = Path(inspect.getfile(__import__("worker.ceiling_probe", fromlist=["x"]))).read_text(
-        encoding="utf-8"
-    )
+    probe = Path(__file__).resolve().parent.parent / "worker" / "ceiling_probe.py"
+    source = probe.read_text(encoding="utf-8")
     tree = ast.parse(source)
 
     imported: list[str] = []
