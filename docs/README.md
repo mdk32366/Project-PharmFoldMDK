@@ -117,6 +117,152 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-076 — The last three unfolded targets: a scoped plan, one tier executed, two on ice behind a named trigger
+
+- **Date of decision:** 2026-08-03 (drafted 2026-08-01). **Entered this log:** 2026-08-04.
+- **Status:** Accepted. **Ruled before any re-fold** — no target named here has been folded under it.
+- **Type:** A **decision** (scope + sequencing), carrying **one finding** inside it (the MUC16 disorder
+  read). Nothing about F-004 changes; see §4 below.
+- **⚠ Why the entry date lags, recorded not silent.** This decision lived as a staged document
+  (`docs/D-076-last-three-fold-plan.md`) from 2026-08-01 and was **cited as settled authority before it
+  entered the log** — by `PREWORK-run-session.md` §5.4, `PREWORK-next.md`, the 2026-08-01 MANIFEST, and
+  then by the D-077 order and pre-registration (2026-08-04). That is the **D-062 defect shape**: a
+  citation pointing at an authority the log did not contain. It is closed here, and it was closed
+  *because merging D-077 while D-076 was absent would have placed the dangling citation inside the log
+  itself* — D-077 decision 7 names "D-076 Tier 1". **Like F-009 and unlike D-062 this is not a
+  reconstruction:** the staged document survives with its own reasoning, so this entry is **sourced**,
+  not recovered from effects.
+- **⚠ Numbering history, recorded because it is a near-miss.** Drafted **D-072**; that number was
+  already taken by the miniature demo notebook (`d46aa1a`). Renumbered **D-076** on 2026-08-03 against
+  the live log (highest decision entry was D-075) — **verified by reading the log, not inherited from
+  an estimate** (`e9e7955`). The historical wording in `HOUSEKEEPING-2026-08-01-untracked-deletions.md`
+  deliberately still names the old filename, since it documents the state at the time (D-073 precedent).
+- **Relates:** **D-047** (recipe resolved at fold-time), **D-050** (derive, don't hardcode — the
+  coverage numbers this moves), **F-007** (the manifest is not a reliable proxy for what ran — binding
+  on any fold produced elsewhere), **D-016** (a fold from another lab names how it is known like any
+  other), **F-004** (the result this entry is firewalled from), **D-022** (the named oversize
+  exclusions MUC16/FAT2 originate here), **F-010** (IGF2R is the row whose `analysis_id` reports null),
+  **D-077** (the local-envelope work that cites this entry's Tier 1 as unchanged).
+- **Provenance (D-016):** owner/planner scoping pass 2026-08-01, written up as the staged document
+  named above; lengths and unfolded status read from the cohort snapshot and `/api/coverage`.
+
+#### Context — why the single "unfoldable" bucket was wrong
+
+At delivery the cohort stands at **79 of 82 folded**. The three unfolded targets were carried as one
+bucket ("unfoldable, surfaced as a finding, not a silent exclusion"). **That bucket is wrong: the three
+are three different problems**, and collapsing them hid that one is trivially closable and the other
+two are resource-access problems, not method walls. When the work is presented, *"why aren't all 82
+folded?"* is the likely first question, and the correct answer is an engineer's answer — *yes it can be
+done, here is how, here is the cost* — with feasibility stated cleanly and utility held as a **separate**
+judgement.
+
+| Target | Length | Why unfolded | Class |
+|---|---|---|---|
+| **IGF2R** | large ECD (2,491 aa), ordered | Hit a **transient A6000 rental-tier ceiling** on its run — not a size wall | **Compute limitation.** No asterisk once folded. |
+| **FAT2** | 4,030 aa | Exceeds single-sequence capacity on available hardware; but **ordered** (cadherin repeat stack) | **Resource + method-seam.** Foldable with more VRAM or by domain assembly; assembly changes `boundary_method`. |
+| **MUC16** | 14,451 aa | Off the end of the field's map; **largely intrinsically disordered** (tandem SEA repeats + glycosylated linkers) | **Biology, not compute.** A structure is producible; a meaningful whole-ECD structure for the six features is not. |
+
+The distinction is load-bearing: it is the difference between *"one more run,"* *"a method with a
+labelled seam,"* and *"the wrong question for this molecule."*
+
+#### Decision (1) — Tier 1, IGF2R: **executes on its own schedule**, comparable, no asterisk
+
+- **How.** Re-enqueue on the A6000 rental tier, **recipe resolved at fold time (D-047)**, sequence
+  length checked against what ceilinged last run. If it still ceilings, escalate one rung (H100 80 GB,
+  same workflow). **No new code, no new `boundary_method`.**
+- **Comparability.** Same **ESMFold-v1 / sliced-ECD recipe** as the other 79, so its six features are
+  directly comparable. This is the only one of the three where "unfolded" is a plain limitation.
+- **Cost.** Hours. One rental block, <1 hr fold time, ~$0.54–2/hr.
+- **Consequence on merge, pre-authorised here.** Cohort 79 → 80. **Every coverage/ranking number
+  re-derives from the authoritative endpoints** (`/api/coverage`, `/api/ranking`) — no re-hardcoding
+  (D-050). If IGF2R clears the pLDDT floor and is a ranked disposition it enters the ranking set; **if
+  labelled, it enters the fit set and F-004's denominators move.** That is a **result update, executed
+  through the gate, derived not typed** — never a silent edit.
+- **⚠ Check the label first.** IGF2R's label status is checked against `data/adc_reference_mapping.csv`
+  **before** the fold, so the consequence is known in advance rather than discovered after.
+
+#### Decision (2) — Tiers 2 and 3 are ON ICE behind a named external trigger
+
+**The trigger:** *external validation of the work's novelty* — a paper accepted, a research group
+adopting the structural axis, or an equivalent signal that the cohort must become complete for
+**reproducibility/coverage** reasons rather than demo optics.
+
+**The utility inversion, recorded so the reasoning survives:**
+
+- **Before validation:** these folds do not change F-004 (§4). MUC16's un-foldability is a *stronger*
+  honesty artifact than a filled cell. Executing now spends real effort — and for MUC16 risks **trading
+  a finding for an asterisk** — to make a coverage table prettier. Utility low-to-negative.
+- **After validation:** a published method must be complete on its stated cohort. *"Couldn't fold 3 of
+  82"* stops reading as sophistication and starts reading as an unfinished dataset. FAT2's seam becomes
+  a methods-section paragraph (where seams belong); MUC16's disorder becomes a publishable finding.
+  Utility flips positive.
+
+**The trigger is external and identifiable. That is what makes "on ice" a plan and not a stall.**
+
+**Tier 2 — FAT2, two routes.** *Route A:* 4,030 aa on an 80 GB card, one sequence — cleanest if it runs
+(standard features, no seam), may fail, cheap to attempt. *Route B:* domain-wise fold in overlapping
+windows, stitched on shared repeats — always runs, but **introduces a new `boundary_method` value**
+(`assembled`/`domain_stitched`) that must travel with the features exactly as feature 4's cross-method
+caveat does. Comparable *enough* to render **provided the seam is labelled and tested.** Cost: Route A
+one big-pod block; Route B ~1–2 sessions.
+
+**Tier 3 — MUC16, three routes.** *Route 1:* fold ordered SEA domains individually — legitimate domain
+models, but a "MUC16" row carrying features from ~120-aa domains **would mislabel what was measured.**
+*Route 2:* fold the membrane-proximal window an ADC would engage — biologically defensible but a
+*choice of sub-region*, another labelled seam, larger. *Route 3:* run it and report the disorder — let
+low-pLDDT regions render as the model reporting "no confident structure here." **Adds no false number.**
+
+##### Finding embedded here (D-016) — MUC16's un-foldability is a structural result, not only a gap
+
+MUC16 being intrinsically disordered means **"predict its ECD structure" is partly the wrong question**
+— and that a disordered, heavily-glycosylated antigen is a genuinely different engineering problem for
+an antibody. **The pipeline correctly placing MUC16 out of structural reach is itself informative about
+its ADC-targeting profile.** Whichever route eventually runs, this framing is preserved: MUC16 is not
+merely "too big," it is a case the structural axis flags as unreachable, **consistent with known
+biology.**
+
+#### Decision (3) — how a fold produced elsewhere enters
+
+The two hard folds are a **resource-access problem more than a method problem.** A well-provisioned
+academic lab with institutional GPU access is the natural executor of FAT2 Route A and MUC16 Route 1/2.
+**Recorded as a candidate collaboration path, not a commitment.** If pursued, the same discipline
+travels: any fold produced elsewhere **enters through the gate**, its `boundary_method` and environment
+captured (**F-007's lesson — the manifest is not a reliable proxy for what ran**), and its features are
+comparable only insofar as the seam is labelled. **A fold from another lab is not exempt from D-016.**
+
+#### Decision (4) — the firewall around F-004
+
+- **F-004 stands untouched by Tiers 2–3.** MUC16 and FAT2 are not among the 12 labelled positives; the
+  LOO distribution, both nulls, the Spearman, and the "orthogonal but unproven" finding are unaffected
+  by whether they fold.
+- **Tier 1 may move F-004's denominators** *if* IGF2R is a labelled positive clearing the floor — a
+  legitimate, **pre-authorised** result update through the gate.
+- **The novelty claim is independent of coverage.** *"No published method ranks ADC targets on predicted
+  ECD structure"* is true at 79/82, 80/82, or 82/82. Folding the last three **completes a dataset; it
+  does not create or strengthen the contribution.**
+
+#### Decision (5) — the one risk to hold
+
+The temptation, now that a plan exists, is to execute all three **before** the trigger, to look complete
+for a demo. **Resist it.** Doing MUC16 prematurely is **the single move in this project that would spend
+honesty capital to buy coverage optics.** The plan's value now is that it *exists and is credible* —
+scoped, tiered, triggered — **not that it has run.**
+
+- **Deep-learning justification.** The three targets are three different statements about the neural
+  core's operating envelope: IGF2R is *infrastructure* (the network folds it; we lacked the card),
+  FAT2 is *sequence-length capacity* under O(L³) attention, and MUC16 is a case where the network's
+  own low confidence is the informative output — the model reporting absence of confident structure is
+  a real prediction, not a failure. Keeping the three distinct keeps ESMFold's limits legible instead
+  of collapsing hardware limits and biological disorder into one excuse.
+
+- **Consequences / open items.**
+  - [x] Number confirmed against this log (2026-08-03), then **the entry itself landed** (2026-08-04).
+  - [ ] IGF2R label status checked against `data/adc_reference_mapping.csv` **before** its fold.
+  - [ ] Tier 1 executed: IGF2R re-enqueued, cohort → 80, all coverage/ranking numbers **re-derived from
+        endpoints**, F-004 denominators updated through the gate if it is a labelled positive.
+  - [ ] Tier 2/3 remain unstarted, trigger unmet — **verified, not assumed.**
+  - [ ] Deck slide ("The last three: a plan, not a wall") reflects these tiers and this trigger.
+
 ### F-009 — The 82 is Kathad's comparator, not a target census: four clinically-validated ADC targets sit outside it, and that is what motivates the project
 
 - **Date of finding:** 2026-08-01. **Entered this log:** 2026-08-03.
