@@ -97,22 +97,21 @@ So the rule is not "be careful" — it is:
      For log entries that is one command: every cited `D-NNN`/`F-NNN` must have a matching `### ` entry.
 
    **⚠ STATE OF THE INVARIANT — do not assume it has always held.** As of **2026-08-04** every cited
-   `D-NNN`/`F-NNN`/`S-NNN`/`DEP-NNN` in this log and in `ARCHITECTURE.md` resolves to a real `### `
-   entry, with **exactly two documented exceptions**:
+   `D-NNN`/`F-NNN`/`S-NNN`/`DEP-NNN` in this log and in `ARCHITECTURE.md` either resolves to a real
+   `### ` entry **or is listed in [`RESERVED.md`](RESERVED.md)**.
 
-   1. **`D-010`** — a deliberate skip, documented above. Backward-looking: it will never exist.
-   2. **`D-078`** — a **forward** reference, introduced 2026-08-04 by D-077 decision 7. It names the
-      not-yet-written pre-registration for the F-008 precision A/B, and **D-077 states in the same
-      breath that it does not exist yet.** It resolves when that entry is written, or it is retired
-      if the A/B is abandoned.
+   **The distinction the register exists to hold.** A *forward* reference to an entry that announces
+   its own absence is not the D-062 defect — D-062's harm was that thirteen citations treated a missing
+   entry as **settled authority**, and nothing in the text suggested it was missing. A reference that
+   says *"this is not written yet"* cannot do that. **But it is indistinguishable from the defect to a
+   checker.**
 
-   **The distinction matters and is the reason both are named rather than counted.** A *forward*
-   reference to an entry that announces its own absence is not the D-062 defect — D-062's harm was that
-   thirteen citations treated a missing entry as **settled authority**, and nothing in the text
-   suggested it was missing. A reference that says *"this is not written yet"* cannot do that. **But it
-   is indistinguishable from the defect to a checker**, which is why it is documented here: a future
-   session running the check will find two misses and must be able to tell, without re-deriving it,
-   that both are deliberate. **An undocumented third miss is a real finding.**
+   **That is why the exceptions are a file and not a paragraph.** This note first carried them as prose
+   — one exception (`D-010`), then two (`D-078`), and within a day the set was five. Prose kept the
+   property *"an undocumented miss is a real finding"* true only while the set was small enough to
+   remember; `RESERVED.md` keeps it true as the set grows. **The checker whitelists that file and
+   nothing else, and an unresolved reference not listed there is a finding immediately** — same class
+   as D-062, found early. The command is in the register; **read its output, not its exit code.**
 
    **This closed state was RESTORED on that date; it did not hold before it.** Two holes were repaired
    the same day: **D-062**, cited **13 times** as the authority for a shipped surface with no entry
