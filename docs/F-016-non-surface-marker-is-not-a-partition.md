@@ -114,10 +114,29 @@ The surface collapse is **four HLA loci**, merged upstream from allele-level ent
 fold `HLA-B` once and count it up to 35 times. **The surface denominator is 2,807** — of which 2,800
 have a live reviewed accession and 7 are inactive.
 
-⟡ **A separate defect from the collapse: the classes are not disjoint by accession even before
-deduplication.** `Q96PC5` and `P01764` each carry rows in two classes (4 rows total). They are
-flagged `class_conflict=yes` and **resolved by neither** — picking a class would assert a judgement
-SURFY did not make. ⚠ **The rule for this bucket is the owner's call and is not made here.**
+### ⟡ `class_conflict` — the mechanism, checked, not just the flag
+
+`Q96PC5` and `P01764` each carry rows in two classes (4 rows). **The classifier did not contradict
+itself.** Checked against the data rather than assumed:
+
+| Row | Entry name | **Pre-merge accession** | Status | Class | Current |
+|---|---|---|---|---|---|
+| 1696 | `CTGE5_HUMAN` | **O15320** | merged | `non_surface` | `Q96PC5` |
+| 4124 | `MIA2_HUMAN` | **Q96PC5** | active | `unclassified` | `Q96PC5` |
+| 3115 | `HV304_HUMAN` | **P01765** | merged | `non_surface` | `P01764` |
+| 3114 | `HV303_HUMAN` | **P01764** | active | `unclassified` | `P01764` |
+
+**Each pair carries distinct pre-merge accessions, and exactly one row per pair is `merged`.** SURFY
+classified two *separate UniProt entries* — legitimately, as separate entries — and UniProt has
+since merged them (`CTAGE5` into `MIA2`; two IGHV3 segments into `IGHV3-23`). **The merge
+manufactured the contradiction, not the classifier.** It is the same mechanism as the HLA collapse,
+surfacing as a contradiction instead of as a count.
+
+**So `resolved by neither` is not a punt — it is the only correct answer.** Resolving would assert
+that a merged entity has a single localization, a biological claim nobody has made about it.
+
+⟡ **And the denominator is untouched:** both conflicts are `non_surface` × `unclassified`. Neither
+involves the surface class, so **2,807 stands.**
 
 ⟡ **Also drifted:** 397 entry names and 452 primary gene symbols renamed upstream
 (`ADCK4`→`COQ8B`, `FAM132A`→`C1QTNF12`, `ARSE`→`ARSL`, …). Recorded, not acted on — they are the
@@ -136,12 +155,30 @@ closed, with the caveat above: 79 of them are no longer distinct.
 | File | Role | sha256 |
 |---|---|---|
 | `data/census/membraneome-reconstructed-2026-08-04.csv` | ✅ **machine-readable source of record** — diffable, greppable, reviewable in a PR. **Tests read the CSV.** | `5a705cc9165eb863f51116c31f2a5f56080bf8941bf994a612f9d85fc6944d37` |
-| `data/census/membraneome-reconstructed-2026-08-04.xlsx` | human-readable copy; carries the `PROVENANCE` sheet | `39eb67e64e41d6b018250ad9c488de609d3ad22c1f78711423dcabf83321bd74` |
+| `data/census/membraneome-reconstructed-2026-08-04.xlsx` | **derived** from the CSV by `scripts/build_membraneome_xlsx.py` | `28bf04132f626154a451d46127c1b1f00bbe39a02c45c77015f264f5033c14a2` |
 
 7,903 rows. The duplicated preamble is dropped; the nine source columns are kept **verbatim** and
-eight added: `surfy_class`, `uniprot_status`, `uniprot_current_accession`,
+**eight** added: `surfy_class`, `uniprot_status`, `uniprot_current_accession`,
 `uniprot_current_entry_name`, `uniprot_primary_gene`, `gene_symbol_changed`, `foldable`,
-`class_conflict`.
+`class_conflict`. ⟡ *The rulings say "the six added columns" — six was the count in the report they
+were written against; `foldable` and `class_conflict` were added by §5 of those same rulings. All
+eight are covered by the parity test.*
+
+### ⚠ Parent and child, not siblings
+
+The CSV and the workbook first existed **side by side**, built independently from the same scrape.
+**That is two paths to one quantity with nothing comparing them** — this project's signature defect
+class, and they would have diverged the first time either was regenerated.
+
+**The workbook is now derived from the CSV.** One source, one derivation, and
+`tests/test_membraneome_artifacts.py` reddens on disagreement in row count, header, or any of the
+eight derived columns. ⟡ It also **pins the three class counts independently**, because a test that
+only compared the two files to each other would stay green while both drifted together — the
+failure mode of comparing a thing to its own copy.
+
+⟡ **Provenance is bound, not adjacent.** The workbook records the sha256 of the CSV it was actually
+built from; `census_spans.py` records the sha256 of whatever it actually read. A filename is not an
+identity — the same principle that keeps the LFS stub under a name stating what it is.
 
 **Committed directly, not LFS** (rulings §4) — LFS is what cost this project a day; the pointer
 looked like the file in two places, and adding LFS reproduces that failure for the next clone. This

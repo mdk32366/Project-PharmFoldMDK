@@ -130,6 +130,165 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-016 — The `Non_Surface` marker in the reconstructed Table S3 is a section heading, not a partition: everything below it is the **whole** membraneome
+
+- **Date:** 2026-08-04. **Entered this log:** 2026-08-04, **in the same commit as F-011**, per
+  `RULINGS-2026-08-04-F016` §6.1 — F-016 discharges F-011's flags and may not precede it.
+- **Type:** A **finding** about a file this project was about to read positionally, caught before any
+  census was built on it. **Nothing is ruled here.** One data artifact written, one script default
+  removed.
+- **Number:** **F-016**, the next free integer. F-013/F-014/F-015 stay reserved.
+- **Relates:** **F-011** (whose magnitudes this discharges and whose `~5,102` it withdraws),
+  **D-077 dec 1.3** (present-flagged-excluded-from-nothing, the treatment reused for inactive rows).
+- **Full text:** `docs/F-016-non-surface-marker-is-not-a-partition.md`.
+
+**The marker at row 2888 is a section heading, and the section it heads is the entire table.** All
+2,886 surface rows appear **again** below it, field-for-field identical. **Splitting on row position
+labels the entire positive class SURFY-negative** — the precise inversion `core/census.py` exists to
+prevent. Derive class from the `Surfy` column, **never from row number.**
+
+**Two gaps were live in the census before a single row was loaded:**
+
+| | The gap | The cost had it shipped |
+|---|---|---|
+| 1 | The classes **do not partition** the table — 2,801 rows carry a blank class cell | "Not positive" overstates the negative class by **126%** (5,017 vs 2,216) |
+| 2 | The **identifier count is not the protein count** | 2,886 identifiers are **2,807 distinct accessions**; 79 collapse into four HLA loci UniProt has merged |
+
+⚠ **Three classes, always named:** `surface` · `non_surface` · `unclassified`. `unclassified` is
+never merged into either and never dropped — and is **not evidence for F-011.**
+
+**UniProt cross-check, 2026-08-04:** 7,746 active · 105 merged · 52 inactive · **0 unaccounted.** No
+accession is corrupt; the divergence is eight years of upstream drift, which is itself the evidence
+the reconstruction is faithful to a 2018 snapshot. Merged rows keep their pre-merge identifier;
+inactive rows are `foldable=no`, retained and flagged, **never dropped.**
+
+⟡ **`class_conflict` — the mechanism, not just the flag.** `Q96PC5` and `P01764` each carry rows in
+two classes. **The classifier did not contradict itself:** each pair carries **distinct pre-merge
+accessions** (`O15320`/`Q96PC5`, `P01765`/`P01764`) and exactly one row per pair is `merged`. SURFY
+classified two separate entries; **UniProt's merge manufactured the contradiction** — the same
+mechanism as the HLA collapse, surfacing as a contradiction instead of a count. **Resolved by
+neither**, because resolving would assert that a merged entity has one localization, a biological
+claim nobody has made. Both conflicts are `non_surface` × `unclassified`, so **the 2,807 surface
+denominator is unaffected.**
+
+⚠ **Not named `table_S3_surfaceome.xlsx`.** That name belongs to an artifact nobody has obtained —
+the published URL still serves a 132-byte LFS pointer stub. Consequently `census_spans.py --source`
+**has no default and is required**, and the script records the source file's sha256 in its output.
+
+---
+
+### F-011 — The surfaceome classifier's negative class is not "cannot be a target": localization is condition-dependent, and the excluded class may be the one with the best therapeutic window
+
+- **Date:** 2026-08-04. **Entered this log:** 2026-08-04, **late** — see the landing note below.
+- **Type:** A **finding** about a boundary this project was about to inherit, caught before
+  inheriting it. **Nothing is ruled. No code, no route, no result.**
+- **Number:** **F-011**, reserved for exactly this in `RESERVED.md`. F-012 is the Task 1c verdict;
+  F-013/F-014/F-015 stay reserved.
+- **Relates:** **F-009** (the same shape, a filter that removes the interesting cases), **F-016**
+  (which read the table this entry could only cite, and supersedes two of its numbers), **A-014**
+  (*an upstream model's negative class is a prediction, not a fact* — still blocked on KEEL-4).
+- **Full text:** `docs/F-011-surfaceome-negative-class-v2.md`, which stays. Both existing is the
+  **D-075 precedent**, not a duplication defect.
+
+#### ⚠ Landing note — this entry is the D-062 defect in the Planner's own output
+
+**F-011 v2 was written, placed in `docs/`, and pushed — and was never in this log.** "In `docs/` and
+pushed" felt like landed and was not. That is **precisely D-062**: a citation treated as settled
+authority with nothing in the text suggesting the entry was missing — committed one day after the
+orders telling Code to **grep for the header, not trust the filename.**
+
+**It surfaced only because F-016 ran that grep before merging on top of it.** F-016 discharges
+F-011's flags, and an entry cannot discharge flags in an entry that does not exist. Recorded here
+rather than quietly fixed, because the failure is the interesting part: the rule was written, the
+rule was correct, and its author did not apply it to their own artifact.
+
+#### ⚠ Supersession — `RULINGS-2026-08-04-F016` §6.4
+
+- **2,216** moves from *unverified* to **counted** — off the file, matching the SURFY site exactly.
+- **~5,102** is **WITHDRAWN, not corrected.** Never a row count; no corrected version exists. It
+  assumed the classes partition the table. They do not — the table holds **7,903**, of which
+  **2,801** carry a blank class cell.
+- ⟡ **The argument is unchanged; its scope narrows.** This finding is about how SURFY defines its
+  **negative** class. That holds **for the 2,216.** It says nothing about the 2,801 unclassified,
+  which are unexamined by a different mechanism. **They must not be recruited into it.**
+
+#### Provenance of every number — each with its key
+
+⚠ A `verified` label answers *"where did this come from?"* and says nothing about *"is this the
+quantity we need?"* — **a verified number with no key is incomplete by construction.** That is how
+2,886 went wrong below: correct, verified, and not the denominator.
+
+| Number | Key | Status | How known |
+|---|---|---|---|
+| **2,886** positive class | identifiers (entry names) | ✅ VERIFIED — ⚠ **not the denominator** | `surfaceome_ids.txt`: 2,886 lines, 2,886 unique. Counted, not cited. |
+| **2,807** positive class | **distinct accessions** | ✅ **COUNTED — the denominator** | F-016. 79 collapse into four HLA loci UniProt has merged. Every join here is keyed by accession. |
+| **2,216** negative class | identifiers | ✅ **COUNTED** *(was: not verified)* | F-016, off the `Surfy` column; matches the SURFY site. |
+| **2,801** unclassified | identifiers | ✅ **COUNTED** | F-016. Blank `Surfy` cell. **Not this finding's subject.** |
+| ~~**~5,102**~~ | — | ❌ **WITHDRAWN** | Planner arithmetic resting on an unstated partition assumption. |
+| **93.5%** accuracy | — (a rate) | ⚠ Cited, not opened at first hand | PNAS abstract. |
+
+#### The finding
+
+The census universe was about to be defined as SURFY's positive class, with the negative class
+treated as ineligible. That rests on a proposition nobody had stated: **"a protein SURFY calls
+non-surface cannot be an ADC target."** **Mechanistically sound, empirically leaky — and every leak
+runs toward the targets ADCs most want.**
+
+**Sound:** an IgG cannot reach an epitope inside the ER lumen. A protein genuinely confined to an
+intracellular membrane is unreachable. Not disputed.
+
+- **Leak 1 — classifier error.** Reported accuracy 93.5%. Across a negative class of order two
+  thousand, implied misclassifications are in the hundreds.
+- **Leak 2 — steady-state localization is not "never at the surface."** The non-surface training set
+  spans ER, endosome, Golgi, lysosome, mitochondrion, nucleus, peroxisome, cytosol (PNAS Fig. 1B).
+  **Endosomal and lysosomal membrane proteins traverse the plasma membrane as part of their
+  transport cycle** — their mechanism, not an exception to it.
+- **Leak 3 — the labels encode normal conditions.** Trained on CSPA mass-spectrometry data from
+  cultured cells. **A protein reaching the surface only under disease conditions is labelled
+  non-surface by construction.**
+
+#### ⚠ Why this is more than a caveat
+
+**Condition-dependent surface trafficking is not a defect in a target — it is the selectivity
+property an ADC exists to exploit.** Intracellular in normal tissue, surface-exposed in tumour, is a
+*better* window than surface-everywhere. **So the classifier that makes the census tractable may
+exclude, by construction, the class with the strongest theoretical window.**
+
+#### The same shape a third time, and that is itself the finding
+
+| Instance | The filter | What it excluded |
+|---|---|---|
+| **F-009** | Kathad's expression-and-selectivity filter | Trop-2, CD33, CD30, CEACAM5 — clinically validated ADC targets |
+| **F-011** | SURFY's localization classifier | Potentially the condition-dependent-trafficking class |
+| *(pattern)* | — | **The filter that makes a list tractable removes the interesting cases.** |
+
+F-009's resolution applies unchanged: **name the boundary, do not inherit it silently, do not claim
+to fill it.**
+
+#### ⚠ Citation status, recorded not silent
+
+Leaks 1–3 come from the SURFY resource page and the PNAS abstract and figure legends, read
+2026-08-04. The examples offered in conversation — **GRP78/HSPA5, calreticulin, nucleolin, LAMP1** —
+are **Planner-supplied from general knowledge, NOT opened at first hand.** Leads, not evidence.
+**None may reach a surface, a deck, or a paper until its primary source is opened.** The finding
+stands without them.
+
+⟡ **The entry names its own weakest point:** it argues that an upstream model's negative class
+should not be inherited as fact, while resting its magnitudes on that model's paper rather than its
+data. Not fatal, not hidden — **and now discharged by F-016.**
+
+#### What this rules — nothing. What it changes — the ingest.
+
+- ✅ **Ingest the full membraneome table, not the positive subset.** SURFY score and class travel as
+  columns. ⟡ **Done — `data/census/membraneome-reconstructed-2026-08-04.csv` (F-016).**
+- ✅ **The negative class is a labelled annex** — retained, flagged.
+- ❌ **Annex members are NOT census members and are NOT ranked.**
+- ❌ **No claim that this project's method recovers them.** F-009's over-claim guard, verbatim.
+- **Deep-learning justification.** Every discipline this log applies to ESMFold's pLDDT applies to
+  SURFY's score. **An upstream model's negative class is a prediction, not a fact.**
+
+---
+
 ### F-012 — ESMFold's chunked trunk is **not** output-invariant: chunk 16 diverges from chunk 64, and the folded cohort spans three different recipes
 
 - **Date of run:** 2026-08-04. **Entered this log:** 2026-08-04, same day, before any use.
