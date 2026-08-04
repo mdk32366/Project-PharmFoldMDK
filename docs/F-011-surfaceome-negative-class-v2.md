@@ -14,14 +14,40 @@
 
 ---
 
+## ⚠ SUPERSESSION NOTE — added 2026-08-04 per `RULINGS-2026-08-04-F016-membraneome.md` §6.4
+
+**Two rows of the table below are superseded by `F-016`,** which read the membraneome table this
+entry could only cite:
+
+- **2,216** moves from *unverified* to **counted** — off the file, and it matches the figure
+  published on the SURFY site exactly.
+- **~5,102** is **WITHDRAWN, not corrected.** It was never a row count, and no corrected version of
+  it exists. It assumed the two classes partition the table. They do not: the table holds **7,903**
+  rows, of which **2,801** carry a *blank* class cell.
+
+⟡ **The argument of this finding is unchanged; its scope narrows.** F-011 is about how SURFY's
+**negative** class is defined — steady-state localization under normal conditions. That still holds,
+**for the 2,216.** It says nothing about the 2,801 unclassified rows, which are unexamined by a
+different mechanism and are **not** evidence for this thesis. **They must not be recruited into it**
+merely because a larger excluded set makes a better story. **P-002's subject is the 2,216.**
+
+---
+
 ## ⟡ Provenance of every number in this entry, stated first because v1 got this wrong
 
-| Number | Status | How known |
-|---|---|---|
-| **2,886** positive class | ✅ **VERIFIED FROM THE FILE** | `surfaceome_ids.txt`, 2026-08-04: **2,886 lines, 2,886 unique**. Counted, not cited. |
-| **2,216** negative class | ⚠ **NOT VERIFIED** | PNAS Fig. 2 legend only. **Not read off any file.** |
-| **~5,102** total scored | ⚠ **PLANNER ARITHMETIC** | 2,886 + 2,216, from a figure legend. **Never a row count.** |
-| **93.5%** accuracy | ⚠ Cited, source not opened at first hand | PNAS abstract |
+⚠ **Every count now states its key** (rulings §1). A `verified` label answers *"where did this come
+from?"* and says nothing about *"is this the quantity we need?"* — so a verified number with no key
+is **incomplete by construction**. That is precisely how 2,886 went wrong below: correct, verified,
+and not the denominator.
+
+| Number | Key | Status | How known |
+|---|---|---|---|
+| **2,886** positive class | **identifiers** (entry names) | ✅ **VERIFIED FROM THE FILE** — ⚠ **but not the denominator** | `surfaceome_ids.txt`, 2026-08-04: **2,886 lines, 2,886 unique**. Counted, not cited. A count of *identifiers*. |
+| **2,807** positive class | **distinct accessions** | ✅ **COUNTED — this is the denominator** | F-016. 79 of the 2,886 collapse into four HLA loci UniProt has since merged. Every join in this project is keyed by accession. |
+| **2,216** negative class | identifiers | ✅ **COUNTED** *(was: not verified)* | F-016: counted off the `Surfy` column, and matches the SURFY site exactly. Previously PNAS Fig. 2 legend only. |
+| **2,801** unclassified | identifiers | ✅ **COUNTED** | F-016. Blank `Surfy` cell — a third class, published nowhere. **Not part of this finding's subject.** |
+| ~~**~5,102** total scored~~ | — | ❌ **WITHDRAWN** *(was: Planner arithmetic)* | 2,886 + 2,216, resting on an unstated assumption that the classes partition the table. The table is **7,903**. |
+| **93.5%** accuracy | — (a rate, not a count) | ⚠ Cited, source not opened at first hand | PNAS abstract |
 
 ⚠ **The membraneome table has not been read.** `table_S3_surfaceome.xlsx`, in Downloads *and* in
 project context, is a **Git LFS pointer** — 132 bytes declaring

@@ -2,6 +2,8 @@
 """Census span pull + cost split (ORDERS-Code-2026-08-04-surfaceome-spans-v2 §3).
 
     python scripts/census_spans.py --map data/census/accession_map.csv \
+                                   --source data/census/membraneome-reconstructed-2026-08-04.csv \
+                                   --run-date 2026-08-04 \
                                    --cache data/census/uniprot_cache \
                                    --out  data/census/span_histogram.csv
 
@@ -39,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import sys
 from pathlib import Path
 
@@ -74,8 +77,12 @@ def main(argv=None) -> int:
     ap.add_argument("--cache", default="data/census/uniprot_cache",
                     help="disk cache for raw UniProt JSON; a re-run reads it")
     ap.add_argument("--out", default="data/census/span_histogram.csv")
-    ap.add_argument("--source", default="data/census/table_S3_surfaceome.xlsx",
-                    help="the artifact the identifiers came from, named in the histogram")
+    ap.add_argument("--source", required=True,
+                    help="the artifact the identifiers came from; named AND sha256-hashed into "
+                         "the histogram. NO DEFAULT, by ruling (RULINGS-2026-08-04-F016 §3): a "
+                         "default naming a file that does not exist silently changes source the "
+                         "day that file appears, with no diff and no signal; a default naming the "
+                         "reconstruction launders provenance the same way. No implicit source.")
     ap.add_argument("--run-date", required=True,
                     help="date the spans were fetched (YYYY-MM-DD), recorded in the artifact")
     ap.add_argument("--annex-column", default=None,
@@ -86,6 +93,13 @@ def main(argv=None) -> int:
 
     map_path = Path(args.map)
     _require(map_path, "accession_map.csv (Task B)", "ORDERS-Code-2026-08-04-b-scale-readiness §2")
+
+    # Provenance travels with the result, not with the invocation (RULINGS-2026-08-04-F016 §3).
+    # Recording the path alone would let two different files answer to one name across runs.
+    source_path = Path(args.source)
+    _require(source_path, "the artifact named by --source", "RULINGS-2026-08-04-F016 §3")
+    source_sha256 = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    print(f"source {source_path} sha256={source_sha256}", file=sys.stderr)
 
     rows = read_accession_map(str(map_path))
     if args.limit:
@@ -114,6 +128,7 @@ def main(argv=None) -> int:
     with open(args.out, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["# source", args.source])
+        w.writerow(["# source_sha256", source_sha256])
         w.writerow(["# run_date", args.run_date])
         w.writerow(["# ceiling_hardware", LOCAL_CEILING.hardware])
         w.writerow(["# ceiling_dtype", LOCAL_CEILING.dtype])
