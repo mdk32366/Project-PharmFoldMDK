@@ -277,12 +277,20 @@ def test_probe_module_imports_no_database_session():
     this redden. It is a static parse, not an import-time check, so it catches the
     import even if it sits inside a function.
 
-    ⚠ The path is resolved from the REPO LAYOUT, not by importing the module. An
-    earlier version used `__import__` to find the file, which meant a revert that
-    added an unimportable database module produced a collection ERROR instead of a
-    failed assertion — the guard appeared to bite while its actual assertion never
-    ran. A static check that cannot survive the thing it is checking for is not
-    static.
+    ⚠ WHAT THE REVERT PROOF ACTUALLY SHOWED, stated precisely (D-016). Reverting
+    with `from db.session import SessionLocal` — a module that does not exist —
+    produces a collection ERROR, because this test module imports
+    `worker.ceiling_probe` at the top like every other test here. The gate goes
+    red, but THIS test's assertion never runs, so that revert proves nothing about
+    this guard. Re-proven with `from db import models`, which is importable and is
+    the realistic mistake (someone reaching for the ORM to persist a probe result):
+    the module imports cleanly, the static parse runs, and the assertion fails with
+    "probe imports 'db'". That is the proof.
+
+    The path is resolved from the REPO LAYOUT rather than by importing the module,
+    so the parse does not depend on the module being importable — but an
+    unimportable import still surfaces as a collection error rather than as this
+    failure. Both are red; only one is this test speaking.
     """
     probe = Path(__file__).resolve().parent.parent / "worker" / "ceiling_probe.py"
     source = probe.read_text(encoding="utf-8")
