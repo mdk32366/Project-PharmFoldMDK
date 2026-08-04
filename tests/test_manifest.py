@@ -161,3 +161,122 @@ def test_ranked_is_not_defined_as_local_tier():
     assert len(rental_ranked) >= 13
     egfr = BY_ACC["P00533"]            # EGFR, 621 aa untested → rental, ranked
     assert egfr.tier == "rental" and egfr.disposition == "ranked"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# D-077 decision 3 — the ceiling is BOUND to the recipe that measured it
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def test_ceiling_constant_carries_its_recipe():
+    """⚠ The ceiling cannot be read without its (dtype, chunk_size).
+
+    They are ONE structure, not two module-level ints. Splitting them back apart
+    reddens this test.
+
+    The failure this prevents (D-077 dec 3): `worker/ceiling_probe.py` defaults
+    `--dtype` to fp16 (written for the A6000). A local run that forgets
+    `--dtype int8` measures a ceiling for a recipe the local tier does not use —
+    and that number would be written into the constant that routes int8
+    production folds. Two paths to one quantity, free to drift. Binding them
+    makes the drift unrepresentable rather than merely unlikely.
+    """
+    from core.manifest import LOCAL_CEILING
+
+    assert LOCAL_CEILING.known_good == 440         # unchanged in this task (order §2b)
+    assert LOCAL_CEILING.known_bad == 630
+    assert LOCAL_CEILING.dtype == "int8"
+    assert LOCAL_CEILING.chunk_size == 64
+    assert LOCAL_CEILING.hardware
+
+    # the recipe must match the tier table it routes for — one source, not a copy
+    from core.contracts import TIER_RECIPE
+
+    assert LOCAL_CEILING.recipe() == TIER_RECIPE["local"]
+
+    # and the bare ints must be GONE — a module-level int is exactly the shape
+    # that let the number travel without its recipe
+    import core.manifest as manifest
+
+    assert not hasattr(manifest, "CEILING_KNOWN_GOOD"), \
+        "the bare int is back; the ceiling can travel without its recipe again"
+    assert not hasattr(manifest, "CEILING_KNOWN_BAD")
+
+
+def test_the_ceiling_is_frozen_so_it_cannot_be_edited_in_place():
+    """A mutable routing constant is one careless assignment from a silent
+    reroute of the whole cohort."""
+    import dataclasses
+
+    import pytest
+
+    from core.manifest import LOCAL_CEILING
+
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        LOCAL_CEILING.known_good = 999
+
+
+def test_unstable_band_routes_conservatively():
+    """D-077 dec 4: with an `unstable` band, tier_for_span uses the LOW end.
+
+    Using the high end reddens this. A band means the boundary is not sharp; the
+    conservative end is the only one a routing decision may rely on, because the
+    cost of routing an unfoldable target to local is a crashed host and the cost
+    of routing a foldable one to rental is a few dollars.
+    """
+    from core.manifest import FoldCeiling, tier_for_span
+
+    banded = FoldCeiling(
+        hardware="test", dtype="int8", chunk_size=64,
+        known_good=440, known_bad=630, unstable_band=(472, 512),
+    )
+
+    # below the low end of the band: still local
+    assert tier_for_span(470, ceiling=banded)[0] == "local"
+    # inside the band: NOT local — the band's low end is the routing bound
+    assert tier_for_span(500, ceiling=banded)[0] == "rental"
+    assert tier_for_span(512, ceiling=banded)[0] == "rental"
+
+    # and the reason names the band rather than pretending to a measured ceiling
+    assert "unstable" in (tier_for_span(500, ceiling=banded)[1] or "")
+
+
+def test_routing_is_unchanged_by_the_refactor():
+    """The 13 unmeasured-ceiling targets, and the local/rental split, must be
+    byte-identical to what shipped before the ceiling gained its recipe. Task 2
+    builds the instrument; it does not move a single target."""
+    from core.manifest import tier_for_span
+
+    assert tier_for_span(440) == ("local", None)
+    assert tier_for_span(441)[0] == "rental"
+    assert tier_for_span(441)[1] == "unmeasured_local_ceiling"
+    assert tier_for_span(629)[1] == "unmeasured_local_ceiling"
+    assert tier_for_span(630) == ("rental", "over_local_ceiling")
+
+    unmeasured = [r for r in ROWS if r.tier_reason == "unmeasured_local_ceiling"]
+    assert len(unmeasured) == 13
+
+
+def test_no_second_copy_of_the_ceiling_survives_in_the_tree():
+    """⚠ Found while implementing D-077 dec 3, and not in the order.
+
+    `scripts/ecd_lengths.py:51-52` carried a HAND-DUPLICATED `CEILING_KNOWN_GOOD`
+    / `CEILING_KNOWN_BAD`, and `core/manifest.py` documented it as "mirrors
+    scripts/ecd_lengths.py:46-52". That is decision 3's own named failure — two
+    paths to one quantity, never compared — sitting one file away from where the
+    order pointed. Binding the constant to its recipe in `core/manifest.py` while
+    leaving a bare int in `scripts/` would have satisfied the letter of the test
+    above and none of its purpose.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    pattern = re.compile(r"^\s*CEILING_KNOWN_(GOOD|BAD)\s*=\s*\d+", re.M)
+
+    offenders = []
+    for path in list(root.glob("core/*.py")) + list(root.glob("scripts/*.py")) + \
+            list(root.glob("worker/*.py")) + list(root.glob("app/*.py")):
+        if pattern.search(path.read_text(encoding="utf-8")):
+            offenders.append(str(path.relative_to(root)))
+
+    assert not offenders, f"bare ceiling literal(s) still declared in: {offenders}"

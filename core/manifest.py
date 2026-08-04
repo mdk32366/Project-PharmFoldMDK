@@ -45,13 +45,100 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+# The tier recipe table is the authority for what dtype/chunk_size each tier runs
+# (D-047). The ceiling below binds itself to it rather than restating the values,
+# so the routing constant and the recipe that measured it cannot drift apart
+# (D-077 dec 3). `core.contracts` is a stdlib-only serving-safe leaf, so this
+# import drags no `worker/` in.
+from core.contracts import TIER_RECIPE
+
 _ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CSV = _ROOT / "data" / "cohort_82_ecd.csv"
 
-# Measured local fold ceiling, S-004/S-005 — mirrors scripts/ecd_lengths.py:46-52.
-# 440 aa folds clean; 630 aa is 4-for-4 fatal; (440, 630) is UNMEASURED.
-CEILING_KNOWN_GOOD = 440
-CEILING_KNOWN_BAD = 630
+# ── the local fold ceiling, BOUND to the recipe that measured it (D-077 dec 3) ──
+#
+# ⚠ This used to be two bare module-level ints, hand-duplicated in
+# `scripts/ecd_lengths.py:51-52` — and the comment here said so ("mirrors
+# scripts/ecd_lengths.py:46-52"), which is a written record of two paths to one
+# quantity, free to drift. D-077 decision 3 names exactly that failure: the probe
+# defaults `--dtype fp16` (it was written for the A6000), so a local run that
+# forgot `--dtype int8` would measure a ceiling for a recipe the local tier does
+# not use, and that number would land in the constant routing int8 production
+# folds. Binding the length to its recipe makes the drift UNREPRESENTABLE rather
+# than merely unlikely; `scripts/ecd_lengths.py` now imports this structure, and
+# `tests/test_manifest.py::test_no_second_copy_of_the_ceiling_survives_in_the_tree`
+# fails if a bare literal reappears anywhere under core/scripts/worker/app.
+
+
+@dataclass(frozen=True)
+class FoldCeiling:
+    """A fold-length ceiling and the recipe under which it was measured.
+
+    D-077 dec 3: the ceiling is recorded as a triple (hardware, dtype, chunk_size)
+    → length, NEVER as a bare integer. A ceiling measured under any other recipe
+    may not update this one.
+
+    `unstable_band` is D-077 dec 4's pre-registered outcome for a boundary that is
+    not sharp: `(highest 4-for-4 good, lowest 4-for-4 bad)`. It is None until a
+    probe measures one. **When it is set, routing uses the LOW end** — the cost of
+    routing an unfoldable target to local is a crashed host; the cost of routing a
+    foldable one to rental is a few dollars.
+    """
+
+    hardware: str
+    dtype: str
+    chunk_size: int
+    known_good: int
+    known_bad: int
+    unstable_band: tuple[int, int] | None = None
+    provenance: str | None = None
+
+    def recipe(self) -> dict:
+        """The recipe this ceiling is valid for — comparable against `TIER_RECIPE`."""
+        return {"dtype": self.dtype, "chunk_size": self.chunk_size}
+
+    @property
+    def local_bound(self) -> int:
+        """Largest span that may route local. The conservative end of a band."""
+        return self.unstable_band[0] if self.unstable_band else self.known_good
+
+    @property
+    def rental_bound(self) -> int:
+        """At or above this, the span is definitively over the local ceiling."""
+        return self.unstable_band[1] if self.unstable_band else self.known_bad
+
+
+# Measured local fold ceiling, S-004/S-005: 440 aa folds clean (28.6 s, peak
+# 6665 MiB, no spill); 630 aa is 4-for-4 fatal; (440, 630) is UNMEASURED — the
+# band D-077 exists to close. **The number stays 440 until an F-entry measures a
+# new one** (D-077: the constant moves in the same PR as the entry that measured
+# it, or not at all).
+LOCAL_CEILING = FoldCeiling(
+    hardware="local NVIDIA Blackwell, 8 GB VRAM",
+    dtype=TIER_RECIPE["local"]["dtype"],
+    chunk_size=TIER_RECIPE["local"]["chunk_size"],
+    known_good=440,
+    known_bad=630,
+    unstable_band=None,
+    provenance="S-004/S-005 bisection; band (440, 630) unmeasured pending D-077",
+)
+
+
+def tier_for_span(span: int, ceiling: FoldCeiling = LOCAL_CEILING) -> tuple[str, str | None]:
+    """Tier for a sliced_ecd fold of `span` aa against a measured ceiling.
+
+    Every rental row carries a reason so it is never mistaken for a measured
+    routing. The reasons are distinct on purpose: `unmeasured_local_ceiling` means
+    nobody has looked, `unstable_ceiling_band` means someone looked and the
+    boundary was not sharp. Collapsing them would lose the D-077 dec 4 result.
+    """
+    if span <= ceiling.local_bound:
+        return "local", None                            # measured-clean local fold
+    if span < ceiling.rental_bound:
+        if ceiling.unstable_band is not None:
+            return "rental", "unstable_ceiling_band"    # D-077 dec 4: band, conservative end
+        return "rental", "unmeasured_local_ceiling"     # D-024 (iii)
+    return "rental", "over_local_ceiling"               # definitively rental
 
 # Named oversize exclusions (D-022): fold on no single card as one sequence. Named
 # rather than thresholded because the A6000 ceiling that would set a threshold is
@@ -123,19 +210,20 @@ def _largest_span_bounds(spans: str, largest: int | None) -> tuple[int | None, i
 
 
 def _sliced_tier(span: int) -> tuple[str, str | None]:
-    """Tier for a sliced_ecd fold of `span` aa, against the measured local ceiling."""
-    if span <= CEILING_KNOWN_GOOD:
-        return "local", None                        # measured-clean local fold
-    if span < CEILING_KNOWN_BAD:                     # (440, 630): local ceiling unmeasured
-        return "rental", "unmeasured_local_ceiling"  # D-024 (iii)
-    return "rental", "over_local_ceiling"            # >= 630: definitively rental
+    """Tier for a sliced_ecd fold of `span` aa, against the measured local ceiling.
+
+    Kept as the internal name `build_manifest` calls; the routing rule itself now
+    lives in the public `tier_for_span` so the census cost model (D-077 dec 6) and
+    the manifest cannot disagree about what routes where.
+    """
+    return tier_for_span(span)
 
 
 def _whole_tier(sequence_length: int | None) -> tuple[str, str | None]:
     """Tier for a whole-sequence fold. D-024 does not rule this (whole folds are
     held out of the ranking); rental is the conservative default, and every rental
     row must carry a reason so it is not mistaken for a measured routing."""
-    if sequence_length is not None and sequence_length <= CEILING_KNOWN_GOOD:
+    if sequence_length is not None and sequence_length <= LOCAL_CEILING.local_bound:
         return "local", None
     return "rental", "whole_sequence_fold"
 
