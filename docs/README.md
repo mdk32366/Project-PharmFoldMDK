@@ -130,6 +130,124 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-012 — ESMFold's chunked trunk is **not** output-invariant: chunk 16 diverges from chunk 64, and the folded cohort spans three different recipes
+
+- **Date of run:** 2026-08-04. **Entered this log:** 2026-08-04, same day, before any use.
+- **Type:** A **finding** — the result of D-077 Task 1c. It **cites D-077 and amends nothing.**
+- **Number:** **F-012**, reserved for exactly this in `RESERVED.md` (amendment §1). F-011 belongs to
+  the surfaceome negative class; F-013 stays reserved for Task 3 Arm A.
+- **Relates:** **D-077 decision 2** (the two-row frozen table this reads against), **D-042** (which
+  changed rental `chunk_size` `None`→`64` after O(L³) falsified the no-chunk assumption — the source
+  of the cohort split below), **F-008** (the two-precision confound this adds a *third* axis to),
+  **D-045/D-071** (fold provenance, without which the cohort split would be unknowable), **D-041 dec 4**
+  (no threshold invented after the fact), **D-047** (recipe resolved at fold time).
+
+#### The verdict, read against the frozen table and only against it
+
+**⚠ Row 2 fired: the outputs DIFFER.** D-077 decision 2 fixed both readings before this ran, and its
+second row says *"outputs differ **at all, by any margin**"* is the differ branch — **"nearly
+identical" is the differ branch.** No tolerance was invented after seeing the numbers (D-041 dec 4).
+
+| Comparison | Coordinates | pLDDT |
+|---|---|---|
+| **chunk 64 vs 32** | **0 / 342 differ** | **0 / 114 differ** |
+| **chunk 64 vs 16** | **45 / 342 differ**, max abs delta **1.0e-3 Å** | **111 / 114 differ**, max abs delta **2.08e-3** |
+| **chunk 32 vs 16** | 45 / 342 differ, max abs delta 1.0e-3 Å | 111 / 114 differ, max abs delta 2.08e-3 |
+
+**First divergence (the evidence dec 2 calls for):** residue 0, field `plddt`,
+`19.8300302028656` vs `19.829827547073364`.
+
+**Therefore, per the pre-registered reading:** `chunk_size` is a **recipe dimension**, not a
+memory/time knob. **The local ceiling is defined ONLY at chunk 64.** Folds produced at different
+chunk sizes are **not commensurable**. **Task 3 Arm B — the extended envelope at chunk 32/16 — is
+ABANDONED, NOT DEFERRED.**
+
+#### How known (D-016), including the control that makes it interpretable
+
+- **Run:** `scripts/chunk_invariance_run.py`, local NVIDIA RTX PRO 2000 Blackwell Laptop GPU (8151 MiB
+  total, 7043 MiB free), torch 2.11.0+cu128, `dtype=int8` resolved from `TIER_RECIPE["local"]`.
+  Artifacts: `data/derived/chunk_invariance/` (three PDBs, three pLDDT arrays, `verdict.json`).
+- **Sequence:** the existing GPU-test fixture source (`tests/test_runner.py:209`), **114 aa**.
+  Decision 2 permitted "the existing test fixture's source, **or** Trop-2 at ~248 aa"; the first was
+  used because **Trop-2 has no sequence in this repo** — F-009 records TACSTD2/P09758 as one of the
+  four clinically-validated ADC targets *excluded* from the 82, so it has no `protein_analyses` row,
+  and `data/heldout_positives.csv` carries its accession and trial data only. The ~93 Trop-2 folds in
+  `ARCHITECTURE.md:598-599` were dev-era.
+- **⚠ THE DETERMINISM CONTROL, run before the verdict was believed.** Two folds at the **same** recipe
+  were compared at chunk 64 and again at chunk 16: **byte-identical both times.** Without this, *"chunk
+  16 differs"* is indistinguishable from *"folds are nondeterministic"* and the whole comparison is
+  uninterpretable. The divergence is a real effect of `chunk_size`.
+- **Comparator:** `worker/fold_compare.py`, exact equality, no tolerance, proven to bite against a
+  deliberately contaminated rounding implementation before it was trusted.
+
+#### ⚠ The consequence nobody had looked for: the folded cohort is already split across recipes
+
+**How known (D-016):** read-only query over `protein_analyses.metadata->'fold_provenance'`, all 80 rows,
+2026-08-04.
+
+| `(dtype, chunk_size)` | Targets |
+|---|---|
+| `('int8', 64)` | **42** |
+| `('fp16', None)` | **34** |
+| `('fp16', 64)` | **3** |
+| no `fold_provenance` recorded | **1** |
+
+**34 folds ran unchunked.** That is D-042's own history — rental `chunk_size` was `None` until the
+first rental run falsified the assumption that more VRAM makes chunking unnecessary — and D-045's
+provenance capture is the only reason it is visible at all. **Until today this was harmless, because
+chunking was assumed output-invariant. That assumption is what D-077 decision 2 said was never
+measured, and it is now measured false for 16-vs-64.**
+
+**⚠ WHAT THIS DOES AND DOES NOT ESTABLISH — the line matters.** This run compared **64 / 32 / 16 at
+int8 on one 114-aa sequence**. It did **NOT** measure `None` versus `64`, did not measure at `fp16`,
+and did not measure on a cohort-length sequence. So:
+
+- **Established:** `chunk_size` can change ESMFold's output; the cohort contains three recipes.
+- **NOT established:** that the 34 unchunked folds differ from the 37 chunked ones, or by how much.
+  **`None` vs `64` is unmeasured**, and it is the comparison that would matter.
+- **Refused:** any claim that the cohort's features are compromised, and equally any claim that they
+  are fine. Both would be beliefs. The measurement that would settle it is **reserved as F-015**.
+
+**This is F-008's shape one axis over.** F-008 recorded precision confounded with length and tier;
+this adds `chunk_size`, and unlike F-008's it is confounded with *when the fold ran* rather than with
+length. D-075 decision 6 already declined to resolve F-008 and is not weakened by this — but a
+survival result there must not be over-read as excluding this either.
+
+#### ⚠ The sub-structure, reported as evidence and explicitly NOT acted on
+
+**chunk 64 and chunk 32 were perfectly identical; only chunk 16 diverged.** That is real information
+and belongs in the record. **It is not a licence to probe Arm B at chunk 32.** Decision 2 says the
+extended-envelope branch is *abandoned, not deferred*, on the differ branch — and "64 and 32 agreed on
+one 114-aa sequence, so 32 is safe" is exactly the post-hoc carve-out the pre-registration exists to
+forbid. n=1 sequence, at one length, on one card. **If chunk 32 is ever wanted, it is a new dated
+entry with its own measurement, not an exception read out of this one.**
+
+#### Honest limits of this finding
+
+- **n = 1 sequence, 114 aa, one card, one torch build.** Generality is unmeasured.
+- **Coordinates were compared through the PDB text format**, which quantises to 3 decimal places — so
+  the observed 1.0e-3 Å max delta is *one unit in the last written place*. The true underlying
+  difference may be smaller or larger; what is certain is that it is visible at file precision.
+- **The magnitude is tiny and the direction of the ruling does not depend on that.** A reader who
+  wants to call 2e-3 pLDDT "noise" is asking for a tolerance, and the answer is the one written before
+  the numbers existed.
+
+- **Deep-learning justification.** This is a statement about the model's numerics: chunking tiles the
+  trunk's triangular attention, and the tiling changes the floating-point reduction order, so the
+  network's own output is not invariant to a setting chosen purely for memory. That is load-bearing
+  for whether folds produced under different memory budgets may share a ranking at all — the question
+  the whole local-envelope idea rested on — and it is answered against the convenient direction.
+
+- **Consequences.**
+  - **Task 3 Arm B is abandoned.** Arm A (chunk 64, the production recipe) is unaffected and still
+    ungated.
+  - `LOCAL_CEILING` is **unchanged at 440** and now provably *recipe-scoped* — D-077 dec 3's binding
+    of the constant to `(hardware, dtype, chunk_size)` is vindicated by its own Task 1.
+  - **No reported result changes.** F-004, F-005, the LOO distribution and the ranking are untouched;
+    nothing here reaches the scorer.
+  - **F-015 reserved** for the `None`-vs-`64` measurement at fp16, which is the open question this
+    opened and cannot itself answer.
+
 ### D-077 — The local fold envelope: measure it, bind it to its recipe, and slice the census by it — as a **cost and reproducibility** axis, never as a suitability axis
 
 - **Date:** 2026-08-04

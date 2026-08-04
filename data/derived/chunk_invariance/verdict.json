@@ -1,0 +1,17 @@
+{
+  "task": "D-077 Task 1c chunk invariance",
+  "sequence": "tests/test_runner.py fixture source",
+  "sequence_length": 114,
+  "dtype": "int8",
+  "chunk_sizes": [
+    64,
+    32,
+    16
+  ],
+  "all_identical": false,
+  "comparisons": {
+    "64v32": true,
+    "64v16": "residue 0 field plddt: 19.8300302028656 vs 19.829827547073364",
+    "32v16": "residue 0 field plddt: 19.8300302028656 vs 19.829827547073364"
+  }
+}

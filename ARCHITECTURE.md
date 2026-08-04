@@ -650,8 +650,33 @@ untouched bisection: a length is known-good only on **4 consecutive** clean fold
 **routing uses the low end**, because the cost of routing an unfoldable target to local is a crashed
 host while the cost of routing a foldable one to rental is a few dollars.
 
-**Not yet measured.** All of the above is the instrument. `unstable_band` is `None`, the band
-(440, 630) is still open, and no probe has run — Task 3 is owner-authorised GPU work.
+**Not yet measured.** The ceiling itself is still open: `unstable_band` is `None`, the band
+(440, 630) is unprobed, and Task 3 Arm A is owner-authorised GPU work.
+
+#### ⚠ MEASURED 2026-08-04 (F-012): the chunked trunk is NOT output-invariant
+
+**`chunk_size` is a recipe dimension, not a memory knob.** Folding one fixed 114-aa sequence at
+`int8` under chunk 64 / 32 / 16: **64 and 32 were byte-identical; 16 diverged** — 45/342 coordinate
+values (max **1.0e-3 Å**, one unit in the last place the PDB format writes) and 111/114 pLDDT values
+(max **2.08e-3**). A determinism control was run first — two folds at the *same* recipe are
+byte-identical — so this is a real effect of `chunk_size`, not run-to-run noise.
+
+D-077 decision 2 fixed this reading before the run: *differ at all, by any margin* → **the local
+ceiling is defined ONLY at chunk 64, folds across chunk sizes are NOT commensurable, and the
+extended-envelope branch (Arm B, probing at chunk 32/16) is ABANDONED, not deferred.** Arm A, at the
+production recipe, is unaffected.
+
+**The consequence for the existing cohort, found by querying rather than assumed.** `fold_provenance`
+(D-045) shows the 80 folded rows span **three recipes**: `('int8', 64)` × 42, **`('fp16', None)` × 34**,
+`('fp16', 64)` × 3, plus one row with no provenance. The 34 unchunked folds are D-042's history —
+rental `chunk_size` was `None` until the first rental run falsified the no-chunk assumption. This was
+harmless only while chunking was *assumed* output-invariant.
+
+**⚠ What is NOT established:** the run compared 64/32/16 at int8 on one short sequence. **`None` vs
+`64` is unmeasured**, at fp16 and at cohort lengths. So it is not known whether those 34 folds differ
+from the 37 chunked ones, or by how much — and the claim that they are fine is as unsupported as the
+claim that they are not. That measurement is **reserved as F-015**. No reported result changes:
+F-004, F-005 and the ranking are untouched, and nothing here reaches the scorer.
 
 **Consequence:** cache generation *may* move to **different compute** (cloud GPU / Colab / cluster)
 to de-risk the schedule — a ≥16 GB GPU also makes the fp16 non-fit stop binding — but that is
