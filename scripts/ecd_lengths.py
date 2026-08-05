@@ -37,19 +37,21 @@ import json
 import sys
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Iterable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 UNIPROT_URL = "https://rest.uniprot.org/uniprotkb/{acc}.json"
 
-# Measured local ceiling, S-004/S-005 (docs/README.md).
-# 440 aa folded clean (28.6 s, peak 6665 MiB, no spill, host stable).
-# 630 aa is 4-for-4 fatal (HYPERVISOR_ERROR 0x00020001).
-# The exact ceiling within (440, 630) is UNMEASURED -- we bucket against both
-# bounds rather than pretending to a single number.
-CEILING_KNOWN_GOOD = 440
-CEILING_KNOWN_BAD = 630
+# ⚠ The ceiling is IMPORTED, not restated (D-077 dec 3). This file used to declare
+# its own `CEILING_KNOWN_GOOD = 440` / `CEILING_KNOWN_BAD = 630`, and
+# `core/manifest.py` declared the same pair while documenting that it "mirrors
+# scripts/ecd_lengths.py:46-52" — a written record of two paths to one quantity,
+# never compared, exactly the drift decision 3 exists to prevent. There is now one
+# structure, and it carries the recipe (int8 / chunk 64) the number was measured
+# under, so a ceiling measured at some other recipe cannot silently replace it.
+from core.manifest import LOCAL_CEILING  # noqa: E402
 
 USER_AGENT = "PharmFoldMDK/0.1 (course project; UniProt REST client)"
 REQUEST_PAUSE_S = 0.34  # be a polite API citizen: ~3 req/s
@@ -102,11 +104,56 @@ class Record:
         """
         if value is None:
             return "unknown"
-        if value <= CEILING_KNOWN_GOOD:
+        if value <= LOCAL_CEILING.local_bound:
             return "local"
-        if value >= CEILING_KNOWN_BAD:
+        if value >= LOCAL_CEILING.rental_bound:
             return "rental"
         return "untested"
+
+
+def read_accession_map(path: str) -> list[dict]:
+    """Read Task B's `accession_map.csv`: entry name -> accession, with status.
+
+    ⚠ Rows whose status is not `resolved` are RETURNED, not skipped. `multi`,
+    `unresolved` and `obsolete` flow through as their own categories all the way
+    to the split (surfaceome-spans-v2 §1) — a census cost model that silently
+    excludes the identifiers it could not resolve is understating the census.
+    """
+    out: list[dict] = []
+    with open(path, encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            out.append({
+                "entry": (row.get("entry") or row.get("entry_name") or "").strip(),
+                "accession": (row.get("accession") or "").strip(),
+                "id_status": (row.get("status") or row.get("id_status") or "resolved").strip().lower(),
+            })
+    return out
+
+
+def fetch_cached(accession: str, cache_dir: str | None, retries: int = 3) -> dict:
+    """`fetch` with a disk cache. Thousands of requests; a re-run reads the cache.
+
+    The cache is keyed by accession and stores the raw UniProt JSON, so a re-run
+    is free and byte-identical. **The run date is recorded either way** by the
+    caller — a cached span is still a span measured on some date, and a histogram
+    that cannot say when its inputs were fetched is not checkable.
+    """
+    if not cache_dir:
+        return fetch(accession, retries=retries)
+
+    cache = Path(cache_dir)
+    cache.mkdir(parents=True, exist_ok=True)
+    hit = cache / f"{accession}.json"
+    if hit.exists():
+        try:
+            return json.loads(hit.read_text(encoding="utf-8"))
+        except ValueError:
+            pass                      # a torn file from a crash — re-fetch, don't die
+
+    data = fetch(accession, retries=retries)
+    hit.write_text(json.dumps(data), encoding="utf-8")
+    time.sleep(REQUEST_PAUSE_S)       # polite only on a real request, not a cache hit
+    return data
 
 
 def fetch(accession: str, retries: int = 3) -> dict:
@@ -226,8 +273,8 @@ def summarise(records: list[Record]) -> None:
     print(f"  multi-span (>1 ECD)  {len(multi)}   <- fold-target rule needed")
 
     print(f"\n  Ceiling bounds (MEASURED, S-004/S-005):")
-    print(f"    <= {CEILING_KNOWN_GOOD} aa  local    (440 folded clean, no spill)")
-    print(f"    >= {CEILING_KNOWN_BAD} aa  rental   (630 is 4-for-4 host bugcheck)")
+    print(f"    <= {LOCAL_CEILING.local_bound} aa  local    (440 folded clean, no spill)")
+    print(f"    >= {LOCAL_CEILING.rental_bound} aa  rental   (630 is 4-for-4 host bugcheck)")
     print(f"    between      untested (exact ceiling UNMEASURED)")
 
     for basis in ("largest", "total"):

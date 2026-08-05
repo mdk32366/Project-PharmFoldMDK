@@ -618,6 +618,66 @@ still **not** retrieval.
 > fold at `chunk 16/32`**, which S-004 crashed before reaching. S-004's peak was lost with its
 > corrupted JSON, so this is untested.
 
+#### The ceiling is now a structure, not two ints (D-077 decisions 3–4, 2026-08-04)
+
+**Structural change, no routing change.** `CEILING_KNOWN_GOOD` / `CEILING_KNOWN_BAD` no longer exist
+as bare module-level integers. `core/manifest.py` exports a single frozen **`FoldCeiling`** carrying
+`(hardware, dtype, chunk_size, known_good, known_bad, unstable_band)`, and `LOCAL_CEILING` reads its
+`dtype`/`chunk_size` from `TIER_RECIPE["local"]` rather than restating them. **440 and 630 are
+unchanged and not one target moved tier** — the instrument moved, the number did not (D-077: the
+constant moves only in the same PR as the F-entry that measured it).
+
+**Why:** `worker/ceiling_probe.py` takes `--dtype` as a free CLI argument and defaulted it to `fp16`
+(it was written for the A6000, D-022). A local run that forgot `--dtype int8` would have measured a
+ceiling for a recipe **the local tier does not use**, and that number would have been written into
+the constant that routes **int8** production folds — two paths to one quantity, never compared.
+`--tier local` now resolves the recipe from `TIER_RECIPE` and **refuses** a contradicting `--dtype`.
+
+**A second copy was found in the same pass:** `scripts/ecd_lengths.py:51-52` declared its own
+`CEILING_KNOWN_GOOD`/`CEILING_KNOWN_BAD`, and `core/manifest.py`'s comment documented the
+duplication ("mirrors `scripts/ecd_lengths.py:46-52`"). It now imports the structure, and
+`tests/test_manifest.py::test_no_second_copy_of_the_ceiling_survives_in_the_tree` fails if a bare
+literal reappears under `core/`, `scripts/`, `worker/` or `app/`.
+
+**The boundary may be a band.** The probe assumed a sharp monotone boundary and *could not report
+that it isn't one*: any single `ok` raised the floor, any single failure lowered the ceiling, and
+`next_probe_length` then raised `ValueError` on inverted bounds — so `ok@560, oom@500`, entirely
+plausible 378 MiB from the wall, made the probe **crash rather than report the flakiness**. D-077
+dec 4 pre-registered that crash as **a result, not a bug**, and added a repeat layer above the
+untouched bisection: a length is known-good only on **4 consecutive** clean folds (k inherited from
+630 aa's 4-for-4, not invented), known-bad only on 4 consecutive failures, and anything else is
+**`unstable`** — a legitimate reportable outcome. `FoldCeiling.unstable_band` carries it, and
+**routing uses the low end**, because the cost of routing an unfoldable target to local is a crashed
+host while the cost of routing a foldable one to rental is a few dollars.
+
+**Not yet measured.** The ceiling itself is still open: `unstable_band` is `None`, the band
+(440, 630) is unprobed, and Task 3 Arm A is owner-authorised GPU work.
+
+#### ⚠ MEASURED 2026-08-04 (F-012): the chunked trunk is NOT output-invariant
+
+**`chunk_size` is a recipe dimension, not a memory knob.** Folding one fixed 114-aa sequence at
+`int8` under chunk 64 / 32 / 16: **64 and 32 were byte-identical; 16 diverged** — 45/342 coordinate
+values (max **1.0e-3 Å**, one unit in the last place the PDB format writes) and 111/114 pLDDT values
+(max **2.08e-3**). A determinism control was run first — two folds at the *same* recipe are
+byte-identical — so this is a real effect of `chunk_size`, not run-to-run noise.
+
+D-077 decision 2 fixed this reading before the run: *differ at all, by any margin* → **the local
+ceiling is defined ONLY at chunk 64, folds across chunk sizes are NOT commensurable, and the
+extended-envelope branch (Arm B, probing at chunk 32/16) is ABANDONED, not deferred.** Arm A, at the
+production recipe, is unaffected.
+
+**The consequence for the existing cohort, found by querying rather than assumed.** `fold_provenance`
+(D-045) shows the 80 folded rows span **three recipes**: `('int8', 64)` × 42, **`('fp16', None)` × 34**,
+`('fp16', 64)` × 3, plus one row with no provenance. The 34 unchunked folds are D-042's history —
+rental `chunk_size` was `None` until the first rental run falsified the no-chunk assumption. This was
+harmless only while chunking was *assumed* output-invariant.
+
+**⚠ What is NOT established:** the run compared 64/32/16 at int8 on one short sequence. **`None` vs
+`64` is unmeasured**, at fp16 and at cohort lengths. So it is not known whether those 34 folds differ
+from the 37 chunked ones, or by how much — and the claim that they are fine is as unsupported as the
+claim that they are not. That measurement is **reserved as F-015**. No reported result changes:
+F-004, F-005 and the ranking are untouched, and nothing here reaches the scorer.
+
 **Consequence:** cache generation *may* move to **different compute** (cloud GPU / Colab / cluster)
 to de-risk the schedule — a ≥16 GB GPU also makes the fp16 non-fit stop binding — but that is
 de-risking, **not** a verdict against the local tier. Inside the D-004 §5 boundary either way, and
@@ -711,12 +771,17 @@ Project-PharmFoldMDK/
 │                            #   features.py (D-027/D-058 pure six-feature extractor + in-repo
 │                            #   Shrake-Rupley SASA, zero third-party imports; ships, never served),
 │                            #   scorer.py (D-041/D-060 L2 logistic regression by hand — IRLS, LOO,
-│                            #   nested-CV lambda, Spearman; pure stdlib, seven parameters)
+│                            #   nested-CV lambda, Spearman; pure stdlib, seven parameters),
+│                            #   foldability.py (D-077 dec 6 census cost model: span → local/
+│                            #     rental/over_ceiling. A COST axis, never a suitability axis —
+│                            #     a test asserts scorer.py and features.py never import it)
 ├── worker/                  # GPU tier (NOT deployed to Fly): runner.py (D-018 fold-runner),
 │                            #   orchestrator.py (D-030 job-pull loop, pure/transport-agnostic),
 │                            #   http_client.py (D-031 concrete HTTP QueueClient, gzips PAE),
 │                            #   main.py (entry point: wire client+loop+fold, `python -m worker.main`),
-│                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run),
+│                            #   ceiling_probe.py (D-022 A6000-ceiling bisection, owner-run;
+│                            #     D-077 adds --tier recipe resolution + the k=4 repeat layer),
+│                            #   fold_compare.py (D-077 exact chunk-invariance comparator, pure),
 │                            #   requirements.txt (CUDA deps + httpx, never installed by CI)
 ├── db/                      # models (db/models.py) + Alembic migrations (db/migrations/)
 ├── scripts/                 # ecd_lengths.py, map_genes_to_uniprot.py, deploy_guard.py (DEP-002),

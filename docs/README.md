@@ -96,9 +96,22 @@ So the rule is not "be careful" — it is:
    - **The general rule: to confirm a thing exists, look at the thing — never at a reference to it.**
      For log entries that is one command: every cited `D-NNN`/`F-NNN` must have a matching `### ` entry.
 
-   **⚠ STATE OF THE INVARIANT — do not assume it has always held.** As of **2026-08-03** every cited
-   `D-NNN`/`F-NNN`/`S-NNN`/`DEP-NNN` in this log and in `ARCHITECTURE.md` resolves to a real `### `
-   entry. `D-010` is the sole exception and is documented above as a deliberate skip.
+   **⚠ STATE OF THE INVARIANT — do not assume it has always held.** As of **2026-08-04** every cited
+   `D-NNN`/`F-NNN`/`S-NNN`/`DEP-NNN` in this log and in `ARCHITECTURE.md` either resolves to a real
+   `### ` entry **or is listed in [`RESERVED.md`](RESERVED.md)**.
+
+   **The distinction the register exists to hold.** A *forward* reference to an entry that announces
+   its own absence is not the D-062 defect — D-062's harm was that thirteen citations treated a missing
+   entry as **settled authority**, and nothing in the text suggested it was missing. A reference that
+   says *"this is not written yet"* cannot do that. **But it is indistinguishable from the defect to a
+   checker.**
+
+   **That is why the exceptions are a file and not a paragraph.** This note first carried them as prose
+   — one exception (`D-010`), then two (`D-078`), and within a day the set was five. Prose kept the
+   property *"an undocumented miss is a real finding"* true only while the set was small enough to
+   remember; `RESERVED.md` keeps it true as the set grows. **The checker whitelists that file and
+   nothing else, and an unresolved reference not listed there is a finding immediately** — same class
+   as D-062, found early. The command is in the register; **read its output, not its exit code.**
 
    **This closed state was RESTORED on that date; it did not hold before it.** Two holes were repaired
    the same day: **D-062**, cited **13 times** as the authority for a shipped surface with no entry
@@ -116,6 +129,639 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### F-016 — The `Non_Surface` marker in the reconstructed Table S3 is a section heading, not a partition: everything below it is the **whole** membraneome
+
+- **Date:** 2026-08-04. **Entered this log:** 2026-08-04, **in the same commit as F-011**, per
+  `RULINGS-2026-08-04-F016` §6.1 — F-016 discharges F-011's flags and may not precede it.
+- **Type:** A **finding** about a file this project was about to read positionally, caught before any
+  census was built on it. **Nothing is ruled here.** One data artifact written, one script default
+  removed.
+- **Number:** **F-016**, the next free integer. F-013/F-014/F-015 stay reserved.
+- **Relates:** **F-011** (whose magnitudes this discharges and whose `~5,102` it withdraws),
+  **D-077 dec 1.3** (present-flagged-excluded-from-nothing, the treatment reused for inactive rows).
+- **Full text:** `docs/F-016-non-surface-marker-is-not-a-partition.md`.
+
+**The marker at row 2888 is a section heading, and the section it heads is the entire table.** All
+2,886 surface rows appear **again** below it, field-for-field identical. **Splitting on row position
+labels the entire positive class SURFY-negative** — the precise inversion `core/census.py` exists to
+prevent. Derive class from the `Surfy` column, **never from row number.**
+
+**Two gaps were live in the census before a single row was loaded:**
+
+| | The gap | The cost had it shipped |
+|---|---|---|
+| 1 | The classes **do not partition** the table — 2,801 rows carry a blank class cell | "Not positive" overstates the negative class by **126%** (5,017 vs 2,216) |
+| 2 | The **identifier count is not the protein count** | 2,886 identifiers are **2,807 distinct accessions**; 79 collapse into four HLA loci UniProt has merged |
+
+⚠ **Three classes, always named:** `surface` · `non_surface` · `unclassified`. `unclassified` is
+never merged into either and never dropped — and is **not evidence for F-011.**
+
+**UniProt cross-check, 2026-08-04:** 7,746 active · 105 merged · 52 inactive · **0 unaccounted.** No
+accession is corrupt; the divergence is eight years of upstream drift, which is itself the evidence
+the reconstruction is faithful to a 2018 snapshot. Merged rows keep their pre-merge identifier;
+inactive rows are `foldable=no`, retained and flagged, **never dropped.**
+
+⟡ **`class_conflict` — the mechanism, not just the flag.** `Q96PC5` and `P01764` each carry rows in
+two classes. **The classifier did not contradict itself:** each pair carries **distinct pre-merge
+accessions** (`O15320`/`Q96PC5`, `P01765`/`P01764`) and exactly one row per pair is `merged`. SURFY
+classified two separate entries; **UniProt's merge manufactured the contradiction** — the same
+mechanism as the HLA collapse, surfacing as a contradiction instead of a count. **Resolved by
+neither**, because resolving would assert that a merged entity has one localization, a biological
+claim nobody has made. Both conflicts are `non_surface` × `unclassified`, so **the 2,807 surface
+denominator is unaffected.**
+
+⚠ **Not named `table_S3_surfaceome.xlsx`.** That name belongs to an artifact nobody has obtained —
+the published URL still serves a 132-byte LFS pointer stub. Consequently `census_spans.py --source`
+**has no default and is required**, and the script records the source file's sha256 in its output.
+
+---
+
+### F-011 — The surfaceome classifier's negative class is not "cannot be a target": localization is condition-dependent, and the excluded class may be the one with the best therapeutic window
+
+- **Date:** 2026-08-04. **Entered this log:** 2026-08-04, **late** — see the landing note below.
+- **Type:** A **finding** about a boundary this project was about to inherit, caught before
+  inheriting it. **Nothing is ruled. No code, no route, no result.**
+- **Number:** **F-011**, reserved for exactly this in `RESERVED.md`. F-012 is the Task 1c verdict;
+  F-013/F-014/F-015 stay reserved.
+- **Relates:** **F-009** (the same shape, a filter that removes the interesting cases), **F-016**
+  (which read the table this entry could only cite, and supersedes two of its numbers), **A-014**
+  (*an upstream model's negative class is a prediction, not a fact* — still blocked on KEEL-4).
+- **Full text:** `docs/F-011-surfaceome-negative-class-v2.md`, which stays. Both existing is the
+  **D-075 precedent**, not a duplication defect.
+
+#### ⚠ Landing note — this entry is the D-062 defect in the Planner's own output
+
+**F-011 v2 was written, placed in `docs/`, and pushed — and was never in this log.** "In `docs/` and
+pushed" felt like landed and was not. That is **precisely D-062**: a citation treated as settled
+authority with nothing in the text suggesting the entry was missing — committed one day after the
+orders telling Code to **grep for the header, not trust the filename.**
+
+**It surfaced only because F-016 ran that grep before merging on top of it.** F-016 discharges
+F-011's flags, and an entry cannot discharge flags in an entry that does not exist. Recorded here
+rather than quietly fixed, because the failure is the interesting part: the rule was written, the
+rule was correct, and its author did not apply it to their own artifact.
+
+#### ⚠ Supersession — `RULINGS-2026-08-04-F016` §6.4
+
+- **2,216** moves from *unverified* to **counted** — off the file, matching the SURFY site exactly.
+- **~5,102** is **WITHDRAWN, not corrected.** Never a row count; no corrected version exists. It
+  assumed the classes partition the table. They do not — the table holds **7,903**, of which
+  **2,801** carry a blank class cell.
+- ⟡ **The argument is unchanged; its scope narrows.** This finding is about how SURFY defines its
+  **negative** class. That holds **for the 2,216.** It says nothing about the 2,801 unclassified,
+  which are unexamined by a different mechanism. **They must not be recruited into it.**
+
+#### Provenance of every number — each with its key
+
+⚠ A `verified` label answers *"where did this come from?"* and says nothing about *"is this the
+quantity we need?"* — **a verified number with no key is incomplete by construction.** That is how
+2,886 went wrong below: correct, verified, and not the denominator.
+
+| Number | Key | Status | How known |
+|---|---|---|---|
+| **2,886** positive class | identifiers (entry names) | ✅ VERIFIED — ⚠ **not the denominator** | `surfaceome_ids.txt`: 2,886 lines, 2,886 unique. Counted, not cited. |
+| **2,807** positive class | **distinct accessions** | ✅ **COUNTED — the denominator** | F-016. 79 collapse into four HLA loci UniProt has merged. Every join here is keyed by accession. |
+| **2,216** negative class | identifiers | ✅ **COUNTED** *(was: not verified)* | F-016, off the `Surfy` column; matches the SURFY site. |
+| **2,801** unclassified | identifiers | ✅ **COUNTED** | F-016. Blank `Surfy` cell. **Not this finding's subject.** |
+| ~~**~5,102**~~ | — | ❌ **WITHDRAWN** | Planner arithmetic resting on an unstated partition assumption. |
+| **93.5%** accuracy | — (a rate) | ⚠ Cited, not opened at first hand | PNAS abstract. |
+
+#### The finding
+
+The census universe was about to be defined as SURFY's positive class, with the negative class
+treated as ineligible. That rests on a proposition nobody had stated: **"a protein SURFY calls
+non-surface cannot be an ADC target."** **Mechanistically sound, empirically leaky — and every leak
+runs toward the targets ADCs most want.**
+
+**Sound:** an IgG cannot reach an epitope inside the ER lumen. A protein genuinely confined to an
+intracellular membrane is unreachable. Not disputed.
+
+- **Leak 1 — classifier error.** Reported accuracy 93.5%. Across a negative class of order two
+  thousand, implied misclassifications are in the hundreds.
+- **Leak 2 — steady-state localization is not "never at the surface."** The non-surface training set
+  spans ER, endosome, Golgi, lysosome, mitochondrion, nucleus, peroxisome, cytosol (PNAS Fig. 1B).
+  **Endosomal and lysosomal membrane proteins traverse the plasma membrane as part of their
+  transport cycle** — their mechanism, not an exception to it.
+- **Leak 3 — the labels encode normal conditions.** Trained on CSPA mass-spectrometry data from
+  cultured cells. **A protein reaching the surface only under disease conditions is labelled
+  non-surface by construction.**
+
+#### ⚠ Why this is more than a caveat
+
+**Condition-dependent surface trafficking is not a defect in a target — it is the selectivity
+property an ADC exists to exploit.** Intracellular in normal tissue, surface-exposed in tumour, is a
+*better* window than surface-everywhere. **So the classifier that makes the census tractable may
+exclude, by construction, the class with the strongest theoretical window.**
+
+#### The same shape a third time, and that is itself the finding
+
+| Instance | The filter | What it excluded |
+|---|---|---|
+| **F-009** | Kathad's expression-and-selectivity filter | Trop-2, CD33, CD30, CEACAM5 — clinically validated ADC targets |
+| **F-011** | SURFY's localization classifier | Potentially the condition-dependent-trafficking class |
+| *(pattern)* | — | **The filter that makes a list tractable removes the interesting cases.** |
+
+F-009's resolution applies unchanged: **name the boundary, do not inherit it silently, do not claim
+to fill it.**
+
+#### ⚠ Citation status, recorded not silent
+
+Leaks 1–3 come from the SURFY resource page and the PNAS abstract and figure legends, read
+2026-08-04. The examples offered in conversation — **GRP78/HSPA5, calreticulin, nucleolin, LAMP1** —
+are **Planner-supplied from general knowledge, NOT opened at first hand.** Leads, not evidence.
+**None may reach a surface, a deck, or a paper until its primary source is opened.** The finding
+stands without them.
+
+⟡ **The entry names its own weakest point:** it argues that an upstream model's negative class
+should not be inherited as fact, while resting its magnitudes on that model's paper rather than its
+data. Not fatal, not hidden — **and now discharged by F-016.**
+
+#### What this rules — nothing. What it changes — the ingest.
+
+- ✅ **Ingest the full membraneome table, not the positive subset.** SURFY score and class travel as
+  columns. ⟡ **Done — `data/census/membraneome-reconstructed-2026-08-04.csv` (F-016).**
+- ✅ **The negative class is a labelled annex** — retained, flagged.
+- ❌ **Annex members are NOT census members and are NOT ranked.**
+- ❌ **No claim that this project's method recovers them.** F-009's over-claim guard, verbatim.
+- **Deep-learning justification.** Every discipline this log applies to ESMFold's pLDDT applies to
+  SURFY's score. **An upstream model's negative class is a prediction, not a fact.**
+
+---
+
+### F-012 — ESMFold's chunked trunk is **not** output-invariant: chunk 16 diverges from chunk 64, and the folded cohort spans three different recipes
+
+- **Date of run:** 2026-08-04. **Entered this log:** 2026-08-04, same day, before any use.
+- **Type:** A **finding** — the result of D-077 Task 1c. It **cites D-077 and amends nothing.**
+- **Number:** **F-012**, reserved for exactly this in `RESERVED.md` (amendment §1). F-011 belongs to
+  the surfaceome negative class; F-013 stays reserved for Task 3 Arm A.
+- **Relates:** **D-077 decision 2** (the two-row frozen table this reads against), **D-042** (which
+  changed rental `chunk_size` `None`→`64` after O(L³) falsified the no-chunk assumption — the source
+  of the cohort split below), **F-008** (the two-precision confound this adds a *third* axis to),
+  **D-045/D-071** (fold provenance, without which the cohort split would be unknowable), **D-041 dec 4**
+  (no threshold invented after the fact), **D-047** (recipe resolved at fold time).
+
+#### The verdict, read against the frozen table and only against it
+
+**⚠ Row 2 fired: the outputs DIFFER.** D-077 decision 2 fixed both readings before this ran, and its
+second row says *"outputs differ **at all, by any margin**"* is the differ branch — **"nearly
+identical" is the differ branch.** No tolerance was invented after seeing the numbers (D-041 dec 4).
+
+| Comparison | Coordinates | pLDDT |
+|---|---|---|
+| **chunk 64 vs 32** | **0 / 342 differ** | **0 / 114 differ** |
+| **chunk 64 vs 16** | **45 / 342 differ**, max abs delta **1.0e-3 Å** | **111 / 114 differ**, max abs delta **2.08e-3** |
+| **chunk 32 vs 16** | 45 / 342 differ, max abs delta 1.0e-3 Å | 111 / 114 differ, max abs delta 2.08e-3 |
+
+**First divergence (the evidence dec 2 calls for):** residue 0, field `plddt`,
+`19.8300302028656` vs `19.829827547073364`.
+
+**Therefore, per the pre-registered reading:** `chunk_size` is a **recipe dimension**, not a
+memory/time knob. **The local ceiling is defined ONLY at chunk 64.** Folds produced at different
+chunk sizes are **not commensurable**. **Task 3 Arm B — the extended envelope at chunk 32/16 — is
+ABANDONED, NOT DEFERRED.**
+
+#### How known (D-016), including the control that makes it interpretable
+
+- **Run:** `scripts/chunk_invariance_run.py`, local NVIDIA RTX PRO 2000 Blackwell Laptop GPU (8151 MiB
+  total, 7043 MiB free), torch 2.11.0+cu128, `dtype=int8` resolved from `TIER_RECIPE["local"]`.
+  Artifacts: `data/derived/chunk_invariance/` (three PDBs, three pLDDT arrays, `verdict.json`).
+- **Sequence:** the existing GPU-test fixture source (`tests/test_runner.py:209`), **114 aa**.
+  Decision 2 permitted "the existing test fixture's source, **or** Trop-2 at ~248 aa"; the first was
+  used because **Trop-2 has no sequence in this repo** — F-009 records TACSTD2/P09758 as one of the
+  four clinically-validated ADC targets *excluded* from the 82, so it has no `protein_analyses` row,
+  and `data/heldout_positives.csv` carries its accession and trial data only. The ~93 Trop-2 folds in
+  `ARCHITECTURE.md:598-599` were dev-era.
+- **⚠ THE DETERMINISM CONTROL, run before the verdict was believed.** Two folds at the **same** recipe
+  were compared at chunk 64 and again at chunk 16: **byte-identical both times.** Without this, *"chunk
+  16 differs"* is indistinguishable from *"folds are nondeterministic"* and the whole comparison is
+  uninterpretable. The divergence is a real effect of `chunk_size`.
+- **Comparator:** `worker/fold_compare.py`, exact equality, no tolerance, proven to bite against a
+  deliberately contaminated rounding implementation before it was trusted.
+
+#### ⚠ The consequence nobody had looked for: the folded cohort is already split across recipes
+
+**How known (D-016):** read-only query over `protein_analyses.metadata->'fold_provenance'`, all 80 rows,
+2026-08-04.
+
+| `(dtype, chunk_size)` | Targets |
+|---|---|
+| `('int8', 64)` | **42** |
+| `('fp16', None)` | **34** |
+| `('fp16', 64)` | **3** |
+| no `fold_provenance` recorded | **1** |
+
+**34 folds ran unchunked.** That is D-042's own history — rental `chunk_size` was `None` until the
+first rental run falsified the assumption that more VRAM makes chunking unnecessary — and D-045's
+provenance capture is the only reason it is visible at all. **Until today this was harmless, because
+chunking was assumed output-invariant. That assumption is what D-077 decision 2 said was never
+measured, and it is now measured false for 16-vs-64.**
+
+**⚠ WHAT THIS DOES AND DOES NOT ESTABLISH — the line matters.** This run compared **64 / 32 / 16 at
+int8 on one 114-aa sequence**. It did **NOT** measure `None` versus `64`, did not measure at `fp16`,
+and did not measure on a cohort-length sequence. So:
+
+- **Established:** `chunk_size` can change ESMFold's output; the cohort contains three recipes.
+- **NOT established:** that the 34 unchunked folds differ from the 37 chunked ones, or by how much.
+  **`None` vs `64` is unmeasured**, and it is the comparison that would matter.
+- **Refused:** any claim that the cohort's features are compromised, and equally any claim that they
+  are fine. Both would be beliefs. The measurement that would settle it is **reserved as F-015**.
+
+**This is F-008's shape one axis over.** F-008 recorded precision confounded with length and tier;
+this adds `chunk_size`, and unlike F-008's it is confounded with *when the fold ran* rather than with
+length. D-075 decision 6 already declined to resolve F-008 and is not weakened by this — but a
+survival result there must not be over-read as excluding this either.
+
+#### ⚠ The sub-structure, reported as evidence and explicitly NOT acted on
+
+**chunk 64 and chunk 32 were perfectly identical; only chunk 16 diverged.** That is real information
+and belongs in the record. **It is not a licence to probe Arm B at chunk 32.** Decision 2 says the
+extended-envelope branch is *abandoned, not deferred*, on the differ branch — and "64 and 32 agreed on
+one 114-aa sequence, so 32 is safe" is exactly the post-hoc carve-out the pre-registration exists to
+forbid. n=1 sequence, at one length, on one card. **If chunk 32 is ever wanted, it is a new dated
+entry with its own measurement, not an exception read out of this one.**
+
+#### Honest limits of this finding
+
+- **n = 1 sequence, 114 aa, one card, one torch build.** Generality is unmeasured.
+- **Coordinates were compared through the PDB text format**, which quantises to 3 decimal places — so
+  the observed 1.0e-3 Å max delta is *one unit in the last written place*. The true underlying
+  difference may be smaller or larger; what is certain is that it is visible at file precision.
+- **The magnitude is tiny and the direction of the ruling does not depend on that.** A reader who
+  wants to call 2e-3 pLDDT "noise" is asking for a tolerance, and the answer is the one written before
+  the numbers existed.
+
+- **Deep-learning justification.** This is a statement about the model's numerics: chunking tiles the
+  trunk's triangular attention, and the tiling changes the floating-point reduction order, so the
+  network's own output is not invariant to a setting chosen purely for memory. That is load-bearing
+  for whether folds produced under different memory budgets may share a ranking at all — the question
+  the whole local-envelope idea rested on — and it is answered against the convenient direction.
+
+- **Consequences.**
+  - **Task 3 Arm B is abandoned.** Arm A (chunk 64, the production recipe) is unaffected and still
+    ungated.
+  - `LOCAL_CEILING` is **unchanged at 440** and now provably *recipe-scoped* — D-077 dec 3's binding
+    of the constant to `(hardware, dtype, chunk_size)` is vindicated by its own Task 1.
+  - **No reported result changes.** F-004, F-005, the LOO distribution and the ranking are untouched;
+    nothing here reaches the scorer.
+  - **F-015 reserved** for the `None`-vs-`64` measurement at fp16, which is the open question this
+    opened and cannot itself answer.
+
+### D-077 — The local fold envelope: measure it, bind it to its recipe, and slice the census by it — as a **cost and reproducibility** axis, never as a suitability axis
+
+- **Date:** 2026-08-04
+- **Status:** Accepted. **Ruled before any probe.** This entry is the pre-registration; **it is void if
+  code precedes it** (D-075 precedent).
+- **Type:** A **decision**. It rules a measurement design, freezes two interpretations, and — the
+  load-bearing half — **rules what the resulting axis may and may not be used for.** Its results land
+  later as their own F-entries (unassigned until they exist; highest `### F-` at merge is **F-010**).
+- **⚠ Number verified, not inherited.** At merge the highest `### D-` entry was **D-076**, landed in the
+  immediately preceding commit precisely so this entry's decision-7 citation of "D-076 Tier 1" resolves
+  to a real entry. **Checked by reading the log, not a reference to it** (method note item 7).
+- **Relates:** **D-024** (which left the local ceiling inside (440, 630) *deliberately open and cheap* —
+  this closes that item); **S-004/S-005** (the original bisection and its anchors); **D-022** (the A6000
+  ceiling probe, whose instrument this reuses); **D-047** (recipe resolved at fold-time, not frozen at
+  enqueue); **D-042** (rental chunking, after O(L³) falsified the no-chunk assumption); **F-008** (the
+  two-precision confound this creates the overlap to test); **D-075 decision 6** (which names F-008 as
+  unresolved and not a prerequisite); **D-027** (the fixed six features — this entry adds none);
+  **D-050** (derive, don't hardcode); **D-076** (Tier 1 IGF2R, unchanged by this entry).
+- **Provenance (D-016):** owner observation, 2026-08-04 — *"we can slice the census by one more
+  dimension: ability to fold on the laptop. All that costs is power."* Orders:
+  `docs/ORDERS-Code-2026-08-04-D-077.md`; pre-work: `docs/PREWORK-2026-08-04.md`.
+
+#### Context — what is actually unmeasured, and what it is costing
+
+**How known (D-016):** each row below was read from the named source in the working clone at `7f391a7`
+and **re-verified by the builder against the file, not against the planning document that cited it.**
+
+| Fact | Source |
+|---|---|
+| `CEILING_KNOWN_GOOD = 440`, `CEILING_KNOWN_BAD = 630`, band **UNMEASURED** | `core/manifest.py:51-54` |
+| 13 cohort targets route to rental with `tier_reason=unmeasured_local_ceiling` | `core/manifest.py:16-17,129-130` |
+| Local recipe **int8 / chunk 64**; rental recipe **fp16 / chunk 64** — the tiers differ **only in dtype** | `core/contracts.py:31-34` `TIER_RECIPE` |
+| 440 aa folded clean at chunk 64: 28.6 s, peak **6665 MiB**, **378 MiB** headroom against 7043 MiB free | `ARCHITECTURE.md:607-609,616` |
+| 630 aa is **4-for-4 fatal** | `ARCHITECTURE.md:598-599` |
+| *"HER2 might yet fold at chunk 16/32 … this is **untested**"* | `ARCHITECTURE.md:616-618` |
+
+**Derived from `data/cohort_82_ecd.csv` (2026-07-21 snapshot), 13 targets with `largest_span_aa`
+strictly inside (440, 630):**
+
+`ENTPD1 441 · SCNN1A 456 · ADAM17 457 · MERTK 485 · CSF1R 498 · PDGFRB 500 · LRFN4 502 ·
+LRFN3 523 · EPHA4 528 · GRIN1 541 · CDH11 564 · LRRN1 606 · EGFR 621`
+
+**ENTPD1 was routed to paid compute for being one residue over a bound nobody has measured.**
+
+> ⚠ **That CSV is a 2026-07-21 snapshot and 13 of its 82 rows carry an empty `largest_span_aa`
+> (`bucket_by_largest='unknown'`, IGF2R among them).** The two 13s are **different rows** and neither
+> count licenses the other. **No census claim in this entry may be derived from this CSV.** Every count
+> that reaches a surface, a deck, or the paper **re-derives from `/api/coverage` and `/api/analyses`**
+> (D-050 stale-literal discipline). The list above is *orientation for the probe's bounds*, not a
+> reportable statistic.
+
+#### Decision (1) — ⚠ **What this axis IS, and what it is NOT.** The load-bearing ruling.
+
+**Local-foldability is a monotone step function of ECD length.** ECD length is **feature 1** of the
+pre-registered six (D-027). Tier was assigned *by* length. Precision was assigned *by* tier. Therefore
+**length, tier, precision, and local-foldability are, on the current cohort, four names for one
+partition with no overlap** — precisely the confound F-008 recorded and D-075 decision 6 declines to
+resolve.
+
+**Rulings, binding on every downstream artifact:**
+
+1. **Local-foldability MUST NOT become a model feature.** No seventh (or eighth) feature. The
+   `--ablate` named-set refusal (D-075 decision 5) stands unamended; adding a foldability feature
+   requires a new dated entry and would re-import F-008 under a new name.
+2. **It MUST NOT be presented as a census axis alongside suitability without its label.** It is a
+   **cost / tractability / reproducibility** axis. It says what a target costs to *compute*, and
+   **nothing whatsoever** about whether it is a good ADC target. Any surface placing the two side by
+   side must state that in the same visual frame (D-069, every surface self-sufficient).
+3. **It MUST NOT be used to filter the census.** A comprehensive census (roadmap 3.1) that silently
+   drops the targets it cannot afford to fold is a census of *our budget*, not of the surfaceome — and
+   it would bias the census by length, i.e. by feature 1. Unaffordable targets stay in the census,
+   flagged, unfolded. **This is the F-009 error one level out and it is refused here in advance.**
+4. **The one thing it legitimately is:** a *pre-fold, sequence-only* predicate. It can be computed for
+   an arbitrary census **without folding anything**, which makes it the only cost instrument available
+   before the money is spent.
+
+**Why this ruling is written before the measurement:** the measurement is cheap and the temptation
+after it will be to promote a satisfying new number to an axis. **Naming what it is now removes that
+option later.**
+
+#### Decision (2) — the chunk-invariance question runs FIRST, because it decides whether "the ceiling" is a number or a curve
+
+`ARCHITECTURE.md:616-618` records, **as inference not measurement**, that HER2 at 630 aa might fold at
+chunk 16/32 — **untested.** If true, the local envelope is not a single length; it is a
+length-per-chunk_size curve, and the "free" envelope is much larger than 440.
+
+But a fold produced at a different `chunk_size` is only usable if **chunk_size does not change the
+output.** Chunking is a tiling of the trunk's triangular attention; it *should* be output-invariant.
+**Should is not measured.**
+
+**The test, frozen before it runs.** On the local box, at `dtype=int8`, fold one fixed sequence
+(the existing test fixture's source, or Trop-2 at ~248 aa — short enough that every chunk_size fits) at
+**chunk_size 64, 32, and 16**. Compare the three outputs.
+
+| Outcome | Reading — **fixed now** |
+|---|---|
+| All three produce **byte-identical CA coordinates and pLDDT** | `chunk_size` is a **memory/time knob only**. The ceiling is a curve, folds across chunk sizes are commensurable, and probing at chunk 16/32 is legitimate. |
+| Outputs differ **at all**, by any margin | `chunk_size` is a **recipe dimension**. The ceiling is then defined **only at chunk 64**, folds across chunk sizes are **not** commensurable, and the extended-envelope branch (decision 4) is **abandoned, not deferred**. The difference is reported as a finding in its own right — *ESMFold's chunked trunk is not output-invariant* is a publishable methods note nobody reports. |
+
+**No third reading. No tolerance threshold invented after seeing the diff** (D-041 decision 4).
+**"Nearly identical" is the *differ* branch.** If a tolerance is ever wanted, it is a new dated entry.
+
+#### Decision (3) — the ceiling is measured at the production recipe, and the constant is BOUND to it
+
+**The failure this prevents:** `worker/ceiling_probe.py` takes `--dtype` and `--chunk-size` as free CLI
+arguments and **defaults `--dtype` to `fp16`** (written for the A6000, D-022 — verified at
+`worker/ceiling_probe.py:140`; `--chunk-size` defaults to `None`, looser still). A local run that
+forgets `--dtype int8` measures a ceiling for a recipe **the local tier does not use**, and that number
+would then be written into `CEILING_KNOWN_GOOD`, which routes production folds at int8. That is the
+project's recurring shape: **two paths to one quantity, never compared** — the routing constant and the
+recipe that measured it, free to drift.
+
+**Ruled:**
+
+- The bisection runs at **`dtype=int8, chunk_size=64`** — resolved from `TIER_RECIPE["local"]`, **not**
+  passed by hand (D-047's principle, applied to the probe).
+- **The measured ceiling is recorded as a triple `(hardware, dtype, chunk_size) → length`, never as a
+  bare integer.** `CEILING_KNOWN_GOOD` acquires a named recipe alongside it, and a test asserts the
+  constant and the recipe cannot be updated independently.
+- A ceiling measured under any other recipe **may not** update the routing constant.
+
+#### Decision (4) — the repeat rule, frozen before the probe, and the outcome the current instrument cannot express
+
+**⚠ The existing probe assumes a sharp, monotone boundary, and cannot report that it isn't one.**
+Verified by reading `worker/ceiling_probe.py`: `bounds_from_history` raises the floor on **any single**
+`ok` (`good = max(good, length)`, line 73) and lowers the ceiling on **any single** failure (line 75);
+`next_probe_length` **raises `ValueError` when `bad <= good`** (lines 53-54, asserted as correct by
+`tests/test_ceiling_probe.py::test_requires_good_below_bad`); `ceiling_from_history` reports `max(ok)`
+and **ignores `bad` entirely** (lines 79-85). So a sequence like *ok@560 then oom@500* — entirely
+plausible **378 MiB** from the wall — makes the probe **crash rather than report the flakiness.** The
+instrument has no vocabulary for *"the boundary is a band."*
+
+This is **not** logged as a defect in the probe. It is a design assumption that was correct for the
+A6000 (far from its wall) and is **not obviously correct for a card with 378 MiB of headroom.**
+Recorded here so a `ValueError` during the run is read as **a result**, not a bug.
+
+**The repeat rule, frozen:**
+
+- A length is **known-good** only if it folds clean **4 times consecutively.** A length is **known-bad**
+  only if it fails **4 times.** *k = 4 is inherited from the existing record — 630 aa was ruled fatal on
+  4-for-4 (`ARCHITECTURE.md:598-599`) — not invented here.*
+- Anything else at a given length is **`unstable`**, a **pre-registered, legitimate, reportable
+  outcome**: the ceiling is then a **band**, reported as `(highest 4-for-4 good, lowest 4-for-4 bad)`,
+  and **routing uses the conservative end.**
+- **A single lucky fold never raises the routing constant.** This is the whole point of k.
+- **Stopping rule frozen:** the bisection stops when `bad - good <= step`, `step = 8`. No "one more try"
+  after a satisfying success. Re-running with the same JSONL history must be deterministic.
+
+#### Decision (5) — the probe must not be able to touch the reported cohort
+
+**Structurally true today, and asserted anyway (D-074).** `worker/ceiling_probe.py` writes only to an
+append-only JSONL file and holds no database session — verified: its imports are `argparse`, `json`,
+`sys`, `pathlib`, `typing` only. Probe folds cannot enter `protein_analyses`. **But this is a property
+of the current call path, not a guarantee** — the same distinction D-075 decision 5 drew about
+`persist_results()`.
+
+**Ruled:** probe artifacts live under `data/derived/`, never in the analysis tables. A test asserts the
+probe module imports no database session and no persistence helper, **proven by revert** (add the
+import, watch it redden). **If a probe fold ever lands in `protein_analyses`, `/api/coverage`'s folded
+count moves and F-004's denominator 56 moves with it** — from a measurement that exists only to decide
+where to run things. That is **D-075's Corruption 2 in a new costume**, guarded before it can happen
+rather than after.
+
+#### Decision (6) — the census cost model, and what it may claim
+
+A pure function over ECD span → `{local | rental | over-ceiling}` at the measured recipe, plus a script
+that reports the split for an arbitrary list of spans. **No GPU, no network, fully unit tested.** This
+is Phase 2's actual instrument: it answers *"what does a census of N targets cost?"* before a dollar is
+spent.
+
+**Two claims it licenses, and one it does not:**
+
+- ✅ **Cost:** *"Of these N targets, M fold at zero marginal cost on an 8 GB consumer card; N−M need
+  rented compute."* Derived, dated, recipe-named.
+- ✅ **Reproducibility (paper-relevant):** *"M of the folds underlying this result are reproducible by
+  any reader with a consumer 8 GB GPU and no cloud spend."* A real strength of the single-sequence /
+  no-MSA design, costing nothing to state — **provided M is derived from the live endpoints and carries
+  its recipe.**
+- ❌ **Not licensed:** any statement coupling foldability to suitability, or any census filtered by it
+  (decision 1).
+
+#### Decision (7) — what this entry does NOT do
+
+- **It does not run the F-008 precision A/B.** If the measured ceiling exceeds 440, some targets become
+  foldable **locally at int8** that were folded **on rental at fp16** — creating, for the first time,
+  **overlap in a partition F-008 recorded as having none.** That is F-008's own named resolution path
+  and it becomes nearly free. **It is a separate, separately-pre-registered entry (D-078), written
+  before any such fold runs, because its outcome can move F-004.** Naming it here is not authorising it.
+- **It does not fold IGF2R, FAT2, or MUC16.** IGF2R remains **D-076** Tier 1 (rental); FAT2/MUC16 stay
+  on ice behind their trigger.
+- **It does not change the six features, the scorer, the pre-registered run, or any reported result.**
+  Nothing in this entry has a path to F-004.
+
+- **Deep-learning justification.** The ceiling is a property of **quantized ESMFold inference** — how
+  the trunk's O(L³) triangular attention scales against 8 GB under int8 with chunked attention.
+  Measuring it measures the neural core's operating envelope, and it determines what fraction of any
+  future census the network can process without external compute. Decision 2 is the sharper DL
+  question: **is ESMFold's chunked trunk output-invariant?** That is a statement about the model's
+  numerics, it is cheap to test, and its answer is load-bearing for whether folds produced under
+  different memory settings may share a ranking at all.
+
+- **Consequences / test surface.** Chunk-invariance fixture reds on a deliberately perturbed comparison
+  and greens on identical output · the probe resolves its recipe from `TIER_RECIPE["local"]` and a
+  hand-passed dtype that contradicts the tier is refused · `CEILING_KNOWN_GOOD` cannot change without
+  its recipe changing (test proven by revert) · a single `ok` does not raise the routing constant (k=4
+  asserted) · `unstable` is representable and does not raise · the probe module imports no DB session
+  (proven by revert) · the census cost function is pure and derives its ceiling from the named constant,
+  never from a literal (D-050) · **`CEILING_KNOWN_GOOD` stays 440 in the implementing PR** — the
+  instrument and the number move in separate PRs so it is always legible which change moved routing.
+
+### D-076 — The last three unfolded targets: a scoped plan, one tier executed, two on ice behind a named trigger
+
+- **Date of decision:** 2026-08-03 (drafted 2026-08-01). **Entered this log:** 2026-08-04.
+- **Status:** Accepted. **Ruled before any re-fold** — no target named here has been folded under it.
+- **Type:** A **decision** (scope + sequencing), carrying **one finding** inside it (the MUC16 disorder
+  read). Nothing about F-004 changes; see §4 below.
+- **⚠ Why the entry date lags, recorded not silent.** This decision lived as a staged document
+  (`docs/D-076-last-three-fold-plan.md`) from 2026-08-01 and was **cited as settled authority before it
+  entered the log** — by `PREWORK-run-session.md` §5.4, `PREWORK-next.md`, the 2026-08-01 MANIFEST, and
+  then by the D-077 order and pre-registration (2026-08-04). That is the **D-062 defect shape**: a
+  citation pointing at an authority the log did not contain. It is closed here, and it was closed
+  *because merging D-077 while D-076 was absent would have placed the dangling citation inside the log
+  itself* — D-077 decision 7 names "D-076 Tier 1". **Like F-009 and unlike D-062 this is not a
+  reconstruction:** the staged document survives with its own reasoning, so this entry is **sourced**,
+  not recovered from effects.
+- **⚠ Numbering history, recorded because it is a near-miss.** Drafted **D-072**; that number was
+  already taken by the miniature demo notebook (`d46aa1a`). Renumbered **D-076** on 2026-08-03 against
+  the live log (highest decision entry was D-075) — **verified by reading the log, not inherited from
+  an estimate** (`e9e7955`). The historical wording in `HOUSEKEEPING-2026-08-01-untracked-deletions.md`
+  deliberately still names the old filename, since it documents the state at the time (D-073 precedent).
+- **Relates:** **D-047** (recipe resolved at fold-time), **D-050** (derive, don't hardcode — the
+  coverage numbers this moves), **F-007** (the manifest is not a reliable proxy for what ran — binding
+  on any fold produced elsewhere), **D-016** (a fold from another lab names how it is known like any
+  other), **F-004** (the result this entry is firewalled from), **D-022** (the named oversize
+  exclusions MUC16/FAT2 originate here), **F-010** (IGF2R is the row whose `analysis_id` reports null),
+  **D-077** (the local-envelope work that cites this entry's Tier 1 as unchanged).
+- **Provenance (D-016):** owner/planner scoping pass 2026-08-01, written up as the staged document
+  named above; lengths and unfolded status read from the cohort snapshot and `/api/coverage`.
+
+#### Context — why the single "unfoldable" bucket was wrong
+
+At delivery the cohort stands at **79 of 82 folded**. The three unfolded targets were carried as one
+bucket ("unfoldable, surfaced as a finding, not a silent exclusion"). **That bucket is wrong: the three
+are three different problems**, and collapsing them hid that one is trivially closable and the other
+two are resource-access problems, not method walls. When the work is presented, *"why aren't all 82
+folded?"* is the likely first question, and the correct answer is an engineer's answer — *yes it can be
+done, here is how, here is the cost* — with feasibility stated cleanly and utility held as a **separate**
+judgement.
+
+| Target | Length | Why unfolded | Class |
+|---|---|---|---|
+| **IGF2R** | large ECD (2,491 aa), ordered | Hit a **transient A6000 rental-tier ceiling** on its run — not a size wall | **Compute limitation.** No asterisk once folded. |
+| **FAT2** | 4,030 aa | Exceeds single-sequence capacity on available hardware; but **ordered** (cadherin repeat stack) | **Resource + method-seam.** Foldable with more VRAM or by domain assembly; assembly changes `boundary_method`. |
+| **MUC16** | 14,451 aa | Off the end of the field's map; **largely intrinsically disordered** (tandem SEA repeats + glycosylated linkers) | **Biology, not compute.** A structure is producible; a meaningful whole-ECD structure for the six features is not. |
+
+The distinction is load-bearing: it is the difference between *"one more run,"* *"a method with a
+labelled seam,"* and *"the wrong question for this molecule."*
+
+#### Decision (1) — Tier 1, IGF2R: **executes on its own schedule**, comparable, no asterisk
+
+- **How.** Re-enqueue on the A6000 rental tier, **recipe resolved at fold time (D-047)**, sequence
+  length checked against what ceilinged last run. If it still ceilings, escalate one rung (H100 80 GB,
+  same workflow). **No new code, no new `boundary_method`.**
+- **Comparability.** Same **ESMFold-v1 / sliced-ECD recipe** as the other 79, so its six features are
+  directly comparable. This is the only one of the three where "unfolded" is a plain limitation.
+- **Cost.** Hours. One rental block, <1 hr fold time, ~$0.54–2/hr.
+- **Consequence on merge, pre-authorised here.** Cohort 79 → 80. **Every coverage/ranking number
+  re-derives from the authoritative endpoints** (`/api/coverage`, `/api/ranking`) — no re-hardcoding
+  (D-050). If IGF2R clears the pLDDT floor and is a ranked disposition it enters the ranking set; **if
+  labelled, it enters the fit set and F-004's denominators move.** That is a **result update, executed
+  through the gate, derived not typed** — never a silent edit.
+- **⚠ Check the label first.** IGF2R's label status is checked against `data/adc_reference_mapping.csv`
+  **before** the fold, so the consequence is known in advance rather than discovered after.
+
+#### Decision (2) — Tiers 2 and 3 are ON ICE behind a named external trigger
+
+**The trigger:** *external validation of the work's novelty* — a paper accepted, a research group
+adopting the structural axis, or an equivalent signal that the cohort must become complete for
+**reproducibility/coverage** reasons rather than demo optics.
+
+**The utility inversion, recorded so the reasoning survives:**
+
+- **Before validation:** these folds do not change F-004 (§4). MUC16's un-foldability is a *stronger*
+  honesty artifact than a filled cell. Executing now spends real effort — and for MUC16 risks **trading
+  a finding for an asterisk** — to make a coverage table prettier. Utility low-to-negative.
+- **After validation:** a published method must be complete on its stated cohort. *"Couldn't fold 3 of
+  82"* stops reading as sophistication and starts reading as an unfinished dataset. FAT2's seam becomes
+  a methods-section paragraph (where seams belong); MUC16's disorder becomes a publishable finding.
+  Utility flips positive.
+
+**The trigger is external and identifiable. That is what makes "on ice" a plan and not a stall.**
+
+**Tier 2 — FAT2, two routes.** *Route A:* 4,030 aa on an 80 GB card, one sequence — cleanest if it runs
+(standard features, no seam), may fail, cheap to attempt. *Route B:* domain-wise fold in overlapping
+windows, stitched on shared repeats — always runs, but **introduces a new `boundary_method` value**
+(`assembled`/`domain_stitched`) that must travel with the features exactly as feature 4's cross-method
+caveat does. Comparable *enough* to render **provided the seam is labelled and tested.** Cost: Route A
+one big-pod block; Route B ~1–2 sessions.
+
+**Tier 3 — MUC16, three routes.** *Route 1:* fold ordered SEA domains individually — legitimate domain
+models, but a "MUC16" row carrying features from ~120-aa domains **would mislabel what was measured.**
+*Route 2:* fold the membrane-proximal window an ADC would engage — biologically defensible but a
+*choice of sub-region*, another labelled seam, larger. *Route 3:* run it and report the disorder — let
+low-pLDDT regions render as the model reporting "no confident structure here." **Adds no false number.**
+
+##### Finding embedded here (D-016) — MUC16's un-foldability is a structural result, not only a gap
+
+MUC16 being intrinsically disordered means **"predict its ECD structure" is partly the wrong question**
+— and that a disordered, heavily-glycosylated antigen is a genuinely different engineering problem for
+an antibody. **The pipeline correctly placing MUC16 out of structural reach is itself informative about
+its ADC-targeting profile.** Whichever route eventually runs, this framing is preserved: MUC16 is not
+merely "too big," it is a case the structural axis flags as unreachable, **consistent with known
+biology.**
+
+#### Decision (3) — how a fold produced elsewhere enters
+
+The two hard folds are a **resource-access problem more than a method problem.** A well-provisioned
+academic lab with institutional GPU access is the natural executor of FAT2 Route A and MUC16 Route 1/2.
+**Recorded as a candidate collaboration path, not a commitment.** If pursued, the same discipline
+travels: any fold produced elsewhere **enters through the gate**, its `boundary_method` and environment
+captured (**F-007's lesson — the manifest is not a reliable proxy for what ran**), and its features are
+comparable only insofar as the seam is labelled. **A fold from another lab is not exempt from D-016.**
+
+#### Decision (4) — the firewall around F-004
+
+- **F-004 stands untouched by Tiers 2–3.** MUC16 and FAT2 are not among the 12 labelled positives; the
+  LOO distribution, both nulls, the Spearman, and the "orthogonal but unproven" finding are unaffected
+  by whether they fold.
+- **Tier 1 may move F-004's denominators** *if* IGF2R is a labelled positive clearing the floor — a
+  legitimate, **pre-authorised** result update through the gate.
+- **The novelty claim is independent of coverage.** *"No published method ranks ADC targets on predicted
+  ECD structure"* is true at 79/82, 80/82, or 82/82. Folding the last three **completes a dataset; it
+  does not create or strengthen the contribution.**
+
+#### Decision (5) — the one risk to hold
+
+The temptation, now that a plan exists, is to execute all three **before** the trigger, to look complete
+for a demo. **Resist it.** Doing MUC16 prematurely is **the single move in this project that would spend
+honesty capital to buy coverage optics.** The plan's value now is that it *exists and is credible* —
+scoped, tiered, triggered — **not that it has run.**
+
+- **Deep-learning justification.** The three targets are three different statements about the neural
+  core's operating envelope: IGF2R is *infrastructure* (the network folds it; we lacked the card),
+  FAT2 is *sequence-length capacity* under O(L³) attention, and MUC16 is a case where the network's
+  own low confidence is the informative output — the model reporting absence of confident structure is
+  a real prediction, not a failure. Keeping the three distinct keeps ESMFold's limits legible instead
+  of collapsing hardware limits and biological disorder into one excuse.
+
+- **Consequences / open items.**
+  - [x] Number confirmed against this log (2026-08-03), then **the entry itself landed** (2026-08-04).
+  - [ ] IGF2R label status checked against `data/adc_reference_mapping.csv` **before** its fold.
+  - [ ] Tier 1 executed: IGF2R re-enqueued, cohort → 80, all coverage/ranking numbers **re-derived from
+        endpoints**, F-004 denominators updated through the gate if it is a labelled positive.
+  - [ ] Tier 2/3 remain unstarted, trigger unmet — **verified, not assumed.**
+  - [ ] Deck slide ("The last three: a plan, not a wall") reflects these tiers and this trigger.
 
 ### F-009 — The 82 is Kathad's comparator, not a target census: four clinically-validated ADC targets sit outside it, and that is what motivates the project
 
