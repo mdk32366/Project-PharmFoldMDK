@@ -108,7 +108,13 @@ def build_scorer_rows(
         # Rows are assembled SEVEN wide: the six, then feature 7 at index 6 (D-075). `run_scorer`
         # projects onto its named set's indices, so the pre-registered fit still uses exactly 0-5.
         if features_complete:
-            feats = (*(float(v) for v in rec.features), float(rec.membrane_proximal_sasa or 0.0))
+            # ⚠ Explicit `is None`, not `or 0.0`. A membrane-proximal SASA of exactly 0.0 is a
+            # LEGITIMATE measurement — a fully buried window — and `or` cannot tell it from an
+            # absence. The absent case still gets an inert 0.0 placeholder, but the two are now
+            # distinguished HERE rather than only by the F-020 guard: `refuse_if_named_set_needs_
+            # feature_7` reads the null-ness from `records`, and a measured 0.0 does not trip it.
+            f7 = rec.membrane_proximal_sasa
+            feats = (*(float(v) for v in rec.features), 0.0 if f7 is None else float(f7))
         else:
             feats = (0.0,) * (len(FEATURE_NAMES) + 1)
         if in_ranking and rec.membrane_proximal_sasa is None:
