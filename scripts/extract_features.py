@@ -220,7 +220,30 @@ class FeatureDrift(Exception):
     """
 
 
-def fill_feature_7(engine, records: list[ExtractedRecord], *, dry_run: bool) -> dict:
+def ranking_set_analysis_ids(engine) -> set[int]:
+    """The analysis_ids in the ranking set, read from `fit_scorer`'s OWN path.
+
+    ⚠ NOT RE-DERIVED HERE, and that is the whole point. Membership is
+    `ranked ∧ folded ∧ pLDDT >= 50 ∧ all six present`, defined once in `fit_scorer`. Writing that
+    predicate a second time in this script would be two paths to one quantity -- the class that
+    produced the F-017 double-claim, the producer/consumer schema mismatch, and the census key
+    defined twice, all on 2026-08-05 alone.
+
+    `group_b_accessions` and `evidence_by_symbol` are passed empty on purpose: they set the label
+    and the comparator, neither of which participates in `in_ranking_set` (`_exclusion_reason`
+    reads only disposition, mean_plddt and feature completeness). A test asserts this function
+    agrees exactly with fit_scorer's path on a fixture that genuinely excludes a row.
+    """
+    import fit_scorer as _fs
+
+    recs = _fs.read_feature_records(engine)
+    rows = _fs.build_scorer_rows(recs, group_b_accessions=set(), evidence_by_symbol={})
+    return {rec.analysis_id for rec, row in zip(recs, rows)          # noqa: B905
+            if row.in_ranking_set and rec.analysis_id is not None}
+
+
+def fill_feature_7(engine, records: list[ExtractedRecord], *, dry_run: bool,
+                   ranking_set_ids: Optional[set[int]] = None) -> dict:
     """Write `membrane_proximal_sasa` and nothing else, in place, keyed by `analysis_id`.
 
     ⚠ UPDATE, NEVER INSERT. `load_features` is `session.add(...)` per record -- a pure insert --
@@ -275,8 +298,23 @@ def fill_feature_7(engine, records: list[ExtractedRecord], *, dry_run: bool) -> 
         targets = [r for r in stored
                    if r.analysis_id in by_analysis and r.membrane_proximal_sasa is None]
         already = compared - len(targets)
+
+        # ⚠ Task C stop condition 2, made evaluable AT THE KEYBOARD rather than after the write.
+        # The fill's population (every row with coordinates) and the guard's population (the
+        # ranking set) are DIFFERENT SETS BY DESIGN -- the original condition conflated them and
+        # would have halted on the correct outcome. Two clauses, reported separately.
+        # "Covered" asks: will this row have a value AFTER the fill? -- so an already-measured
+        # ranking row counts, and a ranking row absent from the fill does not.
+        rs = set(ranking_set_ids or ())
+        target_ids = {r.analysis_id for r in targets}
+        have_value = {r.analysis_id for r in stored if r.membrane_proximal_sasa is not None}
+        covered = rs & (target_ids | have_value)
+
         result = {"compared": compared, "matched": compared, "already_present": already,
-                  "written": 0, "would_write": len(targets), "dry_run": dry_run}
+                  "written": 0, "would_write": len(targets), "dry_run": dry_run,
+                  "rows_total": count_before,
+                  "ranking_set_total": len(rs), "ranking_set_covered": len(covered),
+                  "ranking_set_uncovered": sorted(rs - covered)[:20]}
         if dry_run:
             return result
 
@@ -391,7 +429,8 @@ def run(
     elif args.fill_feature_7:
         engine = engine_factory()
         try:
-            res = fill_feature_7(engine, records, dry_run=args.dry_run)
+            rs_ids = ranking_set_analysis_ids(engine)
+            res = fill_feature_7(engine, records, dry_run=args.dry_run, ranking_set_ids=rs_ids)
         except FeatureDrift as exc:
             # ⚠ Formatted here, raised in the library: a programmatic caller must not be able to
             # proceed past a printed message. Same layering as fit_scorer's refusals.
@@ -400,8 +439,16 @@ def run(
         mode = "DRY RUN — nothing written" if args.dry_run else "WRITE"
         print(f"[{mode}] features 1-6 compared on {res['compared']} rows, "
               f"{res['matched']} byte-identical, 0 drifted")
-        print(f"[{mode}] feature 7: {res['would_write']} rows NULL and fillable, "
+        print(f"[{mode}] feature 7: {res['would_write']} of {res['rows_total']} rows fillable, "
               f"{res['already_present']} already present, {res['written']} written")
+        # ⚠ The owner's stop condition, printed so it can be read at the keyboard rather than
+        # confirmed afterward. Two clauses: the fill's population, then the guard's population.
+        print(f"[{mode}] ranking-set coverage: {res['ranking_set_covered']} of "
+              f"{res['ranking_set_total']} ranking-set rows will have a value after this fill"
+              + (f"  ⚠ UNCOVERED analysis_ids: {res['ranking_set_uncovered']}"
+                 if res['ranking_set_uncovered'] else ""))
+        print(f"[{mode}] STOP if: fillable+already < {res['rows_total']} rows, or "
+              f"ranking-set coverage < {res['ranking_set_total']}")
     return 0
 
 

@@ -55,10 +55,16 @@ def _seed(eng, n=3, *, f7=None, run_id=None):
         if run_id is not None:
             s.add(RankingRun(id=run_id, target_list_version="T", scorer_version="v", run_kind="preregistered"))
         for i in range(n):
-            a = ProteinAnalysis(id=100 + i, input_type="accession", input_value=f"P{i:05d}")
+            # ⚠ `disposition` comes from ProteinAnalysis.meta and `mean_plddt` from the feature
+            # row -- both are inputs to `_exclusion_reason`. Omitting them made every row read as
+            # `not_folded`, which is how the A-017 control below caught its sibling comparing
+            # set() to set() and calling it agreement.
+            a = ProteinAnalysis(id=100 + i, input_type="accession", input_value=f"P{i:05d}",
+                                meta={"gene": f"G{i}", "disposition": "ranked"})
             s.add(a)
             s.add(ProteinFeatures(analysis_id=100 + i, ranking_run_id=run_id,
                                   membrane_proximal_sasa=f7, feature_version="fv1",
+                                  mean_plddt=71.5, below_plddt_floor=False,
                                   **SIX))
         s.commit()
     return eng
@@ -230,6 +236,102 @@ def test_load_still_works_when_the_ranking_run_is_named():
     with pytest.raises(RuntimeError, match="client"):     # reached the client, i.e. past argparse
         ef.run(["--all", "--load", "--ranking-run", "2"], client_factory=_exploding_client,
                engine_factory=_exploding_engine)
+
+
+# ── the ranking-set coverage the owner's stop condition needs ────────────────
+def test_the_fill_reports_ranking_set_coverage():
+    """⚠ Task C stop condition 2 is the OWNER's to evaluate, at the keyboard, before the bytes
+    land. A coverage number confirmed by Code afterward is on the wrong side of the write.
+
+    Prove it bites by dropping the coverage keys from the result: the owner's gate has nothing
+    to read and this reds."""
+    eng = _seed(_engine(), n=3)
+    res = ef.fill_feature_7(eng, _records(eng), dry_run=True, ranking_set_ids={100, 101})
+    assert res["ranking_set_total"] == 2, res
+    assert res["ranking_set_covered"] == 2, res
+    assert res["would_write"] == 3, "the fill still covers all 3 rows, not just the ranking set"
+
+
+def test_a_ranking_set_row_outside_the_fill_is_reported_uncovered():
+    """⚠ The halt case, and the reason the two clauses are separate. The fill's population
+    (every row with coordinates) and the guard's population (the ranking set) are different sets
+    BY DESIGN -- the original condition conflated them and would have halted on the correct
+    outcome. Prove it bites by counting coverage over all rows instead of the ranking set."""
+    eng = _seed(_engine(), n=3)
+    recs = [r for r in _records(eng) if r.analysis_id != 102]      # 102 not in this fill
+    res = ef.fill_feature_7(eng, recs, dry_run=True, ranking_set_ids={100, 101, 102})
+    assert res["ranking_set_total"] == 3, res
+    assert res["ranking_set_covered"] == 2, (
+        "a ranking-set row absent from the fill must read as UNCOVERED", res)
+
+
+def test_an_already_filled_ranking_row_still_counts_as_covered():
+    """Coverage asks 'will every ranking-set row have a value after this fill?', not 'will this
+    fill write to it'. An already-measured row is covered. Prove it bites by counting only the
+    rows this run writes."""
+    eng = _seed(_engine(), n=2, f7=7.5)                            # both already measured
+    res = ef.fill_feature_7(eng, _records(eng), dry_run=True, ranking_set_ids={100, 101})
+    assert res["would_write"] == 0 and res["ranking_set_covered"] == 2, res
+
+
+def test_coverage_counts_only_ranking_set_rows():
+    """⚠ The conflation the amendment corrected: the fill's population (every row with
+    coordinates) is NOT the guard's population (the ranking set), and the original stop condition
+    treated them as one -- so it would have halted on the correct outcome.
+
+    Prove it bites by dropping the `rs &` intersection: coverage then reports 3 of 2, counting a
+    row the guard never asks about."""
+    eng = _seed(_engine(), n=3)
+    res = ef.fill_feature_7(eng, _records(eng), dry_run=True, ranking_set_ids={100, 101})
+    assert res["would_write"] == 3, "the fill must still cover every row, ranking set or not"
+    assert res["ranking_set_total"] == 2, res
+    assert res["ranking_set_covered"] == 2, res
+    assert res["ranking_set_covered"] <= res["ranking_set_total"], (
+        "coverage exceeded the ranking set -- rows outside the guard's population were counted", res)
+
+
+def _seed_mixed(eng):
+    """⚠ A cohort that GENUINELY discriminates: one ranked row, and one `held_out` row whose
+    pLDDT is comfortably above the floor. A predicate that looks only at pLDDT keeps the held-out
+    row; `fit_scorer`'s keeps it out. Without that asymmetry the agreement test below compares
+    two functions that both return 'everything' and calls it agreement."""
+    with Session(eng) as s:
+        for i, disp in enumerate(("ranked", "held_out")):
+            s.add(ProteinAnalysis(id=200 + i, input_type="accession", input_value=f"Q{i:05d}",
+                                  meta={"gene": f"H{i}", "disposition": disp}))
+            s.add(ProteinFeatures(analysis_id=200 + i, membrane_proximal_sasa=None,
+                                  feature_version="fv1", mean_plddt=88.0,
+                                  below_plddt_floor=False, **SIX))
+        s.commit()
+    return eng
+
+
+def test_ranking_set_membership_is_not_re_derived_in_this_script():
+    """⚠ THE anti-two-paths test. Membership is `ranked ∧ folded ∧ pLDDT >= 50 ∧ six present`,
+    defined once in `fit_scorer`. Re-implementing it here would be a second path to one quantity
+    -- the class that produced the F-017 double-claim, the producer/consumer schema mismatch, and
+    the census key defined twice, all on 2026-08-05 alone.
+
+    Prove it bites by hand-rolling the predicate here: a pLDDT-only version keeps the held-out
+    row and diverges."""
+    import fit_scorer as fs
+    eng = _seed_mixed(_seed(_engine(), n=1))
+    mine = ef.ranking_set_analysis_ids(eng)
+    recs = fs.read_feature_records(eng)
+    rows = fs.build_scorer_rows(recs, group_b_accessions=set(), evidence_by_symbol={})
+    theirs = {rec.analysis_id for rec, row in zip(recs, rows)       # noqa: B905
+              if row.in_ranking_set and rec.analysis_id is not None}
+    assert mine == theirs, (mine, theirs)
+
+
+def test_the_membership_fixture_actually_discriminates():
+    """⚠ A-017 positive control for the test above, and it has already earned its place twice:
+    once when the fixture excluded EVERY row (so agreement was `set() == set()`), and once when
+    it excluded NOTHING (so a pLDDT-only hand-roll agreed by accident). Both directions asserted."""
+    eng = _seed_mixed(_seed(_engine(), n=1))
+    ids = ef.ranking_set_analysis_ids(eng)
+    assert 201 not in ids, "the held-out row is in the ranking set -- the fixture excludes nothing"
+    assert 200 in ids and 100 in ids, "the fixture excludes everything, so agreement proves nothing"
 
 
 def _exploding_client():
