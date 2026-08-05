@@ -425,7 +425,14 @@ def run(argv: Optional[list[str]] = None, *, engine_factory: Callable[[], object
     rows = build_scorer_rows(records, group_b, evidence)
     # F-020 — BEFORE run_scorer and three call sites before create_ranking_run(): a named set
     # that uses feature 7 refuses rather than fitting an unextracted column as a constant.
-    refuse_if_named_set_needs_feature_7(feature_set, records, rows)
+    # ⚠ The helper RAISES and the CLI formats, deliberately: a programmatic caller cannot
+    # accidentally proceed past a printed message, and a printed message cannot be caught.
+    # Same surface as the DegenerateLabelSet refusal below — one refusal convention per file.
+    try:
+        refuse_if_named_set_needs_feature_7(feature_set, records, rows)
+    except Feature7NotExtracted as exc:
+        print(f"REFUSING TO FIT (feature 7 not extracted): {exc}")
+        return 1
     try:
         report = run_scorer(rows, feature_set=feature_set)   # ValueError on any unnamed set (D-065 dec 4)
     except DegenerateLabelSet as exc:

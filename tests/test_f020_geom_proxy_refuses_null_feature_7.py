@@ -126,8 +126,12 @@ def test_the_refusal_precedes_create_ranking_run(monkeypatch):
                         lambda *a, **k: calls.append("create_ranking_run") or 999)
     monkeypatch.setattr(fs, "persist_results", lambda *a, **k: (0, 0))
 
-    with pytest.raises(fs.Feature7NotExtracted):
-        fs.run(["--run", "--ablate", "geom_proxy", "--persist"], engine_factory=lambda: object())
+    # ⚠ The CLI formats the refusal and returns 1; the HELPER raises. Asserted at both layers
+    # (the helper's raise is pinned by the first test in this file) because a library that
+    # raises and a CLI that formats is the layering -- a programmatic caller must not be able
+    # to proceed past a printed message.
+    assert fs.run(["--run", "--ablate", "geom_proxy", "--persist"],
+                  engine_factory=lambda: object()) == 1
 
     assert calls == [], (
         "the refusal fired AFTER create_ranking_run() -- every deliberate refusal against "
