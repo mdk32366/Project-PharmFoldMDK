@@ -41,7 +41,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from core.features import FEATURE_NAMES, feature_version  # noqa: E402
-from core.scorer import ScorerRow, ScorerReport, run_scorer  # noqa: E402
+from core.scorer import FEATURE_SETS, ScorerRow, ScorerReport, run_scorer  # noqa: E402
 
 PLDDT_FLOOR = 50.0
 DEFAULT_LABELS = REPO / "data" / "adc_reference_mapping.csv"
@@ -127,6 +127,57 @@ def build_scorer_rows(
             exclusion_reason=reason,
         ))
     return rows
+
+
+# ── F-020: the named ablation refuses an unextracted feature 7 ───────────────
+class Feature7NotExtracted(Exception):
+    """`--ablate geom_proxy` was asked to fit on rows whose feature 7 was never extracted.
+
+    ⚠ RAISED, NEVER WARNED, and this is the whole finding. `build_scorer_rows` coerces a null
+    feature 7 to `0.0` (the placeholder is correct for EXCLUDED rows, which are never fit), and
+    `Standardizer.apply` maps a zero-variance column to `0.0` for every row. So a `geom_proxy`
+    fit over an unextracted column would collapse to `no_plddt` plus one inert parameter and
+    land on the `no_plddt` baseline -- D-075 Decision 4's ambiguous row -- reported as a
+    measurement of the SASA proxy when the proxy was never computed. Nothing would redden.
+    """
+
+
+def refuse_if_named_set_needs_feature_7(feature_set: str, records: list[FeatureRecord],
+                                        rows: list[ScorerRow]) -> None:
+    """Refuse if the NAMED set uses feature 7 and any RANKING-SET row lacks it.
+
+    ⚠ SCOPED TO THE NAMED SET, NOT TO THE FIT. The pre-registered six have no feature 7 and must
+    keep running untouched -- a guard that reddened that path would make F-004 unreproducible in
+    order to protect an ablation.
+
+    ⚠ SCOPED TO RANKING-SET ROWS. An excluded row's `(0.0,)*7` placeholder is inert by
+    construction: it is never fit and never scored. Widening this to all rows would refuse on
+    rows that cannot affect any result.
+
+    ⚠ CALLED BEFORE `create_ranking_run()`. The refusal is run against live production
+    deliberately (F-020's before/after pair), so a guard that raised after run creation would
+    write a junk `ranking_runs` row on every demonstration.
+
+    `records` and `rows` are 1:1 and same-ordered: `build_scorer_rows` appends exactly one row
+    per record, in order. The null-ness must be read from `records` because `rows` has already
+    coerced it to `0.0` and a genuine 0.0 is by then indistinguishable from an absent value.
+    """
+    if 6 not in FEATURE_SETS.get(feature_set, ()):
+        return
+    missing = [rec.symbol for rec, row in zip(records, rows)          # noqa: B905
+               if row.in_ranking_set and rec.membrane_proximal_sasa is None]
+    if not missing:
+        return
+    shown = ", ".join(missing[:10]) + (f", ... (+{len(missing) - 10} more)" if len(missing) > 10 else "")
+    raise Feature7NotExtracted(
+        f"REFUSING TO FIT --ablate {feature_set}: {len(missing)} of "
+        f"{sum(1 for r in rows if r.in_ranking_set)} ranking-set rows have no feature 7 "
+        f"(membrane_proximal_sasa is NULL): {shown}. "
+        f"Feature 7 is a named input of the '{feature_set}' set; a 0.0 placeholder would "
+        f"standardize to a constant, contribute nothing, and return the no_plddt baseline as "
+        f"though it were a measurement of the proxy (D-027, D-075). "
+        f"Run `scripts/extract_features.py --fill-feature-7` first."
+    )
 
 
 # ── label + comparator, ONE path each through core.adc_reference (D-064 dec 1) ──
@@ -372,6 +423,16 @@ def run(argv: Optional[list[str]] = None, *, engine_factory: Callable[[], object
     group_b = load_labels(args.labels)                    # one path (D-064 dec 1), joined on accession
     evidence = load_evidence(args.evidence)               # one path
     rows = build_scorer_rows(records, group_b, evidence)
+    # F-020 — BEFORE run_scorer and three call sites before create_ranking_run(): a named set
+    # that uses feature 7 refuses rather than fitting an unextracted column as a constant.
+    # ⚠ The helper RAISES and the CLI formats, deliberately: a programmatic caller cannot
+    # accidentally proceed past a printed message, and a printed message cannot be caught.
+    # Same surface as the DegenerateLabelSet refusal below — one refusal convention per file.
+    try:
+        refuse_if_named_set_needs_feature_7(feature_set, records, rows)
+    except Feature7NotExtracted as exc:
+        print(f"REFUSING TO FIT (feature 7 not extracted): {exc}")
+        return 1
     try:
         report = run_scorer(rows, feature_set=feature_set)   # ValueError on any unnamed set (D-065 dec 4)
     except DegenerateLabelSet as exc:
