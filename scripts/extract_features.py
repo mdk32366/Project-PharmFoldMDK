@@ -200,6 +200,101 @@ def load_features(engine, records: list[ExtractedRecord], *, ranking_run_id: Opt
 
 
 # ── printing ─────────────────────────────────────────────────────────────────
+# ── F-021: fill feature 7 in place, abort on anything else ───────────────────
+SIX_FEATURE_COLUMNS = (
+    "ecd_length", "radius_of_gyration", "mean_plddt_ecd",
+    "membrane_proximal_plddt", "sasa_normalized", "largest_patch_fraction",
+)
+
+
+class FeatureDrift(Exception):
+    """A recomputed feature 1-6 differs from what is stored, so the WHOLE fill aborts.
+
+    ⚠ NOT a value to accept, and not a per-row skip. Features 1-6 are F-004's inputs; if they
+    have moved since they were stored, the extraction pipeline is not deterministic across the
+    changes since #109, and that is a finding about the instrument D-075 runs on. It outranks
+    D-075: the fill stops, nothing is written, and the fold is examined before anything else.
+
+    ⚠ Aborting the WHOLE fill rather than the drifting rows is the entire task. A fill that
+    writes what matched and reports what did not is the corrupting command wearing a report.
+    """
+
+
+def fill_feature_7(engine, records: list[ExtractedRecord], *, dry_run: bool) -> dict:
+    """Write `membrane_proximal_sasa` and nothing else, in place, keyed by `analysis_id`.
+
+    ⚠ UPDATE, NEVER INSERT. `load_features` is `session.add(...)` per record -- a pure insert --
+    so running it to fill one column would double `protein_features` into two generations
+    (F-021). Row count before == row count after, asserted inside the transaction.
+
+    ⚠ ONLY WHERE NULL. An existing value is never overwritten, including a legitimate 0.0: a
+    fully buried membrane-proximal window is a real measurement, not an absence.
+
+    ⚠ `ranking_run_id` IS NOT TOUCHED. The fill creates no rows, so it needs no run id -- and
+    the default that would have supplied one resolves to the most recent run, which is id=4
+    (`plddt_only`), not the pre-registered id=2.
+
+    ⚠ The 1-6 comparison runs on BOTH paths. The dry run is the owner's stop condition, so it
+    must perform the same computation the write does, not a cheaper approximation of it.
+    """
+    from sqlalchemy import func, select as _select
+    from sqlalchemy.orm import Session
+
+    from db.models import ProteinFeatures
+
+    by_analysis = {r.analysis_id: r for r in records}
+    with Session(engine) as s:
+        count_before = s.execute(_select(func.count()).select_from(ProteinFeatures)).scalar_one()
+        stored = s.execute(
+            _select(ProteinFeatures).order_by(ProteinFeatures.analysis_id)
+        ).scalars().all()
+
+        # ── the comparison, before any write, on every row we have a recomputation for ──
+        drifts: list[str] = []
+        compared = 0
+        for row in stored:
+            rec = by_analysis.get(row.analysis_id)
+            if rec is None:
+                continue
+            compared += 1
+            for col in SIX_FEATURE_COLUMNS:
+                was, now = getattr(row, col), getattr(rec.row, col)
+                if was != now:
+                    drifts.append(f"analysis_id={row.analysis_id} {col}: stored={was!r} recomputed={now!r}")
+        if drifts:
+            raise FeatureDrift(
+                f"ABORTING THE WHOLE FILL: {len(drifts)} of {compared} compared rows have a "
+                f"feature 1-6 that differs from what is stored. NOTHING WAS WRITTEN.\n  "
+                + "\n  ".join(drifts[:20])
+                + (f"\n  ... (+{len(drifts) - 20} more)" if len(drifts) > 20 else "")
+                + "\n⚠ Features 1-6 are F-004's inputs. Drift here means the extraction pipeline "
+                  "is not deterministic across the changes since #109 -- a finding about the "
+                  "instrument, which outranks D-075. Examine it before writing anything."
+            )
+
+        targets = [r for r in stored
+                   if r.analysis_id in by_analysis and r.membrane_proximal_sasa is None]
+        already = compared - len(targets)
+        result = {"compared": compared, "matched": compared, "already_present": already,
+                  "written": 0, "would_write": len(targets), "dry_run": dry_run}
+        if dry_run:
+            return result
+
+        for row in targets:
+            row.membrane_proximal_sasa = by_analysis[row.analysis_id].row.membrane_proximal_sasa
+        s.flush()
+        count_after = s.execute(_select(func.count()).select_from(ProteinFeatures)).scalar_one()
+        if count_after != count_before:
+            s.rollback()
+            raise FeatureDrift(
+                f"ABORTING: protein_features row count changed {count_before} -> {count_after}. "
+                f"The fill must UPDATE, never INSERT. Rolled back."
+            )
+        s.commit()
+        result["written"] = len(targets)
+        return result
+
+
 def _print_one(rec: ExtractedRecord) -> None:
     print(f"{rec.gene} ({rec.accession})  analysis_id={rec.analysis_id}  "
           f"disposition={rec.disposition}  boundary_method={rec.boundary_method}")
@@ -245,9 +340,29 @@ def run(
                        help="extract every folded row and print a summary")
     parser.add_argument("--api", default=DEFAULT_API, help=f"read-API base URL (default {DEFAULT_API})")
     parser.add_argument("--load", action="store_true",
-                        help="write protein_features to DATABASE_URL (owner-authorised; not against prod "
-                             "until the owner says so — D-058 §1.5)")
+                        help="INSERT protein_features rows into DATABASE_URL (owner-authorised; not "
+                             "against prod until the owner says so — D-058 §1.5). Requires --ranking-run.")
+    parser.add_argument("--ranking-run", type=int, default=None,
+                        help="the ranking_run id new rows belong to. REQUIRED with --load. ⚠ The "
+                             "latest-run default was DELETED, not corrected (F-021): it resolved to "
+                             "order_by(id.desc()) — id=4, `plddt_only` — on an assumption that held "
+                             "when one run existed and is false now that four do.")
+    parser.add_argument("--fill-feature-7", dest="fill_feature_7", action="store_true",
+                        help="UPDATE membrane_proximal_sasa in place where it is NULL, and nothing "
+                             "else. Aborts the whole fill if any row's features 1-6 differ from "
+                             "stored. Creates no rows, so it needs no --ranking-run.")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="with --fill-feature-7: run the 1-6 comparison and report what would "
+                             "be written. Writes nothing (asserted by test, not promised by this flag).")
     args = parser.parse_args(argv)
+
+    if args.load and args.fill_feature_7:
+        parser.error("--load and --fill-feature-7 are different operations; pass one")
+    if args.load and args.ranking_run is None:
+        parser.error("--load requires --ranking-run: the latest-run default was removed (F-021) "
+                     "because it silently resolved to the most recent run, id=4 (`plddt_only`)")
+    if args.dry_run and not args.fill_feature_7:
+        parser.error("--dry-run applies to --fill-feature-7")
 
     with client_factory() as client:
         if args.one:
@@ -271,8 +386,22 @@ def run(
 
     if args.load:
         engine = engine_factory()
-        written = load_features(engine, records)
-        print(f"loaded {written} protein_features rows")
+        written = load_features(engine, records, ranking_run_id=args.ranking_run)
+        print(f"loaded {written} protein_features rows (ranking_run_id={args.ranking_run})")
+    elif args.fill_feature_7:
+        engine = engine_factory()
+        try:
+            res = fill_feature_7(engine, records, dry_run=args.dry_run)
+        except FeatureDrift as exc:
+            # ⚠ Formatted here, raised in the library: a programmatic caller must not be able to
+            # proceed past a printed message. Same layering as fit_scorer's refusals.
+            print(f"REFUSING TO FILL (features 1-6 drifted): {exc}")
+            return 1
+        mode = "DRY RUN — nothing written" if args.dry_run else "WRITE"
+        print(f"[{mode}] features 1-6 compared on {res['compared']} rows, "
+              f"{res['matched']} byte-identical, 0 drifted")
+        print(f"[{mode}] feature 7: {res['would_write']} rows NULL and fillable, "
+              f"{res['already_present']} already present, {res['written']} written")
     return 0
 
 

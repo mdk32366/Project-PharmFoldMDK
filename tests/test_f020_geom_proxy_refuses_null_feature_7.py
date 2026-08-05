@@ -160,6 +160,29 @@ def test_the_fixture_for_the_ordering_test_is_not_degenerate(monkeypatch):
     )
 
 
+def test_a_measured_zero_is_not_an_absence():
+    """⚠ The `or 0.0` removal, asserted rather than assumed. A membrane-proximal SASA of exactly
+    0.0 is a legitimate measurement -- a fully buried window -- and must NOT trip the guard.
+
+    Prove it bites by restoring `float(rec.membrane_proximal_sasa or 0.0)` in the assembly and
+    having the guard read the row instead of the record: 0.0 then reads as absent and this reds."""
+    records = [_rec("BURIED", f7=0.0), _rec("NORMAL", f7=12.5)]
+    rows = _rows(records)
+    assert rows[0].features[6] == 0.0, "the measured zero must survive assembly as 0.0"
+    fs.refuse_if_named_set_needs_feature_7("geom_proxy", records, rows)      # must not raise
+
+
+def test_an_absence_and_a_measured_zero_are_distinguished():
+    """⚠ A-017 positive control for the test above: the SAME guard, same set, same assembled
+    value 0.0 -- but absent rather than measured -- MUST raise. Without this, the test above
+    could pass because the guard never fires on anything."""
+    records = [_rec("MISSING", f7=None)]
+    rows = _rows(records)
+    assert rows[0].features[6] == 0.0, "absent is still placeholdered as 0.0 in the row"
+    with pytest.raises(fs.Feature7NotExtracted):
+        fs.refuse_if_named_set_needs_feature_7("geom_proxy", records, rows)
+
+
 def test_the_named_set_actually_uses_index_six():
     """Pins the premise the guard is scoped on. If `geom_proxy` stopped using index 6 the
     guard would silently never fire, and this file would pass while guarding nothing."""
