@@ -130,6 +130,191 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-079 — The census: ingest 2,807 surface proteins, tranche the crank, fold everything reachable at a recorded recipe — and spend none of the pre-registration on it
+
+- **Date:** 2026-08-05
+- **Status:** Accepted. **Ruled before any ingest.** This entry is the census pre-registration; **it is
+  void if code precedes it** (D-075 / D-077 precedent). **No census row exists at merge**, and no
+  census code is in the commit that lands this.
+- **Type:** A **decision**. It rules an ingest design, fixes four denominators, freezes a fold order,
+  and — the load-bearing half — **rules what a census fold may and may not license.** Results land
+  later as their own F-entries.
+- **⚠ Number verified, not inherited.** At merge the highest `### D-` entry was **D-077** and the
+  highest `### F-` was **F-016**; `D-078` and `D-080` are reserved and unwritten. **Confirmed by
+  reading the log for a `### D-079` header, not for a reference to one** (method note item 7).
+- **Provenance (D-016):** `data/census/membraneome-reconstructed-2026-08-04.csv`, sha256
+  `5a705cc9165eb863f51116c31f2a5f56080bf8941bf994a612f9d85fc6944d37`, counted at first hand on
+  2026-08-05 — every figure below was read off that file, not carried forward. Six owner rulings of
+  2026-08-05, plus the Planner rulings of the same date listed under **Rulings that bind this entry**.
+- **Relates:** **D-075** (the pre-registration this must not spend); **D-077** (the local fold
+  envelope — its decision-1 prohibitions are inherited whole); **F-008** (the reported cohort, not
+  re-folded); **F-011** and **F-016** (the annex and the unclassified — different mechanisms, never
+  pooled); **D-047** (recipe resolved at fold time, never hand-passed); **D-016** (every count states
+  how it is known); **D-078** (reserved — it interprets the precision overlap this entry creates).
+
+**⚠ Where the deep learning is.** The census exists to make one measurement possible that n=12
+positives cannot support: whether the structural axis survives once research attention is controlled
+for, at n in the thousands. **pLDDT is ESMFold's own confidence output and it is the signal carrier
+(F-005)** — so a census statistic over pLDDT is a statement about what the network's confidence
+encodes, not a database exercise. That is also exactly why decision 2's heterogeneity is not a
+bookkeeping detail and why decision 7 exists: **a quantization artifact sitting inside the confidence
+variable is sitting inside the measurement.**
+
+#### Rulings that bind this entry, cited and deliberately not restated
+
+This entry names *that* each rule exists and *why*; the mechanism, the named fixtures, and the
+over-claim guards live in the ruling documents. **Restating them here would create the second copy
+this project has spent the day removing** — the standing consequence of
+`AMENDMENT-2026-08-05-D-079-census-key.md`: *where two sections name the same quantity, one cites the
+other rather than restating it.*
+
+| Ruling | Binds |
+|---|---|
+| `AMENDMENT-2026-08-05-D-079-census-key.md` | the census key; the two axes (`verification_bucket` is a finding, never a gate) |
+| `RULINGS-2026-08-05-class-collision.md` | the fourth tag and the four denominators below |
+| `SPEC-2026-08-05-accession-map-schema.md` | the two grains, parent and child, and the schema's move into code |
+| `RULINGS-2026-08-05-task2-task3-contract.md` | the producer/consumer contract; `fetch_eligible`; F-018 |
+| `RULINGS-2026-08-05-identity-status-collapse.md` | the status vocabulary and the collapse function |
+| `RULINGS-2026-08-05-status-wins-over-span.md` | `_STATUS_WINS_OVER_SPAN`; `no_topology` requires a successful fetch; `FETCH_FAILED` |
+| `RULINGS-2026-08-05-prose-vocabulary-retirement.md` | prose cites the constant; retired members survive nowhere |
+| `RULING-2026-08-05-D-079-denominators-in-the-log.md` | why the figures below are written correct rather than superseded |
+
+#### The four denominators — each stating its key
+
+**The key is the distinct current accession** (`uniprot_current_accession`), because a SURFY
+identifier is not a protein: four HLA loci absorb 83 source rows, and a census keyed by identifier
+would weight one family 83-fold inside the confidence distribution that is the census's headline use.
+
+| Tag | Count | |
+|---|---|---|
+| `surface` | **2,807** | the census |
+| `non_surface` | **2,209** | the annex (F-011) — ingested under its own tag, never pooled |
+| `unclassified` | **2,793** | a *different* exclusion mechanism (F-016) — **not evidence for F-011's thesis** |
+| `class_conflict` | **2** | source entries disagree on class, so the protein has no SURFY class |
+
+**Reconciling to 7,811 distinct accessions.** ⚠ **Four denominators, never summed** — the
+reconciliation is a check, not a reportable quantity. A collapse that loses its inputs is a deletion,
+so every row carries `source_identifiers`.
+
+#### Decision (1) — the D-075 gate is **narrowed, not lifted**
+
+A fold is a **measurement**; a score is an **interpretation**. D-075 protects the interpretation.
+
+**Permitted:** ingesting rows with class, accession, span, band, recipe, tranche · folding at a
+recorded recipe · reporting **cost, coverage, and confidence-distribution** statistics, each labelled
+with tranche and recipe.
+
+**Forbidden until D-075 fires:** no census row scored, ranked, or ordered by suitability — **no census
+path imports `core/scorer.py` or the fitter, asserted by test and proven by revert** · no census
+statistic presented as evidence about ADC suitability in any artifact, deck, or briefing · **no
+refit** — `ranking_run` id=2 is read from its row.
+
+#### Decision (2) — fold everything reachable; record the recipe on every fold; disclose the heterogeneity
+
+**Owner ruling, 2026-08-05.** The census folds every target it can reach, at whichever tier reaches
+it, with the recipe stated. **A census that stops at 440 aa is truncated on ECD length — feature 1 of
+the pre-registered six** — which would answer a confound by introducing a selection bias on the most
+load-bearing feature, the F-009 error one level out. **Completeness wins.**
+
+1. No target is left unfolded for recipe-hygiene reasons. Cost and hardware are the only limits.
+2. **Every fold records its recipe at fold time** (D-047), resolved from `TIER_RECIPE`, never
+   hand-passed. ⚠ **A fold that completes without a recorded recipe is a defect, not a gap** — the one
+   such fold among the 82 becomes structurally impossible. Proven by revert.
+3. Every census statistic reaching a surface, a deck, or the paper **states its recipe composition**
+   beside the number, not in a methods appendix.
+4. **Census heterogeneity is one-dimensional, and that is an improvement worth stating.** Both tiers
+   chunk at 64 since D-042, so the census varies in **dtype only**. Tranche zero varies in dtype *and*
+   chunking, which F-012 measured as output-affecting. **The census is cleaner than the cohort it
+   extends, not messier.**
+5. **Recipes are never pooled silently.** Any distributional claim is reported **per recipe as well as
+   combined**, or not reported.
+
+#### Decision (3) — a tranche is an **execution order**, never a filter, never a suitability axis
+
+D-077 decision 1's three prohibitions are inherited whole: local-foldability must not become a model
+feature, must not sit beside suitability without its label, must not filter the census.
+
+Bands are **named, not inferred**: `local` · `unmeasured_band` (440–630, pending F-013) · `above_local`
+· `no_topology` (**a category, never a length, never `0`**) · `unresolvable`. Under decision 2, bands
+determine **which tier folds a target**, not **whether** it is folded. The band vocabulary also
+carries the ineligibility categories ruled in `RULINGS-2026-08-05-status-wins-over-span.md`, where
+**`no_topology` is reserved strictly for rows that were fetched successfully and returned no sliceable
+span.**
+
+#### Decision (4) — within a band, fold order is a **seeded random permutation**, frozen before the first fold
+
+The crank turns for days and someone will want a number off the partial result. A partial set taken in
+file, accession, or length order is a biased subsample of its own band — worst in length order,
+because length is feature 1.
+
+Seed recorded in the census manifest before the first fold. **Frozen reading, both directions:** a
+**band-conditional** statistic on a partial tranche *is* reportable, stating band, n, seed, and recipe
+composition. A **census-wide** statistic on a partial tranche is **not**, under any framing. ⚠ No
+silent re-seed.
+
+#### Decision (5) — accession work is **verification**, not derivation
+
+The reconstructed membraneome already carries an accession on all 7,903 rows (0 blank), counted
+2026-08-05. Re-deriving the mapping would produce a second accession source with nothing comparing it
+to the first — the two-paths class, **caught in a standing Planner order before it executed.**
+
+**The reconstructed CSV — not a fresh UniProt derivation — is the source of record for identity**, and
+the operative census key is its `uniprot_current_accession` column; `UniProt Accession` is retained as
+provenance. Buckets: `agrees` · `source_only` · `uniprot_only` · `disagrees` · `unresolvable`.
+⚠ **A disagreement is a finding, not a merge conflict resolved by preference**, and a verification
+bucket never gates a fetch. Empty buckets are asserted empty. **Owner-reserved:** how `disagrees` and
+`multi` resolve.
+
+#### Decision (6) — what a census fold licenses
+
+✅ **Licensed:** *"Of the 2,807 surface-class ECDs, N are folded — M at (int8, 64) on a consumer 8 GB
+GPU, K at (fp16, 64) on rented compute — as of [date]."* Dated, band-named, **recipe-composition
+named**, derived from live routes.
+
+❌ **Not licensed:** coupling foldability to suitability (D-077 dec 1) · any census filtered by
+affordability (D-077 dec 3) · any statement about how many rows are good targets (D-028) · any
+extrapolation from the 82's proportions to a census size (`core/census.py`'s standing refusal) · any
+**pooled** confidence statistic without its recipe composition · any census-wide confidence claim
+before the overlap set reads out (dec 7) · any census-wide statistic from a partial tranche (dec 4).
+
+#### Decision (7) — the precision overlap set: what makes decision 2 recoverable rather than merely disclosed
+
+Under decision 2 the census spans two dtypes. But **precision is assigned by tier, tier by length, and
+length is feature 1** — so dtype and length are **perfectly confounded with no overlap**, the exact
+structure F-008 recorded for the 82.
+
+**Disclosure does not close it.** Stating the hardware and method makes the heterogeneity **visible**;
+it does not make it **separable**. If census mean pLDDT differs between the int8 rows and the fp16
+rows, no honest reporting tells a reader whether long ECDs genuinely fold with less confidence or
+whether int8 quantization depresses pLDDT. ⚠ **A replicator following our stated method reproduces the
+same confound** — replication then confirms reproducibility, not validity.
+
+**The instrument that closes it, and it is cheap:** fold a pre-registered random sample of short
+targets at **both** precisions, drawn beneath a *measured* fp16 local ceiling, sample size and seed
+recorded before the first overlap fold. It buys a **measured** per-residue pLDDT offset — heterogeneity
+becomes a nuisance parameter with a magnitude instead of a structural confound with none. If the offset
+is negligible, decision 2 is vindicated **by measurement rather than by assumption.**
+
+⚠ **The overlap is not a gate on the crank.** Folding proceeds; the overlap runs alongside. It is
+required before any census-wide confidence statistic is reported, not before any fold happens. **Its
+design and frozen interpretation land as `D-078`**, whose `RESERVED.md` trigger is amended in this
+same commit from *"a raised local ceiling"* to **"the first census fold at a second precision"** —
+the census now creates the overlap need directly.
+
+#### Definition of done
+
+- [x] Number confirmed against the live log by header; `RESERVED.md` checker run and read by output.
+- [x] Entry merged **before** migration 0008 and before any census row exists.
+- [ ] 0007 applied and **verified by column inspection**, not by alembic's exit code.
+- [ ] Tranche column shipped; enumerating routes filtered; **proven by revert**.
+- [ ] Manifest records seed + source sha256 + span run date **before** the first fold.
+- [ ] Recipe recorded at fold time or the fold fails — proven by revert.
+- [ ] Scorer-import refusal green and revert-proven.
+- [ ] 2,807 + 2,209 + 2,793 + 2 ingested under four tags, nothing dropped, nothing pooled.
+- [ ] fp16 local ceiling probed; overlap sample size + seed recorded before the first overlap fold.
+
+---
+
 ### F-016 — The `Non_Surface` marker in the reconstructed Table S3 is a section heading, not a partition: everything below it is the **whole** membraneome
 
 - **Date:** 2026-08-04. **Entered this log:** 2026-08-04, **in the same commit as F-011**, per
