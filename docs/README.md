@@ -130,6 +130,71 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-017 — The confidence-blind structural axis recovers what `no_plddt` lost: Decision 4 row 1 fired, and the proxy that never reads confidence is nonetheless correlated with it
+
+> **The fired row, quoted from `docs/README.md` §D-075 Decision (4), before any prose:**
+>
+> | **All three of `geom_proxy`'s statistics sit toward FULL** (median ≳0.6071, mean ≳0.6176, count 8-of-12) — the proxy recovers what `no_plddt` lost | **Confound weakened.** The signal is geometric accessibility, not confidence. The membrane-proximal information matters; its *pLDDT encoding* was not what carried it. |
+
+**Cites D-075 and F-004. Amends neither.** F-004 stands as the record of the six-feature pre-registered result. D-075's frozen interpretation selected this reading before the number existed.
+
+#### The triple, three-against-three (D-041 dec 4 — never one statistic)
+
+| Run | median | mean | count ≥0.5 |
+|---|---|---|---|
+| **`geom_proxy` (id=5)** | **0.6607** | **0.6324** | **8-of-12** |
+| FULL anchor (id=2) | 0.6071 | 0.6176 | 8-of-12 |
+| `no_plddt` baseline (id=3) | 0.5625 | 0.5893 | 6-of-12 |
+| *`plddt_only` (id=4) — not an anchor* | *0.6786* | *0.6295* | *9-of-12* |
+
+All three of `geom_proxy`'s statistics clear the row's stated `≳` against FULL. **No threshold was invented; the row's own condition is the test.** This is not the ambiguous row and not the split row.
+
+Twelve LOO percentiles: `0.1339 · 0.4732 · 0.4732 · 0.4732 · 0.6339 · 0.6518 · 0.6696 · 0.6875 · 0.6875 · 0.7946 · 0.9375 · 0.9732`. The triple was **recomputed from these by the Planner, independently of the run**, and reproduces to full float precision. `n_ranking_set` 56 · `n_fit_positives` 12 · `loo_status` complete, twelve folds converged · `scorer_version` `5ccab48772b5` · `geom_proxy` = 6 parameters (5 features + intercept).
+
+Head-to-head over the **8 overlapping** targets — overlap with the two-valued evidence comparator, **not** a convergence count; all twelve folds converged. Spearman **+0.0483**, the same magnitude as FULL's with opposite sign, and **read as evidence of nothing** per Decision 4's dead-discriminator clause, whose quantisation behaviour the log predicted in advance.
+
+#### ⚠ Three things this result does NOT license
+
+1. **`geom_proxy`'s median exceeds FULL's. That is not a finding and is not reported as one.** The gap is **3.00 × (1/56)** — three of the finest increments the ranking set can express — and the median falls between the 6th and 7th sorted values, so one target's rank moves it. Decision 0.1–0.3 named this fragility before the run. **Decision 4 has no row for "better than FULL"; the row says *toward*.** Five features outscoring six at n=12 is within noise.
+2. **`plddt_only` (id=4) carries the highest median and count of any run.** It is correctly not an anchor and Decision 4 does not use it. **It is reported here because omitting it would misrepresent the result.** The fired row's reading concerns *this comparison*; it is **not** a finding that confidence carries no signal — id=4 shows plainly that it does. The row's own second sentence is the synthesis: the membrane-proximal information matters, and its *pLDDT encoding* was not what carried it. **Two encodings of one quantity, both of which work.**
+3. **F-005 is refined, not reversed, and is not amended.** F-005 remains true as recorded: remove pLDDT and the signal drops (id=3, 0.5625 / 0.5893 / 6-of-12). What is new is that **a single confidence-blind membrane-proximal feature recovers it.**
+
+#### ⚠ The residual confound — measured, and it narrows the claim
+
+Feature 7's confidence-blindness is **architectural**: `Atom` carries no `b_factor`, `parse_pdb` never reads columns 60-66, and the contaminated fixture reds on both arms — differing pLDDT *values* (11.1442 vs 88.1873) and differing pLDDT *array length* (11.1442 vs 12.2295). **The code cannot see confidence. That is proven, not assumed.**
+
+**Blindness at the input is not independence at the statistic.** Feature 7 is computed over coordinates ESMFold itself produced. Measured over the 56 ranking-set rows, no nulls:
+
+| | Pearson | Spearman |
+|---|---|---|
+| feature 7 vs feature 4 (`membrane_proximal_plddt`) | **−0.4898** | **−0.5490** |
+| feature 7 vs feature 3 (`mean_plddt_ecd`) | **−0.6208** | **−0.4694** |
+| *control:* feature 4 vs feature 3 | +0.7959 | +0.7695 |
+
+⚠ **The confidence-blind proxy is confidence-correlated** — moderately to strongly, negatively, in the mechanistically expected direction: more exposed membrane-proximal SASA goes with lower pLDDT, because ESMFold is less confident where structure is less packed. It sits well below the two confidence features' correlation with each other, and nowhere near zero.
+
+**This does not change which row fired, and it could not have selected it** — the measurement was specified before it ran and its interpretation was fixed in advance in both branches. **But it binds the claim.** The supportable statement is: **feature 7 recovers the membrane-proximal signal without reading confidence — not free of confidence.** Architecturally blind is proven; statistically independent is **measured false**.
+
+**Instrument note.** These coefficients are a property of **this cohort as folded, at one recipe composition** — not a constant of the features. See D-075 Decision 6. They must not be cited as a general figure.
+
+#### The attention control, and a disclosure that is not softened
+
+Run B is blocked: `scripts/attention_control.py --freeze` is a deliberate stub. PR #109 shipped the assembly seam and not the network fetchers. **The snapshot protocol was pre-registered at `73bca8f`, before this result existed.** Under its §3, **Run A survived — so the proxies will be frozen knowing Run A survived.** That sentence goes on the snapshot's face and stands here. The query template and endpoints were already committed constants; **what is post-result is the data pull, and the rules governing that pull were fixed before the result existed.**
+
+#### How this is known (D-016)
+
+Run executed by Code against live production, 2026-08-06, from `ORDERS-Code-2026-08-05-D-075-run.md`. All governing §0 confirmations passed, including the confidence-blindness fixture's contaminated arm reddening on **both** arms.
+
+**Two cross-version checks cleared beforehand.** `no_plddt` and `preregistered` each reproduced their stored anchors under today's `scorer_version` `5ccab48772b5`, so the boundary between id=2's `91e646e4a289` and the current scorer — opened by D-075 making the projection unconditional — is **closed by measurement rather than documented as closed**. ⚠ The first such check was specified against `no_plddt`, which had always projected and therefore could not have detected the change; the Planner corrected the specification to test `preregistered`, the arm that actually changed.
+
+Post-state matched two independently written pre-registrations term for term: `ranking_runs` (4,4) → (5,5) · `ranking_results` 4 → 5 · `target_scores` 168 → 224 · `protein_features` unwritten, feature-7 non-null 79 → 79 · **id=2, id=3 and id=4 byte-unchanged**. No void condition fired.
+
+**Every production number above is Code's reading. The Planner has no database access and recomputed only the triple from the twelve percentiles.**
+
+Denominators, each stating its key, **never summed**: cohort of record **82** (Kathad-2024-PLOSONE) · rows carrying `protein_features` **80** (two named exclusions never enqueued, D-026) · ranking set **56** · excluded **24 of 80** (`held_out`, `below_floor`, and IGF2R `not_folded`).
+
+---
+
 ### F-020 — An absent measurement coerced to zero and fit as though measured: `--ablate geom_proxy` would have returned D-075 Decision 4's ambiguous row for the wrong reason
 
 - **Date:** 2026-08-06 (the defect was found and the guard shipped 2026-08-05)
@@ -1528,6 +1593,29 @@ that same split, so a `geom_proxy` result — either direction — inherits it. 
 path (a controlled A/B re-fold at the opposite precision, never touching the reported cohort) is **not
 run here and is not a prerequisite.** Recorded so a survival result is not over-read as excluding
 *all* confounds, only the confidence one.
+
+⟡ **Second item, added 2026-08-06 with `### F-017` — fold-recipe heterogeneity.** The cohort spans
+three fold recipes: `(int8, 64) × 42`, `(fp16, None) × 34`, `(fp16, 64) × 3`, and **one unrecorded**.
+**F-015 is untested at the cohort's actual variable** (`None` vs `64`) — F-012 measured chunk 16 vs 64
+and not this. ⚠ **No claim in either direction:** *"those 34 folds are fine"* is exactly as
+unsupported as the opposite. This design cannot separate a recipe effect from the axis it measures.
+
+⟡ **Third item, added 2026-08-06 with `### F-017` — the coordinate-mediated correlation.** Feature 7
+is **architecturally blind** to pLDDT — `Atom` carries no `b_factor`, `parse_pdb` never reads columns
+60-66, and the contaminated fixture reds on both arms — **and it is measurably correlated with it.**
+Against feature 4 (`membrane_proximal_plddt`) Pearson **−0.4898** / Spearman **−0.5490**; against
+feature 3 (`mean_plddt_ecd`) Pearson **−0.6208** / Spearman **−0.4694**; the two confidence features
+correlate with each other at **+0.7959 / +0.7695**. The pathway is **the folded coordinates
+themselves**: feature 7 is computed over structure ESMFold produced, so it can track confidence
+without ever reading it. ⚠ **This design cannot separate *"membrane-proximal geometry carries the
+signal"* from *"membrane-proximal geometry is a readout of the same thing confidence reads."***
+
+> ⚠ **Scope of those coefficients, and it binds any later citation.** They were measured on **the 56
+> ranking-set rows, at one recipe composition, on this cohort as folded**. They are a property of
+> **this instrument's output on this cohort — not a constant of the features**, not a property of
+> `membrane_proximal_sasa` in general, and not transferable to the census, to a re-fold at a
+> different precision, or to any other population. **A number lifted out of this sentence and quoted
+> alone would be a general claim this design never made.**
 
 #### Implementation findings — ⚠ TWO invisible pre-registration corruptions, caught and guarded
 
