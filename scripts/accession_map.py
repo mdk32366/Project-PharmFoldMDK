@@ -1,6 +1,26 @@
 #!/usr/bin/env python3
 """Map UniProt entry names to accessions, with the failure modes as outputs.
 
+⚠⚠ SUPERSEDED, 2026-08-06. DORMANT BY ASSERTION, NOT BY HABIT. ⚠⚠
+
+This script DERIVES a mapping. Census Task 2 VERIFIES one instead
+(`scripts/census_verify.py`, per `SPEC-2026-08-05-accession-map-schema.md` §3.1/§3.2), because the
+reconstructed membraneome already carries an accession on all 7,903 rows and re-deriving it would
+create **a second accession source with nothing comparing it to the first** — the two-paths class,
+caught in a standing order before it executed. ⚠ **This script is that second source.**
+
+⚠ **Its `RESOLVED = "resolved"` below is NOT the census vocabulary.** `resolved` was retired by
+F-018 across `core/census.py`, `scripts/ecd_lengths.py` and `scripts/census_spans.py`; the live
+vocabulary is `active · merged · inactive · multi · unresolved` in `core/census_identity.py`. The
+string survives here only because this file is out of that fix's named scope.
+
+⚠ **No census path imports this module**, and that is asserted by
+`tests/test_census_spans_v2.py::test_no_census_path_imports_the_superseded_accession_map_script`,
+proven by revert. Deletion is an owner call and has not been taken; **D-074's second clause applies
+instead — the instrument carries a statement of what it gets wrong.**
+
+
+
     python scripts/accession_map.py --ids data/census/surfaceome_ids.txt \
                                     --out data/census/accession_map.csv \
                                     --cache data/census/idcache
