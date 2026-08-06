@@ -93,6 +93,71 @@ def test_an_ineligible_row_is_not_fetched_and_says_why():
     assert "uniprot_inactive" in rows[0]["no_topology_reason"]
 
 
+# ── the band split: where the never-fetched land, and the declared denominator ──
+def _srow(acc, status, *, reason="", fetched="", span="", failed="false"):
+    return {"census_accession": acc, "census_class": "surface", "census_identity_status": status,
+            "source_identifiers": acc, "span_aa": span, "no_topology_reason": reason,
+            "fetch_failed": failed, "fetch_error": "", "fetched_on": fetched, "uniprot_release": ""}
+
+
+def test_a_never_fetched_row_is_not_no_topology_and_names_its_reason():
+    """⚠ AN UNFETCHED PROTEIN IS NOT A PROTEIN WITH NO TOPOLOGY. It was never asked.
+
+    In production this is exactly **7 rows of 2,807** — the inactive surface proteins — and at that
+    size an absorption into `no_topology` is *harder* to notice, not easier. The band names the
+    reason so it can never be read as a topology claim.
+
+    Prove it bites by keying never-fetched rows on `census_identity_status` alone, or by letting
+    them fall through to `categorise`: the band becomes `inactive` or `no_topology` and this reds."""
+    split = band_of([_srow("A6NKC4", "inactive", reason="not fetched: uniprot_inactive")])
+    assert "no_topology" not in split, (
+        f"a never-fetched protein was counted as having no topology: {split}")
+    assert "fetch_ineligible:uniprot_inactive" in split, split
+
+
+def test_the_band_split_declares_its_denominator_and_does_not_absorb_the_unfetched():
+    """⚠ Either *N fetched with the ineligible named beside it* or *N total with
+    fetch_ineligible as its own band* — **never N total with them silently absorbed.**
+    This is the count where it is easiest to lose rows into a plausible total.
+
+    Prove it bites by dropping `denominator_fetch_ineligible`, or by summing the ineligible into
+    `denominator_fetched`: the two denominators stop reconciling and this reds."""
+    import census_spans_v2 as m
+    rows = [_srow("A", "active", fetched="2026-08-06", span=300),
+            _srow("B", "active", fetched="2026-08-06", reason="no sliceable ECD span"),
+            _srow("C", "inactive", reason="not fetched: uniprot_inactive")]
+    s = m.band_split(rows)
+    assert s["denominator_total_rows"] == 3
+    assert s["denominator_fetched"] == 2
+    assert s["denominator_fetch_ineligible"] == 1
+    assert s["denominator_fetched"] + s["denominator_fetch_ineligible"] == s["denominator_total_rows"], s
+    assert sum(s["bands"].values()) == s["denominator_total_rows"], (
+        "the bands do not sum to the declared total — rows were lost or double-counted")
+
+
+def test_the_band_split_names_the_ceiling_recipe_as_a_triple():
+    """⚠ D-077 dec 3: the ceiling is a triple, never a bare integer. A band split read under a
+    recipe it was not measured under is a different measurement wearing the same name."""
+    import census_spans_v2 as m
+    s = m.band_split([_srow("A", "active", fetched="2026-08-06", span=300)])
+    for token in ("dtype=", "chunk_size=", "known_good="):
+        assert token in s["ceiling_recipe"], (token, s["ceiling_recipe"])
+
+
+def test_the_denominator_fixture_actually_contains_an_unfetched_row():
+    """⚠ A-017 clause (c). With every row fetched, the two tests above pass under an
+    implementation that absorbs the ineligible — the fixture's world would be too small to hold
+    the bug, which is how three fixtures failed on 2026-08-06."""
+    rows = [_srow("A", "active", fetched="2026-08-06", span=300),
+            _srow("C", "inactive", reason="not fetched: uniprot_inactive")]
+    assert sum(1 for r in rows if not r["fetched_on"]) == 1
+
+
+def band_of(rows):
+    import census_spans_v2 as m
+    return m.band_split(rows)["bands"]
+
+
 # ── the unclassified are not pulled ─────────────────────────────────────────
 def test_the_unclassified_cannot_be_pulled_even_by_asking(tmp_path):
     """⚠ F-016. Prove it bites by adding `unclassified` to the --class choices."""

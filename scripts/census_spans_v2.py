@@ -50,6 +50,7 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
+from core.manifest import LOCAL_CEILING  # noqa: E402
 from scripts.ecd_lengths import fetch_cached, parse  # noqa: E402
 
 OUT_COLUMNS = ("census_accession", "census_class", "census_identity_status", "source_identifiers",
@@ -156,20 +157,47 @@ def provenance(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def band_split(rows: list[dict[str, Any]]) -> dict[str, int]:
-    """Counted OFF THE FILE. ⚠ No proportion of the 82 is multiplied by anything."""
+def band_split(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Counted OFF THE FILE. ⚠ No proportion of the 82 is multiplied by anything.
+
+    ⚠ AN UNFETCHED PROTEIN IS NOT A PROTEIN WITH NO TOPOLOGY. It was never asked. Folding the
+    fetch-ineligible into `no_topology` would be the same fabrication shape as a resolvable target
+    recorded as having none — **and at seven rows rather than 2,807 it is harder to notice, not
+    easier.** So they get a band that names the REASON, distinct from `no_topology` and from
+    `unresolvable`: `fetch_ineligible:<reason>`.
+
+    ⚠ AND THE DENOMINATOR IS DECLARED ON THE SAME OBJECT. Either *2,800 fetched with the 7 named
+    beside it*, or *2,807 with `fetch_ineligible` as its own band* — **never 2,807 with the seven
+    silently absorbed.** This is the count where it is easiest to lose rows into a plausible total.
+    """
     from core.census import categorise
     counts: dict[str, int] = {}
     for r in rows:
         if r["fetch_failed"] == "true":
             key = "fetch_failed"
         elif not r["fetched_on"]:
-            key = r["census_identity_status"]            # never fetched: status decides
+            # ⚠ Never asked. The key names WHY, so it can never be read as a topology claim.
+            reason = (r["no_topology_reason"] or "").replace("not fetched: ", "") or "unknown"
+            key = f"fetch_ineligible:{reason}"
         else:
             span = int(r["span_aa"]) if str(r["span_aa"]).strip() else None
             key = categorise({"span_aa": span, "id_status": r["census_identity_status"]})
         counts[key] = counts.get(key, 0) + 1
-    return dict(sorted(counts.items()))
+
+    fetched = sum(n for k, n in counts.items() if not k.startswith("fetch_ineligible:"))
+    ineligible = sum(n for k, n in counts.items() if k.startswith("fetch_ineligible:"))
+    return {
+        "bands": dict(sorted(counts.items())),
+        "denominator_total_rows": len(rows),
+        "denominator_fetched": fetched,
+        "denominator_fetch_ineligible": ineligible,
+        # ⚠ The ceiling is a TRIPLE, never a bare integer (D-077 dec 3). Named here so a band
+        # split can never be read as valid under a recipe it was not measured under.
+        "ceiling_recipe": (f"{LOCAL_CEILING.hardware} | dtype={LOCAL_CEILING.dtype} | "
+                          f"chunk_size={LOCAL_CEILING.chunk_size} | "
+                          f"known_good={LOCAL_CEILING.known_good} | "
+                          f"known_bad={LOCAL_CEILING.known_bad}"),
+    }
 
 
 def run(argv: Optional[list[str]] = None) -> int:
