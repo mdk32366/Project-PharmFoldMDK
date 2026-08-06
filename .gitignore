@@ -226,3 +226,11 @@ ui/dist/
 
 # Claude Code personal machine settings — capability grants must not be inherited by a clone
 .claude/settings.local.json
+
+# Census UniProt entry cache — DERIVED data with recorded provenance (source sha256 + per-record
+# fetch date + release in the span output). Belongs on disk, not in the repo: ~57 KB/entry,
+# ~165 MB for the 2,807 surface and ~296 MB with the 2,209 annex. Deleting it costs a re-pull,
+# not a fact.
+data/census/spancache/
+data/census/idcache/
+data/census/*cache/
