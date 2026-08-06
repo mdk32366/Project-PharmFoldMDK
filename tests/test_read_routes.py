@@ -87,6 +87,9 @@ def _seed(engine, tmp_path) -> dict:
     with Session(engine) as s:
         # Row 1 — NECTIN4-like: ranked, sliced_ecd, local, confident.
         r1 = ProteinAnalysis(
+            # ⚠ cohort_tranche=0: these fixture rows ARE the cohort, exactly as production rows are
+            # after 0008's backfill. An untagged row is *unclassified* and is filtered out.
+            cohort_tranche=0,
             input_type="uniprot", input_value="Q96NY8", structure_source="esmfold",
             mean_plddt=77.26,
             meta=_meta(gene="NECTIN4", label="Nectin-4", disposition="ranked",
@@ -97,6 +100,9 @@ def _seed(engine, tmp_path) -> dict:
         )
         # Row 2 — held-out, whole-chain, local (the 2 the batch also folded).
         r2 = ProteinAnalysis(
+            # ⚠ cohort_tranche=0: these fixture rows ARE the cohort, exactly as production rows are
+            # after 0008's backfill. An untagged row is *unclassified* and is filtered out.
+            cohort_tranche=0,
             input_type="uniprot", input_value="Q9NV96", structure_source="esmfold",
             mean_plddt=65.0,
             meta=_meta(gene="TMEM30A", label="CDC50A", disposition="held_out",
@@ -107,6 +113,9 @@ def _seed(engine, tmp_path) -> dict:
         )
         # Row 3 — a row with NO structure (pdb_path stays NULL): 404, not 500.
         r3 = ProteinAnalysis(
+            # ⚠ cohort_tranche=0: these fixture rows ARE the cohort, exactly as production rows are
+            # after 0008's backfill. An untagged row is *unclassified* and is filtered out.
+            cohort_tranche=0,
             input_type="uniprot", input_value="P00000", structure_source="",
             mean_plddt=None,
             meta=_meta(gene="NONE", label="unfolded", disposition="ranked",

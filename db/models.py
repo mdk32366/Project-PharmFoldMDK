@@ -123,6 +123,17 @@ class ProteinAnalysis(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    # ⚠ THE COHORT TAG (D-079, migration 0008). NULLABLE BECAUSE A NULL IS A CATEGORY.
+    # Untagged means *unclassified* — not a census member and **not** tranche zero. It carries no
+    # `default` and no `server_default` on purpose: either would turn an absent value into a low
+    # number, silently promoting an untagged row into the reported cohort. Existing rows are
+    # backfilled to 0 explicitly by the migration, never by a default.
+    # `protein_analyses` IS the cohort today, so every enumerating read filters on this column —
+    # without it an ingest makes the target list silently become the census.
+    cohort_tranche: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, index=True, default=None
+    )
+
 
 class ProteinFeatures(Base):
     """The six D-027 structure-derived features for one fold, computed offline by

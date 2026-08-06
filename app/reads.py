@@ -107,11 +107,27 @@ def detail_projection(row: ProteinAnalysis) -> dict[str, Any]:
     return out
 
 
+#: The reported cohort. ⚠ Census rows carry a non-zero tranche and must never reach this list.
+COHORT_TRANCHE = 0
+
+
 def list_analyses(engine: Any) -> list[dict[str, Any]]:
-    """Every analysis as a light row, ordered by ``id`` ascending (D-034 / Orders §1)."""
+    """The **cohort** as light rows, ordered by ``id`` ascending (D-034 / Orders §1; D-079).
+
+    ⚠ FILTERED TO TRANCHE ZERO, and the filter is the point. `protein_analyses` **is** the cohort
+    today and `TargetList.jsx` renders whatever this returns, so without the `.where(...)` an
+    ingest makes the target list **silently** become the census — no error, no red, just 2,807
+    rows where there were 82.
+
+    ⚠ `== COHORT_TRANCHE`, never `!= something` and never `IS NULL OR == 0`. An untagged row is
+    *unclassified*, which is a CATEGORY and not a cohort member; treating a null as zero would
+    promote it into the reported set by default.
+    """
     with Session(engine) as s:
         rows = s.scalars(
-            select(ProteinAnalysis).order_by(ProteinAnalysis.id)
+            select(ProteinAnalysis)
+            .where(ProteinAnalysis.cohort_tranche == COHORT_TRANCHE)
+            .order_by(ProteinAnalysis.id)
         ).all()
         return [list_projection(r) for r in rows]
 

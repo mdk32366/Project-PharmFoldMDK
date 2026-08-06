@@ -135,6 +135,41 @@ def test_normalisation_does_not_invent_a_header_where_there_is_none():
     assert LANDING_MARKER not in normalise(ABSENT)
 
 
+# ── ⚠ THE KNOWN LIMIT, ASSERTED RATHER THAN LEFT IMPLICIT (D-074, second clause) ──
+# A document that QUOTES the marker in its first 12 lines passes without carrying a header. This
+# check is a presence test; it cannot distinguish USE from MENTION.
+QUOTED_ONLY = (
+    "# SPEC — 2026-08-06 — What a landing header must say\n\n"
+    "## The convention\n\n"
+    "Every dated artefact carries, verbatim:\n\n"
+    "```\n"
+    "> **Where this file and the log differ, THE LOG GOVERNS.**\n"
+    "```\n\n"
+    "This document does NOT carry one itself.\n"
+)
+
+
+def test_the_check_cannot_tell_use_from_mention_and_says_so():
+    """⚠ A KNOWN LIMIT, pinned so it is explicit rather than discovered.
+
+    `QUOTED_ONLY` carries NO landing header — it only quotes the marker as an example — and this
+    check passes it anyway. **That is the exact defect that produced F-024's first two instances:**
+    #123 and #129 both matched the header template quoted inside
+    `RULING-2026-08-05-D-079-denominators-in-the-log.md` §3, and that file went unheaded for a day.
+
+    The 12-line window makes it rare — a document usually mentions the marker well below its own
+    header — but rare is not never, and this file is itself in the discovery set, as is
+    `SPEC-2026-08-06-landing-header-matcher.md`, whose whole subject is the marker string.
+
+    ⚠ This test asserts the WRONG-BUT-CURRENT behaviour on purpose. If a future change makes the
+    check position-aware or quote-aware, this reds — and that red is the fix landing, not a
+    regression. Update it deliberately; do not delete it to make the suite green."""
+    window = normalise("\n".join(QUOTED_ONLY.splitlines()[:HEADER_WINDOW_LINES]))
+    assert LANDING_MARKER in window, "fixture precondition: the marker must appear as quoted content"
+    assert "Where this file and the log differ" in window, (
+        "the marker appears only inside a fenced example, not as a header")
+
+
 # ── (b) header presence, as its own test, over the real tree ────────────────
 def test_every_discovered_document_carries_a_landing_header():
     missing = [p.name for p in discovered_documents() if LANDING_MARKER not in header_window(p)]
