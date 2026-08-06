@@ -109,13 +109,21 @@ def main(argv=None) -> int:
     census_rows, annex_rows = [], []
     for i, row in enumerate(rows, 1):
         span = None
-        if row["id_status"] == "resolved" and row["accession"]:
+        # ⚠ F-018: the gate is the producer's BOOLEAN, not a string comparison against a
+        # vocabulary living in another file. One place decides eligibility; one reads it.
+        if str(row.get("fetch_eligible", "")).lower() == "true" and row["accession"]:
             try:
                 data = fetch_cached(row["accession"], args.cache)
                 span = parse(row["accession"], "", data).largest_span
             except Exception as e:                      # noqa: BLE001
                 # A fetch failure is an UNKNOWN, not a zero and not a drop.
-                row = {**row, "id_status": "unresolved", "fetch_error": str(e)[:120]}
+                # ⚠ A FETCH FAILURE IS NOT AN IDENTITY FAILURE. `unresolved` means the entry
+                # name mapped to no accession; a network timeout means the accession was
+                # fine and the request was not. At 82 rows this never fired; at 2,807 it
+                # will, and each occurrence would record a FALSE STATEMENT about the
+                # identifier while looking like a supported category. id_status is NOT
+                # rewritten -- the failure gets its own category.
+                row = {**row, "fetch_failed": True, "fetch_error": str(e)[:120]}
         out_row = {**row, "span_aa": span}
         (annex_rows if (args.annex_column and str(row.get(args.annex_column, "")).strip()
                         in ("1", "true", "True", "negative")) else census_rows).append(out_row)
