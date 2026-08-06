@@ -130,6 +130,103 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-020 — An absent measurement coerced to zero and fit as though measured: `--ablate geom_proxy` would have returned D-075 Decision 4's ambiguous row for the wrong reason
+
+- **Date:** 2026-08-06 (the defect was found and the guard shipped 2026-08-05)
+- **Status:** **CLOSED under D-074** — the instrument no longer exhibits the defect. See **Closure**
+  below for what that rests on and who read it.
+- **Type:** A **finding** about the fit path. It cost nothing in the end because it was caught before
+  the run it would have corrupted; what it would have cost is the point of the entry.
+- **⚠ Number verified, not inherited.** Reserved in `RESERVED.md` on 2026-08-05 **before** the fix, per
+  the F-017 precedent (*a number contested mid-task is contested under pressure*). At the time of
+  writing the highest `### F-` in this log was **F-016**; F-017, F-018, F-019, F-021, F-022 and F-023
+  are reserved and unwritten. Confirmed by reading this file for a `### F-020` header, not for a
+  reference to one (method note item 7).
+- **Provenance (D-016):** the three code sites are quoted from the tree at
+  `PharmFoldMDK-snapshot-2026-08-05-4b7547c`. **The closure evidence is Code's reading of the live
+  database on 2026-08-05 and is attributed as such below** — it is **not** Planner-verified, and the
+  Planner has no database access.
+- **Relates:** **D-075** (the pre-registration this would have spent); **F-004** (the pre-registered
+  result, untouched); **F-021** (the loader defect found in the remedy); **F-023** (the residual bare
+  null the fill left); **D-074** (a finding is not closed until the instrument stops exhibiting it);
+  **D-027** (null-with-a-reason, never an imputed value).
+
+**⚠ This is not F-018, and the two must not be merged.** F-018 is a **vocabulary** defect in the
+**identity** path — an absent status recorded as an affirmative one — and it costs a **miscounted
+census row**. F-020 is in the **fit** path and it costs a **fabricated result**. They are the same
+*shape* at different altitudes, which is exactly why a later reader will be tempted to collapse them.
+
+#### The defect — three links, none of which reddens
+
+Migration `0007` created `protein_features.membrane_proximal_sasa`. **Nothing populated it.** Feature 7
+is a named input of the `geom_proxy` ablation (`FEATURE_SETS["geom_proxy"] = (0, 1, 4, 5, 6)`), so a
+`--ablate geom_proxy` run would then have done this:
+
+1. **`scripts/fit_scorer.py`** assembled the row as
+   `float(rec.membrane_proximal_sasa or 0.0)` — **an absent measurement becomes `0.0`.**
+2. **The same file printed a WARNING and proceeded.** Its own text read *"a 0.0 placeholder here
+   would be an imputed value (D-027)"* — ⚠ **it named the defect and then committed it.**
+3. **`core/scorer.py`'s standardizer** is
+   `(features[j] - self.means[j]) / self.stds[j] if self.stds[j] > 0 else 0.0` — a **zero-variance
+   column standardises to `0.0` for every row.** No crash, no `NaN`, nothing red.
+
+**So feature 7 would have entered the fit as a constant and contributed exactly nothing.**
+`geom_proxy` `(0, 1, 4, 5, 6)` collapses to `no_plddt` `(0, 1, 4, 5)` **plus one inert dimension.**
+
+#### ⚠ Why this was the most expensive available failure
+
+The result would have landed at the `no_plddt` baseline — **D-075 Decision 4's second row**, which
+this log names as *"the expected case at n=12"* and reports as **ambiguous**.
+
+**And it would have fired for the wrong reason.** Not *"the SASA proxy did not recover the signal"*
+but ***"the proxy was never computed."*** The two are indistinguishable in the output: same
+`run_kind='sensitivity'`, a plausible triple, and the WARNING lines scrolled off above it.
+
+⚠ **A pre-registered run producing its most likely outcome, for a reason invisible in its own
+artifact, nine days before it is presented.** The pre-registration cannot protect against this,
+because the pre-registration is about *what the numbers mean* — not about whether the input existed.
+
+#### The guard
+
+`--ablate geom_proxy` now **raises** rather than warns when any ranking-set row lacks feature 7.
+
+- **Scoped to the named ablation, never to the fit.** The pre-registered six have no feature 7 and
+  legitimately never did. ⚠ **A guard that reddened the pre-registered path would make F-004
+  unreproducible in order to protect an ablation** — worse than the defect it fixes.
+- **Scoped to ranking-set rows.** An excluded row's placeholder is inert by construction.
+- **It runs before `create_ranking_run()`**, so a refusal writes no run row.
+- **`or 0.0` was removed, not guarded around.** A membrane-proximal SASA of exactly `0.0` is a
+  legitimate measurement — a fully buried window — and `or` cannot distinguish it from an absence.
+
+#### Closure — what it rests on, and whose reading it is
+
+**⚠ Read and reported by Code, 2026-08-05, against the live database. Not verified by the Planner,
+who has no database access.** Recorded this way because D-016 permits an attributed reading and
+forbids an anonymous one.
+
+> **Code's reading, 2026-08-05:** the same guard was demonstrated **refusing** and then, after
+> feature 7 was measured, **passing** — same guard, same rows, **with the run table untouched on both
+> sides.** The refusal named **56 of 56** ranking-set rows; `ranking_runs` read `(4, 4)` before and
+> after each demonstration. The pre-registered six-feature path passed throughout, so **F-004 remains
+> reproducible.**
+
+**The D-074 basis, stated explicitly:** *a finding is not closed when the fix is written; it is
+closed when the instrument stops exhibiting it.* The before/after pair — refusal, then pass, on the
+same instrument against the same population — **is** that evidence. ⚠ **The fix having been merged
+would not have been.**
+
+#### What it changed about how this project works
+
+- **A warning that names a defect and proceeds is not a guard.** It transfers the decision to whoever
+  is reading stdout, at the moment they are least likely to be reading it.
+- **The dangerous failures are the plausible ones.** Nothing here would have crashed. Three separate
+  artifacts on 2026-08-05 had this property, and it is why `test_zero_eligible_rows_is_an_ERROR_not_a_result`
+  exists: *a census where nothing is fetchable is not a census result; it is a broken pipeline wearing one.*
+- **A pre-registration protects the interpretation, not the input.** D-075's §0 had five confirmations
+  and none of them asked whether feature 7 had a value.
+
+---
+
 ### D-079 — The census: ingest 2,807 surface proteins, tranche the crank, fold everything reachable at a recorded recipe — and spend none of the pre-registration on it
 
 - **Date:** 2026-08-05

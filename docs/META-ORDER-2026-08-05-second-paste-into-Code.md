@@ -1,5 +1,9 @@
 # META-ORDER — paste into Code — 2026-08-05 (second) — the A-017 ruling, the merge, and Tasks B → D
 
+> **COMMITTED to `docs/` as provenance. CITED BY the log, not restated in it — where this file and
+> `docs/README.md` differ, THE LOG GOVERNS.** ⚠ This file records how a decision was reached; it is
+> not itself authority. Check the `### D-NNN` / `### F-NNN` header, not a reference to it.
+
 You are receiving **one document**: `RULING-2026-08-05-A017-and-task-C-protocol.md`.
 **Hash it against the copy in hand before reading; a mismatch is stop-and-report.**
 

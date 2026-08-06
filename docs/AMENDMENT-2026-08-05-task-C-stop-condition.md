@@ -1,5 +1,9 @@
 # AMENDMENT — 2026-08-05 — Task C stop condition 2 was not evaluable, and the hash discipline needs a line-ending rule
 
+> **COMMITTED to `docs/` as provenance. CITED BY the log, not restated in it — where this file and
+> `docs/README.md` differ, THE LOG GOVERNS.** ⚠ This file records how a decision was reached; it is
+> not itself authority. Check the `### D-NNN` / `### F-NNN` header, not a reference to it.
+
 > **Amends `RULING-2026-08-05-A017-and-task-C-protocol.md` §4.2 only.** Binding before Task C runs.
 > **Raised by Code**, checkpoint 3, before execution. **Both items are the Planner's.**
 

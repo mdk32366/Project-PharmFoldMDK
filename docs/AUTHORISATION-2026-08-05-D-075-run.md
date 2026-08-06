@@ -1,5 +1,9 @@
 # AUTHORISATION — 2026-08-05 — Execute `ORDERS-Code-2026-08-05-D-075-run.md`
 
+> **COMMITTED to `docs/` as provenance. CITED BY the log, not restated in it — where this file and
+> `docs/README.md` differ, THE LOG GOVERNS.** ⚠ This file records how a decision was reached; it is
+> not itself authority. Check the `### D-NNN` / `### F-NNN` header, not a reference to it.
+
 > **This is an authorisation, not an order.** ⚠ **It restates nothing from the run order or from
 > `docs/README.md` §D-075.** The order governs the run; the log governs the reading. This document
 > does three things only: records the state that makes the run possible, discharges the §0
