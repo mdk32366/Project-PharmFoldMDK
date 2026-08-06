@@ -162,9 +162,29 @@ def test_the_backfill_runs_inside_the_callers_transaction(tmp_path):
     written but **not committed**. A helper using the caller's Connection sees that row and tags it.
     A helper opening a second connection cannot see uncommitted data and tags nothing.
 
-    ⚠ Prove it bites by reverting `backfill_tranche_zero` to `with Session(engine)` and having the
-    migration pass `op.get_bind().engine`: the count drops to 0 and this reds at the assertion
-    below. On the in-memory engine the same revert stays GREEN — which is the finding."""
+    ⚠ Prove it bites by reverting `backfill_tranche_zero` to `with Session(engine)`: this reds at
+    `sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) database is locked` on the UPDATE.
+    On the in-memory engine the same revert stays **GREEN** — which is the finding.
+
+    ═══════════════════════════════════════════════════════════════════════════════════════════
+    ⚠ TWO ERROR-REDS THAT LOOK IDENTICAL AND MEAN OPPOSITE THINGS. Read this before judging one.
+    ═══════════════════════════════════════════════════════════════════════════════════════════
+    A-016's hazard is a red proving the code **never ran** — a module failed to import, the
+    assertion never executed, and a terminal full of red reads as proof. That is the weak form,
+    and it is why "prove it bites" demands a failure at the assertion.
+
+    **This one is the other kind.** The test ran, reached the UPDATE, and the lock fired **at
+    exactly the condition under test**. `database is locked` *is* the assertion — expressed by the
+    engine rather than by `assert`, because the production symptom IS lock contention and not a
+    wrong count. A second connection contending with its caller cannot report a number; it stops.
+
+    **How to tell them apart, since they print the same:** ask whether the error arose *inside* the
+    behaviour under test or *before reaching it*. Here the traceback's last test-side frame is the
+    `backfill_tranche_zero(conn)` call itself, with the UPDATE's SQL in the message.
+
+    ⚠ `test_the_backfill_still_opens_its_own_transaction_when_given_an_engine` is what makes the
+    pair legible: it exercises the same helper on the Engine path and passes, so a reader knows the
+    lock is specific to the shared-transaction condition and not a broken helper."""
     from db.tranche_backfill import backfill_tranche_zero
     eng = _file_engine(tmp_path)
 
