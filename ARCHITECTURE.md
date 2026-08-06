@@ -341,6 +341,18 @@ opened on the local machine.
 
 ## 4. Data Model (from Database Plan v2)
 
+> ⚠ **The census is specified but not built, and this document does not describe it.** `### D-079`
+> (`docs/README.md`, 2026-08-05) pre-registers a census architecture — a tranche tag on
+> `protein_analyses`, a per-protein roster keyed by current accession, four class denominators, and
+> a seeded fold order. **None of it is reflected below, deliberately.** Migration `0008` does not
+> exist; `db/models.py` contains no `tranche` and no `census`; **no census row exists.**
+> **`protein_analyses` remains the cohort**, and every enumerating read below still returns it whole.
+>
+> **This is a pointer, not a section, and that is the ruling.** ⚠ **Describing unbuilt architecture
+> as though it were built is the defect this project spent 2026-08-05 removing** — a document that
+> reads as current while describing an intention is indistinguishable, to the next reader, from one
+> that is simply wrong. **The design lives in `### D-079`; this file gains it when the code does.**
+
 Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](docs/Database_Plan_v2_Postgres.md)):
 
 - **`users`** — auth (username + hashed password), JSONB `preferences`. **Not built yet** (no
@@ -359,7 +371,23 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
   `largest_patch_fraction`), **plus `membrane_proximal_sasa` — feature 7, migration `0007`
   (D-075)**: the confidence-blind proxy, nullable and **deliberately not backfilled** (every
   pre-D-075 row stays NULL, an honest "not computed yet"; a `server_default` would have handed
-  `geom_proxy` 79 values that were never measured). **Feature 7 is not one of D-027's six and never
+  `geom_proxy` 79 values that were never measured).
+  > ⚠ **SUPERSEDED 2026-08-05 — the parenthetical above, not the design claim.** The column was
+  > **measured**, not backfilled: the Task C fill (`scripts/extract_features.py --fill-feature-7`)
+  > wrote `membrane_proximal_sasa` **in place** across the ranking set, from coordinates, aborting
+  > the entire fill if any row's features 1–6 had drifted from what was stored.
+  > **Per `docs/CLOSEOUT-2026-08-05.md` — Code's reading of the live database; not verified from
+  > this tree.** For the population, the residual null and its reason, see the close-out and
+  > **`### F-023`**; **no count is inscribed here** because this document's author cannot see the
+  > database.
+  > **The design claim stands and is why the fill was safe:** feature 7 is still never backfilled
+  > with an *inferred* value. A `server_default` would have supplied numbers nobody measured — which
+  > is precisely the defect **`### F-020`** records, arriving by a different route. Measuring the
+  > column is the one thing D-070 dec 2 always permitted.
+  > ⚠ **Do not read the numeral in the sentence above as a current count.** It is a hypothetical
+  > about `server_default`, written before the fill; that it now resembles the measured population is
+  > a coincidence of arithmetic, and the kind a reader in a hurry converts into a fact.
+  **Feature 7 is not one of D-027's six and never
   reaches the pre-registered path** — `FEATURE_NAMES` still has exactly six entries, asserted by the
   gate, and `run_scorer` projects onto its named set's indices so the graded fit uses columns 0–5
   regardless of how wide a row is. A JSONB `null_reasons` records **why** any is null (D-027's

@@ -1,5 +1,9 @@
 # ORDERS — Code — 2026-08-05 (third) — F-020 / F-021: make D-075 executable
 
+> **COMMITTED to `docs/` as provenance. CITED BY the log, not restated in it — where this file and
+> `docs/README.md` differ, THE LOG GOVERNS.** ⚠ This file records how a decision was reached; it is
+> not itself authority. Check the `### D-NNN` / `### F-NNN` header, not a reference to it.
+
 > **Planner provenance (D-016):** written from the `feafeff`-derived tree read at first hand
 > 2026-08-05, with `scripts/fit_scorer.py:100-130`, `core/scorer.py:144-160`, and
 > `scripts/extract_features.py:145-197` quoted rather than recalled. **No GitHub connector.**

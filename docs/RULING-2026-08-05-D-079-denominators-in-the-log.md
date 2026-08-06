@@ -1,5 +1,9 @@
 # RULING — 2026-08-05 — D-079's denominators enter the log **correct**, not superseded
 
+> **COMMITTED to `docs/` as provenance. CITED BY the log, not restated in it — where this file and
+> `docs/README.md` differ, THE LOG GOVERNS.** ⚠ This file records how a decision was reached; it is
+> not itself authority. Check the `### D-NNN` / `### F-NNN` header, not a reference to it.
+
 > **Answers Code's checkpoint-9 question. Binding on #1's docs-only commit.** Short by design.
 
 ---

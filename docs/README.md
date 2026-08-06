@@ -130,6 +130,168 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-017 — The confidence-blind structural axis recovers what `no_plddt` lost: Decision 4 row 1 fired, and the proxy that never reads confidence is nonetheless correlated with it
+
+> **The fired row, quoted from `docs/README.md` §D-075 Decision (4), before any prose:**
+>
+> | **All three of `geom_proxy`'s statistics sit toward FULL** (median ≳0.6071, mean ≳0.6176, count 8-of-12) — the proxy recovers what `no_plddt` lost | **Confound weakened.** The signal is geometric accessibility, not confidence. The membrane-proximal information matters; its *pLDDT encoding* was not what carried it. |
+
+**Cites D-075 and F-004. Amends neither.** F-004 stands as the record of the six-feature pre-registered result. D-075's frozen interpretation selected this reading before the number existed.
+
+#### The triple, three-against-three (D-041 dec 4 — never one statistic)
+
+| Run | median | mean | count ≥0.5 |
+|---|---|---|---|
+| **`geom_proxy` (id=5)** | **0.6607** | **0.6324** | **8-of-12** |
+| FULL anchor (id=2) | 0.6071 | 0.6176 | 8-of-12 |
+| `no_plddt` baseline (id=3) | 0.5625 | 0.5893 | 6-of-12 |
+| *`plddt_only` (id=4) — not an anchor* | *0.6786* | *0.6295* | *9-of-12* |
+
+All three of `geom_proxy`'s statistics clear the row's stated `≳` against FULL. **No threshold was invented; the row's own condition is the test.** This is not the ambiguous row and not the split row.
+
+Twelve LOO percentiles: `0.1339 · 0.4732 · 0.4732 · 0.4732 · 0.6339 · 0.6518 · 0.6696 · 0.6875 · 0.6875 · 0.7946 · 0.9375 · 0.9732`. The triple was **recomputed from these by the Planner, independently of the run**, and reproduces to full float precision. `n_ranking_set` 56 · `n_fit_positives` 12 · `loo_status` complete, twelve folds converged · `scorer_version` `5ccab48772b5` · `geom_proxy` = 6 parameters (5 features + intercept).
+
+Head-to-head over the **8 overlapping** targets — overlap with the two-valued evidence comparator, **not** a convergence count; all twelve folds converged. Spearman **+0.0483**, the same magnitude as FULL's with opposite sign, and **read as evidence of nothing** per Decision 4's dead-discriminator clause, whose quantisation behaviour the log predicted in advance.
+
+#### ⚠ Three things this result does NOT license
+
+1. **`geom_proxy`'s median exceeds FULL's. That is not a finding and is not reported as one.** The gap is **3.00 × (1/56)** — three of the finest increments the ranking set can express — and the median falls between the 6th and 7th sorted values, so one target's rank moves it. Decision 0.1–0.3 named this fragility before the run. **Decision 4 has no row for "better than FULL"; the row says *toward*.** Five features outscoring six at n=12 is within noise.
+2. **`plddt_only` (id=4) carries the highest median and count of any run.** It is correctly not an anchor and Decision 4 does not use it. **It is reported here because omitting it would misrepresent the result.** The fired row's reading concerns *this comparison*; it is **not** a finding that confidence carries no signal — id=4 shows plainly that it does. The row's own second sentence is the synthesis: the membrane-proximal information matters, and its *pLDDT encoding* was not what carried it. **Two encodings of one quantity, both of which work.**
+3. **F-005 is refined, not reversed, and is not amended.** F-005 remains true as recorded: remove pLDDT and the signal drops (id=3, 0.5625 / 0.5893 / 6-of-12). What is new is that **a single confidence-blind membrane-proximal feature recovers it.**
+
+#### ⚠ The residual confound — measured, and it narrows the claim
+
+Feature 7's confidence-blindness is **architectural**: `Atom` carries no `b_factor`, `parse_pdb` never reads columns 60-66, and the contaminated fixture reds on both arms — differing pLDDT *values* (11.1442 vs 88.1873) and differing pLDDT *array length* (11.1442 vs 12.2295). **The code cannot see confidence. That is proven, not assumed.**
+
+**Blindness at the input is not independence at the statistic.** Feature 7 is computed over coordinates ESMFold itself produced. Measured over the 56 ranking-set rows, no nulls:
+
+| | Pearson | Spearman |
+|---|---|---|
+| feature 7 vs feature 4 (`membrane_proximal_plddt`) | **−0.4898** | **−0.5490** |
+| feature 7 vs feature 3 (`mean_plddt_ecd`) | **−0.6208** | **−0.4694** |
+| *control:* feature 4 vs feature 3 | +0.7959 | +0.7695 |
+
+⚠ **The confidence-blind proxy is confidence-correlated** — moderately to strongly, negatively, in the mechanistically expected direction: more exposed membrane-proximal SASA goes with lower pLDDT, because ESMFold is less confident where structure is less packed. It sits well below the two confidence features' correlation with each other, and nowhere near zero.
+
+**This does not change which row fired, and it could not have selected it** — the measurement was specified before it ran and its interpretation was fixed in advance in both branches. **But it binds the claim.** The supportable statement is: **feature 7 recovers the membrane-proximal signal without reading confidence — not free of confidence.** Architecturally blind is proven; statistically independent is **measured false**.
+
+**Instrument note.** These coefficients are a property of **this cohort as folded, at one recipe composition** — not a constant of the features. See D-075 Decision 6. They must not be cited as a general figure.
+
+#### The attention control, and a disclosure that is not softened
+
+Run B is blocked: `scripts/attention_control.py --freeze` is a deliberate stub. PR #109 shipped the assembly seam and not the network fetchers. **The snapshot protocol was pre-registered at `73bca8f`, before this result existed.** Under its §3, **Run A survived — so the proxies will be frozen knowing Run A survived.** That sentence goes on the snapshot's face and stands here. The query template and endpoints were already committed constants; **what is post-result is the data pull, and the rules governing that pull were fixed before the result existed.**
+
+#### How this is known (D-016)
+
+Run executed by Code against live production, 2026-08-06, from `ORDERS-Code-2026-08-05-D-075-run.md`. All governing §0 confirmations passed, including the confidence-blindness fixture's contaminated arm reddening on **both** arms.
+
+**Two cross-version checks cleared beforehand.** `no_plddt` and `preregistered` each reproduced their stored anchors under today's `scorer_version` `5ccab48772b5`, so the boundary between id=2's `91e646e4a289` and the current scorer — opened by D-075 making the projection unconditional — is **closed by measurement rather than documented as closed**. ⚠ The first such check was specified against `no_plddt`, which had always projected and therefore could not have detected the change; the Planner corrected the specification to test `preregistered`, the arm that actually changed.
+
+Post-state matched two independently written pre-registrations term for term: `ranking_runs` (4,4) → (5,5) · `ranking_results` 4 → 5 · `target_scores` 168 → 224 · `protein_features` unwritten, feature-7 non-null 79 → 79 · **id=2, id=3 and id=4 byte-unchanged**. No void condition fired.
+
+**Every production number above is Code's reading. The Planner has no database access and recomputed only the triple from the twelve percentiles.**
+
+Denominators, each stating its key, **never summed**: cohort of record **82** (Kathad-2024-PLOSONE) · rows carrying `protein_features` **80** (two named exclusions never enqueued, D-026) · ranking set **56** · excluded **24 of 80** (`held_out`, `below_floor`, and IGF2R `not_folded`).
+
+---
+
+### F-020 — An absent measurement coerced to zero and fit as though measured: `--ablate geom_proxy` would have returned D-075 Decision 4's ambiguous row for the wrong reason
+
+- **Date:** 2026-08-06 (the defect was found and the guard shipped 2026-08-05)
+- **Status:** **CLOSED under D-074** — the instrument no longer exhibits the defect. See **Closure**
+  below for what that rests on and who read it.
+- **Type:** A **finding** about the fit path. It cost nothing in the end because it was caught before
+  the run it would have corrupted; what it would have cost is the point of the entry.
+- **⚠ Number verified, not inherited.** Reserved in `RESERVED.md` on 2026-08-05 **before** the fix, per
+  the F-017 precedent (*a number contested mid-task is contested under pressure*). At the time of
+  writing the highest `### F-` in this log was **F-016**; F-017, F-018, F-019, F-021, F-022 and F-023
+  are reserved and unwritten. Confirmed by reading this file for a `### F-020` header, not for a
+  reference to one (method note item 7).
+- **Provenance (D-016):** the three code sites are quoted from the tree at
+  `PharmFoldMDK-snapshot-2026-08-05-4b7547c`. **The closure evidence is Code's reading of the live
+  database on 2026-08-05 and is attributed as such below** — it is **not** Planner-verified, and the
+  Planner has no database access.
+- **Relates:** **D-075** (the pre-registration this would have spent); **F-004** (the pre-registered
+  result, untouched); **F-021** (the loader defect found in the remedy); **F-023** (the residual bare
+  null the fill left); **D-074** (a finding is not closed until the instrument stops exhibiting it);
+  **D-027** (null-with-a-reason, never an imputed value).
+
+**⚠ This is not F-018, and the two must not be merged.** F-018 is a **vocabulary** defect in the
+**identity** path — an absent status recorded as an affirmative one — and it costs a **miscounted
+census row**. F-020 is in the **fit** path and it costs a **fabricated result**. They are the same
+*shape* at different altitudes, which is exactly why a later reader will be tempted to collapse them.
+
+#### The defect — three links, none of which reddens
+
+Migration `0007` created `protein_features.membrane_proximal_sasa`. **Nothing populated it.** Feature 7
+is a named input of the `geom_proxy` ablation (`FEATURE_SETS["geom_proxy"] = (0, 1, 4, 5, 6)`), so a
+`--ablate geom_proxy` run would then have done this:
+
+1. **`scripts/fit_scorer.py`** assembled the row as
+   `float(rec.membrane_proximal_sasa or 0.0)` — **an absent measurement becomes `0.0`.**
+2. **The same file printed a WARNING and proceeded.** Its own text read *"a 0.0 placeholder here
+   would be an imputed value (D-027)"* — ⚠ **it named the defect and then committed it.**
+3. **`core/scorer.py`'s standardizer** is
+   `(features[j] - self.means[j]) / self.stds[j] if self.stds[j] > 0 else 0.0` — a **zero-variance
+   column standardises to `0.0` for every row.** No crash, no `NaN`, nothing red.
+
+**So feature 7 would have entered the fit as a constant and contributed exactly nothing.**
+`geom_proxy` `(0, 1, 4, 5, 6)` collapses to `no_plddt` `(0, 1, 4, 5)` **plus one inert dimension.**
+
+#### ⚠ Why this was the most expensive available failure
+
+The result would have landed at the `no_plddt` baseline — **D-075 Decision 4's second row**, which
+this log names as *"the expected case at n=12"* and reports as **ambiguous**.
+
+**And it would have fired for the wrong reason.** Not *"the SASA proxy did not recover the signal"*
+but ***"the proxy was never computed."*** The two are indistinguishable in the output: same
+`run_kind='sensitivity'`, a plausible triple, and the WARNING lines scrolled off above it.
+
+⚠ **A pre-registered run producing its most likely outcome, for a reason invisible in its own
+artifact, nine days before it is presented.** The pre-registration cannot protect against this,
+because the pre-registration is about *what the numbers mean* — not about whether the input existed.
+
+#### The guard
+
+`--ablate geom_proxy` now **raises** rather than warns when any ranking-set row lacks feature 7.
+
+- **Scoped to the named ablation, never to the fit.** The pre-registered six have no feature 7 and
+  legitimately never did. ⚠ **A guard that reddened the pre-registered path would make F-004
+  unreproducible in order to protect an ablation** — worse than the defect it fixes.
+- **Scoped to ranking-set rows.** An excluded row's placeholder is inert by construction.
+- **It runs before `create_ranking_run()`**, so a refusal writes no run row.
+- **`or 0.0` was removed, not guarded around.** A membrane-proximal SASA of exactly `0.0` is a
+  legitimate measurement — a fully buried window — and `or` cannot distinguish it from an absence.
+
+#### Closure — what it rests on, and whose reading it is
+
+**⚠ Read and reported by Code, 2026-08-05, against the live database. Not verified by the Planner,
+who has no database access.** Recorded this way because D-016 permits an attributed reading and
+forbids an anonymous one.
+
+> **Code's reading, 2026-08-05:** the same guard was demonstrated **refusing** and then, after
+> feature 7 was measured, **passing** — same guard, same rows, **with the run table untouched on both
+> sides.** The refusal named **56 of 56** ranking-set rows; `ranking_runs` read `(4, 4)` before and
+> after each demonstration. The pre-registered six-feature path passed throughout, so **F-004 remains
+> reproducible.**
+
+**The D-074 basis, stated explicitly:** *a finding is not closed when the fix is written; it is
+closed when the instrument stops exhibiting it.* The before/after pair — refusal, then pass, on the
+same instrument against the same population — **is** that evidence. ⚠ **The fix having been merged
+would not have been.**
+
+#### What it changed about how this project works
+
+- **A warning that names a defect and proceeds is not a guard.** It transfers the decision to whoever
+  is reading stdout, at the moment they are least likely to be reading it.
+- **The dangerous failures are the plausible ones.** Nothing here would have crashed. Three separate
+  artifacts on 2026-08-05 had this property, and it is why `test_zero_eligible_rows_is_an_ERROR_not_a_result`
+  exists: *a census where nothing is fetchable is not a census result; it is a broken pipeline wearing one.*
+- **A pre-registration protects the interpretation, not the input.** D-075's §0 had five confirmations
+  and none of them asked whether feature 7 had a value.
+
+---
+
 ### D-079 — The census: ingest 2,807 surface proteins, tranche the crank, fold everything reachable at a recorded recipe — and spend none of the pre-registration on it
 
 - **Date:** 2026-08-05
@@ -1432,6 +1594,29 @@ path (a controlled A/B re-fold at the opposite precision, never touching the rep
 run here and is not a prerequisite.** Recorded so a survival result is not over-read as excluding
 *all* confounds, only the confidence one.
 
+⟡ **Second item, added 2026-08-06 with `### F-017` — fold-recipe heterogeneity.** The cohort spans
+three fold recipes: `(int8, 64) × 42`, `(fp16, None) × 34`, `(fp16, 64) × 3`, and **one unrecorded**.
+**F-015 is untested at the cohort's actual variable** (`None` vs `64`) — F-012 measured chunk 16 vs 64
+and not this. ⚠ **No claim in either direction:** *"those 34 folds are fine"* is exactly as
+unsupported as the opposite. This design cannot separate a recipe effect from the axis it measures.
+
+⟡ **Third item, added 2026-08-06 with `### F-017` — the coordinate-mediated correlation.** Feature 7
+is **architecturally blind** to pLDDT — `Atom` carries no `b_factor`, `parse_pdb` never reads columns
+60-66, and the contaminated fixture reds on both arms — **and it is measurably correlated with it.**
+Against feature 4 (`membrane_proximal_plddt`) Pearson **−0.4898** / Spearman **−0.5490**; against
+feature 3 (`mean_plddt_ecd`) Pearson **−0.6208** / Spearman **−0.4694**; the two confidence features
+correlate with each other at **+0.7959 / +0.7695**. The pathway is **the folded coordinates
+themselves**: feature 7 is computed over structure ESMFold produced, so it can track confidence
+without ever reading it. ⚠ **This design cannot separate *"membrane-proximal geometry carries the
+signal"* from *"membrane-proximal geometry is a readout of the same thing confidence reads."***
+
+> ⚠ **Scope of those coefficients, and it binds any later citation.** They were measured on **the 56
+> ranking-set rows, at one recipe composition, on this cohort as folded**. They are a property of
+> **this instrument's output on this cohort — not a constant of the features**, not a property of
+> `membrane_proximal_sasa` in general, and not transferable to the census, to a re-fold at a
+> different precision, or to any other population. **A number lifted out of this sentence and quoted
+> alone would be a general claim this design never made.**
+
 #### Implementation findings — ⚠ TWO invisible pre-registration corruptions, caught and guarded
 
 **Recorded as findings, not as incidental fixes.** Both were latent in code that was green, both
@@ -1509,6 +1694,73 @@ facts belong in the record — no inflation, no omission.
     byte-identical.
   - **No run in the implementing PR.** Runs are owner-authorised after merge, interpretation already
     frozen by this entry.
+
+#### ⚠ RUN B PRE-REGISTRATION — four free parameters closed, 2026-08-06
+
+**Ruled by the owner 2026-08-06, after Run A returned Decision 4 row 1 (F-017), and BEFORE any
+attention-proxy value existed** — `scripts/attention_control.py --freeze` was a deliberate stub,
+`data/attention_proxies.json` did not exist, and no proxy had ever been computed for any target.
+**The protection is that the data did not exist, not that the ruler was ignorant of Run A.** Stating
+the second would be false; the first is checkable.
+
+Decision 3 and Decision 4's matching rows were frozen before Run A. They left four parameters open.
+Closing them after seeing a Run B result would be the fishing this entry exists to prevent. They are
+closed here instead.
+
+**Ruling 1 — which score Run B re-ranks: `geom_proxy` (`ranking_run` id=5).**
+Decision 3 says *"re-rank with the structural (ablated) score."* When written, the only ablated run
+was `no_plddt`. Decision 3's own opening sentence distinguishes this control from that one —
+*"D-065 tests attention only indirectly, via feature removal. This tests it directly"* — and D-065
+**is** `no_plddt`. `geom_proxy` is the confidence-blind structural axis the result now rests on.
+⚠ `no_plddt` (id=3) is Decision 4's *baseline*; matching on it would answer a question nobody asked.
+
+**Ruling 2 — covariate-adjust AND stratify, as a declared sensitivity pair.**
+Decision 3 says *"covariate-adjusting or stratifying."* The `or` is a live free parameter inside a
+frozen decision. **Both are run.** This is Decision 3's own discipline — *"a sensitivity pair, not
+one blessed number"* — applied to the method rather than to the proxy. **Four results total: two
+methods × two proxies.** ⚠ **Disagreement between methods is reported as disagreement and is not
+resolved toward the cleaner one**, exactly as Decision 4 treats disagreement among the triple.
+The stratification rule for `pub_count`, being a second free parameter, is fixed here: **quartiles of
+the frozen `pub_count` over the 56 ranking-set rows, computed from the snapshot, never re-cut.**
+`pdb_present` is binary and strata are its two values.
+
+**Ruling 3 — what "still enrich" means: the triple, against `geom_proxy`'s unmatched result.**
+Decision 4's matching rows say *survives* / *survives one but not the other* / *vanishes*, and never
+operationalise *survives*. Run A needed no judgement because Decision 4 anchored it to explicit
+numbers. Run B is read the same way: **median, mean, and count ≥0.5 of the matched positive
+percentiles, read against `geom_proxy`'s unmatched triple — 0.6607 / 0.6324 / 8-of-12 — as the
+anchor.** *Survives* = all three sit toward it. ⚠ **No threshold, no significance test, no single
+statistic** (D-041 dec 4; D-065/D-075 dec 5). The anchor is a number that already exists in the
+record and cannot be tuned.
+
+**Ruling 4 — the proxies are three-valued, and absence excludes rather than defaults.**
+Decision 3 defines `pdb_present` as *"1 if the target has an experimentally solved structure in the
+PDB, else 0"* — binary, with no state for *"the lookup failed."* ⚠ **This fills that gap; it does
+not amend the definition.** A protein with no PDB entry is a **measured zero**. A protein whose
+lookup errored is an **absence**, and coercing it to `0`/`False` manufactures a positive claim about
+the world out of a network failure — **which in a matching analysis does not merely miscount, it
+moves the matching.** F-020's shape, in the control rather than the fit.
+
+Both proxies are recorded as **`measured` / `measured_zero` / `absent_with_reason`.** An absent value
+is a **CATEGORY** — never `0`, never `False`, never a bare null. **A target with an absent proxy is
+excluded from that proxy's matched analysis and named**, never defaulted into it.
+
+**The exclusion thresholds, fixed here and acknowledged as arbitrary:**
+- **0 positives excluded** — report normally.
+- **1–2 positives excluded** — ⚠ **run is reportable, with the excluded targets named, and the
+  analysis repeated on the reduced set with both results shown.** At n=12 one exclusion is 8% of the
+  label set; that fact is stated wherever the result appears.
+- **3 or more positives excluded** — ⚠ **VOID.** Fix the fetcher, re-pull under a **new as-of date**,
+  and record the void run and its reason. A void run is not deleted.
+
+⚠ **These numbers are arbitrary and are recorded as arbitrary. An arbitrary threshold fixed before
+any pull is legitimate; the same number chosen afterwards is not.** That difference is the whole
+reason this block exists.
+
+**Sequencing, unchanged from §3 of the run order:** Run B follows the wiring PR and the freeze, in
+its own window, under separate owner authorisation. The proxies are frozen with source, query
+string, and date recorded **before** any Run B result is read, and re-running from the frozen
+snapshot must be byte-identical.
 
 ### D-074 — A finding against an instrument is not closed until the instrument no longer exhibits it — or carries, in itself, the statement of what it gets wrong
 

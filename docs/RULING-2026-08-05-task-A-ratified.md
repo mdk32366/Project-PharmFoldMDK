@@ -1,5 +1,9 @@
 # RULING — 2026-08-05 — Task A ratified; three items closed; go on Task B
 
+> **COMMITTED to `docs/` as provenance. CITED BY the log, not restated in it — where this file and
+> `docs/README.md` differ, THE LOG GOVERNS.** ⚠ This file records how a decision was reached; it is
+> not itself authority. Check the `### D-NNN` / `### F-NNN` header, not a reference to it.
+
 > **Short by design.** Amends `ORDERS-Code-2026-08-05-F020-F021-remedy.md` §1 only.
 
 ---

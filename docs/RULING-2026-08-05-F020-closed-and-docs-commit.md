@@ -1,5 +1,9 @@
 # RULING — 2026-08-05 — F-020 closed under D-074; §5 was unexecutable as written; land the docs commit
 
+> **COMMITTED to `docs/` as provenance. CITED BY the log, not restated in it — where this file and
+> `docs/README.md` differ, THE LOG GOVERNS.** ⚠ This file records how a decision was reached; it is
+> not itself authority. Check the `### D-NNN` / `### F-NNN` header, not a reference to it.
+
 ---
 
 ## §1 — F-020 is closed. The pair is the evidence.
