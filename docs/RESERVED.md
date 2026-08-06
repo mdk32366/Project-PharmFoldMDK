@@ -115,6 +115,30 @@ PY
 | **`db/migrations/env.py` sets no `connect_timeout`** | Owner + Code, 2026-08-05 | A half-dead tunnel **hangs indefinitely** where `scripts/dev_check_db.py` fails in 10 s. Not what happened on 2026-08-05 — the 0007 apply had already committed when its terminal appeared to hang — but the hazard is real and the two look identical from the keyboard. |
 | **`--fill-feature-7` reports `N written` where `written` counts rows *assigned to*, including one assigned `None`** | Code, 2026-08-05 | The Task C write printed **`80 written`** while **79** rows received a value; `IGF2R` was assigned `None`. ⚠ **A true number that answers a different question than it appears to answer** — 2,886's shape, one table down. A tighter report reads *79 valued, 1 null-with-reason*. Closes with **F-023**. |
 
+### Run B's four free parameters — CLOSED, and where to find the ruling
+
+`### D-075` Decision (3) and Decision (4)'s matching rows were frozen before Run A and left **four
+free parameters** open: *which* ablated score Run B re-ranks · *covariate-adjust **or** stratify* ·
+what *"still enrich"* operationally means · and what happens when a proxy lookup fails.
+
+**All four are closed** in `#### ⚠ RUN B PRE-REGISTRATION — four free parameters closed, 2026-08-06`,
+appended to `### D-075`. Recorded here because an amendment at the end of the project's longest entry
+is otherwise discoverable only by reading D-075 to its end.
+
+⚠ **When they were closed, and the honest form of it:** ruled **after** Run A returned Decision 4
+row 1, and **before any attention-proxy value existed** — `--freeze` was a deliberate stub,
+`data/attention_proxies.json` did not exist, and no proxy had ever been computed for any target.
+**The protection is that the data did not exist, not that the ruler was ignorant of Run A.** The
+second would be false; the first is checkable, and the window closes permanently the moment the
+wiring PR merges.
+
+⚠ **The exclusion thresholds are recorded as arbitrary** — 0 excluded reports normally, 1–2 is
+reportable with the targets named and the analysis repeated on the reduced set, 3 or more is **VOID**.
+**An arbitrary threshold fixed before any pull is legitimate; the same number chosen afterwards is
+not.** That difference is the entire reason the block exists.
+
+---
+
 ### ⚠ Hash discipline: compare on normalised line endings
 
 `git`'s `LF→CRLF` conversion on checkout means a document's committed bytes differ from its delivered
