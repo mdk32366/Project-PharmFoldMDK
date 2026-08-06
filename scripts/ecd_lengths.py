@@ -125,7 +125,9 @@ def read_accession_map(path: str) -> list[dict]:
             out.append({
                 "entry": (row.get("entry") or row.get("entry_name") or "").strip(),
                 "accession": (row.get("accession") or "").strip(),
-                "id_status": (row.get("status") or row.get("id_status") or "resolved").strip().lower(),
+                # ⚠ F-018: no default. A missing status is an ABSENCE, not an affirmative.
+                "id_status": (row.get("census_identity_status") or row.get("id_status")
+                              or "").strip().lower(),
             })
     return out
 

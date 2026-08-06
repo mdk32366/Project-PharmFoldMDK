@@ -69,17 +69,31 @@ OVER_CEILING = OVER_CEILING
 
 # Census-scale categories. Each is a way of NOT knowing a cost, kept distinct
 # because merging them would hide which kind of ignorance applies.
-NO_TOPOLOGY = "no_topology"     # resolved identity, but no numeric ECD span
+# ⚠ NO_TOPOLOGY REQUIRES A SUCCESSFUL FETCH. "No sliceable ECD span" is a claim about the
+# PROTEIN and can only be made after looking; "never fetched" is a claim about the PIPELINE.
+# Because STATUS_WINS_OVER_SPAN is exactly the complement of fetch-eligibility, that invariant
+# now holds structurally rather than by care.
+NO_TOPOLOGY = "no_topology"     # fetched successfully, but no numeric ECD span
 MULTI = "multi"                 # entry name mapped to several accessions
 UNRESOLVED = "unresolved"       # entry name mapped to none
-OBSOLETE = "obsolete"           # accession withdrawn upstream
+INACTIVE = "inactive"           # UniProt's own word; the entry is withdrawn
+FETCH_FAILED = "fetch_failed"   # ⚠ the request failed. NOT an identity failure: `unresolved`
+                                # means the name mapped to no accession, while a timeout means
+                                # the accession was fine and the request was not. At 82 rows it
+                                # never fired; at 2,807 it will.
 
-CATEGORIES = (LOCAL, RENTAL, OVER_CEILING, NO_TOPOLOGY, MULTI, UNRESOLVED, OBSOLETE)
+# ⚠ OBSOLETE DELETED -- an invented synonym for a state UniProt already names. Two names for one
+# thing is the two-paths class arriving through a glossary.
+CATEGORIES = (LOCAL, RENTAL, OVER_CEILING, NO_TOPOLOGY, MULTI, UNRESOLVED, INACTIVE, FETCH_FAILED)
 
 # Identity statuses that are answers about the IDENTIFIER, not about the protein.
 # They win over any span, because counting such a row by its span would assert an
 # identity the mapping step explicitly declined to make.
-_IDENTITY_FAILURES = {MULTI: MULTI, UNRESOLVED: UNRESOLVED, OBSOLETE: OBSOLETE}
+# ⚠ F-018: the vocabulary is ONE constant in `core.census_identity`, imported by all three
+# sites that read it. Not three string comparisons agreeing by convention.
+from core.census_identity import (  # noqa: E402
+    STATUS_WINS_OVER_SPAN, require_status,
+)
 
 
 def categorise(row: Mapping[str, Any], ceiling: FoldCeiling = LOCAL_CEILING) -> str:
@@ -87,16 +101,21 @@ def categorise(row: Mapping[str, Any], ceiling: FoldCeiling = LOCAL_CEILING) -> 
 
     A row is `{"span_aa": int | None, "id_status": str}` (other keys ignored).
 
-    1. **Identity failure wins.** `multi` / `unresolved` / `obsolete` are facts
-       about the identifier. A `multi` row carrying a span is still `multi`.
+    1. **Status wins over span** — members of `STATUS_WINS_OVER_SPAN` are decided by
+       their status, whatever span they carry. ⚠ The docstring cites the constant and
+       does NOT list it: a prose copy of a vocabulary drifts on the next rename.
     2. **Absent span is `no_topology`**, never 0 and never `local`. A span of 0 is
        treated the same way — a zero-length ECD is not a free fold, it is a
        measurement that did not happen.
     3. Otherwise the D-077 envelope, at the measured recipe.
     """
-    status = (row.get("id_status") or "resolved").strip().lower()
-    if status in _IDENTITY_FAILURES:
-        return _IDENTITY_FAILURES[status]
+    # ⚠ F-018. NO DEFAULT. An absent status silently becoming an affirmative one is the defect,
+    # and a different default is the same defect at a different value -- so the `or "resolved"`
+    # is DELETED, not corrected. `resolved` is retired from the vocabulary entirely, which means
+    # a surviving default now fails the vocabulary check loudly instead of passing silently.
+    status = require_status((row.get("id_status") or "").strip().lower() or None)
+    if status in STATUS_WINS_OVER_SPAN:
+        return status
 
     span = row.get("span_aa")
     if span is None or not isinstance(span, int) or span <= 0:
@@ -130,7 +149,8 @@ def describe_split(counts: Mapping[str, int], ceiling: FoldCeiling = LOCAL_CEILI
     from core.foldability import describe
 
     measured = counts[LOCAL] + counts[RENTAL] + counts[OVER_CEILING]
-    unknown = counts[NO_TOPOLOGY] + counts[MULTI] + counts[UNRESOLVED] + counts[OBSOLETE]
+    unknown = (counts[NO_TOPOLOGY] + counts[MULTI] + counts[UNRESOLVED]
+               + counts[INACTIVE] + counts[FETCH_FAILED])
 
     lines = [
         f"ceiling      : {describe(ceiling)}",
@@ -146,7 +166,8 @@ def describe_split(counts: Mapping[str, int], ceiling: FoldCeiling = LOCAL_CEILI
         f"  {NO_TOPOLOGY:<13} {counts[NO_TOPOLOGY]:>6}   no numeric ECD span (NOT free)",
         f"  {MULTI:<13} {counts[MULTI]:>6}   entry name -> several accessions",
         f"  {UNRESOLVED:<13} {counts[UNRESOLVED]:>6}   entry name -> none",
-        f"  {OBSOLETE:<13} {counts[OBSOLETE]:>6}   accession withdrawn upstream",
+        f"  {INACTIVE:<13} {counts[INACTIVE]:>6}   UniProt entry withdrawn",
+        f"  {FETCH_FAILED:<13} {counts[FETCH_FAILED]:>6}   the request failed, identity intact",
         f"  {'-' * 13} {'-' * 6}",
         f"  {'uncosted':<13} {unknown:>6}",
         "",

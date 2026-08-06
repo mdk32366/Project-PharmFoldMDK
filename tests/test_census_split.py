@@ -33,7 +33,8 @@ from core.census import (
     LOCAL,
     MULTI,
     NO_TOPOLOGY,
-    OBSOLETE,
+    INACTIVE,
+    FETCH_FAILED,
     OVER_CEILING,
     RENTAL,
     UNRESOLVED,
@@ -42,7 +43,10 @@ from core.census import (
 from core.manifest import LOCAL_CEILING, FoldCeiling
 
 
-def _row(span=None, status="resolved", entry="X_HUMAN"):
+# ⚠ F-018: `resolved` is RETIRED. The live vocabulary is active/merged/inactive/multi/unresolved,
+# and `active` is what a fetchable, correctly-identified row now carries. These fixtures moved
+# because the constant rejects the old string -- which is the retirement doing its job.
+def _row(span=None, status="active", entry="X_HUMAN"):
     return {"entry": entry, "span_aa": span, "id_status": status}
 
 
@@ -144,7 +148,7 @@ def test_unresolved_and_multi_survive_to_the_output():
     v2 §1: a census cost model that silently excludes the identifiers it could
     not resolve is understating the census.
     """
-    rows = [_row(300, "resolved"), _row(None, "multi"), _row(None, "unresolved"),
+    rows = [_row(300, "active"), _row(None, "multi"), _row(None, "unresolved"),
             _row(None, "unresolved")]
     counts = census_split(rows)
 
@@ -166,7 +170,7 @@ def test_every_row_lands_somewhere_and_nothing_is_invented():
     duplicated them would overstate it."""
     rows = ([_row(200)] * 3 + [_row(500)] * 2 + [_row(900)] +
             [_row(None)] * 4 + [_row(None, "multi")] * 2 +
-            [_row(None, "unresolved")] * 5 + [_row(None, "obsolete")])
+            [_row(None, "unresolved")] * 5 + [_row(None, "inactive")])
     counts = census_split(rows)
     assert sum(counts.values()) == len(rows) == 18
 
@@ -174,7 +178,7 @@ def test_every_row_lands_somewhere_and_nothing_is_invented():
 def test_empty_census_is_zeroes_not_an_error():
     counts = census_split([])
     assert sum(counts.values()) == 0
-    for key in (LOCAL, RENTAL, OVER_CEILING, NO_TOPOLOGY, MULTI, UNRESOLVED, OBSOLETE):
+    for key in (LOCAL, RENTAL, OVER_CEILING, NO_TOPOLOGY, MULTI, UNRESOLVED, INACTIVE, FETCH_FAILED):
         assert counts[key] == 0
 
 
