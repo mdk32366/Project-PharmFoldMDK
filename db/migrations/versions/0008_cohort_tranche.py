@@ -41,7 +41,11 @@ def upgrade() -> None:
     # Backfill through the shared helper — the same function the test exercises.
     from db.tranche_backfill import backfill_tranche_zero
 
-    tagged = backfill_tranche_zero(op.get_bind().engine)
+    # ⚠ op.get_bind() — the CONNECTION, never .engine. Passing the Engine makes the backfill
+    # open a SECOND connection, which then waits on the ACCESS EXCLUSIVE lock this very
+    # migration holds from add_column. That deadlocks with itself and hangs forever with no
+    # other clients. Same transaction, same connection, one commit — alembic's.
+    tagged = backfill_tranche_zero(op.get_bind())
     print(f"[0008] backfilled cohort_tranche=0 on {tagged} existing protein_analyses rows")
 
 

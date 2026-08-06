@@ -138,6 +138,77 @@ def test_backfill_tags_every_existing_row():
     assert (total, zeros) == (3, 3), (total, zeros)
 
 
+# ── ⚠ THE MIGRATION-SHAPED FIXTURE. The one the in-memory engine could not provide. ──
+def _file_engine(tmp_path):
+    """A FILE-backed SQLite with NullPool, so 'a second connection' is genuinely a second one.
+
+    ⚠ `create_engine("sqlite://")` uses `SingletonThreadPool` and hands the same connection back,
+    so a helper that opens its own connection is INDISTINGUISHABLE from one that uses the caller's.
+    That is precisely why the gate went green at 490 on code that deadlocked in production."""
+    from sqlalchemy.pool import NullPool
+    eng = create_engine(f"sqlite:///{tmp_path/'t.db'}", poolclass=NullPool)
+    Base.metadata.create_all(eng)
+    return eng
+
+
+def test_the_backfill_runs_inside_the_callers_transaction(tmp_path):
+    """⚠ THE TEST THAT WOULD HAVE CAUGHT THE DEADLOCK, and the fixture is the whole point.
+
+    Migration `0008` calls this helper while holding `ACCESS EXCLUSIVE` on `protein_analyses` in an
+    open transaction. If the helper opens its OWN connection, that connection waits on a lock its
+    own caller holds — a deadlock with itself, hanging forever with zero other clients.
+
+    This fixture reproduces the shape: an **outer transaction the caller already holds**, with a row
+    written but **not committed**. A helper using the caller's Connection sees that row and tags it.
+    A helper opening a second connection cannot see uncommitted data and tags nothing.
+
+    ⚠ Prove it bites by reverting `backfill_tranche_zero` to `with Session(engine)` and having the
+    migration pass `op.get_bind().engine`: the count drops to 0 and this reds at the assertion
+    below. On the in-memory engine the same revert stays GREEN — which is the finding."""
+    from db.tranche_backfill import backfill_tranche_zero
+    eng = _file_engine(tmp_path)
+
+    conn = eng.connect()
+    trans = conn.begin()
+    try:
+        conn.execute(ProteinAnalysis.__table__.insert(),
+                     [{"id": 1, "input_type": "accession", "input_value": "UNCOMMITTED",
+                       "structure_source": "", "pdb_path": None, "notes": "",
+                       "metadata": {}, "cohort_tranche": None}])
+        tagged = backfill_tranche_zero(conn)          # ← the caller's Connection, mid-transaction
+        assert tagged == 1, (
+            "the backfill tagged %r rows — it could not see the caller's uncommitted row, so it "
+            "opened its own connection. In the migration that connection waits on the caller's "
+            "ACCESS EXCLUSIVE lock and hangs forever." % tagged)
+        seen = conn.execute(select(func.count()).select_from(ProteinAnalysis)
+                            .where(ProteinAnalysis.cohort_tranche == TRANCHE_ZERO)).scalar()
+        assert seen == 1, seen
+    finally:
+        trans.rollback()
+        conn.close()
+
+    # ⚠ And it must NOT have committed: the migration owns that transaction.
+    with Session(eng) as s:
+        left = s.scalar(select(func.count()).select_from(ProteinAnalysis))
+    assert left == 0, (
+        f"{left} row(s) survived the caller's rollback — the backfill committed a transaction it "
+        "does not own, which inside a migration ends the DDL transaction early")
+
+
+def test_the_backfill_still_opens_its_own_transaction_when_given_an_engine(tmp_path):
+    """⚠ A-017 positive control for the test above. The Connection path must not be the only one
+    that works — tests and scripts pass an Engine, and that path must still commit on its own."""
+    from db.tranche_backfill import backfill_tranche_zero
+    eng = _file_engine(tmp_path)
+    with Session(eng) as s:
+        s.add(ProteinAnalysis(id=1, input_type="accession", input_value="COMMITTED", meta={}))
+        s.commit()
+    assert backfill_tranche_zero(eng) == 1
+    with Session(eng) as s:
+        assert s.scalar(select(func.count()).select_from(ProteinAnalysis)
+                        .where(ProteinAnalysis.cohort_tranche == TRANCHE_ZERO)) == 1
+
+
 def test_the_backfill_fixture_contains_a_null_pdb_path_row():
     """⚠ A-017 clause (c), asserted rather than assumed. Names the row that plays IGF2R's part. If
     this ever reds, `test_backfill_tags_every_existing_row` has stopped discriminating and its
