@@ -1,0 +1,30 @@
+{
+  "class": "non_surface",
+  "parsed_under": "v2-ruled-vocabulary-2026-08-07",
+  "source_v1_file": "spans_annex.csv",
+  "rows": 2209,
+  "band_split": {
+    "bands": {
+      "fetch_ineligible:uniprot_inactive": 19,
+      "no_extracellular_span": 1303,
+      "span:gpi_rule_A": 1,
+      "span:vocabulary": 885,
+      "term_unruled": 1
+    },
+    "denominator_total_rows": 2209,
+    "denominator_fetched": 2190,
+    "denominator_fetch_ineligible": 19,
+    "denominator_fetch_failed": 0,
+    "foldable": 886,
+    "foldable_v1": 332
+  },
+  "gains": {
+    "gained_by_mechanism": {
+      "gpi_rule_A": 1,
+      "vocabulary": 553
+    },
+    "gained_total": 554,
+    "changed_existing_spans": []
+  },
+  "note": "fetched_on and uniprot_release are carried from the V1 rows unchanged; only the parse differs"
+}
