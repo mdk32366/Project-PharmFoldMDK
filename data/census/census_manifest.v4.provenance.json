@@ -1,0 +1,125 @@
+{
+  "seed": 20260807,
+  "manifest_revision": 4,
+  "rebuild_reason": "manifest identity fix: r1 and r3 had identical membership and an identical fold order (3,468 of 3,468) while two spans differed, so a membership-only identity reported no change on the revision where the work moved. r4 carries TWO identities -- fold_order_key (membership only, stable across span revisions by design) and manifest_content_hash (coordinates, band, tier, rule, definition). It also adds span_start/span_end, without which nothing downstream could slice a sequence at all.",
+  "seed_preserved_across_rebuild": true,
+  "order_differs_because_population_differs": true,
+  "seed_recorded_before_shuffle": true,
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "span_definition_note": "D-081: the 82-target cohort is frozen under v1-extracellular-substring-2026-07-21. Counts under the two definitions are not comparable unless both are named.",
+  "attention_tilt_limitation": "The no_extracellular_span band correlates weakly with UniProt entry recency: Spearman rho = -0.142 against entryVersion and +0.120 against firstPublicDate, real at n\u22482,800 but about 2% of variance, and the two proxies are mechanically confounded. Nothing is adjusted for it.",
+  "ceiling_recipe": {
+    "hardware": "local NVIDIA Blackwell, 8 GB VRAM",
+    "dtype": "int8",
+    "chunk_size": 64,
+    "known_good": 440,
+    "known_bad": 630,
+    "provenance": "S-004/S-005 bisection; band (440, 630) unmeasured pending D-077"
+  },
+  "classes": {
+    "surface": {
+      "source_file": "spans_surface.v2.csv",
+      "source_sha256": "74336d4e58f011019f539874971bd260cd90e189bd2169e539c1e45f3587f1a6",
+      "source_rows": 2807,
+      "foldable": 2582,
+      "not_foldable_by_reason": {
+        "absent_with_reason": 2,
+        "fetch_ineligible:not fetched: uniprot_inactive": 7,
+        "no_extracellular_span": 215,
+        "span_boundary_unknown": 1
+      },
+      "span_definition": "v2-ruled-vocabulary-2026-08-07"
+    },
+    "non_surface": {
+      "source_file": "spans_annex.v2.csv",
+      "source_sha256": "8c8833234e2ffe454b8a402ebd23ef1810aea387567a98099b2ad55bca502635",
+      "source_rows": 2209,
+      "foldable": 886,
+      "not_foldable_by_reason": {
+        "fetch_ineligible:not fetched: uniprot_inactive": 19,
+        "no_extracellular_span": 1304
+      },
+      "span_definition": "v2-ruled-vocabulary-2026-08-07"
+    }
+  },
+  "shuffled": true,
+  "manifest_rows": 3468,
+  "manifest_sha256": "0411cc4c55aac6d3aa3182cfe6c7481b53df538896be8930408a78e3c0abb9b5",
+  "fold_order_key": "18e570987a5fc385b86a0b344532b9a4552542b753da22a4186ee74ad915fe82",
+  "fold_order_key_covers": "membership only: the census_accession set \u2014 stable across span revisions BY DESIGN",
+  "manifest_content_hash": "4c33c54d54303ab676c7faeb740c4a2dec1f2db28f6b5dbfe15ab3f2780f5cea",
+  "manifest_content_hash_covers": [
+    "census_accession",
+    "span_start",
+    "span_end",
+    "band",
+    "tier",
+    "span_rule",
+    "span_definition"
+  ],
+  "bands": {
+    "above_local": 428,
+    "local": 2691,
+    "untested_band": 349
+  },
+  "tiers": {
+    "local": 2691,
+    "rental": 777
+  },
+  "rows_by_class": {
+    "non_surface": 886,
+    "surface": 2582
+  },
+  "first_10_fold_order": [
+    [
+      1,
+      "P51679",
+      "local"
+    ],
+    [
+      2,
+      "P05362",
+      "rental"
+    ],
+    [
+      3,
+      "Q14517",
+      "rental"
+    ],
+    [
+      4,
+      "Q5BIV9",
+      "local"
+    ],
+    [
+      5,
+      "Q9Y5F0",
+      "rental"
+    ],
+    [
+      6,
+      "Q9Y4A9",
+      "local"
+    ],
+    [
+      7,
+      "Q96P31",
+      "rental"
+    ],
+    [
+      8,
+      "Q8NEW7",
+      "local"
+    ],
+    [
+      9,
+      "Q8N6F1",
+      "local"
+    ],
+    [
+      10,
+      "O75121",
+      "local"
+    ]
+  ]
+}

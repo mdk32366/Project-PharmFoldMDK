@@ -180,3 +180,77 @@ def test_band_of_refuses_to_call_a_missing_span_foldable():
     assert band_of(None) == "not_foldable"
     assert band_of(LOCAL_CEILING.known_good) == "local"
     assert band_of(LOCAL_CEILING.known_bad) == "above_local"
+
+
+# ── ⚠ two identities, and neither may stand for the other ───────────────────
+def _mrow(acc, start, end, band="local", tier="local", rule="vocabulary", defn="v2"):
+    return {"census_accession": acc, "span_start": start, "span_end": end, "band": band,
+            "tier": tier, "span_rule": rule, "span_definition": defn}
+
+
+def test_changing_exactly_one_span_moves_the_content_hash_and_not_the_fold_order():
+    """⚠⚠ THE DISCRIMINATING TEST, and a membership-only check passes under the defect.
+
+    Revisions 1 and 3 had identical membership (3,468) and an identical fold order — 3,468 of
+    3,468 — while `P51654` went 529→195 and `Q13421` went 561→302. **An unchanged fold order is
+    not evidence of an unchanged manifest.**
+
+    Prove it bites by defining `manifest_content_hash` over accessions only — exactly the
+    membership-only identity that hid the change — and the content assertion reds."""
+    from scripts.census_manifest import fold_order_key, manifest_content_hash
+    before = [_mrow("A", 1, 100), _mrow("B", 200, 400)]
+    after = [_mrow("A", 1, 100), _mrow("B", 200, 300)]      # ⚠ exactly one span changed
+
+    assert fold_order_key(before) == fold_order_key(after), (
+        "the fold order key moved when only a SPAN changed — fold orders must stay reproducible "
+        "across span revisions, which is the whole reason it is keyed on membership")
+    assert manifest_content_hash(before) != manifest_content_hash(after), (
+        "the content hash did NOT move when a span changed — this is the r1-vs-r3 defect: a "
+        "manifest whose contents differ reporting the same identity")
+
+
+def test_the_fixture_actually_changes_exactly_one_span():
+    """⚠ A-017 clause (c). With no changed span, both assertions above pass trivially."""
+    before = [_mrow("A", 1, 100), _mrow("B", 200, 400)]
+    after = [_mrow("A", 1, 100), _mrow("B", 200, 300)]
+    diff = [(x, y) for x, y in zip(before, after) if x != y]
+    assert len(diff) == 1 and diff[0][0]["span_end"] != diff[0][1]["span_end"]
+
+
+def test_a_membership_change_moves_both():
+    """⚠ The converse control: adding a protein must move BOTH, or the fold-order key would be
+    stable against the one thing it is supposed to track."""
+    from scripts.census_manifest import fold_order_key, manifest_content_hash
+    before = [_mrow("A", 1, 100)]
+    after = [_mrow("A", 1, 100), _mrow("B", 5, 50)]
+    assert fold_order_key(before) != fold_order_key(after)
+    assert manifest_content_hash(before) != manifest_content_hash(after)
+
+
+def test_the_content_hash_covers_the_band_tier_rule_and_definition_not_only_coordinates():
+    """⚠ A band or tier moving is a routing change; a rule or definition moving is a meaning
+    change. Both must move the identity."""
+    from scripts.census_manifest import manifest_content_hash as h
+    base = [_mrow("A", 1, 100)]
+    assert h(base) != h([_mrow("A", 1, 100, band="above_local")])
+    assert h(base) != h([_mrow("A", 1, 100, tier="rental")])
+    assert h(base) != h([_mrow("A", 1, 100, rule="gpi_rule_A")])
+    assert h(base) != h([_mrow("A", 1, 100, defn="v1")])
+
+
+def test_both_identities_are_emitted_and_labelled_distinctly(built):
+    """⚠ One number standing for both is the defect this exists to prevent."""
+    _, prov, _ = built
+    assert prov["fold_order_key"] != prov["manifest_content_hash"]
+    assert "membership" in prov["fold_order_key_covers"].lower()
+    assert "span_start" in prov["manifest_content_hash_covers"]
+
+
+def test_a_span_without_coordinates_is_refused_outright():
+    """⚠ A LENGTH CANNOT SLICE A SEQUENCE. The census manifest carried only `span_aa` until now,
+    so nothing downstream could have cut anything from it. Prove it bites by dropping the check."""
+    from core.span_extract import SpanResult
+    with pytest.raises(ValueError, match="cannot be sliced"):
+        SpanResult(span_aa=100, rule="vocabulary")
+    with pytest.raises(ValueError, match="do not reconcile"):
+        SpanResult(span_aa=100, span_start=1, span_end=50, rule="vocabulary")

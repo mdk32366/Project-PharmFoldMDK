@@ -29,6 +29,11 @@ from core.span_definition import (
 class SpanResult:
     """One protein's span under V2. ⚠ `span_aa` and `category` never both carry a value."""
     span_aa: Optional[int] = None
+    #: ⚠ THE COORDINATES, not just the length. A length cannot slice a sequence — `core/manifest.py`
+    #: has carried `ecd_start`/`ecd_end` for the 82 since D-024, and the census manifest was built
+    #: with only `span_aa`, which means nothing downstream could actually have cut anything from it.
+    span_start: Optional[int] = None
+    span_end: Optional[int] = None
     rule: str = ""
     category: str = ""
     reason: str = ""
@@ -42,6 +47,14 @@ class SpanResult:
     definition: str = V2_RULED_VOCABULARY
 
     def __post_init__(self) -> None:
+        if self.span_aa is not None and (self.span_start is None or self.span_end is None):
+            raise ValueError(
+                f"a span without coordinates cannot be sliced: span_aa={self.span_aa!r} "
+                f"start={self.span_start!r} end={self.span_end!r}")
+        if self.span_aa is not None and self.span_end - self.span_start + 1 != self.span_aa:
+            raise ValueError(
+                f"the coordinates do not reconcile with the length: "
+                f"{self.span_start}-{self.span_end} is not {self.span_aa} aa")
         if (self.span_aa is None) == (not self.category):
             raise ValueError(
                 f"a SpanResult must carry exactly one of a span or a category, not both and not "
@@ -143,6 +156,7 @@ def extract(data: dict) -> SpanResult:
     held: list[str] = []
     boundary: list[str] = []
     best: Optional[int] = None
+    best_bounds: tuple[Optional[int], Optional[int]] = (None, None)
 
     for f in _features(data, "Topological domain"):
         desc = f.get("description", "") or ""
@@ -162,11 +176,11 @@ def extract(data: dict) -> SpanResult:
             continue
         n = e - s + 1
         if best is None or n > best:
-            best = n
+            best, best_bounds = n, (s, e)
 
     if best is not None:
-        return SpanResult(span_aa=best, rule=RULE_VOCABULARY,
-                          terms_unruled=unruled, terms_held=held)
+        return SpanResult(span_aa=best, span_start=best_bounds[0], span_end=best_bounds[1],
+                          rule=RULE_VOCABULARY, terms_unruled=unruled, terms_held=held)
 
     lip = gpi_lipidation(data)
     if lip:
@@ -197,7 +211,9 @@ def extract(data: dict) -> SpanResult:
             return SpanResult(category=ABSENT_WITH_REASON,
                               reason=REASON_GPI_POSITION_UNANNOTATED,
                               terms_unruled=unruled, terms_held=held, guards=guards)
-        return SpanResult(span_aa=pos - cs, rule=RULE_GPI_A,
+        # ⚠ start → (anchor − 1): the anchored residue itself is the attachment point, not part
+        # of the folded ectodomain.
+        return SpanResult(span_aa=pos - cs, span_start=cs, span_end=pos - 1, rule=RULE_GPI_A,
                           terms_unruled=unruled, terms_held=held, guards=guards)
 
     if boundary:
@@ -239,6 +255,8 @@ def as_row(result: SpanResult) -> dict[str, Any]:
     """The flat output shape. ⚠ An empty string is the ABSENT marker; `0` is never written."""
     return {
         "span_aa": result.span_aa if result.span_aa is not None else "",
+        "span_start": result.span_start if result.span_start is not None else "",
+        "span_end": result.span_end if result.span_end is not None else "",
         "span_rule": result.rule,
         "span_category": result.category,
         "no_span_reason": result.reason,

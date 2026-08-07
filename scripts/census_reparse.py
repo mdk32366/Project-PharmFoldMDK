@@ -57,7 +57,7 @@ CACHE = CENSUS / "spancache"
 CARRIED = ("census_accession", "census_class", "census_identity_status", "source_identifiers",
            "fetch_failed", "fetch_error", "fetched_on", "uniprot_release")
 
-NEW = ("span_aa", "span_rule", "span_category", "no_span_reason", "span_boundary_coordinate",
+NEW = ("span_aa", "span_start", "span_end", "span_rule", "span_category", "no_span_reason", "span_boundary_coordinate",
        "terms_unruled", "terms_held", "guards", "parsed_under")
 
 #: ⚠ The V1 span, carried so the two definitions sit side by side in one file and NEITHER is

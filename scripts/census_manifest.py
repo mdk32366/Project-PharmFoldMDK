@@ -63,14 +63,50 @@ ATTENTION_TILT = (
 )
 
 OUT_COLUMNS = (
-    "census_accession", "census_class", "span_aa", "span_rule", "band", "tier", "tier_reason",
-    "dtype", "chunk_size", "fold_order", "span_definition", "guards",
+    "census_accession", "census_class", "span_aa", "span_start", "span_end", "span_rule",
+    "band", "tier", "tier_reason", "dtype", "chunk_size", "fold_order", "span_definition",
+    "guards",
 )
+
+#: ⚠⚠ TWO IDENTITIES, AND NEITHER MAY STAND FOR THE OTHER.
+#:
+#: Revisions 1 and 3 had **identical membership (3,468) and an identical fold order — 3,468 of
+#: 3,468 — while two spans differed** (`P51654` 529→195, `Q13421` 561→302). The seeded shuffle keys
+#: on the accession SET, so an unchanged order says nothing about whether the manifest changed.
+#: **A reader diffing r1 against r3 by row count, membership or order would have concluded nothing
+#: moved — on the revision where the whole point of the work moved.**
+#:
+#: So the manifest carries two numbers with two jobs:
+#:
+#: · `fold_order_key`        — what the shuffle is keyed on. ⚠ Deliberately membership-only, so a
+#:                             fold order stays reproducible ACROSS span revisions.
+#: · `manifest_content_hash` — what the manifest SAYS. Covers the coordinates, the band, the tier,
+#:                             the rule that produced the span and the definition version.
+#:
+#: ⚠ One number standing for both is the defect this exists to prevent.
+CONTENT_FIELDS = ("census_accession", "span_start", "span_end", "band", "tier", "span_rule",
+                  "span_definition")
 
 
 def sha256_of(path: Path) -> str:
     """⚠ LF-normalised, so a checkout's line endings cannot change an artifact's identity."""
     return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def fold_order_key(rows: list[dict[str, Any]]) -> str:
+    """⚠ MEMBERSHIP ONLY, deliberately. The fold order must stay reproducible across span
+    revisions, so this must NOT move when a span moves. `manifest_content_hash` is what moves."""
+    payload = "\n".join(sorted(r["census_accession"] for r in rows))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def manifest_content_hash(rows: list[dict[str, Any]]) -> str:
+    """⚠ WHAT THE MANIFEST SAYS, not who is in it. Moves when any coordinate, band, tier, rule or
+    definition version moves — including when membership is untouched."""
+    payload = "\n".join(
+        "\t".join(str(r.get(f, "")) for f in CONTENT_FIELDS)
+        for r in sorted(rows, key=lambda x: x["census_accession"]))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def band_of(span: Optional[int]) -> str:
@@ -103,6 +139,8 @@ def manifest_rows(census_class: str) -> tuple[list[dict[str, Any]], dict[str, An
             "census_accession": r["census_accession"],
             "census_class": r["census_class"],
             "span_aa": span,
+            "span_start": r.get("span_start", ""),
+            "span_end": r.get("span_end", ""),
             "span_rule": r["span_rule"],
             "band": band_of(span),
             "tier": tier,
@@ -200,6 +238,12 @@ def run(argv: Optional[list[str]] = None) -> int:
     by_class = Counter(r["census_class"] for r in rows)
     provenance.update(shuffled=True, manifest_rows=len(rows),
                       manifest_sha256=sha256_of(out),
+                      # ⚠ BOTH, LABELLED DISTINCTLY. Never one number standing for both.
+                      fold_order_key=fold_order_key(rows),
+                      fold_order_key_covers="membership only: the census_accession set — stable across span "
+                                            "revisions BY DESIGN",
+                      manifest_content_hash=manifest_content_hash(rows),
+                      manifest_content_hash_covers=list(CONTENT_FIELDS),
                       bands=dict(sorted(bands.items())), tiers=dict(sorted(tiers.items())),
                       rows_by_class=dict(sorted(by_class.items())),
                       first_10_fold_order=[(r["fold_order"], r["census_accession"], r["tier"])
