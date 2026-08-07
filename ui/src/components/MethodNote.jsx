@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getCoverage } from '../api.js'
 import ArchitectureDiagram from './ArchitectureDiagram.jsx'
 import Glossary from './Glossary.jsx'
+import SpanGlossary from './SpanGlossary.jsx'
 import Term from './Term.jsx'
 
 // Method note (UI Plan v2 §3.4, D-028): what the system claims and what it does not — the whole
@@ -78,6 +79,7 @@ export default function MethodNote() {
         so as a ruled change with its own decision entry — not because the UI had space for it.
       </p>
 
+      <SpanGlossary />
       <Glossary />
     </div>
   )

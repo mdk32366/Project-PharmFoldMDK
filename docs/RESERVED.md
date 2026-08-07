@@ -106,6 +106,24 @@ PY
 
 ---
 
+## ⚠ Reserved WITHOUT a number — findings queued behind one free integer
+
+> **These are reservations, not deferrals.** They announce something forward; what they do **not** do
+> is take an integer. ⚠ **`F-025` was claimed in a commit message before it appeared in this register
+> and turned out to be free by luck rather than by procedure** (see `### F-025`, *number verified
+> live*). **Five findings are now queued behind the next free `F-`, and no number is taken under
+> momentum. The owner rules which, if any, is written.**
+
+| Queued finding | Recorded | What unblocks it |
+|---|---|---|
+| **A topological-domain term from a non-human organism's vocabulary appears in the human membraneome census** — whether this is a cosmetic annotation artifact or a **denominator error affecting counts already published** depends on the organism of the carrying row | `AMENDMENT-Code-2026-08-07-reparse-and-organism-check.md` A2.3, 2026-08-07 | ✅ **The organism check has run and the serious branch is closed.** `P0DKB6` MPC1L is *Homo sapiens*, `taxonId 9606`, **reviewed (Swiss-Prot)**, annex class — so *"7,811 human proteins"* stands in the deck, the literature review and `P-003`, and **no census-wide organism sweep is owed.** ⚠ What remains is cosmetic and is hypothesis 1 or 2: all three of its topological domains cite one source (`PubMed 27317664`, `ECO:0000305` — inferred by curator), and the `Mother cell cytoplasmic` segment at 43-51 sits **between two `Mitochondrial matrix` domains** in *Mitochondrial pyruvate carrier 1-like protein*, which is the shape of **ortholog annotation transfer from a yeast study.** ⚠ Not sourced at first hand. **Changes no count — `Cytoplasmic` and the mitochondrial terms are all rejected regardless.** |
+| **The KEEL absence** | 2026-08-04 → | `KEEL-4-The-Assumption-Register-v1.md` landing |
+| **A verification sharing an implementation with its subject** | 2026-08-06 | Owner ruling |
+| **Derive from source, not from context** | 2026-08-06 | Owner ruling |
+| **An order asking for confirmation invites confirmation** | 2026-08-06 | Owner ruling |
+
+---
+
 ## Named deferrals — known, recorded, not built (D-074 dec 3)
 
 > **Not reservations.** These carry no `D-`/`F-`/`A-` number and announce nothing forward. They are

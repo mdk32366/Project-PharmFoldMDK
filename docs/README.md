@@ -130,6 +130,174 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-081 — The span definition is frozen for the 82, permanently: two definitions exist from today, both named, and no artifact compares them without saying which
+
+- **Date:** 2026-08-07
+- **Status:** Accepted. **Ruled before any re-extraction.** ⚠ **Binding and permanent** — this is not
+  a deferral. `### F-004` and `### F-017` are **never re-run under a later span definition.**
+- **Type:** A **decision**. It rules what a measured result means once the definition that produced it
+  moves, and it forecloses the two repairs that look most reasonable.
+- **⚠ Number verified live, not inherited.** At writing, the highest `### D-` entry was **D-079**;
+  `D-078` and `D-080` are reserved and unwritten in `docs/RESERVED.md`. **D-081 is the next free
+  integer. Confirmed by reading the log for a `### D-081` header, not for a reference to one**
+  (method note item 7).
+- **Provenance (D-016):** the trigger is Code's reading via `scripts/f025_vocabulary_gate.py` over
+  `data/census/spancache` — **all 82 in cache, 0 fetches, 82/82 answered offline.** Owner ruling:
+  `docs/RULINGS-2026-08-07-span-definition.md` R5.
+
+- **Context.** `### F-025` establishes that the span filter measures *"no `Topological domain`
+  described as extracellular"*. The owner has ruled a widened, per-term, biological vocabulary for the
+  census. ⚠ **The gate asking whether that widening touches the cohort came back AFFECTED.**
+
+- **The trigger, as measured — three of the 82 gain spans:**
+
+  | accession | label | committed | under the ruled definition |
+  |---|---|---|---|
+  | `P11717` | IGF2R | `largest_span_aa` empty | `Lumenal` → **2,264 aa** |
+  | `O15455` | TLR3 | `largest_span_aa` empty | `Lumenal` → **681 aa** |
+  | `Q9NV96` | TMEM30A | `largest_span_aa` empty | `Exoplasmic loop` → **255 aa** |
+
+  ⚠ **And the consequence is a routing flip, not a feature value.** `core/manifest.py:239-251`
+  branches on `largest_span_aa` being numeric; empty means `boundary_method="whole"`,
+  `held_out=True`, fold the whole sequence. All three would move `whole → sliced_ecd` and
+  `held_out → ranked`, **on a different molecule** — IGF2R 2,491 → 2,264, TLR3 904 → 681, TMEM30A
+  361 → 255. Coverage would go `67 ranked + 13 held_out + 2 excluded` → `70 + 10 + 2`.
+
+  **Feature 1 is `ecd_length = len(plddt)`** (`core/features.py:422`) — the length of *what was
+  actually folded*. For these three that is the whole-sequence length. **The committed features are
+  not wrong under their own definition; they were measured on a different molecule from the one the
+  new definition names.** That is precisely the boundary-method incomparability D-021 held them out
+  for.
+
+- **Decision.**
+  1. **The 82 are frozen under the original span definition, permanently.** No re-slice, no re-fold,
+     no re-extract, no re-fit, no re-score, no re-rank. F-008 forbids touching the reported cohort.
+  2. **The census uses the ruled definition.**
+  3. ⚠ **`n_ranking_set` is DEFINITION-DEPENDENT and must always be reported with its definition.**
+     67 is not a property of the cohort; it is a property of the cohort *under a filter*. A future
+     reader comparing 67 to a census figure computed under the new definition would be comparing two
+     different measurements wearing one name.
+  4. ⚠ **Every artifact naming a span states which definition produced it. Two definitions, both
+     named, never compared without naming which.**
+
+- **⚠ Options rejected, and why — both are the repairs that look most reasonable:**
+  - **Re-run the 82 under the new definition.** ⚠ **This destroys `### D-075`'s pre-registration.**
+    D-075 froze six Decision-4 rows before the numbers existed, and Run A fired row 1 against them.
+    A cohort re-measured after the interpretation was written cannot test an interpretation written
+    before it. **The apparatus that makes F-017 credible is the thing this would spend.**
+  - **Amend `### F-004` to the new numbers.** ⚠ **D-074: corrections are recorded openly, never
+    patched into a sealed result.** An amended F-004 would read as though it had always said that,
+    and the disagreement between the two definitions — which is itself the finding — would vanish.
+
+- **Deep-learning justification.** Neutral to the neural core and protective of its evaluation. The
+  graded deliverable rests on a pre-registered ablation whose validity depends on the measured inputs
+  not moving underneath it. ⚠ **A definition change applied retroactively to a fitted cohort is
+  train-test contamination wearing a maintenance ticket** — the model would be evaluated on features
+  recomputed after its interpretation was fixed. Freezing the cohort keeps the ablation falsifiable.
+
+- **Consequences.** Two span definitions exist in the repository from today and both are named in
+  code. The census's foldable counts are **not comparable** to `2,352` / `332` without stating both
+  definitions. ⚠ **The 82 keep IGF2R, TLR3 and TMEM30A as `held_out`, which is now known to be an
+  artifact of the old definition rather than a property of those proteins** — recorded here so it is
+  never re-discovered as a bug.
+
+---
+
+### F-025 — `no_topology` reported an absence that was five different things: a band name that made a claim its filter could not support
+
+- **Date:** 2026-08-07
+- **Status:** Accepted. ⚠ **NOT closed under D-074** — the instrument still exhibits it at the moment
+  this is written, and the rename and the re-extraction land in the same arc but not in this entry.
+  It closes when `scripts/ecd_lengths.py` no longer produces a band called `no_topology`, or when the
+  band carries a statement of what it gets wrong.
+- **Type:** An **instrument finding**. It is about what the extractor measures, not about the biology
+  it was pointed at.
+- **⚠ Number verified live, not inherited — and the verification found a second thing.** The highest
+  `### F-` written was **F-020**; `F-021`–`F-024` are reserved and unwritten; **F-025 is the next free
+  integer.** ⚠ **But `F-025` appears nowhere in `docs/RESERVED.md`, `docs/README.md` or
+  `ARCHITECTURE.md` — zero occurrences.** It was claimed in commit `ba1e687` and in PR #133 on the
+  strength of a chat message, and **there was no reservation row to strike.** The owner's
+  `RULINGS-2026-08-07-span-definition.md` R5 ratifies it: *a Planner chat message cannot ratify what a
+  committed document reserved.* Recorded because a number taken outside the register and later found
+  to be free is right by luck, not by procedure.
+- **Provenance (D-016):** every count is Code's reading, off
+  `data/census/spancache` (5,009 cached UniProt entry JSONs, **0 fetches**),
+  `data/census/spans_annex.csv`, `data/census/spans_surface.csv` and `data/cohort_82_ecd.csv`.
+  Instrument: `scripts/span_extraction_audit.py`. Output verbatim:
+  `docs/AUDIT-OUTPUT-2026-08-07-span-extraction.txt`. Superseding correction:
+  `docs/CORRECTION-2026-08-06-no-topology-is-not-no-topology.md`.
+
+- **Context.** `scripts/ecd_lengths.py:194-196`:
+
+  ```python
+  if feat.get("type") != "Topological domain":
+      continue
+  description = feat.get("description", "") or ""
+  if "extracellular" not in description.lower():
+      continue
+  ```
+
+  ⚠ **What is measured is *no `Topological domain` whose description contains the substring
+  "extracellular"*.** The band was called `no_topology`, and that name was used interchangeably with
+  *"this protein has no reachable domain"* in the span reports, in two hypotheses built on top, and in
+  a commit message that reached `main`.
+
+- **Finding — the band reported FIVE different things, and only one of them is "no topology":**
+
+  | | Mechanism | Annex | Surface | What fixes it |
+  |---|---|---|---|---|
+  | 1 | A reachable face under other vocabulary (`Lumenal`, `Vesicular`, `Exoplasmic loop`, …) | 553 | 106 | Widen the term list |
+  | 2 | `Transmembrane` present, faces never labelled | 734 | 197 | ⚠ **Nothing — a genuine annotation gap** |
+  | 3 | GPI-anchored: no topology **by design** | 1 | 125 | A different extraction rule |
+  | 4 | Only an unreachable or cytoplasmic face | 199 | 15 | Correctly excluded |
+  | 5 | ⚠ Term matched, **coordinate `UNKNOWN`** | 0 | 1 | A coordinate rule |
+
+  Counts are proteins, and the columns sum to the populations they came from: **1,858 annex** and
+  **448 surface** (mechanism 3 and 5 are drawn from within mechanism 4's and the neither-bucket's
+  rows; the audit output carries the full reconciliation).
+
+- ⚠ **Mechanism 5 is the one nobody was looking for, and it is the F-020 shape.** `Q7Z5N4` SDK1
+  carries `Topological domain 'Extracellular'` with
+  `{"start": {"value": null, "modifier": "UNKNOWN"}, "end": {"value": 2009, "modifier": "EXACT"}}`.
+  **The current filter matches it** — the description does contain *extracellular*. `parse()` admits
+  `Span(start=None, end=2009)`, `largest_span` returns `None` because it cannot subtract a null, and
+  the row reports `no_topology`. **A 2,009 aa ECD that UniProt did annotate as extracellular, lost to
+  a coordinate modifier rather than to a word.** An absent *measurement* reported as absence of the
+  *thing*. n=1 census-wide.
+
+- ⚠ **And the selector used to look for the problem masked it.** The audit was ordered over *twelve*
+  of the 82 with `n_extracellular_spans == 0`. Re-deriving on the field that actually drives the
+  pipeline — a blank `largest_span_aa` — returns **thirteen**. SDK1's `n_extracellular_spans` is
+  **1**: it matched, and it still has no span. **The criterion chosen to find the defect was blind to
+  one instance of it.**
+
+- **The 82, all thirteen, bucketed:** **1** vocabulary 3 *(IGF2R, TLR3, TMEM30A)* · **2** annotation
+  gap 6 *(CLCNKB, ENPP5, FRRS1, SLC44A3, TMEM108, UGT8)* · **3** GPI 3 *(GPC1, MSLN, TNFRSF10C)* ·
+  **5** coordinate 1 *(SDK1)* · ⚠ **4 — not a membrane protein: EMPTY.** **Every one of the thirteen
+  has membrane evidence. None was correctly excluded.**
+
+- ⚠⚠ **`MSLN` is out of the ranking set by an extraction failure, not by a labelling decision.**
+  `Q13421` carries `Lipidation` `'GPI-anchor amidated serine'` at 598, **no** `Transmembrane`, **no**
+  `Topological domain`, and a `Signal` peptide — attached by a lipid tail, crossing nothing, mature
+  chain entirely extracellular. UniProt records a GPI anchor as a **lipid-moiety-binding site**, which
+  is a feature type the extractor's topology model cannot produce. MSLN and `GPC1` both carry Kathad
+  evidence score 4, and `data/adc_reference_mapping.csv`'s own carve-out names MSLN as absent because
+  **unverified, not negative**. **So `n=12` — the binding constraint on every claim this project
+  makes — is partly an artifact of this filter.**
+
+- ⚠ **Both foldable counts are FLOORS, not populations.** `2,352` surface and `332` annex count only
+  proteins with an explicitly *extracellular* span. **The surface class leaks too** — 106 surface
+  proteins have a reachable face and are counted today as having none.
+
+- **Consequences.** The band is renamed to what it measures; the vocabulary, the GPI rule and the
+  coordinate category are ruled in `RULINGS-2026-08-07-span-definition.md` and implemented against the
+  census only. ⚠ **The 82 are frozen — `### D-081`.** The annex's 84.8% is largely an instrument
+  artifact rather than a finding about UniProt's coverage, and **the `### F-016` collision dissolves**:
+  the table can be the whole membraneome, these can be properly annotated membrane proteins, and they
+  still read `no_topology` under a filter looking for one word.
+
+---
+
 ### F-017 — The confidence-blind structural axis recovers what `no_plddt` lost: Decision 4 row 1 fired, and the proxy that never reads confidence is nonetheless correlated with it
 
 > **The fired row, quoted from `docs/README.md` §D-075 Decision (4), before any prose:**
@@ -192,6 +360,26 @@ Post-state matched two independently written pre-registrations term for term: `r
 **Every production number above is Code's reading. The Planner has no database access and recomputed only the triple from the twelve percentiles.**
 
 Denominators, each stating its key, **never summed**: cohort of record **82** (Kathad-2024-PLOSONE) · rows carrying `protein_features` **80** (two named exclusions never enqueued, D-026) · ranking set **56** · excluded **24 of 80** (`held_out`, `below_floor`, and IGF2R `not_folded`).
+
+> #### ⚠ DISCLOSURE added 2026-08-07 — a statement about the inputs, NOT a correction to the result
+>
+> **Nothing above is amended.** The triple, the twelve percentiles, the correlations and the quoted
+> fired row are **unchanged and are not restated here.** The result stands exactly as measured.
+>
+> **What is now known, and was not known when this entry was written:** the spans every feature was
+> computed on were produced by the span definition described in `### F-025`, and **three of the 82 —
+> `IGF2R`, `TLR3`, `TMEM30A` — carry a domain that definition does not admit.** They are `held_out`
+> here for a reason that is a property of the filter rather than of the proteins.
+>
+> ⚠ **This does not move a number in this entry, and no number in this entry may be re-derived to
+> find out whether it would.** `### D-081` freezes the cohort permanently, and the reason is in that
+> entry: re-measuring the 82 after `### D-075`'s interpretation was sealed would spend the
+> pre-registration that makes this result mean anything.
+>
+> **The operative consequence is comparability, not validity.** `n_ranking_set = 56` and the cohort's
+> dispositions are **definition-dependent**, and any census figure computed under the ruled 2026-08-07
+> definition is **a different measurement** — comparable only when both definitions are named.
+> See `### F-025` and `### D-081`; they are cited, not summarised.
 
 ---
 
