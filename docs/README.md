@@ -307,6 +307,35 @@ So the rule is not "be careful" — it is:
   docstring is not guarding it.** The guard is the category — `span_boundary_unknown` — and it did
   not exist until today. **No number is taken for this; it is a clause of this finding.**
 
+- ⚠⚠ **AND THE SIXTH MECHANISM WAS IN THE FIX, NOT IN THE FILTER — `Q13421` MSLN.** The GPI span
+  rule selected the mature chain by `min(Chain start)`, which on mesothelin took **37** and produced
+  a **561 aa** span. Mesothelin is made as a precursor: the N-terminal megakaryocyte-potentiating
+  factor is cleaved and **secreted**, so ~250 of those residues are never on the cell. ⚠ **On the
+  protein this finding is named after, and it would have folded, scored, banded and looked entirely
+  normal.** `P51654`'s −195 and MSLN's +250 are the same defect at opposite ends of the molecule —
+  rule B was barred for over-reading the C-terminus, and this is its N-terminal twin, **live while
+  B never fired.**
+
+  ⚠ **The first correction was also wrong, and it is recorded rather than replaced.** Selecting the
+  chain whose **end** coincides with the anchor conflated two jobs — disambiguating among chains,
+  and testing whether a chain is valid at all — and it **excluded `P06731` CEACAM5, one of
+  `### F-009`'s four clinically-validated missing targets, on a nine-residue end mismatch at a
+  boundary rule A never reads.** An exclusion on annotation *form* rather than on biology.
+  **The Planner wrote that ruling and corrected it.**
+
+  The rule is now one rule: **the chains that CONTAIN the anchor; among them, the LATEST start.**
+  ⚠ Latest start is conservative, not arbitrary: annotating both `Mesothelin` 37-598 and
+  `Mesothelin, cleaved form` 296-598 is an assertion that 37-295 *can be removed*. **The rule can
+  only under-read, and over-reading is what folds things that are not there.** MSLN lands at
+  **302 aa**, the mature form the ADCs bind; CEACAM5 returns at **641 aa**.
+
+- ⚠ **A reporting trap this produced, recorded because it nearly passed.** Manifest revision 1 and
+  revision 3 have **identical membership (3,468) and an identical fold order — 3,468 of 3,468 —
+  while two spans differ**: `P51654` 529→195 and `Q13421` 561→302. The seeded shuffle keys on the
+  accession set, not on span values, so **an unchanged fold order is not evidence of an unchanged
+  manifest.** A reader diffing the two by row count, membership or order would have concluded that
+  nothing moved, on the revision where the whole point of the day's work moved.
+
 - **Consequences.** The band is renamed to what it measures; the vocabulary, the GPI rule and the
   coordinate category are ruled in `RULINGS-2026-08-07-span-definition.md` and implemented against the
   census only. ⚠ **The 82 are frozen — `### D-081`.** The annex's 84.8% is largely an instrument

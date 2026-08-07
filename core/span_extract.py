@@ -18,7 +18,8 @@ from typing import Any, Optional
 
 from core.span_definition import (
     ABSENT_WITH_REASON, GUARD_CHAIN_OVERRUNS_ANCHOR, GUARD_CHAIN_START_AMBIGUOUS,
-    NO_EXTRACELLULAR_SPAN, REASON_GPI_MATURE_CHAIN_AMBIGUOUS, REASON_GPI_NO_CHAIN,
+    GUARD_CHAIN_SHORTER_THAN_LONGEST, NO_EXTRACELLULAR_SPAN,
+    REASON_GPI_NO_CHAIN, REASON_GPI_NO_CHAIN_SPANS_ANCHOR,
     REASON_GPI_POSITION_UNANNOTATED, RULE_GPI_A,
     RULE_VOCABULARY, SPAN_BOUNDARY_UNKNOWN, TERM_UNRULED, V2_RULED_VOCABULARY, classify_term,
 )
@@ -88,34 +89,33 @@ def mature_chain_bounds(data: dict) -> tuple[Optional[int], Optional[int]]:
     return (min(starts) if starts else None, max(ends) if ends else None)
 
 
-def mature_chain_at_anchor(data: dict, anchor: Optional[int]) -> tuple[Optional[int], str]:
-    """`(start, "")` of the mature GPI chain, or `(None, reason)`.
+def mature_chain_at_anchor(data: dict, anchor: Optional[int]) -> tuple[Optional[int], str, float]:
+    """`(start, "", ratio)` of the mature GPI chain, or `(None, reason, 1.0)`.
 
-    ⚠ **The anchor selects the chain.** A GPI-anchored mature chain is the one terminating at the
-    anchor; every other `Chain` on the entry is a fragment that is cleaved away.
+    ⚠ **The chains that CONTAIN the anchor; among them, the LATEST start.** A GPI anchor is attached
+    to a residue *inside* the mature chain, so containment — not a coincident end — is the test that
+    a chain is the anchored species.
 
-    Three outcomes, and two of them refuse:
+    ⚠ **This corrects a first ruling that tested for a coincident END.** That version excluded
+    `P06731` CEACAM5 — chain 35-685, anchor 676 — on a nine-residue mismatch at a boundary rule A
+    never reads. **A clinically-validated ADC target, dropped on annotation form rather than on
+    biology.**
 
-    1. the candidates agree on one span → that is the mature chain
-    2. **no** `Chain` ends at the anchor → `gpi_mature_chain_ambiguous`
-    3. ⚠ **the candidates disagree** → `gpi_mature_chain_ambiguous` as well. `Q13421` MSLN carries
-       `Mesothelin` 37-598 **and** `Mesothelin, cleaved form` 296-598 — both terminate at the
-       anchor, giving 561 and 302. **Picking one is a ruling, and "never guessed" is the operative
-       clause**, so it is excluded and named rather than decided here.
+    ⚠ **Latest start can only under-read.** Where UniProt annotates both `Mesothelin` 37-598 and
+    `Mesothelin, cleaved form` 296-598, it is asserting that 37-295 *can be removed* — so those
+    residues are not reliably on the surface, and folding them would be folding something that is
+    not there. On MSLN this lands on 296-597: the mature form the ADCs bind.
 
-    ⚠ Two chains with identical bounds are NOT a disagreement — `O95971` CD160 carries
-    `CD160 antigen` and `CD160 antigen, soluble form`, both 25-159. The test is on the SPAN, not on
-    the number of records.
+    The returned `ratio` is selected-span ÷ longest-candidate-span, recorded rather than thresholded.
     """
     if anchor is None:
-        return None, REASON_GPI_POSITION_UNANNOTATED
-    candidates = [c for c in _features(data, "Chain") if _bounds(c)[1] == anchor]
-    starts = {s for s in (_bounds(c)[0] for c in candidates) if s is not None}
+        return None, REASON_GPI_POSITION_UNANNOTATED, 1.0
+    starts = [s for s, e in ((_bounds(c)) for c in _features(data, "Chain"))
+              if s is not None and e is not None and s <= anchor <= e]
     if not starts:
-        return None, REASON_GPI_MATURE_CHAIN_AMBIGUOUS
-    if len(starts) > 1:
-        return None, REASON_GPI_MATURE_CHAIN_AMBIGUOUS
-    return starts.pop(), ""
+        return None, REASON_GPI_NO_CHAIN_SPANS_ANCHOR, 1.0
+    selected, longest = anchor - max(starts), anchor - min(starts)
+    return max(starts), "", (selected / longest if longest else 1.0)
 
 
 def _chain_starts_disagree(data: dict) -> bool:
@@ -185,10 +185,14 @@ def extract(data: dict) -> SpanResult:
         if not _features(data, "Chain"):
             return SpanResult(category=ABSENT_WITH_REASON, reason=REASON_GPI_NO_CHAIN,
                               terms_unruled=unruled, terms_held=held, guards=guards)
-        cs, why = mature_chain_at_anchor(data, pos)
+        cs, why, ratio = mature_chain_at_anchor(data, pos)
         if cs is None:
             return SpanResult(category=ABSENT_WITH_REASON, reason=why,
                               terms_unruled=unruled, terms_held=held, guards=guards)
+        if ratio < 1.0:
+            # ⚠ The selector had a choice. Flagged, not excluded — same posture as the C-terminal
+            # guard on P08571. The ratio travels on the row so magnitude needs no threshold.
+            guards.append(f"{GUARD_CHAIN_SHORTER_THAN_LONGEST}:{ratio:.3f}")
         if pos - 1 < cs:
             return SpanResult(category=ABSENT_WITH_REASON,
                               reason=REASON_GPI_POSITION_UNANNOTATED,
