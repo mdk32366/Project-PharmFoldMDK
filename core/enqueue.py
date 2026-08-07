@@ -35,6 +35,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.contracts import TIER_RECIPE
+from core.fold_reconcile import check_sliced_length
 from core.manifest import ManifestRow, build_manifest
 from core.queue import COMPLETE, PENDING
 from db.models import JobRecord, ProteinAnalysis, RankingRun
@@ -169,6 +170,12 @@ def enqueue_cohort(
 
         fetched = fetch_sequence(row.accession)
         fold_seq, source = _fold_input(row, fetched.sequence)
+        # ⚠ THE CLAIM IS CHECKED WHERE THE SLICE IS MADE. span and the coordinates are two paths to
+        # one quantity, and this is the first place they can be compared. Raises, never asserts:
+        # an assert vanishes under python -O and this stands between a span and a whole-sequence
+        # fold. A mismatch halts the crank.
+        sliced_length = check_sliced_length(
+            row.accession, source, row.span, fold_seq, len(fetched.sequence))
 
         analysis = ProteinAnalysis(
             input_type="uniprot",
@@ -185,7 +192,7 @@ def enqueue_cohort(
                 "source": source,
                 "uniprot_release": fetched.uniprot_release,
                 "full_length": len(fetched.sequence),
-                "fold_length": len(fold_seq),
+                "fold_length": sliced_length,   # ⚠ the CHECKED length, not a re-measurement
                 "ecd_start": row.ecd_start,
                 "ecd_end": row.ecd_end,
                 "primary_match": row.primary_match,
