@@ -1,0 +1,281 @@
+==============================================================================
+TASK 1 — THE GATE. Does the vocabulary gap touch the 82?
+==============================================================================
+twelve | order supplies | 12
+twelve | re-derived from cohort_82_ecd.csv (blank largest_span_aa) | 13
+twelve | order list == re-derived set | False
+twelve | in spancache | 13 | NOT cached | 0
+
+P51801 | CLCNKB | sequence_length | 687
+P51801 | CLCNKB | topological_domain | 'Cytoplasmic' 1-50
+P51801 | CLCNKB | topological_domain | 'Cytoplasmic' 521-687
+P51801 | CLCNKB | transmembrane | 'Helical' 51-82
+P51801 | CLCNKB | transmembrane | 'Helical' 91-111
+P51801 | CLCNKB | transmembrane | 'Helical' 141-160
+P51801 | CLCNKB | transmembrane | 'Helical' 161-180
+P51801 | CLCNKB | transmembrane | 'Helical' 236-255
+P51801 | CLCNKB | transmembrane | 'Helical' 282-310
+P51801 | CLCNKB | transmembrane | 'Helical' 325-342
+P51801 | CLCNKB | transmembrane | 'Helical' 400-420
+P51801 | CLCNKB | transmembrane | 'Helical' 421-440
+P51801 | CLCNKB | transmembrane | 'Helical' 500-520
+P51801 | CLCNKB | gpi_anchor | NONE
+P51801 | CLCNKB | signal_peptide | NONE
+P51801 | CLCNKB | BUCKET | 2 TM present, faces unlabelled — a genuine annotation gap
+
+Q9UJA9 | ENPP5 | sequence_length | 477
+Q9UJA9 | ENPP5 | topological_domain | NONE
+Q9UJA9 | ENPP5 | transmembrane | 'Helical' 432-452
+Q9UJA9 | ENPP5 | gpi_anchor | NONE
+Q9UJA9 | ENPP5 | signal_peptide | type='Signal' 1-24
+Q9UJA9 | ENPP5 | BUCKET | 2 TM present, faces unlabelled — a genuine annotation gap
+
+Q6ZNA5 | FRRS1 | sequence_length | 592
+Q6ZNA5 | FRRS1 | topological_domain | NONE
+Q6ZNA5 | FRRS1 | transmembrane | 'Helical; Name=1' 2-22
+Q6ZNA5 | FRRS1 | transmembrane | 'Helical; Name=2' 372-392
+Q6ZNA5 | FRRS1 | transmembrane | 'Helical; Name=3' 415-435
+Q6ZNA5 | FRRS1 | transmembrane | 'Helical; Name=4' 446-466
+Q6ZNA5 | FRRS1 | transmembrane | 'Helical; Name=5' 491-511
+Q6ZNA5 | FRRS1 | transmembrane | 'Helical; Name=6' 515-535
+Q6ZNA5 | FRRS1 | transmembrane | 'Helical; Name=7' 569-589
+Q6ZNA5 | FRRS1 | gpi_anchor | NONE
+Q6ZNA5 | FRRS1 | signal_peptide | NONE
+Q6ZNA5 | FRRS1 | BUCKET | 2 TM present, faces unlabelled — a genuine annotation gap
+
+P35052 | GPC1 | sequence_length | 558
+P35052 | GPC1 | topological_domain | NONE
+P35052 | GPC1 | transmembrane | NONE
+P35052 | GPC1 | gpi_anchor | type='Lipidation' description='GPI-anchor amidated serine' 530-530
+P35052 | GPC1 | signal_peptide | type='Signal' 1-23
+P35052 | GPC1 | BUCKET | 3 GPI-anchored — no topology by design, needs a different extraction rule
+
+P11717 | IGF2R | sequence_length | 2491
+P11717 | IGF2R | topological_domain | 'Lumenal' 41-2304
+P11717 | IGF2R | topological_domain | 'Cytoplasmic' 2328-2491
+P11717 | IGF2R | transmembrane | 'Helical' 2305-2327
+P11717 | IGF2R | gpi_anchor | NONE
+P11717 | IGF2R | signal_peptide | type='Signal' 1-40
+P11717 | IGF2R | BUCKET | 1 lumenal-family vocabulary — widen the term list
+
+Q13421 | MSLN | sequence_length | 622
+Q13421 | MSLN | topological_domain | NONE
+Q13421 | MSLN | transmembrane | NONE
+Q13421 | MSLN | gpi_anchor | type='Lipidation' description='GPI-anchor amidated serine' 598-598
+Q13421 | MSLN | signal_peptide | type='Signal' 1-36
+Q13421 | MSLN | BUCKET | 3 GPI-anchored — no topology by design, needs a different extraction rule
+
+Q7Z5N4 | SDK1 | sequence_length | 2213
+Q7Z5N4 | SDK1 | topological_domain | 'Extracellular' None-2009
+Q7Z5N4 | SDK1 | topological_domain | 'Cytoplasmic' 2031-2213
+Q7Z5N4 | SDK1 | transmembrane | 'Helical' 2010-2030
+Q7Z5N4 | SDK1 | gpi_anchor | NONE
+Q7Z5N4 | SDK1 | signal_peptide | type='Signal' 1-None
+Q7Z5N4 | SDK1 | BUCKET | 5 term matched, coordinate UNKNOWN — not vocabulary, needs a coordinate rule
+
+Q8N4M1 | SLC44A3 | sequence_length | 653
+Q8N4M1 | SLC44A3 | topological_domain | NONE
+Q8N4M1 | SLC44A3 | transmembrane | 'Helical' 34-54
+Q8N4M1 | SLC44A3 | transmembrane | 'Helical' 213-233
+Q8N4M1 | SLC44A3 | transmembrane | 'Helical' 243-263
+Q8N4M1 | SLC44A3 | transmembrane | 'Helical' 284-304
+Q8N4M1 | SLC44A3 | transmembrane | 'Helical' 334-354
+Q8N4M1 | SLC44A3 | transmembrane | 'Helical' 384-404
+Q8N4M1 | SLC44A3 | transmembrane | 'Helical' 534-554
+Q8N4M1 | SLC44A3 | transmembrane | 'Helical' 563-583
+Q8N4M1 | SLC44A3 | gpi_anchor | NONE
+Q8N4M1 | SLC44A3 | signal_peptide | NONE
+Q8N4M1 | SLC44A3 | BUCKET | 2 TM present, faces unlabelled — a genuine annotation gap
+
+O15455 | TLR3 | sequence_length | 904
+O15455 | TLR3 | topological_domain | 'Lumenal' 24-704
+O15455 | TLR3 | topological_domain | 'Cytoplasmic' 726-904
+O15455 | TLR3 | transmembrane | 'Helical' 705-725
+O15455 | TLR3 | gpi_anchor | NONE
+O15455 | TLR3 | signal_peptide | type='Signal' 1-23
+O15455 | TLR3 | BUCKET | 1 lumenal-family vocabulary — widen the term list
+
+Q6UXF1 | TMEM108 | sequence_length | 575
+Q6UXF1 | TMEM108 | topological_domain | NONE
+Q6UXF1 | TMEM108 | transmembrane | 'Helical' 9-29
+Q6UXF1 | TMEM108 | transmembrane | 'Helical' 469-489
+Q6UXF1 | TMEM108 | gpi_anchor | NONE
+Q6UXF1 | TMEM108 | signal_peptide | NONE
+Q6UXF1 | TMEM108 | BUCKET | 2 TM present, faces unlabelled — a genuine annotation gap
+
+Q9NV96 | TMEM30A | sequence_length | 361
+Q9NV96 | TMEM30A | topological_domain | 'Cytoplasmic' 2-49
+Q9NV96 | TMEM30A | topological_domain | 'Exoplasmic loop' 71-325
+Q9NV96 | TMEM30A | topological_domain | 'Cytoplasmic' 347-361
+Q9NV96 | TMEM30A | transmembrane | 'Helical' 50-70
+Q9NV96 | TMEM30A | transmembrane | 'Helical' 326-346
+Q9NV96 | TMEM30A | gpi_anchor | NONE
+Q9NV96 | TMEM30A | signal_peptide | NONE
+Q9NV96 | TMEM30A | BUCKET | 1 lumenal-family vocabulary — widen the term list
+
+O14798 | TNFRSF10C | sequence_length | 259
+O14798 | TNFRSF10C | topological_domain | NONE
+O14798 | TNFRSF10C | transmembrane | NONE
+O14798 | TNFRSF10C | gpi_anchor | type='Lipidation' description='GPI-anchor amidated alanine' 236-236
+O14798 | TNFRSF10C | signal_peptide | type='Signal' 1-25
+O14798 | TNFRSF10C | BUCKET | 3 GPI-anchored — no topology by design, needs a different extraction rule
+
+Q16880 | UGT8 | sequence_length | 541
+Q16880 | UGT8 | topological_domain | NONE
+Q16880 | UGT8 | transmembrane | 'Helical' 472-492
+Q16880 | UGT8 | gpi_anchor | NONE
+Q16880 | UGT8 | signal_peptide | type='Signal' 1-20
+Q16880 | UGT8 | BUCKET | 2 TM present, faces unlabelled — a genuine annotation gap
+
+------------------------------------------------------------------------------
+TASK 1 — bucket assignment
+  P51801 | CLCNKB    | 2 TM present, faces unlabelled — a genuine annotation gap
+  Q9UJA9 | ENPP5     | 2 TM present, faces unlabelled — a genuine annotation gap
+  Q6ZNA5 | FRRS1     | 2 TM present, faces unlabelled — a genuine annotation gap
+  P35052 | GPC1      | 3 GPI-anchored — no topology by design, needs a different extraction rule
+  P11717 | IGF2R     | 1 lumenal-family vocabulary — widen the term list
+  Q13421 | MSLN      | 3 GPI-anchored — no topology by design, needs a different extraction rule
+  Q7Z5N4 | SDK1      | 5 term matched, coordinate UNKNOWN — not vocabulary, needs a coordinate rule
+  Q8N4M1 | SLC44A3   | 2 TM present, faces unlabelled — a genuine annotation gap
+  O15455 | TLR3      | 1 lumenal-family vocabulary — widen the term list
+  Q6UXF1 | TMEM108   | 2 TM present, faces unlabelled — a genuine annotation gap
+  Q9NV96 | TMEM30A   | 1 lumenal-family vocabulary — widen the term list
+  O14798 | TNFRSF10C | 3 GPI-anchored — no topology by design, needs a different extraction rule
+  Q16880 | UGT8      | 2 TM present, faces unlabelled — a genuine annotation gap
+
+  bucket 1 | 3
+  bucket 2 | 6
+  bucket 3 | 3
+  bucket 5 | 1
+
+⚠ WOULD ANY OF THE 82 MOVE UNDER A WIDENING | YES | 3 | ['P11717/IGF2R', 'O15455/TLR3', 'Q9NV96/TMEM30A']
+
+==============================================================================
+TASK 2 — the same question over the census no_topology populations
+==============================================================================
+annex | no_topology rows | 1858 | cache hits | 1858 | misses | 0
+surface | no_topology rows | 448 | cache hits | 448 | misses | 0
+
+2a | the neither-TM-nor-topological-domain bucket | GPI-anchor annotation
+2a | annex | neither | 372
+2a | annex | GPI-anchored, STRICT (Lipidation 'GPI-anchor …') | 1 | 0.3%
+2a | annex | any feature MENTIONING gpi (loose, not a claim) | 1
+2a | annex | anchor description (verbatim) | 'GPI-anchor amidated serine' | 1
+2a | annex | example GPI accessions | ['Q6UWB4']
+2a | surface | neither | 130
+2a | surface | GPI-anchored, STRICT (Lipidation 'GPI-anchor …') | 125 | 96.2%
+2a | surface | any feature MENTIONING gpi (loose, not a claim) | 126
+2a | surface | ⚠ mention-only, NOT counted as anchored | ['P06858']
+2a | surface | anchor description (verbatim) | 'GPI-anchor amidated serine' | 55
+2a | surface | anchor description (verbatim) | 'GPI-anchor amidated glycine' | 25
+2a | surface | anchor description (verbatim) | 'GPI-anchor amidated asparagine' | 17
+2a | surface | anchor description (verbatim) | 'GPI-anchor amidated alanine' | 14
+2a | surface | anchor description (verbatim) | 'GPI-anchor amidated aspartate' | 7
+2a | surface | anchor description (verbatim) | 'GPI-anchor amidated cysteine' | 5
+2a | surface | anchor description (verbatim) | 'GPI-anchor amidated asparagine; alternate' | 1
+2a | surface | anchor description (verbatim) | 'GPI-anchor amidated cysteine; alternate' | 1
+2a | surface | example GPI accessions | ['P21589', 'P22303', 'Q10588', 'O95971', 'P55290', 'P22748', 'P14384', 'Q6YHK3', 'P08571', 'Q8N6Q3', 'P25063', 'P09326']
+2a | TOTAL | neither | 502 | GPI-anchored STRICT | 126 | 25.1% | loose | 127
+
+2b | the TM-present-no-topological-domain bucket | distinct feature types present
+2b | annex | TM but no topological domain | 734
+2b | annex | feature type | 'Transmembrane' | proteins carrying it | 734 | occurrences | 2223
+2b | annex | feature type | 'Chain' | proteins carrying it | 734 | occurrences | 736
+2b | annex | feature type | 'Natural variant' | proteins carrying it | 407 | occurrences | 2003
+2b | annex | feature type | 'Alternative sequence' | proteins carrying it | 354 | occurrences | 926
+2b | annex | feature type | 'Sequence conflict' | proteins carrying it | 345 | occurrences | 897
+2b | annex | feature type | 'Region' | proteins carrying it | 338 | occurrences | 713
+2b | annex | feature type | 'Compositional bias' | proteins carrying it | 247 | occurrences | 752
+2b | annex | feature type | 'Modified residue' | proteins carrying it | 216 | occurrences | 649
+2b | annex | feature type | 'Domain' | proteins carrying it | 134 | occurrences | 205
+2b | annex | feature type | 'Helix' | proteins carrying it | 114 | occurrences | 1667
+2b | annex | feature type | 'Mutagenesis' | proteins carrying it | 89 | occurrences | 379
+2b | annex | feature type | 'Binding site' | proteins carrying it | 88 | occurrences | 500
+2b | annex | feature type | 'Beta strand' | proteins carrying it | 88 | occurrences | 674
+2b | annex | feature type | 'Glycosylation' | proteins carrying it | 82 | occurrences | 172
+2b | annex | feature type | 'Turn' | proteins carrying it | 80 | occurrences | 285
+2b | annex | feature type | 'Motif' | proteins carrying it | 55 | occurrences | 95
+2b | annex | feature type | 'Active site' | proteins carrying it | 52 | occurrences | 77
+2b | annex | feature type | 'Initiator methionine' | proteins carrying it | 50 | occurrences | 50
+2b | annex | proteins carrying a GPI anchor | 5
+2b | surface | TM but no topological domain | 197
+2b | surface | feature type | 'Transmembrane' | proteins carrying it | 197 | occurrences | 1314
+2b | surface | feature type | 'Chain' | proteins carrying it | 197 | occurrences | 221
+2b | surface | feature type | 'Natural variant' | proteins carrying it | 129 | occurrences | 618
+2b | surface | feature type | 'Glycosylation' | proteins carrying it | 126 | occurrences | 1036
+2b | surface | feature type | 'Sequence conflict' | proteins carrying it | 114 | occurrences | 343
+2b | surface | feature type | 'Alternative sequence' | proteins carrying it | 113 | occurrences | 347
+2b | surface | feature type | 'Region' | proteins carrying it | 102 | occurrences | 329
+2b | surface | feature type | 'Compositional bias' | proteins carrying it | 70 | occurrences | 435
+2b | surface | feature type | 'Domain' | proteins carrying it | 61 | occurrences | 135
+2b | surface | feature type | 'Modified residue' | proteins carrying it | 48 | occurrences | 114
+2b | surface | feature type | 'Signal' | proteins carrying it | 47 | occurrences | 47
+2b | surface | feature type | 'Beta strand' | proteins carrying it | 30 | occurrences | 377
+2b | surface | feature type | 'Helix' | proteins carrying it | 29 | occurrences | 614
+2b | surface | feature type | 'Turn' | proteins carrying it | 25 | occurrences | 131
+2b | surface | feature type | 'Disulfide bond' | proteins carrying it | 23 | occurrences | 111
+2b | surface | feature type | 'Binding site' | proteins carrying it | 21 | occurrences | 88
+2b | surface | feature type | 'Mutagenesis' | proteins carrying it | 20 | occurrences | 126
+2b | surface | feature type | 'Site' | proteins carrying it | 16 | occurrences | 22
+2b | surface | proteins carrying a GPI anchor | 2
+
+2c | the recoverable bucket | ⚠ PER-PROTEIN counts per term, terms kept SEPARATE
+2c | annex | proteins with a reachable face (the recoverable count) | 553
+2c | annex | term 'Cytoplasmic' | proteins | 649 | reachable=False
+2c | annex | term 'Lumenal' | proteins | 505 | reachable=True
+2c | annex | term 'Mitochondrial intermembrane' | proteins | 126 | reachable=False
+2c | annex | term 'Mitochondrial matrix' | proteins | 89 | reachable=False
+2c | annex | term 'Vesicular' | proteins | 30 | reachable=True
+2c | annex | term 'Perinuclear space' | proteins | 16 | reachable=True
+2c | annex | term 'Nuclear' | proteins | 12 | reachable=False
+2c | annex | term 'Peroxisomal matrix' | proteins | 6 | reachable=False
+2c | annex | term 'Peroxisomal' | proteins | 5 | reachable=False
+2c | annex | term 'Exoplasmic loop' | proteins | 2 | reachable=True
+2c | annex | term 'Mother cell cytoplasmic' | proteins | 1 | reachable=False
+2c | surface | proteins with a reachable face (the recoverable count) | 107
+2c | surface | term 'Cytoplasmic' | proteins | 119 | reachable=False
+2c | surface | term 'Lumenal' | proteins | 86 | reachable=True
+2c | surface | term 'Vesicular' | proteins | 7 | reachable=True
+2c | surface | term 'Lumenal, vesicle' | proteins | 4 | reachable=True
+2c | surface | term 'Lumenal, melanosome' | proteins | 3 | reachable=True
+2c | surface | term 'Perinuclear space' | proteins | 2 | reachable=True
+2c | surface | term 'Mitochondrial intermembrane' | proteins | 2 | reachable=False
+2c | surface | term 'Vacuolar' | proteins | 2 | reachable=True
+2c | surface | term 'Intragranular' | proteins | 1 | reachable=True
+2c | surface | term 'Nuclear' | proteins | 1 | reachable=False
+2c | surface | term 'Exoplasmic loop' | proteins | 1 | reachable=True
+2c | surface | term 'Mitochondrial matrix' | proteins | 1 | reachable=False
+2c | surface | term 'Extracellular' | proteins | 1 | reachable=True
+
+2d | ⚠ NOT ORDERED — the coordinate-incomplete shape, found via SDK1 in Task 1
+2d | an ALREADY-MATCHING `Extracellular` domain whose span cannot be computed
+2d | annex | proteins reporting no_topology with a matching but uncomputable extracellular domain | 0
+2d | surface | proteins reporting no_topology with a matching but uncomputable extracellular domain | 1
+2d | surface | Q7Z5N4 | 'Extracellular' | {"start": {"value": null, "modifier": "UNKNOWN"}, "end": {"value": 2009, "modifier": "EXACT"}}
+2d | TOTAL | 1 | ⚠ widening the vocabulary recovers NONE of these
+
+
+==============================================================================
+TASK 3 — the ruling input. ⚠ The table only. No term list is proposed.
+==============================================================================
+Term                             annex  surface  Compartment
+'Cytoplasmic'                      649      119  cytosol
+'Lumenal'                          505       86  secretory-pathway lumen (ER / Golgi / endosome / lysosome)
+'Mitochondrial intermembrane'      126        2  mitochondrial intermembrane space
+'Mitochondrial matrix'              89        1  mitochondrial matrix
+'Vesicular'                         30        7  vesicle lumen
+'Perinuclear space'                 16        2  perinuclear space — continuous with the ER lumen
+'Nuclear'                           12        1  nucleoplasm
+'Peroxisomal matrix'                 6        0  peroxisomal matrix
+'Peroxisomal'                        5        0  peroxisome
+'Lumenal, vesicle'                   0        4  secretory / transport vesicle lumen
+'Exoplasmic loop'                    2        1  exoplasmic face — a third term for the non-cytoplasmic side
+'Lumenal, melanosome'                0        3  melanosome lumen (a lysosome-related organelle)
+'Vacuolar'                           0        2  vacuolar / lysosomal lumen
+'Mother cell cytoplasmic'            1        0  cytoplasm (sporulation-specific term)
+'Intragranular'                      0        1  secretory granule lumen
+'Extracellular'                      0        1  cell exterior
+
+terms observed | 16 | ⚠ not in the compartment table | []
+⚠ Counts are PROTEINS, not domains, and a protein carrying two terms is counted under each — so the columns do NOT sum to the population.
+
