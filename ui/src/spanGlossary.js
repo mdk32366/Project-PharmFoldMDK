@@ -78,26 +78,33 @@ export const SPAN_TERMS = [
       'directly into the same space as the ER.',
   },
 
-  // ── HELD ──────────────────────────────────────────────────────────────────
+  // ── ACCEPTED 2026-08-07, promoted from held after the CSPA check ──────────
   {
-    term: 'Lumenal, melanosome', ruling: 'held',
+    term: 'Lumenal, melanosome', ruling: 'accepted',
     compartment: 'the lumen of a melanosome, a lysosome-related organelle',
     reason:
-      'Held pending a check, and NOT accepted in the meantime — so it gains nothing today. ' +
-      'Melanosomal membrane proteins do reach the cell surface, but that is a specialised lineage ' +
-      'and the reasoning behind it was not sourced at first hand.',
+      'Held pending a check, and the check answered it. All three proteins carrying this term ' +
+      'are in Cell Surface Protein Atlas category 1 — detected at the cell surface by mass ' +
+      'spectrometry on intact cells. \u26a0 That is a MEASUREMENT, and it is independent of the ' +
+      'topology vocabulary that raised the question. Their spans are 449–458 aa: real ectodomains.',
     plain:
-      'The inside of the pigment packet in a pigment cell. Probably reaches the surface, but it is ' +
-      'a special case and it is being checked rather than assumed.',
+      'The inside of the pigment packet in a pigment cell. It was accepted because these proteins ' +
+      'have actually been found on the cell surface in the lab — not because the word looked right.',
   },
   {
-    term: 'Vacuolar', ruling: 'held',
+    term: 'Vacuolar', ruling: 'accepted',
     compartment: 'a vacuolar or lysosomal lumen',
     reason:
-      'Held pending the same check. In human entries this is usually lysosome-like, and lysosomal ' +
-      'exocytosis is real — but the case is weaker than `Lumenal` and it is not being ' +
-      'accepted on a resemblance.',
-    plain: 'The inside of a storage or digestion compartment. Less certain than the lysosome case.',
+      '\u26a0 Accepted on COMPARTMENT BIOLOGY, and deliberately NOT on the two proteins that ' +
+      'happen to carry it here. Both observed instances are V-type ATPase subunits whose vacuolar ' +
+      'faces are short loops — 64 aa and 74 aa — rather than ectodomains, and only one of the two ' +
+      'is surface-detected. \u26a0 But rejecting a compartment on a sample of two would bar every ' +
+      'future vacuolar protein on evidence about V-ATPase. The two short loops sort themselves out ' +
+      'downstream on their own merits, which is the ranking working rather than a gap.',
+    plain:
+      'The inside of a storage or digestion compartment. Accepted because that compartment can ' +
+      'reach the surface — not because the two proteins we have seen so far look promising. ' +
+      'They do not: both have short loops rather than the large outward-facing region a drug needs.',
   },
 
   // ── REJECTED ──────────────────────────────────────────────────────────────
@@ -144,7 +151,7 @@ export const SPAN_TERMS = [
     plain: 'Deeper inside that same compartment.',
   },
   {
-    term: 'Mother cell cytoplasmic', ruling: 'unruled',
+    term: 'Mother cell cytoplasmic', ruling: 'rejected',
     compartment: 'cytoplasm — a sporulation term from yeast biology',
     reason:
       '⚠ Not ruled, and deliberately not guessed at. It appears once, on a human, reviewed ' +
@@ -152,10 +159,11 @@ export const SPAN_TERMS = [
       'same single source as both — the shape of a term carried across from a yeast study. ' +
       'It changes no count either way, because cytoplasmic and mitochondrial faces are rejected ' +
       'regardless. It is listed here rather than dropped, because a term nobody can see is a term ' +
-      'nobody can question.',
+      'nobody can question. It is rejected for the same reason `Cytoplasmic` is, and it is rejected rather than deleted so the ruling stays visible.',
     plain:
       'A word borrowed from yeast biology that appears once, in a human entry, where it does not ' +
-      'belong. It affects nothing, and it is shown rather than quietly deleted.',
+      'belong. It describes an inward-facing side either way, so it is ruled out — and it is ' +
+      'shown here rather than quietly deleted.',
   },
 ]
 
@@ -215,3 +223,18 @@ export const SPAN_DEFINITION_NOTE =
 
 export const spanTerm = (term) => SPAN_TERMS.find((t) => t.term === term) || null
 export const RULINGS = ['accepted', 'held', 'rejected', 'unruled']
+
+// \u26a0 The GPI span rule. B was WITHDRAWN on 2026-08-07 and the withdrawal is shown, not hidden:
+// a rule that quietly disappears is a rule someone re-invents.
+export const GPI_SPAN_RULE = {
+  rule: 'The extracellular region runs from the start of the mature protein to the residue before the lipid anchor.',
+  withdrawn:
+    'A fallback that measured to the end of the annotated chain was withdrawn. On every protein ' +
+    'where the two disagreed, the annotated chain ran past the anchor and through a tail that is ' +
+    'cut off when the anchor is attached — by 266 residues in the worst case, and on half of them ' +
+    'that removed tail is not annotated at all. \u26a0 It never produced a span here. It was ' +
+    'withdrawn because it would have been wrong the first time it was needed.',
+  whenUnavailable:
+    'If the anchor position is not annotated, no span is produced and the protein is listed with ' +
+    'that reason. \u26a0 Nothing is estimated to fill the gap.',
+}

@@ -58,7 +58,7 @@ CARRIED = ("census_accession", "census_class", "census_identity_status", "source
            "fetch_failed", "fetch_error", "fetched_on", "uniprot_release")
 
 NEW = ("span_aa", "span_rule", "span_category", "no_span_reason", "span_boundary_coordinate",
-       "terms_unruled", "terms_held", "parsed_under")
+       "terms_unruled", "terms_held", "guards", "parsed_under")
 
 #: ⚠ The V1 span, carried so the two definitions sit side by side in one file and NEITHER is
 #: implied. A reader comparing them can see both and the definition that produced each.

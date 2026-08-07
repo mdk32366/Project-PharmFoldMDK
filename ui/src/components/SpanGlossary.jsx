@@ -1,5 +1,5 @@
 import {
-  COMPARTMENT_PROVENANCE, GPI_BADGE, RANK_LIMITATION, SPAN_CATEGORY_TOOLTIPS,
+  COMPARTMENT_PROVENANCE, GPI_BADGE, GPI_SPAN_RULE, RANK_LIMITATION, SPAN_CATEGORY_TOOLTIPS,
   SPAN_DEFINITION_NOTE, SPAN_TERMS,
 } from '../spanGlossary.js'
 
@@ -62,6 +62,11 @@ export default function SpanGlossary() {
           </div>
         ))}
       </dl>
+
+      <h4>How a GPI-anchored protein&rsquo;s extracellular region is measured</h4>
+      <p>{GPI_SPAN_RULE.rule}</p>
+      <p className="note">{GPI_SPAN_RULE.whenUnavailable}</p>
+      <p className="note gpi-rule-withdrawn">{GPI_SPAN_RULE.withdrawn}</p>
 
       <h4>{GPI_BADGE.label}</h4>
       <p className="gpi-badge-explainer" title={GPI_BADGE.tooltip}>{GPI_BADGE.tooltip}</p>

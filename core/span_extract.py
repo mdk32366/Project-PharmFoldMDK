@@ -17,8 +17,9 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from core.span_definition import (
-    ABSENT_WITH_REASON, NO_EXTRACELLULAR_SPAN, RULE_GPI_A, RULE_GPI_B, RULE_VOCABULARY,
-    SPAN_BOUNDARY_UNKNOWN, TERM_UNRULED, V2_RULED_VOCABULARY, classify_term,
+    ABSENT_WITH_REASON, GUARD_CHAIN_OVERRUNS_ANCHOR, GUARD_CHAIN_START_AMBIGUOUS,
+    NO_EXTRACELLULAR_SPAN, REASON_GPI_NO_CHAIN, REASON_GPI_POSITION_UNANNOTATED, RULE_GPI_A,
+    RULE_VOCABULARY, SPAN_BOUNDARY_UNKNOWN, TERM_UNRULED, V2_RULED_VOCABULARY, classify_term,
 )
 
 
@@ -33,6 +34,9 @@ class SpanResult:
     boundary_coordinate: str = ""
     terms_unruled: list[str] = field(default_factory=list)
     terms_held: list[str] = field(default_factory=list)
+    #: ⚠ Guards that FIRED on this row. A flag is not an error — it is a row a human should look at,
+    #: carried on the artifact so nobody has to remember to re-run a check.
+    guards: list[str] = field(default_factory=list)
     definition: str = V2_RULED_VOCABULARY
 
     def __post_init__(self) -> None:
@@ -83,6 +87,12 @@ def mature_chain_bounds(data: dict) -> tuple[Optional[int], Optional[int]]:
     return (min(starts) if starts else None, max(ends) if ends else None)
 
 
+def _chain_starts_disagree(data: dict) -> bool:
+    """⚠ More than one `Chain` with DIFFERENT starts — the mature N-terminus is ambiguous."""
+    starts = {b for b in (_bounds(f)[0] for f in _features(data, "Chain")) if b is not None}
+    return len(starts) > 1
+
+
 def extract(data: dict) -> SpanResult:
     """One protein's V2 span. ⚠ Never raises on data shape — an absence is a named category.
 
@@ -131,27 +141,33 @@ def extract(data: dict) -> SpanResult:
     if lip:
         cs, ce = mature_chain_bounds(data)
         pos = _bounds(lip[0])[0]
+        guards: list[str] = []
+        if _chain_starts_disagree(data):
+            # ⚠ "The first `Chain`" is not a rule. Two census proteins are proteolytically cleaved
+            # into subunits with different starts — `P51654` and `Q13421` MSLN — and the mature
+            # N-terminus this uses (`min`) includes a fragment that is cleaved off and secreted.
+            # That is the SAME defect that barred rule B, at the other end of the molecule. It is
+            # FLAGGED rather than silently decided, because deciding it is a ruling.
+            guards.append(GUARD_CHAIN_START_AMBIGUOUS)
         if cs is None:
-            # ⚠ Named, never silently dropped from a denominator.
+            return SpanResult(category=ABSENT_WITH_REASON, reason=REASON_GPI_NO_CHAIN,
+                              terms_unruled=unruled, terms_held=held, guards=guards)
+        if pos is None:
+            # ⚠ RULE B IS BARRED, so this is where a missing anchor position now lands: NAMED,
+            # excluded, and never defaulted into a span. Under rule B it would have become the full
+            # `Chain` — a chimera of the ectodomain and a cleaved signal.
             return SpanResult(category=ABSENT_WITH_REASON,
-                              reason="GPI-anchored but no `Chain` feature: mature chain start is "
-                                     "unknown, so neither rule A nor rule B can be applied",
-                              terms_unruled=unruled, terms_held=held)
-        if pos is not None and pos - 1 >= cs:
-            # Rule A — explicit about BOTH boundaries rather than trusting `Chain` to end correctly.
-            # ⚠ It is primary for a measured reason: rule B over-reads on every protein where the
-            # two diverge, because `Chain` runs through the C-terminal GPI signal that is cleaved
-            # and replaced by the anchor — up to 266 residues on `Q96GW7`, and on three of six
-            # divergent proteins that removed segment is not annotated anywhere.
-            return SpanResult(span_aa=pos - cs, rule=RULE_GPI_A,
-                              terms_unruled=unruled, terms_held=held)
-        if ce is not None:
-            return SpanResult(span_aa=ce - cs + 1, rule=RULE_GPI_B,
-                              terms_unruled=unruled, terms_held=held)
-        return SpanResult(category=ABSENT_WITH_REASON,
-                          reason="GPI-anchored, `Lipidation` position unusable and `Chain` has no "
-                                 "end: neither rule A nor rule B can be applied",
-                          terms_unruled=unruled, terms_held=held)
+                              reason=REASON_GPI_POSITION_UNANNOTATED,
+                              terms_unruled=unruled, terms_held=held, guards=guards)
+        if ce is not None and ce - pos > 1:
+            # ⚠ THE LIVE GUARD. `Chain` running past the anchor is how rule B was caught.
+            guards.append(GUARD_CHAIN_OVERRUNS_ANCHOR)
+        if pos - 1 < cs:
+            return SpanResult(category=ABSENT_WITH_REASON,
+                              reason=REASON_GPI_POSITION_UNANNOTATED,
+                              terms_unruled=unruled, terms_held=held, guards=guards)
+        return SpanResult(span_aa=pos - cs, rule=RULE_GPI_A,
+                          terms_unruled=unruled, terms_held=held, guards=guards)
 
     if boundary:
         return SpanResult(category=SPAN_BOUNDARY_UNKNOWN,
@@ -198,5 +214,6 @@ def as_row(result: SpanResult) -> dict[str, Any]:
         "span_boundary_coordinate": result.boundary_coordinate,
         "terms_unruled": ";".join(sorted(set(result.terms_unruled))),
         "terms_held": ";".join(sorted(set(result.terms_held))),
+        "guards": ";".join(sorted(set(result.guards))),
         "parsed_under": result.definition,
     }

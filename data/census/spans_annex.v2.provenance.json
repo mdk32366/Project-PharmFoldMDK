@@ -6,10 +6,9 @@
   "band_split": {
     "bands": {
       "fetch_ineligible:uniprot_inactive": 19,
-      "no_extracellular_span": 1303,
+      "no_extracellular_span": 1304,
       "span:gpi_rule_A": 1,
-      "span:vocabulary": 885,
-      "term_unruled": 1
+      "span:vocabulary": 885
     },
     "denominator_total_rows": 2209,
     "denominator_fetched": 2190,

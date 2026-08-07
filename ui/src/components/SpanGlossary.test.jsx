@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import SpanGlossary from './SpanGlossary.jsx'
 import {
-  GPI_BADGE, RANK_LIMITATION, SPAN_TERMS,
+  GPI_BADGE, GPI_SPAN_RULE, RANK_LIMITATION, SPAN_TERMS,
 } from '../spanGlossary.js'
 
 // R4, and every assertion here is about a distinction that has already cost this project something.
@@ -27,7 +27,10 @@ describe('the span vocabulary surface (R4)', () => {
     // assertion above passes under an implementation that hides rejections.
     const rejected = SPAN_TERMS.filter((t) => t.ruling === 'rejected')
     expect(rejected.length).toBeGreaterThan(0)
-    expect(SPAN_TERMS.some((t) => t.ruling === 'held')).toBe(true)
+    // ⚠ The held category is now EMPTY — both terms were ruled accepted on 2026-08-07 after the
+    // CSPA check. So the rejected terms are what makes the render test discriminate, and the
+    // assertion says that rather than quietly dropping a control that no longer applies.
+    expect(SPAN_TERMS.some((t) => t.ruling === 'held')).toBe(false)
   })
 
   it('every term states a compartment, a reason and a plain-language sentence', () => {
@@ -53,18 +56,29 @@ describe('the span vocabulary surface (R4)', () => {
     expect(screen.getByText('Nuclear')).toBeTruthy()
   })
 
-  it('the held terms are not presented as accepted', () => {
-    // Prove it bites by relabelling `held` as `accepted`: five surface proteins would read as
-    // foldable on a surface, before the check that governs them has run.
-    const held = SPAN_TERMS.filter((t) => t.ruling === 'held').map((t) => t.term)
-    expect(held).toContain('Vacuolar')
-    expect(held).toContain('Lumenal, melanosome')
+  it('the two formerly-held terms are accepted, each carrying the evidence that decided it', () => {
+    // ⚠ RULED 2026-08-07, and the two did NOT get the same answer — so neither may render as a
+    // bare "accepted" with no reason. Prove it bites by trimming either reason to one clause.
+    const mel = SPAN_TERMS.find((t) => t.term === 'Lumenal, melanosome')
+    const vac = SPAN_TERMS.find((t) => t.term === 'Vacuolar')
+    expect(mel.ruling).toBe('accepted')
+    expect(vac.ruling).toBe('accepted')
+    // melanosome: accepted on an orthogonal MEASUREMENT
+    expect(mel.reason).toMatch(/Cell Surface Protein Atlas/i)
+    expect(mel.reason).toMatch(/mass\s+spectrometry/i)
+    // ⚠ vacuolar: accepted on COMPARTMENT BIOLOGY, and the n=2 caveat must travel with it, or the
+    // surface would imply the two proteins carrying it are good targets. They are not.
+    expect(vac.reason).toMatch(/compartment biology/i)
+    expect(vac.reason).toMatch(/64 aa and 74 aa/)
+    expect(vac.reason).toMatch(/sample of two/i)
+  })
+
+  it('the yeast term renders as ruled and rejected, not as an open question', () => {
+    // ⚠ Rejected, NOT deleted. A term that vanishes reads as "nobody thought of it."
+    const y = SPAN_TERMS.find((t) => t.term === 'Mother cell cytoplasmic')
+    expect(y.ruling).toBe('rejected')
     render(<SpanGlossary />)
-    for (const term of held) {
-      const dt = screen.getByText(term).closest('dt')
-      expect(dt.textContent).toMatch(/Held/)
-      expect(dt.textContent).not.toMatch(/^.*Accepted/)
-    }
+    expect(screen.getByText('Mother cell cytoplasmic')).toBeTruthy()
   })
 
   it('the compartment reasoning discloses that it was not sourced at first hand', () => {
@@ -115,5 +129,23 @@ describe('the standing limitation line', () => {
   it('renders wherever the span surface does', () => {
     render(<SpanGlossary />)
     expect(screen.getByText(RANK_LIMITATION)).toBeTruthy()
+  })
+})
+
+describe('the GPI span rule after the withdrawal of rule B', () => {
+  it('shows the withdrawn fallback rather than quietly dropping it', () => {
+    // ⚠ A rule that disappears silently is a rule someone re-invents. The surface says it existed,
+    // what it did, and why it is gone. Prove it bites by deleting `withdrawn`.
+    expect(GPI_SPAN_RULE.withdrawn).toMatch(/withdrawn/i)
+    expect(GPI_SPAN_RULE.withdrawn).toMatch(/266 residues/)
+    expect(GPI_SPAN_RULE.withdrawn).toMatch(/never produced a span/i)
+    render(<SpanGlossary />)
+    expect(screen.getByText(GPI_SPAN_RULE.withdrawn)).toBeTruthy()
+  })
+
+  it('says plainly that nothing is estimated when the anchor position is missing', () => {
+    expect(GPI_SPAN_RULE.whenUnavailable).toMatch(/nothing is estimated/i)
+    render(<SpanGlossary />)
+    expect(screen.getByText(GPI_SPAN_RULE.whenUnavailable)).toBeTruthy()
   })
 })

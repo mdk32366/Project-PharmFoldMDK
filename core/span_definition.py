@@ -63,6 +63,9 @@ ACCEPTED_TERMS: frozenset[str] = frozenset({
     "Intragranular",        # secretory-granule lumen — exocytosis exposes it
     "Exoplasmic loop",      # ⚠ *exoplasmic* MEANS the non-cytoplasmic face. A third word for it
     "Perinuclear space",    # ⚠ continuous with the ER lumen. Same compartment, different name
+    # ── ruled 2026-08-07 after the CSPA check, promoted from HELD ──
+    "Lumenal, melanosome",  # 3/3 CSPA category 1 — experimentally surface-detected, 449-458 aa
+    "Vacuolar",             # ⚠ accepted on COMPARTMENT BIOLOGY, not on the two instances seen
 })
 
 #: ⚠ HELD — ruled AFTER a check, not before. **They are not accepted and gain nothing.**
@@ -70,21 +73,37 @@ ACCEPTED_TERMS: frozenset[str] = frozenset({
 #: appear in an EXPERIMENTAL cell-surface dataset? Topology vocabulary is a curator's word choice;
 #: surface proteomics is a measurement. ⚠ That they sit in SURFY's positive class is supporting but
 #: WEAKER evidence — A-014 holds that a model's positive class is a prediction, not a fact.
-HELD_TERMS: frozenset[str] = frozenset({
-    "Lumenal, melanosome",  # melanosomes are lysosome-related organelles; a specialised lineage
-    "Vacuolar",             # usually lysosome-like in human annotation; lysosomal exocytosis is real
-})
+#: ⚠ EMPTY, AND THE CONSTANT STAYS. Both terms were ruled ACCEPTED on 2026-08-07 after the check.
+#: An empty frozenset is a finding — "the held list was worked through" — where a deleted constant
+#: would read as "there was never a holding pen." Same rule as an empty band key versus an omitted
+#: one, which is the distinction this whole vocabulary exists to keep.
+HELD_TERMS: frozenset[str] = frozenset()
 
 #: REJECTED — cannot reach the plasma membrane on any mechanism.
 REJECTED_TERMS: frozenset[str] = frozenset({
     "Mitochondrial intermembrane", "Mitochondrial matrix",
     "Nuclear", "Peroxisomal matrix", "Peroxisomal",
     "Cytoplasmic",
+    # ⚠ Ruled 2026-08-07, hypothesis 1: yeast ortholog annotation transfer. `P0DKB6` MPC1L is
+    # Homo sapiens 9606, reviewed — the organism check closed the serious branch. It is a
+    # CYTOPLASMIC term wearing sporulation vocabulary, so it is rejected for the same reason
+    # `Cytoplasmic` is, and it is REJECTED rather than deleted so the ruling stays visible.
+    "Mother cell cytoplasmic",
 })
 
 #: The band and category vocabulary. ⚠ Every one of these is an ABSENCE WITH A CAUSE, never a zero
 #: and never a bare null. `no_topology` is retired: it made a claim its filter could not support.
 NO_EXTRACELLULAR_SPAN = "no_extracellular_span"
+
+#: ⚠ The reason a GPI protein takes when rule A cannot run. Named, excluded, NEVER defaulted into a
+#: span — the withdrawn rule B is what defaulting would have looked like.
+REASON_GPI_POSITION_UNANNOTATED = "gpi_anchor_position_unannotated"
+REASON_GPI_NO_CHAIN = "gpi_chain_unannotated"
+
+#: ⚠ LIVE GUARDS, not one-off checks. Both of these found a real defect once; a check that runs only
+#: when someone remembers to run it will not find the second one.
+GUARD_CHAIN_OVERRUNS_ANCHOR = "chain_end_exceeds_anchor"
+GUARD_CHAIN_START_AMBIGUOUS = "chain_start_ambiguous"
 SPAN_BOUNDARY_UNKNOWN = "span_boundary_unknown"
 TERM_UNRULED = "term_unruled"
 ABSENT_WITH_REASON = "absent_with_reason"
@@ -93,9 +112,22 @@ ABSENT_WITH_REASON = "absent_with_reason"
 #: meaning is unknown.
 RULE_VOCABULARY = "vocabulary"
 RULE_GPI_A = "gpi_rule_A"
-RULE_GPI_B = "gpi_rule_B"
 
-SPAN_RULES: tuple[str, ...] = (RULE_VOCABULARY, RULE_GPI_A, RULE_GPI_B)
+#: ⚠⚠ RULE B IS WITHDRAWN, 2026-08-07, and it is not a deprecation — it is a bar.
+#:
+#: B was `Chain` start → `Chain` end. The divergence check that was supposed to VALIDATE it killed
+#: it instead: on all six proteins where A and B disagree, `Chain` runs straight through the
+#: C-terminal GPI signal that is cleaved and replaced by the anchor — by **266 residues** on
+#: `Q96GW7` — and on three of those six that removed segment is annotated nowhere at all.
+#: **`Chain` is not the mature protein for those entries.** B would have folded a chimera of the
+#: real ectodomain and a signal peptide that does not exist in the mature protein.
+#:
+#: ⚠ **B fired zero times, so nothing produced was ever wrong.** That is exactly why it is barred
+#: rather than left in place: **a fallback that is unsafe when it fires is not a fallback, it is a
+#: latent defect waiting for a `Lipidation` annotation to go missing.**
+RULE_GPI_B_WITHDRAWN = "gpi_rule_B"
+
+SPAN_RULES: tuple[str, ...] = (RULE_VOCABULARY, RULE_GPI_A)
 
 SPAN_CATEGORIES: tuple[str, ...] = (
     NO_EXTRACELLULAR_SPAN, SPAN_BOUNDARY_UNKNOWN, TERM_UNRULED, ABSENT_WITH_REASON,
