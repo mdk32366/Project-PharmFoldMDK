@@ -62,6 +62,33 @@ ATTENTION_TILT = (
     "for it."
 )
 
+#: ⚠ R11.1 — A STATED PROPERTY OF THE CENSUS, NOT AN IMPLEMENTATION DETAIL. It belongs in the
+#: provenance and in the paper, where a reader meets it, rather than in a function nobody opens.
+LARGEST_CONTIGUOUS_DISCLOSURE = (
+    "For multi-pass membrane proteins the census folds the LARGEST CONTIGUOUS extracellular "
+    "segment and discards the remainder. 1,650 of 3,343 vocabulary rows (49.4%) carry more than "
+    "one accepted span. Verified: rows where span_aa differs from the largest contiguous accepted "
+    "span = 0, across 3,343. CCR4 (P51679) folds a 39 aa N-terminus and discards 61 residues "
+    "across three further segments; the manifest does NOT sum them to 100. This inherits the "
+    "cohort's rule (F-004 banded on largest), so the two agree."
+)
+
+#: ⚠ R11 — MEASURED AND RECORDED, NOT ACTED ON. NO LENGTH FLOOR IS RULED and none is applied.
+#: PLDDT_FLOOR = 50.0 is a mean-pLDDT floor applied AFTER folding; there is no length floor in the
+#: cohort or the census, so the two agree and the two-definitions concern dissolves. A short span
+#: folds and then stands or falls on its own confidence.
+#: ⚠ Recorded so a FUTURE scoring ruling has the number in hand rather than a fresh measurement
+#: taken after the answer is wanted.
+SPAN_LENGTH_DISCLOSURE_NOTE = (
+    "Span-length distribution recorded as a disclosure. NO FLOOR IS APPLIED. ⚠ Two features of "
+    "the tail are named rather than filtered: 73 spans are 5 aa or shorter, of which 10 are "
+    "exactly 1 residue (e.g. Q8WXF7 471-471) — a one-residue topological domain is a real UniProt "
+    "annotation and not a foldable object; and the longest span is Q8WXI7 (MUC16) at 14,451 aa, "
+    "which routes to `rental` because tier_for_span has NO UPPER BOUND. ⚠ The A6000 single-fold "
+    "ceiling is explicitly unmeasured and owner-reserved (D-022), so `rental` here is a routing "
+    "destination, not a claim that the fold succeeds."
+)
+
 OUT_COLUMNS = (
     "census_accession", "census_class", "span_aa", "span_start", "span_end", "span_rule",
     "boundary_method", "band", "tier", "tier_reason", "dtype", "chunk_size", "fold_order",
@@ -231,6 +258,19 @@ def run(argv: Optional[list[str]] = None) -> int:
             "D-081: the 82-target cohort is frozen under v1-extracellular-substring-2026-07-21. "
             "Counts under the two definitions are not comparable unless both are named."),
         "attention_tilt_limitation": ATTENTION_TILT,
+        "largest_contiguous_disclosure": LARGEST_CONTIGUOUS_DISCLOSURE,
+        "span_length_disclosure_note": SPAN_LENGTH_DISCLOSURE_NOTE,
+        # ⚠ The determinism control (4a) runs with the worker IDLE and nothing enqueued, so any
+        # ceiling it measures is SINGLE-PROCESS headroom. Under concurrent operation the effective
+        # ceiling is lower by the worker's model footprint, which is unknown until its first claim.
+        "ceiling_is_single_process": True,
+        "concurrency_caveat": (
+            "Any measured fold ceiling reflects single-process headroom: the probe ran with the "
+            "worker idle and holding no model. The worker's _MODEL_CACHE is module-level and "
+            "therefore PER-PROCESS, so a probe and a worker folding concurrently hold two copies "
+            "of the weights on one card. ⚠ Operating rule: do not enqueue a protein within "
+            "800 MiB of the measured ceiling until one fold has completed with the worker actively "
+            "holding its model."),
         "ceiling_recipe": {
             "hardware": LOCAL_CEILING.hardware, "dtype": LOCAL_CEILING.dtype,
             "chunk_size": LOCAL_CEILING.chunk_size, "known_good": LOCAL_CEILING.known_good,
@@ -262,7 +302,18 @@ def run(argv: Optional[list[str]] = None) -> int:
     bands = Counter(r["band"] for r in rows)
     tiers = Counter(r["tier"] for r in rows)
     by_class = Counter(r["census_class"] for r in rows)
+    lengths = sorted(int(r["span_aa"]) for r in rows)
+    import statistics as _st
+    _q = _st.quantiles(lengths, n=4)
     provenance.update(shuffled=True, manifest_rows=len(rows),
+                      span_length_distribution={
+                          "n": len(lengths), "min": lengths[0], "q1": round(_q[0]),
+                          "median": round(_q[1]), "q3": round(_q[2]), "max": lengths[-1],
+                          "mean": round(_st.mean(lengths), 1),
+                          "below_50": sum(1 for x in lengths if x < 50),
+                          "below_100": sum(1 for x in lengths if x < 100),
+                          "below_150": sum(1 for x in lengths if x < 150),
+                      },
                       manifest_sha256=sha256_of(out),
                       # ⚠ BOTH, LABELLED DISTINCTLY. Never one number standing for both.
                       fold_order_key=fold_order_key(rows),

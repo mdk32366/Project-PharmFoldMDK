@@ -1,0 +1,144 @@
+{
+  "seed": 20260807,
+  "manifest_revision": 6,
+  "rebuild_reason": "R10: span_contains_transmembrane, both clauses. Q9BQT9's UniProt Extracellular 20-847 overlaps its own Transmembrane 256-276 and contains three Cytoplasmic domains; the largest-contiguous rule picked the inconsistent annotation and we would have folded 828 residues containing a TM helix in water, successfully. Excluded, not truncated: truncating at 256 would invent a boundary from an entry that cannot be trusted about boundaries. Also records R11's span-length distribution and R11.1's largest-contiguous disclosure, both as disclosures with no filter applied.",
+  "seed_preserved_across_rebuild": true,
+  "order_differs_because_population_differs": true,
+  "seed_recorded_before_shuffle": true,
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "span_definition_note": "D-081: the 82-target cohort is frozen under v1-extracellular-substring-2026-07-21. Counts under the two definitions are not comparable unless both are named.",
+  "attention_tilt_limitation": "The no_extracellular_span band correlates weakly with UniProt entry recency: Spearman rho = -0.142 against entryVersion and +0.120 against firstPublicDate, real at n\u22482,800 but about 2% of variance, and the two proxies are mechanically confounded. Nothing is adjusted for it.",
+  "largest_contiguous_disclosure": "For multi-pass membrane proteins the census folds the LARGEST CONTIGUOUS extracellular segment and discards the remainder. 1,650 of 3,343 vocabulary rows (49.4%) carry more than one accepted span. Verified: rows where span_aa differs from the largest contiguous accepted span = 0, across 3,343. CCR4 (P51679) folds a 39 aa N-terminus and discards 61 residues across three further segments; the manifest does NOT sum them to 100. This inherits the cohort's rule (F-004 banded on largest), so the two agree.",
+  "span_length_disclosure_note": "Span-length distribution recorded as a disclosure. NO FLOOR IS APPLIED. \u26a0 Two features of the tail are named rather than filtered: 73 spans are 5 aa or shorter, of which 10 are exactly 1 residue (e.g. Q8WXF7 471-471) \u2014 a one-residue topological domain is a real UniProt annotation and not a foldable object; and the longest span is Q8WXI7 (MUC16) at 14,451 aa, which routes to `rental` because tier_for_span has NO UPPER BOUND. \u26a0 The A6000 single-fold ceiling is explicitly unmeasured and owner-reserved (D-022), so `rental` here is a routing destination, not a claim that the fold succeeds.",
+  "ceiling_is_single_process": true,
+  "concurrency_caveat": "Any measured fold ceiling reflects single-process headroom: the probe ran with the worker idle and holding no model. The worker's _MODEL_CACHE is module-level and therefore PER-PROCESS, so a probe and a worker folding concurrently hold two copies of the weights on one card. \u26a0 Operating rule: do not enqueue a protein within 800 MiB of the measured ceiling until one fold has completed with the worker actively holding its model.",
+  "ceiling_recipe": {
+    "hardware": "local NVIDIA Blackwell, 8 GB VRAM",
+    "dtype": "int8",
+    "chunk_size": 64,
+    "known_good": 440,
+    "known_bad": 630,
+    "provenance": "S-004/S-005 bisection; band (440, 630) unmeasured pending D-077"
+  },
+  "classes": {
+    "surface": {
+      "source_file": "spans_surface.v2.csv",
+      "source_sha256": "6e241642129bcf0c79511e77bbe4aa8ba65e28605df8469c599b9047d0d251a5",
+      "source_rows": 2807,
+      "foldable": 2581,
+      "not_foldable_by_reason": {
+        "absent_with_reason": 3,
+        "fetch_ineligible:not fetched: uniprot_inactive": 7,
+        "no_extracellular_span": 215,
+        "span_boundary_unknown": 1
+      },
+      "span_definition": "v2-ruled-vocabulary-2026-08-07"
+    },
+    "non_surface": {
+      "source_file": "spans_annex.v2.csv",
+      "source_sha256": "57bc8e802c68de85dc0c213e4cc1a7981b784ec3967e401dbf12ffc55d04f673",
+      "source_rows": 2209,
+      "foldable": 886,
+      "not_foldable_by_reason": {
+        "fetch_ineligible:not fetched: uniprot_inactive": 19,
+        "no_extracellular_span": 1304
+      },
+      "span_definition": "v2-ruled-vocabulary-2026-08-07"
+    }
+  },
+  "shuffled": true,
+  "manifest_rows": 3467,
+  "span_length_distribution": {
+    "n": 3467,
+    "min": 1,
+    "q1": 37,
+    "median": 122,
+    "q3": 394,
+    "max": 14451,
+    "mean": 288.3,
+    "below_50": 1296,
+    "below_100": 1618,
+    "below_150": 1842
+  },
+  "manifest_sha256": "6dab3486f20764441be35081f8d73fb33d8dd962be24b05098b7e5c9a5a02c68",
+  "fold_order_key": "2a3d518a0872cde48bc3834fdd2edf08c224f899844cc3107d2715a5a4369940",
+  "fold_order_key_covers": "membership only: the census_accession set \u2014 stable across span revisions BY DESIGN",
+  "manifest_content_hash": "d5fb75777bd6fa1d2159e0c45033925fd641327833e7645be40bdd68053f7483",
+  "manifest_content_hash_covers": [
+    "census_accession",
+    "span_start",
+    "span_end",
+    "boundary_method",
+    "band",
+    "tier",
+    "span_rule",
+    "span_definition"
+  ],
+  "identity_fn_version": 3,
+  "identity_fn_version_note": "1 = revisions 1-3, no coordinates and no boundary_method (the tuple degenerates to accession/band/tier/rule/definition and a span change that moved neither band nor tier would still collide); 2 = revision 4, coordinates present; 3 = revision 5 onward, boundary_method present",
+  "bands": {
+    "above_local": 427,
+    "local": 2691,
+    "untested_band": 349
+  },
+  "tiers": {
+    "local": 2691,
+    "rental": 776
+  },
+  "rows_by_class": {
+    "non_surface": 886,
+    "surface": 2581
+  },
+  "first_10_fold_order": [
+    [
+      1,
+      "P51677",
+      "local"
+    ],
+    [
+      2,
+      "P05362",
+      "rental"
+    ],
+    [
+      3,
+      "Q96LB2",
+      "local"
+    ],
+    [
+      4,
+      "Q9UNW8",
+      "local"
+    ],
+    [
+      5,
+      "Q9Y5F0",
+      "rental"
+    ],
+    [
+      6,
+      "Q9UQQ1",
+      "rental"
+    ],
+    [
+      7,
+      "Q8NC54",
+      "local"
+    ],
+    [
+      8,
+      "Q8NEW7",
+      "local"
+    ],
+    [
+      9,
+      "Q969I6",
+      "local"
+    ],
+    [
+      10,
+      "O75121",
+      "local"
+    ]
+  ]
+}

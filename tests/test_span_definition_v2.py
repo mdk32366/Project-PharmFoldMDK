@@ -399,3 +399,64 @@ def test_a_gpi_protein_with_no_chain_at_all_is_still_named_and_excluded():
     matters: it is a fact about the record, not about our rule."""
     r = extract(entry(lipid(59)))
     assert r.span_aa is None and r.reason == "gpi_chain_unannotated"
+
+
+# ── ⚠ R10: a span the record itself contradicts ─────────────────────────────
+def tm(start, end, desc="Helical"):
+    return {"type": "Transmembrane", "description": desc, "location": _loc(start, end)}
+
+
+def test_a_span_overlapping_a_transmembrane_helix_is_excluded_not_truncated():
+    """⚠⚠ `Q9BQT9`'s real shape: `Extracellular 20-847` overlapping its own `Transmembrane
+    256-276`. The largest-contiguous rule faithfully picks the inconsistent annotation, and we
+    would have folded **828 residues containing a transmembrane helix, in water — successfully.**
+
+    ⚠ EXCLUDED, NOT TRUNCATED. Truncating at 256 would invent a boundary from an entry that cannot
+    be trusted about boundaries.
+
+    Prove it bites by deleting the clause: an 828 aa span appears and folds."""
+    r = extract(entry(td("Extracellular", 20, 847), tm(256, 276), tm(848, 868)))
+    assert r.span_aa is None, f"a span containing a TM helix was folded: {r}"
+    assert r.reason == "span_contains_transmembrane"
+    assert "span_overlaps_transmembrane" in r.guards
+
+
+def test_a_partial_overlap_of_one_residue_is_enough():
+    """⚠ ANY overlap, not only full containment — a half-overlap is the same contradiction.
+    Prove it bites by testing `start <= ts and te <= end`: this span keeps its 100 aa."""
+    r = extract(entry(td("Extracellular", 1, 100), tm(100, 130)))
+    assert r.span_aa is None, f"a one-residue overlap was tolerated: {r}"
+    assert "span_overlaps_transmembrane" in r.guards
+
+
+def test_an_adjacent_helix_is_not_an_overlap_and_the_span_survives():
+    """⚠ A-017 clause (c). Every extracellular domain on a membrane protein ABUTS a helix — if
+    adjacency counted, the clause would exclude the entire census and therefore exclude nothing
+    meaningfully. CCR4's N-terminus is 1-39 with TM 40-67."""
+    r = extract(entry(td("Extracellular", 1, 39), tm(40, 67)))
+    assert r.span_aa == 39 and r.rule == RULE_VOCABULARY, r
+    assert not r.guards
+
+
+def test_a_span_containing_a_rejected_domain_asserts_both_faces_at_once():
+    """⚠ Clause 2, and it fires independently of clause 1: an extracellular span holding a
+    `Cytoplasmic` domain claims both faces of the membrane simultaneously.
+
+    Prove it bites by deleting the clause — with no TM feature present, clause 1 cannot catch it."""
+    r = extract(entry(td("Extracellular", 20, 400), td("Cytoplasmic", 52, 71)))
+    assert r.span_aa is None, f"a span containing a cytoplasmic domain was folded: {r}"
+    assert r.guards == ["span_contains_rejected_domain"]
+
+
+def test_a_span_beside_a_rejected_domain_is_fine():
+    """⚠ The control for clause 2. Normal topology alternates faces; only CONTAINMENT is a
+    contradiction."""
+    r = extract(entry(td("Extracellular", 1, 39), td("Cytoplasmic", 68, 77)))
+    assert r.span_aa == 39, r
+
+
+def test_both_clauses_fire_together_on_the_real_entry():
+    """⚠ Two contradictions, one record — clause 2 independently corroborates clause 1."""
+    r = extract(entry(td("Extracellular", 20, 847), tm(256, 276),
+                      td("Cytoplasmic", 52, 71), td("Lumenal", 277, 364)))
+    assert set(r.guards) == {"span_overlaps_transmembrane", "span_contains_rejected_domain"}, r

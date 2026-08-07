@@ -18,7 +18,8 @@ from typing import Any, Optional
 
 from core.span_definition import (
     ABSENT_WITH_REASON, GUARD_CHAIN_OVERRUNS_ANCHOR, GUARD_CHAIN_START_AMBIGUOUS,
-    GUARD_CHAIN_SHORTER_THAN_LONGEST, NO_EXTRACELLULAR_SPAN,
+    GUARD_CHAIN_SHORTER_THAN_LONGEST, GUARD_SPAN_HOLDS_REJECTED_DOMAIN,
+    GUARD_SPAN_OVERLAPS_TM, NO_EXTRACELLULAR_SPAN, REASON_SPAN_CONTAINS_TRANSMEMBRANE,
     REASON_GPI_NO_CHAIN, REASON_GPI_NO_CHAIN_SPANS_ANCHOR,
     REASON_GPI_POSITION_UNANNOTATED, RULE_GPI_A,
     RULE_VOCABULARY, SPAN_BOUNDARY_UNKNOWN, TERM_UNRULED, V2_RULED_VOCABULARY, classify_term,
@@ -137,6 +138,29 @@ def _chain_starts_disagree(data: dict) -> bool:
     return len(starts) > 1
 
 
+def span_contradicted_by_record(data: dict, start: int, end: int) -> list[str]:
+    """⚠ R10. Which clauses say this span contradicts its own entry. Empty means neither.
+
+    Not a heuristic and not a plausibility check — **both clauses read the SAME record that produced
+    the span** and ask whether it also asserts something incompatible. A span cannot be a soluble
+    extracellular domain and contain a membrane-crossing helix, and it cannot face outward while
+    holding a domain annotated as facing inward.
+    """
+    fired: list[str] = []
+    for f in _features(data, "Transmembrane"):
+        ts, te = _bounds(f)
+        if ts is not None and te is not None and start <= te and ts <= end:
+            fired.append(GUARD_SPAN_OVERLAPS_TM)     # ⚠ ANY overlap, not containment
+            break
+    for f in _features(data, "Topological domain"):
+        ts, te = _bounds(f)
+        if (ts is not None and te is not None and start <= ts and te <= end
+                and classify_term(f.get("description", "") or "") == "rejected"):
+            fired.append(GUARD_SPAN_HOLDS_REJECTED_DOMAIN)
+            break
+    return fired
+
+
 def extract(data: dict) -> SpanResult:
     """One protein's V2 span. ⚠ Never raises on data shape — an absence is a named category.
 
@@ -179,6 +203,13 @@ def extract(data: dict) -> SpanResult:
             best, best_bounds = n, (s, e)
 
     if best is not None:
+        contradicted = span_contradicted_by_record(data, best_bounds[0], best_bounds[1])
+        if contradicted:
+            # ⚠ EXCLUDED, NOT TRUNCATED. The entry cannot be trusted about boundaries, so a
+            # narrower boundary derived from it would be invented rather than measured.
+            return SpanResult(category=ABSENT_WITH_REASON,
+                              reason=REASON_SPAN_CONTAINS_TRANSMEMBRANE,
+                              terms_unruled=unruled, terms_held=held, guards=contradicted)
         return SpanResult(span_aa=best, span_start=best_bounds[0], span_end=best_bounds[1],
                           rule=RULE_VOCABULARY, terms_unruled=unruled, terms_held=held)
 

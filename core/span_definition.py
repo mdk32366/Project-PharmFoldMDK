@@ -130,6 +130,32 @@ REASON_GPI_NO_CHAIN = "gpi_chain_unannotated"
 #: bind: 296-597, 302 aa.
 REASON_GPI_NO_CHAIN_SPANS_ANCHOR = "gpi_no_chain_spans_anchor"
 
+#: ⚠⚠ R10 — a chosen span that the record itself contradicts. **Excluded, not truncated.**
+#:
+#: `Q9BQT9` carries `Extracellular 20-847` overlapping its own `Transmembrane 256-276`, a
+#: `Lumenal 277-364`, and **three** `Cytoplasmic` domains — all inside the chosen span. The
+#: largest-contiguous rule faithfully picks the inconsistent annotation, and we would have folded
+#: **828 residues containing a transmembrane helix, in water — and it would have succeeded.**
+#:
+#: ⚠ **Truncating at 256 would invent a boundary from an entry that cannot be trusted about
+#: boundaries.** That reasoning has now applied five times today.
+#:
+#: **Two clauses, because a contradiction has two shapes:**
+#:   1. any overlap of **≥1 residue** with a `Transmembrane` feature — not only full containment,
+#:      since a half-overlap is the same contradiction
+#:   2. containment of a topological domain in the REJECTED set — an extracellular span holding a
+#:      `Cytoplasmic` domain asserts both faces at once
+#:
+#: ⚠ **Measured before implementation: both clauses catch exactly `Q9BQT9`, 1 of 3,468.** The narrow
+#: version would have sufficed; the widened one costs nothing and is kept, and clause 2
+#: independently corroborates that the entry is internally inconsistent.
+REASON_SPAN_CONTAINS_TRANSMEMBRANE = "span_contains_transmembrane"
+
+#: Which clause fired. ⚠ Recorded separately so "the widened clause never fires" stays checkable
+#: rather than becoming an assumption.
+GUARD_SPAN_OVERLAPS_TM = "span_overlaps_transmembrane"
+GUARD_SPAN_HOLDS_REJECTED_DOMAIN = "span_contains_rejected_domain"
+
 #: ⚠ LIVE GUARDS, not one-off checks. Both of these found a real defect once; a check that runs only
 #: when someone remembers to run it will not find the second one.
 GUARD_CHAIN_OVERRUNS_ANCHOR = "chain_end_exceeds_anchor"
