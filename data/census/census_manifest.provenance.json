@@ -1,0 +1,109 @@
+{
+  "seed": 20260807,
+  "seed_recorded_before_shuffle": true,
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "span_definition_note": "D-081: the 82-target cohort is frozen under v1-extracellular-substring-2026-07-21. Counts under the two definitions are not comparable unless both are named.",
+  "attention_tilt_limitation": "The no_extracellular_span band correlates weakly with UniProt entry recency: Spearman rho = -0.142 against entryVersion and +0.120 against firstPublicDate, real at n\u22482,800 but about 2% of variance, and the two proxies are mechanically confounded. Nothing is adjusted for it.",
+  "ceiling_recipe": {
+    "hardware": "local NVIDIA Blackwell, 8 GB VRAM",
+    "dtype": "int8",
+    "chunk_size": 64,
+    "known_good": 440,
+    "known_bad": 630,
+    "provenance": "S-004/S-005 bisection; band (440, 630) unmeasured pending D-077"
+  },
+  "classes": {
+    "surface": {
+      "source_file": "spans_surface.v2.csv",
+      "source_sha256": "b74fa8dce76876e6e8d002e6c940ae3f4ac89771793976c8f0c5d597420a1113",
+      "source_rows": 2807,
+      "foldable": 2582,
+      "not_foldable_by_reason": {
+        "absent_with_reason": 2,
+        "fetch_ineligible:not fetched: uniprot_inactive": 7,
+        "no_extracellular_span": 215,
+        "span_boundary_unknown": 1
+      },
+      "span_definition": "v2-ruled-vocabulary-2026-08-07"
+    },
+    "non_surface": {
+      "source_file": "spans_annex.v2.csv",
+      "source_sha256": "d2bca079e34f52aa67333b00077e5a8f7ce425d2cf45dbe659292de3b4c3a352",
+      "source_rows": 2209,
+      "foldable": 886,
+      "not_foldable_by_reason": {
+        "fetch_ineligible:not fetched: uniprot_inactive": 19,
+        "no_extracellular_span": 1304
+      },
+      "span_definition": "v2-ruled-vocabulary-2026-08-07"
+    }
+  },
+  "shuffled": true,
+  "manifest_rows": 3468,
+  "manifest_sha256": "cc82b830ef4d2e15a0bc46a46cf701e9dd9175cb73db3d012a5d96c41e2f5157",
+  "bands": {
+    "above_local": 428,
+    "local": 2689,
+    "untested_band": 351
+  },
+  "tiers": {
+    "local": 2689,
+    "rental": 779
+  },
+  "rows_by_class": {
+    "non_surface": 886,
+    "surface": 2582
+  },
+  "first_10_fold_order": [
+    [
+      1,
+      "P51679",
+      "local"
+    ],
+    [
+      2,
+      "P05362",
+      "rental"
+    ],
+    [
+      3,
+      "Q14517",
+      "rental"
+    ],
+    [
+      4,
+      "Q5BIV9",
+      "local"
+    ],
+    [
+      5,
+      "Q9Y5F0",
+      "rental"
+    ],
+    [
+      6,
+      "Q9Y4A9",
+      "local"
+    ],
+    [
+      7,
+      "Q96P31",
+      "rental"
+    ],
+    [
+      8,
+      "Q8NEW7",
+      "local"
+    ],
+    [
+      9,
+      "Q8N6F1",
+      "local"
+    ],
+    [
+      10,
+      "O75121",
+      "local"
+    ]
+  ]
+}

@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""Census Task 4 — the manifest. ⚠ THE SEED IS RECORDED BEFORE THE FIRST SHUFFLE.
+
+    python scripts/census_manifest.py --seed 20260807 --class surface --class non_surface
+
+⚠⚠ **A SEED CHOSEN AFTER SEEING THE ORDER IS NOT A SEED, IT IS A SELECTION.** The seed is a
+required argument, it is written into the provenance object **before** `shuffle` is called, and the
+provenance is emitted even if the run then fails. A fold order that cannot be reproduced from a
+recorded seed is a fold order somebody could have chosen.
+
+⚠ **BANDS CHOOSE THE TIER, NEVER WHETHER A TARGET FOLDS.** `above_local` is a routing fact — it
+sends a protein to the rented GPU. It is **not** an exclusion, and a manifest that quietly dropped
+those rows would report a foldable population it had shrunk itself.
+
+⚠ **THE SPAN DEFINITION IS NAMED ON EVERY ROW** (`### D-081`). Two definitions exist:
+`v1-extracellular-substring-2026-07-21` measured the frozen 82; this manifest is built on
+`v2-ruled-vocabulary-2026-08-07`. **A foldable count under one is not comparable to a count under
+the other unless both are named** — 2,582 surface / 886 annex here against 2,352 / 332 under V1.
+
+⚠ **THE ATTENTION-TILT LIMITATION TRAVELS WITH THE MANIFEST.** `no_topology` (now
+`no_extracellular_span`) correlates weakly with UniProt entry recency — ρ ≈ −0.142 against
+`entryVersion`, ρ ≈ +0.120 against `firstPublicDate`, real at n≈2,800 but ~2% of variance, and the
+two proxies are mechanically confounded. **It is not a correction and nothing is adjusted for it.**
+It is recorded because a fold order drawn from a population with a known tilt should say so.
+
+⚠ **NOTHING IS SCORED, RANKED, ORDERED BY SUITABILITY, REFIT OR FEATURE-EXTRACTED HERE.** D-079
+decision 1 stands. This emits a routing table and a seeded fold order — **folding is not scoring,
+and the gate is on scoring.**
+
+⚠ **NO DATABASE. NO NETWORK.** Reads the committed V2 span artifacts and writes files.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import random
+import sys
+from collections import Counter
+from pathlib import Path
+from typing import Any, Optional
+
+REPO = Path(__file__).resolve().parent.parent
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+from core.contracts import TIER_RECIPE  # noqa: E402
+from core.manifest import LOCAL_CEILING, tier_for_span  # noqa: E402
+from core.span_definition import V2_RULED_VOCABULARY  # noqa: E402
+
+CENSUS = REPO / "data" / "census"
+SOURCES = {"surface": "spans_surface.v2.csv", "non_surface": "spans_annex.v2.csv"}
+
+#: ⚠ Recorded verbatim on the manifest so a reader of the fold order meets it there, not three
+#: documents away. Not a correction; nothing is adjusted for it.
+ATTENTION_TILT = (
+    "The no_extracellular_span band correlates weakly with UniProt entry recency: Spearman "
+    "rho = -0.142 against entryVersion and +0.120 against firstPublicDate, real at n≈2,800 but "
+    "about 2% of variance, and the two proxies are mechanically confounded. Nothing is adjusted "
+    "for it."
+)
+
+OUT_COLUMNS = (
+    "census_accession", "census_class", "span_aa", "span_rule", "band", "tier", "tier_reason",
+    "dtype", "chunk_size", "fold_order", "span_definition", "guards",
+)
+
+
+def sha256_of(path: Path) -> str:
+    """⚠ LF-normalised, so a checkout's line endings cannot change an artifact's identity."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def band_of(span: Optional[int]) -> str:
+    """⚠ A ROUTING BAND, not an eligibility test. Every one of these folds."""
+    if span is None:
+        return "not_foldable"
+    if span <= LOCAL_CEILING.known_good:
+        return "local"
+    if span < LOCAL_CEILING.known_bad:
+        return "untested_band"      # (440, 630) — unmeasured, routed to rental, still ranked
+    return "above_local"
+
+
+def manifest_rows(census_class: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    src = CENSUS / SOURCES[census_class]
+    with src.open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+
+    foldable, skipped = [], Counter()
+    for r in rows:
+        raw = str(r.get("span_aa", "")).strip()
+        if not raw:
+            # ⚠ NAMED, never a silent drop. A row with no span is not foldable, and the REASON is
+            # what distinguishes "measured and absent" from "never asked".
+            skipped[r.get("span_category") or f"fetch_ineligible:{r.get('no_span_reason','')[:40]}"] += 1
+            continue
+        span = int(raw)
+        tier, reason = tier_for_span(span)
+        foldable.append({
+            "census_accession": r["census_accession"],
+            "census_class": r["census_class"],
+            "span_aa": span,
+            "span_rule": r["span_rule"],
+            "band": band_of(span),
+            "tier": tier,
+            "tier_reason": reason or "",
+            "dtype": TIER_RECIPE[tier]["dtype"],
+            "chunk_size": TIER_RECIPE[tier]["chunk_size"],
+            "fold_order": None,                       # ⚠ filled after the seeded shuffle
+            "span_definition": V2_RULED_VOCABULARY,
+            "guards": r.get("guards", ""),
+        })
+
+    meta = {
+        "source_file": src.name,
+        "source_sha256": sha256_of(src),
+        "source_rows": len(rows),
+        "foldable": len(foldable),
+        "not_foldable_by_reason": dict(sorted(skipped.items())),
+        "span_definition": V2_RULED_VOCABULARY,
+    }
+    return foldable, meta
+
+
+def run(argv: Optional[list[str]] = None) -> int:
+    ap = argparse.ArgumentParser(prog="python scripts/census_manifest.py", description=__doc__)
+    # ⚠ REQUIRED. There is no default seed, because a default is a seed nobody chose and everybody
+    # inherits — and it would make "the seed was recorded before the shuffle" vacuously true.
+    ap.add_argument("--seed", type=int, required=True,
+                    help="⚠ recorded BEFORE the shuffle; a fold order must be reproducible from it")
+    ap.add_argument("--class", dest="classes", action="append", required=True,
+                    choices=["surface", "non_surface"],
+                    help="⚠ `unclassified` is deliberately absent — F-016")
+    ap.add_argument("--out", default=str(CENSUS / "census_manifest.csv"))
+    args = ap.parse_args(argv)
+
+    out = Path(args.out)
+    prov_path = out.parent / f"{out.stem}.provenance.json"
+
+    # ⚠⚠ THE SEED IS WRITTEN TO DISK BEFORE ANY SHUFFLE HAPPENS. If the run dies after this line,
+    # the record of what seed was intended survives — which is the point. A seed reported after a
+    # successful run is a seed that could have been retried until the order looked good.
+    per_class = {c: manifest_rows(c) for c in args.classes}
+    provenance: dict[str, Any] = {
+        "seed": args.seed,
+        "seed_recorded_before_shuffle": True,
+        "span_definition": V2_RULED_VOCABULARY,
+        "span_definition_note": (
+            "D-081: the 82-target cohort is frozen under v1-extracellular-substring-2026-07-21. "
+            "Counts under the two definitions are not comparable unless both are named."),
+        "attention_tilt_limitation": ATTENTION_TILT,
+        "ceiling_recipe": {
+            "hardware": LOCAL_CEILING.hardware, "dtype": LOCAL_CEILING.dtype,
+            "chunk_size": LOCAL_CEILING.chunk_size, "known_good": LOCAL_CEILING.known_good,
+            "known_bad": LOCAL_CEILING.known_bad, "provenance": LOCAL_CEILING.provenance,
+        },
+        "classes": {c: meta for c, (_, meta) in per_class.items()},
+        "shuffled": False,
+    }
+    prov_path.parent.mkdir(parents=True, exist_ok=True)
+    prov_path.write_text(json.dumps(provenance, indent=2), encoding="utf-8")
+    print(f"⚠ seed {args.seed} recorded to {prov_path.name} BEFORE the shuffle")
+
+    rows: list[dict[str, Any]] = []
+    for c in args.classes:
+        rows.extend(per_class[c][0])
+
+    # ⚠ Sorted to a canonical order FIRST, so the shuffle is the only source of order and the
+    # result depends on the seed alone rather than on dict iteration or file order.
+    rows.sort(key=lambda r: (r["census_class"], r["census_accession"]))
+    random.Random(args.seed).shuffle(rows)
+    for i, r in enumerate(rows, 1):
+        r["fold_order"] = i
+
+    with out.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(OUT_COLUMNS))
+        w.writeheader()
+        w.writerows(rows)
+
+    bands = Counter(r["band"] for r in rows)
+    tiers = Counter(r["tier"] for r in rows)
+    by_class = Counter(r["census_class"] for r in rows)
+    provenance.update(shuffled=True, manifest_rows=len(rows),
+                      manifest_sha256=sha256_of(out),
+                      bands=dict(sorted(bands.items())), tiers=dict(sorted(tiers.items())),
+                      rows_by_class=dict(sorted(by_class.items())),
+                      first_10_fold_order=[(r["fold_order"], r["census_accession"], r["tier"])
+                                           for r in rows[:10]])
+    prov_path.write_text(json.dumps(provenance, indent=2), encoding="utf-8")
+
+    print(f"wrote {out} | {len(rows)} foldable rows")
+    for c in args.classes:
+        m = per_class[c][1]
+        print(f"{c} | source {m['source_file']} sha256 {m['source_sha256'][:16]}… | "
+              f"rows {m['source_rows']} | foldable {m['foldable']}")
+        print(f"{c} | not foldable, by reason | {json.dumps(m['not_foldable_by_reason'])}")
+    print(f"bands (routing, NOT eligibility) | {json.dumps(dict(sorted(bands.items())))}")
+    print(f"tiers | {json.dumps(dict(sorted(tiers.items())))}")
+    print(f"⚠ every band folds; sum of bands {sum(bands.values())} == manifest rows {len(rows)}")
+    print(f"first 10 of the seeded fold order | {provenance['first_10_fold_order']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(run())
