@@ -135,6 +135,11 @@ def run(argv: Optional[list[str]] = None) -> int:
                     choices=["surface", "non_surface"],
                     help="⚠ `unclassified` is deliberately absent — F-016")
     ap.add_argument("--out", default=str(CENSUS / "census_manifest.csv"))
+    ap.add_argument("--revision", type=int, default=1,
+                    help="⚠ manifest revision. Earlier revisions are RETAINED, never overwritten")
+    ap.add_argument("--rebuild-reason", default="",
+                    help="⚠ required for revision > 1 — a rebuild with no stated reason is "
+                         "indistinguishable from a rerun that liked its answer better")
     args = ap.parse_args(argv)
 
     out = Path(args.out)
@@ -144,8 +149,18 @@ def run(argv: Optional[list[str]] = None) -> int:
     # the record of what seed was intended survives — which is the point. A seed reported after a
     # successful run is a seed that could have been retried until the order looked good.
     per_class = {c: manifest_rows(c) for c in args.classes}
+    if args.revision > 1 and not args.rebuild_reason:
+        raise SystemExit("⚠ --rebuild-reason is required for revision > 1")
     provenance: dict[str, Any] = {
         "seed": args.seed,
+        "manifest_revision": args.revision,
+        "rebuild_reason": args.rebuild_reason,
+        # ⚠ THE SEED IS PRESERVED ACROSS THE REBUILD and the order still differs, because the
+        # POPULATION differs. Stated here so a later reader does not read a changed order as a
+        # broken seed. What the pre-registration protects is that the seed was fixed before any
+        # order was seen — and that survives a rebuild it did not choose.
+        "seed_preserved_across_rebuild": args.revision > 1,
+        "order_differs_because_population_differs": args.revision > 1,
         "seed_recorded_before_shuffle": True,
         "span_definition": V2_RULED_VOCABULARY,
         "span_definition_note": (

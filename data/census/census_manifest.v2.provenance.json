@@ -1,0 +1,114 @@
+{
+  "seed": 20260807,
+  "manifest_revision": 2,
+  "rebuild_reason": "the ruled mature-chain selector (2026-08-07) fixed a live MSLN over-read; MSLN, CEACAM5, Q6UWB4, P22303 and Q96GW7 leave the foldable population and P51654 GPC3 moves 529->195, so the population the seed shuffles is not the one revision 1 shuffled",
+  "seed_preserved_across_rebuild": true,
+  "order_differs_because_population_differs": true,
+  "seed_recorded_before_shuffle": true,
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "span_definition_note": "D-081: the 82-target cohort is frozen under v1-extracellular-substring-2026-07-21. Counts under the two definitions are not comparable unless both are named.",
+  "attention_tilt_limitation": "The no_extracellular_span band correlates weakly with UniProt entry recency: Spearman rho = -0.142 against entryVersion and +0.120 against firstPublicDate, real at n\u22482,800 but about 2% of variance, and the two proxies are mechanically confounded. Nothing is adjusted for it.",
+  "ceiling_recipe": {
+    "hardware": "local NVIDIA Blackwell, 8 GB VRAM",
+    "dtype": "int8",
+    "chunk_size": 64,
+    "known_good": 440,
+    "known_bad": 630,
+    "provenance": "S-004/S-005 bisection; band (440, 630) unmeasured pending D-077"
+  },
+  "classes": {
+    "surface": {
+      "source_file": "spans_surface.v2.csv",
+      "source_sha256": "3abe131c6fe89c029fc4af15c09034f4ad5f5f3f4614ee4a52995eb2b253ee58",
+      "source_rows": 2807,
+      "foldable": 2578,
+      "not_foldable_by_reason": {
+        "absent_with_reason": 6,
+        "fetch_ineligible:not fetched: uniprot_inactive": 7,
+        "no_extracellular_span": 215,
+        "span_boundary_unknown": 1
+      },
+      "span_definition": "v2-ruled-vocabulary-2026-08-07"
+    },
+    "non_surface": {
+      "source_file": "spans_annex.v2.csv",
+      "source_sha256": "644aaf03f0aa8e710a1a2bb3aa7c24b3b9e2317ad9a14058e66259b79d495ee9",
+      "source_rows": 2209,
+      "foldable": 885,
+      "not_foldable_by_reason": {
+        "absent_with_reason": 1,
+        "fetch_ineligible:not fetched: uniprot_inactive": 19,
+        "no_extracellular_span": 1304
+      },
+      "span_definition": "v2-ruled-vocabulary-2026-08-07"
+    }
+  },
+  "shuffled": true,
+  "manifest_rows": 3463,
+  "manifest_sha256": "a587c74c8b5cea78c1f8e222f460b7e4ae4649abd4e2af13e697df276362923d",
+  "bands": {
+    "above_local": 427,
+    "local": 2689,
+    "untested_band": 347
+  },
+  "tiers": {
+    "local": 2689,
+    "rental": 774
+  },
+  "rows_by_class": {
+    "non_surface": 885,
+    "surface": 2578
+  },
+  "first_10_fold_order": [
+    [
+      1,
+      "P16442",
+      "local"
+    ],
+    [
+      2,
+      "Q6NUS8",
+      "rental"
+    ],
+    [
+      3,
+      "P47890",
+      "local"
+    ],
+    [
+      4,
+      "Q6Q8B3",
+      "local"
+    ],
+    [
+      5,
+      "P19021",
+      "rental"
+    ],
+    [
+      6,
+      "P80370",
+      "local"
+    ],
+    [
+      7,
+      "Q9H205",
+      "local"
+    ],
+    [
+      8,
+      "O75023",
+      "local"
+    ],
+    [
+      9,
+      "Q04912",
+      "rental"
+    ],
+    [
+      10,
+      "P79483",
+      "local"
+    ]
+  ]
+}

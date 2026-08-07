@@ -119,7 +119,11 @@ def test_a_gpi_protein_whose_anchor_precedes_the_chain_start_is_named_not_defaul
     """The other unusable-position shape. ⚠ Under rule B this became the full `Chain`."""
     r = extract(entry(chain(100, 400), lipid(50)))
     assert r.span_aa is None, f"an unusable anchor position produced a span: {r}"
-    assert r.reason == REASON_GPI_POSITION_UNANNOTATED
+    # ⚠ The mature-chain selector now catches this EARLIER than the start/anchor comparison did:
+    # no chain ends at 50, so the record does not describe a mature GPI protein at all.
+    assert r.reason == "gpi_mature_chain_ambiguous"
+    # and a genuinely unannotated position still lands on its own reason
+    assert extract(entry(chain(20, 300), lipid(None))).reason == REASON_GPI_POSITION_UNANNOTATED
 
 
 def test_the_chain_overrun_guard_fires_and_is_carried_on_the_row():
@@ -130,9 +134,12 @@ def test_the_chain_overrun_guard_fires_and_is_carried_on_the_row():
     Prove it bites by deleting the guard — the row still gets the right span, and the thing that
     caught the defect quietly stops watching."""
     r = extract(entry(chain(23, 911), lipid(646)))
-    assert r.span_aa == 623 and r.rule == RULE_GPI_A
+    # ⚠ The row is now EXCLUDED by the selector — and the guard must still fire on it. The rows it
+    # was built for are exactly the ones the selector rejects; a guard evaluated after the
+    # exclusion would stop watching them at the moment they became interesting.
+    assert r.span_aa is None and r.reason == "gpi_mature_chain_ambiguous"
     assert GUARD_CHAIN_OVERRUNS_ANCHOR in r.guards, r
-    clean = extract(entry(chain(37, 599), lipid(598)))
+    clean = extract(entry(chain(37, 598), lipid(598)))
     assert GUARD_CHAIN_OVERRUNS_ANCHOR not in clean.guards, (
         "the guard fires on a protein whose chain ends at the anchor — it would flag everything "
         "and therefore flag nothing")
@@ -280,7 +287,9 @@ def test_the_divergence_check_is_kept_as_diagnosis_after_the_bar():
     past the anchor because the C-terminal GPI signal is cleaved and not annotated."""
     e = entry(chain(23, 911), lipid(646))
     assert divergence(e) == (623, 889)
-    assert extract(e).span_aa == 623, "the divergence check leaked into the produced span"
+    # ⚠ The diagnosis survives the exclusion: the row produces NO span, and the two numbers that
+    # justified barring rule B are still computable from it.
+    assert extract(e).span_aa is None, "the divergence check leaked into the produced span"
 
 
 # ── ⚠ D-081: the frozen path must stay frozen ───────────────────────────────
@@ -297,3 +306,67 @@ def test_the_v1_extractor_does_not_know_the_v2_vocabulary():
         "cohort's committed spans are no longer reproducible from its own extractor.")
     rec2 = parse("TEST", "", entry(td("Extracellular", 1, 100)))
     assert rec2.largest_span == 100, "the V1 positive control failed — parse() is broken outright"
+
+
+# ── ⚠ the ruled mature-chain selector: the MSLN over-read ────────────────────
+def test_the_anchor_selects_the_chain_not_the_lowest_start():
+    """⚠⚠ THE MSLN DEFECT, and it was LIVE on the protein F-025 is named after.
+
+    Mesothelin is made as a precursor. The N-terminal MPF fragment is cleaved and **secreted** — it
+    is not on the cell. `min(start)` took 37 and produced a 561 aa span carrying ~250 residues an
+    antibody will never meet, fused to the ectodomain that matters. **It would have folded, scored,
+    banded and looked entirely normal.**
+
+    Prove it bites by restoring `mature_chain_bounds` as the selector: the span becomes 561."""
+    e = entry(chain(37, 598), chain(37, 286), chain(296, 598), lipid(598))
+    r = extract(e)
+    assert r.span_aa != 561, (
+        "the mature chain was selected by lowest start — this is the MSLN over-read, and it carries "
+        "~250 residues of a secreted fragment into the fold")
+
+
+def test_msln_shaped_disagreeing_candidates_are_named_and_excluded_never_guessed():
+    """⚠ Both `Mesothelin` 37-598 and `Mesothelin, cleaved form` 296-598 terminate at the anchor,
+    giving 561 and 302. The owner ruled the ZERO-candidate case; the DISAGREEING case is not ruled,
+    so it takes the same named exclusion rather than a guess.
+
+    Prove it bites by adding a tie-break (e.g. latest start): a span appears where a ruling is
+    owed, and this reds."""
+    r = extract(entry(chain(37, 598), chain(37, 286), chain(296, 598), lipid(598)))
+    assert r.span_aa is None, f"a chain was chosen where the candidates disagree: {r}"
+    assert r.reason == "gpi_mature_chain_ambiguous"
+
+
+def test_identical_duplicate_chains_are_not_a_disagreement():
+    """⚠ A-017 clause (c) for the selector. `O95971` CD160 carries `CD160 antigen` and
+    `CD160 antigen, soluble form`, BOTH 25-159. Two records, one span — not ambiguous.
+
+    Prove it bites by testing `len(candidates) > 1` instead of the number of distinct SPANS:
+    CD160 becomes absent_with_reason and a correct protein is lost."""
+    r = extract(entry(chain(25, 159), chain(25, 159), lipid(159)))
+    assert r.span_aa == 134, f"two identical chains were read as a disagreement: {r}"
+    assert r.rule == RULE_GPI_A
+
+
+def test_the_selector_takes_the_anchored_subunit_of_a_cleaved_protein():
+    """⚠ `P51654` GPC3: alpha 25-358, beta 359-554, anchor 554. The anchor sits on the BETA subunit,
+    so the mature GPI chain is 359-554 → 195 aa, not 529. The alpha subunit is a separate chain."""
+    r = extract(entry(chain(25, 358), chain(359, 554), lipid(554)))
+    assert r.span_aa == 195 and r.rule == RULE_GPI_A, r
+
+
+def test_no_chain_ending_at_the_anchor_is_named_and_excluded():
+    """⚠ `Chain` running past the anchor means the record does not describe the mature protein, so
+    its START cannot be trusted either. `P06731` CEACAM5 is in this state — chain 35-685, anchor
+    676 — and it is one of F-009's four clinically-validated missing targets. Excluded and NAMED
+    beats folded and wrong."""
+    r = extract(entry(chain(35, 685), lipid(676)))
+    assert r.span_aa is None
+    assert r.reason == "gpi_mature_chain_ambiguous"
+
+
+def test_the_chain_start_guard_stays_live_after_the_fix():
+    """⚠ The guard is what CAUGHT the MSLN over-read. It stays on the artifact after the fix, so a
+    `Chain` set the selector does not explain is still visible rather than silently handled."""
+    r = extract(entry(chain(25, 358), chain(359, 554), lipid(554)))
+    assert GUARD_CHAIN_START_AMBIGUOUS in r.guards, r

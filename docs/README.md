@@ -289,6 +289,24 @@ So the rule is not "be careful" — it is:
   proteins with an explicitly *extracellular* span. **The surface class leaks too** — 106 surface
   proteins have a reachable face and are counted today as having none.
 
+- ⚠⚠ **AND MECHANISM 5 WAS ALREADY KNOWN — IN A DOCSTRING — FOR THREE WEEKS.** `core/manifest.py`'s
+  module docstring, written for **D-024 v** on 2026-07-22, says in as many words:
+
+  > *SDK1 (Q7Z5N4) has n_spans==1 but null bounds (`None-2009(None)`), so it is `whole` — keying off
+  > n_spans would slice a None (D-024 v).*
+
+  **The behaviour was correct.** The manifest routed SDK1 to a whole-sequence fold rather than
+  slicing a null, and it named the accession, the shape and the hazard. ⚠ **What was wrong was the
+  LABEL, and the label is what everyone read.** The band went on calling it `no_topology` — an
+  absence of topology — while the code three modules away knew the topology was present and only a
+  coordinate was missing. **Mechanism 5 had to be rediscovered from the other end, by an audit that
+  found thirteen where the order said twelve.**
+
+  ⚠ **This is KEEL-4's Principle 11 scar verbatim: a hazard written into a code comment and left
+  live for weeks, because writing it down felt like handling it.** **Recording a hazard in a
+  docstring is not guarding it.** The guard is the category — `span_boundary_unknown` — and it did
+  not exist until today. **No number is taken for this; it is a clause of this finding.**
+
 - **Consequences.** The band is renamed to what it measures; the vocabulary, the GPI rule and the
   coordinate category are ruled in `RULINGS-2026-08-07-span-definition.md` and implemented against the
   census only. ⚠ **The 82 are frozen — `### D-081`.** The annex's 84.8% is largely an instrument

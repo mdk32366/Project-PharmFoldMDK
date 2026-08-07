@@ -18,7 +18,8 @@ from typing import Any, Optional
 
 from core.span_definition import (
     ABSENT_WITH_REASON, GUARD_CHAIN_OVERRUNS_ANCHOR, GUARD_CHAIN_START_AMBIGUOUS,
-    NO_EXTRACELLULAR_SPAN, REASON_GPI_NO_CHAIN, REASON_GPI_POSITION_UNANNOTATED, RULE_GPI_A,
+    NO_EXTRACELLULAR_SPAN, REASON_GPI_MATURE_CHAIN_AMBIGUOUS, REASON_GPI_NO_CHAIN,
+    REASON_GPI_POSITION_UNANNOTATED, RULE_GPI_A,
     RULE_VOCABULARY, SPAN_BOUNDARY_UNKNOWN, TERM_UNRULED, V2_RULED_VOCABULARY, classify_term,
 )
 
@@ -76,15 +77,45 @@ def gpi_lipidation(data: dict) -> list[dict]:
 
 
 def mature_chain_bounds(data: dict) -> tuple[Optional[int], Optional[int]]:
-    """`min(start)`, `max(end)` over every `Chain`.
+    """`min(start)`, `max(end)` over every `Chain`. ⚠ DIAGNOSTIC ONLY — see `divergence`.
 
-    ⚠ **Not `Chain[0]`.** A proteolytically processed protein carries several `Chain` records, and
-    taking the first produced a **negative** rule-A-minus-rule-B divergence on `P51654` during the
-    pre-registration — an artifact of the pick, not a property of the data.
+    ⚠ **This is NOT the span selector and must never be used as one.** It was, and on `Q13421`
+    MSLN it produced a 561 aa span carrying ~250 residues of the megakaryocyte-potentiating factor,
+    which is cleaved off and secreted. `mature_chain_at_anchor` is the selector.
     """
     starts = [s for f in _features(data, "Chain") for s in (_bounds(f)[0],) if s is not None]
     ends = [e for f in _features(data, "Chain") for e in (_bounds(f)[1],) if e is not None]
     return (min(starts) if starts else None, max(ends) if ends else None)
+
+
+def mature_chain_at_anchor(data: dict, anchor: Optional[int]) -> tuple[Optional[int], str]:
+    """`(start, "")` of the mature GPI chain, or `(None, reason)`.
+
+    ⚠ **The anchor selects the chain.** A GPI-anchored mature chain is the one terminating at the
+    anchor; every other `Chain` on the entry is a fragment that is cleaved away.
+
+    Three outcomes, and two of them refuse:
+
+    1. the candidates agree on one span → that is the mature chain
+    2. **no** `Chain` ends at the anchor → `gpi_mature_chain_ambiguous`
+    3. ⚠ **the candidates disagree** → `gpi_mature_chain_ambiguous` as well. `Q13421` MSLN carries
+       `Mesothelin` 37-598 **and** `Mesothelin, cleaved form` 296-598 — both terminate at the
+       anchor, giving 561 and 302. **Picking one is a ruling, and "never guessed" is the operative
+       clause**, so it is excluded and named rather than decided here.
+
+    ⚠ Two chains with identical bounds are NOT a disagreement — `O95971` CD160 carries
+    `CD160 antigen` and `CD160 antigen, soluble form`, both 25-159. The test is on the SPAN, not on
+    the number of records.
+    """
+    if anchor is None:
+        return None, REASON_GPI_POSITION_UNANNOTATED
+    candidates = [c for c in _features(data, "Chain") if _bounds(c)[1] == anchor]
+    starts = {s for s in (_bounds(c)[0] for c in candidates) if s is not None}
+    if not starts:
+        return None, REASON_GPI_MATURE_CHAIN_AMBIGUOUS
+    if len(starts) > 1:
+        return None, REASON_GPI_MATURE_CHAIN_AMBIGUOUS
+    return starts.pop(), ""
 
 
 def _chain_starts_disagree(data: dict) -> bool:
@@ -139,29 +170,25 @@ def extract(data: dict) -> SpanResult:
 
     lip = gpi_lipidation(data)
     if lip:
-        cs, ce = mature_chain_bounds(data)
         pos = _bounds(lip[0])[0]
         guards: list[str] = []
         if _chain_starts_disagree(data):
-            # ⚠ "The first `Chain`" is not a rule. Two census proteins are proteolytically cleaved
-            # into subunits with different starts — `P51654` and `Q13421` MSLN — and the mature
-            # N-terminus this uses (`min`) includes a fragment that is cleaved off and secreted.
-            # That is the SAME defect that barred rule B, at the other end of the molecule. It is
-            # FLAGGED rather than silently decided, because deciding it is a ruling.
+            # ⚠ KEPT LIVE. This guard is what caught the MSLN over-read; it stays on the artifact
+            # after the fix so a `Chain` set the selector does not explain is still visible.
             guards.append(GUARD_CHAIN_START_AMBIGUOUS)
-        if cs is None:
+        _, ce_all = mature_chain_bounds(data)
+        if ce_all is not None and pos is not None and ce_all - pos > 1:
+            # ⚠ EVALUATED BEFORE THE SELECTOR, DELIBERATELY. This guard is what barred rule B, and
+            # the rows it was built for are exactly the ones the selector now EXCLUDES. If it ran
+            # after, it would stop watching them at the moment they became interesting.
+            guards.append(GUARD_CHAIN_OVERRUNS_ANCHOR)
+        if not _features(data, "Chain"):
             return SpanResult(category=ABSENT_WITH_REASON, reason=REASON_GPI_NO_CHAIN,
                               terms_unruled=unruled, terms_held=held, guards=guards)
-        if pos is None:
-            # ⚠ RULE B IS BARRED, so this is where a missing anchor position now lands: NAMED,
-            # excluded, and never defaulted into a span. Under rule B it would have become the full
-            # `Chain` — a chimera of the ectodomain and a cleaved signal.
-            return SpanResult(category=ABSENT_WITH_REASON,
-                              reason=REASON_GPI_POSITION_UNANNOTATED,
+        cs, why = mature_chain_at_anchor(data, pos)
+        if cs is None:
+            return SpanResult(category=ABSENT_WITH_REASON, reason=why,
                               terms_unruled=unruled, terms_held=held, guards=guards)
-        if ce is not None and ce - pos > 1:
-            # ⚠ THE LIVE GUARD. `Chain` running past the anchor is how rule B was caught.
-            guards.append(GUARD_CHAIN_OVERRUNS_ANCHOR)
         if pos - 1 < cs:
             return SpanResult(category=ABSENT_WITH_REASON,
                               reason=REASON_GPI_POSITION_UNANNOTATED,

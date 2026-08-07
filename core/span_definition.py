@@ -100,6 +100,26 @@ NO_EXTRACELLULAR_SPAN = "no_extracellular_span"
 REASON_GPI_POSITION_UNANNOTATED = "gpi_anchor_position_unannotated"
 REASON_GPI_NO_CHAIN = "gpi_chain_unannotated"
 
+#: ⚠⚠ THE MATURE-CHAIN SELECTOR, ruled 2026-08-07 after a live defect on MSLN.
+#:
+#: A GPI-anchored mature chain is **by definition the one terminating at the anchor** — the
+#: anchor position selects the chain, not the other way round. `min(start)`, `Chain[0]` and
+#: "the longest" are all wrong, and `min(start)` was wrong LIVE: on `Q13421` MSLN it took 37,
+#: carrying ~250 residues of the megakaryocyte-potentiating factor — a fragment that is
+#: cleaved off and **secreted**, so an antibody never meets it — fused to the ectodomain that
+#: matters. ⚠ On the one protein `### F-025` is named after, and it would have folded,
+#: scored, banded and looked entirely normal.
+#:
+#: ⚠ `P51654`'s −195 and MSLN's +250 are the SAME defect at opposite ends of the molecule.
+#: Rule B was barred for over-reading the C-terminus; this is the N-terminal twin, and it was
+#: live while B never fired.
+#:
+#: ⚠ **No chain ends at the anchor, OR the candidates disagree → named and excluded, never
+#: guessed.** The disagreeing case is not the owner's ruling and is not invented here: MSLN
+#: carries BOTH `Mesothelin` 37-598 and `Mesothelin, cleaved form` 296-598, both terminating at
+#: the anchor, giving 561 and 302. Choosing between them is a ruling, so it lands here instead.
+REASON_GPI_MATURE_CHAIN_AMBIGUOUS = "gpi_mature_chain_ambiguous"
+
 #: ⚠ LIVE GUARDS, not one-off checks. Both of these found a real defect once; a check that runs only
 #: when someone remembers to run it will not find the second one.
 GUARD_CHAIN_OVERRUNS_ANCHOR = "chain_end_exceeds_anchor"
