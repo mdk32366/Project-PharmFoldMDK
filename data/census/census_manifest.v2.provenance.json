@@ -110,5 +110,8 @@
       "P79483",
       "local"
     ]
-  ]
+  ],
+  "identity_fn_version": 1,
+  "identity_fn_version_note": "1 = revisions 1-3, no coordinates and no boundary_method: the tuple degenerates to accession/band/tier/rule/definition, and a span change that moved neither band nor tier would still collide; 2 = revision 4, coordinates present; 3 = revision 5 onward, boundary_method present",
+  "identity_fn_version_stamped": "stamped retrospectively 2026-08-07 \u2014 this revision was produced BEFORE the identity function was versioned. \u26a0 Its manifest_content_hash field was computed by function version 1; recomputing this file under a later version yields a DIFFERENT number, and the two must never be compared without naming both versions."
 }

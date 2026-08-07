@@ -1,7 +1,7 @@
 {
   "seed": 20260807,
-  "manifest_revision": 4,
-  "rebuild_reason": "manifest identity fix: r1 and r3 had identical membership and an identical fold order (3,468 of 3,468) while two spans differed, so a membership-only identity reported no change on the revision where the work moved. r4 carries TWO identities -- fold_order_key (membership only, stable across span revisions by design) and manifest_content_hash (coordinates, band, tier, rule, definition). It also adds span_start/span_end, without which nothing downstream could slice a sequence at all.",
+  "manifest_revision": 5,
+  "rebuild_reason": "boundary_method is now carried per row and is in the content-hash tuple. The census fold path would have folded 3,468 full-length sequences: core/enqueue.py branched on boundary_method, not on coordinates, and any unrecognised or absent value fell through to whole. The manifest carried no such column, so ingest would have had to invent one. It is now pre-registered in the manifest and ingest copies it. identity_fn_version 3.",
   "seed_preserved_across_rebuild": true,
   "order_differs_because_population_differs": true,
   "seed_recorded_before_shuffle": true,
@@ -44,19 +44,22 @@
   },
   "shuffled": true,
   "manifest_rows": 3468,
-  "manifest_sha256": "0411cc4c55aac6d3aa3182cfe6c7481b53df538896be8930408a78e3c0abb9b5",
+  "manifest_sha256": "13a9ea137bc81f72154685fdcc7ec3b9d74104ce2f597139684a1eea626ff6c6",
   "fold_order_key": "18e570987a5fc385b86a0b344532b9a4552542b753da22a4186ee74ad915fe82",
   "fold_order_key_covers": "membership only: the census_accession set \u2014 stable across span revisions BY DESIGN",
-  "manifest_content_hash": "4c33c54d54303ab676c7faeb740c4a2dec1f2db28f6b5dbfe15ab3f2780f5cea",
+  "manifest_content_hash": "68c487716029530e75ce0722940b7c222502cacc18e001b864be87ecabb9d5eb",
   "manifest_content_hash_covers": [
     "census_accession",
     "span_start",
     "span_end",
+    "boundary_method",
     "band",
     "tier",
     "span_rule",
     "span_definition"
   ],
+  "identity_fn_version": 3,
+  "identity_fn_version_note": "1 = revisions 1-3, no coordinates and no boundary_method (the tuple degenerates to accession/band/tier/rule/definition and a span change that moved neither band nor tier would still collide); 2 = revision 4, coordinates present; 3 = revision 5 onward, boundary_method present",
   "bands": {
     "above_local": 428,
     "local": 2691,
@@ -121,8 +124,5 @@
       "O75121",
       "local"
     ]
-  ],
-  "identity_fn_version": 2,
-  "identity_fn_version_note": "1 = revisions 1-3, no coordinates and no boundary_method: the tuple degenerates to accession/band/tier/rule/definition, and a span change that moved neither band nor tier would still collide; 2 = revision 4, coordinates present; 3 = revision 5 onward, boundary_method present",
-  "identity_fn_version_stamped": "stamped retrospectively 2026-08-07 \u2014 this revision was produced BEFORE the identity function was versioned. \u26a0 Its manifest_content_hash field was computed by function version 2; recomputing this file under a later version yields a DIFFERENT number, and the two must never be compared without naming both versions."
+  ]
 }

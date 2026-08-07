@@ -189,6 +189,30 @@ So the rule is not "be careful" — it is:
     patched into a sealed result.** An amended F-004 would read as though it had always said that,
     and the disagreement between the two definitions — which is itself the finding — would vanish.
 
+> #### ⚠ AMENDMENT, 2026-08-07 — the scope of this freeze, written openly rather than assumed
+>
+> **`### D-081` freezes measured results and forbids re-running them. It does not preserve a defect
+> that fires only on inputs the cohort does not contain.**
+>
+> ⚠ **Letting a procedural rule create a scientific hazard is the rule failing, not the rule
+> working.** `core/enqueue.py:_fold_input` branched on `boundary_method == "sliced_ecd"` and **fell
+> through to fold the whole sequence** for every other value — `""`, `None`, or any string a future
+> caller invented. `whole` is a legitimate recorded outcome, so the artifacts would have been
+> internally consistent while describing the wrong molecule. That is a fail-open default in a code
+> path that will never run against the cohort again, and it is now a raise.
+>
+> **Authorised by the owner on one condition, and the condition was proved BEFORE the change**
+> (`tests/test_enqueue_boundary_method.py`): every cohort row carries a recognised
+> `boundary_method`. Measured from two independently-read sources —
+> the manifest built from `data/cohort_82_ecd.csv`: **`sliced_ecd` 69 · `whole` 13 · unrecognised
+> 0**; the live `protein_analyses` rows: **`sliced_ecd` 67 · `whole` 13 · unrecognised 0**, and
+> `meta[boundary_method]` agrees with `meta[source]` on all 80. **69 → 67 reconciles exactly:**
+> MUC16 and FAT2 are the two named exclusions never enqueued (D-026).
+>
+> ⚠ **So the change cannot alter cohort behaviour by construction.** No stored artifact moves, no
+> re-run is authorised, and nothing about the frozen results changes. **What changes is that a value
+> the cohort never contained now costs a raise instead of a silent 2,000-residue fold.**
+
 - **Deep-learning justification.** Neutral to the neural core and protective of its evaluation. The
   graded deliverable rests on a pre-registered ablation whose validity depends on the measured inputs
   not moving underneath it. ⚠ **A definition change applied retroactively to a fitted cohort is
@@ -328,6 +352,30 @@ So the rule is not "be careful" — it is:
   `Mesothelin, cleaved form` 296-598 is an assertion that 37-295 *can be removed*. **The rule can
   only under-read, and over-reading is what folds things that are not there.** MSLN lands at
   **302 aa**, the mature form the ADCs bind; CEACAM5 returns at **641 aa**.
+
+- ⚠⚠ **THE LARGEST CLAUSE, AND IT IS NOT ABOUT THE FILTER: THE CENSUS FOLD PATH WOULD HAVE FOLDED
+  3,468 FULL-LENGTH SEQUENCES INSTEAD OF EXTRACELLULAR DOMAINS.** `core/enqueue.py:81` branched on
+  `boundary_method`, **not on the presence of coordinates**. The safe branch required the exact
+  literal `"sliced_ecd"`; **the unsafe branch was the default, reached by omission.** Measured
+  2026-08-07 — a census row carrying `span_aa=302` and no coordinates:
+
+  ```
+  boundary_method='sliced_ecd'  -> AssertionError raised                    ✅
+  boundary_method='whole'       -> folded 2000 residues, source='whole'   ⚠ nothing red
+  boundary_method=''            -> folded 2000 residues, source='whole'   ⚠ nothing red
+  boundary_method='census_span' -> folded 2000 residues, source='whole'   ⚠ nothing red
+  boundary_method=None          -> folded 2000 residues, source='whole'   ⚠ nothing red
+  ```
+
+  **And the census manifest carried no `boundary_method` column at all**, so any ingest would have
+  had to supply one. ⚠ **`whole` is a legitimate recorded outcome** — D-024 routes whole-method
+  targets to it — so every artifact would have been internally consistent: fold succeeds, recipe
+  recorded, provenance intact, `source='whole'`. **Describing the wrong molecule, 3,468 times, with
+  nothing red anywhere.**
+
+  ⚠ **Found because a specified content-hash tuple named `span_start` and `span_end`, and building
+  it found there were none.** A specification acting as an audit. The manifest had only `span_aa` —
+  **a length, which cannot slice a sequence.**
 
 - ⚠ **A reporting trap this produced, recorded because it nearly passed.** Manifest revision 1 and
   revision 3 have **identical membership (3,468) and an identical fold order — 3,468 of 3,468 —

@@ -64,9 +64,17 @@ ATTENTION_TILT = (
 
 OUT_COLUMNS = (
     "census_accession", "census_class", "span_aa", "span_start", "span_end", "span_rule",
-    "band", "tier", "tier_reason", "dtype", "chunk_size", "fold_order", "span_definition",
-    "guards",
+    "boundary_method", "band", "tier", "tier_reason", "dtype", "chunk_size", "fold_order",
+    "span_definition", "guards",
 )
+
+#: ⚠ THE MANIFEST IS THE PRE-REGISTRATION OF WHAT FOLDS AND HOW. **How belongs in it.**
+#: Every census row folds a sliced ECD — it has coordinates by construction, since a row without
+#: them is `not_foldable` and never reaches here. Ingest COPIES this; **ingest never defaults it.**
+#: ⚠ A field invented at the ingest boundary is exactly the class of thing that gets invented
+#: differently next time, and `core/enqueue.py` used to treat any unrecognised value as
+#: "fold the whole sequence".
+BOUNDARY_METHOD = "sliced_ecd"
 
 #: ⚠⚠ TWO IDENTITIES, AND NEITHER MAY STAND FOR THE OTHER.
 #:
@@ -84,8 +92,25 @@ OUT_COLUMNS = (
 #:                             the rule that produced the span and the definition version.
 #:
 #: ⚠ One number standing for both is the defect this exists to prevent.
-CONTENT_FIELDS = ("census_accession", "span_start", "span_end", "band", "tier", "span_rule",
-                  "span_definition")
+#: ⚠ `boundary_method` is IN the tuple: a row that folds whole and a row that folds sliced are not
+#: the same row, even with identical coordinates.
+CONTENT_FIELDS = ("census_accession", "span_start", "span_end", "boundary_method", "band", "tier",
+                  "span_rule", "span_definition")
+
+#: ⚠⚠ THE IDENTITY FUNCTION IS ITSELF VERSIONED, and two hashes computed by different functions
+#: must never be compared without both versions named — the same rule that governs the two span
+#: definitions and the two band-split versions.
+#:
+#: · **1** — revisions 1-3. `span_start`/`span_end`/`boundary_method` did not exist, so the tuple
+#:   degenerated to (accession, band, tier, rule, definition). ⚠ **A span change that moved neither
+#:   band nor tier would still collide.** r1 and r3 differ only because both changed spans also
+#:   moved band and tier.
+#: · **2** — revision 4. Coordinates present.
+#: · **3** — revision 5 onward. `boundary_method` present.
+#:
+#: ⚠ Without this, r3→r4→r5 hashes differ for two reasons at once — the content changed AND the
+#: function changed — and nobody downstream can separate them.
+IDENTITY_FN_VERSION = 3
 
 
 def sha256_of(path: Path) -> str:
@@ -141,6 +166,7 @@ def manifest_rows(census_class: str) -> tuple[list[dict[str, Any]], dict[str, An
             "span_aa": span,
             "span_start": r.get("span_start", ""),
             "span_end": r.get("span_end", ""),
+            "boundary_method": BOUNDARY_METHOD,
             "span_rule": r["span_rule"],
             "band": band_of(span),
             "tier": tier,
@@ -244,6 +270,15 @@ def run(argv: Optional[list[str]] = None) -> int:
                                             "revisions BY DESIGN",
                       manifest_content_hash=manifest_content_hash(rows),
                       manifest_content_hash_covers=list(CONTENT_FIELDS),
+                      # ⚠ Two hashes computed by different functions are not comparable without
+                      # both versions named.
+                      identity_fn_version=IDENTITY_FN_VERSION,
+                      identity_fn_version_note=(
+                          "1 = revisions 1-3, no coordinates and no boundary_method (the tuple "
+                          "degenerates to accession/band/tier/rule/definition and a span change "
+                          "that moved neither band nor tier would still collide); "
+                          "2 = revision 4, coordinates present; "
+                          "3 = revision 5 onward, boundary_method present"),
                       bands=dict(sorted(bands.items())), tiers=dict(sorted(tiers.items())),
                       rows_by_class=dict(sorted(by_class.items())),
                       first_10_fold_order=[(r["fold_order"], r["census_accession"], r["tier"])
