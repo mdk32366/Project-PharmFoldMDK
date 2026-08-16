@@ -1,0 +1,9 @@
+{
+  "derived_on": "cache-only; no network fetch, no span changed",
+  "source_manifest": "census_manifest.v7.csv",
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "rows": 3467,
+  "intermittent": 1649,
+  "discarded_residues": 92709,
+  "\u26a0 scope": "CONTEXT ONLY \u2014 no span_aa, fold or artifact is altered by this file"
+}

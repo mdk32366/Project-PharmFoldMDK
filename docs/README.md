@@ -513,6 +513,42 @@ So the rule is not "be careful" — it is:
 
 ---
 
+### F-037 — `span_aa` is the LARGEST extracellular segment, not the extracellular content, and 47.6% of the census has more than one
+
+- **Date:** 2026-08-16
+- **Status:** open — ⚠ **no span, fold or artifact is wrong; what was missing is the CONTEXT beside them.**
+- **What is true:** `core/span_extract.extract()` keeps the longest accepted topological domain — `if best is None or n > best` — and **silently discards every other one**. For a single-pass receptor the longest segment *is* the ectodomain and the two are the same thing. ⚠ **For a multi-pass protein it is one loop out of several**, and no artifact said which case a row was.
+
+- **Measured, cache-only, no span altered:**
+
+  | topology | rows | |
+  |---|---|---|
+  | `contiguous` (1 segment) | 1,693 | 48.8% |
+  | ⚠ **`intermittent` (>1 segment)** | **1,649** | **47.6%** |
+  | `no_accepted_segment` (GPI — a different architecture, D-081) | 125 | 3.6% |
+
+  ⚠⚠ **92,709 residues of extracellular material are discarded.** Worst: `Q9UHC9` — **7 segments, 830 aa extracellular, 272 folded, 558 discarded.**
+
+- ⚠ **Why it matters here specifically.** A reader seeing `span_aa = 272` reasonably reads *"the extracellular region is 272 aa."* For `Q9UHC9` the extracellular region is **830 aa across 7 segments** and 272 is the biggest one. **An antibody can bind a conformational epitope spanning several loops — a structure of one loop in isolation is not a model of that site.** On an ADC platform that is the difference between a candidate and an artifact.
+
+- **And it is visible in the confidence numbers.** Across **2,510 folded rows** joined to the segment derivation:
+
+  | topology | n | median pLDDT | below 50 |
+  |---|---|---|---|
+  | contiguous | 879 | **67.9** | 13.1% |
+  | ⚠ **intermittent** | 1,556 | **50.9** | **45.4%** |
+  | GPI | 75 | 70.5 | 4.0% |
+
+  ⚠⚠ **Intermittent spans are ~3.5× more likely to fold below 50.**
+
+- ⚠ **CAUSATION IS NOT CLAIMED, and the data cannot separate the two explanations:** (a) a fragment folded out of its structural context predicts worse, or (b) the extracellular loops of multi-pass proteins are genuinely short and flexible, so a low score is the correct answer. **Both are plausible, both are informative, and they lead to the same practical conclusion** — an intermittent span's structure is a weaker basis for epitope work — **but they are different claims and only one of them is about our method.** Separating them needs a re-fold of a segment in context, which has not been done.
+
+- **Remedy:** `scripts/span_segments.py` → `data/census/span_segments.csv` — **context only, nothing behind it altered.** ⚠ The topology is a **word** (`contiguous` / `intermittent` / `no_accepted_segment`), never a bare integer: *"1"* and *"7"* mean different things to someone deciding whether a structure models a binding site, and a count invites the reader to do that reasoning unaided.
+
+- ⚠ **`no_accepted_segment` is NOT "intermittent" and NOT a defect.** GPI-anchored proteins have no topological domains **by design** and take their own rule (D-081). Collapsing them into a segment count would report a different molecular architecture as missing data — ⚠ the exact `no_topology` conflation `F-025` was about.
+
+---
+
 ### F-036 — A row that was never fetched carries an EMPTY span_category, so "unknown" and "has a span" are the same filter
 
 - **Date:** 2026-08-16
