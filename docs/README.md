@@ -565,6 +565,33 @@ So the rule is not "be careful" — it is:
 
 ---
 
+### F-038 — A census protein page displayed the COHORT's measured ceiling, and six census structures exceed it
+
+- **Date:** 2026-08-16
+- **Status:** fixed
+- **What happened:** `ui/src/plddt.js` bakes the cohort's measured maximum into the top band's caveat — *"cohort max 84.23 — no target reaches the high-confidence range"* — and `Confidence` renders it wherever it appears. **D-089 put `Confidence` on census protein pages**, so a census structure was shown beside a ceiling belonging to a different population.
+
+- **Measured, after tranche 4 drained:**
+
+  | population | max mean pLDDT | rows > 84.23 | rows ≥ 90 |
+  |---|---|---|---|
+  | cohort (the 82) | **84.23** | 0 | 0 |
+  | ⚠ **census** | **89.25** | **6** | 0 |
+
+  ⚠⚠ **Six census structures already exceed the ceiling the page was quoting at them**, and the highest is 89.25 — within one point of the high-confidence band the caveat says nothing reaches.
+
+- ⚠ **The claim was never false; it was about the wrong population.** *"Cohort max 84.23"* is exactly true of the 82. Shown on a census page it describes a set the protein is not in — the same shape as the tranche-filter leaks (`_folded_accessions`, `_failed_accessions`), one surface silently answering with another population's numbers.
+
+- ⚠ **The count that found it was not looking for it.** The owner asked for a low-pLDDT tally at tranche 4's drain; `max 89.2` in the output is what did not fit. **Same pattern as every serious defect this project has caught — a check that existed to find something else.**
+
+- **Fixed:** `Confidence` takes an optional `caveat`. ⚠ **Passing nothing keeps the cohort behaviour byte-for-byte**, so target pages are untouched. The census page supplies its own, and ⚠ **quotes NO census maximum** — that number moves every time a tranche completes, and one baked in here would go stale in silence, which is the D-088 trap one layer up.
+
+- ⚠ **The test found a SECOND instance the fix had missed.** `PlddtExplainer` also printed `COHORT_MAX_PLDDT`, and it is rendered on the same page — so the first fix closed one leak and left its twin. `showCohortMax` now gates it; the *"why the scores run lower"* explanation is about the **method** and is population-independent, so only the number is conditional.
+
+- **Evidence:** 3 tests on the page + 4 new on `Confidence` (a file that did not exist). ⚠ **`caveat=""` SUPPRESSES the note rather than falling back to the cohort's** — a caller saying *"this population has nothing to add"* must not have the removed claim restated for them. UI **213 passed** across 31 files. Revert proof: removing the override reds 2.
+
+---
+
 ### F-037 — `span_aa` is the LARGEST extracellular segment, not the extracellular content, and 47.6% of the census has more than one
 
 - **Date:** 2026-08-16

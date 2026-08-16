@@ -77,8 +77,17 @@ export default function CensusProteinView({ id }) {
       <StructureViewer id={id} />
 
       <div className="panels">
-        <Confidence meanPlddt={detail.mean_plddt} plddt={plddt} />
-        <PlddtExplainer />
+        {/* ⚠ NOT the cohort's ceiling. The default note states "cohort max 84.23", which is a
+            fact about the 82 — and six census structures already exceed it. ⚠ No census maximum is
+            quoted either: it moves every time a tranche completes, and a number baked in here
+            would go stale silently (the D-088 trap). */}
+        <Confidence
+          meanPlddt={detail.mean_plddt}
+          plddt={plddt}
+          caveat="the confidence bands are shared with the ranked 82, but this protein is not one of them — the cohort's measured ceiling does not describe the census"
+        />
+        {/* ⚠ Without the cohort's ceiling — see the Confidence note above. */}
+        <PlddtExplainer showCohortMax={false} />
       </div>
 
       {/* The measured body — status, extracellular topology (F-037), association coverage.
