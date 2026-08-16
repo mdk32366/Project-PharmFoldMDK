@@ -1,0 +1,69 @@
+{
+  "accession": "Q8WXD0",
+  "gene_hint": "surface",
+  "tier": "local",
+  "dtype": "int8",
+  "chunk_size": 64,
+  "repeat": 2,
+  "manifest": "census_manifest.v6.csv",
+  "manifest_span_aa": 416,
+  "span_start": 1,
+  "span_end": 416,
+  "sliced_length": 416,
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "span_starts_at_residue_1": true,
+  "gpu_before": {
+    "used_mib": 0,
+    "total_mib": 8151
+  },
+  "limitations": [
+    "Covers the FOLD KERNEL only, not the enqueue path. Not end-to-end determinism (R12).",
+    "Determinism verified on a span BEGINNING AT RESIDUE 1. Only 410 of 3,467 manifest rows (11.8%) begin there; for proteins whose census span starts at a non-1 residue the probe was not directly exercised, though the kernel property is expected to generalise. Stated, not softened.",
+    "Any ceiling touched here is SINGLE-PROCESS headroom: runner._MODEL_CACHE is module-level and per-process, so a probe and a worker folding concurrently hold two copies of the weights on one card.",
+    "NO CROSS-RECIPE COMPARISON IS READ. D-078 is unwritten."
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "wall_clock_s": 78.45,
+      "ca_residues_in_pdb": 416,
+      "plddt_len": 416,
+      "mean_plddt": 74.81,
+      "gpu_after": {
+        "used_mib": 7658,
+        "total_mib": 8151
+      },
+      "recipe_recorded": {
+        "dtype": "int8",
+        "chunk_size": 64
+      }
+    },
+    {
+      "attempt": 2,
+      "wall_clock_s": 62.54,
+      "ca_residues_in_pdb": 416,
+      "plddt_len": 416,
+      "mean_plddt": 74.81,
+      "gpu_after": {
+        "used_mib": 7658,
+        "total_mib": 8151
+      },
+      "recipe_recorded": {
+        "dtype": "int8",
+        "chunk_size": 64
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "pair": [
+        1,
+        2
+      ],
+      "identical": true,
+      "divergence": "identical"
+    }
+  ],
+  "deterministic": true,
+  "verdict": "IDENTICAL across all pairs \u2014 the kernel is deterministic at this recipe"
+}
