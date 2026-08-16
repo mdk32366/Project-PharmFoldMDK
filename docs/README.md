@@ -130,6 +130,42 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-084 — D-082 layer 3 ships OFF, and the switch is the decision: a fold path may not change its process topology because a module landed
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Context:** D-082 specified three layers. Layers 1 and 2 (measurement, allocator cap) shipped. **Layer 3 — run the fold in a child process, so a hard death becomes a named job outcome instead of a vanished worker — was built today, while tranche 1 was mid-crank at 1,003 of 1,307.**
+
+  ⚠ The running worker had **already imported `runner.py`**, so it is unaffected by anything written now. **The exposure is its NEXT start**, which the owner performs by hand in a separate terminal.
+
+- **Decision:**
+
+  1. **`worker/fold_supervisor.py` is wired into `worker/main.py` but is OFF unless `WORKER_FOLD_IN_CHILD=1`.** ⚠ **The default is the decision, not an oversight.** A default-on layer would have changed the fold path's process topology at the next worker start **without anyone choosing it** — and the person restarting would have been running a topology they had not been told about, on a machine that had bugchecked four days earlier.
+
+  2. **The choice is printed on every start, both ways.** `layer 3 ENABLED` or `layer 3 off (set WORKER_FOLD_IN_CHILD=1 to enable)`. ⚠ **A fold path that changes shape silently makes the next unexplained failure much harder to attribute** — and the failure this layer exists to catch is exactly the kind that leaves no other trace.
+
+  3. **The child is PERSISTENT, one per worker, not one per fold.** `runner._MODEL_CACHE` is module-level and therefore per-process; a child per fold would reload **8.4 GB every time** — the exact cost `_MODEL_CACHE` was added to remove. ⚠ **And only one process ever holds weights: the parent never imports torch**, so this does not double VRAM.
+
+  4. **A death and a failure get different vocabulary.** A fold that raises → `RuntimeError`, an ordinary job failure, unchanged. A child that dies → **`FoldChildDied` carrying the exit code.** ⚠ D-024's rule — attempted-and-failed must be distinguishable from never-attempted — applied one level down: a driver reset must not read as *"this sequence cannot be folded."*
+
+  5. **A death is NOT retried automatically.** ⚠ A crash loop that re-folds the row that killed it is how **one bad row takes a whole tranche with it.**
+
+  6. **An injected `fold_fn` is never overridden**, even with the flag on. ⚠ Every test that supplies a fake fold would otherwise **silently spawn a real child process.**
+
+- **Consequences:**
+  - ⚠⚠ **It does not survive a bugcheck. Nothing does.** Layer 3's claim is stated narrowly on purpose: it converts every failure *short of a host death* into a recorded outcome. The bugcheck of 2026-08-12 would still have taken the machine down, and layers 1 and 2 are what address that.
+  - ⚠ **Turning it on is an owner action with a measurement attached, not a flip.** Before tranche 4 goes, it runs on a real tranche-boundary batch and the fold results are compared — **a layer that changed structures would be a worse defect than the one it prevents**, which is why `test_the_supervisor_does_not_change_the_fold` exists.
+  - The default-off state means **tranches 1–3 complete on the in-process path**, so the population folded under each topology is knowable rather than mixed mid-tranche.
+
+- **Alternatives rejected:**
+  - **Ship it on.** ⚠ Rejected: it would have taken effect at a restart the owner performs, in a terminal where nothing announces what changed.
+  - **Restart the worker now to pick it up.** ⚠ Rejected: 1,003 completed folds and a live claim, to gain nothing tranche 1 needs.
+  - **A child per fold, for full isolation.** Rejected on the 8.4 GB reload measured on the first rental run (`Loading weights: 4498` per fold).
+
+- **Evidence:** 11 tests in `tests/test_fold_supervisor.py`, all passing; full gate **648 passed, 15 skipped**, pytest exit code **0** read on the line immediately after the command (the `5b24329` correction). **Revert proof 14:** replacing `raise FoldChildDied` with `raise RuntimeError` turns two tests red — `test_a_HARD_CHILD_DEATH_becomes_a_named_outcome_and_the_parent_survives` and `test_a_death_is_not_retried_automatically`.
+
+---
+
 ### D-083 — Tranches are size-banded ascending, and the seed still governs inside each: batching is a partition, not an ordering
 
 - **Date:** 2026-08-16
