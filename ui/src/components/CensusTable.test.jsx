@@ -1,7 +1,13 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render as rtlRender, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import CensusTable, { filterRows } from './CensusTable.jsx'
 import CensusDetail from './CensusDetail.jsx'
+
+// ⚠ The accession cell is a react-router <Link> now — each protein has its own page, so it must be
+// openable in a new tab and reachable by the back button. A Link outside a Router throws, so every
+// render goes through one.
+const render = (ui) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>)
 
 const ROWS = [
   { id: 1, accession: 'Q9UHC9', gene: 'NPC1L1', label: 'NPC1-like 1', span_aa: 272, tranche: 3,
@@ -18,8 +24,15 @@ const ROWS = [
 describe('CensusTable', () => {
   it('defaults to accession order, not pLDDT — an order is not a score (D-079)', () => {
     render(<CensusTable rows={ROWS} />)
-    const first = within(screen.getAllByRole('row')[1]).getByRole('button')
+    const first = within(screen.getAllByRole('row')[1]).getByRole('link')
     expect(first).toHaveTextContent('A0AVI2')
+  })
+
+  it('links each accession to its own page, not an onClick handler', () => {
+    render(<CensusTable rows={ROWS} />)
+    // ⚠ href, not a click handler: openable in a new tab, shareable, back-button reachable.
+    expect(screen.getByRole('link', { name: 'Q9UHC9' })).toHaveAttribute('href', '/census/1')
+    expect(screen.getByRole('link', { name: 'A0AVI2' })).toHaveAttribute('href', '/census/2')
   })
 
   it('searches accession, gene and protein name', () => {
@@ -33,10 +46,10 @@ describe('CensusTable', () => {
     render(<CensusTable rows={ROWS} />)
     fireEvent.click(screen.getByRole('button', { name: /Span \(aa\)/ }))
     let cells = screen.getAllByRole('row')[1]
-    expect(within(cells).getByRole('button')).toHaveTextContent('A0AVI2') // 75 aa
+    expect(within(cells).getByRole('link')).toHaveTextContent('A0AVI2') // 75 aa
     fireEvent.click(screen.getByRole('button', { name: /Span \(aa\)/ }))
     cells = screen.getAllByRole('row')[1]
-    expect(within(cells).getByRole('button')).toHaveTextContent('Q9UHC9') // 272 aa
+    expect(within(cells).getByRole('link')).toHaveTextContent('Q9UHC9') // 272 aa
   })
 
   // ⚠ A missing pLDDT is not a low one. Ascending by pLDDT must not put it first.
@@ -44,7 +57,7 @@ describe('CensusTable', () => {
     render(<CensusTable rows={ROWS} />)
     fireEvent.click(screen.getByRole('button', { name: /pLDDT/ }))
     const rows = screen.getAllByRole('row')
-    const last = within(rows[rows.length - 1]).getByRole('button')
+    const last = within(rows[rows.length - 1]).getByRole('link')
     expect(last).toHaveTextContent('P00000')
   })
 

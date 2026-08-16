@@ -135,17 +135,28 @@ function Associations({ assoc }) {
   )
 }
 
-export default function CensusDetail({ detail, onClose }) {
+export default function CensusDetail({ detail, onClose, embedded = false }) {
   if (!detail) return null
   const band = bandFor(detail.mean_plddt)
   return (
     <section className="census-detail panel">
-      <button type="button" className="close" onClick={onClose}>Close</button>
-      <h3>
-        {detail.gene ?? detail.accession}{' '}
-        <span className="accession">{detail.accession}</span>
-      </h3>
-      <p className="protein-name">{detail.label ?? <span className="unknown">name unknown</span>}</p>
+      {/* ⚠ Only when there is somewhere to close TO. On the protein page the panel IS the page,
+          and a Close button there would suggest an overlay that does not exist. */}
+      {onClose && <button type="button" className="close" onClick={onClose}>Close</button>}
+      {/* ⚠ Suppressed when embedded in the protein page, which already carries the identity in
+          its own header. Printing gene + accession + name twice on one page reads as a rendering
+          fault, and a reader who spots it trusts the numbers underneath less. */}
+      {!embedded && (
+        <>
+          <h3>
+            {detail.gene ?? detail.accession}{' '}
+            <span className="accession">{detail.accession}</span>
+          </h3>
+          <p className="protein-name">
+            {detail.label ?? <span className="unknown">name unknown</span>}
+          </p>
+        </>
+      )}
 
       <h4>Status</h4>
       <ul className="status-list">
