@@ -247,3 +247,99 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .scorer-panel .attr-neg { color: #f6ad55; }
 .scorer-panel .ambiguity-note { font-size: 0.9rem; color: #b9c4cc; margin-top: 0.8rem; }
 .scorer .dist-table td, .scorer .ranking-table td, .scorer .h2h-table td { padding: 0.15rem 0.6rem; }
+
+/* ── Census browser (D-087) ───────────────────────────────────────────────────
+   ⚠ Every class below was used by CensusTable/CensusDetail and had NO rule at all — the surface
+   shipped with 23 unstyled classes, so it rendered as bare browser defaults: header buttons as
+   grey pills, accessions as grey buttons, badges as wrapping plain text.
+   ⚠ `.sr-only` was referenced and never defined, so the visually-hidden search label PRINTED
+   beside its input and collided with it. A visually-hidden class that does not exist is not
+   hidden — it is just text. */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.census-table, .census-detail { margin-top: 1.6rem; }
+.census-scope { color: #cbd5e0; }
+.census-count { color: #b9c4cc; font-size: 0.9rem; margin: 0.4rem 0 0.8rem; }
+
+.census-search { display: block; margin-top: 0.9rem; }
+.census-search input {
+  width: 100%; max-width: 30rem; padding: 0.5rem 0.7rem;
+  background: #0f1620; color: #e2e8f0;
+  border: 1px solid #2d3748; border-radius: 6px; font-size: 0.95rem;
+}
+.census-search input:focus { outline: 2px solid #4299e1; outline-offset: 1px; }
+
+.census-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+/* ⚠ Sticky header: the list is thousands of rows and a header that scrolls away turns every
+   column into an unlabelled number. */
+.census-table thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: #131c27; border-bottom: 1px solid #2d3748;
+  padding: 0; text-align: left; white-space: nowrap;
+}
+.census-table thead th button {
+  width: 100%; background: none; border: 0; color: #cbd5e0;
+  font: inherit; font-weight: 600; text-align: inherit;
+  padding: 0.5rem 0.6rem; cursor: pointer;
+}
+.census-table thead th button:hover { color: #e2e8f0; background: #1a2431; }
+.census-table tbody td { padding: 0.35rem 0.6rem; border-bottom: 1px solid #1c2530; }
+.census-table tbody tr:hover { background: #172029; }
+/* ⚠ Numbers right-aligned and tabular so columns compare by eye rather than by reading. */
+.census-table .num, .census-detail .num {
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+/* ⚠ The protein name is the only free-text column; it takes the slack instead of the table
+   deciding for itself. */
+.census-table td:nth-child(3) { width: 100%; }
+
+.link {
+  background: none; border: 0; padding: 0; font: inherit;
+  color: #63b3ed; cursor: pointer; text-decoration: underline;
+}
+.link:hover { color: #90cdf4; }
+.unknown { color: #718096; font-style: italic; }
+
+.badge {
+  display: inline-block; white-space: nowrap;
+  padding: 0.1rem 0.45rem; border-radius: 999px;
+  font-size: 0.78rem; border: 1px solid #2d3748; color: #b9c4cc;
+}
+.badge-contiguous { color: #68d391; border-color: #276749; }
+/* ⚠ Amber, not red. Intermittent is a PROPERTY OF THE PROTEIN, not a failure — colouring it as an
+   error would tell the reader the fold went wrong when nothing did. */
+.badge-intermittent { color: #f6ad55; border-color: #7b341e; }
+.badge-unknown { color: #a0aec0; border-style: dashed; }
+
+.census-detail { border-left: 3px solid #4299e1; }
+.census-detail .close { float: right; }
+.census-detail h3 { margin-top: 0; }
+/* ⚠ The accession is secondary to the gene symbol; running them together at equal weight made
+   "SLC5A10 A0PJK1" read as one name. */
+.census-detail .accession {
+  font-weight: 400; font-size: 0.85em; color: #a0aec0; font-family: ui-monospace, monospace;
+}
+.census-detail .protein-name { color: #cbd5e0; margin-top: 0.2rem; }
+.census-detail .status-list { list-style: none; padding-left: 0; }
+.census-detail .status-list li { padding: 0.15rem 0; border-bottom: 1px solid #1c2530; }
+.census-detail .segments, .census-detail .associations { margin-top: 1.2rem; }
+.census-detail .segment-list { font-family: ui-monospace, monospace; font-size: 0.85rem; color: #b9c4cc; }
+.census-detail .associations ul { margin: 0.3rem 0; }
+.census-detail .source { font-size: 0.82rem; color: #718096; margin-top: 0.5rem; }
+
+.plddt-explainer summary { cursor: pointer; font-weight: 600; color: #cbd5e0; padding: 0.3rem 0; }
+.plddt-explainer summary:hover { color: #e2e8f0; }
+.plddt-explainer h4 { margin: 1rem 0 0.3rem; }
+
+/* ⚠ Pre-existing and also unstyled: the two <dl> blocks rendered as raw dt/dd stacks. */
+.census-figures { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 0.8rem 0; }
+.census-figures > div { min-width: 9rem; }
+.census-figures dt { font-size: 1.8rem; font-weight: 700; color: #e2e8f0; }
+.census-figures dd { margin: 0.1rem 0 0; color: #b9c4cc; font-size: 0.9rem; max-width: 16rem; }
+.census-absence { margin-bottom: 0.7rem; }
+.census-absence dt { font-weight: 600; color: #cbd5e0; }
+.census-absence dd { margin: 0.1rem 0 0 1rem; color: #b9c4cc; font-size: 0.92rem; }

@@ -42,9 +42,16 @@ export function filterRows(rows, query) {
   )
 }
 
+// ⚠⚠ A CAP, AND IT IS STATED. The first version rendered all 2,629 rows: a 116,000px table body
+// that no reader scrolls and every browser pays for. But a SILENT cap is worse than a slow page —
+// it would show 200 rows above a count of 2,629 and let the reader assume they had seen the list.
+// So the cap is announced, the full count stays visible, and there is a control to lift it.
+const PAGE = 200
+
 export default function CensusTable({ rows, onSelect }) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState({ key: 'accession', dir: 'asc' })
+  const [showAll, setShowAll] = useState(false)
 
   const shown = useMemo(() => {
     const col = COLUMNS.find((c) => c.key === sort.key) ?? COLUMNS[0]
@@ -57,6 +64,8 @@ export default function CensusTable({ rows, onSelect }) {
     setSort((s) => ({ key, dir: s.key === key && s.dir === 'asc' ? 'desc' : 'asc' }))
 
   const intermittent = rows.filter((r) => r.topology === 'intermittent').length
+  const capped = !showAll && shown.length > PAGE
+  const visible = capped ? shown.slice(0, PAGE) : shown
 
   return (
     <section className="census-table panel">
@@ -110,7 +119,7 @@ export default function CensusTable({ rows, onSelect }) {
           </tr>
         </thead>
         <tbody>
-          {shown.map((r) => {
+          {visible.map((r) => {
             const band = bandFor(r.mean_plddt)
             return (
               <tr key={r.id}>

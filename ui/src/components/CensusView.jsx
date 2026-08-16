@@ -149,8 +149,10 @@ function CensusBrowser() {
 
   return (
     <>
-      <CensusTable rows={rows} onSelect={open} />
+      {/* ⚠ ABOVE the table, not below it. Rendered underneath, the panel sat past a
+          116,000px table body — clicking a protein appeared to do nothing at all. */}
       {detail && <CensusDetail detail={detail} onClose={() => setDetail(null)} />}
+      <CensusTable rows={rows} onSelect={open} />
     </>
   )
 }
