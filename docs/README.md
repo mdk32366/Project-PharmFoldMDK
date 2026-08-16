@@ -443,6 +443,40 @@ So the rule is not "be careful" — it is:
 
 ---
 
+### F-033 — A residue the tokenizer has no word for fails as a tensor-shape complaint, not as "this protein cannot be folded"
+
+- **Date:** 2026-08-16
+- **Status:** open — ⚠ **the row is correctly `failed`; what is open is the VOCABULARY, not the outcome.**
+- **What happened:** the first failure in 2,359 census folds. `P55073`, tranche 3, span 68–304:
+
+  ```
+  unexpected fold failure: Unable to create tensor, you should probably activate truncation
+  and/or padding with 'padding=True' 'truncation=True' to have batched tensors with the same
+  length. Perhaps your features (`input_ids`) have excessive nesting …
+  ```
+
+  ⚠ **Nothing in that message is true of the actual problem.** It names truncation, padding and batching. The span needs none of them. **The span contains `U` — selenocysteine**, the 21st amino acid, and **`U` is not in the ESM vocabulary.**
+
+- **Measured, not inferred** (the message is so misleading that inference would have been a guess):
+
+  | probe | result |
+  |---|---|
+  | 20 standard residues | OK, `shape=(1, 10)` |
+  | same + `U` | ⚠ **raises `ValueError`, the exact production message** |
+  | same + `X` | OK, `shape=(1, 21)` |
+  | `"U" in tok.get_vocab()` | **False** |
+  | `"X" in tok.get_vocab()` | **True** |
+
+  ⚠ **`X` — "unknown residue" — is IN the vocabulary and folds.** So the model has a word for *"I don't know what this is"* and no word for *"this is selenocysteine."* `tokenize("U")` returns `['U']` and then converts to `None`, and the `None` is what the nesting complaint is actually about — **three layers away from the cause.**
+
+- **Bounded, and the bound was measured across every tranche before any conclusion:** **1 span of 3,467** contains a non-standard residue. It is this one, the residue is `U`, and **tranches 4 and 5 contain none.** ⚠ **This is not a wave; it is a single row**, and that is a measurement rather than a hope.
+
+- **Why it is a finding even though the outcome was correct:** the job **is** `failed`, with the error stored — D-024 held, and the crank did not stop. ⚠ **But the recorded reason is a lie about the cause.** A future reader debugging *"excessive nesting"* would look at batching, padding and the enqueue path — **none of which is involved.** The project's own rule is that an absent value is a **CATEGORY**: *"cannot be folded: contains selenocysteine, absent from the model vocabulary"* is a category; *"Unable to create tensor"* is noise that happens to be red.
+
+- ⚠ **NOT fixed, and deliberately not, mid-crank.** A guard belongs at **ingest**, where `MUC16` and `FAT2` are already named exclusions with stated reasons (D-022) — the precedent exists and this is the same shape. But tranche 3 is **already ingested and folding**, changing the ingest path now would alter nothing for the row that failed, and **the population would then span two versions of the enqueue rule mid-tranche.** ⚠ Same reasoning as D-084. **Owner ruling wanted** on whether `P55073` becomes a third named exclusion or the guard becomes general.
+
+---
+
 ### F-032 — A dry run that does not exercise its consumer's contract is not a dry run
 
 - **Date:** 2026-08-16 · **Status:** Accepted. **Closed under D-074** — the instrument no longer
