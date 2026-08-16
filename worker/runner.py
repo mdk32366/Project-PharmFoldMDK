@@ -85,6 +85,12 @@ class FoldProvenance:
     transformers_version: Optional[str] = None
     device_name: Optional[str] = None            # e.g. "NVIDIA RTX A6000"
     cuda_version: Optional[str] = None           # torch.version.cuda, e.g. "12.8"
+    #: ⚠ D-082. The NVIDIA DRIVER, which was NOT recorded before 2026-08-16 — the stack captured
+    #: torch/transformers/CUDA and not the one component that turned an over-allocation into a HOST
+    #: BUGCHECK. A ceiling, and a determinism verdict, are valid only under the recipe AND the
+    #: stack that produced them; without this field a fold cannot be attributed to a driver at all.
+    #: Optional like its neighbours, so every pre-D-082 record still deserializes.
+    nvidia_driver_version: Optional[str] = None   # e.g. "596.72" — from nvidia-smi, not torch
 
 
 @dataclass
@@ -232,8 +238,19 @@ def _capture_environment() -> dict[str, Optional[str]]:
     still imports on the CI gate (no CUDA — D-018)."""
     env: dict[str, Optional[str]] = {
         "torch_version": None, "transformers_version": None,
-        "device_name": None, "cuda_version": None,
+        "device_name": None, "cuda_version": None, "nvidia_driver_version": None,
     }
+    try:
+        # ⚠ torch does NOT expose the driver version, so this is the one probe that must shell out.
+        # Guarded like every other: an absent nvidia-smi yields None, never an exception — a
+        # diagnostic that can fail the fold is worse than the gap it fills.
+        import subprocess  # noqa: PLC0415
+        out = subprocess.run(["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+                             capture_output=True, text=True, timeout=15)
+        if out.returncode == 0 and out.stdout.strip():
+            env["nvidia_driver_version"] = out.stdout.strip().splitlines()[0].strip()
+    except Exception:
+        pass       # no nvidia-smi, or it hung → stays None, which is a CATEGORY not a zero
     try:
         import torch  # noqa: PLC0415 — lazy on purpose (see module docstring)
         env["torch_version"] = getattr(torch, "__version__", None)

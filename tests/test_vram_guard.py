@@ -131,3 +131,37 @@ def test_preflight_carries_every_layer_onto_the_record(monkeypatch):
     r = g.preflight(200, "int8", 64, requirement_mib=4000)
     assert set(r.layers) == {"layer1_sysmem_fallback", "layer2_allocator_cap"}
     assert r.layers["layer1_sysmem_fallback"]["state"] == "unknown"
+
+
+# ── ⚠ D-082: the stack must name the driver, or a fold cannot be attributed ──
+def test_the_fold_provenance_captures_the_nvidia_driver_version():
+    """⚠⚠ THE GAP THE 2026-08-16 CRASH EXPOSED. The fold record captured torch, transformers, CUDA
+    and the device name — and NOT the driver, which is the one component that turned an
+    over-allocation into a HOST BUGCHECK rather than an exception.
+
+    D-082: a ceiling, and a determinism verdict, are valid only under the recipe AND the stack that
+    produced them. Without this field a fold cannot be attributed to a driver at all, and a result
+    measured under 596.72 would silently read as applying to whatever is installed later.
+
+    Prove it bites by removing the field or the probe."""
+    import dataclasses
+    from worker.runner import FoldProvenance, _capture_environment
+    assert "nvidia_driver_version" in [f.name for f in dataclasses.fields(FoldProvenance)]
+    env = _capture_environment()
+    assert "nvidia_driver_version" in env
+
+
+def test_an_absent_nvidia_smi_yields_none_rather_than_failing_the_fold(monkeypatch):
+    """⚠ A diagnostic that can fail the fold is worse than the gap it fills. `None` is a CATEGORY —
+    'the driver was not readable' — never a zero and never a guess.
+
+    Prove it bites by removing the try/except: the CI gate, which has no nvidia-smi, dies."""
+    import subprocess
+    from worker.runner import _capture_environment
+
+    def boom(*a, **k):
+        raise FileNotFoundError("nvidia-smi")
+
+    monkeypatch.setattr(subprocess, "run", boom)
+    env = _capture_environment()
+    assert env["nvidia_driver_version"] is None

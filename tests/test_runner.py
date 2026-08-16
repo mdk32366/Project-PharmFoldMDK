@@ -131,11 +131,18 @@ def test_an_old_shaped_provenance_dict_without_env_keys_still_loads():
     assert p.mean_plddt == 74.7 and p.model_revision == runner.MODEL_REVISION  # old data intact
 
 
-def test_capture_environment_never_raises_and_returns_the_four_keys():
+def test_capture_environment_never_raises_and_returns_the_five_keys():
     # The contract that protects the fold: capture returns, never raises, whether or not torch/CUDA
     # are present. On the CI gate torch is absent → all None; on a GPU host some are populated str.
+    #
+    # ⚠ FOUR KEYS BECAME FIVE ON 2026-08-16 (D-082). `nvidia_driver_version` was added because the
+    # stack recorded torch, transformers, CUDA and the device name — and NOT the one component that
+    # turned an over-allocation into a HOST BUGCHECK rather than a catchable exception. This
+    # assertion is deliberately an exact set: it exists so a key cannot appear or vanish silently,
+    # and it correctly reddened when the field was added rather than letting it slip in.
     env = runner._capture_environment()
-    assert set(env) == {"torch_version", "transformers_version", "device_name", "cuda_version"}
+    assert set(env) == {"torch_version", "transformers_version", "device_name", "cuda_version",
+                        "nvidia_driver_version"}
     assert all(v is None or isinstance(v, str) for v in env.values())
 
 
