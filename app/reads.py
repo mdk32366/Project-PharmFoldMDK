@@ -384,11 +384,23 @@ def _census_context() -> dict[str, Any]:
     labels: dict[str, dict[str, str]] = {}
     segs: dict[str, dict[str, str]] = {}
     lp, sp = base / "census_labels.csv", base / "span_segments.csv"
-    if lp.is_file():
+    # ⚠⚠ FRESHNESS IS CHECKED BEFORE THE DATA IS USED. Both files are derived from the manifest;
+    # a manifest revision leaves them describing something that is no longer there, and they would
+    # not fail, warn or change. **A wrong topology is worse than a missing one, because a missing
+    # one is visible.** So a stale derivation is DROPPED and its verdict is carried on every row.
+    from core.derived_freshness import FRESH, check
+    manifest = base / "census_manifest.v7.csv"
+    seg_verdict, seg_note = check(base / "span_segments.provenance.json", manifest)
+    lab_verdict, lab_note = check(base / "census_labels.provenance.json", manifest)
+
+    if lp.is_file() and lab_verdict == FRESH:
         labels = {r["census_accession"]: r for r in _csv.DictReader(lp.open(encoding="utf-8"))}
-    if sp.is_file():
+    if sp.is_file() and seg_verdict == FRESH:
         segs = {r["census_accession"]: r for r in _csv.DictReader(sp.open(encoding="utf-8"))}
-    _CENSUS_CTX.update({"labels": labels, "segments": segs})
+
+    _CENSUS_CTX.update({"labels": labels, "segments": segs,
+                        "segments_verdict": seg_verdict, "segments_note": seg_note,
+                        "labels_verdict": lab_verdict, "labels_note": lab_note})
     return _CENSUS_CTX
 
 
@@ -412,7 +424,13 @@ def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
         "census_class": meta.get("census_class"),
         "mean_plddt": row.mean_plddt,
         # ⚠ F-037 context. `topology` is a WORD; a bare count invites the reader to interpret it.
-        "topology": seg.get("topology") or "unknown",
+        # ⚠ A stale derivation reports its VERDICT, not "unknown" and never the old value. The
+        # reader must be able to tell "nobody derived this" from "it was derived against a
+        # different manifest" — different causes, different fixes.
+        "topology": seg.get("topology") or (
+            "unknown" if ctx["segments_verdict"] == "fresh" else ctx["segments_verdict"]),
+        "derivation_status": ctx["segments_verdict"],
+        "derivation_note": ctx["segments_note"],
         "segment_count": int(seg["segment_count"]) if seg.get("segment_count") else None,
         "extracellular_total_aa": int(seg["extracellular_total_aa"]) if seg.get("extracellular_total_aa") else None,
         "discarded_aa": int(seg["discarded_aa"]) if seg.get("discarded_aa") else None,

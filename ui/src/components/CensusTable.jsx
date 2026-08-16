@@ -131,8 +131,15 @@ export default function CensusTable({ rows, onSelect }) {
                     <span className="badge" title="GPI-anchored: no topological domains by design">
                       GPI / no segment
                     </span>
-                  ) : (
+                  ) : r.topology === 'contiguous' ? (
                     <span className="badge badge-contiguous">contiguous</span>
+                  ) : (
+                    // ⚠ Anything else is NOT contiguous. The final branch used to swallow
+                    // 'unknown' and every derivation verdict into the benign label — a default
+                    // that asserts the safe case is how a surface states something nobody measured.
+                    <span className="badge badge-unknown" title={r.derivation_note ?? undefined}>
+                      {r.topology === 'unknown' ? 'not derived' : 'derivation out of date'}
+                    </span>
                   )}
                 </td>
                 <td className="num" style={{ color: band.color }}>

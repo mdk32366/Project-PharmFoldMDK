@@ -29,6 +29,23 @@ function Segments({ detail }) {
     )
   }
 
+  if (topology === 'derivation_stale' || topology === 'derivation_absent'
+      || topology === 'derivation_unstamped') {
+    return (
+      <div className="segments">
+        <h4>Extracellular topology</h4>
+        {/* ⚠⚠ NOT "unknown", and never the old value. A stale derivation described a manifest that
+            is no longer on disk; showing its numbers would be confidently wrong. */}
+        <p className="caveat">
+          ⚠⚠ <strong>Not shown — the segment derivation is out of date.</strong> It was computed
+          from a different revision of the census manifest, so its numbers would describe data that
+          is no longer there. <strong>This is withheld deliberately, not missing.</strong>
+        </p>
+        {detail.derivation_note && <p className="note">{detail.derivation_note}</p>}
+      </div>
+    )
+  }
+
   if (topology === 'unknown') {
     return (
       <div className="segments">

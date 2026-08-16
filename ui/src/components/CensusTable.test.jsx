@@ -110,3 +110,29 @@ describe('CensusDetail', () => {
     expect(screen.getByText(/Colorectal cancer/)).toBeInTheDocument()
   })
 })
+
+describe('stale derivation', () => {
+  const STALE = { id: 9, accession: 'Q00000', gene: 'X', label: 'x', span_aa: 10, tranche: 2,
+    mean_plddt: 60, topology: 'derivation_stale', derivation_status: 'derivation_stale',
+    derivation_note: 'derived from census_manifest.v7.csv @ aaa…, but the file on disk is @ bbb…',
+    scored: false }
+
+  // ⚠ The old final branch labelled ANYTHING that was not intermittent/GPI as "contiguous".
+  it('never labels a stale row contiguous', () => {
+    render(<CensusTable rows={[STALE]} />)
+    expect(screen.queryByText('contiguous')).not.toBeInTheDocument()
+    expect(screen.getByText(/derivation out of date/i)).toBeInTheDocument()
+  })
+
+  it('distinguishes "not derived" from "derived against the wrong manifest"', () => {
+    render(<CensusTable rows={[{ ...STALE, topology: 'unknown' }]} />)
+    expect(screen.getByText(/not derived/i)).toBeInTheDocument()
+  })
+
+  // ⚠⚠ Withheld, not missing — and never the stale numbers.
+  it('withholds stale segment numbers and says why', () => {
+    render(<CensusDetail detail={{ ...STALE, cancer_associations: null }} />)
+    expect(screen.getByText(/the segment derivation is out of date/i)).toBeInTheDocument()
+    expect(screen.getByText(/withheld deliberately, not missing/i)).toBeInTheDocument()
+  })
+})

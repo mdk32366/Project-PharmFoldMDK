@@ -130,6 +130,27 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-088 — A derived artifact states what it was derived from, and a stale one is refused rather than served
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Context:** D-087 shipped with a loose end: `span_segments.csv` and `census_labels.csv` are derived from `census_manifest.v7.csv`, and ⚠ **a manifest revision would not make them fail, warn or change — they would keep answering.** *"A wrong topology is worse than a missing one, because a missing one is visible."*
+
+- **Decisions:**
+
+  1. **Every derivation stamps the manifest's `sha256`.** ⚠ `census_labels.csv` had **no provenance file at all** — it could not be checked, because nothing recorded what it came from.
+  2. ⚠⚠ **CONTENT, never mtime.** A file copied, checked out or restored from a zip has a new mtime and identical bytes. **mtime would cry stale on a `git checkout` and stay silent on an in-place edit that preserved it — wrong in both directions.**
+  3. ⚠⚠ **DETECT AND REFUSE, NEVER AUTO-REGENERATE.** Re-deriving on read would hand a reader different numbers on two loads with nothing saying why, and would do unrequested work inside a request. **The surface drops the stale artifact and states the verdict**; a human clears it with one command.
+  4. **Four distinct verdicts, because they need different actions:** `fresh` · `derivation_stale` (re-run it) · `derivation_unstamped` (⚠ *predates the check* — **not a pass and not a failure**) · `derivation_absent` (nothing was derived). ⚠ Collapsing `unstamped` into either neighbour would recommend the wrong action.
+  5. ⚠ **An unreadable provenance file is STALE, not fresh.** Treating a file we cannot parse as current would trust it exactly when we cannot.
+  6. **`scripts/derive_census_context.py`** re-derives both — ⚠ **one command, because two commands is one command someone forgets**, and a revision that refreshed only one would leave the surface half-current with nothing saying which half. `--check` reports and derives nothing, exiting non-zero when stale. ⚠ **A mid-run failure STOPS rather than continuing**: a half-derived set is worse than an untouched one.
+
+- ⚠ **A defect found while wiring the UI for this:** the topology badge's final branch labelled **anything** that was not `intermittent`/`GPI` as **`contiguous`** — so `unknown` and every derivation verdict would have rendered as the benign case. ⚠ **A default that asserts the safe answer is how a surface states something nobody measured.** Now `not derived` and `derivation out of date` are their own badges, and the detail panel **withholds the stale numbers** and says it is withholding them.
+
+- **Evidence:** 7 tests in `tests/test_derived_freshness.py` + 3 UI. Gate **669 passed**, exit 0; UI **192 passed**. Proven live: corrupting the stored hash flipped every row to `derivation_stale` with the note *"…but the file on disk is @ 9ecee249b247… — RE-RUN THE DERIVATION"*, and restoring it returned `fresh`.
+
+---
+
 ### D-087 — The census becomes browsable: a per-protein list, searchable and sortable, reversing this project's own "no per-protein row" rule
 
 - **Date:** 2026-08-16
@@ -157,7 +178,7 @@ So the rule is not "be careful" — it is:
 
 - **Evidence:** 13 new UI tests; UI 189 passed across 29 files; gate 662 passed, 15 skipped, exit 0. Live: **2,521 folded census rows served, `scored` false on every one.**
 
-- **Open:** ⚠ the surface refreshes on load, so it tracks each tranche automatically — **but nothing yet re-derives `span_segments.csv` / `census_labels.csv` when a manifest changes.** Today they are current; a manifest revision would leave them stale with nothing saying so.
+- ⚠ **Loose end CLOSED (D-088):** the derived artifacts are stamped with the manifest's content hash and the surface **refuses** a stale one. See below.
 
 ---
 

@@ -1,6 +1,7 @@
 {
-  "derived_on": "cache-only; no network fetch, no span changed",
   "source_manifest": "census_manifest.v7.csv",
+  "source_manifest_sha256": "9ecee249b2474c60ec4190a4c370269a44a3b1f94a6286e890092c5255e8fea7",
+  "derived_on": "cache-only; no network fetch, no span changed",
   "span_definition": "v2-ruled-vocabulary-2026-08-07",
   "rows": 3467,
   "intermittent": 1649,

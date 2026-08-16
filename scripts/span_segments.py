@@ -120,9 +120,12 @@ def main() -> int:
         w = csv.DictWriter(fh, fieldnames=list(COLUMNS))
         w.writeheader()
         w.writerows(rows)
+    from core.derived_freshness import stamp
     (CENSUS / "span_segments.provenance.json").write_text(json.dumps({
+        # ⚠ The manifest's CONTENT HASH, so a revision cannot leave this file quietly describing a
+        # manifest that no longer exists. Consumers refuse rather than serve stale topology.
+        **stamp(MANIFEST),
         "derived_on": "cache-only; no network fetch, no span changed",
-        "source_manifest": MANIFEST.name,
         "span_definition": "v2-ruled-vocabulary-2026-08-07",
         "rows": len(rows),
         "intermittent": inter,

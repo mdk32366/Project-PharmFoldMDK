@@ -15,7 +15,9 @@ import csv
 import json
 from pathlib import Path
 
+import sys
 REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO))
 CENSUS = REPO / "data" / "census"
 CACHE = CENSUS / "spancache"
 OUT = CENSUS / "census_labels.csv"
@@ -48,6 +50,16 @@ def main() -> int:
         w = csv.DictWriter(fh, fieldnames=["census_accession", "gene", "label", "source"])
         w.writeheader()
         w.writerows(rows)
+    from core.derived_freshness import stamp
+    # ⚠ This file had NO provenance at all — it could not be checked for staleness because nothing
+    # recorded what it was derived from.
+    (CENSUS / "census_labels.provenance.json").write_text(json.dumps({
+        **stamp(CENSUS / "census_manifest.v7.csv"),
+        "derived_on": "cache-only; no network fetch",
+        "rows": len(rows),
+        "⚠ scope": "NAMES ONLY — no span, fold or artifact is altered by this file",
+    }, indent=2), encoding="utf-8")
+
     named = sum(1 for r in rows if r["gene"])
     print(f"wrote {OUT.name} | {len(rows)} rows | with a gene symbol {named} "
           f"| ⚠ without {len(rows) - named} | ⚠ no cache entry {missing}")
