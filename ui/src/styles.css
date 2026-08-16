@@ -343,3 +343,14 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .census-absence { margin-bottom: 0.7rem; }
 .census-absence dt { font-weight: 600; color: #cbd5e0; }
 .census-absence dd { margin: 0.1rem 0 0 1rem; color: #b9c4cc; font-size: 0.92rem; }
+
+/* ── A page per census protein (D-089) ────────────────────────────────────── */
+.census-protein .breadcrumb { margin: 0 0 0.8rem; font-size: 0.9rem; }
+.census-protein .breadcrumb a { color: #63b3ed; }
+/* ⚠ The unscored statement sits in the header, where a reader arriving from a search engine meets
+   it before the structure they came to look at. Bordered so it does not read as body copy. */
+.census-protein .census-bar {
+  border-left: 3px solid #f6ad55; background: #1a1f27;
+  padding: 0.6rem 0.9rem; margin-top: 0.7rem; color: #cbd5e0; font-size: 0.92rem;
+}
+.census-protein .census-detail { border-left: 0; }

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CENSUS, CENSUS_LIMITS } from '../censusSummary.js'
-import { getCensusDetail, listCensus } from '../api.js'
+import { listCensus } from '../api.js'
 import CensusTable from './CensusTable.jsx'
-import CensusDetail from './CensusDetail.jsx'
 
 // The census surface. ⚠⚠ UNSCORED BY CONSTRUCTION — no score, no rank, no order-by-suitability,
 // because D-079 dec 1 bars scoring any census row.
@@ -119,7 +118,6 @@ export default function CensusView() {
 function CensusBrowser() {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
-  const [detail, setDetail] = useState(null)
 
   useEffect(() => {
     let live = true
@@ -129,12 +127,6 @@ function CensusBrowser() {
     return () => { live = false }
   }, [])
 
-  const open = (row) => {
-    setDetail({ ...row, loading: true })
-    getCensusDetail(row.id)
-      .then(setDetail)
-      .catch((e) => setDetail({ ...row, error: e.message ?? String(e) }))
-  }
 
   if (error) {
     return (
@@ -149,10 +141,10 @@ function CensusBrowser() {
 
   return (
     <>
-      {/* ⚠ ABOVE the table, not below it. Rendered underneath, the panel sat past a
-          116,000px table body — clicking a protein appeared to do nothing at all. */}
-      {detail && <CensusDetail detail={detail} onClose={() => setDetail(null)} />}
-      <CensusTable rows={rows} onSelect={open} />
+      {/* ⚠ No inline panel any more — each protein has its own page (`/census/:id`), which the
+          accession links to. A panel AND a page would be two surfaces describing one protein,
+          free to drift apart. */}
+      <CensusTable rows={rows} />
     </>
   )
 }

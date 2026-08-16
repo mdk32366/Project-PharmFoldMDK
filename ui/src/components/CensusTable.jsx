@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { bandFor } from '../plddt.js'
 
 // The census surface (D-087). Searchable, sortable, and deliberately UNRANKED.
@@ -141,9 +142,12 @@ export default function CensusTable({ rows, onSelect }) {
             return (
               <tr key={r.id}>
                 <td>
-                  <button type="button" className="link" onClick={() => onSelect?.(r)}>
+                  {/* ⚠ A real Link, not a button: each protein has its own page, so it must be
+                      openable in a new tab, shareable, and reachable by the back button. An
+                      onClick handler is none of those things. */}
+                  <Link className="link" to={`/census/${r.id}`} onClick={() => onSelect?.(r)}>
                     {r.accession}
-                  </button>
+                  </Link>
                 </td>
                 <td>{r.gene ?? <span className="unknown">unknown</span>}</td>
                 <td>{r.label ?? <span className="unknown">unknown</span>}</td>
