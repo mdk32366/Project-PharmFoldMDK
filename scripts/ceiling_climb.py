@@ -77,6 +77,11 @@ def run(argv: Optional[list[str]] = None) -> int:
                     help="⚠ REQUIRED. The cap is the ceiling of the experiment; without it the "
                          "refusal is a bugcheck rather than an exception")
     ap.add_argument("--layer1-attested", action="store_true")
+    ap.add_argument("--empty-cache", action="store_true",
+                    help="⚠ release the caching allocator's retained pool after each fold. The "
+                         "0.85 cap refused 424 aa at ALLOCATED 6,354 MiB because RESERVED had "
+                         "already hit 6,916 — the cap binds on what the allocator HOLDS, and "
+                         "nothing in the fold path ever gave it back")
     ap.add_argument("--out", default=str(CENSUS / "ceiling_climb.int8.jsonl"))
     args = ap.parse_args(argv)
 
@@ -109,6 +114,7 @@ def run(argv: Optional[list[str]] = None) -> int:
         "dtype": dtype, "chunk_size": chunk_size, "source_length": len(seq),
         "start": args.start, "stop": args.stop, "step": args.step,
         "memory_fraction": args.memory_fraction,
+        "empty_cache": bool(args.empty_cache),
         "cuda_mem_get_info_before": (lambda m: {"free_mib": m[0], "total_mib": m[1]} if m else None)(
             cuda_memory()),
         "layers": {
@@ -159,6 +165,17 @@ def run(argv: Optional[list[str]] = None) -> int:
             rec.update(outcome=(OOM_CAUGHT if is_oom else ERROR),
                        wall_clock_s=round(time.time() - t0, 2), detail=msg[:400])
         rec["peak_vram"] = peak_vram()
+        rec["empty_cache_applied"] = bool(args.empty_cache)
+        if args.empty_cache:
+            # ⚠ AFTER the peak is read, or the release would erase the number it is meant to
+            # explain. Timed separately: the re-allocation cost lands on the NEXT fold's
+            # wall-clock, so this measures only the release itself.
+            import torch                                          # noqa: PLC0415
+            _t = time.time()
+            torch.cuda.empty_cache()
+            rec["empty_cache_s"] = round(time.time() - _t, 3)
+            m2 = cuda_memory()
+            rec["free_after_release_mib"] = m2[0] if m2 else None
         m = cuda_memory()
         rec["cuda_mem_get_info_after"] = {"free_mib": m[0], "total_mib": m[1]} if m else None
         _append_fsync(out, rec)                    # ⚠ durable BEFORE the next fold
