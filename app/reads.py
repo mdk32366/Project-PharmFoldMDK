@@ -168,6 +168,13 @@ def _folded_accessions(engine: Any) -> dict[str, int]:
             select(ProteinAnalysis.id, ProteinAnalysis.input_value)
             .where(ProteinAnalysis.pdb_path.is_not(None))
             .where(ProteinAnalysis.input_type == "uniprot")
+            # ⚠⚠ TRANCHE-FILTERED, AND IT IS NOT OPTIONAL. 75 of the 82 cohort accessions also
+            # appear in the census manifest — HER2, EGFR, MSLN, IGF2R, MUC16 among them. Without
+            # this, the first census fold of P04626 puts a CENSUS analysis_id under HER2's
+            # accession in this dict, and the cohort's coverage row then points at a fold measured
+            # under a DIFFERENT SPAN DEFINITION. ⚠ There is no ORDER BY, so which row wins is
+            # whatever the database returns last — nondeterministic, and silently so.
+            .where(ProteinAnalysis.cohort_tranche == COHORT_TRANCHE)
         ).all()
     return {input_value: pid for pid, input_value in pairs}
 
@@ -187,6 +194,10 @@ def _failed_accessions(engine: Any) -> dict[str, str | None]:
             .join(JobRecord, JobRecord.analysis_id == ProteinAnalysis.id)
             .where(ProteinAnalysis.input_type == "uniprot")
             .where(JobRecord.status == FAILED)
+            # ⚠ Same leak, mirrored: an unfiltered failed census fold would mark a COHORT target
+            # as failed on the tranche-zero surface. D-024 requires attempted-and-failed be shown
+            # as distinct from never-attempted, and a census failure is neither.
+            .where(ProteinAnalysis.cohort_tranche == COHORT_TRANCHE)
             .order_by(JobRecord.id)
         ).all()
     return {input_value: error for input_value, error in pairs}
