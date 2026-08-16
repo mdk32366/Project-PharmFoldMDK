@@ -91,8 +91,8 @@ SPAN_LENGTH_DISCLOSURE_NOTE = (
 
 OUT_COLUMNS = (
     "census_accession", "census_class", "span_aa", "span_start", "span_end", "span_rule",
-    "boundary_method", "band", "tier", "tier_reason", "dtype", "chunk_size", "fold_order",
-    "span_definition", "guards",
+    "boundary_method", "band", "tier", "tier_reason", "dtype", "chunk_size", "tranche",
+    "fold_order", "span_definition", "guards",
 )
 
 #: ⚠ THE MANIFEST IS THE PRE-REGISTRATION OF WHAT FOLDS AND HOW. **How belongs in it.**
@@ -102,6 +102,35 @@ OUT_COLUMNS = (
 #: differently next time, and `core/enqueue.py` used to treat any unrecognised value as
 #: "fold the whole sequence".
 BOUNDARY_METHOD = "sliced_ecd"
+
+#: ⚠ D-083 — a TRANCHE IS A PARTITION; the seed is an ORDER WITHIN a partition. Batching touches
+#: only the first. Rows fold in the manifest's seeded `fold_order` inside every tranche: not
+#: re-shuffled, not re-sorted, and the seed is not re-drawn.
+#:
+#: ⚠ Boundaries chosen for RISK, not for balance. D-082 leaves the crank running uncapped — layer 2
+#: off, layer 3 unwired, layer 1 never once observed to fire — so discovering a memory problem on a
+#: 430 aa fold rather than a 40 aa one is the difference between a caught refusal and a bugcheck.
+#:
+#: ⚠⚠ TRANCHE 0 IS THE 82-TARGET COHORT AND IS NEVER CENSUS. A census row carrying tranche 0 is a
+#: named stop condition — it would appear on the tranche-zero surface the app serves.
+TRANCHE_ZERO_IS_COHORT = 0
+TRANCHE_BANDS: tuple[tuple[int, int, int], ...] = (
+    # (tranche, lo_inclusive, hi_inclusive)
+    (1, 1, 50),
+    (2, 51, 150),
+    (3, 151, 300),
+    (4, 301, 440),
+    (5, 441, 10 ** 9),      # ⚠ the rental tier; no upper bound, because tier_for_span has none
+)
+
+
+def tranche_for_span(span: int) -> int:
+    """⚠ Exhaustive and mutually exclusive by construction. A span outside every band RAISES rather
+    than defaulting — an unbanded row would fold under a tranche label nobody assigned it."""
+    for t, lo, hi in TRANCHE_BANDS:
+        if lo <= span <= hi:
+            return t
+    raise ValueError(f"span {span} falls outside every tranche band — refusing to guess a tranche")
 
 #: ⚠⚠ TWO IDENTITIES, AND NEITHER MAY STAND FOR THE OTHER.
 #:
@@ -194,6 +223,7 @@ def manifest_rows(census_class: str) -> tuple[list[dict[str, Any]], dict[str, An
             "span_start": r.get("span_start", ""),
             "span_end": r.get("span_end", ""),
             "boundary_method": BOUNDARY_METHOD,
+            "tranche": tranche_for_span(span),
             "span_rule": r["span_rule"],
             "band": band_of(span),
             "tier": tier,
@@ -333,7 +363,19 @@ def run(argv: Optional[list[str]] = None) -> int:
                       bands=dict(sorted(bands.items())), tiers=dict(sorted(tiers.items())),
                       rows_by_class=dict(sorted(by_class.items())),
                       first_10_fold_order=[(r["fold_order"], r["census_accession"], r["tier"])
-                                           for r in rows[:10]])
+                                           for r in rows[:10]],
+                      # ⚠ D-083. A tranche is an execution batch: NOT a ranking, NOT a priority,
+                      # NOT a quality signal, and NOT a denominator.
+                      tranches=dict(sorted(Counter(r["tranche"] for r in rows).items())),
+                      tranche_bands=[{"tranche": t, "span_lo": lo,
+                                      "span_hi": (None if hi > 10 ** 8 else hi)}
+                                     for t, lo, hi in TRANCHE_BANDS],
+                      tranche_note=(
+                          "⚠ Tranches are size-banded and executed ASCENDING; within each, rows "
+                          "fold in the seeded fold_order, unchanged. The seed was NOT re-drawn. "
+                          "A tranche is a partition, not an ordering, not a ranking, and not a "
+                          "denominator — a statistic computed per tranche is a statistic computed "
+                          "per length. Tranche 0 is the 82-target cohort and is never census."))
     prov_path.write_text(json.dumps(provenance, indent=2), encoding="utf-8")
 
     print(f"wrote {out} | {len(rows)} foldable rows")

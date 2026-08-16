@@ -2,6 +2,7 @@ import { Routes, Route, Link, NavLink, useParams, Navigate } from 'react-router-
 import Story from './components/Story.jsx'
 import TargetList from './components/TargetList.jsx'
 import TargetView from './components/TargetView.jsx'
+import CensusView from './components/CensusView.jsx'
 import CoverageView from './components/CoverageView.jsx'
 import ScorerView from './components/ScorerView.jsx'
 import MethodNote from './components/MethodNote.jsx'
@@ -25,6 +26,7 @@ export default function App() {
           <NavLink to="/" end>Story</NavLink>
           <NavLink to="/targets">Targets</NavLink>
           <NavLink to="/coverage">Coverage</NavLink>
+          <NavLink to="/census">Census</NavLink>
           <NavLink to="/scorer">Scorer</NavLink>
           <NavLink to="/method">Method</NavLink>
           <NavLink to="/about">About ADCs</NavLink>
@@ -36,6 +38,7 @@ export default function App() {
           <Route path="/targets" element={<TargetList />} />
           <Route path="/target/:id" element={<TargetRoute />} />
           <Route path="/coverage" element={<CoverageView />} />
+          <Route path="/census" element={<CensusView />} />
           <Route path="/scorer" element={<ScorerView />} />
           <Route path="/method" element={<MethodNote />} />
           <Route path="/about" element={<AdcContext />} />

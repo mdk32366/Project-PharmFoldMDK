@@ -130,6 +130,77 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-083 — Tranches are size-banded ascending, and the seed still governs inside each: batching is a partition, not an ordering
+
+- **Date:** 2026-08-16
+- **Status:** Accepted. **Ruled before the tranche column is written and before any census row is
+  enqueued.** ⚠ **Void if code precedes it.**
+- **Type:** A **decision**. It rules how the crank is batched, and — the load-bearing half — it
+  rules what batching is **not allowed to touch**.
+- **⚠ Number verified live.** Highest `### D-` written was **D-082**; `D-010`, `D-078`, `D-080`
+  reserved-unwritten; **`D-083` appears nowhere** in the log or `RESERVED.md`. Read for the header,
+  not for a reference to one.
+- **Provenance (D-016):** counts are Code's reading off `data/census/census_manifest.v6.csv`
+  (3,467 foldable rows, seed `20260807`, `identity_fn_version 3`).
+
+- **Context.** The owner asked for folds in batches, smallest first. ⚠ **Taken naively that would
+  destroy a pre-registration**: the manifest's fold order comes from a **seeded shuffle with the
+  seed recorded before the first shuffle**, and the entire value of that is that **nobody chose the
+  order**. **Sorting by size is choosing it.**
+
+  ⚠ **But the operational case is strong and it got stronger.** `### D-082` leaves the crank running
+  **uncapped** — layer 2 off, layer 3 unwired, and layer 1 **never once observed to fire**. Under
+  that, discovering a memory problem on a 430 aa fold rather than a 40 aa one is the difference
+  between a caught refusal and a bugcheck.
+
+- **Decision — the reconciliation, and it is the whole entry.**
+
+  ⚠ **A tranche is a PARTITION of the population. The seed is an ORDER WITHIN a partition. They are
+  different objects and batching only ever touches the first.**
+
+  1. **Tranches are size-banded and executed ascending.**
+  2. ⚠ **Within every tranche, rows fold in the manifest's seeded `fold_order` — unchanged, not
+     re-shuffled, not re-sorted.** The seed is not re-drawn and the manifest is not re-seeded.
+  3. **The bands are boundaries on `span_aa`, fixed here before any row is enqueued:**
+
+     | tranche | span range | rows |
+     |---|---|---|
+     | ⚠ **0** | *the 82-target cohort* | **reserved, never census** |
+     | 1 | 1–50 aa | 1,307 |
+     | 2 | 51–150 aa | 535 |
+     | 3 | 151–300 aa | 517 |
+     | 4 | 301–440 aa | 332 |
+     | 5 | ⚠ >440 aa — the rental tier | 776 |
+
+     `1,307 + 535 + 517 + 332 = 2,691` = the local band. `+776 = 3,467` = the manifest. ⚠ **The
+     partition is exhaustive and mutually exclusive, and it sums to the declared denominator.**
+
+  4. ⚠ **The boundaries are chosen for RISK, not for balance.** Tranche 1 is 48.6% of the local band
+     and every row in it is ≤50 aa — **the cheapest possible place to discover that something is
+     wrong.** Tranche 4 carries the rows nearest the measured ceiling and runs last.
+
+- ⚠ **What this must NOT become.** A tranche is an execution batch. **It is not a ranking, not a
+  priority, not a quality signal, and nothing may be reported per-tranche as though it were a
+  finding about the proteins in it.** Small proteins folding first is an operational fact about VRAM
+  and says nothing about them as targets. ⚠ **A statistic computed per-tranche is a statistic
+  computed per-length**, and the two must never be confused in a report.
+
+- ⚠ **And a tranche is not a denominator.** The census's denominators are the ones `### D-079` fixed;
+  a tranche count is a batch size. **Reporting "1,307 of 3,467 complete" is progress. Reporting
+  anything else per tranche needs its own justification.**
+
+- **Deep-learning justification.** Neutral to the neural core and protective of the run that
+  exercises it. ⚠ **A crank that dies at hour 40 with no way to say which folds are trustworthy is
+  worse than one that never started** — ascending bands mean a failure lands early, cheaply, and on
+  the rows least costly to redo.
+
+- **Consequences.** Manifest **revision 7** carries a `tranche` column; ⚠ **the `fold_order` and both
+  identities are unchanged, because membership and content are unchanged — only a label is added.**
+  Earlier revisions are retained. **No row moves between bands, no span changes, and the seed is not
+  re-drawn.**
+
+---
+
 ### D-082 — A fold that exceeds VRAM must fail as a job, not as a bugcheck: three layers, and the outermost is not ours
 
 - **Date:** 2026-08-16
