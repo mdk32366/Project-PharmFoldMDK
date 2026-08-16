@@ -52,6 +52,10 @@ def config_from_env() -> WorkerConfig:
     persist**, behaviour and disk cost unchanged; set (the rented box) → each fold's PAE is
     written to `{dir}/{job_id}/` for out-of-band retrieval before pod termination."""
     return WorkerConfig(
+        # ⚠ D-082 LAYER 3, OFF BY DEFAULT AND THAT IS DELIBERATE. Enabling it changes the process
+        # topology of the fold path, and it was built while a tranche was mid-flight: a default-on
+        # switch would have altered the next worker start without anyone choosing it. Set
+        # WORKER_FOLD_IN_CHILD=1 to turn it on.
         transport_url=os.environ.get("TRANSPORT_URL", DEFAULT_TRANSPORT_URL).rstrip("/"),
         auth_token=os.environ["WORKER_AUTH_TOKEN"],
         worker_id=os.environ.get("WORKER_ID", "local-gpu"),
@@ -112,6 +116,33 @@ def build_client(config: WorkerConfig) -> HttpQueueClient:
     return HttpQueueClient(config.transport_url, config.auth_token)
 
 
+def _supervised_fold_fn() -> Callable[..., Any]:
+    """⚠ D-082 layer 3: a `fold`-shaped callable that runs the fold in a CHILD PROCESS.
+
+    A hard child death (segfault, driver reset, allocator abort) becomes a **named** outcome with
+    the parent alive, instead of the worker vanishing mid-tranche. ⚠ **It does not survive a
+    bugcheck — nothing does.**
+
+    The supervisor is created ONCE and closed over, so the child is long-lived and the weights load
+    exactly once. ⚠ A child per fold would reload 8.4 GB every time — the cost `_MODEL_CACHE`
+    exists to remove.
+    """
+    from worker.fold_supervisor import FoldSupervisor
+    from worker.runner import FoldResult, FoldProvenance
+
+    sup = FoldSupervisor()
+
+    def _fold(sequence: str, **kw: Any) -> Any:
+        payload = sup.fold(sequence, dtype=kw["dtype"], chunk_size=kw["chunk_size"],
+                           source=kw["source"], ecd_start=kw.get("ecd_start"),
+                           ecd_end=kw.get("ecd_end"))
+        prov = payload.get("provenance")
+        return FoldResult(pdb=payload["pdb"], plddt=payload["plddt"], pae=payload.get("pae"),
+                          provenance=FoldProvenance(**prov) if prov else None)
+
+    return _fold
+
+
 def run(
     config: WorkerConfig | None = None,
     *,
@@ -124,6 +155,17 @@ def run(
     point — the loop, its retry/failure taxonomy, and the transport are all already built."""
     config = config or config_from_env()
     client = build_client(config)
+    # ⚠ Opt-in, and the choice is LOGGED rather than silent: a fold path that changed topology
+    # without saying so would make an unexplained failure much harder to attribute later.
+    if os.environ.get("WORKER_FOLD_IN_CHILD") == "1" and fold_fn is fold:
+        # ⚠ ASCII ONLY, and that is load-bearing. This banner is the ONLY confirmation that the
+        # switch took, and the worker runs in a plain PowerShell window whose codepage we do not
+        # control: an em dash here raises UnicodeEncodeError on cp437 and the worker DIES AT
+        # STARTUP. A startup message that can kill the process it announces is worse than none.
+        print("[worker] D-082 layer 3 ENABLED - folding in a child process", flush=True)
+        fold_fn = _supervised_fold_fn()
+    else:
+        print("[worker] D-082 layer 3 off (set WORKER_FOLD_IN_CHILD=1 to enable)", flush=True)
     run_worker_fn(
         client,
         lambda spec: fold_from_spec(spec, fold_fn, artifact_dir=config.artifact_dir),

@@ -1,0 +1,10 @@
+{
+  "source_manifest": "census_manifest.v7.csv",
+  "source_manifest_sha256": "fd80d65df8b3acf59ce9faa135275dc75eac6caf7f4fc2a2cbc5399d3f970d07",
+  "derived_on": "cache-only; no network fetch, no span changed",
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "rows": 3467,
+  "intermittent": 1649,
+  "discarded_residues": 92709,
+  "\u26a0 scope": "CONTEXT ONLY \u2014 no span_aa, fold or artifact is altered by this file"
+}

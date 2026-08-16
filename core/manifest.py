@@ -140,12 +140,93 @@ def tier_for_span(span: int, ceiling: FoldCeiling = LOCAL_CEILING) -> tuple[str,
         return "rental", "unmeasured_local_ceiling"     # D-024 (iii)
     return "rental", "over_local_ceiling"               # definitively rental
 
-# Named oversize exclusions (D-022): fold on no single card as one sequence. Named
-# rather than thresholded because the A6000 ceiling that would set a threshold is
-# itself unmeasured; these two are the definitively-oversize first pass.
+# ⚠⚠ NAMED EXCLUSIONS (D-022, extended by D-085). READ THE SCOPE BEFORE USING THIS.
+#
+# ⚠ "Excluded" here has NEVER meant "cannot be folded", and reading it that way is the defect
+# D-085 was raised to fix. Every entry states BOTH the path that skips it AND — when the protein
+# is foldable at all — the CONDITIONS under which it folds. An exclusion whose reason stops at
+# "excluded" tells a future reader nothing about whether the work is impossible or merely
+# elsewhere, and the two lead to opposite decisions.
+#
+# ⚠ Proof that the distinction is not hypothetical: MUC16 and FAT2 are **in the census manifest at
+# tranche 5, tier=rental** — they are SCHEDULED TO FOLD. A guard that treated this registry as
+# "unfoldable" and applied it to the census path would silently drop two rows that are queued to
+# succeed. That is why `scope` is a field and not a comment.
+
+
+@dataclass(frozen=True)
+class Exclusion:
+    """One named exclusion. ⚠ `conditions` is REQUIRED whenever `foldable` is not `"no"`.
+
+    Enforced in `__post_init__` rather than by review, because *"state the conditions"* is a rule
+    that decays the moment someone adds an entry in a hurry.
+    """
+
+    symbol: str
+    scope: str        #: ⚠ WHICH fold path skips it. Never "everywhere" without meaning it.
+    reason: str       #: why it is skipped on that path
+    foldable: str     #: ⚠ "no" | "yes, …" — a sentence, never a bare bool
+    conditions: str   #: ⚠ the conditions under which it CAN be folded
+
+    def __post_init__(self) -> None:
+        if self.foldable != "no" and not self.conditions.strip():
+            raise ValueError(
+                f"{self.symbol}: `foldable` is {self.foldable!r} but no conditions are stated. "
+                f"⚠ An exclusion that can be folded MUST say under what conditions — otherwise it "
+                f"reads as impossible and the work is silently abandoned.")
+
+
+EXCLUSIONS: dict[str, Exclusion] = {
+    "Q8WXI7": Exclusion(
+        symbol="MUC16 (CA-125), 14451 aa",
+        scope="cohort tranche 0 (the 82, local card, whole sequence)",
+        reason="folds on no single card as one sequence (D-022)",
+        foldable="yes — and it is ALREADY QUEUED: census tranche 5, tier=rental",
+        conditions=("Rental hardware, as one sequence. ⚠ A structure is PRODUCIBLE; a meaningful "
+                    "whole-ECD structure is not, because MUC16 is largely intrinsically disordered "
+                    "(tandem SEA repeats + glycosylated linkers) — D-076 Tier 3. ⚠ That is a "
+                    "BIOLOGY limit, not a compute one, and more VRAM does not remove it."),
+    ),
+    "Q9NYQ8": Exclusion(
+        symbol="FAT2, 4030 aa",
+        scope="cohort tranche 0 (the 82, local card, whole sequence)",
+        reason="folds on no single card as one sequence (D-022)",
+        foldable="yes — and it is ALREADY QUEUED: census tranche 5, tier=rental",
+        conditions=("Rental hardware as one sequence, or domain assembly on the local card. "
+                    "⚠ It is ORDERED (a cadherin repeat stack), so unlike MUC16 this is a pure "
+                    "resource limit — D-076 Tier 2. ⚠ Assembly changes `boundary_method`, so an "
+                    "assembled structure is not comparable to a single-pass one without saying so."),
+    ),
+    "P55073": Exclusion(
+        symbol="P55073, span 68–304 (237 aa)",
+        scope="every ESMFold path, at any size, on any hardware",
+        reason=("the span contains `U` (selenocysteine) and `U` is absent from the ESM "
+                "vocabulary — the fold cannot be tokenised, let alone attempted (F-033)"),
+        foldable="yes, but ONLY by folding a DIFFERENT SEQUENCE than the one on record",
+        conditions=(
+            "⚠⚠ Substitution is REQUIRED, and every option changes the molecule:\n"
+            "  · `U`→`C` (cysteine): selenocysteine is the Se analogue of cysteine, so the "
+            "backbone prediction is expected to be close. ⚠ BUT the artifact would then describe "
+            "a sequence that is NOT the sequence of record — the MSLN class of defect (F-025), "
+            "where something folds, scores and looks entirely normal while being the wrong "
+            "molecule.\n"
+            "  · `U`→`X` (unknown): `X` IS in the vocabulary (measured), so this tokenises. It "
+            "masks the residue instead of asserting a wrong one.\n"
+            "⚠ EITHER WAY the substitution must be recorded IN the artifact — a different "
+            "`span_definition` or an explicit `residue_substitution` field — because an unlabelled "
+            "substitution is indistinguishable from a correct fold.\n"
+            "⚠ NOT DONE, and not Code's call: choosing a substitution is a modelling decision "
+            "about what the structure means, not a bug fix."),
+    ),
+}
+
+#: ⚠ COHORT-SCOPED VIEW, and the filter is the point. `core/manifest.py`'s cohort builder and
+#: `crank_status.py`'s roster reconciliation consume this; **the census path must NOT**, because
+#: `Q8WXI7` and `Q9NYQ8` are queued to fold there. Derived, never hand-maintained alongside.
 NAMED_EXCLUSIONS: dict[str, str] = {
-    "Q8WXI7": "oversize: MUC16 (CA-125), 14451 aa — folds on no single card as one sequence (D-022)",
-    "Q9NYQ8": "oversize: FAT2, 4030 aa — folds on no single card as one sequence (D-022)",
+    acc: f"oversize: {e.symbol} — {e.reason}"
+    for acc, e in EXCLUSIONS.items()
+    if e.scope.startswith("cohort")
 }
 
 # Primary-match resolutions (D-020): among multiple reviewed-human hits, the one

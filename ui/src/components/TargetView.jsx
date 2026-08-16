@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getAnalysis, getPlddt, getRanking } from '../api.js'
 import StructureViewer from './StructureViewer.jsx'
 import Confidence from './Confidence.jsx'
+import PlddtExplainer from './PlddtExplainer.jsx'
 import Provenance from './Provenance.jsx'
 import CancerAssociations from './CancerAssociations.jsx'
 import TargetScorerPanel from './TargetScorerPanel.jsx'
@@ -53,6 +54,7 @@ export default function TargetView({ id }) {
       <StructureViewer id={id} />
       <div className="panels">
         <Confidence meanPlddt={detail.mean_plddt} plddt={plddt} />
+        <PlddtExplainer />
         <Provenance detail={detail} />
       </div>
       <TargetScorerPanel detail={detail} ranking={ranking} />

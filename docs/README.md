@@ -130,6 +130,259 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-088 — A derived artifact states what it was derived from, and a stale one is refused rather than served
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Context:** D-087 shipped with a loose end: `span_segments.csv` and `census_labels.csv` are derived from `census_manifest.v7.csv`, and ⚠ **a manifest revision would not make them fail, warn or change — they would keep answering.** *"A wrong topology is worse than a missing one, because a missing one is visible."*
+
+- **Decisions:**
+
+  1. **Every derivation stamps the manifest's `sha256`.** ⚠ `census_labels.csv` had **no provenance file at all** — it could not be checked, because nothing recorded what it came from.
+  2. ⚠⚠ **CONTENT, never mtime.** A file copied, checked out or restored from a zip has a new mtime and identical bytes. **mtime would cry stale on a `git checkout` and stay silent on an in-place edit that preserved it — wrong in both directions.**
+  3. ⚠⚠ **DETECT AND REFUSE, NEVER AUTO-REGENERATE.** Re-deriving on read would hand a reader different numbers on two loads with nothing saying why, and would do unrequested work inside a request. **The surface drops the stale artifact and states the verdict**; a human clears it with one command.
+  4. **Four distinct verdicts, because they need different actions:** `fresh` · `derivation_stale` (re-run it) · `derivation_unstamped` (⚠ *predates the check* — **not a pass and not a failure**) · `derivation_absent` (nothing was derived). ⚠ Collapsing `unstamped` into either neighbour would recommend the wrong action.
+  5. ⚠ **An unreadable provenance file is STALE, not fresh.** Treating a file we cannot parse as current would trust it exactly when we cannot.
+  6. **`scripts/derive_census_context.py`** re-derives both — ⚠ **one command, because two commands is one command someone forgets**, and a revision that refreshed only one would leave the surface half-current with nothing saying which half. `--check` reports and derives nothing, exiting non-zero when stale. ⚠ **A mid-run failure STOPS rather than continuing**: a half-derived set is worse than an untouched one.
+
+- ⚠ **A defect found while wiring the UI for this:** the topology badge's final branch labelled **anything** that was not `intermittent`/`GPI` as **`contiguous`** — so `unknown` and every derivation verdict would have rendered as the benign case. ⚠ **A default that asserts the safe answer is how a surface states something nobody measured.** Now `not derived` and `derivation out of date` are their own badges, and the detail panel **withholds the stale numbers** and says it is withholding them.
+
+- **Evidence:** 7 tests in `tests/test_derived_freshness.py` + 3 UI. Gate **669 passed**, exit 0; UI **192 passed**. Proven live: corrupting the stored hash flipped every row to `derivation_stale` with the note *"…but the file on disk is @ 9ecee249b247… — RE-RUN THE DERIVATION"*, and restoring it returned `fresh`.
+
+---
+
+### D-087 — The census becomes browsable: a per-protein list, searchable and sortable, reversing this project's own "no per-protein row" rule
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Owner's ruling:** *"Can we update the surface for targets and coverage please? … Why hide it under a bushel? Also we need to make it searchable and sortable."*
+
+- ⚠⚠ **THIS REVERSES A RECORDED RULE, AND THE REVERSAL IS THE DECISION.** `CensusView.jsx` carried: *"UNSCORED BY CONSTRUCTION — there is no score, no rank, **no sort control and no per-protein row anywhere on this page**, because a per-protein list is one sort away from being read as a shortlist."* **The owner overrode it.** ⚠ The old comment is **corrected in place with the reversal stated**, not deleted.
+
+- ⚠ **The original worry was RIGHT, and is now answered by construction rather than by omission:**
+  1. **Default order is ACCESSION**, never pLDDT. ⚠ A default sort by confidence would turn a self-report into a de facto ranking — precisely what D-079 bars. **The page must not arrive already having chosen.**
+  2. **No score column, because there is no score.**
+  3. **Every row carries `scored: false` and its reason FROM THE API** — not from the UI remembering to say so.
+  4. ⚠ **Sorting is not scoring.** The reader orders the data; the project endorses no order.
+  - ⚠ **What the old rule bought was safety through invisibility, and that had its own cost: ~2,500 measured structures nobody could look at.**
+
+- **What a protein now says when opened** (owner's list, each answered as a **category**):
+  - **Status** — tranche, span, coordinates, span definition, confidence with its band.
+  - ⚠ **"No extracellular component"** — said plainly. **GPI-anchored proteins get their own words**: no topological domains *by design*, ⚠ **not missing data and not intermittent** (D-081).
+  - ⚠⚠ **"The extracellular portion is intermittent"** — with the numbers: how many segments, how much is extracellular in total, how much was folded, **how much was not**, and the warning that *an antibody can bind an epitope formed by several loops, so a structure of one loop is not a model of that site* (F-037).
+  - ⚠⚠ **Cancer associations — and this is the one most likely to mislead.** The source covers **the 82 cohort targets only**. For a census protein the answer is **`not_covered` — "unknown", NOT "none"**. The UI never prints *"no cancer associations."* ⚠ *"We did not look"* and *"we looked and found none"* are different facts; the second is rendered only when the protein is genuinely in the source and genuinely had no hit.
+
+- **Two guards fired on this change and both were right:**
+  1. ⚠⚠ **The census filter was `!= COHORT_TRANCHE` and is now `> COHORT_TRANCHE`.** A bare negation reads as *"everything that is not the cohort"* while **excluding NULL under three-valued logic** — so an untagged row would have been **invisible on BOTH surfaces at once**. `census_untranched_count()` now counts the rows that fall through both, because that outcome is correct but silent. **Measured: 0.**
+  2. **`test_every_live_route_is_modelled`** refused the new routes until they were drawn in `system-model.json` (D-051).
+
+- **Evidence:** 13 new UI tests; UI 189 passed across 29 files; gate 662 passed, 15 skipped, exit 0. Live: **2,521 folded census rows served, `scored` false on every one.**
+
+- ⚠ **Loose end CLOSED (D-088):** the derived artifacts are stamped with the manifest's content hash and the surface **refuses** a stale one. See below.
+
+---
+
+### D-086 — The 26 inactive identities are resolved and categorised; 21 of them are answers, not gaps
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Owner's ruling:** *"If they have nothing to fold, let's say that. The 26 unknown? Is that possible? Also, yes fix the span_category. Let's refetch the 26."*
+
+- ⚠⚠ **"Is that possible?" — measured, and the answer is mostly NO, in a good way.** All 26 were re-fetched:
+
+  | resolution | rows | resolvable? |
+  |---|---|---|
+  | **`DELETED`** | **21** | ⚠ **No.** Withdrawn from Swiss-Prot. **No target, no sequence, nothing to fetch, ever.** |
+  | **`DEMERGED`** | **5** | Yes — but **one-to-many**, into 11 target accessions. |
+
+  ⚠⚠ **NOT ONE OF THE 26 CARRIES A SEQUENCE.** So the re-fetch converts *"we do not know"* into **a stated, final reason** — and produces **zero** foldable rows. **That is the whole result, and it is worth having**: 21 rows move from *unknown* to *this entry no longer exists*, which is an answer.
+
+- **Decisions:**
+
+  1. **The re-fetch writes its OWN artifact.** `census_identity_resolution.csv` + provenance, with its own `resolved_on = 2026-08-16`. ⚠⚠ **The span files are NOT restamped** — they were fetched 2026-08-06, and rewriting that would manufacture provenance for data that did not move (*two facts, never one date*). A reader joins on `census_accession`. Guarded by `test_the_span_files_were_not_restamped_by_the_resolution_run`.
+
+  2. ⚠ **The 5 demerge targets are RECORDED, NOT FOLLOWED.** Following them would take 5 census rows to 11 and **change the denominator** — *"7,811 human proteins"* is cited in artifacts. ⚠ **And one target, `P0DMS9`, is ALREADY a census row**, so a naive follow would double-count. **A scope decision, and it is not taken here.**
+
+  3. **`span_category` is fixed on the right axis (F-036).** ⚠ The original blank was *principled* — `census_reparse.py` said a never-fetched row *"is neither a span nor an absence of one"* and withheld a V2 span judgement, which is **correct**. **The defect was the ENCODING**: blank is what a row *with a span* carries, so `span_category == ""` meant both *"fine"* and *"never looked at."* The fix is a category on the **identity** axis — `identity_deleted`, `identity_demerged`, `identity_unresolved` — **never blank**.
+
+  4. ⚠ **An absent resolution file yields `identity_unresolved`, not a blank and not `DELETED`.** *"Nobody has looked"* and *"we looked and it is gone"* are different facts. Guessing `deleted` would assert a withdrawal that never happened.
+
+  5. **The 1,519 are stated plainly**: ⚠ **they have nothing to fold.** No extracellular face, on any mechanism. **Not failures, not gaps, not deferred work** — nothing about them is pending.
+
+- ⚠ **The V2 span CSVs are NOT rewritten.** They are measured artifacts stamped `parsed_under = v2-…@55a792f-r10`, and that parse did not produce identity categories. The fix lands **in the code**, so the next re-parse emits them; `census_identity_resolution.csv` is the authority for those 26 until then. ⚠ **Editing a measured artifact to carry a judgement its stated parse never made is exactly the provenance defect this project keeps finding.**
+
+- ⚠ **A fetch failure is its own category**, distinct from `DELETED`. *"The entry is gone"* and *"we could not ask"* must never share an encoding — the same mistake one level down.
+
+- **Evidence:** 5 tests in `tests/test_identity_categories.py`. **Revert proof 17:** restoring the blank return turns 3 red.
+
+---
+
+### D-085 — "Excluded" has never meant "cannot be folded", and the registry now has to say which: scope, and the conditions
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Owner's ruling:** *"Third named exclusion with reason stated. It appears all of those exclusions cannot be folded. If that is NOT the case and it can be folded, then stating the conditions under which that is possible is required."*
+
+- ⚠⚠ **The premise did not hold, and checking it is what made this a decision rather than a one-line edit.** `MUC16` (`Q8WXI7`) and `FAT2` (`Q9NYQ8`) are **in the census manifest at tranche 5, `tier=rental` — they are SCHEDULED TO FOLD.** The registry never meant *"cannot be folded"*; it meant **"not on the local card, as one sequence, in the cohort."** ⚠ **A guard that had read it the other way and applied it to the census path would have silently dropped two rows queued to succeed** — which is exactly what the owner's conditional anticipated.
+
+- ⚠ **And the literal reading of the ruling would have been INERT.** `P55073` is **not in the 82**; it is census-only. `NAMED_EXCLUSIONS` is consumed **only** by the cohort manifest builder and the roster reconciliation. Adding `P55073` there would have looked done and **done nothing** — the F-030 shape, where the path that matters is reached by omission.
+
+- **Decision:**
+
+  1. **An exclusion is a record, not a string.** `Exclusion(symbol, scope, reason, foldable, conditions)`. ⚠ **`foldable` is a SENTENCE, never a bool** — *"yes, but ONLY by folding a DIFFERENT SEQUENCE than the one on record"* is the actual answer for `P55073` and no boolean carries it.
+  2. ⚠⚠ **`__post_init__` REFUSES a foldable entry with empty conditions.** The ruling is enforced at construction, **not by review** — *"state the conditions"* is a rule that decays the moment someone adds an entry in a hurry.
+  3. **`NAMED_EXCLUSIONS` becomes a DERIVED, cohort-scoped view** (`scope.startswith("cohort")`). ⚠ The census path must never consume it, and now structurally cannot pick up `P55073` or mistake the rental-queued two for unfoldable.
+  4. **The guard lands where `P55073` actually lives — `scripts/census_ingest.py`.** A span carrying a residue outside the ESM vocabulary is **excluded as a named category before any write**, and ⚠ **excluded, not fatal**: one untokenisable row must not stop a tranche of 500 that are fine.
+  5. ⚠ **`crank_status.py`'s `NOT_FOLDED` label is CORRECTED, not deleted.** It asserted an impossibility the data contradicts. It now reads `NOT IN COHORT TRANCHE 0` and prints `foldable?` beneath.
+
+- **The three entries, with conditions stated:**
+
+  | accession | scope | foldable? | conditions |
+  |---|---|---|---|
+  | `Q8WXI7` MUC16 | cohort tranche 0 | **yes — already queued**, census tranche 5 rental | Rental hardware. ⚠ A structure is **producible**; a meaningful whole-ECD one is **not** — largely intrinsically disordered (D-076 Tier 3). ⚠ **A biology limit, not a compute one: more VRAM does not remove it.** |
+  | `Q9NYQ8` FAT2 | cohort tranche 0 | **yes — already queued**, census tranche 5 rental | Rental as one sequence, **or** domain assembly locally. ⚠ **Ordered** (cadherin stack), so a pure resource limit (D-076 Tier 2). ⚠ Assembly changes `boundary_method`. |
+  | `P55073` | ⚠ **every ESMFold path, any size, any hardware** | **yes — but only by folding a DIFFERENT SEQUENCE** | ⚠⚠ Substitution required. `U`→`C` (Se analogue of cysteine, backbone close) ⚠ **but the artifact would then describe a sequence that is not the sequence of record — the F-025/MSLN defect, where something folds, scores and looks entirely normal while being the wrong molecule.** `U`→`X` (measured: `X` **is** in the vocabulary) masks rather than asserts. ⚠ **Either way the substitution must be recorded IN the artifact**, or it is indistinguishable from a correct fold. ⚠ **NOT DONE — a modelling decision, not a bug fix.** |
+
+- **Consequences:**
+  - ⚠ **The already-failed `P55073` row is NOT retrofitted.** It stays `failed` carrying its misleading tensor-shape error, with F-033 recording what the error actually meant. The guard is forward-looking; **corrections are recorded, never patched away.**
+  - **Bounded and measured:** **1 span of 3,467** carries an untokenisable residue. **Tranches 4 and 5 carry none**, so no further ingest changes.
+  - ⚠ **`X` stays TOKENISABLE.** It is in the vocabulary and folds; excluding it would drop every span carrying an unknown residue — a much larger silent loss than the defect being fixed.
+
+- **Evidence:** 6 tests in `tests/test_exclusions.py`, including one asserting against the **census manifest data** that `MUC16`/`FAT2` really are rental-queued — so a future edit that routes them away fails, because their stated conditions promise it. Guard proven live: the tranche-3 dry run emits `EXCLUDED_UNTOKENISABLE_RESIDUE | P55073 | residue(s) ['U']` and the row count drops 517 → 516.
+
+---
+
+### D-084 — D-082 layer 3 ships OFF, and the switch is the decision: a fold path may not change its process topology because a module landed
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Context:** D-082 specified three layers. Layers 1 and 2 (measurement, allocator cap) shipped. **Layer 3 — run the fold in a child process, so a hard death becomes a named job outcome instead of a vanished worker — was built today, while tranche 1 was mid-crank at 1,003 of 1,307.**
+
+  ⚠ The running worker had **already imported `runner.py`**, so it is unaffected by anything written now. **The exposure is its NEXT start**, which the owner performs by hand in a separate terminal.
+
+- **Decision:**
+
+  1. **`worker/fold_supervisor.py` is wired into `worker/main.py` but is OFF unless `WORKER_FOLD_IN_CHILD=1`.** ⚠ **The default is the decision, not an oversight.** A default-on layer would have changed the fold path's process topology at the next worker start **without anyone choosing it** — and the person restarting would have been running a topology they had not been told about, on a machine that had bugchecked four days earlier.
+
+  2. **The choice is printed on every start, both ways.** `layer 3 ENABLED` or `layer 3 off (set WORKER_FOLD_IN_CHILD=1 to enable)`. ⚠ **A fold path that changes shape silently makes the next unexplained failure much harder to attribute** — and the failure this layer exists to catch is exactly the kind that leaves no other trace.
+
+  3. **The child is PERSISTENT, one per worker, not one per fold.** `runner._MODEL_CACHE` is module-level and therefore per-process; a child per fold would reload **8.4 GB every time** — the exact cost `_MODEL_CACHE` was added to remove. ⚠ **And only one process ever holds weights: the parent never imports torch**, so this does not double VRAM.
+
+  4. **A death and a failure get different vocabulary.** A fold that raises → `RuntimeError`, an ordinary job failure, unchanged. A child that dies → **`FoldChildDied` carrying the exit code.** ⚠ D-024's rule — attempted-and-failed must be distinguishable from never-attempted — applied one level down: a driver reset must not read as *"this sequence cannot be folded."*
+
+  5. **A death is NOT retried automatically.** ⚠ A crash loop that re-folds the row that killed it is how **one bad row takes a whole tranche with it.**
+
+  6. **An injected `fold_fn` is never overridden**, even with the flag on. ⚠ Every test that supplies a fake fold would otherwise **silently spawn a real child process.**
+
+- **Consequences:**
+  - ⚠⚠ **It does not survive a bugcheck. Nothing does.** Layer 3's claim is stated narrowly on purpose: it converts every failure *short of a host death* into a recorded outcome. The bugcheck of 2026-08-12 would still have taken the machine down, and layers 1 and 2 are what address that.
+  - ⚠ **Turning it on is an owner action with a measurement attached, not a flip.** Before tranche 4 goes, it runs on a real tranche-boundary batch and the fold results are compared — **a layer that changed structures would be a worse defect than the one it prevents**, which is why `test_the_supervisor_does_not_change_the_fold` exists.
+  - The default-off state means **tranches 1–3 complete on the in-process path**, so the population folded under each topology is knowable rather than mixed mid-tranche.
+
+- **Alternatives rejected:**
+  - **Ship it on.** ⚠ Rejected: it would have taken effect at a restart the owner performs, in a terminal where nothing announces what changed.
+  - **Restart the worker now to pick it up.** ⚠ Rejected: 1,003 completed folds and a live claim, to gain nothing tranche 1 needs.
+  - **A child per fold, for full isolation.** Rejected on the 8.4 GB reload measured on the first rental run (`Loading weights: 4498` per fold).
+
+- **Execution plan (added 2026-08-16, owner: *"no change on that decision — execute when appropriate"*):**
+
+  **The switch happens in the idle window between tranche 3 and tranche 4, and that window is created deliberately by NOT ingesting tranche 4.** The size bands make the timing non-arbitrary:
+
+  | tranche | rows | span | vs `known_good = 440` |
+  |---|---|---|---|
+  | 1 ✅ | 1,307 | 1–50 aa | far under |
+  | 2 | 535 | 51–149 aa | far under |
+  | 3 | 517 | 152–300 aa | under |
+  | **4** | **332** | **301–439 aa** | ⚠ **runs up against it** |
+  | 5 | 776 | 441–14,451 aa | over — rental |
+
+  ⚠ **Tranche 4 is the first band where a fold approaches the ceiling**, which is what makes *"layer 3 before tranche 4"* a boundary and not a preference. Tranches 0–3 fold on the in-process path; **tranche 4 is where the topology changes**, so the population under each is knowable and no tranche is split across two.
+
+  ⚠ **The step-by-step is `docs/D-084-layer3-switch-procedure.md`, written down rather than recalled** — it spans a session boundary and half the steps are the owner's hands on a terminal Code cannot see.
+
+  ⚠ **A defect found while writing those instructions, and it was in the confirmation signal itself.** The startup banner read `layer 3 ENABLED — folding in a child process`. **The em dash raises `UnicodeEncodeError` on cp437**, so on a console using that codepage **the worker would have died at startup** — and the banner is the *only* confirmation the switch took. **A startup message that destroys the process it announces.** Now ASCII, guarded over the source by `test_the_startup_banner_survives_every_windows_console_codepage` across cp437/cp850/cp1252/ascii, and proven by putting the em dash back (revert proof 15, two tests red). ⚠ **Found by writing "confirm the first line reads exactly…" and then checking whether it could** — the instruction audited the code, the same way the content-hash tuple found the whole-sequence folds.
+
+  **Sequence:** tranche 3 drains → worker goes idle (nothing queued, because tranche 4 is held back) → owner stops the worker → `scripts/supervisor_equivalence.py` runs both arms → owner restarts with `WORKER_FOLD_IN_CHILD=1` → tranche 4 ingests.
+
+- **The equivalence gate, and why it is one arm per invocation:** `scripts/supervisor_equivalence.py`. ⚠⚠ **The supervised arm spawns a child that loads the weights; if the in-process arm had already cached them in the same process, two model copies would be resident on one card — the exact configuration that bugchecked the host on 2026-08-12.** So each arm runs in its own process, writes an artifact and exits, and the comparison reads files. ⚠ **It also refuses to run while any job is `claimed`** — a live worker is already the first holder — and the refusal is a **queue read, not an assumption**. Proven live: it refused against the running tranche-2 crank. ⚠ **The override is spelled `--i-have-stopped-the-worker`**, so using it is a sentence someone has to mean.
+
+  ⚠ **What it proves is narrow: that the fold is byte-identical through the supervisor.** A layer added to make failures legible that quietly changed structures would be **worse than the defect it prevents** — every tranche-4 artifact plausible, different, and nothing red. ⚠ **It is NOT a determinism control and cannot substitute for one**: without `scripts/determinism_control.py` on the same accession and tier, *"the supervisor differs"* and *"the recipe is nondeterministic"* are **the same observation**, and the script says so on failure rather than letting the attribution be assumed.
+
+- **Evidence:** 11 tests in `tests/test_fold_supervisor.py`, all passing; full gate **648 passed, 15 skipped**, pytest exit code **0** read on the line immediately after the command (the `5b24329` correction). **Revert proof 14:** replacing `raise FoldChildDied` with `raise RuntimeError` turns two tests red — `test_a_HARD_CHILD_DEATH_becomes_a_named_outcome_and_the_parent_survives` and `test_a_death_is_not_retried_automatically`.
+
+---
+
+### D-083 — Tranches are size-banded ascending, and the seed still governs inside each: batching is a partition, not an ordering
+
+- **Date:** 2026-08-16
+- **Status:** Accepted. **Ruled before the tranche column is written and before any census row is
+  enqueued.** ⚠ **Void if code precedes it.**
+- **Type:** A **decision**. It rules how the crank is batched, and — the load-bearing half — it
+  rules what batching is **not allowed to touch**.
+- **⚠ Number verified live.** Highest `### D-` written was **D-082**; `D-010`, `D-078`, `D-080`
+  reserved-unwritten; **`D-083` appears nowhere** in the log or `RESERVED.md`. Read for the header,
+  not for a reference to one.
+- **Provenance (D-016):** counts are Code's reading off `data/census/census_manifest.v6.csv`
+  (3,467 foldable rows, seed `20260807`, `identity_fn_version 3`).
+
+- **Context.** The owner asked for folds in batches, smallest first. ⚠ **Taken naively that would
+  destroy a pre-registration**: the manifest's fold order comes from a **seeded shuffle with the
+  seed recorded before the first shuffle**, and the entire value of that is that **nobody chose the
+  order**. **Sorting by size is choosing it.**
+
+  ⚠ **But the operational case is strong and it got stronger.** `### D-082` leaves the crank running
+  **uncapped** — layer 2 off, layer 3 unwired, and layer 1 **never once observed to fire**. Under
+  that, discovering a memory problem on a 430 aa fold rather than a 40 aa one is the difference
+  between a caught refusal and a bugcheck.
+
+- **Decision — the reconciliation, and it is the whole entry.**
+
+  ⚠ **A tranche is a PARTITION of the population. The seed is an ORDER WITHIN a partition. They are
+  different objects and batching only ever touches the first.**
+
+  1. **Tranches are size-banded and executed ascending.**
+  2. ⚠ **Within every tranche, rows fold in the manifest's seeded `fold_order` — unchanged, not
+     re-shuffled, not re-sorted.** The seed is not re-drawn and the manifest is not re-seeded.
+  3. **The bands are boundaries on `span_aa`, fixed here before any row is enqueued:**
+
+     | tranche | span range | rows |
+     |---|---|---|
+     | ⚠ **0** | *the 82-target cohort* | **reserved, never census** |
+     | 1 | 1–50 aa | 1,307 |
+     | 2 | 51–150 aa | 535 |
+     | 3 | 151–300 aa | 517 |
+     | 4 | 301–440 aa | 332 |
+     | 5 | ⚠ >440 aa — the rental tier | 776 |
+
+     `1,307 + 535 + 517 + 332 = 2,691` = the local band. `+776 = 3,467` = the manifest. ⚠ **The
+     partition is exhaustive and mutually exclusive, and it sums to the declared denominator.**
+
+  4. ⚠ **The boundaries are chosen for RISK, not for balance.** Tranche 1 is 48.6% of the local band
+     and every row in it is ≤50 aa — **the cheapest possible place to discover that something is
+     wrong.** Tranche 4 carries the rows nearest the measured ceiling and runs last.
+
+- ⚠ **What this must NOT become.** A tranche is an execution batch. **It is not a ranking, not a
+  priority, not a quality signal, and nothing may be reported per-tranche as though it were a
+  finding about the proteins in it.** Small proteins folding first is an operational fact about VRAM
+  and says nothing about them as targets. ⚠ **A statistic computed per-tranche is a statistic
+  computed per-length**, and the two must never be confused in a report.
+
+- ⚠ **And a tranche is not a denominator.** The census's denominators are the ones `### D-079` fixed;
+  a tranche count is a batch size. **Reporting "1,307 of 3,467 complete" is progress. Reporting
+  anything else per tranche needs its own justification.**
+
+- **Deep-learning justification.** Neutral to the neural core and protective of the run that
+  exercises it. ⚠ **A crank that dies at hour 40 with no way to say which folds are trustworthy is
+  worse than one that never started** — ascending bands mean a failure lands early, cheaply, and on
+  the rows least costly to redo.
+
+- **Consequences.** Manifest **revision 7** carries a `tranche` column; ⚠ **the `fold_order` and both
+  identities are unchanged, because membership and content are unchanged — only a label is added.**
+  Earlier revisions are retained. **No row moves between bands, no span changes, and the seed is not
+  re-drawn.**
+
+---
+
 ### D-082 — A fold that exceeds VRAM must fail as a job, not as a bugcheck: three layers, and the outermost is not ours
 
 - **Date:** 2026-08-16
@@ -309,6 +562,307 @@ So the rule is not "be careful" — it is:
   definitions. ⚠ **The 82 keep IGF2R, TLR3 and TMEM30A as `held_out`, which is now known to be an
   artifact of the old definition rather than a property of those proteins** — recorded here so it is
   never re-discovered as a bug.
+
+---
+
+### F-037 — `span_aa` is the LARGEST extracellular segment, not the extracellular content, and 47.6% of the census has more than one
+
+- **Date:** 2026-08-16
+- **Status:** open — ⚠ **no span, fold or artifact is wrong; what was missing is the CONTEXT beside them.**
+- **What is true:** `core/span_extract.extract()` keeps the longest accepted topological domain — `if best is None or n > best` — and **silently discards every other one**. For a single-pass receptor the longest segment *is* the ectodomain and the two are the same thing. ⚠ **For a multi-pass protein it is one loop out of several**, and no artifact said which case a row was.
+
+- **Measured, cache-only, no span altered:**
+
+  | topology | rows | |
+  |---|---|---|
+  | `contiguous` (1 segment) | 1,693 | 48.8% |
+  | ⚠ **`intermittent` (>1 segment)** | **1,649** | **47.6%** |
+  | `no_accepted_segment` (GPI — a different architecture, D-081) | 125 | 3.6% |
+
+  ⚠⚠ **92,709 residues of extracellular material are discarded.** Worst: `Q9UHC9` — **7 segments, 830 aa extracellular, 272 folded, 558 discarded.**
+
+- ⚠ **Why it matters here specifically.** A reader seeing `span_aa = 272` reasonably reads *"the extracellular region is 272 aa."* For `Q9UHC9` the extracellular region is **830 aa across 7 segments** and 272 is the biggest one. **An antibody can bind a conformational epitope spanning several loops — a structure of one loop in isolation is not a model of that site.** On an ADC platform that is the difference between a candidate and an artifact.
+
+- **And it is visible in the confidence numbers.** Across **2,510 folded rows** joined to the segment derivation:
+
+  | topology | n | median pLDDT | below 50 |
+  |---|---|---|---|
+  | contiguous | 879 | **67.9** | 13.1% |
+  | ⚠ **intermittent** | 1,556 | **50.9** | **45.4%** |
+  | GPI | 75 | 70.5 | 4.0% |
+
+  ⚠⚠ **Intermittent spans are ~3.5× more likely to fold below 50.**
+
+- ⚠ **CAUSATION IS NOT CLAIMED, and the data cannot separate the two explanations:** (a) a fragment folded out of its structural context predicts worse, or (b) the extracellular loops of multi-pass proteins are genuinely short and flexible, so a low score is the correct answer. **Both are plausible, both are informative, and they lead to the same practical conclusion** — an intermittent span's structure is a weaker basis for epitope work — **but they are different claims and only one of them is about our method.** Separating them needs a re-fold of a segment in context, which has not been done.
+
+- **Remedy:** `scripts/span_segments.py` → `data/census/span_segments.csv` — **context only, nothing behind it altered.** ⚠ The topology is a **word** (`contiguous` / `intermittent` / `no_accepted_segment`), never a bare integer: *"1"* and *"7"* mean different things to someone deciding whether a structure models a binding site, and a count invites the reader to do that reasoning unaided.
+
+- ⚠ **`no_accepted_segment` is NOT "intermittent" and NOT a defect.** GPI-anchored proteins have no topological domains **by design** and take their own rule (D-081). Collapsing them into a segment count would report a different molecular architecture as missing data — ⚠ the exact `no_topology` conflation `F-025` was about.
+
+---
+
+### F-036 — A row that was never fetched carries an EMPTY span_category, so "unknown" and "has a span" are the same filter
+
+- **Date:** 2026-08-16
+- **Status:** open
+- **What happened:** accounting for all 5,016 census rows under V2, every no-span row carries a `span_category` — `no_extracellular_span` (1,519), `absent_with_reason` (3), `span_boundary_unknown` (1). ⚠ **Except 26.** The `uniprot_inactive` rows — never fetched — have **`span_category = ''`**, the same value carried by every row that *does* have a span.
+
+- **Measured:**
+
+  | | rows |
+  |---|---|
+  | `span_category == ''` | **3,493** |
+  | …of which actually carry a span | 3,467 |
+  | ⚠ …of which carry **no span, never fetched** | **26** |
+
+  ⚠ **A consumer filtering `span_category == ''` to mean "has a span" silently picks up 26 rows that were never looked at.**
+
+- **Why it matters, and it is the project's own rule:** *an absent value is a CATEGORY, never a low number and never a bare null.* ⚠ **`uniprot_inactive` is not "no extracellular span" — it is "we do not know."** Absence of evidence against evidence of absence, and the two lead to opposite actions: one is a correct permanent exclusion, the other is **resolvable by fetching**. Collapsing them into the same empty string is exactly the `no_topology` defect that `F-025` was about — **one band meaning several things** — reappearing in the field that was supposed to have fixed it.
+
+- ⚠ **The `no_span_reason` column DOES carry it** (`not fetched: uniprot_inactive`), so the information survives. **That is what makes this a defect rather than a data loss** — and also what makes it easy to miss: the row looks complete until you filter on the wrong one of the two columns.
+
+- ⚠ **It has not bitten.** `census_manifest.v7.csv` is built from rows that **have a span**, not from `span_category == ''`, so no unfetched row ever reached a tranche — confirmed both directions: `span but not in manifest = 0`, `manifest but no span = 0`. **The manifest is correct by a different predicate than the one that is wrong**, which is luck, not design.
+
+- **Remedy (not implemented):** give the 26 a category of their own — `absent_not_fetched`, or `identity_inactive`. ⚠ **Do NOT reuse `absent_with_reason`**: that means *"parsed, and refused for a stated reason"*, which is a claim about the entry's content. **These were never parsed at all.**
+
+- ⚠ **A ruling is wanted on the 26 themselves, separately from the column.** They are UniProt-inactive accessions — merged or withdrawn. Whether the census should follow the merge targets, or record them permanently as inactive-at-this-release, is a **scope decision, not a bug fix**, and it interacts with the *"two facts, never one date"* rule: re-fetching 26 rows would put a second fetch date in a file whose whole provenance model forbids that.
+
+- ⚠⚠ **A TEST HELD THE DEFECT IN PLACE, and it is recorded here rather than taking its own integer** (an eighth integer under momentum is the F-025 defect). `test_a_never_fetched_row_takes_no_v2_category_and_keeps_its_reason` **asserted `span_category == ""`** — so the blank was not merely emitted, it was **pinned**, in the test file whose entire subject is not asserting things about data that did not move. ⚠ **A test can hold a defect as firmly as it holds a behaviour**, and a gate that is green because it agrees with the bug is a gate that has stopped being evidence. It now asserts the identity category and **still** asserts the half that was always right: no span invented, no `parsed_under` stamped.
+
+- **Detail:** `docs/CENSUS-ACCOUNTING-V2.md`.
+
+---
+
+### F-035 — The local/rental routing is computed by the manifest and enforced by nobody
+
+- **Date:** 2026-08-16
+- **Status:** open — ⚠ **owner ruled it a FINDING**, not a decision: the gap exists now, independently of whether anyone has tripped it.
+- **What is true:** `core/manifest.py` decides `local` vs `rental` per row, records `tier_reason`, and `TIER_RECIPE` resolves the recipe from it **at claim time** (D-047) — `local → int8`, `rental → fp16`. ⚠ **And `core/queue.py:claim()` selects `WHERE status = 'pending' ORDER BY created_at, id`. No tier. No length.** A worker takes the oldest pending job, whatever it is.
+
+- ⚠⚠ **It has never bitten because no rental row has ever been ingested.** The only thing keeping rental work off the local card is that **none exists yet** — *an operational convention doing a guard's job*, holding exactly until someone runs the obvious next command.
+
+- **What it would cost the moment tranche 5 lands:** 776 rows, all `tier=rental`, 441–14,451 aa, resolving **`fp16`**, against a card measured at **8,150 MiB total** with `known_good = 440` **at int8**. ⚠⚠ **An fp16 probe is what bugchecked this host on 2026-08-12**, and on WDDM the over-allocation is not refused — the driver spills to system memory and faults in kernel mode. ⚠ **D-082 layer 3 does not survive that.** ⚠ **FIFO is a delay, not a safeguard**: those rows would be claimed the instant tranche 4 drained, most likely unattended.
+
+- **Remedy (proposed, NOT implemented — tranche 4 is mid-flight and the claim path is untouched):**
+  1. `WORKER_TIER`, **defaulting to `local`** — ⚠ wrongly refusing work costs an idle GPU; wrongly accepting it costs a host.
+  2. ⚠ **Filtered IN THE SQL, never checked after the claim.** A post-claim refusal marks the job `claimed` then declines it — the shape that stranded ten jobs: `attempts=0`, no error, nothing retryable.
+  3. **An independent length guard at fold time.** ⚠ Tier is a *label*; length is the physical constraint. `vram_guard.preflight()` already returns `REFUSED_NO_MEASUREMENT` and is **simply not wired in**.
+  4. **State the composition on refusal** — ⚠ an idle worker and an empty queue must never look identical.
+
+- **Detail:** `docs/PROPOSAL-claim-tier-filter-and-tranche-5-cost.md`, which also carries the tranche-5 cost model and the §3 correction retracting *"impossible"*.
+
+---
+
+### F-034 — The verification harness would have triggered the failure it was built to verify against
+
+- **Date:** 2026-08-16
+- **Status:** fixed
+- **What happened:** `scripts/supervisor_equivalence.py` — the gate that had to pass before layer 3 could be switched on — folded **`sequence_from_cache(accession)`, the FULL protein**, not the manifest span.
+
+  ⚠⚠ **`Q8N423`'s span is 439 aa. Its full chain is 597 aa — well past the measured 440 ceiling.** Had that accession been chosen, **the tool proving it was safe to enable the VRAM-death guard would itself have folded 597 residues on a card whose ceiling is 440** — risking the exact failure layer 3 exists to catch, **before layer 3 was on**, on a host that bugchecked four days earlier.
+
+- ⚠ **It was caught by checking the input, not by the tool objecting.** Nothing in the harness compared the fold length to the ceiling; the check happened because the accession's length was looked up before folding it. **`Q6ZVN8` was under 440 by luck (426 aa full), so the run would have gone green and taught nothing.**
+
+- **Why the defect existed:** the harness was written to answer *"does the supervisor change the structure?"*, and **any sequence answers that.** ⚠ **So the sequence was chosen for convenience rather than fidelity** — and a verification that does not fold what the worker folds is not measuring the workload it is clearing.
+
+- **Fixed:** it now folds the **manifest span** with `source='sliced_ecd'` and the same coordinates the worker uses; asserts the slice length equals `span_aa` (a disagreement is a construction defect, not a rounding difference); and ⚠ **REFUSES anything past `CEILING_AA = 440`** — *a verification that triggers the failure it is verifying against is worthless.*
+
+- ⚠ **A second defect in the same instrument, recorded here rather than given its own integer** (taking an integer under momentum is the F-025 defect): `compare_folds` takes **mappings with `coords` and `plddt`**, not PDB text. The first call passed strings and died in `fold["coords"]`. ⚠ **It was fixed by reading the contract, NOT by removing the call** — deleting the comparison would have left the sha256 as the only evidence, and a byte hash over a rendered file is a weaker claim than CA coordinates compared with no tolerance. **Both arms were then re-run, so the evidence comes from the code that ships rather than the code that was repaired.**
+
+- **The class:** ⚠ **both defects were in the instrument, and both were invisible until it was run against real data.** Same shape as `ceiling_probe._attempt` (an `except` that never runs because there is no process left) and the revert proof that performed the `setattr` itself. **An instrument is code, and code that has never been exercised against the real case is a hypothesis.**
+
+- **Evidence:** gate 655 passed, 15 skipped, exit code 0. The corrected harness produced `byte-identical PDB | True` and `compare_folds | identical` on `Q6ZVN8` (364 aa span, 36–399 of 426).
+
+---
+
+### F-033 — A residue the tokenizer has no word for fails as a tensor-shape complaint, not as "this protein cannot be folded"
+
+- **Date:** 2026-08-16
+- **Status:** open — ⚠ **the row is correctly `failed`; what is open is the VOCABULARY, not the outcome.**
+- **What happened:** the first failure in 2,359 census folds. `P55073`, tranche 3, span 68–304:
+
+  ```
+  unexpected fold failure: Unable to create tensor, you should probably activate truncation
+  and/or padding with 'padding=True' 'truncation=True' to have batched tensors with the same
+  length. Perhaps your features (`input_ids`) have excessive nesting …
+  ```
+
+  ⚠ **Nothing in that message is true of the actual problem.** It names truncation, padding and batching. The span needs none of them. **The span contains `U` — selenocysteine**, the 21st amino acid, and **`U` is not in the ESM vocabulary.**
+
+- **Measured, not inferred** (the message is so misleading that inference would have been a guess):
+
+  | probe | result |
+  |---|---|
+  | 20 standard residues | OK, `shape=(1, 10)` |
+  | same + `U` | ⚠ **raises `ValueError`, the exact production message** |
+  | same + `X` | OK, `shape=(1, 21)` |
+  | `"U" in tok.get_vocab()` | **False** |
+  | `"X" in tok.get_vocab()` | **True** |
+
+  ⚠ **`X` — "unknown residue" — is IN the vocabulary and folds.** So the model has a word for *"I don't know what this is"* and no word for *"this is selenocysteine."* `tokenize("U")` returns `['U']` and then converts to `None`, and the `None` is what the nesting complaint is actually about — **three layers away from the cause.**
+
+- **Bounded, and the bound was measured across every tranche before any conclusion:** **1 span of 3,467** contains a non-standard residue. It is this one, the residue is `U`, and **tranches 4 and 5 contain none.** ⚠ **This is not a wave; it is a single row**, and that is a measurement rather than a hope.
+
+- **Why it is a finding even though the outcome was correct:** the job **is** `failed`, with the error stored — D-024 held, and the crank did not stop. ⚠ **But the recorded reason is a lie about the cause.** A future reader debugging *"excessive nesting"* would look at batching, padding and the enqueue path — **none of which is involved.** The project's own rule is that an absent value is a **CATEGORY**: *"cannot be folded: contains selenocysteine, absent from the model vocabulary"* is a category; *"Unable to create tensor"* is noise that happens to be red.
+
+- ⚠ **NOT fixed, and deliberately not, mid-crank.** A guard belongs at **ingest**, where `MUC16` and `FAT2` are already named exclusions with stated reasons (D-022) — the precedent exists and this is the same shape. But tranche 3 is **already ingested and folding**, changing the ingest path now would alter nothing for the row that failed, and **the population would then span two versions of the enqueue rule mid-tranche.** ⚠ Same reasoning as D-084. **Owner ruling wanted** on whether `P55073` becomes a third named exclusion or the guard becomes general.
+
+---
+
+### F-032 — A dry run that does not exercise its consumer's contract is not a dry run
+
+- **Date:** 2026-08-16 · **Status:** Accepted. **Closed under D-074** — the instrument no longer
+  exhibits it: `scripts/census_ingest.py` builds the consumer's object before any write.
+- **⚠ Number verified live.** Highest `### F-` written was F-025; F-026–F-032 appeared nowhere in
+  the log, `docs/RESERVED.md` or `ARCHITECTURE.md`.
+- **Provenance (D-016):** Code's reading of the production database, 2026-08-16.
+
+**The census ingest's dry run validated slices, spans and every DB invariant — and omitted
+`model_revision` from `inference_settings`.** `/claim` subscripts `s["model_revision"]`, raised
+`KeyError`, and did so **after** marking each job `claimed`. ⚠ **Ten jobs became permanently stuck:
+`attempts=0`, no error recorded, nothing retryable, GPU idle at 0 MiB.**
+
+⚠⚠ **The dry run passed because it never called the consumer it was writing for.** It checked the
+producer's internal consistency and stopped there. ⚠ **And the pre-registration named the field
+correctly — *"model id/revision"* — while the code implemented half of it**, so the document was
+right and the artifact did not match it.
+
+⚠ **At 1,307 rows this would have been 1,307 silently stuck jobs.** A failure that leaves **no trace
+in the row** is worse than one that fails loudly: a failed job is visible and retryable; a job
+marked `claimed` and abandoned looks like work in progress forever.
+
+**Remedy:** the producer **constructs the consumer's object before any write**, and the test reads
+the required keys **out of the consumer's source** — ⚠ **never a hand-kept list, because a
+hand-kept list is exactly what drifted.**
+
+---
+
+### F-031 — Two populations in one table, joined on a key that is no longer unique
+
+- **Date:** 2026-08-16 · **Status:** Accepted. **Closed under D-074** — every `select(ProteinAnalysis…)`
+  in `app/` is tranche-filtered, enumerated by test.
+- **Provenance (D-016):** measured **before** the first census row was written.
+
+**75 of the 82 cohort accessions also appear in the census manifest; all 82 appear in the roster** —
+`P04626` HER2, `P00533` EGFR, `Q13421` MSLN, `P11717` IGF2R, `Q8WXI7` MUC16 among them.
+
+`coverage_payload` iterates the 82 and looks each accession up in a dict built from the database.
+⚠ **Two of those dict-builders were not tranche-filtered.** The first census fold of `P04626` would
+have put a **census** `analysis_id` under HER2's accession, and the cohort's coverage row would then
+point at a fold measured under a **different span definition**.
+
+⚠⚠ **It would have overwritten a reported result** — `coverage` is a tranche-zero surface and the
+82's fold status feeds `### F-004`'s denominators. **Not appeared beside; overwritten.**
+
+⚠ **And there is no `ORDER BY`**, so with a cohort row and a census row sharing an accession the
+surviving entry is **whatever the database returns last — nondeterministic, and silently so.**
+
+⚠ **The general form: adding a second population to a table silently re-types every key that was
+unique in the first.** `input_value` did not change; what it *means* did.
+
+---
+
+### F-030 — The unsafe branch was the default, reached by omission
+
+- **Date:** 2026-08-16 · **Status:** Accepted. **Closed under D-074** — an unrecognised
+  `boundary_method` now raises; `whole` is an explicit opt-in.
+
+`core/enqueue.py:_fold_input` branched on `boundary_method`, **not on the presence of coordinates**:
+
+```
+'sliced_ecd'                    -> AssertionError raised                    ✅
+'whole' / '' / None / anything  -> folded 2,000 residues, source='whole'   ⚠ nothing red
+```
+
+⚠ **The safe branch required an exact literal. Every other value — including absence — fell through
+to folding the whole sequence.** And the census manifest carried **no `boundary_method` column at
+all**, so any ingest would have had to supply one.
+
+⚠⚠ **`whole` is a LEGITIMATE recorded outcome** (D-024 routes whole-method targets to it), so
+**3,468 census proteins would have folded full-length with every artifact internally consistent** —
+fold succeeds, recipe recorded, provenance intact, `source='whole'`. **Nothing red anywhere.**
+
+⚠ **The general form: when a fall-through is a valid outcome rather than an error, omission becomes
+indistinguishable from choice.** The remedy is that both branches cost a keystroke.
+
+⚠ **And the coordinate check was an `assert`** — see `### F-029`.
+
+---
+
+### F-029 — `assert` used as a guard vanishes under an optimisation flag
+
+- **Date:** 2026-08-16 · **Status:** Accepted. ⚠ **NOT closed under D-074** — four remain in
+  `scripts/`, ruled for conversion. **Latent, not live**: neither script is run by CI or the crank,
+  and nothing in the repo passes `-O`.
+
+**`python -O` strips every `assert`.** A check written as one is **a comment that occasionally
+runs** — and it is invisible when it stops running.
+
+**Found in the fold path**, where an `assert` stood between a manifest span and a 2,000-residue
+fold. **Still present in two scripts**, and ⚠ **the sharpest case is `scripts/intersection_check.py`,
+whose own comment reads *"if it stops reconciling, the reports below are unsafe"*: under `-O` that
+check evaluates to nothing and the unsafe reports print anyway.** ⚠ **A checker whose checks are
+asserts has an entire output that is a claim that verification happened.**
+
+**The rule:** ⚠ **any check whose failure would produce a wrong artifact raises an explicit
+exception.** `assert` is for internal invariants whose violation is a crash — never for a guard
+standing between a claim and a result.
+
+---
+
+### F-028 — An order that asks for confirmation invites confirmation
+
+- **Date:** 2026-08-06 (reserved) · 2026-08-16 (written) · **Status:** Accepted. **Process finding;
+  no instrument to close under D-074.**
+
+**An instruction phrased as *"confirm that X"* asks a different question from *"what is X?"** — and
+the first is answered agreeably far more often than the second. Instances this project logged
+include a span audit ordered over **twelve** proteins where the data held **thirteen**: the
+selection criterion was inherited from the order rather than re-derived, and ⚠ **the criterion chosen
+to find the defect was blind to one instance of it.**
+
+⚠ **The remedy is not scepticism, it is RE-DERIVATION**: the receiving party recomputes the
+population from the source and reports the count **before** answering the question asked of it. Where
+the order's list and the derived list disagree, **the disagreement is the finding.**
+
+---
+
+### F-027 — Derive from source, not from context
+
+- **Date:** 2026-08-06 (reserved) · 2026-08-16 (written) · **Status:** Accepted. **Closed under
+  D-074** for the instance that produced it — the relocation was redone from the source document.
+
+**A block relocated within the decision log was reconstructed from conversational context rather
+than re-extracted from the source**, and it silently lost a trailing separator: `### D-071` hashed
+`371e7127` before and `e4283d60` after.
+
+⚠ **The content looked right.** A reconstruction from memory of a thing one has just read is the
+hardest kind of error to see, because the reader supplies from context exactly what the artifact is
+missing. **The remedy is mechanical: re-extract from the source file, never retype from the
+conversation** — and hash both sides.
+
+---
+
+### F-026 — A verification that shares an implementation with its subject verifies nothing
+
+- **Date:** 2026-08-06 (reserved) · 2026-08-16 (written) · **Status:** Accepted. ⚠ **Recurred on
+  2026-08-16 and was caught by a revert**, which is the only reason it is closable.
+
+**A check built on the same code as the thing it checks cannot disagree with it.**
+
+⚠ **The 2026-08-16 recurrence is the cleanest instance this project has:** a test asserting that
+`fold()` assigns its environment from a dict **performed the assignment loop inside the test itself**.
+It exercised the loop **in the test**, not the one in `fold()` — so reverting `fold()` to the broken
+hand-written version left the test **green**. **A-017 clause (a): the fixture never reached the code
+under test.**
+
+⚠ **The same shape in data:** a residue count read from a field recorded beside a claim cannot
+disagree with the claim; it must be **read out of the artifact** — which is why `reconcile_fold`
+parses the PDB rather than trusting `fold_length`.
+
+**Remedy:** the verifier and the subject must not share an implementation — and where they must
+(a GPU-only path), ⚠ **assert over the subject's SOURCE**, and **prove by revert**, because a revert
+that leaves the suite green is the only way this defect announces itself.
 
 ---
 

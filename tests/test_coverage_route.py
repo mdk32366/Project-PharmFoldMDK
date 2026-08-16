@@ -40,7 +40,11 @@ def engine():
 
 def _seed_folded(engine, accession: str, pdb_path: str = "/data/artifacts/1/structure.pdb") -> int:
     with Session(engine) as s:
-        row = ProteinAnalysis(input_type="uniprot", input_value=accession,
+        # ⚠ cohort_tranche=0 because that is what production holds: all 80 cohort rows are
+        # tranche 0. A fixture omitting it modelled a NULL-tranche row, which exists nowhere —
+        # and once _folded_accessions became tranche-filtered, that fixture went invisible to the
+        # cohort surface. The filter was right; the fixture was wrong.
+        row = ProteinAnalysis(input_type="uniprot", input_value=accession, cohort_tranche=0,
                               structure_source="esmfold", mean_plddt=77.26, pdb_path=pdb_path,
                               meta={"gene": "NECTIN4"})
         s.add(row)
@@ -56,7 +60,7 @@ def _seed_job(engine, accession: str, status: str, error: str | None = None,
     row in `status`. Mirrors production, where `core.enqueue` writes the shell row first and
     the FK-bound job points at it. Returns the analysis id."""
     with Session(engine) as s:
-        pa = ProteinAnalysis(input_type="uniprot", input_value=accession,
+        pa = ProteinAnalysis(input_type="uniprot", input_value=accession, cohort_tranche=0,
                              structure_source="esmfold", pdb_path=pdb_path,
                              mean_plddt=(77.26 if pdb_path else None),
                              meta={"gene": "SEED"})

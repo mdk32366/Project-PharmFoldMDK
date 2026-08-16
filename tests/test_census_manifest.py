@@ -254,3 +254,76 @@ def test_a_span_without_coordinates_is_refused_outright():
         SpanResult(span_aa=100, rule="vocabulary")
     with pytest.raises(ValueError, match="do not reconcile"):
         SpanResult(span_aa=100, span_start=1, span_end=50, rule="vocabulary")
+
+
+# ── ⚠ D-083: a tranche is a PARTITION, not an ordering ──────────────────────
+def test_the_tranche_bands_are_exhaustive_and_mutually_exclusive(built):
+    """⚠ Every foldable row lands in exactly one tranche, and they sum to the declared total.
+    Prove it bites by overlapping two bands or leaving a gap between them."""
+    from scripts.census_manifest import tranche_for_span
+    rows, prov, _ = built
+    assert sum(prov["tranches"].values()) == len(rows) == prov["manifest_rows"]
+    for r in rows:
+        assert int(r["tranche"]) == tranche_for_span(int(r["span_aa"]))
+
+
+def test_a_span_outside_every_band_raises_rather_than_defaulting():
+    """⚠ An unbanded row would fold under a tranche label nobody assigned it."""
+    from scripts.census_manifest import tranche_for_span
+    with pytest.raises(ValueError, match="refusing to guess"):
+        tranche_for_span(0)
+
+
+def test_the_bands_ascend_and_tranche_one_is_the_smallest(built):
+    """⚠⚠ THE BOUNDARIES ARE CHOSEN FOR RISK, NOT BALANCE. D-082 leaves the crank uncapped with
+    layer 2 off and layer 1 never observed to fire, so a memory problem must surface on a 40 aa
+    fold rather than a 430 aa one.
+
+    Prove it bites by reordering the bands descending: tranche 1 becomes the most expensive batch
+    and the derisking is inverted."""
+    from scripts.census_manifest import TRANCHE_BANDS
+    los = [lo for _, lo, _ in TRANCHE_BANDS]
+    assert los == sorted(los), "the tranche bands do not ascend"
+    rows, _, _ = built
+    by_t = {}
+    for r in rows:
+        by_t.setdefault(int(r["tranche"]), []).append(int(r["span_aa"]))
+    for t in sorted(by_t)[:-1]:
+        assert max(by_t[t]) < min(by_t[t + 1]), f"tranche {t} overlaps tranche {t+1}"
+
+
+def test_no_census_row_is_ever_labelled_tranche_zero(built):
+    """⚠⚠ TRANCHE 0 IS THE 82-TARGET COHORT. A census row carrying it would appear on the
+    tranche-zero surface the app serves — a named stop condition.
+
+    Prove it bites by starting TRANCHE_BANDS at 0."""
+    rows, _, _ = built
+    assert not [r for r in rows if int(r["tranche"]) == 0]
+
+
+def test_the_seed_still_governs_inside_each_tranche(built):
+    """⚠⚠ THE RECONCILIATION, AND IT IS THE WHOLE POINT OF D-083. Batching touches the PARTITION;
+    the seeded order is untouched. Within a tranche, fold_order must still be the shuffled order —
+    NOT sorted by span, which is what "smallest first" would mean if taken naively.
+
+    Prove it bites by sorting rows by span_aa before assigning fold_order: within a tranche the
+    order becomes monotone in span and this reds."""
+    rows, _, _ = built
+    t1 = [r for r in rows if int(r["tranche"]) == 1]
+    t1.sort(key=lambda r: int(r["fold_order"]))
+    spans = [int(r["span_aa"]) for r in t1]
+    assert spans != sorted(spans), (
+        "within tranche 1 the fold order is monotone in span — the seeded order was replaced by a "
+        "size sort, which is choosing the order the seed exists to avoid choosing")
+
+
+def test_the_tranche_is_derived_from_the_span_so_it_is_not_in_the_content_hash(built):
+    """⚠ `tranche` is a PURE FUNCTION of `span_aa`, and `span_start`/`span_end` are already in
+    CONTENT_FIELDS — so hashing it would add nothing a span change does not already move. Stated
+    rather than left as an apparent oversight: r6 and r7 hash identically ON PURPOSE.
+
+    Prove it bites by making the tranche depend on anything other than the span."""
+    from scripts.census_manifest import CONTENT_FIELDS, tranche_for_span
+    rows, _, _ = built
+    assert "tranche" not in CONTENT_FIELDS
+    assert all(int(r["tranche"]) == tranche_for_span(int(r["span_aa"])) for r in rows)

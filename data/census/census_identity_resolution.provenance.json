@@ -1,0 +1,8 @@
+{
+  "resolved_on": "2026-08-16",
+  "api": "rest.uniprot.org/uniprotkb",
+  "rows": 26,
+  "\u26a0 scope": "identity resolution ONLY \u2014 no sequence was retrieved and none exists",
+  "\u26a0 fetched_on of the span files": "2026-08-06 \u2014 NOT restamped by this run",
+  "\u26a0 demerge targets": "recorded, NOT followed \u2014 following them is a denominator change"
+}

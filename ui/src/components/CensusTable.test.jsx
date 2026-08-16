@@ -1,0 +1,138 @@
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import CensusTable, { filterRows } from './CensusTable.jsx'
+import CensusDetail from './CensusDetail.jsx'
+
+const ROWS = [
+  { id: 1, accession: 'Q9UHC9', gene: 'NPC1L1', label: 'NPC1-like 1', span_aa: 272, tranche: 3,
+    mean_plddt: 61.2, topology: 'intermittent', segment_count: 7, extracellular_total_aa: 830,
+    discarded_aa: 558, segments: '1-30;60-90', span_definition: 'v2', scored: false,
+    span_start: 1, span_end: 272, full_length: 1332, not_scored_reason: 'D-079 decision 1' },
+  { id: 2, accession: 'A0AVI2', gene: 'FER1L5', label: 'Fer-1-like protein 5', span_aa: 75,
+    tranche: 2, mean_plddt: 44.7, topology: 'contiguous', segment_count: 1,
+    extracellular_total_aa: 75, discarded_aa: 0, segments: '1983-2057', scored: false },
+  { id: 3, accession: 'P00000', gene: null, label: null, span_aa: 100, tranche: 2,
+    mean_plddt: null, topology: 'no_accepted_segment', segment_count: 0, scored: false },
+]
+
+describe('CensusTable', () => {
+  it('defaults to accession order, not pLDDT — an order is not a score (D-079)', () => {
+    render(<CensusTable rows={ROWS} />)
+    const first = within(screen.getAllByRole('row')[1]).getByRole('button')
+    expect(first).toHaveTextContent('A0AVI2')
+  })
+
+  it('searches accession, gene and protein name', () => {
+    expect(filterRows(ROWS, 'npc1l1').map((r) => r.accession)).toEqual(['Q9UHC9'])
+    expect(filterRows(ROWS, 'fer-1').map((r) => r.accession)).toEqual(['A0AVI2'])
+    expect(filterRows(ROWS, 'Q9UHC9').map((r) => r.accession)).toEqual(['Q9UHC9'])
+    expect(filterRows(ROWS, 'zzzz')).toEqual([])
+  })
+
+  it('sorts on click and reverses on a second click', () => {
+    render(<CensusTable rows={ROWS} />)
+    fireEvent.click(screen.getByRole('button', { name: /Span \(aa\)/ }))
+    let cells = screen.getAllByRole('row')[1]
+    expect(within(cells).getByRole('button')).toHaveTextContent('A0AVI2') // 75 aa
+    fireEvent.click(screen.getByRole('button', { name: /Span \(aa\)/ }))
+    cells = screen.getAllByRole('row')[1]
+    expect(within(cells).getByRole('button')).toHaveTextContent('Q9UHC9') // 272 aa
+  })
+
+  // ⚠ A missing pLDDT is not a low one. Ascending by pLDDT must not put it first.
+  it('sorts a null pLDDT LAST, not as the lowest value', () => {
+    render(<CensusTable rows={ROWS} />)
+    fireEvent.click(screen.getByRole('button', { name: /pLDDT/ }))
+    const rows = screen.getAllByRole('row')
+    const last = within(rows[rows.length - 1]).getByRole('button')
+    expect(last).toHaveTextContent('P00000')
+  })
+
+  // ⚠⚠ The owner ruling: the badge is on the row, not only in the detail panel.
+  it('badges intermittent rows in the table itself', () => {
+    render(<CensusTable rows={ROWS} />)
+    expect(screen.getByText(/intermittent \(7\)/)).toBeInTheDocument()
+  })
+
+  it('states on the surface that nothing here is scored or ranked', () => {
+    render(<CensusTable rows={ROWS} />)
+    expect(screen.getByText(/Not scored, not ranked, not ordered by suitability/i)).toBeInTheDocument()
+  })
+
+  it('says a search matched nothing rather than showing an empty table silently', () => {
+    render(<CensusTable rows={ROWS} />)
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'zzzz' } })
+    expect(screen.getByText(/no protein matches that search/i)).toBeInTheDocument()
+  })
+})
+
+describe('CensusDetail', () => {
+  it('says the extracellular portion is intermittent, and what was left out', () => {
+    render(<CensusDetail detail={{ ...ROWS[0], cancer_associations: null }} />)
+    expect(screen.getByText(/7 separate extracellular segments/i)).toBeInTheDocument()
+    expect(screen.getByText(/558 aa across the remaining 6 segments was not folded/i)).toBeInTheDocument()
+  })
+
+  it('says a contiguous protein models the whole extracellular portion', () => {
+    render(<CensusDetail detail={{ ...ROWS[1], cancer_associations: null }} />)
+    expect(screen.getByText(/models the whole extracellular portion/i)).toBeInTheDocument()
+  })
+
+  // ⚠ "no extracellular component" — the owner asked for this said explicitly.
+  it('says plainly when there is no annotated extracellular segment', () => {
+    render(<CensusDetail detail={{ ...ROWS[2], cancer_associations: null }} />)
+    expect(screen.getByText(/No annotated extracellular segment/i)).toBeInTheDocument()
+    // ⚠ matched on the substantive claim; the 'not missing data' phrase is split across <strong>
+    expect(screen.getByText(/different molecular architecture/i)).toBeInTheDocument()
+  })
+
+  // ⚠⚠ The one that matters most: unknown must never render as none.
+  it('never says "no associations" for a protein outside the source', () => {
+    render(<CensusDetail detail={{ ...ROWS[0], cancer_associations: {
+      status: 'not_covered', hits: [], source: 'Kathad et al. 2024',
+      coverage_note: 'the association source covers the 82 cohort targets only' } }} />)
+    expect(screen.getByText(/Not covered by the association source/i)).toBeInTheDocument()
+    expect(screen.getByText(/unknown/i)).toBeInTheDocument()
+    expect(screen.queryByText(/no cancer associations found/i)).not.toBeInTheDocument()
+  })
+
+  it('distinguishes a measured absence from an unexamined one', () => {
+    render(<CensusDetail detail={{ ...ROWS[0], cancer_associations: {
+      status: 'covered', hits: [], source: 'Kathad et al. 2024', coverage_note: '' } }} />)
+    expect(screen.getByText(/no cancer met the threshold/i)).toBeInTheDocument()
+    expect(screen.getByText(/is.*a measured absence/i)).toBeInTheDocument()
+  })
+
+  it('lists associated cancers when the protein is covered', () => {
+    render(<CensusDetail detail={{ ...ROWS[0], cancer_associations: {
+      status: 'covered', hits: [{ cancer: 'Colorectal cancer', qh_score: 266.67 }],
+      source: 'Kathad et al. 2024', coverage_note: '' } }} />)
+    expect(screen.getByText(/Colorectal cancer/)).toBeInTheDocument()
+  })
+})
+
+describe('stale derivation', () => {
+  const STALE = { id: 9, accession: 'Q00000', gene: 'X', label: 'x', span_aa: 10, tranche: 2,
+    mean_plddt: 60, topology: 'derivation_stale', derivation_status: 'derivation_stale',
+    derivation_note: 'derived from census_manifest.v7.csv @ aaa…, but the file on disk is @ bbb…',
+    scored: false }
+
+  // ⚠ The old final branch labelled ANYTHING that was not intermittent/GPI as "contiguous".
+  it('never labels a stale row contiguous', () => {
+    render(<CensusTable rows={[STALE]} />)
+    expect(screen.queryByText('contiguous')).not.toBeInTheDocument()
+    expect(screen.getByText(/derivation out of date/i)).toBeInTheDocument()
+  })
+
+  it('distinguishes "not derived" from "derived against the wrong manifest"', () => {
+    render(<CensusTable rows={[{ ...STALE, topology: 'unknown' }]} />)
+    expect(screen.getByText(/not derived/i)).toBeInTheDocument()
+  })
+
+  // ⚠⚠ Withheld, not missing — and never the stale numbers.
+  it('withholds stale segment numbers and says why', () => {
+    render(<CensusDetail detail={{ ...STALE, cancer_associations: null }} />)
+    expect(screen.getByText(/the segment derivation is out of date/i)).toBeInTheDocument()
+    expect(screen.getByText(/withheld deliberately, not missing/i)).toBeInTheDocument()
+  })
+})

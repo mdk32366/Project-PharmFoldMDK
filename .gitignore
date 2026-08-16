@@ -234,3 +234,8 @@ ui/dist/
 data/census/spancache/
 data/census/idcache/
 data/census/*cache/
+
+# ⚠ Repo snapshots — build artifacts, never tracked. They can contain census CSVs and
+# must never contain .env; the builder asserts that before writing.
+*.zip
+PharmFoldMDK-snapshot-*.zip
