@@ -383,6 +383,163 @@ So the rule is not "be careful" — it is:
 
 ---
 
+### F-032 — A dry run that does not exercise its consumer's contract is not a dry run
+
+- **Date:** 2026-08-16 · **Status:** Accepted. **Closed under D-074** — the instrument no longer
+  exhibits it: `scripts/census_ingest.py` builds the consumer's object before any write.
+- **⚠ Number verified live.** Highest `### F-` written was F-025; F-026–F-032 appeared nowhere in
+  the log, `docs/RESERVED.md` or `ARCHITECTURE.md`.
+- **Provenance (D-016):** Code's reading of the production database, 2026-08-16.
+
+**The census ingest's dry run validated slices, spans and every DB invariant — and omitted
+`model_revision` from `inference_settings`.** `/claim` subscripts `s["model_revision"]`, raised
+`KeyError`, and did so **after** marking each job `claimed`. ⚠ **Ten jobs became permanently stuck:
+`attempts=0`, no error recorded, nothing retryable, GPU idle at 0 MiB.**
+
+⚠⚠ **The dry run passed because it never called the consumer it was writing for.** It checked the
+producer's internal consistency and stopped there. ⚠ **And the pre-registration named the field
+correctly — *"model id/revision"* — while the code implemented half of it**, so the document was
+right and the artifact did not match it.
+
+⚠ **At 1,307 rows this would have been 1,307 silently stuck jobs.** A failure that leaves **no trace
+in the row** is worse than one that fails loudly: a failed job is visible and retryable; a job
+marked `claimed` and abandoned looks like work in progress forever.
+
+**Remedy:** the producer **constructs the consumer's object before any write**, and the test reads
+the required keys **out of the consumer's source** — ⚠ **never a hand-kept list, because a
+hand-kept list is exactly what drifted.**
+
+---
+
+### F-031 — Two populations in one table, joined on a key that is no longer unique
+
+- **Date:** 2026-08-16 · **Status:** Accepted. **Closed under D-074** — every `select(ProteinAnalysis…)`
+  in `app/` is tranche-filtered, enumerated by test.
+- **Provenance (D-016):** measured **before** the first census row was written.
+
+**75 of the 82 cohort accessions also appear in the census manifest; all 82 appear in the roster** —
+`P04626` HER2, `P00533` EGFR, `Q13421` MSLN, `P11717` IGF2R, `Q8WXI7` MUC16 among them.
+
+`coverage_payload` iterates the 82 and looks each accession up in a dict built from the database.
+⚠ **Two of those dict-builders were not tranche-filtered.** The first census fold of `P04626` would
+have put a **census** `analysis_id` under HER2's accession, and the cohort's coverage row would then
+point at a fold measured under a **different span definition**.
+
+⚠⚠ **It would have overwritten a reported result** — `coverage` is a tranche-zero surface and the
+82's fold status feeds `### F-004`'s denominators. **Not appeared beside; overwritten.**
+
+⚠ **And there is no `ORDER BY`**, so with a cohort row and a census row sharing an accession the
+surviving entry is **whatever the database returns last — nondeterministic, and silently so.**
+
+⚠ **The general form: adding a second population to a table silently re-types every key that was
+unique in the first.** `input_value` did not change; what it *means* did.
+
+---
+
+### F-030 — The unsafe branch was the default, reached by omission
+
+- **Date:** 2026-08-16 · **Status:** Accepted. **Closed under D-074** — an unrecognised
+  `boundary_method` now raises; `whole` is an explicit opt-in.
+
+`core/enqueue.py:_fold_input` branched on `boundary_method`, **not on the presence of coordinates**:
+
+```
+'sliced_ecd'                    -> AssertionError raised                    ✅
+'whole' / '' / None / anything  -> folded 2,000 residues, source='whole'   ⚠ nothing red
+```
+
+⚠ **The safe branch required an exact literal. Every other value — including absence — fell through
+to folding the whole sequence.** And the census manifest carried **no `boundary_method` column at
+all**, so any ingest would have had to supply one.
+
+⚠⚠ **`whole` is a LEGITIMATE recorded outcome** (D-024 routes whole-method targets to it), so
+**3,468 census proteins would have folded full-length with every artifact internally consistent** —
+fold succeeds, recipe recorded, provenance intact, `source='whole'`. **Nothing red anywhere.**
+
+⚠ **The general form: when a fall-through is a valid outcome rather than an error, omission becomes
+indistinguishable from choice.** The remedy is that both branches cost a keystroke.
+
+⚠ **And the coordinate check was an `assert`** — see `### F-029`.
+
+---
+
+### F-029 — `assert` used as a guard vanishes under an optimisation flag
+
+- **Date:** 2026-08-16 · **Status:** Accepted. ⚠ **NOT closed under D-074** — four remain in
+  `scripts/`, ruled for conversion. **Latent, not live**: neither script is run by CI or the crank,
+  and nothing in the repo passes `-O`.
+
+**`python -O` strips every `assert`.** A check written as one is **a comment that occasionally
+runs** — and it is invisible when it stops running.
+
+**Found in the fold path**, where an `assert` stood between a manifest span and a 2,000-residue
+fold. **Still present in two scripts**, and ⚠ **the sharpest case is `scripts/intersection_check.py`,
+whose own comment reads *"if it stops reconciling, the reports below are unsafe"*: under `-O` that
+check evaluates to nothing and the unsafe reports print anyway.** ⚠ **A checker whose checks are
+asserts has an entire output that is a claim that verification happened.**
+
+**The rule:** ⚠ **any check whose failure would produce a wrong artifact raises an explicit
+exception.** `assert` is for internal invariants whose violation is a crash — never for a guard
+standing between a claim and a result.
+
+---
+
+### F-028 — An order that asks for confirmation invites confirmation
+
+- **Date:** 2026-08-06 (reserved) · 2026-08-16 (written) · **Status:** Accepted. **Process finding;
+  no instrument to close under D-074.**
+
+**An instruction phrased as *"confirm that X"* asks a different question from *"what is X?"** — and
+the first is answered agreeably far more often than the second. Instances this project logged
+include a span audit ordered over **twelve** proteins where the data held **thirteen**: the
+selection criterion was inherited from the order rather than re-derived, and ⚠ **the criterion chosen
+to find the defect was blind to one instance of it.**
+
+⚠ **The remedy is not scepticism, it is RE-DERIVATION**: the receiving party recomputes the
+population from the source and reports the count **before** answering the question asked of it. Where
+the order's list and the derived list disagree, **the disagreement is the finding.**
+
+---
+
+### F-027 — Derive from source, not from context
+
+- **Date:** 2026-08-06 (reserved) · 2026-08-16 (written) · **Status:** Accepted. **Closed under
+  D-074** for the instance that produced it — the relocation was redone from the source document.
+
+**A block relocated within the decision log was reconstructed from conversational context rather
+than re-extracted from the source**, and it silently lost a trailing separator: `### D-071` hashed
+`371e7127` before and `e4283d60` after.
+
+⚠ **The content looked right.** A reconstruction from memory of a thing one has just read is the
+hardest kind of error to see, because the reader supplies from context exactly what the artifact is
+missing. **The remedy is mechanical: re-extract from the source file, never retype from the
+conversation** — and hash both sides.
+
+---
+
+### F-026 — A verification that shares an implementation with its subject verifies nothing
+
+- **Date:** 2026-08-06 (reserved) · 2026-08-16 (written) · **Status:** Accepted. ⚠ **Recurred on
+  2026-08-16 and was caught by a revert**, which is the only reason it is closable.
+
+**A check built on the same code as the thing it checks cannot disagree with it.**
+
+⚠ **The 2026-08-16 recurrence is the cleanest instance this project has:** a test asserting that
+`fold()` assigns its environment from a dict **performed the assignment loop inside the test itself**.
+It exercised the loop **in the test**, not the one in `fold()` — so reverting `fold()` to the broken
+hand-written version left the test **green**. **A-017 clause (a): the fixture never reached the code
+under test.**
+
+⚠ **The same shape in data:** a residue count read from a field recorded beside a claim cannot
+disagree with the claim; it must be **read out of the artifact** — which is why `reconcile_fold`
+parses the PDB rather than trusting `fold_length`.
+
+**Remedy:** the verifier and the subject must not share an implementation — and where they must
+(a GPU-only path), ⚠ **assert over the subject's SOURCE**, and **prove by revert**, because a revert
+that leaves the suite green is the only way this defect announces itself.
+
+---
+
 ### F-025 — `no_topology` reported an absence that was five different things: a band name that made a claim its filter could not support
 
 - **Date:** 2026-08-07

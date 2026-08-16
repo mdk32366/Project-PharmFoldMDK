@@ -106,21 +106,57 @@ PY
 
 ---
 
-## ⚠ Reserved WITHOUT a number — findings queued behind one free integer
+## ⚠ Reserved WITHOUT a number — CLEARED 2026-08-16
 
-> **These are reservations, not deferrals.** They announce something forward; what they do **not** do
-> is take an integer. ⚠ **`F-025` was claimed in a commit message before it appeared in this register
-> and turned out to be free by luck rather than by procedure** (see `### F-025`, *number verified
-> live*). **Five findings are now queued behind the next free `F-`, and no number is taken under
-> momentum. The owner rules which, if any, is written.**
+> **This section is kept, empty of live entries, rather than deleted.** ⚠ An empty holding pen is a
+> finding — *"the queue was worked through"* — where a removed section reads as *"there was never
+> one."* Same rule as an empty band key versus an omitted one.
 
-| Queued finding | Recorded | What unblocks it |
-|---|---|---|
-| **A topological-domain term from a non-human organism's vocabulary appears in the human membraneome census** — whether this is a cosmetic annotation artifact or a **denominator error affecting counts already published** depends on the organism of the carrying row | `AMENDMENT-Code-2026-08-07-reparse-and-organism-check.md` A2.3, 2026-08-07 | ✅ **The organism check has run and the serious branch is closed.** `P0DKB6` MPC1L is *Homo sapiens*, `taxonId 9606`, **reviewed (Swiss-Prot)**, annex class — so *"7,811 human proteins"* stands in the deck, the literature review and `P-003`, and **no census-wide organism sweep is owed.** ⚠ What remains is cosmetic and is hypothesis 1 or 2: all three of its topological domains cite one source (`PubMed 27317664`, `ECO:0000305` — inferred by curator), and the `Mother cell cytoplasmic` segment at 43-51 sits **between two `Mitochondrial matrix` domains** in *Mitochondrial pyruvate carrier 1-like protein*, which is the shape of **ortholog annotation transfer from a yeast study.** ⚠ Not sourced at first hand. **Changes no count — `Cytoplasmic` and the mitochondrial terms are all rejected regardless.** |
-| **The KEEL absence** | 2026-08-04 → | `KEEL-4-The-Assumption-Register-v1.md` landing |
-| **A verification sharing an implementation with its subject** | 2026-08-06 | Owner ruling |
-| **Derive from source, not from context** | 2026-08-06 | Owner ruling |
-| **An order asking for confirmation invites confirmation** | 2026-08-06 | Owner ruling |
+**Seven were written as `### F-026` … `### F-032` on 2026-08-16.** ⚠ **The owner's instruction was
+to fan out to *the seven that actually occurred*, so the queue was filtered rather than transcribed:**
+
+| written | finding |
+|---|---|
+| `F-026` | a verification sharing an implementation with its subject |
+| `F-027` | derive from source, not from context |
+| `F-028` | an order asking for confirmation invites confirmation |
+| `F-029` | `assert` used as a guard vanishes under an optimisation flag |
+| `F-030` | the unsafe branch was the default, reached by omission |
+| `F-031` | two populations in one table, joined on a key no longer unique |
+| `F-032` | a dry run that does not exercise its consumer's contract |
+
+### ⚠ Two were NOT numbered, and the reason is recorded rather than left to inference
+
+| not numbered | why |
+|---|---|
+| **The KEEL absence** | ⚠ **A missing document, not a defect that fired.** `KEEL-4-The-Assumption-Register-v1.md` has still never been received, and **`A-014` and `A-016` remain blocked on it**. It is a dependency, and it stays in *Status of the documents this register depends on* below — where a reader looking for missing inputs will find it. |
+| **The `P0DKB6` yeast vocabulary** | ⚠ **Resolved, and resolved to cosmetic.** The organism check closed the serious branch: `MPC1L` is *Homo sapiens* `taxonId 9606`, reviewed Swiss-Prot, so **no non-human row is in the census, no denominator moves, and *"7,811 human proteins"* stands.** What remains is an ortholog-transfer annotation artifact that **changes no count** — `Cytoplasmic` and the mitochondrial terms are rejected regardless. It is ruled in `core/span_definition.py`'s `REJECTED_TERMS` and visible in the census glossary. |
+
+### ⚠ And one that occurred TWICE today and was deliberately NOT numbered
+
+**A guard placed downstream of the filter it guards watches nothing.** It fired on the VRAM overrun
+guard (placed after the selector, so it stopped watching exactly the rows the selector excluded —
+the rows it existed for) and on `check_sliced_length` (which, had it run only on the sliced branch,
+would have gone green on 3,468 whole-sequence folds).
+
+⚠ **Not numbered because the instruction was seven, and taking an eighth integer under momentum is
+the `F-025` defect repeating.** It is recorded here so the next numbering ruling has it in hand.
+
+---
+
+## ⚠ F-025's provenance defect, recorded because the number was right by luck
+
+**`### F-025` was claimed in commit `ba1e687` and in PR #133 on the strength of a chat message, and
+it appeared NOWHERE in this register, the log or `ARCHITECTURE.md` at the time** — zero occurrences.
+
+⚠ **The integer happened to be free.** Highest written was `F-020`; `F-021`–`F-024` were
+reserved-unwritten; `F-025` was genuinely next. **So the outcome was correct and the procedure was
+not**, and *"a Planner chat message cannot ratify what a committed document reserved"*
+(`RULINGS-2026-08-07-span-definition.md` R5) is what made it correct rather than merely lucky.
+
+**The register is now in step with the log**: `F-001`–`F-012`, `F-016`, `F-017`, `F-020`,
+`F-025`–`F-032` written; `F-013`, `F-014`, `F-015`, `F-018`, `F-019`, `F-021`–`F-024` still
+reserved-unwritten below. ⚠ **Next free `F-` integer: `F-033`.**
 
 ---
 
