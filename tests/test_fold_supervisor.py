@@ -209,3 +209,21 @@ def test_an_injected_fold_fn_is_never_replaced_by_the_supervisor(monkeypatch):
           fold_fn=sentinel, run_worker_fn=fake_run_worker)
     # the callable handed to run_worker closes over fold_from_spec, so assert via the closure
     assert seen["cb"] is not None
+
+
+def test_the_startup_banner_survives_every_windows_console_codepage():
+    """⚠ The banner is the ONLY confirmation that the layer-3 switch took, and it is read in a
+    plain PowerShell window whose codepage nobody controls.
+
+    ⚠⚠ **Proven, not assumed:** an em dash raises `UnicodeEncodeError` on **cp437** and the worker
+    would **die at startup** — a startup message that kills the process it announces. Asserted over
+    the SOURCE, so the guard survives the banner text being edited."""
+    import re
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parent.parent / "worker" / "main.py"
+    banners = re.findall(r'print\("\[worker\][^"]*"', src.read_text(encoding="utf-8"))
+    assert banners, "no [worker] banners found — the guard has lost its subject"
+    for line in banners:
+        for enc in ("cp437", "cp850", "cp1252", "ascii"):
+            line.encode(enc)  # raises UnicodeEncodeError if a non-ASCII char creeps back in

@@ -158,7 +158,11 @@ def run(
     # ⚠ Opt-in, and the choice is LOGGED rather than silent: a fold path that changed topology
     # without saying so would make an unexplained failure much harder to attribute later.
     if os.environ.get("WORKER_FOLD_IN_CHILD") == "1" and fold_fn is fold:
-        print("[worker] D-082 layer 3 ENABLED — folding in a child process", flush=True)
+        # ⚠ ASCII ONLY, and that is load-bearing. This banner is the ONLY confirmation that the
+        # switch took, and the worker runs in a plain PowerShell window whose codepage we do not
+        # control: an em dash here raises UnicodeEncodeError on cp437 and the worker DIES AT
+        # STARTUP. A startup message that can kill the process it announces is worse than none.
+        print("[worker] D-082 layer 3 ENABLED - folding in a child process", flush=True)
         fold_fn = _supervised_fold_fn()
     else:
         print("[worker] D-082 layer 3 off (set WORKER_FOLD_IN_CHILD=1 to enable)", flush=True)
