@@ -1,6 +1,6 @@
 {
   "source_manifest": "census_manifest.v7.csv",
-  "source_manifest_sha256": "9ecee249b2474c60ec4190a4c370269a44a3b1f94a6286e890092c5255e8fea7",
+  "source_manifest_sha256": "fd80d65df8b3acf59ce9faa135275dc75eac6caf7f4fc2a2cbc5399d3f970d07",
   "derived_on": "cache-only; no network fetch",
   "rows": 3467,
   "\u26a0 scope": "NAMES ONLY \u2014 no span, fold or artifact is altered by this file"

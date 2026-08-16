@@ -20,6 +20,31 @@ import pytest
 REPO = pathlib.Path(__file__).resolve().parent.parent
 
 
+# ⚠⚠ THE SPANCACHE IS GITIGNORED (`.gitignore:234`) — 5,009 UniProt entries, deliberately not in
+# the repo. The first version of this file called `ing.manifest_rows(1)` and let `build_row` read
+# the real cache, so **it passed only on the author's machine and turned CI red on every run**:
+# `SystemExit: no cache entry for P51677`. A test that depends on an artifact not in the repo is a
+# test only one person can run, and a green local gate that CI cannot reproduce is not a gate.
+#
+# ⚠ The fix is a SYNTHETIC row, not a skip. What is under test is the CLAIM CONTRACT — which keys
+# the payload must carry — and that needs no real UniProt entry. Skipping would have left the
+# ten-stranded-jobs regression unguarded everywhere except one laptop.
+@pytest.fixture
+def census_row(monkeypatch):
+    """One manifest row + its sequence, entirely in-memory. ⚠ No cache, no network, no DB."""
+    import scripts.census_ingest as ing
+    row = {
+        "census_accession": "TEST0001", "tranche": "1", "tier": "local",
+        "span_aa": "12", "span_start": "5", "span_end": "16",
+        "boundary_method": "sliced_ecd", "census_class": "surface", "band": "local",
+        "tier_reason": "", "span_rule": "vocabulary", "guards": "", "fold_order": "1",
+        "span_definition": "v2-ruled-vocabulary-2026-08-07",
+    }
+    # ⚠ 20 residues so the 5..16 slice is real; the slice check must still be exercised.
+    monkeypatch.setattr(ing, "sequence_from_cache", lambda acc: "MKTAYIAKQRQISFVKSHF")
+    return row
+
+
 def _keys_read_by_build_fold_spec() -> tuple[set[str], set[str]]:
     """The `s[...]` and `meta[...]` keys `app/artifacts.py:build_fold_spec` actually subscripts.
 
@@ -42,11 +67,11 @@ def test_the_scan_finds_the_keys_rather_than_passing_on_an_empty_set():
     assert "sequence" in meta_keys, meta_keys
 
 
-def test_the_ingest_payload_supplies_every_key_claim_subscripts():
+def test_the_ingest_payload_supplies_every_key_claim_subscripts(census_row):
     """⚠⚠ THE GUARD. Prove it bites by deleting `model_revision` from the ingest payload — the
     exact defect that stranded ten jobs — and this names the missing key."""
     import scripts.census_ingest as ing
-    row = next(r for r in ing.manifest_rows(1))
+    row = census_row
     payload = ing.build_row(row)
     s_keys, meta_keys = _keys_read_by_build_fold_spec()
     missing_s = s_keys - set(payload["inference_settings"])
@@ -57,27 +82,27 @@ def test_the_ingest_payload_supplies_every_key_claim_subscripts():
     assert not missing_meta, f"meta is missing {sorted(missing_meta)}"
 
 
-def test_a_payload_missing_model_revision_is_refused_before_any_write():
+def test_a_payload_missing_model_revision_is_refused_before_any_write(census_row):
     """⚠ The refusal itself, not just the key check — `assert_claimable` must RAISE, because the
     dry run's job is to fail here rather than let the route fail after a write."""
     import scripts.census_ingest as ing
-    payload = ing.build_row(next(r for r in ing.manifest_rows(1)))
+    payload = ing.build_row(census_row)
     del payload["inference_settings"]["model_revision"]
     with pytest.raises(SystemExit, match="stranding it"):
         ing.assert_claimable(payload)
 
 
-def test_a_payload_with_an_unresolvable_tier_is_refused():
+def test_a_payload_with_an_unresolvable_tier_is_refused(census_row):
     """⚠ D-047: `/claim` raises when `meta['tier']` resolves no recipe. Same failure shape — after
     the claim — so the ingest must refuse first."""
     import scripts.census_ingest as ing
-    payload = ing.build_row(next(r for r in ing.manifest_rows(1)))
+    payload = ing.build_row(census_row)
     payload["meta"]["tier"] = "gpu-go-brrr"
     with pytest.raises(SystemExit, match="resolves no recipe"):
         ing.assert_claimable(payload)
 
 
-def test_a_valid_payload_builds_a_foldspec_with_the_recipe_from_the_tier_table():
+def test_a_valid_payload_builds_a_foldspec_with_the_recipe_from_the_tier_table(census_row):
     """⚠ A-017 clause (c) control: without this, the refusals above would pass under an
     implementation that refuses everything.
 
@@ -85,7 +110,7 @@ def test_a_valid_payload_builds_a_foldspec_with_the_recipe_from_the_tier_table()
     which deliberately does not carry them."""
     import scripts.census_ingest as ing
     from core.contracts import TIER_RECIPE
-    payload = ing.build_row(next(r for r in ing.manifest_rows(1)))
+    payload = ing.build_row(census_row)
     spec = ing.assert_claimable(payload)
     assert spec.dtype == TIER_RECIPE["local"]["dtype"]
     assert spec.chunk_size == TIER_RECIPE["local"]["chunk_size"]

@@ -11,11 +11,19 @@ Regenerating on read would hide the change: a surface that silently re-derived w
 different numbers on two loads with nothing saying why, and derivation would happen inside a request
 nobody asked to do work. **So the mismatch becomes a stated category** and a human runs the script.
 
-## ⚠ Hashed on CONTENT, not on mtime
+## ⚠⚠ Hashed on NORMALISED content — not on mtime, and NOT on raw bytes
 
-A file copied, checked out, or restored from a zip has a new mtime and identical content. `mtime`
-would cry stale on a `git checkout` and stay quiet on an in-place edit that preserved it — **wrong
-in both directions.** The sha256 of the bytes is the only claim worth storing.
+`mtime` is wrong in both directions: a file copied, checked out or restored from a zip has a new
+mtime and identical content, so mtime would cry stale on a `git checkout` and stay quiet on an
+in-place edit that preserved it.
+
+**Raw bytes are wrong too, and the first version of this module used them.** Git converts line
+endings on checkout, so the same committed file is **CRLF on Windows and LF on Linux**. The stamp
+was written on Windows at `9ecee249…` and read on the Linux CI runner as `fd80d65d…`, so **every
+derivation reported itself stale on every CI run** — the identical *wrong-in-both-directions*
+failure this docstring criticises mtime for, rebuilt one layer down.
+
+⚠ **The content of a text file is what it says, not which bytes the platform stores it in.**
 """
 
 from __future__ import annotations
@@ -37,12 +45,17 @@ STALE = "derivation_stale"
 UNSTAMPED = "derivation_unstamped"
 ABSENT = "derivation_absent"
 
+#: ⚠ CRLF → LF before hashing. See the module docstring: without this the stamp is
+#: platform-dependent and CI is red on every run.
+_CRLF = b"\r\n"
+_LF = b"\n"
+
 
 def file_sha256(path: Path) -> Optional[str]:
-    """sha256 of a file's bytes, or `None` if it is not there. ⚠ Never raises on absence."""
+    """sha256 of a file's content, **line endings normalised**. `None` if absent; never raises."""
     if not path.is_file():
         return None
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashlib.sha256(path.read_bytes().replace(_CRLF, _LF)).hexdigest()
 
 
 def stamp(manifest: Path, extra: Optional[dict] = None) -> dict:
