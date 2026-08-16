@@ -130,6 +130,91 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-082 — A fold that exceeds VRAM must fail as a job, not as a bugcheck: three layers, and the outermost is not ours
+
+- **Date:** 2026-08-16
+- **Status:** Accepted. **Ruled before the crank runs and before any re-measurement.** ⚠ **Void if
+  code precedes it** (D-075 / D-077 / D-079 precedent).
+- **Type:** A **decision**. It rules how the fold path fails, and it forecloses the assumption every
+  existing instrument is built on.
+- **⚠ Number verified live, not inherited.** Highest `### D-` written was **D-081**; `D-010`,
+  `D-078` and `D-080` are reserved and unwritten; `D-082` appears nowhere in the log, `RESERVED.md`
+  or `ARCHITECTURE.md`. **Confirmed by reading for a `### D-082` header, not for a reference to one**
+  (method note item 7).
+- **Provenance (D-016):** the Windows System event log, `nvidia-smi`, `torch.cuda.mem_get_info`, and
+  `data/census/determinism_control.int8.json`. The crash was reported by the owner at the keyboard
+  and confirmed independently in the event log. Detail:
+  `docs/FINDING-2026-08-16-fp16-bugchecks-the-host.md`.
+
+- **Context.** Task 4a's fp16 probe took the **host** down mid-fold — bugcheck `0x0000001e`
+  (`KMODE_EXCEPTION_NOT_HANDLED`) with `0xC0000005`, Kernel-Power 41, unclean reboot. **Host RAM was
+  not the constraint** (31.5 GB total, 22 GB free at rest). ⚠ **On WDDM, an allocation that exceeds
+  VRAM is not refused — the driver spills into shared system memory**, and under pressure that path
+  faulted in kernel mode.
+
+  ⚠⚠ **Every instrument we have assumes the opposite.** `worker/ceiling_probe.py:_attempt` is
+  `except Exception → OOM`; `worker/main.py`'s loop reports `fail()` and continues. **Neither runs.
+  There is no process left.** A probe built to survive its own failure mode did not survive it, and
+  its append-only resume file — written *before* each fold precisely so a halt is recoverable — came
+  back as **55 bytes of `\0`**, because a hard reset does not flush the page cache.
+
+  ⚠ **And the headroom is smaller than the card's label.** `mem_get_info` reports **7,043 MiB free of
+  8,150** — the card drives a display, and context plus driver reservations take ~1.1 GB. **int8 at
+  416 aa peaked at 7,658 MiB by `nvidia-smi`**, which is *above* that budget: **the fold that
+  succeeded may already have been spilling.** It survived; that is not the same as being safe.
+
+- **Decision — three layers, and they are ordered by who owns them.**
+
+  1. ⚠⚠ **Driver (OWNER ACTION, and nothing else works without it).** Set NVIDIA **CUDA → Sysmem
+     Fallback Policy = "Prefer No Sysmem Fallback"** for the venv's `python.exe`. With fallback off
+     the driver **returns `CUDA out of memory`** instead of spilling. **This is the only layer that
+     addresses the mechanism that actually killed the host; the other two are defence in depth.**
+  2. **Allocator.** `torch.cuda.set_per_process_memory_fraction(f)` so the caching allocator raises
+     `torch.cuda.OutOfMemoryError` **in Python** at a cap below physical VRAM. ⚠ **Not total** —
+     cuBLAS/cuDNN workspaces and the CUDA context do not all route through it, so this is a strong
+     guard and not a proof, and it is recorded as such.
+  3. **Process.** Fold in a **child process**, so a hard child death (abort, driver reset, allocator
+     kill) leaves the parent alive to record a **named** outcome. ⚠ **It does not survive a
+     bugcheck — nothing does.** It converts every failure *short* of one from "the worker vanished"
+     into a job result.
+
+- **And the crank REFUSES rather than attempts.** A pre-flight budget check reads `mem_get_info()`
+  and compares it against a **measured** requirement for that length and recipe. ⚠ **An absent
+  measurement is a CATEGORY, not a green light**: a length with no curve is routed out, never tried.
+
+- **`HOST_DOWN` is a real outcome and the instrument cannot self-report it.** It is inferred, not
+  observed: ⚠ **a job left `claimed`/`running` across a restart is evidence of a host death**, and
+  the crank must look for one on startup and refuse to continue silently. **Its absence is not proof
+  of health.**
+
+- **⚠ Every fold records its peak VRAM, and `nvidia-smi` is not the instrument.** `used` is
+  *reserved* — inflated by the caching allocator's retained pool. `reset_peak_memory_stats()` with
+  `max_memory_allocated()` and `max_memory_reserved()` goes on the fold record beside the recipe.
+
+- **⚠ Options rejected:**
+  - **Catch the OOM better.** There is nothing to catch. The kernel faulted; the process is gone.
+    **Any design whose safety rests on an `except` is unsound on this platform.**
+  - **Trust `known_good = 440`.** It came from S-004/S-005 and ⚠ **it is not recorded which driver
+    measured it.** A ceiling is valid only under the recipe **and the stack** that produced it —
+    D-077 dec 3's rule, applied one level lower than it was written for.
+  - **Probe fp16 again on this host.** ⚠ **A bugcheck is not a data point worth buying twice**, and
+    n=1 is not a ceiling.
+
+- **Deep-learning justification.** Protective of the graded deliverable rather than neutral to it.
+  The census fold is the neural core's only application at scale, and ⚠ **an unclean host death
+  mid-crank leaves partial state whose completeness cannot be established afterwards** — folds that
+  ran, jobs that were claimed, artifacts half-written. **A run that cannot say what it did is not a
+  run that can be reported.**
+
+- **Consequences.** ⚠ **`known_good = 440` is in question on this driver and is re-measured under
+  the caps before the crank**, at int8, with peak *allocated* recorded. If real headroom is near
+  int8's demand, a large part of the manifest's **2,691 local-band rows** belongs on rental — **a
+  cost decision, ruled on the re-measurement and not on today's two points.** The tranche's longest
+  span folds once as a **canary** before the crank, ⚠ **recorded as a separate pre-flight fold** so
+  the seeded order is not disturbed.
+
+---
+
 ### D-081 — The span definition is frozen for the 82, permanently: two definitions exist from today, both named, and no artifact compares them without saying which
 
 - **Date:** 2026-08-07
@@ -188,6 +273,30 @@ So the rule is not "be careful" — it is:
   - **Amend `### F-004` to the new numbers.** ⚠ **D-074: corrections are recorded openly, never
     patched into a sealed result.** An amended F-004 would read as though it had always said that,
     and the disagreement between the two definitions — which is itself the finding — would vanish.
+
+> #### ⚠ AMENDMENT, 2026-08-07 — the scope of this freeze, written openly rather than assumed
+>
+> **`### D-081` freezes measured results and forbids re-running them. It does not preserve a defect
+> that fires only on inputs the cohort does not contain.**
+>
+> ⚠ **Letting a procedural rule create a scientific hazard is the rule failing, not the rule
+> working.** `core/enqueue.py:_fold_input` branched on `boundary_method == "sliced_ecd"` and **fell
+> through to fold the whole sequence** for every other value — `""`, `None`, or any string a future
+> caller invented. `whole` is a legitimate recorded outcome, so the artifacts would have been
+> internally consistent while describing the wrong molecule. That is a fail-open default in a code
+> path that will never run against the cohort again, and it is now a raise.
+>
+> **Authorised by the owner on one condition, and the condition was proved BEFORE the change**
+> (`tests/test_enqueue_boundary_method.py`): every cohort row carries a recognised
+> `boundary_method`. Measured from two independently-read sources —
+> the manifest built from `data/cohort_82_ecd.csv`: **`sliced_ecd` 69 · `whole` 13 · unrecognised
+> 0**; the live `protein_analyses` rows: **`sliced_ecd` 67 · `whole` 13 · unrecognised 0**, and
+> `meta[boundary_method]` agrees with `meta[source]` on all 80. **69 → 67 reconciles exactly:**
+> MUC16 and FAT2 are the two named exclusions never enqueued (D-026).
+>
+> ⚠ **So the change cannot alter cohort behaviour by construction.** No stored artifact moves, no
+> re-run is authorised, and nothing about the frozen results changes. **What changes is that a value
+> the cohort never contained now costs a raise instead of a silent 2,000-residue fold.**
 
 - **Deep-learning justification.** Neutral to the neural core and protective of its evaluation. The
   graded deliverable rests on a pre-registered ablation whose validity depends on the measured inputs
@@ -288,6 +397,77 @@ So the rule is not "be careful" — it is:
 - ⚠ **Both foldable counts are FLOORS, not populations.** `2,352` surface and `332` annex count only
   proteins with an explicitly *extracellular* span. **The surface class leaks too** — 106 surface
   proteins have a reachable face and are counted today as having none.
+
+- ⚠⚠ **AND MECHANISM 5 WAS ALREADY KNOWN — IN A DOCSTRING — FOR THREE WEEKS.** `core/manifest.py`'s
+  module docstring, written for **D-024 v** on 2026-07-22, says in as many words:
+
+  > *SDK1 (Q7Z5N4) has n_spans==1 but null bounds (`None-2009(None)`), so it is `whole` — keying off
+  > n_spans would slice a None (D-024 v).*
+
+  **The behaviour was correct.** The manifest routed SDK1 to a whole-sequence fold rather than
+  slicing a null, and it named the accession, the shape and the hazard. ⚠ **What was wrong was the
+  LABEL, and the label is what everyone read.** The band went on calling it `no_topology` — an
+  absence of topology — while the code three modules away knew the topology was present and only a
+  coordinate was missing. **Mechanism 5 had to be rediscovered from the other end, by an audit that
+  found thirteen where the order said twelve.**
+
+  ⚠ **This is KEEL-4's Principle 11 scar verbatim: a hazard written into a code comment and left
+  live for weeks, because writing it down felt like handling it.** **Recording a hazard in a
+  docstring is not guarding it.** The guard is the category — `span_boundary_unknown` — and it did
+  not exist until today. **No number is taken for this; it is a clause of this finding.**
+
+- ⚠⚠ **AND THE SIXTH MECHANISM WAS IN THE FIX, NOT IN THE FILTER — `Q13421` MSLN.** The GPI span
+  rule selected the mature chain by `min(Chain start)`, which on mesothelin took **37** and produced
+  a **561 aa** span. Mesothelin is made as a precursor: the N-terminal megakaryocyte-potentiating
+  factor is cleaved and **secreted**, so ~250 of those residues are never on the cell. ⚠ **On the
+  protein this finding is named after, and it would have folded, scored, banded and looked entirely
+  normal.** `P51654`'s −195 and MSLN's +250 are the same defect at opposite ends of the molecule —
+  rule B was barred for over-reading the C-terminus, and this is its N-terminal twin, **live while
+  B never fired.**
+
+  ⚠ **The first correction was also wrong, and it is recorded rather than replaced.** Selecting the
+  chain whose **end** coincides with the anchor conflated two jobs — disambiguating among chains,
+  and testing whether a chain is valid at all — and it **excluded `P06731` CEACAM5, one of
+  `### F-009`'s four clinically-validated missing targets, on a nine-residue end mismatch at a
+  boundary rule A never reads.** An exclusion on annotation *form* rather than on biology.
+  **The Planner wrote that ruling and corrected it.**
+
+  The rule is now one rule: **the chains that CONTAIN the anchor; among them, the LATEST start.**
+  ⚠ Latest start is conservative, not arbitrary: annotating both `Mesothelin` 37-598 and
+  `Mesothelin, cleaved form` 296-598 is an assertion that 37-295 *can be removed*. **The rule can
+  only under-read, and over-reading is what folds things that are not there.** MSLN lands at
+  **302 aa**, the mature form the ADCs bind; CEACAM5 returns at **641 aa**.
+
+- ⚠⚠ **THE LARGEST CLAUSE, AND IT IS NOT ABOUT THE FILTER: THE CENSUS FOLD PATH WOULD HAVE FOLDED
+  3,468 FULL-LENGTH SEQUENCES INSTEAD OF EXTRACELLULAR DOMAINS.** `core/enqueue.py:81` branched on
+  `boundary_method`, **not on the presence of coordinates**. The safe branch required the exact
+  literal `"sliced_ecd"`; **the unsafe branch was the default, reached by omission.** Measured
+  2026-08-07 — a census row carrying `span_aa=302` and no coordinates:
+
+  ```
+  boundary_method='sliced_ecd'  -> AssertionError raised                    ✅
+  boundary_method='whole'       -> folded 2000 residues, source='whole'   ⚠ nothing red
+  boundary_method=''            -> folded 2000 residues, source='whole'   ⚠ nothing red
+  boundary_method='census_span' -> folded 2000 residues, source='whole'   ⚠ nothing red
+  boundary_method=None          -> folded 2000 residues, source='whole'   ⚠ nothing red
+  ```
+
+  **And the census manifest carried no `boundary_method` column at all**, so any ingest would have
+  had to supply one. ⚠ **`whole` is a legitimate recorded outcome** — D-024 routes whole-method
+  targets to it — so every artifact would have been internally consistent: fold succeeds, recipe
+  recorded, provenance intact, `source='whole'`. **Describing the wrong molecule, 3,468 times, with
+  nothing red anywhere.**
+
+  ⚠ **Found because a specified content-hash tuple named `span_start` and `span_end`, and building
+  it found there were none.** A specification acting as an audit. The manifest had only `span_aa` —
+  **a length, which cannot slice a sequence.**
+
+- ⚠ **A reporting trap this produced, recorded because it nearly passed.** Manifest revision 1 and
+  revision 3 have **identical membership (3,468) and an identical fold order — 3,468 of 3,468 —
+  while two spans differ**: `P51654` 529→195 and `Q13421` 561→302. The seeded shuffle keys on the
+  accession set, not on span values, so **an unchanged fold order is not evidence of an unchanged
+  manifest.** A reader diffing the two by row count, membership or order would have concluded that
+  nothing moved, on the revision where the whole point of the day's work moved.
 
 - **Consequences.** The band is renamed to what it measures; the vocabulary, the GPI rule and the
   coordinate category are ruled in `RULINGS-2026-08-07-span-definition.md` and implemented against the

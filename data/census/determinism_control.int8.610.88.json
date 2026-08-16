@@ -1,0 +1,112 @@
+{
+  "accession": "Q8WXD0",
+  "gene_hint": "surface",
+  "tier": "local",
+  "dtype": "int8",
+  "chunk_size": 64,
+  "repeat": 2,
+  "manifest": "census_manifest.v6.csv",
+  "manifest_span_aa": 416,
+  "span_start": 1,
+  "span_end": 416,
+  "sliced_length": 416,
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "span_starts_at_residue_1": true,
+  "gpu_before": {
+    "used_mib": 0,
+    "total_mib": 8151
+  },
+  "layers": {
+    "layer1_sysmem_fallback": {
+      "state": "unknown",
+      "why": "the NVIDIA Sysmem Fallback Policy is a per-application driver setting with no supported query interface; it is OWNER ACTION and cannot be confirmed from code",
+      "owner_action": "NVIDIA Control Panel -> Manage 3D Settings -> Program Settings -> the venv's python.exe -> CUDA - Sysmem Fallback Policy -> 'Prefer No Sysmem Fallback'",
+      "why_it_matters": "without it, exceeding VRAM SPILLS to shared system memory instead of raising, and the failure is a host bugcheck rather than an exception",
+      "owner_attested_set": true,
+      "attestation_note": "the owner states the policy is set for BOTH the venv stub and the base interpreter. \u26a0 This is testimony, not a measurement, and it is labelled as such."
+    },
+    "layer2_allocator_cap": {
+      "applied": false,
+      "why": "deliberately uncapped: this run MEASURES the demand that decides the cap, so capping it would be circular (D-082 pre-registration \u00a73)"
+    },
+    "layer3_child_process": {
+      "applied": false,
+      "why": "not wired into the fold path yet \u2014 stated, not implied"
+    }
+  },
+  "cuda_mem_get_info_before": {
+    "free_mib": 7043,
+    "total_mib": 8150
+  },
+  "limitations": [
+    "Covers the FOLD KERNEL only, not the enqueue path. Not end-to-end determinism (R12).",
+    "Determinism verified on a span BEGINNING AT RESIDUE 1. Only 410 of 3,467 manifest rows (11.8%) begin there; for proteins whose census span starts at a non-1 residue the probe was not directly exercised, though the kernel property is expected to generalise. Stated, not softened.",
+    "Any ceiling touched here is SINGLE-PROCESS headroom: runner._MODEL_CACHE is module-level and per-process, so a probe and a worker folding concurrently hold two copies of the weights on one card.",
+    "NO CROSS-RECIPE COMPARISON IS READ. D-078 is unwritten."
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "wall_clock_s": 73.44,
+      "ca_residues_in_pdb": 416,
+      "plddt_len": 416,
+      "mean_plddt": 74.81,
+      "gpu_after": {
+        "used_mib": 6962,
+        "total_mib": 8151
+      },
+      "peak_vram": {
+        "max_allocated_mib": 6527,
+        "max_reserved_mib": 7174
+      },
+      "cuda_mem_get_info_after": {
+        "free_mib": 173,
+        "total_mib": 8150
+      },
+      "nvidia_driver_version": "610.88",
+      "comparator_digest": "b23f4210fcc6077fa2d5f5428e461e2a94804f44fbbbedc3f5637129f78f90a8",
+      "recipe_recorded": {
+        "dtype": "int8",
+        "chunk_size": 64
+      }
+    },
+    {
+      "attempt": 2,
+      "wall_clock_s": 62.6,
+      "ca_residues_in_pdb": 416,
+      "plddt_len": 416,
+      "mean_plddt": 74.81,
+      "gpu_after": {
+        "used_mib": 6962,
+        "total_mib": 8151
+      },
+      "peak_vram": {
+        "max_allocated_mib": 6527,
+        "max_reserved_mib": 6830
+      },
+      "cuda_mem_get_info_after": {
+        "free_mib": 173,
+        "total_mib": 8150
+      },
+      "nvidia_driver_version": "610.88",
+      "comparator_digest": "b23f4210fcc6077fa2d5f5428e461e2a94804f44fbbbedc3f5637129f78f90a8",
+      "recipe_recorded": {
+        "dtype": "int8",
+        "chunk_size": 64
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "pair": [
+        1,
+        2
+      ],
+      "identical": true,
+      "divergence": "identical"
+    }
+  ],
+  "comparator_sidecar": "data\\census\\determinism_control.int8.610.88.folds.json",
+  "deterministic": true,
+  "verdict": "IDENTICAL across all pairs \u2014 the kernel is deterministic at this recipe"
+}

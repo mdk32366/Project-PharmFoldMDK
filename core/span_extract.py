@@ -18,7 +18,10 @@ from typing import Any, Optional
 
 from core.span_definition import (
     ABSENT_WITH_REASON, GUARD_CHAIN_OVERRUNS_ANCHOR, GUARD_CHAIN_START_AMBIGUOUS,
-    NO_EXTRACELLULAR_SPAN, REASON_GPI_NO_CHAIN, REASON_GPI_POSITION_UNANNOTATED, RULE_GPI_A,
+    GUARD_CHAIN_SHORTER_THAN_LONGEST, GUARD_SPAN_HOLDS_REJECTED_DOMAIN,
+    GUARD_SPAN_OVERLAPS_TM, NO_EXTRACELLULAR_SPAN, REASON_SPAN_CONTAINS_TRANSMEMBRANE,
+    REASON_GPI_NO_CHAIN, REASON_GPI_NO_CHAIN_SPANS_ANCHOR,
+    REASON_GPI_POSITION_UNANNOTATED, RULE_GPI_A,
     RULE_VOCABULARY, SPAN_BOUNDARY_UNKNOWN, TERM_UNRULED, V2_RULED_VOCABULARY, classify_term,
 )
 
@@ -27,6 +30,11 @@ from core.span_definition import (
 class SpanResult:
     """One protein's span under V2. ⚠ `span_aa` and `category` never both carry a value."""
     span_aa: Optional[int] = None
+    #: ⚠ THE COORDINATES, not just the length. A length cannot slice a sequence — `core/manifest.py`
+    #: has carried `ecd_start`/`ecd_end` for the 82 since D-024, and the census manifest was built
+    #: with only `span_aa`, which means nothing downstream could actually have cut anything from it.
+    span_start: Optional[int] = None
+    span_end: Optional[int] = None
     rule: str = ""
     category: str = ""
     reason: str = ""
@@ -40,6 +48,14 @@ class SpanResult:
     definition: str = V2_RULED_VOCABULARY
 
     def __post_init__(self) -> None:
+        if self.span_aa is not None and (self.span_start is None or self.span_end is None):
+            raise ValueError(
+                f"a span without coordinates cannot be sliced: span_aa={self.span_aa!r} "
+                f"start={self.span_start!r} end={self.span_end!r}")
+        if self.span_aa is not None and self.span_end - self.span_start + 1 != self.span_aa:
+            raise ValueError(
+                f"the coordinates do not reconcile with the length: "
+                f"{self.span_start}-{self.span_end} is not {self.span_aa} aa")
         if (self.span_aa is None) == (not self.category):
             raise ValueError(
                 f"a SpanResult must carry exactly one of a span or a category, not both and not "
@@ -76,21 +92,73 @@ def gpi_lipidation(data: dict) -> list[dict]:
 
 
 def mature_chain_bounds(data: dict) -> tuple[Optional[int], Optional[int]]:
-    """`min(start)`, `max(end)` over every `Chain`.
+    """`min(start)`, `max(end)` over every `Chain`. ⚠ DIAGNOSTIC ONLY — see `divergence`.
 
-    ⚠ **Not `Chain[0]`.** A proteolytically processed protein carries several `Chain` records, and
-    taking the first produced a **negative** rule-A-minus-rule-B divergence on `P51654` during the
-    pre-registration — an artifact of the pick, not a property of the data.
+    ⚠ **This is NOT the span selector and must never be used as one.** It was, and on `Q13421`
+    MSLN it produced a 561 aa span carrying ~250 residues of the megakaryocyte-potentiating factor,
+    which is cleaved off and secreted. `mature_chain_at_anchor` is the selector.
     """
     starts = [s for f in _features(data, "Chain") for s in (_bounds(f)[0],) if s is not None]
     ends = [e for f in _features(data, "Chain") for e in (_bounds(f)[1],) if e is not None]
     return (min(starts) if starts else None, max(ends) if ends else None)
 
 
+def mature_chain_at_anchor(data: dict, anchor: Optional[int]) -> tuple[Optional[int], str, float]:
+    """`(start, "", ratio)` of the mature GPI chain, or `(None, reason, 1.0)`.
+
+    ⚠ **The chains that CONTAIN the anchor; among them, the LATEST start.** A GPI anchor is attached
+    to a residue *inside* the mature chain, so containment — not a coincident end — is the test that
+    a chain is the anchored species.
+
+    ⚠ **This corrects a first ruling that tested for a coincident END.** That version excluded
+    `P06731` CEACAM5 — chain 35-685, anchor 676 — on a nine-residue mismatch at a boundary rule A
+    never reads. **A clinically-validated ADC target, dropped on annotation form rather than on
+    biology.**
+
+    ⚠ **Latest start can only under-read.** Where UniProt annotates both `Mesothelin` 37-598 and
+    `Mesothelin, cleaved form` 296-598, it is asserting that 37-295 *can be removed* — so those
+    residues are not reliably on the surface, and folding them would be folding something that is
+    not there. On MSLN this lands on 296-597: the mature form the ADCs bind.
+
+    The returned `ratio` is selected-span ÷ longest-candidate-span, recorded rather than thresholded.
+    """
+    if anchor is None:
+        return None, REASON_GPI_POSITION_UNANNOTATED, 1.0
+    starts = [s for s, e in ((_bounds(c)) for c in _features(data, "Chain"))
+              if s is not None and e is not None and s <= anchor <= e]
+    if not starts:
+        return None, REASON_GPI_NO_CHAIN_SPANS_ANCHOR, 1.0
+    selected, longest = anchor - max(starts), anchor - min(starts)
+    return max(starts), "", (selected / longest if longest else 1.0)
+
+
 def _chain_starts_disagree(data: dict) -> bool:
     """⚠ More than one `Chain` with DIFFERENT starts — the mature N-terminus is ambiguous."""
     starts = {b for b in (_bounds(f)[0] for f in _features(data, "Chain")) if b is not None}
     return len(starts) > 1
+
+
+def span_contradicted_by_record(data: dict, start: int, end: int) -> list[str]:
+    """⚠ R10. Which clauses say this span contradicts its own entry. Empty means neither.
+
+    Not a heuristic and not a plausibility check — **both clauses read the SAME record that produced
+    the span** and ask whether it also asserts something incompatible. A span cannot be a soluble
+    extracellular domain and contain a membrane-crossing helix, and it cannot face outward while
+    holding a domain annotated as facing inward.
+    """
+    fired: list[str] = []
+    for f in _features(data, "Transmembrane"):
+        ts, te = _bounds(f)
+        if ts is not None and te is not None and start <= te and ts <= end:
+            fired.append(GUARD_SPAN_OVERLAPS_TM)     # ⚠ ANY overlap, not containment
+            break
+    for f in _features(data, "Topological domain"):
+        ts, te = _bounds(f)
+        if (ts is not None and te is not None and start <= ts and te <= end
+                and classify_term(f.get("description", "") or "") == "rejected"):
+            fired.append(GUARD_SPAN_HOLDS_REJECTED_DOMAIN)
+            break
+    return fired
 
 
 def extract(data: dict) -> SpanResult:
@@ -112,6 +180,7 @@ def extract(data: dict) -> SpanResult:
     held: list[str] = []
     boundary: list[str] = []
     best: Optional[int] = None
+    best_bounds: tuple[Optional[int], Optional[int]] = (None, None)
 
     for f in _features(data, "Topological domain"):
         desc = f.get("description", "") or ""
@@ -131,42 +200,51 @@ def extract(data: dict) -> SpanResult:
             continue
         n = e - s + 1
         if best is None or n > best:
-            best = n
+            best, best_bounds = n, (s, e)
 
     if best is not None:
-        return SpanResult(span_aa=best, rule=RULE_VOCABULARY,
-                          terms_unruled=unruled, terms_held=held)
+        contradicted = span_contradicted_by_record(data, best_bounds[0], best_bounds[1])
+        if contradicted:
+            # ⚠ EXCLUDED, NOT TRUNCATED. The entry cannot be trusted about boundaries, so a
+            # narrower boundary derived from it would be invented rather than measured.
+            return SpanResult(category=ABSENT_WITH_REASON,
+                              reason=REASON_SPAN_CONTAINS_TRANSMEMBRANE,
+                              terms_unruled=unruled, terms_held=held, guards=contradicted)
+        return SpanResult(span_aa=best, span_start=best_bounds[0], span_end=best_bounds[1],
+                          rule=RULE_VOCABULARY, terms_unruled=unruled, terms_held=held)
 
     lip = gpi_lipidation(data)
     if lip:
-        cs, ce = mature_chain_bounds(data)
         pos = _bounds(lip[0])[0]
         guards: list[str] = []
         if _chain_starts_disagree(data):
-            # ⚠ "The first `Chain`" is not a rule. Two census proteins are proteolytically cleaved
-            # into subunits with different starts — `P51654` and `Q13421` MSLN — and the mature
-            # N-terminus this uses (`min`) includes a fragment that is cleaved off and secreted.
-            # That is the SAME defect that barred rule B, at the other end of the molecule. It is
-            # FLAGGED rather than silently decided, because deciding it is a ruling.
+            # ⚠ KEPT LIVE. This guard is what caught the MSLN over-read; it stays on the artifact
+            # after the fix so a `Chain` set the selector does not explain is still visible.
             guards.append(GUARD_CHAIN_START_AMBIGUOUS)
-        if cs is None:
+        _, ce_all = mature_chain_bounds(data)
+        if ce_all is not None and pos is not None and ce_all - pos > 1:
+            # ⚠ EVALUATED BEFORE THE SELECTOR, DELIBERATELY. This guard is what barred rule B, and
+            # the rows it was built for are exactly the ones the selector now EXCLUDES. If it ran
+            # after, it would stop watching them at the moment they became interesting.
+            guards.append(GUARD_CHAIN_OVERRUNS_ANCHOR)
+        if not _features(data, "Chain"):
             return SpanResult(category=ABSENT_WITH_REASON, reason=REASON_GPI_NO_CHAIN,
                               terms_unruled=unruled, terms_held=held, guards=guards)
-        if pos is None:
-            # ⚠ RULE B IS BARRED, so this is where a missing anchor position now lands: NAMED,
-            # excluded, and never defaulted into a span. Under rule B it would have become the full
-            # `Chain` — a chimera of the ectodomain and a cleaved signal.
-            return SpanResult(category=ABSENT_WITH_REASON,
-                              reason=REASON_GPI_POSITION_UNANNOTATED,
+        cs, why, ratio = mature_chain_at_anchor(data, pos)
+        if cs is None:
+            return SpanResult(category=ABSENT_WITH_REASON, reason=why,
                               terms_unruled=unruled, terms_held=held, guards=guards)
-        if ce is not None and ce - pos > 1:
-            # ⚠ THE LIVE GUARD. `Chain` running past the anchor is how rule B was caught.
-            guards.append(GUARD_CHAIN_OVERRUNS_ANCHOR)
+        if ratio < 1.0:
+            # ⚠ The selector had a choice. Flagged, not excluded — same posture as the C-terminal
+            # guard on P08571. The ratio travels on the row so magnitude needs no threshold.
+            guards.append(f"{GUARD_CHAIN_SHORTER_THAN_LONGEST}:{ratio:.3f}")
         if pos - 1 < cs:
             return SpanResult(category=ABSENT_WITH_REASON,
                               reason=REASON_GPI_POSITION_UNANNOTATED,
                               terms_unruled=unruled, terms_held=held, guards=guards)
-        return SpanResult(span_aa=pos - cs, rule=RULE_GPI_A,
+        # ⚠ start → (anchor − 1): the anchored residue itself is the attachment point, not part
+        # of the folded ectodomain.
+        return SpanResult(span_aa=pos - cs, span_start=cs, span_end=pos - 1, rule=RULE_GPI_A,
                           terms_unruled=unruled, terms_held=held, guards=guards)
 
     if boundary:
@@ -208,6 +286,8 @@ def as_row(result: SpanResult) -> dict[str, Any]:
     """The flat output shape. ⚠ An empty string is the ABSENT marker; `0` is never written."""
     return {
         "span_aa": result.span_aa if result.span_aa is not None else "",
+        "span_start": result.span_start if result.span_start is not None else "",
+        "span_end": result.span_end if result.span_end is not None else "",
         "span_rule": result.rule,
         "span_category": result.category,
         "no_span_reason": result.reason,

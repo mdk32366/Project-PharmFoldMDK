@@ -100,10 +100,80 @@ NO_EXTRACELLULAR_SPAN = "no_extracellular_span"
 REASON_GPI_POSITION_UNANNOTATED = "gpi_anchor_position_unannotated"
 REASON_GPI_NO_CHAIN = "gpi_chain_unannotated"
 
+#: ⚠⚠ THE MATURE-CHAIN SELECTOR, ruled 2026-08-07 after a live defect on MSLN.
+#:
+#: A GPI-anchored mature chain is **by definition the one terminating at the anchor** — the
+#: anchor position selects the chain, not the other way round. `min(start)`, `Chain[0]` and
+#: "the longest" are all wrong, and `min(start)` was wrong LIVE: on `Q13421` MSLN it took 37,
+#: carrying ~250 residues of the megakaryocyte-potentiating factor — a fragment that is
+#: cleaved off and **secreted**, so an antibody never meets it — fused to the ectodomain that
+#: matters. ⚠ On the one protein `### F-025` is named after, and it would have folded,
+#: scored, banded and looked entirely normal.
+#:
+#: ⚠ `P51654`'s −195 and MSLN's +250 are the SAME defect at opposite ends of the molecule.
+#: Rule B was barred for over-reading the C-terminus; this is the N-terminal twin, and it was
+#: live while B never fired.
+#:
+#: ⚠⚠ **CORRECTED 2026-08-07, SECOND RULING.** The first selector said *the chain whose END
+#: coincides with the anchor*, and it conflated two different jobs — disambiguating among
+#: chains, and testing whether a chain is valid at all. **It excluded `P06731` CEACAM5, a
+#: clinically-validated ADC target, on a nine-residue end mismatch that rule A never uses.**
+#: An exclusion on annotation FORM rather than on biology.
+#:
+#: The rule is now one rule: **the chains that CONTAIN the anchor; among them, the LATEST
+#: start.** Zero → `gpi_no_chain_spans_anchor`, named and excluded.
+#:
+#: ⚠ **Latest start is conservative, not arbitrary.** If UniProt annotates both 37-598 and
+#: 296-598, it is asserting that residues 37-295 can be removed — so they are not reliably
+#: on the surface. **The rule can only under-read, and over-reading is what folds things that
+#: are not there.** On mesothelin it lands exactly on the mature GPI-anchored form the ADCs
+#: bind: 296-597, 302 aa.
+REASON_GPI_NO_CHAIN_SPANS_ANCHOR = "gpi_no_chain_spans_anchor"
+
+#: ⚠⚠ R10 — a chosen span that the record itself contradicts. **Excluded, not truncated.**
+#:
+#: `Q9BQT9` carries `Extracellular 20-847` overlapping its own `Transmembrane 256-276`, a
+#: `Lumenal 277-364`, and **three** `Cytoplasmic` domains — all inside the chosen span. The
+#: largest-contiguous rule faithfully picks the inconsistent annotation, and we would have folded
+#: **828 residues containing a transmembrane helix, in water — and it would have succeeded.**
+#:
+#: ⚠ **Truncating at 256 would invent a boundary from an entry that cannot be trusted about
+#: boundaries.** That reasoning has now applied five times today.
+#:
+#: **Two clauses, because a contradiction has two shapes:**
+#:   1. any overlap of **≥1 residue** with a `Transmembrane` feature — not only full containment,
+#:      since a half-overlap is the same contradiction
+#:   2. containment of a topological domain in the REJECTED set — an extracellular span holding a
+#:      `Cytoplasmic` domain asserts both faces at once
+#:
+#: ⚠ **Measured before implementation: both clauses catch exactly `Q9BQT9`, 1 of 3,468.** The narrow
+#: version would have sufficed; the widened one costs nothing and is kept, and clause 2
+#: independently corroborates that the entry is internally inconsistent.
+REASON_SPAN_CONTAINS_TRANSMEMBRANE = "span_contains_transmembrane"
+
+#: Which clause fired. ⚠ Recorded separately so "the widened clause never fires" stays checkable
+#: rather than becoming an assumption.
+GUARD_SPAN_OVERLAPS_TM = "span_overlaps_transmembrane"
+GUARD_SPAN_HOLDS_REJECTED_DOMAIN = "span_contains_rejected_domain"
+
 #: ⚠ LIVE GUARDS, not one-off checks. Both of these found a real defect once; a check that runs only
 #: when someone remembers to run it will not find the second one.
 GUARD_CHAIN_OVERRUNS_ANCHOR = "chain_end_exceeds_anchor"
 GUARD_CHAIN_START_AMBIGUOUS = "chain_start_ambiguous"
+
+#: ⚠ Fires when the selected chain is SHORTER than the longest candidate containing the
+#: anchor — i.e. wherever the selector actually had a choice to make. It protects against a
+#: small internal fragment annotated as a `Chain` winning on "latest start".
+#:
+#: ⚠⚠ **DELIBERATELY THRESHOLD-FREE, and that is a measured decision.** Across all 128
+#: GPI-anchored census proteins, **127 have a single candidate start** (ratio 1.000) and
+#: exactly one differs — `Q13421` MSLN at 0.538. **There is nothing here to calibrate a
+#: constant against**: any threshold below 0.538 flags nothing and any threshold above it
+#: flags only MSLN, so the number would be a dial wearing the costume of a measurement.
+#: A threshold could only ever SUPPRESS flags, which is the wrong direction for a guard.
+#: The ratio is recorded on the row instead, so magnitude is visible without a constant
+#: deciding on anyone's behalf.
+GUARD_CHAIN_SHORTER_THAN_LONGEST = "chain_shorter_than_longest_candidate"
 SPAN_BOUNDARY_UNKNOWN = "span_boundary_unknown"
 TERM_UNRULED = "term_unruled"
 ABSENT_WITH_REASON = "absent_with_reason"

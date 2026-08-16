@@ -35,6 +35,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.contracts import TIER_RECIPE
+from core.fold_reconcile import check_sliced_length
 from core.manifest import ManifestRow, build_manifest
 from core.queue import COMPLETE, PENDING
 from db.models import JobRecord, ProteinAnalysis, RankingRun
@@ -75,11 +76,53 @@ class EnqueueSummary:
         return self.created + self.existed
 
 
+class UnrecognisedBoundaryMethod(ValueError):
+    """⚠ A `boundary_method` outside the recognised set. Raised, never defaulted.
+
+    **This class exists because the default used to be the dangerous branch.** `_fold_input`
+    branched on `boundary_method == "sliced_ecd"` and fell through to *fold the whole sequence* for
+    every other value — including `""`, `None`, and any new string a future caller might invent.
+    The `assert` on the coordinates fired **only** on the exact opt-in literal, so the safe path
+    cost a keystroke and the unsafe path cost nothing.
+
+    ⚠ **Measured, 2026-08-07:** a census row carrying `span_aa=302` and no coordinates folded
+    **2,000 residues** and recorded `source='whole'` under `''`, `None`, `'whole'` and
+    `'census_span'` alike. `whole` is a LEGITIMATE recorded outcome, so every artifact would have
+    been internally consistent — fold succeeds, recipe recorded, provenance intact — while
+    describing the wrong molecule **3,468 times**.
+
+    ⚠ Found because a specified content-hash tuple named `span_start`/`span_end` and building it
+    found there were none.
+    """
+
+
+#: ⚠ BOTH ARE OPT-IN NOW. `whole` is a decision a caller makes, not the destination of a
+#: fall-through. There is no `else` that folds anything.
+RECOGNISED_BOUNDARY_METHODS: frozenset[str] = frozenset({SLICED_ECD, WHOLE})
+
+
 def _fold_input(row: ManifestRow, full_sequence: str) -> tuple[str, str]:
-    """(residues_to_fold, source). sliced_ecd → the largest ECD span (1-based,
-    inclusive); whole → the full sequence."""
-    if row.boundary_method == "sliced_ecd":
-        assert row.ecd_start is not None and row.ecd_end is not None
+    """(residues_to_fold, source). `sliced_ecd` → the largest ECD span (1-based, inclusive);
+    `whole` → the full sequence. ⚠ Anything else RAISES.
+
+    ⚠ **`### D-081` does not protect this.** D-081 freezes measured results and forbids re-running
+    them; it does not preserve a fail-open default that fires only on inputs the cohort does not
+    contain. **Proven a no-op before the change** — see `tests/test_enqueue_boundary_method.py`.
+    """
+    method = row.boundary_method
+    if method not in RECOGNISED_BOUNDARY_METHODS:
+        raise UnrecognisedBoundaryMethod(
+            f"{row.accession}: boundary_method {method!r} is not one of "
+            f"{sorted(RECOGNISED_BOUNDARY_METHODS)}. ⚠ There is no default — an unrecognised, "
+            f"empty or absent boundary method used to mean 'fold the whole sequence', which is a "
+            f"legitimate outcome and therefore an invisible error.")
+    if method == SLICED_ECD:
+        if row.ecd_start is None or row.ecd_end is None:
+            # ⚠ Was an `assert`. Asserts vanish under `python -O`, and this is the check standing
+            # between a span and a 2,000-residue fold.
+            raise UnrecognisedBoundaryMethod(
+                f"{row.accession}: boundary_method is {SLICED_ECD!r} but the coordinates are "
+                f"{row.ecd_start!r}-{row.ecd_end!r}. A length cannot slice a sequence.")
         return full_sequence[row.ecd_start - 1: row.ecd_end], SLICED_ECD
     return full_sequence, WHOLE
 
@@ -127,6 +170,12 @@ def enqueue_cohort(
 
         fetched = fetch_sequence(row.accession)
         fold_seq, source = _fold_input(row, fetched.sequence)
+        # ⚠ THE CLAIM IS CHECKED WHERE THE SLICE IS MADE. span and the coordinates are two paths to
+        # one quantity, and this is the first place they can be compared. Raises, never asserts:
+        # an assert vanishes under python -O and this stands between a span and a whole-sequence
+        # fold. A mismatch halts the crank.
+        sliced_length = check_sliced_length(
+            row.accession, source, row.span, fold_seq, len(fetched.sequence))
 
         analysis = ProteinAnalysis(
             input_type="uniprot",
@@ -143,7 +192,7 @@ def enqueue_cohort(
                 "source": source,
                 "uniprot_release": fetched.uniprot_release,
                 "full_length": len(fetched.sequence),
-                "fold_length": len(fold_seq),
+                "fold_length": sliced_length,   # ⚠ the CHECKED length, not a re-measurement
                 "ecd_start": row.ecd_start,
                 "ecd_end": row.ecd_end,
                 "primary_match": row.primary_match,

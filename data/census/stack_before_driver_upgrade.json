@@ -1,0 +1,10 @@
+{
+  "recorded_before_driver_upgrade": "2026-08-16",
+  "nvidia_driver_version": "596.72",
+  "gpu": "NVIDIA RTX PRO 2000 Blackwell Generation Laptop GPU",
+  "vram_total_mib": "8151 MiB",
+  "torch": "2.11.0+cu128",
+  "torch_cuda": "12.8",
+  "transformers": "5.14.1",
+  "note": "\u26a0 THE STACK THAT PRODUCED data/census/determinism_control.int8.json. D-082 rules that a ceiling is valid only under the recipe AND the stack that produced it; the same applies to a determinism verdict. After a driver upgrade this result is scoped to the driver named here and must be re-run, not carried forward."
+}

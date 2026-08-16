@@ -5,18 +5,18 @@
   "rows": 2807,
   "band_split": {
     "bands": {
-      "absent_with_reason": 2,
+      "absent_with_reason": 3,
       "fetch_ineligible:uniprot_inactive": 7,
       "no_extracellular_span": 215,
       "span:gpi_rule_A": 124,
-      "span:vocabulary": 2458,
+      "span:vocabulary": 2457,
       "span_boundary_unknown": 1
     },
     "denominator_total_rows": 2807,
     "denominator_fetched": 2800,
     "denominator_fetch_ineligible": 7,
     "denominator_fetch_failed": 0,
-    "foldable": 2582,
+    "foldable": 2581,
     "foldable_v1": 2352
   },
   "gains": {
@@ -25,7 +25,13 @@
       "vocabulary": 106
     },
     "gained_total": 230,
-    "changed_existing_spans": []
+    "changed_existing_spans": [
+      [
+        "Q9BQT9",
+        "828",
+        "LOST"
+      ]
+    ]
   },
   "note": "fetched_on and uniprot_release are carried from the V1 rows unchanged; only the parse differs"
 }

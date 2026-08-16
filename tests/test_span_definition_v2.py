@@ -119,7 +119,10 @@ def test_a_gpi_protein_whose_anchor_precedes_the_chain_start_is_named_not_defaul
     """The other unusable-position shape. ⚠ Under rule B this became the full `Chain`."""
     r = extract(entry(chain(100, 400), lipid(50)))
     assert r.span_aa is None, f"an unusable anchor position produced a span: {r}"
-    assert r.reason == REASON_GPI_POSITION_UNANNOTATED
+    # ⚠ No chain CONTAINS position 50 (the only chain is 100-400), so there is no anchored species.
+    assert r.reason == "gpi_no_chain_spans_anchor"
+    # and a genuinely unannotated position still lands on its own reason
+    assert extract(entry(chain(20, 300), lipid(None))).reason == REASON_GPI_POSITION_UNANNOTATED
 
 
 def test_the_chain_overrun_guard_fires_and_is_carried_on_the_row():
@@ -130,9 +133,11 @@ def test_the_chain_overrun_guard_fires_and_is_carried_on_the_row():
     Prove it bites by deleting the guard — the row still gets the right span, and the thing that
     caught the defect quietly stops watching."""
     r = extract(entry(chain(23, 911), lipid(646)))
+    # ⚠ The row keeps its span under the corrected selector AND still carries the flag. A guard
+    # that only fired on exclusions would go quiet the moment the exclusion was lifted.
     assert r.span_aa == 623 and r.rule == RULE_GPI_A
     assert GUARD_CHAIN_OVERRUNS_ANCHOR in r.guards, r
-    clean = extract(entry(chain(37, 599), lipid(598)))
+    clean = extract(entry(chain(37, 598), lipid(598)))
     assert GUARD_CHAIN_OVERRUNS_ANCHOR not in clean.guards, (
         "the guard fires on a protein whose chain ends at the anchor — it would flag everything "
         "and therefore flag nothing")
@@ -280,6 +285,7 @@ def test_the_divergence_check_is_kept_as_diagnosis_after_the_bar():
     past the anchor because the C-terminal GPI signal is cleaved and not annotated."""
     e = entry(chain(23, 911), lipid(646))
     assert divergence(e) == (623, 889)
+    # ⚠ Rule A's 623 is produced; rule B's 889 is computable as diagnosis and never used.
     assert extract(e).span_aa == 623, "the divergence check leaked into the produced span"
 
 
@@ -297,3 +303,160 @@ def test_the_v1_extractor_does_not_know_the_v2_vocabulary():
         "cohort's committed spans are no longer reproducible from its own extractor.")
     rec2 = parse("TEST", "", entry(td("Extracellular", 1, 100)))
     assert rec2.largest_span == 100, "the V1 positive control failed — parse() is broken outright"
+
+
+# ── ⚠ the ruled mature-chain selector: the MSLN over-read ────────────────────
+def test_the_anchor_selects_the_chain_not_the_lowest_start():
+    """⚠⚠ THE MSLN DEFECT, and it was LIVE on the protein F-025 is named after.
+
+    Mesothelin is made as a precursor. The N-terminal MPF fragment is cleaved and **secreted** — it
+    is not on the cell. `min(start)` took 37 and produced a 561 aa span carrying ~250 residues an
+    antibody will never meet, fused to the ectodomain that matters. **It would have folded, scored,
+    banded and looked entirely normal.**
+
+    Prove it bites by restoring `mature_chain_bounds` as the selector: the span becomes 561."""
+    e = entry(chain(37, 598), chain(37, 286), chain(296, 598), lipid(598))
+    r = extract(e)
+    assert r.span_aa != 561, (
+        "the mature chain was selected by lowest start — this is the MSLN over-read, and it carries "
+        "~250 residues of a secreted fragment into the fold")
+
+
+def test_msln_shaped_disagreeing_candidates_are_named_and_excluded_never_guessed():
+    """⚠ Both `Mesothelin` 37-598 and `Mesothelin, cleaved form` 296-598 terminate at the anchor,
+    giving 561 and 302. The owner ruled the ZERO-candidate case; the DISAGREEING case is not ruled,
+    so it takes the same named exclusion rather than a guess.
+
+    Prove it bites by adding a tie-break (e.g. latest start): a span appears where a ruling is
+    owed, and this reds."""
+    r = extract(entry(chain(37, 598), chain(37, 286), chain(296, 598), lipid(598)))
+    # ⚠ CORRECTED BY THE SECOND RULING. The candidates containing the anchor are 37-598 and
+    # 296-598; the LATEST start wins, landing on the mature cleaved form the ADCs bind.
+    assert r.span_aa == 302, f"the mature cleaved form was not selected: {r}"
+    assert r.rule == RULE_GPI_A
+
+
+def test_identical_duplicate_chains_are_not_a_disagreement():
+    """⚠ A-017 clause (c) for the selector. `O95971` CD160 carries `CD160 antigen` and
+    `CD160 antigen, soluble form`, BOTH 25-159. Two records, one span — not ambiguous.
+
+    Prove it bites by testing `len(candidates) > 1` instead of the number of distinct SPANS:
+    CD160 becomes absent_with_reason and a correct protein is lost."""
+    r = extract(entry(chain(25, 159), chain(25, 159), lipid(159)))
+    assert r.span_aa == 134, f"two identical chains were read as a disagreement: {r}"
+    assert r.rule == RULE_GPI_A
+
+
+def test_the_selector_takes_the_anchored_subunit_of_a_cleaved_protein():
+    """⚠ `P51654` GPC3: alpha 25-358, beta 359-554, anchor 554. The anchor sits on the BETA subunit,
+    so the mature GPI chain is 359-554 → 195 aa, not 529. The alpha subunit is a separate chain."""
+    r = extract(entry(chain(25, 358), chain(359, 554), lipid(554)))
+    assert r.span_aa == 195 and r.rule == RULE_GPI_A, r
+
+
+def test_a_chain_running_past_the_anchor_still_yields_a_span_and_is_flagged_not_excluded():
+    """⚠ Flagged, not excluded — the posture the owner set for `P08571`. The C-terminal overrun is
+    real and recorded; it is not a reason to lose the protein."""
+    # ⚠⚠ THE FIRST SELECTOR EXCLUDED THIS PROTEIN AND IT WAS WRONG TO. P06731 CEACAM5 has ONE
+    # chain, 35-685, and an anchor at 676 — a nine-residue end mismatch at a boundary rule A never
+    # reads. It was dropped on ANNOTATION FORM rather than on biology, and it is a clinically
+    # validated ADC target. Containment is the right test: the anchor sits inside the chain.
+    r = extract(entry(chain(35, 685), lipid(676)))
+    assert r.span_aa == 641, f"CEACAM5 was excluded on an end mismatch rule A never uses: {r}"
+    assert r.rule == RULE_GPI_A
+
+
+def test_the_chain_start_guard_stays_live_after_the_fix():
+    """⚠ The guard is what CAUGHT the MSLN over-read. It stays on the artifact after the fix, so a
+    `Chain` set the selector does not explain is still visible rather than silently handled."""
+    r = extract(entry(chain(25, 358), chain(359, 554), lipid(554)))
+    assert GUARD_CHAIN_START_AMBIGUOUS in r.guards, r
+
+
+def test_the_shortening_guard_fires_wherever_the_selector_had_a_choice_and_carries_the_ratio():
+    """⚠ THRESHOLD-FREE BY MEASUREMENT, not by preference. Across all 128 GPI-anchored census
+    proteins, 127 have a single candidate start and exactly one differs — MSLN at 0.538. **There is
+    nothing to calibrate a constant against**, so any threshold would be a dial wearing the costume
+    of a measurement, and it could only ever SUPPRESS flags.
+
+    Prove it bites by adding `if ratio < 0.5` — MSLN stops being flagged, and the one protein where
+    a choice was actually made becomes indistinguishable from the 127 where none was."""
+    r = extract(entry(chain(37, 598), chain(37, 286), chain(296, 598), lipid(598)))
+    flags = [g for g in r.guards if g.startswith("chain_shorter_than_longest_candidate")]
+    assert flags, f"the selector chose between candidates without flagging it: {r.guards}"
+    assert flags[0].endswith(":0.538"), flags
+
+
+def test_the_shortening_guard_stays_silent_where_there_was_no_choice():
+    """⚠ A-017 clause (c). A guard that fires on every GPI protein flags nothing."""
+    r = extract(entry(chain(37, 598), lipid(598)))
+    assert not [g for g in r.guards if g.startswith("chain_shorter_than_longest_candidate")], r
+
+
+def test_a_gpi_protein_with_no_chain_at_all_is_still_named_and_excluded():
+    """⚠ P25063 and P31358 carry a GPI anchor and NO `Chain` feature. They stay out — but now on
+    annotation absence rather than on an over-strict selector, which is the distinction that
+    matters: it is a fact about the record, not about our rule."""
+    r = extract(entry(lipid(59)))
+    assert r.span_aa is None and r.reason == "gpi_chain_unannotated"
+
+
+# ── ⚠ R10: a span the record itself contradicts ─────────────────────────────
+def tm(start, end, desc="Helical"):
+    return {"type": "Transmembrane", "description": desc, "location": _loc(start, end)}
+
+
+def test_a_span_overlapping_a_transmembrane_helix_is_excluded_not_truncated():
+    """⚠⚠ `Q9BQT9`'s real shape: `Extracellular 20-847` overlapping its own `Transmembrane
+    256-276`. The largest-contiguous rule faithfully picks the inconsistent annotation, and we
+    would have folded **828 residues containing a transmembrane helix, in water — successfully.**
+
+    ⚠ EXCLUDED, NOT TRUNCATED. Truncating at 256 would invent a boundary from an entry that cannot
+    be trusted about boundaries.
+
+    Prove it bites by deleting the clause: an 828 aa span appears and folds."""
+    r = extract(entry(td("Extracellular", 20, 847), tm(256, 276), tm(848, 868)))
+    assert r.span_aa is None, f"a span containing a TM helix was folded: {r}"
+    assert r.reason == "span_contains_transmembrane"
+    assert "span_overlaps_transmembrane" in r.guards
+
+
+def test_a_partial_overlap_of_one_residue_is_enough():
+    """⚠ ANY overlap, not only full containment — a half-overlap is the same contradiction.
+    Prove it bites by testing `start <= ts and te <= end`: this span keeps its 100 aa."""
+    r = extract(entry(td("Extracellular", 1, 100), tm(100, 130)))
+    assert r.span_aa is None, f"a one-residue overlap was tolerated: {r}"
+    assert "span_overlaps_transmembrane" in r.guards
+
+
+def test_an_adjacent_helix_is_not_an_overlap_and_the_span_survives():
+    """⚠ A-017 clause (c). Every extracellular domain on a membrane protein ABUTS a helix — if
+    adjacency counted, the clause would exclude the entire census and therefore exclude nothing
+    meaningfully. CCR4's N-terminus is 1-39 with TM 40-67."""
+    r = extract(entry(td("Extracellular", 1, 39), tm(40, 67)))
+    assert r.span_aa == 39 and r.rule == RULE_VOCABULARY, r
+    assert not r.guards
+
+
+def test_a_span_containing_a_rejected_domain_asserts_both_faces_at_once():
+    """⚠ Clause 2, and it fires independently of clause 1: an extracellular span holding a
+    `Cytoplasmic` domain claims both faces of the membrane simultaneously.
+
+    Prove it bites by deleting the clause — with no TM feature present, clause 1 cannot catch it."""
+    r = extract(entry(td("Extracellular", 20, 400), td("Cytoplasmic", 52, 71)))
+    assert r.span_aa is None, f"a span containing a cytoplasmic domain was folded: {r}"
+    assert r.guards == ["span_contains_rejected_domain"]
+
+
+def test_a_span_beside_a_rejected_domain_is_fine():
+    """⚠ The control for clause 2. Normal topology alternates faces; only CONTAINMENT is a
+    contradiction."""
+    r = extract(entry(td("Extracellular", 1, 39), td("Cytoplasmic", 68, 77)))
+    assert r.span_aa == 39, r
+
+
+def test_both_clauses_fire_together_on_the_real_entry():
+    """⚠ Two contradictions, one record — clause 2 independently corroborates clause 1."""
+    r = extract(entry(td("Extracellular", 20, 847), tm(256, 276),
+                      td("Cytoplasmic", 52, 71), td("Lumenal", 277, 364)))
+    assert set(r.guards) == {"span_overlaps_transmembrane", "span_contains_rejected_domain"}, r
