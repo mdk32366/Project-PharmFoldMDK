@@ -87,11 +87,28 @@ export default function CensusTable({ rows, onSelect }) {
         />
       </label>
 
+      {/* ⚠⚠ THE COUNT REPORTS WHAT IS ON SCREEN, not what matched. The first version printed
+          `shown.length` while the table rendered `visible.length` — so the page read
+          "Showing 2,641 of 2,641" above 200 rows. **A silent cap that claims completeness is
+          worse than no cap at all**, and it is the precise failure the notice below exists to
+          prevent — shipped anyway, because the edit that was meant to add the notice silently
+          did not apply and nothing checked. */}
       <p className="census-count">
-        Showing <strong>{shown.length.toLocaleString()}</strong> of{' '}
+        Showing <strong>{visible.length.toLocaleString()}</strong> of{' '}
         {rows.length.toLocaleString()}
         {query && shown.length === 0 && ' — no protein matches that search'}
       </p>
+
+      {capped && (
+        <p className="caveat">
+          ⚠ <strong>Capped for the browser&rsquo;s sake.</strong> {shown.length.toLocaleString()}{' '}
+          rows match; the first <strong>{PAGE}</strong> are drawn. Search to narrow, or{' '}
+          <button type="button" className="link" onClick={() => setShowAll(true)}>
+            render all {shown.length.toLocaleString()}
+          </button>{' '}
+          — slow, but nothing is being withheld.
+        </p>
+      )}
 
       {intermittent > 0 && (
         <p className="caveat">
