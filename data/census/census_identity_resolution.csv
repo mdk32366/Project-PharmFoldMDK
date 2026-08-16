@@ -1,0 +1,27 @@
+census_accession,census_class,source_identifiers,resolution,targets,target_count,deleted_reason,carries_sequence,resolvable,resolved_on,api
+P33765,surface,AA3R_HUMAN,DEMERGED,P0DMS8;P0DMS9,2,,false,"yes, but ONE-TO-2 — following targets changes the census denominator (scope decision, not taken here)",2026-08-16,rest.uniprot.org/uniprotkb
+A6NKC4,surface,FCGRC_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q5JXX5,surface,GLRA4_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q9BZG9,surface,LYNX1_HUMAN,DEMERGED,P0DP57;P0DP58,2,,false,"yes, but ONE-TO-2 — following targets changes the census denominator (scope decision, not taken here)",2026-08-16,rest.uniprot.org/uniprotkb
+Q15614,surface,OR8G2_HUMAN,DEMERGED,Q6IF36;P0DMU2,2,,false,"yes, but ONE-TO-2 — following targets changes the census denominator (scope decision, not taken here)",2026-08-16,rest.uniprot.org/uniprotkb
+Q9NY84,surface,VNN3_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q5VU13,surface,VSIG8_HUMAN,DEMERGED,P0DPA2;P0DPA3,2,,false,"yes, but ONE-TO-2 — following targets changes the census denominator (scope decision, not taken here)",2026-08-16,rest.uniprot.org/uniprotkb
+Q9NSE7,non_surface,ABCCD_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+A6NL99,non_surface,AQP73_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+A4D0T2,non_surface,CG066_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q96NF6,non_surface,CH049_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+H3BN30,non_surface,CP097_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q96KH6,non_surface,CR012_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+A6NIL9,non_surface,CRAS1_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+O60344,non_surface,ECE2_HUMAN,DEMERGED,P0DPD6;P0DPD7;P0DPD8,3,,false,"yes, but ONE-TO-3 — following targets changes the census denominator (scope decision, not taken here)",2026-08-16,rest.uniprot.org/uniprotkb
+Q5RGS3,non_surface,F74A1_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q4VXF1,non_surface,F74A3_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+A6NL05,non_surface,F74A7_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+A9Z1Z3,non_surface,FR1L4_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q5T4J0,non_surface,GCNT6_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q5T5W8,non_surface,SI11L_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+A8MVG2,non_surface,SKIT1_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q9Y5M6,non_surface,TISR_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q9H2Q1,non_surface,TM133_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+A2RUG3,non_surface,XKRY2_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb
+Q7L0L9,non_surface,YA043_HUMAN,DELETED,,0,Deleted from Swiss-Prot,false,"no — withdrawn, no target and no sequence",2026-08-16,rest.uniprot.org/uniprotkb

@@ -130,6 +130,41 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-086 — The 26 inactive identities are resolved and categorised; 21 of them are answers, not gaps
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Owner's ruling:** *"If they have nothing to fold, let's say that. The 26 unknown? Is that possible? Also, yes fix the span_category. Let's refetch the 26."*
+
+- ⚠⚠ **"Is that possible?" — measured, and the answer is mostly NO, in a good way.** All 26 were re-fetched:
+
+  | resolution | rows | resolvable? |
+  |---|---|---|
+  | **`DELETED`** | **21** | ⚠ **No.** Withdrawn from Swiss-Prot. **No target, no sequence, nothing to fetch, ever.** |
+  | **`DEMERGED`** | **5** | Yes — but **one-to-many**, into 11 target accessions. |
+
+  ⚠⚠ **NOT ONE OF THE 26 CARRIES A SEQUENCE.** So the re-fetch converts *"we do not know"* into **a stated, final reason** — and produces **zero** foldable rows. **That is the whole result, and it is worth having**: 21 rows move from *unknown* to *this entry no longer exists*, which is an answer.
+
+- **Decisions:**
+
+  1. **The re-fetch writes its OWN artifact.** `census_identity_resolution.csv` + provenance, with its own `resolved_on = 2026-08-16`. ⚠⚠ **The span files are NOT restamped** — they were fetched 2026-08-06, and rewriting that would manufacture provenance for data that did not move (*two facts, never one date*). A reader joins on `census_accession`. Guarded by `test_the_span_files_were_not_restamped_by_the_resolution_run`.
+
+  2. ⚠ **The 5 demerge targets are RECORDED, NOT FOLLOWED.** Following them would take 5 census rows to 11 and **change the denominator** — *"7,811 human proteins"* is cited in artifacts. ⚠ **And one target, `P0DMS9`, is ALREADY a census row**, so a naive follow would double-count. **A scope decision, and it is not taken here.**
+
+  3. **`span_category` is fixed on the right axis (F-036).** ⚠ The original blank was *principled* — `census_reparse.py` said a never-fetched row *"is neither a span nor an absence of one"* and withheld a V2 span judgement, which is **correct**. **The defect was the ENCODING**: blank is what a row *with a span* carries, so `span_category == ""` meant both *"fine"* and *"never looked at."* The fix is a category on the **identity** axis — `identity_deleted`, `identity_demerged`, `identity_unresolved` — **never blank**.
+
+  4. ⚠ **An absent resolution file yields `identity_unresolved`, not a blank and not `DELETED`.** *"Nobody has looked"* and *"we looked and it is gone"* are different facts. Guessing `deleted` would assert a withdrawal that never happened.
+
+  5. **The 1,519 are stated plainly**: ⚠ **they have nothing to fold.** No extracellular face, on any mechanism. **Not failures, not gaps, not deferred work** — nothing about them is pending.
+
+- ⚠ **The V2 span CSVs are NOT rewritten.** They are measured artifacts stamped `parsed_under = v2-…@55a792f-r10`, and that parse did not produce identity categories. The fix lands **in the code**, so the next re-parse emits them; `census_identity_resolution.csv` is the authority for those 26 until then. ⚠ **Editing a measured artifact to carry a judgement its stated parse never made is exactly the provenance defect this project keeps finding.**
+
+- ⚠ **A fetch failure is its own category**, distinct from `DELETED`. *"The entry is gone"* and *"we could not ask"* must never share an encoding — the same mistake one level down.
+
+- **Evidence:** 5 tests in `tests/test_identity_categories.py`. **Revert proof 17:** restoring the blank return turns 3 red.
+
+---
+
 ### D-085 — "Excluded" has never meant "cannot be folded", and the registry now has to say which: scope, and the conditions
 
 - **Date:** 2026-08-16
@@ -503,6 +538,8 @@ So the rule is not "be careful" — it is:
 - **Remedy (not implemented):** give the 26 a category of their own — `absent_not_fetched`, or `identity_inactive`. ⚠ **Do NOT reuse `absent_with_reason`**: that means *"parsed, and refused for a stated reason"*, which is a claim about the entry's content. **These were never parsed at all.**
 
 - ⚠ **A ruling is wanted on the 26 themselves, separately from the column.** They are UniProt-inactive accessions — merged or withdrawn. Whether the census should follow the merge targets, or record them permanently as inactive-at-this-release, is a **scope decision, not a bug fix**, and it interacts with the *"two facts, never one date"* rule: re-fetching 26 rows would put a second fetch date in a file whose whole provenance model forbids that.
+
+- ⚠⚠ **A TEST HELD THE DEFECT IN PLACE, and it is recorded here rather than taking its own integer** (an eighth integer under momentum is the F-025 defect). `test_a_never_fetched_row_takes_no_v2_category_and_keeps_its_reason` **asserted `span_category == ""`** — so the blank was not merely emitted, it was **pinned**, in the test file whose entire subject is not asserting things about data that did not move. ⚠ **A test can hold a defect as firmly as it holds a behaviour**, and a gate that is green because it agrees with the bug is a gate that has stopped being evidence. It now asserts the identity category and **still** asserts the half that was always right: no span invented, no `parsed_under` stamped.
 
 - **Detail:** `docs/CENSUS-ACCOUNTING-V2.md`.
 

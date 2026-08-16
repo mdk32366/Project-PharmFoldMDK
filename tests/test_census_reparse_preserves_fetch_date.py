@@ -97,14 +97,28 @@ def test_the_v1_span_is_carried_beside_the_v2_span_rather_than_replaced(cached):
 
 
 # ── the never-fetched and the cache miss ────────────────────────────────────
-def test_a_never_fetched_row_takes_no_v2_category_and_keeps_its_reason(cached):
-    """⚠ It was never asked. A re-parse cannot make a claim about a protein nobody looked at."""
+def test_a_never_fetched_row_makes_no_SPAN_claim_but_still_takes_an_IDENTITY_category(cached):
+    """⚠ It was never asked, so no V2 SPAN judgement exists and none is invented — `span_aa` stays
+    empty and `parsed_under` stays unstamped. **That half was always right.**
+
+    ⚠⚠ **THIS TEST PREVIOUSLY ASSERTED `span_category == ""` AND THAT PINNED THE DEFECT (F-036).**
+    Blank is the value a row *with a span* carries, so the assertion locked in an encoding where
+    `span_category == ""` meant BOTH *"has a span"* and *"never looked at"* — 3,467 rows and 26
+    rows sharing one value. **A test can hold a defect in place as firmly as it holds a
+    behaviour**, and this one did, in the file whose whole subject is not asserting things about
+    data that did not move.
+
+    The category is now on the **identity** axis, which the re-parse *can* speak to, and it is
+    **never blank**."""
     row = _v1_row("NEVER", reason="not fetched: uniprot_inactive")
     row["fetched_on"] = ""
     out = reparse_row(row, commit="x")
-    assert out["span_aa"] == "" and out["span_category"] == ""
-    assert out["no_span_reason"] == "not fetched: uniprot_inactive"
+    assert out["span_aa"] == "", "a span was invented for a protein nobody looked at"
     assert out["parsed_under"] == "", "a never-fetched row was stamped with a parse definition"
+    assert out["no_span_reason"] == "not fetched: uniprot_inactive"
+    # ⚠ The correction: a category, and specifically NOT the blank that means "has a span".
+    assert out["span_category"], "a spanless row carries a blank category — F-036 all over again"
+    assert out["span_category"].startswith("identity_")
 
 
 def test_a_missing_cache_entry_is_named_and_not_refetched(cached):

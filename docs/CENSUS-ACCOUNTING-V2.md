@@ -31,12 +31,19 @@ Stated in both directions because a one-directional check passes while missing h
 |---|---|---|---|
 | **1,304** | non_surface | `no_extracellular_span` | no topological domain with an accepted description, and no GPI anchor |
 | **215** | surface | `no_extracellular_span` | same |
-| **19** | non_surface | ⚠ *(empty)* | `not fetched: uniprot_inactive` |
-| **7** | surface | ⚠ *(empty)* | `not fetched: uniprot_inactive` |
+| **19** | non_surface | ⚠ *(empty — F-036, now `identity_*` in code)* | `not fetched: uniprot_inactive` → **resolved 2026-08-16** |
+| **7** | surface | ⚠ *(empty — F-036, now `identity_*` in code)* | `not fetched: uniprot_inactive` → **resolved 2026-08-16** |
 | **2** | surface | `absent_with_reason` | `gpi_chain_unannotated` |
 | **1** | surface | `absent_with_reason` | `span_contains_transmembrane` |
 | **1** | surface | `span_boundary_unknown` | an accepted topological domain matched and the coordinate is `UNKNOWN` |
 | **1,549** | | | |
+
+### ⚠⚠ 1,519 of these proteins HAVE NOTHING TO FOLD. Said plainly, because it is the answer.
+
+**They have no extracellular face.** Not a small one, not an unmeasured one — **none**, on any
+mechanism the V2 vocabulary admits. ⚠ **There is no structure to predict, because there is no
+region an antibody could ever reach.** They are not failures, not gaps, not deferred work, and not
+candidates for a bigger card or a better method. **Nothing about them is pending.**
 
 ### What the big number actually means
 
@@ -51,8 +58,11 @@ Length is the constraint that gets discussed; it is not the one that decides the
 
 ### The 30 that are not that
 
-- **26 `uniprot_inactive`** — ⚠ **never fetched.** These are *not* "no span"; they are **unknown**.
-  Absence of evidence, not evidence of absence. See **`F-036`** below.
+- **26 `uniprot_inactive`** — ⚠ **RESOLVED 2026-08-16** (D-086, `census_identity_resolution.csv`):
+  **21 `DELETED`** (withdrawn from Swiss-Prot — no target, no sequence, ⚠ **nothing to fetch,
+  ever**) and **5 `DEMERGED`** into 11 targets (⚠ resolvable but **one-to-many**, and one target is
+  already a census row — a denominator change, not taken). ⚠⚠ **NOT ONE carries a sequence**, so
+  the resolution produced **zero** foldable rows. See **`F-036`** for the category defect.
 - **3 `absent_with_reason`** — a GPI anchor with an unannotated chain (2), and a span that would
   have contained a transmembrane segment (1). ⚠ **Named refusals, not silent drops.**
 - **1 `span_boundary_unknown`** — ⚠ **the term matched and the coordinate is `UNKNOWN`.** This is
@@ -90,7 +100,8 @@ vocabulary — foldable only by folding a **different sequence**, with the subst
 | | |
 |---|---|
 | 1,519 | nothing to fold — **no extracellular face**. Correct exclusion, by biology. |
-| 26 | **unknown** — never fetched. Resolvable by fetching. |
+| 21 | ⚠ **`DELETED` — the entry no longer exists.** Not unknown any more: **answered, and final.** |
+| 5 | `DEMERGED` into 11 targets — resolvable, but a denominator change. |
 | 4 | named parse refusals (`absent_with_reason`, `span_boundary_unknown`). Resolvable. |
 | 3,326 | **fold today**, or on a rented card, with defensible results. |
 | 138 | need **domain assembly** — a method, not a barrier. |
@@ -102,3 +113,8 @@ cannot run. Tandem-repeat, heavily glycosylated, largely disordered: *"predict i
 is partly the wrong question (D-076, the finding embedded in it).
 
 **3 rows of 5,016.**
+
+⚠ **One correction to §4 as first written:** it listed the 26 as *"unknown — resolvable by
+fetching."* **They were fetched. 21 are not resolvable at all** — the entries were withdrawn — and
+that is not a worse answer, it is a **final** one. The remaining 5 are resolvable only by changing
+the denominator.

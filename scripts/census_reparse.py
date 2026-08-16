@@ -80,6 +80,30 @@ def load_cache(acc: str) -> Optional[dict]:
         return None
 
 
+#: ⚠ Identity categories (F-036). A row with no span ALWAYS carries one of these — never "".
+IDENTITY_DELETED = "identity_deleted"
+IDENTITY_DEMERGED = "identity_demerged"
+IDENTITY_UNRESOLVED = "identity_unresolved"
+
+
+def _identity_category(accession: str) -> str:
+    """The identity verdict for a row that was never parsed. ⚠ NEVER returns an empty string.
+
+    Read from `census_identity_resolution.csv` (written by `scripts/resolve_inactive.py`, its own
+    fetch and its own date — the span files are never restamped). ⚠ **An absent resolution file is
+    `identity_unresolved`, not a blank**: *"nobody has looked"* and *"we looked and it is gone"*
+    are different facts and must not share an encoding. That confusion IS F-036.
+    """
+    path = CENSUS / "census_identity_resolution.csv"
+    if not path.is_file():
+        return IDENTITY_UNRESOLVED
+    for r in csv.DictReader(path.open(encoding="utf-8")):
+        if r["census_accession"] == accession:
+            return {"DELETED": IDENTITY_DELETED,
+                    "DEMERGED": IDENTITY_DEMERGED}.get(r["resolution"], IDENTITY_UNRESOLVED)
+    return IDENTITY_UNRESOLVED
+
+
 def reparse_row(row: dict[str, str], *, commit: str) -> dict[str, Any]:
     """One V1 row → one V2 row. ⚠ `fetched_on` and `uniprot_release` are copied, never computed."""
     out: dict[str, Any] = {k: row.get(k, "") for k in CARRIED}
@@ -87,9 +111,17 @@ def reparse_row(row: dict[str, str], *, commit: str) -> dict[str, Any]:
 
     if row.get("fetch_failed") == "true" or not row.get("fetched_on"):
         # ⚠ A failed or never-fetched row is neither a span nor an absence of one. It was never
-        # asked, or the request is what failed — the identity is intact either way. It keeps its V1
-        # reason verbatim and takes no V2 category.
+        # asked, or the request is what failed — no V2 SPAN judgement is available and none is
+        # invented.
+        #
+        # ⚠⚠ BUT IT STILL TAKES A CATEGORY (F-036). The first version left `span_category` EMPTY,
+        # which is the SAME VALUE a row WITH a span carries — so a consumer filtering
+        # `span_category == ""` to mean "has a span" silently picked up 26 rows that were never
+        # looked at. The reasoning ("no span judgement is available") was right; the ENCODING was
+        # wrong, because it put "unknown" and "fine" in the same bucket. The category is on a
+        # different axis — IDENTITY, not span — and it is never blank.
         out.update({k: "" for k in NEW})
+        out["span_category"] = _identity_category(row["census_accession"])
         out["no_span_reason"] = row.get("no_topology_reason", "")
         out["parsed_under"] = ""
         return out
