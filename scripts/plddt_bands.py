@@ -3,9 +3,11 @@
 
     python scripts/plddt_bands.py --tranche 4
 
-⚠ **The band edges are NOT invented here.** 90 / 70 / 50 are the AlphaFold-DB convention that
-ESMFold's pLDDT head is on the same scale as. **Choosing thresholds to make an answer look tidy is
-how a measurement becomes a decoration**, so the field's edges are used and named.
+⚠⚠ **The bands are the PROJECT's (D-039/D-049), mirrored from `ui/src/plddt.js`, which declares
+itself the single source of the scheme.** A script with its own edges would make *"low"* mean one
+thing in the webapp and another in the analysis. **Choosing thresholds to make an answer look tidy
+is how a measurement becomes a decoration** — so the ruled edges are used, and the divergence from
+the AlphaFold-DB convention (90/70/50) is stated rather than silently resolved.
 
 ⚠⚠ **`mean_plddt` IS A MEAN AND A MEAN HIDES THE DISTRIBUTION.** A folded domain at 90 beside a
 disordered linker at 30 averages to ~70 and reads as *"confident"*. This script reports the
@@ -28,12 +30,24 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-#: ⚠ AlphaFold-DB convention, named rather than chosen. (low, high, label, what it means)
+#: ⚠⚠ THE PROJECT'S OWN SCHEME (D-039/D-049), NOT AlphaFold-DB's.
+#:
+#: The first version of this file used the AF-DB convention (90/70/50). That was wrong — not
+#: because the convention is wrong, but because `ui/src/plddt.js` says of itself: *"This is the
+#: single source of the band scheme; the confidence element, the per-residue plot, and the
+#: structure colouring all read it, so the structure and its legend cannot disagree."* Adding a
+#: second scheme in a script would have made "low" mean one thing in the webapp and another in the
+#: analysis — ⚠ **one word, two meanings, which is the defect this project keeps finding.**
+#:
+#: D-039 anchored 70 and 50 on convention and justified 60 on the cohort's own measured mass
+#: (45% below it on 42 folds; re-justified at 29.1% on 79). ⚠ The 90 tier is deliberately ABSENT:
+#: nothing in the cohort reaches it, and a band nobody occupies invites the reader to assume
+#: someone might.
 BANDS = (
-    (90, 101, "very high", "backbone and side chains both reliable"),
-    (70, 90, "confident", "backbone reliable; treat side chains with care"),
-    (50, 70, "low", "⚠ backbone only as a hypothesis"),
-    (0, 50, "very low", "⚠⚠ often INTRINSIC DISORDER, not model failure"),
+    (70, 101, "confident backbone", "⚠ cohort max is 84.23 — nothing reaches high-confidence (≥90)"),
+    (60, 70, "moderate", ""),
+    (50, 60, "low", "⚠ backbone unreliable"),
+    (0, 50, "very low", "⚠⚠ not reliably interpretable; often INTRINSIC DISORDER, not model failure"),
 )
 
 
