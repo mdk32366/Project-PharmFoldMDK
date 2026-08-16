@@ -162,6 +162,26 @@ So the rule is not "be careful" — it is:
   - **Restart the worker now to pick it up.** ⚠ Rejected: 1,003 completed folds and a live claim, to gain nothing tranche 1 needs.
   - **A child per fold, for full isolation.** Rejected on the 8.4 GB reload measured on the first rental run (`Loading weights: 4498` per fold).
 
+- **Execution plan (added 2026-08-16, owner: *"no change on that decision — execute when appropriate"*):**
+
+  **The switch happens in the idle window between tranche 3 and tranche 4, and that window is created deliberately by NOT ingesting tranche 4.** The size bands make the timing non-arbitrary:
+
+  | tranche | rows | span | vs `known_good = 440` |
+  |---|---|---|---|
+  | 1 ✅ | 1,307 | 1–50 aa | far under |
+  | 2 | 535 | 51–149 aa | far under |
+  | 3 | 517 | 152–300 aa | under |
+  | **4** | **332** | **301–439 aa** | ⚠ **runs up against it** |
+  | 5 | 776 | 441–14,451 aa | over — rental |
+
+  ⚠ **Tranche 4 is the first band where a fold approaches the ceiling**, which is what makes *"layer 3 before tranche 4"* a boundary and not a preference. Tranches 0–3 fold on the in-process path; **tranche 4 is where the topology changes**, so the population under each is knowable and no tranche is split across two.
+
+  **Sequence:** tranche 3 drains → worker goes idle (nothing queued, because tranche 4 is held back) → owner stops the worker → `scripts/supervisor_equivalence.py` runs both arms → owner restarts with `WORKER_FOLD_IN_CHILD=1` → tranche 4 ingests.
+
+- **The equivalence gate, and why it is one arm per invocation:** `scripts/supervisor_equivalence.py`. ⚠⚠ **The supervised arm spawns a child that loads the weights; if the in-process arm had already cached them in the same process, two model copies would be resident on one card — the exact configuration that bugchecked the host on 2026-08-12.** So each arm runs in its own process, writes an artifact and exits, and the comparison reads files. ⚠ **It also refuses to run while any job is `claimed`** — a live worker is already the first holder — and the refusal is a **queue read, not an assumption**. Proven live: it refused against the running tranche-2 crank. ⚠ **The override is spelled `--i-have-stopped-the-worker`**, so using it is a sentence someone has to mean.
+
+  ⚠ **What it proves is narrow: that the fold is byte-identical through the supervisor.** A layer added to make failures legible that quietly changed structures would be **worse than the defect it prevents** — every tranche-4 artifact plausible, different, and nothing red. ⚠ **It is NOT a determinism control and cannot substitute for one**: without `scripts/determinism_control.py` on the same accession and tier, *"the supervisor differs"* and *"the recipe is nondeterministic"* are **the same observation**, and the script says so on failure rather than letting the attribution be assumed.
+
 - **Evidence:** 11 tests in `tests/test_fold_supervisor.py`, all passing; full gate **648 passed, 15 skipped**, pytest exit code **0** read on the line immediately after the command (the `5b24329` correction). **Revert proof 14:** replacing `raise FoldChildDied` with `raise RuntimeError` turns two tests red — `test_a_HARD_CHILD_DEATH_becomes_a_named_outcome_and_the_parent_survives` and `test_a_death_is_not_retried_automatically`.
 
 ---
