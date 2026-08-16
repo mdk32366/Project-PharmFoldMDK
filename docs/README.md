@@ -130,6 +130,91 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-082 — A fold that exceeds VRAM must fail as a job, not as a bugcheck: three layers, and the outermost is not ours
+
+- **Date:** 2026-08-16
+- **Status:** Accepted. **Ruled before the crank runs and before any re-measurement.** ⚠ **Void if
+  code precedes it** (D-075 / D-077 / D-079 precedent).
+- **Type:** A **decision**. It rules how the fold path fails, and it forecloses the assumption every
+  existing instrument is built on.
+- **⚠ Number verified live, not inherited.** Highest `### D-` written was **D-081**; `D-010`,
+  `D-078` and `D-080` are reserved and unwritten; `D-082` appears nowhere in the log, `RESERVED.md`
+  or `ARCHITECTURE.md`. **Confirmed by reading for a `### D-082` header, not for a reference to one**
+  (method note item 7).
+- **Provenance (D-016):** the Windows System event log, `nvidia-smi`, `torch.cuda.mem_get_info`, and
+  `data/census/determinism_control.int8.json`. The crash was reported by the owner at the keyboard
+  and confirmed independently in the event log. Detail:
+  `docs/FINDING-2026-08-16-fp16-bugchecks-the-host.md`.
+
+- **Context.** Task 4a's fp16 probe took the **host** down mid-fold — bugcheck `0x0000001e`
+  (`KMODE_EXCEPTION_NOT_HANDLED`) with `0xC0000005`, Kernel-Power 41, unclean reboot. **Host RAM was
+  not the constraint** (31.5 GB total, 22 GB free at rest). ⚠ **On WDDM, an allocation that exceeds
+  VRAM is not refused — the driver spills into shared system memory**, and under pressure that path
+  faulted in kernel mode.
+
+  ⚠⚠ **Every instrument we have assumes the opposite.** `worker/ceiling_probe.py:_attempt` is
+  `except Exception → OOM`; `worker/main.py`'s loop reports `fail()` and continues. **Neither runs.
+  There is no process left.** A probe built to survive its own failure mode did not survive it, and
+  its append-only resume file — written *before* each fold precisely so a halt is recoverable — came
+  back as **55 bytes of `\0`**, because a hard reset does not flush the page cache.
+
+  ⚠ **And the headroom is smaller than the card's label.** `mem_get_info` reports **7,043 MiB free of
+  8,150** — the card drives a display, and context plus driver reservations take ~1.1 GB. **int8 at
+  416 aa peaked at 7,658 MiB by `nvidia-smi`**, which is *above* that budget: **the fold that
+  succeeded may already have been spilling.** It survived; that is not the same as being safe.
+
+- **Decision — three layers, and they are ordered by who owns them.**
+
+  1. ⚠⚠ **Driver (OWNER ACTION, and nothing else works without it).** Set NVIDIA **CUDA → Sysmem
+     Fallback Policy = "Prefer No Sysmem Fallback"** for the venv's `python.exe`. With fallback off
+     the driver **returns `CUDA out of memory`** instead of spilling. **This is the only layer that
+     addresses the mechanism that actually killed the host; the other two are defence in depth.**
+  2. **Allocator.** `torch.cuda.set_per_process_memory_fraction(f)` so the caching allocator raises
+     `torch.cuda.OutOfMemoryError` **in Python** at a cap below physical VRAM. ⚠ **Not total** —
+     cuBLAS/cuDNN workspaces and the CUDA context do not all route through it, so this is a strong
+     guard and not a proof, and it is recorded as such.
+  3. **Process.** Fold in a **child process**, so a hard child death (abort, driver reset, allocator
+     kill) leaves the parent alive to record a **named** outcome. ⚠ **It does not survive a
+     bugcheck — nothing does.** It converts every failure *short* of one from "the worker vanished"
+     into a job result.
+
+- **And the crank REFUSES rather than attempts.** A pre-flight budget check reads `mem_get_info()`
+  and compares it against a **measured** requirement for that length and recipe. ⚠ **An absent
+  measurement is a CATEGORY, not a green light**: a length with no curve is routed out, never tried.
+
+- **`HOST_DOWN` is a real outcome and the instrument cannot self-report it.** It is inferred, not
+  observed: ⚠ **a job left `claimed`/`running` across a restart is evidence of a host death**, and
+  the crank must look for one on startup and refuse to continue silently. **Its absence is not proof
+  of health.**
+
+- **⚠ Every fold records its peak VRAM, and `nvidia-smi` is not the instrument.** `used` is
+  *reserved* — inflated by the caching allocator's retained pool. `reset_peak_memory_stats()` with
+  `max_memory_allocated()` and `max_memory_reserved()` goes on the fold record beside the recipe.
+
+- **⚠ Options rejected:**
+  - **Catch the OOM better.** There is nothing to catch. The kernel faulted; the process is gone.
+    **Any design whose safety rests on an `except` is unsound on this platform.**
+  - **Trust `known_good = 440`.** It came from S-004/S-005 and ⚠ **it is not recorded which driver
+    measured it.** A ceiling is valid only under the recipe **and the stack** that produced it —
+    D-077 dec 3's rule, applied one level lower than it was written for.
+  - **Probe fp16 again on this host.** ⚠ **A bugcheck is not a data point worth buying twice**, and
+    n=1 is not a ceiling.
+
+- **Deep-learning justification.** Protective of the graded deliverable rather than neutral to it.
+  The census fold is the neural core's only application at scale, and ⚠ **an unclean host death
+  mid-crank leaves partial state whose completeness cannot be established afterwards** — folds that
+  ran, jobs that were claimed, artifacts half-written. **A run that cannot say what it did is not a
+  run that can be reported.**
+
+- **Consequences.** ⚠ **`known_good = 440` is in question on this driver and is re-measured under
+  the caps before the crank**, at int8, with peak *allocated* recorded. If real headroom is near
+  int8's demand, a large part of the manifest's **2,691 local-band rows** belongs on rental — **a
+  cost decision, ruled on the re-measurement and not on today's two points.** The tranche's longest
+  span folds once as a **canary** before the crank, ⚠ **recorded as a separate pre-flight fold** so
+  the seeded order is not disturbed.
+
+---
+
 ### D-081 — The span definition is frozen for the 82, permanently: two definitions exist from today, both named, and no artifact compares them without saying which
 
 - **Date:** 2026-08-07
