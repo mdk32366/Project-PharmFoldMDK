@@ -165,3 +165,58 @@ def test_an_absent_nvidia_smi_yields_none_rather_than_failing_the_fold(monkeypat
     monkeypatch.setattr(subprocess, "run", boom)
     env = _capture_environment()
     assert env["nvidia_driver_version"] is None
+
+
+def test_every_captured_environment_key_has_a_provenance_field():
+    """⚠⚠ THE DRIFT GUARD, and it exists because the drift already happened.
+
+    `fold()` assigned the environment onto the provenance with FOUR HAND-WRITTEN LINES. A fifth key
+    — `nvidia_driver_version` — was added to `_capture_environment` and to the dataclass, and the
+    assignment list was not updated. Every fold then recorded `None` for the one field `### D-082`
+    required, **one commit after the entry demanding it.** Two paths to one quantity, nothing
+    comparing them.
+
+    ⚠ The assignment is now a loop over the dict, so the two cannot disagree — and this asserts the
+    key set matches the fields, so a key added to one side and not the other reds here rather than
+    silently writing `None` into every record.
+
+    Prove it bites by adding a key to `_capture_environment`'s dict with no matching field."""
+    import dataclasses
+    from worker.runner import FoldProvenance, _capture_environment
+    fields = {f.name for f in dataclasses.fields(FoldProvenance)}
+    missing = set(_capture_environment()) - fields
+    assert not missing, (
+        f"captured environment key(s) with no FoldProvenance field: {sorted(missing)} — they would "
+        f"be silently dropped from every fold record")
+
+
+def test_fold_assigns_the_environment_from_the_dict_not_by_hand():
+    """⚠⚠ ASSERTED STATICALLY OVER THE SOURCE, because the behavioural version proved NOTHING.
+
+    My first attempt performed the `setattr` loop inside the TEST, so it exercised the loop in
+    the test and not the one in `fold()` — reverting `fold()` to the hand-written four-line
+    assignment left it GREEN. **A-017 clause (a): the fixture never reached the code under
+    test**, the same class as the three revert proofs that proved nothing on 2026-08-06.
+
+    `fold()` needs a GPU, so the assignment cannot be exercised on the CI gate. It is pinned
+    over the source instead — the precedent is `test_comparator_is_exact_not_tolerant`, which
+    asserts the absence of tolerance "behaviourally and statically over this source".
+
+    Prove it bites by restoring `prov.torch_version = env["torch_version"]` and its siblings:
+    the hand-written list reappears and this reds."""
+    import pathlib as _pl
+    import re
+    src = (_pl.Path(__file__).resolve().parent.parent / "worker" / "runner.py").read_text(
+        encoding="utf-8")
+    assert "for _key, _value in env.items():" in src, (
+        "fold() no longer assigns the environment from the dict")
+    assert "setattr(prov, _key, _value)" in src, (
+        "the environment assignment loop is gone from fold()")
+    hand = re.findall(
+        r"^\s*prov\.(torch_version|transformers_version|device_name|cuda_version|"
+        r"nvidia_driver_version)\s*=", src, re.M)
+    assert not hand, (
+        f"fold() assigns environment field(s) by hand: {hand}. A hand-written list must track "
+        f"a dict, and it already drifted once — nvidia_driver_version was captured and never "
+        f"assigned, so every fold recorded None for the field D-082 required.")
+

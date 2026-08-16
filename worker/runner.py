@@ -313,8 +313,14 @@ def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int]
     prov.mean_plddt = round(sum(plddt) / len(plddt), 2) if plddt else None
     prov.ca_atom_count = pdb.count(" CA ")   # cheap CA count for the §1a fold-sanity diagnostic
     env = _capture_environment()             # the framework build under the weights (D-045)
-    prov.torch_version = env["torch_version"]
-    prov.transformers_version = env["transformers_version"]
-    prov.device_name = env["device_name"]
-    prov.cuda_version = env["cuda_version"]
+    # ⚠⚠ ASSIGNED FROM THE DICT, NOT FIELD BY FIELD — and that is the fix for a CLASS of defect,
+    # not for one instance of it. This was four hand-written lines, and it drifted the moment a
+    # fifth key appeared: `nvidia_driver_version` was captured by `_capture_environment` and never
+    # assigned, so every fold recorded `None` for the one field `### D-082` required — one commit
+    # after the entry demanding it. Two paths to one quantity, with nothing comparing them.
+    #
+    # ⚠ `test_every_captured_environment_key_has_a_provenance_field` makes the drift structurally
+    # impossible rather than remembered.
+    for _key, _value in env.items():
+        setattr(prov, _key, _value)
     return FoldResult(pdb=pdb, plddt=plddt, pae=pae, provenance=prov)

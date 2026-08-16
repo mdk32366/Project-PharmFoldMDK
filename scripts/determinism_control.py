@@ -50,6 +50,9 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from core.contracts import TIER_RECIPE  # noqa: E402
+from core.vram_guard import (  # noqa: E402
+    apply_allocator_cap, cuda_memory, peak_vram, reset_peak, sysmem_fallback_state,
+)
 from worker.fold_compare import compare_folds, fold_from_pdb  # noqa: E402
 
 CENSUS = REPO / "data" / "census"
@@ -79,6 +82,18 @@ def sequence_from_cache(accession: str) -> str:
     return (json.loads(p.read_text(encoding="utf-8")).get("sequence") or {}).get("value", "")
 
 
+def _digest(cmp_input: dict) -> str:
+    """sha256 over the comparator input. ⚠ Exact — coordinates and pLDDT, no rounding.
+
+    Rounding here would be a tolerance, and D-041 dec 4 rules that no tolerance may be invented:
+    *"nearly identical" is the DIFFER branch*.
+    """
+    import hashlib
+    payload = json.dumps({"coords": cmp_input["coords"], "plddt": cmp_input["plddt"]},
+                         sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def gpu_memory_mib() -> Optional[dict[str, Any]]:
     """Peak/used VRAM, read from `nvidia-smi`. ⚠ Absent is a CATEGORY, never a zero."""
     try:
@@ -99,6 +114,15 @@ def run(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--repeat", type=int, default=2,
                     help="folds at the one recipe. ⚠ 2 is the control; more is more evidence")
     ap.add_argument("--out", default=str(CENSUS / "determinism_control.json"))
+    #: ⚠ DEFAULT None = NO CAP, and that is deliberate rather than lax. The pre-registration says
+    #: the allocated-vs-reserved gap "decides the cap" — so capping this run would be circular:
+    #: the measurement that sets the cap cannot be bounded by the cap it sets. Layer 1 (sysmem
+    #: fallback off) is what makes an uncapped run safe, and it is owner-attested below.
+    ap.add_argument("--memory-fraction", type=float, default=None,
+                    help="⚠ allocator cap. OMIT for the run that MEASURES demand — see D-082")
+    ap.add_argument("--layer1-attested", action="store_true",
+                    help="⚠ the owner states the sysmem fallback policy is set. It CANNOT be "
+                         "verified from code; this records an attestation, never a measurement")
     args = ap.parse_args(argv)
 
     row = span_from_manifest(args.accession)
@@ -125,6 +149,28 @@ def run(argv: Optional[list[str]] = None) -> int:
         "span_definition": row.get("span_definition", ""),
         "span_starts_at_residue_1": start == 1,
         "gpu_before": gpu_memory_mib(),
+        # ⚠ D-082 layer state, recorded on the artifact so a later reader knows what protected
+        # this run — or did not.
+        "layers": {
+            "layer1_sysmem_fallback": {
+                **sysmem_fallback_state(),
+                # ⚠ ATTESTED, NOT MEASURED. There is no query API; this records who said so.
+                "owner_attested_set": bool(args.layer1_attested),
+                "attestation_note": ("the owner states the policy is set for BOTH the venv stub "
+                                     "and the base interpreter. ⚠ This is testimony, not a "
+                                     "measurement, and it is labelled as such."),
+            },
+            "layer2_allocator_cap": (apply_allocator_cap(args.memory_fraction)
+                                     if args.memory_fraction else
+                                     {"applied": False,
+                                      "why": ("deliberately uncapped: this run MEASURES the demand "
+                                              "that decides the cap, so capping it would be "
+                                              "circular (D-082 pre-registration §3)")}),
+            "layer3_child_process": {"applied": False,
+                                     "why": "not wired into the fold path yet — stated, not implied"},
+        },
+        "cuda_mem_get_info_before": (lambda m: {"free_mib": m[0], "total_mib": m[1]} if m else None)(
+            cuda_memory()),
         # ⚠ Stated BEFORE the first fold, so the line that opens the run names what it measured.
         "limitations": [
             "Covers the FOLD KERNEL only, not the enqueue path. Not end-to-end determinism (R12).",
@@ -146,11 +192,20 @@ def run(argv: Optional[list[str]] = None) -> int:
 
     folds, records = [], []
     for i in range(args.repeat):
+        # ⚠ BEFORE the fold, or the peak describes the wrong window.
+        reset_peak()
         t0 = time.time()
         result = runner.fold(fold_seq, dtype=dtype, chunk_size=chunk_size, source=runner.WHOLE)
         wall = time.time() - t0
+        peak = peak_vram()
         cmp_input = fold_from_pdb(result.pdb, result.plddt)
         folds.append(cmp_input)
+        # ⚠⚠ PERSISTED, because otherwise the cross-driver question CANNOT BE ANSWERED LATER.
+        # The first version of this artifact stored mean_plddt, ca_residues and plddt_len — no
+        # coordinates — so "identical across drivers" would have rested on 74.81 == 74.81, a
+        # scalar to two decimals. That is exactly the weak signal `ceiling_probe --repeat 2` was
+        # rejected for, rebuilt inside the instrument meant to replace it.
+        cmp_digest = _digest(cmp_input)
         rec = {
             "attempt": i + 1,
             "wall_clock_s": round(wall, 2),
@@ -158,6 +213,17 @@ def run(argv: Optional[list[str]] = None) -> int:
             "plddt_len": len(result.plddt),
             "mean_plddt": (result.provenance.mean_plddt if result.provenance else None),
             "gpu_after": gpu_memory_mib(),
+            # ⚠⚠ THREE NUMBERS, NONE STANDING FOR THE OTHER. `nvidia-smi used` is RESERVED,
+            # inflated by the caching allocator's retained pool — it is what we mistook for demand
+            # on 596.72 when we recorded 7,658 MiB. max_allocated is the actual demand.
+            "peak_vram": peak,
+            "cuda_mem_get_info_after": (lambda m: {"free_mib": m[0], "total_mib": m[1]} if m else None)(
+                cuda_memory()),
+            "nvidia_driver_version": getattr(result.provenance, "nvidia_driver_version", None),
+            # ⚠ A cheap exact identity for the STRUCTURE. Two folds on different drivers with the
+            # same digest are identical without needing the sidecar; different digests say only
+            # that they differ, and `compare_folds` on the sidecars says WHERE.
+            "comparator_digest": cmp_digest,
             # ⚠ The recipe AS RECORDED BY THE FOLD, not as passed in. A fold completing without a
             # recorded recipe is a stop condition.
             "recipe_recorded": {
@@ -172,8 +238,11 @@ def run(argv: Optional[list[str]] = None) -> int:
             print(f"⚠ attempt {i+1}: structure holds {rec['ca_residues_in_pdb']} CA residues, "
                   f"manifest span_aa is {span_aa}", file=sys.stderr)
         records.append(rec)
-        print(f"  attempt {i+1}/{args.repeat} | {wall:.1f}s | "
-              f"{rec['ca_residues_in_pdb']} CA | mean_plddt {rec['mean_plddt']}", file=sys.stderr)
+        print(f"  attempt {i+1}/{args.repeat} | {wall:.1f}s | {rec['ca_residues_in_pdb']} CA | "
+              f"mean_plddt {rec['mean_plddt']} | peak_alloc "
+              f"{peak.get('max_allocated_mib')} MiB | peak_reserved "
+              f"{peak.get('max_reserved_mib')} MiB | driver {rec['nvidia_driver_version']}",
+              file=sys.stderr)
 
     # ⚠ EXACT comparison, no tolerance. Every pair, not just the first against the last.
     comparisons = []
@@ -186,12 +255,35 @@ def run(argv: Optional[list[str]] = None) -> int:
 
     deterministic = all(c["identical"] for c in comparisons)
     out = {**header, "attempts": records, "comparisons": comparisons,
+           "comparator_sidecar": None,   # filled below once written
            "deterministic": deterministic,
            "verdict": ("IDENTICAL across all pairs — the kernel is deterministic at this recipe"
                        if deterministic else
                        "⚠ NOT IDENTICAL — the kernel is nondeterministic at this recipe, and no "
                        "cross-recipe difference can be attributed until this is resolved")}
-    Path(args.out).write_text(json.dumps(out, indent=2), encoding="utf-8")
+    # ⚠ The comparator inputs go to a SIDECAR so the main artifact stays readable, and the main
+    # artifact carries each fold's digest so the sidecar is not needed for a yes/no answer.
+    import os
+    side = Path(args.out).with_suffix(".folds.json")
+    with open(side, "w", encoding="utf-8") as fh:
+        json.dump({"accession": args.accession, "dtype": dtype, "chunk_size": chunk_size,
+                   "nvidia_driver_version": records[0].get("nvidia_driver_version"),
+                   "note": ("comparator inputs, persisted so a CROSS-DRIVER comparison is "
+                            "answerable later. ⚠ Without these, identity across drivers rests on "
+                            "a scalar mean, which is the weak signal this instrument exists to "
+                            "replace."),
+                   "folds": folds}, fh)
+        fh.flush()
+        os.fsync(fh.fileno())
+    out_extra_sidecar = str(side)
+
+    # ⚠ fsync. The last probe's append-only file came back as 55 bytes of NUL after a hard reset:
+    # a write that reaches the page cache and not the disk is not a record.
+    out["comparator_sidecar"] = out_extra_sidecar
+    with open(args.out, "w", encoding="utf-8") as fh:
+        json.dump(out, fh, indent=2)
+        fh.flush()
+        os.fsync(fh.fileno())
     print(f"\n{out['verdict']}")
     print(f"wrote {args.out}")
     return 0 if deterministic else 1
