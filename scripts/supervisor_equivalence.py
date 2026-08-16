@@ -80,20 +80,60 @@ def _refuse_if_worker_busy(overridden: bool) -> None:
     print(f"✅ no claimed jobs — the card is believed free (claimed={claimed})")
 
 
-def _sequence_and_recipe(accession: str, tier: str) -> tuple[str, dict]:
-    """⚠ The recipe is resolved from `TIER_RECIPE` at use time (D-047), never from a stored copy."""
-    from core.contracts import TIER_RECIPE
+#: ⚠ The measured A6000 single-fold ceiling. Folding past it is the failure mode this whole
+#: layer exists for, and a VERIFICATION that triggers it would be self-defeating.
+CEILING_AA = 440
 
-    # ⚠ Reuses the ingest's own cache reader rather than a second one written here. A duplicate
-    # loader is a second source for one quantity with nothing comparing them — and it is
-    # cache-only, so this measurement performs NO network fetch.
+
+def _sequence_and_recipe(accession: str, tier: str) -> tuple[str, dict, dict]:
+    """The **manifest SPAN**, the recipe, and the coordinates — not the whole protein.
+
+    ⚠⚠ **The first version folded `sequence_from_cache(accession)` — the FULL sequence.** For a
+    tranche-4 row that is the wrong molecule *and* a real hazard: `Q8N423`'s span is 439 aa but its
+    full chain is **597 aa, well past the 440 ceiling**. A verification harness would have folded
+    597 residues and risked **the exact failure layer 3 exists to catch, before layer 3 was on.**
+
+    ⚠ It now folds **what the worker folds** — the slice, with `source='sliced_ecd'` and the same
+    coordinates — so equivalence is measured on the real workload rather than a longer one.
+    """
+    import csv
+
+    from core.contracts import TIER_RECIPE
+    # ⚠ The ingest's own cache reader, not a second one. Cache-only: no network fetch.
     from scripts.census_ingest import sequence_from_cache
 
-    recipe = TIER_RECIPE[tier]
-    seq = sequence_from_cache(accession)
-    if not seq:
-        raise SystemExit(f"⚠ empty sequence for {accession} — refusing to fold nothing")
-    return seq, recipe
+    manifest = REPO / "data" / "census" / "census_manifest.v7.csv"
+    rows = [r for r in csv.DictReader(manifest.open(encoding="utf-8"))
+            if r["census_accession"] == accession]
+    if not rows:
+        raise SystemExit(f"⚠ {accession} is not in the census manifest — refusing to invent a span")
+    r = rows[0]
+
+    full = sequence_from_cache(accession)
+    start, end = int(r["span_start"]), int(r["span_end"])
+    span = full[start - 1: end]
+    if not span:
+        raise SystemExit(f"⚠ empty span for {accession} — refusing to fold nothing")
+    if len(span) != int(r["span_aa"]):
+        raise SystemExit(f"⚠⚠ {accession}: slice is {len(span)} aa, manifest says {r['span_aa']} — "
+                         f"STOP. A slice disagreeing with its recorded length is a construction "
+                         f"defect, not a rounding difference.")
+    if len(span) > CEILING_AA:
+        # ⚠ REFUSE. A verification that triggers the failure it is verifying against is worthless.
+        raise SystemExit(f"⚠⚠ {accession}: span is {len(span)} aa, past the {CEILING_AA} aa "
+                         f"ceiling. REFUSING — pick a shorter accession.")
+    return span, TIER_RECIPE[tier], {"ecd_start": start, "ecd_end": end,
+                                     "span_aa": int(r["span_aa"]), "full_length": len(full)}
+
+
+def _ca_coords(pdb_path: Path) -> list[tuple[float, float, float]]:
+    """CA coordinates in residue order, parsed from the PDB. ⚠ No tolerance, no rounding — the
+    strings are converted once and compared as given."""
+    out = []
+    for line in pdb_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("ATOM") and line[12:16].strip() == "CA":
+            out.append((float(line[30:38]), float(line[38:46]), float(line[46:54])))
+    return out
 
 
 def _artifact(arm: str, accession: str, tier: str, pdb: str, plddt: list[float]) -> dict:
@@ -105,26 +145,32 @@ def _artifact(arm: str, accession: str, tier: str, pdb: str, plddt: list[float])
         "pdb_sha256": hashlib.sha256(pdb.encode()).hexdigest(),
         "pdb_len": len(pdb),
         "n_plddt": len(plddt),
+        # ⚠ Kept in full, not summarised: `compare_folds` needs the per-residue values, and a mean
+        # cannot distinguish two structures that differ.
+        "plddt": list(plddt),
         "mean_plddt": sum(plddt) / len(plddt) if plddt else None,
     }
 
 
 def run_arm(arm: str, accession: str, tier: str, overridden: bool) -> int:
     _refuse_if_worker_busy(overridden)
-    seq, recipe = _sequence_and_recipe(accession, tier)
-    print(f"arm={arm} | {accession} | {len(seq)} aa | dtype={recipe['dtype']} "
-          f"chunk={recipe['chunk_size']}")
+    seq, recipe, coords = _sequence_and_recipe(accession, tier)
+    print(f"arm={arm} | {accession} | span {len(seq)} aa "
+          f"({coords['ecd_start']}-{coords['ecd_end']} of {coords['full_length']}) | "
+          f"dtype={recipe['dtype']} chunk={recipe['chunk_size']} | ceiling {CEILING_AA}")
 
     if arm == "inprocess":
         from worker.runner import fold
-        r = fold(seq, dtype=recipe["dtype"], chunk_size=recipe["chunk_size"], source="whole")
+        r = fold(seq, dtype=recipe["dtype"], chunk_size=recipe["chunk_size"],
+                 source="sliced_ecd", ecd_start=coords["ecd_start"], ecd_end=coords["ecd_end"])
         pdb, plddt = r.pdb, list(r.plddt)
     else:
         from worker.fold_supervisor import FoldSupervisor
         sup = FoldSupervisor()
         try:
             payload = sup.fold(seq, dtype=recipe["dtype"], chunk_size=recipe["chunk_size"],
-                               source="whole")
+                               source="sliced_ecd", ecd_start=coords["ecd_start"],
+                               ecd_end=coords["ecd_end"])
         finally:
             # ⚠ Always reaped. A leaked child keeps 8.4 GB on the card until the shell exits.
             sup.stop()
@@ -154,11 +200,17 @@ def compare() -> int:
                          f"{a['accession']}/{a['tier']} vs {b['accession']}/{b['tier']}. "
                          f"Comparing them would be meaningless. STOP.")
 
+    # ⚠ `compare_folds` takes MAPPINGS with "coords" and "plddt" — NOT PDB text. The first
+    # version passed strings and died in `fold["coords"]`. Fixed by reading the contract rather
+    # than by removing the call: the CA coordinates are the substantive comparison, and the sha256
+    # below is only a byte claim over the rendered file.
     from worker.fold_compare import compare_folds
     verdict = compare_folds(
-        (OUT_DIR / "supervisor_equivalence.inprocess.pdb").read_text(),
-        (OUT_DIR / "supervisor_equivalence.supervised.pdb").read_text(),
-    )
+        {"coords": _ca_coords(OUT_DIR / "supervisor_equivalence.inprocess.pdb"),
+         "plddt": a["plddt"]},
+        {"coords": _ca_coords(OUT_DIR / "supervisor_equivalence.supervised.pdb"),
+         "plddt": b["plddt"]},
+    ).describe()
     same_hash = a["pdb_sha256"] == b["pdb_sha256"]
     print(f"accession   | {a['accession']} tier={a['tier']}")
     print(f"in-process  | sha256={a['pdb_sha256'][:16]}… mean_plddt={a['mean_plddt']}")

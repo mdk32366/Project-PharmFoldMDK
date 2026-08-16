@@ -478,6 +478,28 @@ So the rule is not "be careful" — it is:
 
 ---
 
+### F-034 — The verification harness would have triggered the failure it was built to verify against
+
+- **Date:** 2026-08-16
+- **Status:** fixed
+- **What happened:** `scripts/supervisor_equivalence.py` — the gate that had to pass before layer 3 could be switched on — folded **`sequence_from_cache(accession)`, the FULL protein**, not the manifest span.
+
+  ⚠⚠ **`Q8N423`'s span is 439 aa. Its full chain is 597 aa — well past the measured 440 ceiling.** Had that accession been chosen, **the tool proving it was safe to enable the VRAM-death guard would itself have folded 597 residues on a card whose ceiling is 440** — risking the exact failure layer 3 exists to catch, **before layer 3 was on**, on a host that bugchecked four days earlier.
+
+- ⚠ **It was caught by checking the input, not by the tool objecting.** Nothing in the harness compared the fold length to the ceiling; the check happened because the accession's length was looked up before folding it. **`Q6ZVN8` was under 440 by luck (426 aa full), so the run would have gone green and taught nothing.**
+
+- **Why the defect existed:** the harness was written to answer *"does the supervisor change the structure?"*, and **any sequence answers that.** ⚠ **So the sequence was chosen for convenience rather than fidelity** — and a verification that does not fold what the worker folds is not measuring the workload it is clearing.
+
+- **Fixed:** it now folds the **manifest span** with `source='sliced_ecd'` and the same coordinates the worker uses; asserts the slice length equals `span_aa` (a disagreement is a construction defect, not a rounding difference); and ⚠ **REFUSES anything past `CEILING_AA = 440`** — *a verification that triggers the failure it is verifying against is worthless.*
+
+- ⚠ **A second defect in the same instrument, recorded here rather than given its own integer** (taking an integer under momentum is the F-025 defect): `compare_folds` takes **mappings with `coords` and `plddt`**, not PDB text. The first call passed strings and died in `fold["coords"]`. ⚠ **It was fixed by reading the contract, NOT by removing the call** — deleting the comparison would have left the sha256 as the only evidence, and a byte hash over a rendered file is a weaker claim than CA coordinates compared with no tolerance. **Both arms were then re-run, so the evidence comes from the code that ships rather than the code that was repaired.**
+
+- **The class:** ⚠ **both defects were in the instrument, and both were invisible until it was run against real data.** Same shape as `ceiling_probe._attempt` (an `except` that never runs because there is no process left) and the revert proof that performed the `setattr` itself. **An instrument is code, and code that has never been exercised against the real case is a hypothesis.**
+
+- **Evidence:** gate 655 passed, 15 skipped, exit code 0. The corrected harness produced `byte-identical PDB | True` and `compare_folds | identical` on `Q6ZVN8` (364 aa span, 36–399 of 426).
+
+---
+
 ### F-033 — A residue the tokenizer has no word for fails as a tensor-shape complaint, not as "this protein cannot be folded"
 
 - **Date:** 2026-08-16
