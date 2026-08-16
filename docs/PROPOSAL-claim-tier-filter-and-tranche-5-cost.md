@@ -173,3 +173,91 @@ filtering, or the rental jobs are visible to the local worker the moment they ex
    cheap and routine. ⚠ **The 39 rows above 2,000 aa are a separate decision** — they need domain
    assembly (which changes `boundary_method`, so the artifacts are not comparable to single-pass
    folds), and that is a modelling decision, not a purchase.
+
+
+---
+
+# §3 — CORRECTION: "infeasible" / "impossible" was wrong, and the 13 are not what I called them
+
+> **Added 2026-08-16 after the owner challenged the word.** ⚠ **The table in §2 says "infeasible as
+> one sequence" and my summary said "impossible." Both were wrong, and the second was wrong in the
+> exact way `D-085` had just ruled against** — *excluded* did not mean *unfoldable*, and neither
+> does this. ⚠ **The original wording is left standing above and corrected here, not edited away.**
+
+## What is actually true — a hard limit, and it is not the one I cited
+
+`facebook/esmfold_v1`: **`max_position_embeddings = 1026`**, **`position_embedding_type = rotary`**.
+
+⚠ **Rotary embeddings extrapolate — there is NO mechanical cutoff.** So nothing refuses a long
+sequence on model grounds. But **~1,026 is the trained context**, and beyond it the model is
+running outside the distribution it was fitted on. **It will return a structure. There is no
+evidence it means anything.**
+
+⚠⚠ **That implicates far more than 13 rows:**
+
+| tranche-5 spans | rows |
+|---|---|
+| > 850 aa (past the 48 GB estimate) | **210** |
+| **> 1,026 aa (past the TRAINED CONTEXT)** | **141** |
+| > 2,000 aa | 39 |
+| > 4,000 aa | 13 |
+
+⚠ **This is not a hardware question and renting a bigger card does not touch it.** §2 framed the
+rental tranche as a memory-and-money problem; **for 141 rows the binding constraint is the model,
+not the GPU.**
+
+## The 13, named — and they are not a junk tail
+
+| accession | symbol | span | what it is |
+|---|---|---|---|
+| Q14517 | **FAT1** | 4,160 | protocadherin — cadherin repeat stack |
+| Q9NYQ8 | **FAT2** | 4,030 | protocadherin |
+| Q8TDW7 | **FAT3** | 4,122 | protocadherin |
+| Q6V0I7 | **FAT4** | 4,466 | protocadherin |
+| Q07954 | **LRP1** | 4,400 | LDLR-related — LDLa/EGF/β-propeller modules |
+| Q9NZR2 | **LRP1B** | 4,420 | LDLR-related |
+| P98164 | **LRP2** | 4,398 | LDLR-related (megalin) |
+| O75445 | **USH2A** | 5,011 | usherin — laminin/fibronectin domains |
+| Q8WXG9 | **ADGRV1** | 5,879 | adhesion GPCR — Calx-β repeats |
+| Q86WI1 | **PKHD1L1** | 4,190 | fibrocystin-L — IPT/TIG domains |
+| Q685J3 | **MUC17** | 4,368 | mucin — tandem repeats |
+| Q9UKN1 | **MUC12** | 5,364 | mucin — tandem repeats |
+| Q8WXI7 | **MUC16** | 14,451 | mucin (CA-125) |
+
+⚠⚠ **All thirteen are `census_class = surface`.** On an ADC target platform that is the class that
+matters — **these are not the rows to discard, they are among the rows most worth having.**
+
+## They split into TWO groups, and neither is "impossible"
+
+**Group A — modular ordered repeat proteins (10):** FAT1–4, LRP1/1B/2, USH2A, ADGRV1, PKHD1L1.
+⚠ **These are stacks of independently-folding domains, each comfortably inside the 1,026 trained
+context.** Domain assembly is not a workaround for them — **it is arguably the correct way to model
+them**, and a single 4,400-residue pass would be the questionable choice even on infinite VRAM.
+**Verdict: a METHOD limit with a known remedy, not a limit at all.** ⚠ Assembly changes
+`boundary_method`, so the artifacts are **not comparable to single-pass folds** without saying so
+(D-076 Tier 2 already says this for FAT2).
+
+**Group B — mucins (3):** MUC16, MUC12, MUC17. Tandem repeats, heavily O-glycosylated, largely
+intrinsically disordered. ⚠ **A structure is PRODUCIBLE and uninformative** — exactly the D-085
+condition already recorded for MUC16. **Verdict: a BIOLOGY limit. More compute does not help, and
+neither does domain assembly.**
+
+⚠ **Nothing in the 13 is impossible.** Ten have a clear method; three have a clear reason the
+question is malformed. **"Impossible" collapsed those into one word and pointed at the wrong
+remedy for both.**
+
+## The owner's read was right: this is a tranche 6, not a bigger tranche 5
+
+⚠ **Domain assembly is a different KIND of work**, not more of the same: it needs a domain-boundary
+source, a per-domain span definition, an assembly step, and a `boundary_method` that says so.
+**Its artifacts do not belong in the same population as single-pass folds** — which is precisely
+why it is a separate arc and not a longer queue.
+
+**Revised recommendation:**
+1. Tranche 5 becomes **the 566 rows at 441–850 aa** — measurable, cheap, single-pass, inside the
+   trained context.
+2. ⚠ **The 141 rows above 1,026 aa do not belong in ANY single-pass tranche**, at any budget, on any
+   card. Renting hardware for them buys extrapolation.
+3. **Tranche 6 is the domain-assembly arc** for Group A. It is a modelling design task, not a
+   purchase — and it is where several of the most interesting surface targets live.
+4. **Group B stays excluded**, with the D-085 conditions already stated.
