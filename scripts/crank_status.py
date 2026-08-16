@@ -14,6 +14,14 @@ even when it is zero** — an omitted `failed` row reads as *"no failures"* when
 
 ⚠ **Read-only, deliberately.** It opens a session, selects, and closes. Nothing here writes, so it
 is safe to run against a live crank — which is the only time anyone wants it.
+
+⚠⚠ **And tranche 0 reconciles against the ROSTER, not against itself.** The first version of this
+file printed `tranche-0 … total=80` and stopped. **The cohort is 82.** The two absent rows —
+`MUC16` and `FAT2`, the D-022 named oversize exclusions — have no `protein_analyses` row and never
+had one, **so a query over that table cannot see them and reported a low number instead of a
+category.** That is the exact failure the project bans: *an absent value is a CATEGORY, never a low
+number and never a bare null.* The reconciliation below is therefore not decoration — **it is the
+only part of this file that can see something the database has no row for.**
 """
 
 from __future__ import annotations
@@ -68,7 +76,48 @@ def main() -> int:
 
     grand = sum(sum(c.values()) for c in by_tranche.values())
     print(f"{'ALL':>14} | jobs={grand} across {len(by_tranche)} tranche key(s)")
+
+    _reconcile_cohort(by_tranche.get(0, {}))
     return 0
+
+
+def _reconcile_cohort(counts: dict[str, int]) -> None:
+    """⚠ Tranche 0 against the roster of 82 — the only check here that sees a MISSING ROW.
+
+    Every other number in this file is a count of rows that exist. **`MUC16` and `FAT2` have no
+    `protein_analyses` row at all**, so they are invisible to the queries above by construction,
+    and `total=80` would read as *"80 targets"* rather than *"82 minus two named exclusions."*
+    """
+    # ⚠ Derived from source, never a hand-kept list (F-027): the exclusions come out of the module
+    # that rules them, so a change there cannot leave this reconciliation quietly stale.
+    from core.manifest import NAMED_EXCLUSIONS
+
+    roster_path = REPO / "data" / "cohort_82_accessions.txt"
+    if not roster_path.is_file():
+        # ⚠ A category, not a silent skip. "The roster was unreadable" and "the roster agreed"
+        # must not produce the same output.
+        print(f"{'COHORT':>14} | ⚠ ROSTER_UNREADABLE — {roster_path.name} absent; "
+              f"tranche 0 is UNRECONCILED, not reconciled")
+        return
+
+    # ⚠ The file is `ACCESSION  SYMBOL` with `#` comments. Parsed by token, not by line: a
+    # whole-line comparison against accessions matches nothing and reads as total divergence.
+    roster = [l.split()[0] for l in roster_path.read_text().splitlines()
+              if l.strip() and not l.lstrip().startswith("#")]
+
+    excluded = sorted(a for a in roster if a in NAMED_EXCLUSIONS)
+    expected = len(roster) - len(excluded)
+    seen = sum(counts.values())
+
+    print(f"{'COHORT':>14} | roster={len(roster)} − named_exclusions={len(excluded)} "
+          f"→ expected_jobs={expected} | observed={seen} "
+          f"| {'✅ reconciles' if seen == expected else '⚠⚠ DOES NOT RECONCILE'}")
+    for a in excluded:
+        print(f"{'':>14} | ⚠ NOT_FOLDED (no row exists) {a} — {NAMED_EXCLUSIONS[a]}")
+    if seen != expected:
+        # ⚠ Stated, never reconciled away by adjusting the denominator to match.
+        print(f"{'':>14} | ⚠⚠ {abs(expected - seen)} row(s) unaccounted for — STOP AND REPORT. "
+              f"Do NOT adjust the expected count to agree.")
 
 
 if __name__ == "__main__":
