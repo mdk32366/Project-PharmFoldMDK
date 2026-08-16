@@ -130,6 +130,41 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-085 — "Excluded" has never meant "cannot be folded", and the registry now has to say which: scope, and the conditions
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Owner's ruling:** *"Third named exclusion with reason stated. It appears all of those exclusions cannot be folded. If that is NOT the case and it can be folded, then stating the conditions under which that is possible is required."*
+
+- ⚠⚠ **The premise did not hold, and checking it is what made this a decision rather than a one-line edit.** `MUC16` (`Q8WXI7`) and `FAT2` (`Q9NYQ8`) are **in the census manifest at tranche 5, `tier=rental` — they are SCHEDULED TO FOLD.** The registry never meant *"cannot be folded"*; it meant **"not on the local card, as one sequence, in the cohort."** ⚠ **A guard that had read it the other way and applied it to the census path would have silently dropped two rows queued to succeed** — which is exactly what the owner's conditional anticipated.
+
+- ⚠ **And the literal reading of the ruling would have been INERT.** `P55073` is **not in the 82**; it is census-only. `NAMED_EXCLUSIONS` is consumed **only** by the cohort manifest builder and the roster reconciliation. Adding `P55073` there would have looked done and **done nothing** — the F-030 shape, where the path that matters is reached by omission.
+
+- **Decision:**
+
+  1. **An exclusion is a record, not a string.** `Exclusion(symbol, scope, reason, foldable, conditions)`. ⚠ **`foldable` is a SENTENCE, never a bool** — *"yes, but ONLY by folding a DIFFERENT SEQUENCE than the one on record"* is the actual answer for `P55073` and no boolean carries it.
+  2. ⚠⚠ **`__post_init__` REFUSES a foldable entry with empty conditions.** The ruling is enforced at construction, **not by review** — *"state the conditions"* is a rule that decays the moment someone adds an entry in a hurry.
+  3. **`NAMED_EXCLUSIONS` becomes a DERIVED, cohort-scoped view** (`scope.startswith("cohort")`). ⚠ The census path must never consume it, and now structurally cannot pick up `P55073` or mistake the rental-queued two for unfoldable.
+  4. **The guard lands where `P55073` actually lives — `scripts/census_ingest.py`.** A span carrying a residue outside the ESM vocabulary is **excluded as a named category before any write**, and ⚠ **excluded, not fatal**: one untokenisable row must not stop a tranche of 500 that are fine.
+  5. ⚠ **`crank_status.py`'s `NOT_FOLDED` label is CORRECTED, not deleted.** It asserted an impossibility the data contradicts. It now reads `NOT IN COHORT TRANCHE 0` and prints `foldable?` beneath.
+
+- **The three entries, with conditions stated:**
+
+  | accession | scope | foldable? | conditions |
+  |---|---|---|---|
+  | `Q8WXI7` MUC16 | cohort tranche 0 | **yes — already queued**, census tranche 5 rental | Rental hardware. ⚠ A structure is **producible**; a meaningful whole-ECD one is **not** — largely intrinsically disordered (D-076 Tier 3). ⚠ **A biology limit, not a compute one: more VRAM does not remove it.** |
+  | `Q9NYQ8` FAT2 | cohort tranche 0 | **yes — already queued**, census tranche 5 rental | Rental as one sequence, **or** domain assembly locally. ⚠ **Ordered** (cadherin stack), so a pure resource limit (D-076 Tier 2). ⚠ Assembly changes `boundary_method`. |
+  | `P55073` | ⚠ **every ESMFold path, any size, any hardware** | **yes — but only by folding a DIFFERENT SEQUENCE** | ⚠⚠ Substitution required. `U`→`C` (Se analogue of cysteine, backbone close) ⚠ **but the artifact would then describe a sequence that is not the sequence of record — the F-025/MSLN defect, where something folds, scores and looks entirely normal while being the wrong molecule.** `U`→`X` (measured: `X` **is** in the vocabulary) masks rather than asserts. ⚠ **Either way the substitution must be recorded IN the artifact**, or it is indistinguishable from a correct fold. ⚠ **NOT DONE — a modelling decision, not a bug fix.** |
+
+- **Consequences:**
+  - ⚠ **The already-failed `P55073` row is NOT retrofitted.** It stays `failed` carrying its misleading tensor-shape error, with F-033 recording what the error actually meant. The guard is forward-looking; **corrections are recorded, never patched away.**
+  - **Bounded and measured:** **1 span of 3,467** carries an untokenisable residue. **Tranches 4 and 5 carry none**, so no further ingest changes.
+  - ⚠ **`X` stays TOKENISABLE.** It is in the vocabulary and folds; excluding it would drop every span carrying an unknown residue — a much larger silent loss than the defect being fixed.
+
+- **Evidence:** 6 tests in `tests/test_exclusions.py`, including one asserting against the **census manifest data** that `MUC16`/`FAT2` really are rental-queued — so a future edit that routes them away fails, because their stated conditions promise it. Guard proven live: the tranche-3 dry run emits `EXCLUDED_UNTOKENISABLE_RESIDUE | P55073 | residue(s) ['U']` and the row count drops 517 → 516.
+
+---
+
 ### D-084 — D-082 layer 3 ships OFF, and the switch is the decision: a fold path may not change its process topology because a module landed
 
 - **Date:** 2026-08-16

@@ -69,6 +69,21 @@ def sequence_from_cache(accession: str) -> str:
     return (json.loads(p.read_text(encoding="utf-8")).get("sequence") or {}).get("value", "")
 
 
+#: ⚠ The ESM vocabulary's 20 standard residues plus `X` (unknown), which IS in the vocabulary and
+#: tokenises — measured, not assumed (F-033). `U` (selenocysteine) and `O` (pyrrolysine) are NOT.
+TOKENISABLE = set("ACDEFGHIKLMNPQRSTVWYX")
+
+
+def untokenisable_residues(span: str) -> list[str]:
+    """⚠ Residues ESMFold has no word for. Returns a LIST, so the reason can NAME them.
+
+    D-085: a span carrying one of these cannot be tokenised, let alone folded — and left
+    unguarded it fails as *"Unable to create tensor … excessive nesting"*, a message about
+    batching that names nothing real (F-033). **A named category beats a true-but-useless error.**
+    """
+    return sorted(set(span) - TOKENISABLE)
+
+
 def build_row(r: dict[str, str]) -> dict[str, Any]:
     """The analysis payload for one manifest row. ⚠ Raises rather than writing a bad slice."""
     span = int(r["span_aa"])
@@ -164,6 +179,21 @@ def run(argv: Optional[list[str]] = None) -> int:
         rows = rows[: args.limit]
 
     payloads = [build_row(r) for r in rows]      # ⚠ every slice checked before any write
+
+    # ⚠⚠ D-085: a span the model cannot TOKENISE is excluded as a NAMED CATEGORY, before any
+    # write. Left unguarded it reaches the GPU and fails as "Unable to create tensor … excessive
+    # nesting" — a message about batching that names nothing real (F-033). ⚠ It is EXCLUDED, not
+    # fatal: one untokenisable row must not stop a tranche of 500 that are fine.
+    untok = [(p, untokenisable_residues(p["meta"]["sequence"])) for p in payloads]
+    blocked = [(p, bad) for p, bad in untok if bad]
+    payloads = [p for p, bad in untok if not bad]
+    for p, bad in blocked:
+        print(f"  ⚠ EXCLUDED_UNTOKENISABLE_RESIDUE | {p['accession']} | "
+              f"residue(s) {bad} absent from the ESM vocabulary — cannot be tokenised, so the "
+              f"fold is not attempted rather than failing as a tensor-shape error (F-033, D-085)")
+    # ⚠ Stated even at zero, so "none were blocked" and "the check never ran" differ in the output.
+    print(f"  ⚠ untokenisable spans excluded | {len(blocked)}")
+
     specs = [assert_claimable(p) for p in payloads]   # ⚠ and the CLAIM CONTRACT, before any write
 
     spans = [p["meta"]["span_aa"] for p in payloads]

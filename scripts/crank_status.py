@@ -90,7 +90,7 @@ def _reconcile_cohort(counts: dict[str, int]) -> None:
     """
     # ⚠ Derived from source, never a hand-kept list (F-027): the exclusions come out of the module
     # that rules them, so a change there cannot leave this reconciliation quietly stale.
-    from core.manifest import NAMED_EXCLUSIONS
+    from core.manifest import EXCLUSIONS, NAMED_EXCLUSIONS
 
     roster_path = REPO / "data" / "cohort_82_accessions.txt"
     if not roster_path.is_file():
@@ -113,7 +113,12 @@ def _reconcile_cohort(counts: dict[str, int]) -> None:
           f"→ expected_jobs={expected} | observed={seen} "
           f"| {'✅ reconciles' if seen == expected else '⚠⚠ DOES NOT RECONCILE'}")
     for a in excluded:
-        print(f"{'':>14} | ⚠ NOT_FOLDED (no row exists) {a} — {NAMED_EXCLUSIONS[a]}")
+        # ⚠ "NOT_FOLDED" was wrong and is corrected (D-085): both of these are IN the census
+        # manifest at tranche 5, tier=rental — SCHEDULED TO FOLD, not unfoldable. The label
+        # asserted an impossibility the data contradicts.
+        e = EXCLUSIONS[a]
+        print(f"{'':>14} | ⚠ NOT IN COHORT TRANCHE 0 (no row exists) {a} — {e.reason}")
+        print(f"{'':>14} |    foldable? {e.foldable}")
     if seen != expected:
         # ⚠ Stated, never reconciled away by adjusting the denominator to match.
         print(f"{'':>14} | ⚠⚠ {abs(expected - seen)} row(s) unaccounted for — STOP AND REPORT. "
