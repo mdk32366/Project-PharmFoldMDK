@@ -478,6 +478,36 @@ So the rule is not "be careful" — it is:
 
 ---
 
+### F-036 — A row that was never fetched carries an EMPTY span_category, so "unknown" and "has a span" are the same filter
+
+- **Date:** 2026-08-16
+- **Status:** open
+- **What happened:** accounting for all 5,016 census rows under V2, every no-span row carries a `span_category` — `no_extracellular_span` (1,519), `absent_with_reason` (3), `span_boundary_unknown` (1). ⚠ **Except 26.** The `uniprot_inactive` rows — never fetched — have **`span_category = ''`**, the same value carried by every row that *does* have a span.
+
+- **Measured:**
+
+  | | rows |
+  |---|---|
+  | `span_category == ''` | **3,493** |
+  | …of which actually carry a span | 3,467 |
+  | ⚠ …of which carry **no span, never fetched** | **26** |
+
+  ⚠ **A consumer filtering `span_category == ''` to mean "has a span" silently picks up 26 rows that were never looked at.**
+
+- **Why it matters, and it is the project's own rule:** *an absent value is a CATEGORY, never a low number and never a bare null.* ⚠ **`uniprot_inactive` is not "no extracellular span" — it is "we do not know."** Absence of evidence against evidence of absence, and the two lead to opposite actions: one is a correct permanent exclusion, the other is **resolvable by fetching**. Collapsing them into the same empty string is exactly the `no_topology` defect that `F-025` was about — **one band meaning several things** — reappearing in the field that was supposed to have fixed it.
+
+- ⚠ **The `no_span_reason` column DOES carry it** (`not fetched: uniprot_inactive`), so the information survives. **That is what makes this a defect rather than a data loss** — and also what makes it easy to miss: the row looks complete until you filter on the wrong one of the two columns.
+
+- ⚠ **It has not bitten.** `census_manifest.v7.csv` is built from rows that **have a span**, not from `span_category == ''`, so no unfetched row ever reached a tranche — confirmed both directions: `span but not in manifest = 0`, `manifest but no span = 0`. **The manifest is correct by a different predicate than the one that is wrong**, which is luck, not design.
+
+- **Remedy (not implemented):** give the 26 a category of their own — `absent_not_fetched`, or `identity_inactive`. ⚠ **Do NOT reuse `absent_with_reason`**: that means *"parsed, and refused for a stated reason"*, which is a claim about the entry's content. **These were never parsed at all.**
+
+- ⚠ **A ruling is wanted on the 26 themselves, separately from the column.** They are UniProt-inactive accessions — merged or withdrawn. Whether the census should follow the merge targets, or record them permanently as inactive-at-this-release, is a **scope decision, not a bug fix**, and it interacts with the *"two facts, never one date"* rule: re-fetching 26 rows would put a second fetch date in a file whose whole provenance model forbids that.
+
+- **Detail:** `docs/CENSUS-ACCOUNTING-V2.md`.
+
+---
+
 ### F-035 — The local/rental routing is computed by the manifest and enforced by nobody
 
 - **Date:** 2026-08-16

@@ -156,7 +156,7 @@ not**, and *"a Planner chat message cannot ratify what a committed document rese
 
 **The register is now in step with the log**: `F-001`–`F-012`, `F-016`, `F-017`, `F-020`,
 `F-025`–`F-032` written; `F-013`, `F-014`, `F-015`, `F-018`, `F-019`, `F-021`–`F-024` still
-reserved-unwritten below. **`F-033`** (selenocysteine absent from the ESM vocabulary) **was written on 2026-08-16.** **`F-034`** (a verification harness that would have exceeded the fold ceiling) **was written on 2026-08-16.** **`F-035`** (tier routing computed but never enforced at claim time) **was written on 2026-08-16, owner-ruled a finding.** ⚠ **Next free `F-` integer: `F-036`.**
+reserved-unwritten below. **`F-033`** (selenocysteine absent from the ESM vocabulary) **was written on 2026-08-16.** **`F-034`** (a verification harness that would have exceeded the fold ceiling) **was written on 2026-08-16.** **`F-035`** (tier routing computed but never enforced at claim time) **was written on 2026-08-16, owner-ruled a finding.** **`F-036`** (an unfetched row carries an empty `span_category`) **was written on 2026-08-16.** ⚠ **Next free `F-` integer: `F-037`.**
 
 ---
 
