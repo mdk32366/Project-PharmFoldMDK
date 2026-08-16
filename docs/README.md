@@ -478,6 +478,26 @@ So the rule is not "be careful" — it is:
 
 ---
 
+### F-035 — The local/rental routing is computed by the manifest and enforced by nobody
+
+- **Date:** 2026-08-16
+- **Status:** open — ⚠ **owner ruled it a FINDING**, not a decision: the gap exists now, independently of whether anyone has tripped it.
+- **What is true:** `core/manifest.py` decides `local` vs `rental` per row, records `tier_reason`, and `TIER_RECIPE` resolves the recipe from it **at claim time** (D-047) — `local → int8`, `rental → fp16`. ⚠ **And `core/queue.py:claim()` selects `WHERE status = 'pending' ORDER BY created_at, id`. No tier. No length.** A worker takes the oldest pending job, whatever it is.
+
+- ⚠⚠ **It has never bitten because no rental row has ever been ingested.** The only thing keeping rental work off the local card is that **none exists yet** — *an operational convention doing a guard's job*, holding exactly until someone runs the obvious next command.
+
+- **What it would cost the moment tranche 5 lands:** 776 rows, all `tier=rental`, 441–14,451 aa, resolving **`fp16`**, against a card measured at **8,150 MiB total** with `known_good = 440` **at int8**. ⚠⚠ **An fp16 probe is what bugchecked this host on 2026-08-12**, and on WDDM the over-allocation is not refused — the driver spills to system memory and faults in kernel mode. ⚠ **D-082 layer 3 does not survive that.** ⚠ **FIFO is a delay, not a safeguard**: those rows would be claimed the instant tranche 4 drained, most likely unattended.
+
+- **Remedy (proposed, NOT implemented — tranche 4 is mid-flight and the claim path is untouched):**
+  1. `WORKER_TIER`, **defaulting to `local`** — ⚠ wrongly refusing work costs an idle GPU; wrongly accepting it costs a host.
+  2. ⚠ **Filtered IN THE SQL, never checked after the claim.** A post-claim refusal marks the job `claimed` then declines it — the shape that stranded ten jobs: `attempts=0`, no error, nothing retryable.
+  3. **An independent length guard at fold time.** ⚠ Tier is a *label*; length is the physical constraint. `vram_guard.preflight()` already returns `REFUSED_NO_MEASUREMENT` and is **simply not wired in**.
+  4. **State the composition on refusal** — ⚠ an idle worker and an empty queue must never look identical.
+
+- **Detail:** `docs/PROPOSAL-claim-tier-filter-and-tranche-5-cost.md`, which also carries the tranche-5 cost model and the §3 correction retracting *"impossible"*.
+
+---
+
 ### F-034 — The verification harness would have triggered the failure it was built to verify against
 
 - **Date:** 2026-08-16

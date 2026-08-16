@@ -72,11 +72,8 @@ and then be claimed the instant tranche 4 drains, most likely unattended.
 4. **State the composition on every claim refusal.** *"No work for tier `local`; 776 pending at
    tier `rental`"* — ⚠ an idle worker and an empty queue must never look identical.
 
-⚠ **Not yet numbered as an `F-` entry.** Next free is `F-035`, and taking an integer under
-momentum is the F-025 defect. **Owner ruling wanted** on whether this is a finding (a defect that
-exists now) or a decision (a gap that only becomes a defect on ingest). **My read: a finding** — the
-manifest's routing is load-bearing and is not enforced, independently of whether anyone has tripped
-it yet.
+⚠ **Numbered `F-035` on 2026-08-16 — the owner ruled it a FINDING**, not a decision: the gap
+exists now, independently of whether anyone has tripped it. Written up in `docs/README.md`.
 
 ---
 
