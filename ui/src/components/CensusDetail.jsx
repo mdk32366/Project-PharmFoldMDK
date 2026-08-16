@@ -76,8 +76,10 @@ function Segments({ detail }) {
           <p>
             Extracellular in total: <strong>{total} aa</strong>. Folded here:{' '}
             <strong>{span} aa</strong> — the <em>largest single segment</em>.{' '}
-            <strong>{discarded} aa across the remaining {n - 1} segment
-            {n - 1 === 1 ? '' : 's'} was not folded.</strong>
+            <strong>
+              {discarded} aa across the remaining {n - 1}{' '}
+              {n - 1 === 1 ? 'segment was' : 'segments were'} not folded.
+            </strong>
           </p>
           <p className="caveat">
             ⚠ An antibody can bind an epitope formed by several loops together. A structure of one

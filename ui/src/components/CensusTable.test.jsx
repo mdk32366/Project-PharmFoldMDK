@@ -70,7 +70,18 @@ describe('CensusDetail', () => {
   it('says the extracellular portion is intermittent, and what was left out', () => {
     render(<CensusDetail detail={{ ...ROWS[0], cancer_associations: null }} />)
     expect(screen.getByText(/7 separate extracellular segments/i)).toBeInTheDocument()
-    expect(screen.getByText(/558 aa across the remaining 6 segments was not folded/i)).toBeInTheDocument()
+    // ⚠ "segments WERE", not "was" — the first version agreed the verb with the aa count instead
+    // of the segment count, and this assertion pinned the mistake.
+    expect(screen.getByText(/558 aa across the remaining 6 segments were not folded/i)).toBeInTheDocument()
+  })
+
+  it('agrees the verb with the SEGMENT count, singular and plural', () => {
+    const two = { ...ROWS[0], segment_count: 2, discarded_aa: 40, cancer_associations: null }
+    const { unmount } = render(<CensusDetail detail={two} />)
+    expect(screen.getByText(/40 aa across the remaining 1 segment was not folded/i)).toBeInTheDocument()
+    unmount()
+    render(<CensusDetail detail={{ ...ROWS[0], cancer_associations: null }} />)
+    expect(screen.getByText(/remaining 6 segments were not folded/i)).toBeInTheDocument()
   })
 
   it('says a contiguous protein models the whole extracellular portion', () => {
