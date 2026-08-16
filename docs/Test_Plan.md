@@ -159,4 +159,77 @@ This balanced approach ensures both technical correctness and that the system de
 
 ---
 
+## ⚠ ADDENDUM 2026-08-16 — what a test has to do here, learned by writing bad ones
+
+**The suite is 637 passing / 15 skipped.** ⚠ **Count is not the property.** Every rule below was
+earned by a test that passed while guarding nothing.
+
+### A-017, three clauses, each asserted SEPARATELY
+
+**(a) the fixture must reach the code under test.** ⚠ A revert proof performed the `setattr` loop
+*inside the test*, so it exercised the loop in the test and not the one in `fold()` — reverting the
+code left it **green**. **A scan that matches nothing, or a fixture the code never sees, passes
+perfectly.** Assert the scan **finds** things: `assert len(found) >= 3`.
+
+**(b) one property, one test.**
+
+**(c) ⚠ the fixture must contain a case where correct and incorrect DIFFER.** A date test only
+discriminates on a row whose span actually changes. A grain test needs a protein reached by **two**
+identifiers. A leak test needs the two populations to actually **overlap** — so the overlap itself
+is asserted, because if it collapsed, every other assertion would pass for the wrong reason.
+
+### ⚠ Prove by revert, and read WHERE it reds
+
+**An error-red and a failure-red are different objects.** A test that reds at *collection* proves
+nothing about the assertion. Every guard in this project is reverted deliberately and the **file and
+line** recorded — ⚠ and one revert proof **did not red at all**, which is how it was found to be
+testing itself.
+
+### ⚠⚠ Test the PROPERTY, not the prose
+
+The census "unscored" check banned the substring `score` — and flagged the page's own *"has not been
+scored"*. Rewritten to require a negation, it flagged *"the 82 **ranked** targets"*. **Both were
+policing wording.** It is now **structural**: the data objects carry no score field, so the page
+cannot render one however it is worded. ⚠ **Fitting a test to a page until it goes green is how a
+guard becomes a decoration.**
+
+### ⚠ Guard the CLASS, not the instance
+
+Two unfiltered reads leaked; the test **enumerates every `select(ProteinAnalysis…)` in `app/`** so
+the next one reds too. Two shapes drifted apart; the test **reads the required keys out of the
+consumer's source**, never from a hand-kept list — ⚠ **a hand-kept list is the thing that drifts.**
+
+### ⚠ Exemptions must be narrow, stated, and justified in the test
+
+The leak guard first flagged `artifacts_present` — correctly — and **filtering it would have made
+every census fold un-completable.** The exemption (primary-key lookups) is written into the
+docstring **with the reason**, because an unexplained exemption is indistinguishable from an
+oversight.
+
+### ⚠⚠ A guard downstream of the filter it guards watches nothing
+
+A VRAM guard placed **after** the selector stopped watching exactly the rows the selector excluded —
+the rows it existed for. A `check_sliced_length` that only ran on the sliced branch would have gone
+green on 3,468 whole-sequence folds. **Both branches are checked.**
+
+### ⚠ No `assert` in a guard path
+
+`assert` vanishes under `python -O`. **Any check whose failure would produce a wrong artifact raises
+an explicit exception.** ⚠ Four `assert`s doing guard work remain in `scripts/` — **reported, ruled
+for conversion, and latent rather than live** since nothing in the repo passes `-O`.
+
+### ⚠ The gate's exit code is pytest's, or it is nothing
+
+`pytest -q > file; GATE=$(tail -1 file); RC=$?` captures **`tail`'s** status. ⚠ **A commit landed
+with 4 failures this way.** Capture `$?` on the line **immediately** after the command, with nothing
+between — and **copy the count from the run, never recall it.**
+
+### ⚠ A dry run that does not exercise the consumer's contract is not a dry run
+
+The census ingest validated slices, spans and DB invariants — and omitted a key `/claim` subscripts.
+Ten jobs were marked `claimed`, then stranded with `attempts=0` and no error. **The dry run now
+builds the consumer's object before any write.**
+
+---
+
 **End of Test Plan**
