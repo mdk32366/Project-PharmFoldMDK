@@ -147,3 +147,39 @@ describe('stale derivation', () => {
     expect(screen.getByText(/withheld deliberately, not missing/i)).toBeInTheDocument()
   })
 })
+
+describe('the row cap', () => {
+  const many = Array.from({ length: 250 }, (_, i) => ({
+    id: 100 + i, accession: `Q${String(i).padStart(5, '0')}`, gene: `G${i}`, label: `Protein ${i}`,
+    span_aa: 100 + i, tranche: 2, mean_plddt: 60, topology: 'contiguous', segment_count: 1,
+    scored: false,
+  }))
+
+  // ⚠⚠ THE ONE THAT WOULD HAVE CAUGHT THE SHIPPED BUG. The page read "Showing 2,641 of 2,641"
+  // above 200 rendered rows — a silent cap claiming completeness.
+  it('never claims to show more rows than it draws', () => {
+    render(<CensusTable rows={many} />)
+    const drawn = screen.getAllByRole('row').length - 1   // minus the header
+    expect(screen.getByText(/Showing/).textContent).toContain(String(drawn))
+    expect(screen.getByText(/Showing/).textContent).not.toMatch(/Showing\s*250\s*of/)
+  })
+
+  it('announces the cap and offers to lift it', () => {
+    render(<CensusTable rows={many} />)
+    expect(screen.getByText(/Capped for the browser/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /render all 250/i })).toBeInTheDocument()
+  })
+
+  it('renders everything once the cap is lifted', () => {
+    render(<CensusTable rows={many} />)
+    fireEvent.click(screen.getByRole('button', { name: /render all 250/i }))
+    expect(screen.getAllByRole('row').length - 1).toBe(250)
+    expect(screen.queryByText(/Capped for the browser/i)).not.toBeInTheDocument()
+  })
+
+  it('does not cap a small list at all', () => {
+    render(<CensusTable rows={ROWS} />)
+    expect(screen.queryByText(/Capped for the browser/i)).not.toBeInTheDocument()
+    expect(screen.getAllByRole('row').length - 1).toBe(ROWS.length)
+  })
+})
