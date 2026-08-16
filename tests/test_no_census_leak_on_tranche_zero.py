@@ -105,4 +105,15 @@ def test_the_cohort_tranche_constant_is_zero_and_the_filter_is_equality():
     assert COHORT_TRANCHE == 0
     src = (REPO / "app" / "reads.py").read_text(encoding="utf-8")
     assert "cohort_tranche == COHORT_TRANCHE" in src
-    assert "cohort_tranche !=" not in src, "a negated tranche filter admits NULL-tranche rows"
+    assert "cohort_tranche !=" not in src, (
+        "a BARE NEGATION is banned on BOTH surfaces. The cohort filter must be `== COHORT_TRANCHE`; "
+        "the census filter must be `> COHORT_TRANCHE`. `!=` reads as 'everything that is not the "
+        "cohort' while silently excluding NULL under three-valued logic — so an untagged row would "
+        "be invisible on both surfaces at once.")
+    # ⚠ The census surface exists now (D-087) and must use the POSITIVE form.
+    assert "cohort_tranche > COHORT_TRANCHE" in src, "the census filter is missing or negated"
+    # ⚠ And the rows that fall through BOTH filters must be counted, not left to be inferred from a
+    # total that does not add up.
+    assert "def census_untranched_count" in src, (
+        "nothing counts NULL-tranche rows — they are invisible on both surfaces by construction, "
+        "which is correct only if something reports them")

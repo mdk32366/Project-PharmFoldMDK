@@ -130,6 +130,37 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-087 — The census becomes browsable: a per-protein list, searchable and sortable, reversing this project's own "no per-protein row" rule
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- **Owner's ruling:** *"Can we update the surface for targets and coverage please? … Why hide it under a bushel? Also we need to make it searchable and sortable."*
+
+- ⚠⚠ **THIS REVERSES A RECORDED RULE, AND THE REVERSAL IS THE DECISION.** `CensusView.jsx` carried: *"UNSCORED BY CONSTRUCTION — there is no score, no rank, **no sort control and no per-protein row anywhere on this page**, because a per-protein list is one sort away from being read as a shortlist."* **The owner overrode it.** ⚠ The old comment is **corrected in place with the reversal stated**, not deleted.
+
+- ⚠ **The original worry was RIGHT, and is now answered by construction rather than by omission:**
+  1. **Default order is ACCESSION**, never pLDDT. ⚠ A default sort by confidence would turn a self-report into a de facto ranking — precisely what D-079 bars. **The page must not arrive already having chosen.**
+  2. **No score column, because there is no score.**
+  3. **Every row carries `scored: false` and its reason FROM THE API** — not from the UI remembering to say so.
+  4. ⚠ **Sorting is not scoring.** The reader orders the data; the project endorses no order.
+  - ⚠ **What the old rule bought was safety through invisibility, and that had its own cost: ~2,500 measured structures nobody could look at.**
+
+- **What a protein now says when opened** (owner's list, each answered as a **category**):
+  - **Status** — tranche, span, coordinates, span definition, confidence with its band.
+  - ⚠ **"No extracellular component"** — said plainly. **GPI-anchored proteins get their own words**: no topological domains *by design*, ⚠ **not missing data and not intermittent** (D-081).
+  - ⚠⚠ **"The extracellular portion is intermittent"** — with the numbers: how many segments, how much is extracellular in total, how much was folded, **how much was not**, and the warning that *an antibody can bind an epitope formed by several loops, so a structure of one loop is not a model of that site* (F-037).
+  - ⚠⚠ **Cancer associations — and this is the one most likely to mislead.** The source covers **the 82 cohort targets only**. For a census protein the answer is **`not_covered` — "unknown", NOT "none"**. The UI never prints *"no cancer associations."* ⚠ *"We did not look"* and *"we looked and found none"* are different facts; the second is rendered only when the protein is genuinely in the source and genuinely had no hit.
+
+- **Two guards fired on this change and both were right:**
+  1. ⚠⚠ **The census filter was `!= COHORT_TRANCHE` and is now `> COHORT_TRANCHE`.** A bare negation reads as *"everything that is not the cohort"* while **excluding NULL under three-valued logic** — so an untagged row would have been **invisible on BOTH surfaces at once**. `census_untranched_count()` now counts the rows that fall through both, because that outcome is correct but silent. **Measured: 0.**
+  2. **`test_every_live_route_is_modelled`** refused the new routes until they were drawn in `system-model.json` (D-051).
+
+- **Evidence:** 13 new UI tests; UI 189 passed across 29 files; gate 662 passed, 15 skipped, exit 0. Live: **2,521 folded census rows served, `scored` false on every one.**
+
+- **Open:** ⚠ the surface refreshes on load, so it tracks each tranche automatically — **but nothing yet re-derives `span_segments.csv` / `census_labels.csv` when a manifest changes.** Today they are current; a manifest revision would leave them stale with nothing saying so.
+
+---
+
 ### D-086 — The 26 inactive identities are resolved and categorised; 21 of them are answers, not gaps
 
 - **Date:** 2026-08-16

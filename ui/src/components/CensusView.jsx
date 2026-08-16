@@ -1,8 +1,24 @@
+import { useEffect, useState } from 'react'
 import { CENSUS, CENSUS_LIMITS } from '../censusSummary.js'
+import { getCensusDetail, listCensus } from '../api.js'
+import CensusTable from './CensusTable.jsx'
+import CensusDetail from './CensusDetail.jsx'
 
-// The census surface. ⚠⚠ UNSCORED BY CONSTRUCTION — there is no score, no rank, no sort control
-// and no per-protein row anywhere on this page, because a per-protein list is one sort away from
-// being read as a shortlist, and D-079 dec 1 bars scoring any census row.
+// The census surface. ⚠⚠ UNSCORED BY CONSTRUCTION — no score, no rank, no order-by-suitability,
+// because D-079 dec 1 bars scoring any census row.
+//
+// ⚠⚠ THE PER-PROTEIN LIST IS NEW, AND IT REVERSES THIS FILE'S OWN EARLIER RULE (D-087).
+// This comment used to read "...no sort control and no per-protein row anywhere on this page,
+// because a per-protein list is one sort away from being read as a shortlist." The owner overrode
+// it — *"Why hide it under a bushel?"* — and the reversal is recorded rather than edited away.
+//
+// ⚠ The original worry was real and is answered by CONSTRUCTION, not by omission:
+//   · default order is ACCESSION, never pLDDT — the page does not arrive having chosen
+//   · there is no score column, because there is no score
+//   · every row carries `scored: false` with its reason, from the API, not from the UI's memory
+//   · sorting is not scoring: the reader orders the data, the project does not endorse an order
+// ⚠ What the old rule bought was safety through invisibility, and that has its own cost —
+// 2,500 measured structures nobody could look at.
 export default function CensusView() {
   const foldable = CENSUS.sources.reduce((a, s) => a + s.foldable, 0)
   const rows = CENSUS.sources.reduce((a, s) => a + s.rows, 0)
@@ -76,6 +92,8 @@ export default function CensusView() {
         </ul>
       </section>
 
+      <CensusBrowser />
+
       <section className="census-limits">
         <h3>What these numbers do not mean</h3>
         {CENSUS_LIMITS.map((l) => (
@@ -93,5 +111,46 @@ export default function CensusView() {
         under <code>{CENSUS.frozenDefinition}</code>.
       </p>
     </div>
+  )
+}
+
+// The browsable list (D-087). ⚠ Loads on mount; an error is stated, never rendered as an empty
+// table — "nothing matched" and "the request failed" must not look the same.
+function CensusBrowser() {
+  const [rows, setRows] = useState(null)
+  const [error, setError] = useState(null)
+  const [detail, setDetail] = useState(null)
+
+  useEffect(() => {
+    let live = true
+    listCensus()
+      .then((r) => live && setRows(r))
+      .catch((e) => live && setError(e.message ?? String(e)))
+    return () => { live = false }
+  }, [])
+
+  const open = (row) => {
+    setDetail({ ...row, loading: true })
+    getCensusDetail(row.id)
+      .then(setDetail)
+      .catch((e) => setDetail({ ...row, error: e.message ?? String(e) }))
+  }
+
+  if (error) {
+    return (
+      <section className="census-browser panel">
+        <h3>Census — every folded protein</h3>
+        <p className="caveat">⚠ The list could not be loaded: {error}. This is a failure to
+          retrieve, <strong>not</strong> an empty census.</p>
+      </section>
+    )
+  }
+  if (rows === null) return <p className="note">Loading the folded census…</p>
+
+  return (
+    <>
+      <CensusTable rows={rows} onSelect={open} />
+      {detail && <CensusDetail detail={detail} onClose={() => setDetail(null)} />}
+    </>
   )
 }

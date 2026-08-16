@@ -93,3 +93,27 @@ def get_associations() -> dict:
     supplier (``core/cancer_associations.py``); counts are computed from what loaded, never
     constants. No credential (D-034 posture)."""
     return load_associations()
+
+
+@read_router.get("/census")
+def list_census(engine: Any = Depends(get_engine)) -> list[dict]:
+    """Every folded CENSUS row (D-087). ⚠ Separate from `/analyses`, which is the 82-target cohort.
+
+    ⚠⚠ **No score, no rank, no order-by-suitability** — D-079 decision 1 bars scoring census rows,
+    and every row states `scored: false` with its reason rather than relying on the absence of a
+    field to convey it.
+    """
+    return reads.list_census(engine)
+
+
+@read_router.get("/census/{analysis_id}")
+def get_census_detail(analysis_id: int, engine: Any = Depends(get_engine)) -> dict:
+    """One census protein: status, span topology (F-037), and cancer-association COVERAGE.
+
+    ⚠ A cohort id here is a 404, not a redirect — the two populations are measured under different
+    span definitions (D-081) and must not be reachable through one another's route.
+    """
+    record = reads.get_census_detail(engine, analysis_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="unknown census analysis")
+    return record

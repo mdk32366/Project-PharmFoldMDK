@@ -31,7 +31,7 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
-from sqlalchemy import desc, select
+from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
 
 from core.manifest import ManifestRow, build_manifest, coverage
@@ -356,3 +356,131 @@ def ranking_payload(engine: Any) -> dict[str, Any]:
             },
             "rows": [_score_projection(sc, row) for sc, row in pairs],
         }
+
+
+# ── The census surface (D-087) ───────────────────────────────────────────────
+#
+# ⚠⚠ SEPARATE FROM THE COHORT, AND THE SEPARATION IS THE POINT. `list_analyses` is
+# `cohort_tranche == COHORT_TRANCHE` and stays that way; this is `!= COHORT_TRANCHE`. The two
+# populations are measured under different span definitions (D-081) and one is scored while the
+# other is barred from scoring (D-079). ⚠ A surface that mixed them would put a V2 census span
+# beside a V1 cohort span in one column with nothing saying which was which.
+
+_CENSUS_CTX: dict[str, Any] = {}
+
+
+def _census_context() -> dict[str, Any]:
+    """Accession → name + segment topology, from the derived artifacts. Loaded once.
+
+    ⚠ Read from files rather than the database because neither is in it: census rows carry span
+    geometry, not identity (`census_labels.csv`) and not segment structure (`span_segments.csv`,
+    F-037). ⚠ **A missing artifact yields an empty context, never a silent zero** — the caller
+    renders 'unknown', which is not 'none'.
+    """
+    if _CENSUS_CTX:
+        return _CENSUS_CTX
+    import csv as _csv
+    base = Path(__file__).resolve().parent.parent / "data" / "census"
+    labels: dict[str, dict[str, str]] = {}
+    segs: dict[str, dict[str, str]] = {}
+    lp, sp = base / "census_labels.csv", base / "span_segments.csv"
+    if lp.is_file():
+        labels = {r["census_accession"]: r for r in _csv.DictReader(lp.open(encoding="utf-8"))}
+    if sp.is_file():
+        segs = {r["census_accession"]: r for r in _csv.DictReader(sp.open(encoding="utf-8"))}
+    _CENSUS_CTX.update({"labels": labels, "segments": segs})
+    return _CENSUS_CTX
+
+
+def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
+    """One census row for the list. ⚠ Carries NO score and no rank — D-079 decision 1."""
+    ctx = _census_context()
+    meta = row.meta or {}
+    acc = row.input_value
+    lab = ctx["labels"].get(acc, {})
+    seg = ctx["segments"].get(acc, {})
+    return {
+        "id": row.id,
+        "accession": acc,
+        "gene": lab.get("gene") or None,
+        "label": lab.get("label") or None,
+        "tranche": row.cohort_tranche,
+        "span_aa": meta.get("span_aa"),
+        "span_start": meta.get("ecd_start"),
+        "span_end": meta.get("ecd_end"),
+        "full_length": meta.get("full_length"),
+        "census_class": meta.get("census_class"),
+        "mean_plddt": row.mean_plddt,
+        # ⚠ F-037 context. `topology` is a WORD; a bare count invites the reader to interpret it.
+        "topology": seg.get("topology") or "unknown",
+        "segment_count": int(seg["segment_count"]) if seg.get("segment_count") else None,
+        "extracellular_total_aa": int(seg["extracellular_total_aa"]) if seg.get("extracellular_total_aa") else None,
+        "discarded_aa": int(seg["discarded_aa"]) if seg.get("discarded_aa") else None,
+        "segments": seg.get("segments") or None,
+        "span_definition": meta.get("span_definition"),
+        # ⚠⚠ NOT a score and never sortable as one. Stated on every row so no consumer has to
+        # remember the bar.
+        "scored": False,
+        "not_scored_reason": meta.get("not_scored_reason"),
+    }
+
+
+def list_census(engine: Any) -> list[dict[str, Any]]:
+    """Every FOLDED census row. ⚠ `!= COHORT_TRANCHE` — the cohort is served by `list_analyses`."""
+    with Session(engine) as session:
+        rows = session.scalars(
+            select(ProteinAnalysis)
+            # ⚠⚠ `> COHORT_TRANCHE`, NOT `!= COHORT_TRANCHE`. A bare negation reads as "everything
+            # that is not the cohort" and would make a NULL-tranche row invisible on BOTH surfaces
+            # — the cohort filter is `==` and excludes it, and a negation excludes it too under SQL
+            # three-valued logic. An untagged row must not vanish; `census_untranched_count` exists
+            # so it is COUNTED rather than quietly dropped.
+            .where(ProteinAnalysis.cohort_tranche > COHORT_TRANCHE)
+            .where(ProteinAnalysis.pdb_path.isnot(None))
+            .order_by(ProteinAnalysis.input_value)          # ⚠ accession, a neutral default
+        ).all()
+    return [census_projection(r) for r in rows]
+
+
+def census_untranched_count(engine: Any) -> int:
+    """Rows with NO tranche at all. ⚠ Visible on NEITHER surface, so it is counted here.
+
+    The cohort filter is `== 0` and the census filter is `> 0`; a NULL falls through both. **That
+    is correct behaviour and a silent one**, so the number is exposed rather than left to be
+    discovered by a total that does not add up.
+    """
+    with Session(engine) as session:
+        return session.scalar(
+            select(func.count()).select_from(ProteinAnalysis)
+            .where(ProteinAnalysis.cohort_tranche.is_(None))) or 0
+
+
+def get_census_detail(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]:
+    """One census row, with its cancer-association STATUS.
+
+    ⚠⚠ THE ASSOCIATION SOURCE COVERS THE 82 COHORT TARGETS ONLY (`targets_covered: 82`). For a
+    census protein there is **no association data**, and that is `not_covered` — **NOT "no cancer
+    associations found."** *"We did not look"* and *"we looked and found none"* are different
+    facts, and rendering the first as the second would be a claim the data does not support.
+    """
+    with Session(engine) as session:
+        row = session.get(ProteinAnalysis, analysis_id)
+        if row is None or row.cohort_tranche == COHORT_TRANCHE:
+            return None
+        out = census_projection(row)
+        out["sequence"] = (row.meta or {}).get("sequence")
+        out["fold_provenance"] = (row.meta or {}).get("fold_provenance")
+        out["structure_source"] = row.structure_source
+    from core.cancer_associations import load_associations
+    payload = load_associations()
+    gene = out.get("gene")
+    hits = (payload.get("associations") or {}).get(gene) if gene else None
+    out["cancer_associations"] = {
+        "status": "covered" if hits is not None else "not_covered",
+        "hits": hits or [],
+        "source": payload.get("source"),
+        # ⚠ The denominator travels with the verdict, so 'not_covered' is self-explaining.
+        "coverage_note": (f"the association source covers the {payload.get('targets_covered')} "
+                          f"cohort targets only; census proteins are outside it"),
+    }
+    return out

@@ -13,6 +13,9 @@ export const getPlddt = (id) => getJSON(`/api/analyses/${id}/plddt`)
 export const getCoverage = () => getJSON('/api/coverage')
 export const getAssociations = () => getJSON('/api/associations')   // D-053
 export const getRanking = () => getJSON('/api/ranking')             // D-062
+export const listCensus = () => getJSON('/api/census')                 // D-087
+export const getCensusDetail = (id) => getJSON(`/api/census/${id}`)      // D-087
+
 
 // 3Dmol.js takes the structure BY URL (D-034 decision 2) so the browser caches it independently
 // of the metadata — never inline it in the detail JSON.
