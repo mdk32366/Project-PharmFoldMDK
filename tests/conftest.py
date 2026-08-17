@@ -7,9 +7,25 @@ SQLAlchemy / SQLModel sessions once database models exist. No application code
 is imported here yet — see docs/README.md.
 """
 
+import os
+import re
 import sqlite3
 
 import pytest
+
+# ⚠⚠ KEEL V8-a: the suite refuses to run against a database that is not disposable.
+# The reasoning, the incident it comes from, and the loopback caveat live in
+# `tests/_db_safety.py` — kept there because a guard nobody can test is a guard nobody can
+# trust, and `refusal_reason()` is pure and env-injectable so it HAS tests.
+from _db_safety import refusal_reason  # noqa: E402
+
+
+def pytest_collection_modifyitems(config, items):
+    reason = refusal_reason()
+    if reason:
+        # ⚠ A hard collection error, never a skip — a skip is what let a destructive suite
+        # look harmless.
+        raise pytest.UsageError(reason)
 
 
 @pytest.fixture

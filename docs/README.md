@@ -130,6 +130,63 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-092 — KEEL V8: prevention and recovery are separate amendments, and only one of them is a session-start check
+
+- **Date:** 2026-08-17
+- **Status:** V8-a **implemented**; V8-b **proposed, not written**
+- **Context:** the 2026-08-17 destruction was recovered from a Fly backup **nobody had verified existed**. The owner asked whether backup verification should become a session-start check amended into KEEL.
+
+- ⚠⚠ **It should not, and the reason matters more than the answer.** A session-start check **runs when nothing is at risk, passes, and trains the reader to skip it** — the same shape as *a guard downstream of the filter it guards*. And it addresses **the wrong half**: the failure was not *"no backup existed"*, it was *"a destructive test ran against production."* **A backup makes RECOVERY reliable and does nothing about PREVENTION.** Installing it as *the* remedy would file the incident as solved while the hole stayed open.
+
+- **V8-a — PREVENTION (implemented).** `tests/_db_safety.py` + a `pytest_collection_modifyitems` hook: the suite **refuses to run** unless `DATABASE_URL` names a disposable host, and it is a **hard `UsageError`, never a skip** — ⚠ *a skip is exactly what let a destructive suite look harmless.*
+  - ⚠⚠ **The old guard pointed the wrong way.** `pg_engine` *skips unless* Postgres is reachable, so **supplying production credentials ARMED it**. The safety property was *"you probably do not have a database"*, which is not a safety property.
+  - ⚠ **The override is `PHARMFOLD_ALLOW_DESTRUCTIVE_DB=i-know-this-truncates`**, not `1` — a flag someone can flick is a flag someone flicks by habit.
+  - ⚠ **Necessary and NOT sufficient, stated in the module:** a tunnel to production looks exactly like localhost, and `localhost:16380` is one right now. It stops the obvious mistake and cannot stop the subtle one.
+
+- ⚠ **Its own tests found two bugs in it, and one failed OPEN.** `db_host` stopped at the **first** `@`, so a password containing `@` parsed `user:p@ss@prod.example.net` as host **`ss`** — a guard whose parser can read a production host as something else is not a guard. The second: alternation order made `[::1]` parse as `[`, which would have refused legitimate loopback runs. **9 tests, including the exact URL that caused the incident.**
+
+- **V8-b — RECOVERY (proposed).** ⚠ **Not at session start, but as a stated precondition of any destructive operation** — migration, DDL, bulk write, cluster change: *confirm a completed backup exists and state its age.* **It runs exactly when the answer changes what you do**, which is the only time a check gets read.
+
+- **Evidence:** gate **690 passed**, exit 0.
+
+---
+
+### D-091 — Three owner rulings: P55073 folds as a substitution, tranche 5 is held entirely, tranche 6 starts as a design document
+
+- **Date:** 2026-08-17
+- **Status:** accepted
+
+#### Ruling 1 — `P55073` folds under `U`→`C`, and the substitution is recorded IN the artifact
+
+Selenocysteine is the selenium analogue of cysteine, so the backbone prediction is expected to be close. ⚠⚠ **But the sequence folded is NOT the sequence of record**, and that must be legible from the artifact alone.
+
+- ⚠ **It takes its own `span_definition`, not a boolean flag.** A flag can be ignored by a reader, a joiner, or a future surface; a definition string travels with every artifact that cites it and is already the mechanism the project uses to keep V1 and V2 apart (D-081). **An unlabelled substitution is indistinguishable from a correct fold** — the `F-025`/MSLN defect, where something folds, scores and looks entirely normal while being the wrong molecule.
+- ⚠ **The existing failed row is NOT retrofitted.** It stays `failed` with its misleading tensor-shape error, and `F-033` records what that error meant. **Corrections are recorded, never patched away.**
+
+#### Ruling 2 — **ALL 776 rows of tranche 5 are held.** No rental spend until the domain-assembly arc is designed
+
+Not the 566 cheap rows either. ⚠ **The owner declined the split**, and the reasoning is worth keeping: folding the easy band first and reconsidering the hard one later is how the long proteins get handled by whatever is convenient at the time rather than by a method chosen for them.
+
+**Consequences, stated rather than discovered later:**
+- ⚠ **`F-035` remedy item 3 — the length guard — stays BLOCKED.** `preflight()` needs a measured ceiling on rental hardware, and there will be no rental hardware until this unblocks. **The claim-time filter (D-090) is live and is the only half that is closed.**
+- **The 566 single-pass rows wait on work unrelated to them.** Accepted cost.
+- **The local-tier census is therefore the deliverable** as it stands: 2,690 folds, tranches 1–4.
+
+#### Ruling 3 — Tranche 6 begins as a **design document**, with **no folding**
+
+Subjects: **FAT1–4, LRP1/1B/2, USH2A, ADGRV1, PKHD1L1** — stacks of independently-folding domains, each comfortably inside the 1,026-residue trained context. ⚠ **Assembly is not a workaround for these: a single 4,400-residue pass would be the questionable choice even on infinite VRAM.**
+
+The document must settle, before anything folds:
+1. **The domain-boundary source** — UniProt `Domain` features vs Pfam vs InterPro. ⚠ **They will not agree**, and picking one after seeing results is how a boundary gets chosen for the answer it gives.
+2. **Per-domain span rules**, and what happens to inter-domain linkers — ⚠ folded, omitted, or named as a category.
+3. **The assembly step**, and whether an assembled model is a structure or a set of structures.
+4. ⚠⚠ **A `boundary_method` that says so**, because **assembled artifacts are NOT comparable to single-pass folds** and must never share a column with them silently — the `F-037` lesson one level up.
+5. **How pLDDT is reported** for an assembly. ⚠ A mean over concatenated domains is not a mean over a structure.
+
+⚠ **No GPU, no rental, no ingest until it is written and ruled.**
+
+---
+
 ### D-090 — The claim filters on tier, in the SQL: a local worker can no longer take rental work
 
 - **Date:** 2026-08-17
