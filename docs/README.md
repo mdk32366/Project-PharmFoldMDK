@@ -130,6 +130,92 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-096 — The ADC mechanism graphic becomes a raster illustration, and the D-052 property is kept by the ABSENT IMPORT rather than by the medium
+
+- **Date:** 2026-08-17
+- **Status:** accepted — owner-directed, and the asset is owner-selected.
+- **Touches:** `ui/src/components/AdcSchematic.jsx`, its three tests, `ui/src/assets/`, the `/about` surface (`AdcContext.jsx:54`).
+
+- **Context:** the owner asked for the hand-rolled SVG on **About ADCs** to be replaced with a five-panel illustrated explainer of the PADCEV / NECTIN-4 mechanism. **D-052** built that SVG deliberately, and its reasoning was *not* about drawing: the component **imports nothing from `api.js`**, so it is *structurally* incapable of quietly becoming a model output — *"a label can be edited away by a later hand; an import that does not exist cannot start lying."*
+
+- **Decision: the medium changes, the structural property does not.** A static imported asset takes no props and calls no API, so **the D-052 guarantee survives the swap intact** — and its test (*"invokes NO api.js export"*) still passes for the same reason it always did. ⚠ **The property was never a fact about SVG.** That is worth stating, because the obvious reading of D-052 is *"hand-rolled SVG"*, and the load-bearing half is *"imports nothing."*
+
+- **⚠ Four candidate assets, and the record keeps all four**, because a filename is not an identity:
+
+| version | time | sha256 (first 8) | verdict |
+|---|---|---|---|
+| `grok-image-2e6b3470…` | 11:49 | `A5B26E31` | rejected — thyroid, "cancer destroyer", "Neutralization", whole gland dies |
+| `grok-image-3f66b6ae…` | 11:54 | `A2D7EB2F` | ⚠ rejected — **added captions, corrected nothing**; put the thyroid error into prose |
+| `grok-image-9e579701…` | 12:09 | `D48547A2` | all five original defects fixed; `cytoplasmic`/`conjugated` |
+| **`grok-image-d2ae0c22…`** | **12:14** | **`33AEC70F`** | ⚠ **SHIPPED, owner-selected** |
+
+- ⚠⚠ **The shipped asset carries three known defects, accepted rather than missed.** Recorded here so the record does not read as though they were overlooked: **(1)** panel 4 reads **`cyttoxic`**, a misspelling of *cytotoxic*; **(2)** panel 1 reads **"an antibody-drug conjugation"** where the drug class is a *conjugate*; **(3)** panel 4's artwork shows exploding **hand grenades** while its own caption says **MMAE** is released — the payload drawn is not the payload named. ⚠ The owner selected this version over `D48547A2` with all three stated.
+
+- ⚠ **Why iteration stopped: the errors were rotating, not converging.** Four passes. v2 changed the picture and fixed nothing. v4 was asked to change **two words** and instead produced a non-word (`cyttoxic`), a different wrong form (`conjugation`), and **regressed artwork it was told not to touch** (capsules → grenades). *A generator that cannot reliably edit two words is not an instrument you converge with*, and continuing would have been process theatre.
+
+- ⚠⚠ **The real cost, named because it is invisible: the copy left version control.** The SVG's words were JSX — greppable, diffable, and **readable by the over-claim denylist tests**. The JPEG's words are pixels. **No test in this repo can now read what that graphic says**, and the next reader will not know that. This is a **new blind spot on the exact surface D-094 governs**, and it is the reason the defects above are enumerated here rather than left to a future eye.
+  - **Mitigation, partial and stated as such:** the **`alt` text transcribes all five panels**, so the wording is at least in the DOM, in git, and available to a screen reader — ⚠ **but `alt` is a transcription that can silently drift from the pixels it describes, and nothing checks that it hasn't.**
+  - ⚠ **The transcription is deliberately NOT verbatim, and that is itself a decision.** It reads **`cytotoxic`** and **`conjugate`** where the pixels read `cyttoxic` and `conjugation`. **A transcription exists to convey meaning to a reader who cannot see the image**, and propagating a typo into a screen reader serves nobody. ⚠ The divergence is pinned by test (`expect(alt).not.toContain('cyttoxic')`) so it reads as chosen rather than sloppy — **the alt is the corrected record, the pixels are the shipped artefact, and D-096 is where they are known to differ.**
+
+- **D-094 compliance:** disclosure is a **mount precondition**, and the `figcaption` — *"Schematic illustration — not a structure produced by this system"* — is retained verbatim and still asserted by test. ⚠ **It matters more now, not less:** a glossy rendered cell reads as a depiction of real structure far more readily than a line drawing did.
+
+- **Deep-learning justification:** neutral to the neural core by construction, and that is the point — the graphic sits on the same surface as ESMFold outputs, so the **only** DL-relevant property is that it cannot be mistaken for one. That property is preserved by the absent import (enforced by test), not by the caption.
+
+- ⚠ **A pre-existing defect found by LOOKING at the page, which no test could see.** The rendered copy read **"an antibody–drug conjugate<em>is</em> a guided one"** — no space. Cause: the JSX classic — a newline **adjacent to a closing tag is removed entirely**, not condensed to a space (`AdcContext.jsx`, `</strong>` then a newline then `is`). ⚠ **218 UI tests passed over it**, because every assertion matches on substrings that do not span the join. Fixed with an explicit `{' '}`. **It was on the surface for as long as the paragraph has existed, and only a screenshot found it** — the same lesson as F-038, which also surfaced from looking rather than from asserting.
+
+- **Consequences:** `ui/` gains its **first image asset** (~707 KB) — Vite emits it hashed into `dist/assets`, which `app/main.py:42` already mounts, so **no new serving infrastructure**. ⚠ Bundle payload grows by ~707 KB on a surface that previously shipped a few hundred bytes of inline SVG. **Follow-up available, not taken:** regenerate the artwork **wordless** and render every caption as HTML, which would return the copy to version control and to the denylist tests.
+
+---
+
+### D-095 — Tranche 6 is designed as TILING, not as domain assembly: every residue in exactly one tile, and no concatenated structure
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **PROPOSED — written, not ruled.** D-091 ruling 3 requires *written and ruled* before anything folds. **No GPU, no rental, no ingest has occurred.**
+- **Full text:** `docs/D-095-tranche-6-domain-assembly-design.md`
+- **Evidence:** `scripts/tranche6_domain_survey.py` — read-only, cache-only, exit 0, sha256 per cache file.
+
+- **Context:** D-091 ruling 3 commissioned a design document settling six things before tranche 6 folds anything. `PREWORK-2026-08-18.md` §3 named the cheapest first move — count the domains under UniProt / Pfam / InterPro and check whether they agree. It was run first, and it **changed the design rather than confirming it**. See **F-041** for what it found about the sources.
+
+- ⚠⚠ **The load-bearing measurement: a domain is small, a RUN is not.** Every single domain instance in all ten subjects is inside the 1,026-residue trained context — **the largest anywhere is 247 aa.** But the domains **abut**: FAT1's cadherin repeats share exact boundaries (`35-149`, `150-257`, …), so its 39 domains collapse into **9 contiguous runs, one of 2,289 aa**. FAT4's is **3,037 aa**. ⚠ **A run has no linker to cut at**, so the decision is not *where are the seams* but **where to sever a continuous domain stack** — and in cadherins the inter-repeat interface is exactly what the Ca²⁺ rigidification depends on. ⚠ *Predicted, not measured*, and flagged as the owner's most important call.
+
+- ⚠ **Two regimes, not one.** FAT1–4 have one oversized run each and must be cut inside a stack. LRP1/1B/2, USH2A, ADGRV1 and PKHD1L1 have **no run exceeding context** — natural seams already exist. One rule cannot cover both, so the document writes both.
+
+- ⚠⚠ **The F-037 trap, one level down.** A design that folds *"the domains"* folds **44.7% of PKHD1L1** and discards **2,319 residues** without saying so — the same shape as *`span_aa` is the largest extracellular segment, not the extracellular content*. **ADGRV1 is 33.1% unannotated, LRP2 28.2%.** ⚠ **"Unannotated" is not "disordered"** — nothing in the cache separates genuine disorder from *not yet annotated*, and dropping the residues would convert a limit of the annotation into a claim about the protein.
+
+- **The six decisions.** (1) **UniProt `Domain` + `Repeat`** is the boundary source — ⚠ chosen **by availability, and the artifact must say so**, because it declines to arbitrate the disagreement rather than resolving it; `Repeat` is not optional (dropping it loses 34/34/35/9 repeats from LRP1/LRP1B/LRP2/PKHD1L1). (2) ⚠ **The fold unit is a TILE, not a domain** — **every residue of the span in exactly one tile**, linkers and unannotated regions retained, `tile_cut_kind ∈ {gap, domain_boundary, span_end}` so a cut through a cadherin stack is legible from the artifact alone. (3) ⚠⚠ **An assembly is a SET of structures** — N artifacts, **no concatenated PDB**, because ESMFold predicts no inter-tile geometry and **the file format itself would state orientations that were never predicted.** (4) **`boundary_method = domain_tiled_v1`** — ⚠ purely additive: the column is currently monovalued (`sliced_ecd`, all 3,467 rows), so **every existing row already declares itself and none is retrofitted.** (5) ⚠ **There is no mean pLDDT** — per-tile always; any single figure is `plddt_tilewise_mean`, never `plddt`, and **tile-edge pLDDT is depressed by a known-direction bias that is stated, not corrected.** (6) ⚠ **F-040 compounds**: ADGRV1 is a tile, of a monomer, of a subunit, of the USH2 complex — and **D-094 makes both disclosures a mount precondition**, making this the first surface built *under* D-094 rather than retrofitted to it.
+
+- **Deep-learning justification:** the trained context is a property of the *model*, not of the hardware, so tiling is a modelling decision about what the network was trained to represent. ⚠ The document's central claim — that per-tile confidence is not composable into a whole-molecule confidence — is a statement about what the predictor actually outputs, and it is what keeps a tiled artifact from being read as a 4,000-residue prediction.
+
+- ⚠⚠ **Decision 1(c), added at Planner's P3: the boundary source is ITSELF a model output, and the first draft missed it.** Of **521** domain-like features across the ten, **416 (79.8%) are `ECO:0000255` — automatic assertion from a sequence model**, 395 citing **PROSITE-ProRule**; 14 are curator inference; **≥91 cite nothing at all**; and ⚠⚠ **`ECO:0000269` experimental evidence appears ZERO times, in any of the ten.** FAT1–4, LRP2 and USH2A are **100% sequence-model** boundaries. **So tranche 6 is an HMM deciding where a neural network may cut** — a defensible pipeline, but not what a reader assumes from a column called `boundary_method`. ⚠ It also reframes §1: the disagreement between sources is **a disagreement between models**, not between an annotation and a ground truth, **so no arbiter exists** — which is exactly why decision 1(a) chooses on availability and must say so.
+
+- **Consequences, and what is explicitly NOT settled:** ⚠ the **FAT1–4 cut** may instead warrant declaring them out of scope — a scope ruling, the owner's. `tile_max_aa = 1,000` is **proposed, never measured** (⚠ no tile has ever been folded; F-034's lesson says the number should come from a measurement). ⚠⚠ **Whether tiling bears on tranche 5's 141 past-context rows is flagged and deliberately NOT pursued** — D-091 ruling 2 held tranche 5 entirely, and widening scope on the strength of a proposal is what that ruling forbids. Schema placement deferred: a rejected design needs no schema.
+
+- ⚠ **A recorded error, not patched away.** The first pass of the analysis merged *contiguous* intervals and reported the largest **run** under the heading *largest single domain*, inventing a "3,037 aa domain" for FAT4 where the true largest is **185 aa**. Corrected, and the mistake is preserved in the script's `merge()` docstring — **the run/domain distinction it obscured is the most important structural fact in the document.**
+
+---
+
+### F-041 — Two of the three candidate boundary sources cannot supply a boundary, and InterPro cannot supply a count either
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **OPEN** — it is a property of the instrument, and the instrument still exhibits it.
+- **Evidence:** `scripts/tranche6_domain_survey.py` part 1; cache-wide verification over all **4,990** `data/census/spancache` entries.
+
+- **Context:** D-091 ruling 3 and `PREWORK-2026-08-18.md` §3 frame tranche 6's first decision as a **choice among three sources** — *UniProt `Domain` vs Pfam vs InterPro* — warning that **they will not agree.** They do not agree. ⚠ **But that is not the finding.**
+
+- ⚠⚠ **The comparison as posed cannot be run, because two of the three do not carry the object being compared.** In the UniProtKB cache: **UniProt `Domain`/`Repeat` features carry `start`/`end`**; **Pfam carries a count (`MatchStatus`) and no position**; **InterPro carries neither** — family membership only.
+
+- **Cache-wide, with denominators:** **0 of 22,176** InterPro xrefs declare an instance count, against **8,251/8,251** for Pfam, **6,059/6,059** PROSITE, **3,200/3,200** SMART, and 100% for CDD, Gene3D, SUPFAM, PANTHER and FunFam. ⚠ **No database carries coordinates at any point in the cache.** All 4,990 files parsed; **zero counterexamples.** The check was written so that **one hit would have disqualified it**.
+
+- ⚠ **This is a category difference, not a disagreement in number** — the **F-038** shape. Comparing FAT1's *"UniProt 39"* against *"InterPro 9"* compares **39 domain instances** against **9 family memberships**: two different objects, and the comparison would have looked entirely meaningful.
+
+- **The absence has a cause, stated (the "every absence is a CATEGORY" rule):** InterPro's UniProtKB cross-reference is **entry-level by construction** — it records which families the protein belongs to, never how many times or where. ⚠ **The counts and coordinates exist upstream**, in the InterPro *matches* API and InterProScan, **a different instrument this project has never fetched.** So *"use InterPro boundaries"* is **not a parameter change but a new instrument**, with its own cache, provenance and freshness obligations (D-088).
+
+- ⚠ **The disagreement does not even point in one direction.** PROSITE finds **63** where UniProt finds 39 (FAT1) and **8** where UniProt finds 42 (ADGRV1). No systematic offset reconciles them; the sources annotate different things.
+
+- **Consequence:** D-095 decision 1 selects UniProt **by availability**, and ⚠ **that must be legible in the artifact** — otherwise a later reader takes `boundary_method` as a considered verdict that UniProt's annotation is *correct*, which it is not and which this evidence cannot support.
+
+---
+
 ### D-094 — Claim discipline in educational surfaces: a surface is accountable for the PREMISES it supplies, not only for the claims it makes
 
 - **Date:** authored against a pre-D-076 snapshot · **entered this log:** 2026-08-17

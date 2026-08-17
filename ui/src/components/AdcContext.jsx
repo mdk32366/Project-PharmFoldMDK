@@ -41,7 +41,7 @@ export default function AdcContext() {
 
       <p>
         Standard chemotherapy is a blunt weapon: it attacks fast-dividing cells all over the body,
-        so it harms healthy tissue along with the tumour. An <strong>antibody–drug conjugate</strong>
+        so it harms healthy tissue along with the tumour. An <strong>antibody–drug conjugate</strong>{' '}
         is a guided one:
       </p>
       <ul className="adc-parts">
