@@ -71,6 +71,18 @@ describe('AdcMechanismPanels — the process half, structurally not a model outp
     expect(img.getAttribute('loading')).toBe('lazy')
   })
 
+  it('⚠ renders a real em dash, not double-encoded mojibake (D-097)', () => {
+    const { container } = renderIt()
+    const caption = container.querySelector('figcaption').textContent
+    // ⚠⚠ THE REGRESSION, named. A PowerShell Get-Content/Set-Content round-trip read this file's
+    // UTF-8 as ANSI and rewrote it double-encoded, turning "—" into "â€”" and "⚠" into "âš ". It
+    // SHIPPED to production, because every other assertion here matches ASCII substrings and none
+    // could see it. Looking at the page found it; the suite could not.
+    expect(caption).toContain('Illustration — not a structure produced by this system')
+    expect(caption, 'mojibake: UTF-8 was read as ANSI somewhere').not.toMatch(/[Âãâ]€/)
+    expect(caption).not.toContain('﻿')
+  })
+
   it('carries its OWN disclosure — D-094, not inherited from the schematic', () => {
     const { container } = renderIt()
     const figure = container.querySelector('figure')
