@@ -130,6 +130,35 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-098 — Tranche 6 is scoped to the 141 past-context rows, not to the ten proteins that motivated it
+
+- **Date:** 2026-08-17 (⚠ the ruling was authored "2026-08-18"; the wall clock is 2026-08-17 — stamped with the real date, as D-095 was)
+- **Status:** accepted — owner ruling.
+- ⚠ **Supersedes the SCOPE clause of `D-091` ruling 3 and of `D-095`.** Both gates stand untouched: D-091 ruling 3's *design document before any folding*, and D-095's *Proposed, not ruled*. **Neither is weakened by this.**
+- ⚠ **Merged at `D-098`, not the `D-095` the ruling claimed.** It was authored against a snapshot predating this session, in which D-095 was free; **D-095, D-096 and D-097 were written and committed (`061eb3f`, `bac7a5c`) before the ruling arrived.** The ruling's own instruction — *"confirm D-095 is still free against the live log before merging"* — is what caught it, and renumbering-on-merge is the `F-039` precedent (D-079→D-093, D-080→D-094, F-012→F-040). ⚠⚠ **The same shape a fourth time in two days: a document reasoning about a log it cannot see.**
+
+- **Context:** `D-091` ruling 3 named ten subjects — FAT1–4, LRP1/1B/2, USH2A, ADGRV1, PKHD1L1. Measured against `census_manifest.v7.csv`, the band those ten sit in (`tranche=5`, `span_aa > 1026`) holds **141 rows**: the ten named, three mucins, and **128 named nowhere** — CDH23, CELSR1–3, TENM1–4, CSMD1/2, DCHS1/2, FRAS1, PKD1, SORL1, STAB1/2, CSPG4, IGF2R among them, every one the same modular-repeat architecture the ruling was written for.
+
+- **Decision:** the tranche 6 design document is scoped to the **141**. Task A of `ORDERS-Code-2026-08-18` measures all 141 under every candidate boundary source.
+
+- **⚠⚠ The reasoning, which is the load-bearing part.** `boundary_method` is a **column**, and a column applies to every row that carries it. Designing the method on the ten longest and then writing it onto 141 rows is **scoping a method to its motivating examples** — the `F-037` shape one level up: *the artifact is not the thing the reader assumes*, where the reader assumes a boundary rule was measured on the protein it was applied to. **The ten were selected by length rank, which is not a property the method is about.**
+
+- **⚠ And the selection was worse than arbitrary — it was systematic.** **102 of the 141** are between 1,027 and 2,000 aa, under 2× the trained context. **Not one of the ten is among them.** The named subjects are the extreme tail, so a criterion validated on them is validated at the point where every source disagrees most.
+
+- **Deep-learning justification:** the quantity in dispute is where ESMFold's 1,026-residue trained context stops holding, and that is a property of **the model**, not of the ten proteins. A boundary rule tuned on 4,000+ residue chains and applied to 1,100-residue chains would be selecting a decomposition for inputs that may not need decomposing. ⚠ **Every candidate source is itself a model output** — Pfam and InterPro boundaries are HMM matches, and UniProt `Domain` on proteins of this size is largely propagated from PROSITE/ProRule profiles. `A-014` holds three times over: **there is no curated ground truth here to pick.** Tranche 6 is a pipeline of models and the design document must say so rather than let UniProt read as fact. ⚠ **This is already measured, not merely asserted:** `F-041` and `D-095` decision 1(c) record **416 of 521** domain features on the ten as `ECO:0000255` sequence-model assertions, 395 citing PROSITE-ProRule, and **zero** carrying experimental evidence.
+
+- **Consequences, stated rather than discovered later:**
+  1. **`D-091` ruling 3 is NOT edited**, and neither is **`D-095`.** Their subject lists stay as written and this entry records the widening. *Corrections are recorded, never patched away.*
+  2. **Task A's cost rises from 10 accessions to 141.** Cache-only for UniProt; the InterPro pull, if A1 shows it is needed, is 141 requests under `census_spans_v2`'s stop-and-report rules. ⚠ **A1's check is already answered and committed as `F-041`: no database in the 4,990-entry cache carries coordinates, and 0 of 22,176 InterPro xrefs declare a count — so the pull IS needed.**
+  3. ⚠ **The three mucins (MUC16, MUC12, MUC17) are now in scope and may not admit a method at all.** Tandem low-complexity repeat is not a stack of independently-folding domains. **If the design document cannot rule a boundary method for them, it names a CATEGORY with a reason** — it does not quietly apply the cadherin-family answer to a protein that is not one. ⚠ This is `D-085`: an exclusion states its scope and its conditions.
+  4. **The criterion in the order's §0/P1 must survive CDH23 and TENM3, not only FAT1.** If it separates the sources on the ten and fails to separate them on the 128, **that is a finding about the criterion**, and it must be reported as one rather than resolved by falling back to the ten.
+  5. ⚠ **This does not authorise any fold.** `D-091` ruling 3's gate is unchanged: no GPU, no rental, no ingest until the design document is written and ruled.
+  6. ⚠ **`D-095` must be revised before it is ruled.** It is `Proposed` and scoped to the ten; its §2 cadherin-stack argument and its §3 unannotated-residue table were measured on ten proteins and **must be re-measured across the 141** before the document is put up for ruling.
+
+- **Evidence:** `census_manifest.v7.csv` ⋈ `census_labels.csv` — 776 tranche-5 rows splitting **566 / 69 / 141** at the 850 and 1,026 boundaries, reconciling with `CLOSEOUT-2026-08-17` §4. ⚠ **Task D re-derives all of these independently**; a disagreement is a defect, not a rounding difference.
+
+---
+
 ### D-097 — Both graphics stay, because they answer different questions: the schematic is ANATOMY, the cartoon is PROCESS
 
 - **Date:** 2026-08-17
