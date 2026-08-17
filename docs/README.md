@@ -130,6 +130,38 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-099 — The control fold is not tranche 6: PAE is recovered on proteins that need no assembly
+
+- **Date:** 2026-08-17 (⚠ authored "2026-08-18"; wall clock at merge is 2026-08-17 16:57 — stamped with the real date, as D-095 and D-098 were)
+- **Status:** accepted — owner ruling, merged verbatim in substance.
+- ⚠ **`F-042` is cited below and is NOT YET WRITTEN.** It is reserved in `docs/RESERVED.md` so the forward reference is distinguishable from the D-062 defect. **The finding is the owner's to write.**
+
+- **Context:** `D-091` ruling 3 reads *"no GPU, no rental, no ingest until it is written and ruled"*, unqualified. Task C needs PAE on in-context multi-domain proteins; `F-042` establishes the census carries none on any of 2,690 rows. **The only route to the measurement is to fold again**, and that touches a GPU. Code declined to proceed on a Planner footnote and asked for the log entry first. ⚠ **That was correct** — a ruling that lives only in chat is a ruling nobody will find.
+
+- **Decision:** a **control fold** is permitted, defined narrowly by four conditions, **all of which must hold**:
+  1. **Subjects are existing census rows in tranches 3–4 only** — already folded, already ingested, inside the 1,026-residue trained context, single-pass. **No protein new to the system.**
+  2. ⚠⚠ **`boundary_method` stays `sliced_ecd`. `RECOGNISED_BOUNDARY_METHODS` is not touched.** This is the actual thing `D-091` ruling 3 guards: an assembled method one keystroke from a fold before the document that governs it exists.
+  3. ⚠⚠ **NO INGEST.** Artifacts land outside `protein_analyses`. No census row is written, updated, or re-pointed. **The 2,690 keep their NULL `pae_json_path`** — `F-042` is recorded, not patched away.
+  4. **Local tier only.** No rental, no spend, no `WORKER_TIER=rental`.
+
+- ⚠ **What would make it tranche 6, and is therefore barred:** folding any tranche-5 row · folding any protein by domain decomposition · writing a `boundary_source` or an assembled `boundary_method` into any artifact. **If a step requires one of these, it stops and returns here.**
+
+- **Deep-learning justification.** PAE is an output of the folding head — a **learned inter-residue confidence about relative position**, not a heuristic. `D-091` ruling 3 requirement 3 asks whether an assembled model is *a structure or a set of structures*; PAE lets **the network answer it** instead of an argument. ⚠ **And this is the only population where it is answerable:** the question needs a single-pass reference to compare assembly against, and for the 141 that reference cannot exist. **Assembly must be validated where assembly is unnecessary, or not at all.**
+
+- **Sample selection, pre-registered here, BEFORE Task C's counts are read** — ⚠ *choosing subjects after seeing the population is how a control gets picked for the answer it gives.*
+  - Eligible: tranche 3–4 rows with **≥2 UniProt `Domain` features wholly inside the V2 span** (A1's measure, same code path).
+  - Ordered by **`census_accession`, ascending**. If the population exceeds the fold budget, take a fixed number **per domain-count stratum**, in that order.
+  - ⚠⚠ **Never ordered or filtered by pLDDT, mean or per-residue.** Selecting on the confidence neighbour of the outcome is the `D-087` defect — *a default sort by confidence turns a self-report into a ranking* — and here it would choose the control on the variable under test.
+
+- **Consequences:**
+  - **It settles `pae_never_emitted` vs `pae_absent_local_tier` as a by-product** — the one observation Code correctly named as missing. ⚠ **If a local int8 chunked fold emits no `predicted_aligned_error`, `F-042` is a different finding and must be rewritten, not amended.**
+  - ⚠ **The generalisation limit, stated before the result, not after it.** A control on 300–439 aa two-domain proteins is evidence about **two-domain proteins in context**. FAT1 is a stack of ~34 cadherin repeats over 4,160 residues. **The control can show that inter-domain PAE is informative; it cannot show that it stays informative at ten times the length.** The design document says so in whatever it concludes.
+  - The PAE persistence path must be repaired for the control to capture anything — **that repair is `F-042`'s remedy and is in scope here**, but it does not backfill the 2,690.
+
+- **Evidence:** `F-042` (2,690 / 2,690 NULL, fold-day partition reconciling to 2,769 of 2,771); `worker/runner.py:311`; `worker/main.py:_persist_pae_local`.
+
+---
+
 ### D-098 — Tranche 6 is scoped to the 141 past-context rows, not to the ten proteins that motivated it
 
 - **Date:** 2026-08-17 (⚠ the ruling was authored "2026-08-18"; the wall clock is 2026-08-17 — stamped with the real date, as D-095 was)
