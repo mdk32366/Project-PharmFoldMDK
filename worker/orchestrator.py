@@ -28,6 +28,7 @@ import logging
 import time
 from typing import Any, Callable, Protocol
 
+from core.queue import DEFAULT_TIER
 from core.contracts import FoldSpec  # re-exported: FoldSpec now lives in the tier-neutral
 # contracts module (DEP-001) so `app/` imports it without pulling `worker/` into the Fly
 # image. The loop and its tests still `from worker.orchestrator import FoldSpec` unchanged.
@@ -97,6 +98,7 @@ def run_worker(
     *,
     poll_interval: float = 5.0,
     sleep: Callable[[float], None] = time.sleep,
+    tier: str = DEFAULT_TIER,
     should_stop: Callable[[], bool] = lambda: False,
     submit_attempts: int = 5,
 ) -> None:
@@ -107,7 +109,7 @@ def run_worker(
     the fold), which is the loop's cost-control guarantee on a paid card."""
     while not should_stop():
         try:
-            spec = client.claim(worker_id)
+            spec = client.claim(worker_id, tier=tier)
         except AuthError as e:
             # A 401 is not a transient blip — a wrong/truncated token never becomes right, so
             # polling on is pointless. Stop LOUD on the FIRST one (closeout §4b), turning a

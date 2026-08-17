@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from core.queue import DEFAULT_TIER
 from worker.http_client import HttpQueueClient
 from worker.orchestrator import FoldError, FoldSpec, run_worker
 from worker.runner import MODEL_REVISION, fold, write_pae
@@ -166,11 +167,19 @@ def run(
         fold_fn = _supervised_fold_fn()
     else:
         print("[worker] D-082 layer 3 off (set WORKER_FOLD_IN_CHILD=1 to enable)", flush=True)
+
+    # ⚠ ASCII only, like the layer-3 banner: this runs in a console whose codepage nobody controls,
+    # and an em dash raises UnicodeEncodeError on cp437 and kills the worker at startup (F-034 era).
+    tier = os.environ.get("WORKER_TIER", DEFAULT_TIER)
+    print(f"[worker] tier={tier} - claims ONLY jobs of this tier (F-035)", flush=True)
     run_worker_fn(
         client,
         lambda spec: fold_from_spec(spec, fold_fn, artifact_dir=config.artifact_dir),
         config.worker_id,
         poll_interval=config.poll_interval,
+        # ⚠ Reaches the claim SQL's predicate. Injected here rather than read inside the loop so a
+        # test can drive a rental worker without setting a process-wide environment variable.
+        tier=tier,
         **run_worker_kwargs,
     )
 

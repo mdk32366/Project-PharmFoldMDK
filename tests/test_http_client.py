@@ -63,7 +63,9 @@ def test_client_sets_an_explicit_timeout_not_the_5s_default():
 def test_claim_parses_inline_fold_spec():
     def handler(req):
         assert req.headers["Authorization"] == f"Bearer {TOKEN}"      # token on the call
-        assert json.loads(req.content) == {"worker_id": "w1"}
+        # ⚠ The worker DECLARES its tier in the claim body (F-035). Asserted, not relaxed:
+        # a client that stopped sending it would silently be treated as `local`.
+        assert json.loads(req.content) == {"worker_id": "w1", "tier": "local"}
         return httpx.Response(200, json=SPEC_JSON)
 
     spec = _client(handler).claim("w1")
@@ -179,7 +181,7 @@ class _OneJobQueue:
         self._job = job
         self.completed = []
 
-    def claim(self, worker_id):
+    def claim(self, worker_id, tier="local"):
         job, self._job = self._job, None
         return job
 
@@ -228,8 +230,8 @@ def test_loop_client_app_end_to_end(tmp_path):
     stop = {"v": False}
     orig_claim = queue.claim
 
-    def claim_then_stop(worker_id):
-        job = orig_claim(worker_id)
+    def claim_then_stop(worker_id, tier="local"):
+        job = orig_claim(worker_id, tier)
         if job is None:
             stop["v"] = True
         return job

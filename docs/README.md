@@ -130,6 +130,39 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-090 — The claim filters on tier, in the SQL: a local worker can no longer take rental work
+
+- **Date:** 2026-08-17
+- **Status:** accepted — closes `F-035`'s claim-time half
+- **Decisions:**
+  1. **`jobs.tier`, a real column** (migration `0009`), not a JSON reach-through. ⚠ The tier lives in `protein_analyses.meta['tier']` and the claim is one atomic `UPDATE … FOR UPDATE SKIP LOCKED`; getting at it there needs `meta->>'tier'` on Postgres and `json_extract` on SQLite — **and this queue is tested on both.** A dialect-split claim is the one statement in the system that must not have two versions.
+  2. ⚠⚠ **`AND tier = :tier` INSIDE the claim, never a check after it.** A post-claim refusal marks the job `claimed` then declines it — the shape that left ten jobs stuck at `attempts=0` with no error.
+  3. ⚠⚠ **Never `OR tier IS NULL`.** It is the friendly-looking version and it restores the hole exactly: an untagged rental job taken by the local worker. **A null-tier job is claimable by NOBODY**, and `pending_jobs_with_no_tier()` counts them, because *an idle worker beside unclaimable jobs looks identical to an idle worker beside an empty queue.*
+  4. **`WORKER_TIER` defaults to `local`, and the direction IS the decision.** ⚠ Wrongly refusing work costs an idle GPU; wrongly accepting it means **fp16 at 441+ aa on a card measured at 8,150 MiB with `known_good = 440`** — and an fp16 overrun is what bugchecked this host. **The cheap failure is the default.**
+  5. **The claim body's `tier` is OPTIONAL.** ⚠ Required would have stopped every running crank at deploy time — a worse failure than the one being fixed.
+  6. ⚠ **The migration ran at a measured 0 pending / 0 claimed**, re-measured immediately before the DDL rather than trusted from a check minutes earlier. Once the filter is strict, a null-tier row is claimable by nobody, so migrating with work in flight would have stranded it.
+  7. **The backfill takes a BIND, never an engine** — the rule `db/tranche_backfill.py` was rewritten to encode after a helper opened a second connection and deadlocked production against its own caller's `ACCESS EXCLUSIVE` lock, with zero other clients.
+
+- ⚠ **The test double enforces the SAME rule, and that mattered more than it sounds.** Making it merely *accept* `tier` would have let every claim test pass while production filtered differently — two paths to one behaviour, never compared, which is precisely how the `0008` deadlock shipped green. ⚠ **Its `enqueue` defaults to `local` while its `claim` stays strict**: creation and filtering are different rules, and conflating them is the finding itself.
+
+- ⚠ **12 tests went red when the double turned strict — and they were right to.** They had been relying on untagged jobs being claimable, which is the hole. Fixed by tagging the fixtures, not by loosening the filter.
+
+- **Evidence:** 12 tests in `tests/test_claim_tier_filter.py`; gate **681 passed**, exit 0. **Revert proof 18:** restoring `OR tier IS NULL` reds the SQL guard. **Revert proof 19:** making the double ignore the tier reds 4. Production: **2,733 local + 38 rental, 0 untagged.**
+
+---
+
+### D-089 — A page per census protein, deliberately without a scorer panel
+
+- **Date:** 2026-08-16
+- **Status:** accepted
+- ⚠ **Written late.** This entry was referenced by `CensusProteinView.jsx` and by its commit before it existed in the log — **the code led the log, which is backwards here.** Recorded on 2026-08-17 with the omission stated rather than back-dated.
+- **Decision:** each census protein gets `/census/:id` — structure coloured by pLDDT, confidence with its band, and its measured properties. The accession in the table is a real `Link`, so a page is **shareable, openable in a new tab and back-button reachable**; an `onClick` handler is none of those. **The inline panel is gone** — a panel *and* a page would be two surfaces describing one protein, free to drift.
+- ⚠⚠ **No scorer panel, and the absence IS the decision.** `TargetView` carries one because the 82 **were** scored; `D-079` bars scoring any census row, so the equivalent here would have to invent one. **A census protein given a page that looks like a ranked target's page is how a reader concludes it is one** — so *"Not scored, not ranked"* sits in the header, above the structure, and a test asserts the scorer panel is absent.
+- ⚠ **The structure and pLDDT routes are reused, not duplicated.** `get_structure_path` is not tranche-filtered, so it already serves any analysis id; a second pair of routes would be a second source for one artifact with nothing comparing them.
+- **Consequence found immediately:** rendering `Confidence` here exposed **`F-038`** — the panel was quoting the cohort's ceiling on census pages.
+
+---
+
 ### D-088 — A derived artifact states what it was derived from, and a stale one is refused rather than served
 
 - **Date:** 2026-08-16
@@ -663,7 +696,7 @@ So the rule is not "be careful" — it is:
 ### F-035 — The local/rental routing is computed by the manifest and enforced by nobody
 
 - **Date:** 2026-08-16
-- **Status:** open — ⚠ **owner ruled it a FINDING**, not a decision: the gap exists now, independently of whether anyone has tripped it.
+- **Status:** ⚠ **claim-time filter CLOSED 2026-08-17 (D-090). Remedy item 3 — the independent length guard — REMAINS OPEN**, and the reason is stated below rather than left as an unticked box.
 - **What is true:** `core/manifest.py` decides `local` vs `rental` per row, records `tier_reason`, and `TIER_RECIPE` resolves the recipe from it **at claim time** (D-047) — `local → int8`, `rental → fp16`. ⚠ **And `core/queue.py:claim()` selects `WHERE status = 'pending' ORDER BY created_at, id`. No tier. No length.** A worker takes the oldest pending job, whatever it is.
 
 - ⚠⚠ **It has never bitten because no rental row has ever been ingested.** The only thing keeping rental work off the local card is that **none exists yet** — *an operational convention doing a guard's job*, holding exactly until someone runs the obvious next command.
@@ -675,6 +708,10 @@ So the rule is not "be careful" — it is:
   2. ⚠ **Filtered IN THE SQL, never checked after the claim.** A post-claim refusal marks the job `claimed` then declines it — the shape that stranded ten jobs: `attempts=0`, no error, nothing retryable.
   3. **An independent length guard at fold time.** ⚠ Tier is a *label*; length is the physical constraint. `vram_guard.preflight()` already returns `REFUSED_NO_MEASUREMENT` and is **simply not wired in**.
   4. **State the composition on refusal** — ⚠ an idle worker and an empty queue must never look identical.
+
+- **CLOSED (D-090):** `jobs.tier` (migration `0009`), filtered **inside the claim SQL** — `AND tier = :tier`, never `OR tier IS NULL`. `WORKER_TIER` defaults to `local`. Production migrated at **0 pending / 0 claimed**, backfilled to **2,733 local + 38 rental, 0 untagged**.
+
+- ⚠ **STILL OPEN — remedy item 3, the length guard.** Tier is a *label*; length is the physical constraint, and a mislabelled row must still be refused. `vram_guard.preflight()` exists and is **not wired in**. ⚠ **It cannot simply be switched on**: it returns `REFUSED_NO_MEASUREMENT` for any unmeasured length, and **no ceiling has been measured for rental hardware** — so wiring it today would refuse every legitimate rental fold. **It needs a `ceiling_climb` on the rented card first**, which is part of the rental arc and has not begun. **Recorded as open rather than ticked off.**
 
 - **Detail:** `docs/PROPOSAL-claim-tier-filter-and-tranche-5-cost.md`, which also carries the tranche-5 cost model and the §3 correction retracting *"impossible"*.
 

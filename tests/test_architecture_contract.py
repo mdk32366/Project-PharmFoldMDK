@@ -31,7 +31,7 @@ MODEL_PATH = Path(__file__).resolve().parents[1] / "ui" / "src" / "system-model.
 
 
 class _DummyQueue:
-    def claim(self, worker_id):  # pragma: no cover - the contract test never touches the queue
+    def claim(self, worker_id, tier="local"):  # pragma: no cover - the contract test never touches the queue
         raise AssertionError("contract test must not touch the queue")
 
 

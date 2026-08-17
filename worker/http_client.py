@@ -21,6 +21,7 @@ from typing import Any, Optional
 
 import httpx
 
+from core.queue import DEFAULT_TIER
 from worker.orchestrator import AuthError, FoldSpec, TransportError
 
 # Explicit transport timeout (D-035 §3a). httpx defaults to 5 s on ALL of connect/read/write/pool;
@@ -43,9 +44,14 @@ class HttpQueueClient:
 
     # ── the four QueueClient methods ─────────────────────────────────────────
 
-    def claim(self, worker_id: str) -> Optional[FoldSpec]:
-        """POST /jobs/claim → the inline FoldSpec, or ``None`` on 204 (empty queue)."""
-        r = self._post("/jobs/claim", json={"worker_id": worker_id}, ok=(200, 204))
+    def claim(self, worker_id: str, tier: str = DEFAULT_TIER) -> Optional[FoldSpec]:
+        """POST /jobs/claim → the inline FoldSpec, or ``None`` on 204 (empty queue).
+
+        ⚠ The worker DECLARES its tier (F-035); the server filters on it inside the claim SQL. A
+        worker that sends nothing is treated as `local` — the cheap failure is an idle GPU, not an
+        fp16 overrun on a card measured to hold 440 aa.
+        """
+        r = self._post("/jobs/claim", json={"worker_id": worker_id, "tier": tier}, ok=(200, 204))
         if r.status_code == 204:
             return None
         return FoldSpec(**r.json())

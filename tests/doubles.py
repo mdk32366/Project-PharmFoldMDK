@@ -14,6 +14,7 @@ from core.queue import (
     CLAIMED,
     COMPLETE,
     DEFAULT_STALE_SECONDS,
+    DEFAULT_TIER,
     FAILED,
     MAX_ATTEMPTS,
     PENDING,
@@ -52,13 +53,22 @@ class UnlockedFakeJobQueue:
 
     # ── test-state construction (not part of the JobQueue seam) ──────────────
     def enqueue(self, analysis_id: int, inference_settings: Optional[dict[str, Any]] = None,
-                created_at: Optional[datetime] = None) -> int:
+                created_at: Optional[datetime] = None, tier: Optional[str] = DEFAULT_TIER) -> int:
+        """⚠ CREATION defaults to `local`; the FILTER above does not. Those are different rules and
+        conflating them is the F-035 hole.
+
+        Every real enqueue path sets a tier (`core/enqueue`, `census_ingest`), so defaulting here
+        keeps existing fixtures meaning what they always meant. **Pass `tier=None` to build the
+        untagged job that no worker may claim** — the case that must stay reachable in tests, since
+        it is the one the production column allows and the claim SQL refuses.
+        """
         jid = self._next_id
         self._next_id += 1
         self._jobs[jid] = Job(
             id=jid, analysis_id=analysis_id, status=PENDING,
             inference_settings=inference_settings or {},
             created_at=created_at or self.now,
+            tier=tier,
         )
         return jid
 
@@ -66,8 +76,13 @@ class UnlockedFakeJobQueue:
         return self._jobs[job_id]
 
     # ── the JobQueue seam ────────────────────────────────────────────────────
-    def claim(self, worker_id: str) -> Optional[Job]:
-        pending = [j for j in self._jobs.values() if j.status == PENDING]
+    def claim(self, worker_id: str, tier: str = DEFAULT_TIER) -> Optional[Job]:
+        # ⚠⚠ THE DOUBLE FILTERS THE SAME WAY THE SQL DOES (F-035), and matching `j.tier == tier`
+        # STRICTLY is the whole point. A double that merely accepted `tier` and ignored it would
+        # let every claim test pass while production filtered differently — two paths to one
+        # behaviour, never compared, which is exactly how the 0008 backfill deadlock shipped green.
+        # ⚠ A None-tier job matches nothing here, mirroring `NULL = 'local'` being unknown in SQL.
+        pending = [j for j in self._jobs.values() if j.status == PENDING and j.tier == tier]
         if not pending:
             return None
         # FIFO by created_at is CONTRACT (D-009 §1 Amendment 3), id as tiebreak. NO

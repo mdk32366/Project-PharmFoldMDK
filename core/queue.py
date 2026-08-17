@@ -41,6 +41,12 @@ FAILED = "failed"
 # (its own entry). A fixed timeout has no correct value once folds are long/variable.
 DEFAULT_STALE_SECONDS = 60 * 60
 
+#: ⚠⚠ THE SAFE DEFAULT, AND THE DIRECTION MATTERS (F-035). A worker that declares no tier is
+#: treated as `local`. Wrongly refusing work costs an idle GPU; wrongly ACCEPTING it means folding
+#: fp16 at 441+ aa on a card measured to hold 440 — and an fp16 overrun is what bugchecked this
+#: host on 2026-08-12. The cheap failure is the default.
+DEFAULT_TIER = "local"
+
 # Retry budget (D-009 §1 Amendment 1). NOT a round number: the host reliability
 # floor is ~1 fatal bugcheck per several weeks (survive one host loss → retry), and
 # a 630 aa fold is 4-for-4 fatal (a deterministic crasher → don't re-dispatch
@@ -93,6 +99,8 @@ class Job:
     error: Optional[str] = None
     inference_settings: dict[str, Any] = field(default_factory=dict)
     created_at: Optional[datetime] = None
+    #: ⚠ F-035. `None` means *declares no tier* — claimable by nobody, never by whoever asks first.
+    tier: Optional[str] = None
 
 
 class JobQueue(Protocol):
@@ -105,8 +113,8 @@ class JobQueue(Protocol):
     transitions and are honestly exercisable.
     """
 
-    def claim(self, worker_id: str) -> Optional[Job]:
-        """Atomically take the oldest pending job — **FIFO by ``created_at`` is
+    def claim(self, worker_id: str, tier: str = DEFAULT_TIER) -> Optional[Job]:
+        """Atomically take the oldest pending job **of this worker's tier** (F-035) — **FIFO by ``created_at`` is
         contract** (D-009 §1 Amendment 3), so the query carries an explicit
         ``ORDER BY created_at, id``, not a reliance on the index. Mark it
         ``claimed``, stamp ``claimed_at`` and ``worker_id``; ``None`` when none
@@ -146,6 +154,7 @@ def _row_to_job(row: Any) -> Job:
         id=row["id"], analysis_id=row["analysis_id"], status=row["status"],
         attempts=row["attempts"], worker_id=row["worker_id"],
         claimed_at=row["claimed_at"], completed_at=row["completed_at"],
+        tier=row["tier"] if "tier" in row.keys() else None,
         error=row["error"], inference_settings=settings or {},
         created_at=row["created_at"],
     )
@@ -174,23 +183,33 @@ class PostgresJobQueue:
         self._engine = engine
         self._clock = clock or (lambda: datetime.now(timezone.utc))
 
-    def claim(self, worker_id: str) -> Optional[Job]:
+    def claim(self, worker_id: str, tier: str = DEFAULT_TIER) -> Optional[Job]:
+        # ⚠⚠ THE TIER IS FILTERED IN THE SQL, NOT CHECKED AFTER THE CLAIM (F-035). A post-claim
+        # check would mark the job `claimed` and then decline it — the shape that left ten jobs
+        # permanently stuck with attempts=0, no error and nothing retryable.
+        #
+        # ⚠ `tier = :tier` is strict. A NULL-tier job is claimed by NOBODY, deliberately: three-
+        # valued logic makes `NULL = 'local'` unknown, hence false, and that is the behaviour we
+        # want. `OR tier IS NULL` would have been the friendly-looking version and would have
+        # restored the exact hole — an untagged rental job taken by the local worker.
         sql = self._text(
             """
             UPDATE jobs SET status = 'claimed', claimed_at = :now, worker_id = :w
             WHERE id = (
                 SELECT id FROM jobs
                 WHERE status = 'pending'
+                  AND tier = :tier                -- ⚠ F-035: never `OR tier IS NULL`
                 ORDER BY created_at, id          -- FIFO is contract (Amendment 3)
                 FOR UPDATE SKIP LOCKED            -- the seam: Postgres-only, unproven here
                 LIMIT 1
             )
             RETURNING id, analysis_id, status, attempts, worker_id,
-                      claimed_at, completed_at, error, inference_settings, created_at
+                      claimed_at, completed_at, error, inference_settings, created_at, tier
             """
         )
         with self._engine.begin() as conn:
-            row = conn.execute(sql, {"now": self._clock(), "w": worker_id}).mappings().first()
+            row = conn.execute(sql, {"now": self._clock(), "w": worker_id,
+                                     "tier": tier}).mappings().first()
         return _row_to_job(row) if row else None
 
     def complete(self, job_id: int) -> None:

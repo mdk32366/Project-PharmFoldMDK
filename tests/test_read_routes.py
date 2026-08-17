@@ -42,7 +42,7 @@ class _DummyQueue:
     """Reads never touch the queue; create_app still wants one. This asserts that by
     exploding if a read path ever calls it."""
 
-    def claim(self, worker_id):  # pragma: no cover - must never be reached by a read
+    def claim(self, worker_id, tier="local"):  # pragma: no cover - must never be reached by a read
         raise AssertionError("a read route touched the queue")
 
 
