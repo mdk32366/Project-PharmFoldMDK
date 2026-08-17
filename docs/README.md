@@ -130,7 +130,34 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-097 — Both graphics stay, because they answer different questions: the schematic is ANATOMY, the cartoon is PROCESS
+
+- **Date:** 2026-08-17
+- **Status:** accepted — owner ruling, superseding **D-096**'s *replacement* half within the hour.
+- **Supersedes:** D-096 decision to replace. ⚠ **D-096 is NOT amended or deleted.** It shipped, it is committed (`061eb3f`), and it records what was actually done. *Corrections are recorded, never patched away* — a log that edits its own history to look consistent is worth less than one that shows the turn.
+
+- **Context:** D-096 replaced the D-052 hand-rolled SVG with the five-panel raster cartoon. The owner ruled that **the schematic can stay**, and that the cartoon *"illustrates the process that almost anybody can reach without a technical background."* **Both belong in the story on that surface.**
+
+- ⚠⚠ **The ruling is right for a reason worth writing down: they are not two versions of one graphic, they are two different objects.**
+  - **The schematic answers *what an ADC is made of*** — antibody, linker, payload, antigen. It is a **parts diagram**, and it sits directly under the parts list it labels. Four nouns, one drawing.
+  - **The cartoon answers *what an ADC does*** — bind, internalise, cleave, release, kill. It is a **sequence in time**, and no parts diagram can carry it.
+  - ⚠ **Treating them as rivals was the error in D-096.** *"Replace"* was never the question the surface was asking; the surface needed both halves of an explanation and had only ever had one.
+
+- **Order: anatomy before process, and it is not arbitrary.** ⚠ **A reader cannot follow *"the linker is cut"* in panel 3 without having been shown a linker.** The schematic is the vocabulary; the cartoon is the sentence built from it.
+
+- **D-094 compliance: two figures, two disclosures, neither inherited.** Each `figcaption` carries its own *"not a structure produced by this system"*, and the wording differs because the risk differs — ⚠ **the glossy cartoon reads as a depiction of real cellular structure far more readily than a line drawing does**, so its caption names the cell, the antibody and the payload as cartoons drawn at no real scale.
+
+- ⚠ **D-096's blind spot is now HALF recovered, and the half matters.** D-096 named the cost: the graphic's words became pixels, unreadable to the over-claim denylist tests. Restoring the SVG **returns the anatomy labels to version control** — *Antibody*, *Linker*, *Payload*, *Antigen on the tumour cell* are JSX text again, greppable and testable. ⚠⚠ **The cartoon's words remain pixels.** So the honest statement is **not** *"the blind spot is fixed"* — it is **the surface is now half-readable to its own tests**, and the unreadable half is the one carrying `cyttoxic`.
+
+- **Deep-learning justification:** unchanged and now doubled — **both** illustrations sit on a surface that also renders real ESMFold output, so the only DL-relevant property is that neither can be mistaken for one. ⚠ **The D-052 guarantee holds for both by the same mechanism**: neither imports `api.js`, and both components' tests assert it independently.
+
+- **Consequences:** `AdcSchematic.jsx` and its three tests are **restored byte-for-byte from `faf9e32`** rather than retyped — ⚠ *a retyped restoration is a new component wearing an old name.* The cartoon moves to its own component, `AdcMechanismPanels.jsx`, with its own tests and its own class; the `.adc-schematic` SVG rules removed by D-096 are restored, and the raster rules move to `.adc-panels`. **Bundle cost is unchanged** (~707 KB) — the SVG is a few hundred bytes.
+
+---
+
 ### D-096 — The ADC mechanism graphic becomes a raster illustration, and the D-052 property is kept by the ABSENT IMPORT rather than by the medium
+
+> ⚠ **SUPERSEDED IN PART by D-097 (same day):** the *replacement* is reversed — the schematic is restored and the cartoon joins it. **Everything else below stands**: the four-asset provenance, the three accepted defects in the shipped pixels, the `alt` divergence, and the named blind spot. ⚠ **This entry is left as written because it is what happened.**
 
 - **Date:** 2026-08-17
 - **Status:** accepted — owner-directed, and the asset is owner-selected.
