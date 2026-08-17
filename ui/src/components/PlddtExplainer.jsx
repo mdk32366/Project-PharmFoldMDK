@@ -9,7 +9,11 @@ import { COHORT_MAX_PLDDT } from '../plddt.js'
 // two claims wearing one number — one about the method, one about the molecule — and the useful
 // skill is telling which one you are looking at. A page that only listed levers would teach readers
 // to push a number that, for a disordered region, cannot move and should not.
-export default function PlddtExplainer() {
+// ⚠ `showCohortMax` exists because this component was rendered on census pages while quoting the
+// COHORT's measured ceiling — a fact about the 82, shown beside census structures that exceed it
+// (F-038). The "why nothing reaches 90" explanation is about the METHOD and stays; only the
+// population-specific number is conditional.
+export default function PlddtExplainer({ showCohortMax = true }) {
   const [open, setOpen] = useState(false)
   return (
     <details className="plddt-explainer panel" open={open} onToggle={(e) => setOpen(e.target.open)}>
@@ -48,9 +52,12 @@ export default function PlddtExplainer() {
         </li>
       </ul>
 
-      <h4>Why nothing here reaches 90</h4>
+      <h4>Why the scores here run lower than you may expect</h4>
       <p>
-        The cohort maximum is <strong>{COHORT_MAX_PLDDT}</strong>. These folds come from{' '}
+        {showCohortMax && (
+          <>The ranked cohort&rsquo;s maximum is <strong>{COHORT_MAX_PLDDT}</strong>. </>
+        )}
+        These folds come from{' '}
         <strong>ESMFold</strong>, which predicts from a <em>single sequence</em> using a protein
         language model. AlphaFold2 additionally reads a multiple sequence alignment — the
         evolutionary record of the protein family — and generally scores higher for it. A pLDDT of 74

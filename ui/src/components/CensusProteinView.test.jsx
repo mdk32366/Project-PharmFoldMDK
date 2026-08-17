@@ -95,3 +95,30 @@ describe('CensusProteinView', () => {
     expect(screen.queryByRole('button', { name: /close/i })).not.toBeInTheDocument()
   })
 })
+
+describe('the cohort ceiling must not leak onto a census page (F-038)', () => {
+  // ⚠⚠ The census max is 89.25 and six rows exceed the cohort's 84.23. Printing "cohort max 84.23"
+  // beside a 89.25 structure states another population's ceiling — one this protein beats.
+  it('never shows the cohort maximum on a census protein page', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({ ...DETAIL, mean_plddt: 89.25 })
+    view()
+    await screen.findByRole('heading', { name: 'SLC5A10' })
+    expect(screen.queryByText(/84\.23/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/cohort max/i)).not.toBeInTheDocument()
+  })
+
+  it('says instead that the cohort ceiling does not describe the census', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({ ...DETAIL, mean_plddt: 89.25 })
+    view()
+    expect(await screen.findByText(/does not describe the census/i)).toBeInTheDocument()
+  })
+
+  // ⚠ And no census maximum is quoted either — it moves every tranche, so a number baked into the
+  // page would go stale in silence.
+  it('quotes no census maximum, which would go stale each tranche', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({ ...DETAIL, mean_plddt: 89.25 })
+    view()
+    await screen.findByRole('heading', { name: 'SLC5A10' })
+    expect(screen.queryByText(/89\.25 is the highest|census max/i)).not.toBeInTheDocument()
+  })
+})
