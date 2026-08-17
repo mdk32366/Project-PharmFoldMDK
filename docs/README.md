@@ -655,6 +655,32 @@ The document must settle, before anything folds:
 
 ---
 
+### F-039 — Three staged documents arrived claiming numbers already written, and one claimed a filename already in use
+
+- **Date:** 2026-08-17
+- **Status:** open — ⚠ **the documents are placed and UNMERGED; the renumbering is the merge step, not done here.**
+- **What happened:** five documents were delivered for `docs/`. Three are staged log entries, and **each claims an integer the live log has already spent**:
+
+  | arrived as | claims | ⚠ live state |
+  |---|---|---|
+  | `D-079-clinical-association-layer.md` | `D-079` | **WRITTEN** — *the census: ingest 2,807 surface proteins…* |
+  | `D-080-claim-discipline-educational-surfaces.md` | `D-080` | **RESERVED** — *a revert proof operates on committed state…* |
+  | `F-012-single-chain-oligomer-interface.md` | `F-012` | **WRITTEN** — *ESMFold's chunked trunk is not output-invariant…* |
+
+- ⚠ **This is not carelessness, and the documents say so themselves.** Each carries *"⚠ Confirm the number against the live log before merging"* and states the snapshot it was written against: **highest `### D-` is D-075**. The live log is at **D-092**. **They were authored against a tree seventeen decisions old** — the numbering is stale, not wrong, and the instruction to re-check is the thing that worked.
+
+- ⚠⚠ **AND TWO DIFFERENT DOCUMENTS ARRIVED UNDER ONE FILENAME.** `CLOSEOUT-2026-08-17.md` exists twice: mine (state + the database incident, `048f447a…`, 8,959 B) and the Planner's (*"The disclosure arc"*, `4e3903e1…`, 13,632 B). ⚠ **Copying the incoming file in unchanged would have destroyed the other silently** — no error, no diff, one file. *A filename is not an identity* stops being a slogan here.
+
+- **What was done, and what deliberately was not:**
+  - All five **placed in `docs/`**, each with its **sha256 recorded above/below**.
+  - The three staged entries **renamed to `STAGED-<subject>.md`** — ⚠ **the number is removed from the filename**, because a filename asserting `D-079` is a claim on an integer the file does not hold. The claim now lives only inside the document, where the merge step must resolve it.
+  - The Planner's closeout renamed to **`CLOSEOUT-2026-08-17-planner-disclosure-arc.md`**.
+  - ⚠ **NOT merged into this log, and NOT renumbered inside the documents.** Renumbering is a decision about what the entries *are*, and it belongs to whoever merges them with both documents open. **Next free: `D-093`, `D-094`, `F-039`** (this entry takes `F-039`; the staged findings take what remains).
+
+- ⚠ **The contents are not reviewed here.** They concern a clinical-association layer, claim discipline in educational surfaces, and a single-chain/oligomer-interface finding against the instrument. **None of that has been checked against the current code**, and the census work of the last two days may bear on all three.
+
+---
+
 ### F-038 — A census protein page displayed the COHORT's measured ceiling, and six census structures exceed it
 
 - **Date:** 2026-08-16
