@@ -1,5 +1,21 @@
 # ORDERS — Code — 2026-08-18 — the measurements that PRECEDE the tranche 6 design document
 
+> **COMMITTED to `docs/` as provenance. CITED BY the log, not restated in it — where this file and
+> `docs/README.md` differ, THE LOG GOVERNS.** ⚠ This file records how a decision was reached; it is
+> not itself authority. Check the `### D-NNN` / `### F-NNN` header, not a reference to it.
+>
+> ⚠ **LANDED, not authored here.** Received 2026-08-17 12:43 as
+> `ORDERS-Code-2026-08-18-tranche-6-premeasurement.md`, **sha256 as received
+> `1EB0A97169F3A3B5B89C7A0570AE804E0A2F8BC84D43E5FF842547C142C4C46D`.** This copy differs from the
+> received original by **this landing header and nothing else** — the convention the gate enforces
+> (`tests/test_docs_landing_headers.py`) did not exist in the sender's copy. Both hashes are
+> recorded so the received artefact stays checkable.
+>
+> ⚠ **Its `§1` scope is superseded by `D-098`** — which widened tranche 6 to the 141 and is the
+> ruling this order's own scope question asked for. **§2 reserves `F-041` for the PAE finding;
+> `F-041` was already spent** on the boundary-source finding before this order arrived. **The PAE
+> finding takes `F-042`.**
+
 > **This is not the design document.** `D-091` ruling 3 requires a design document before anything
 > folds. This order produces the four measurements the document cannot be written honestly without,
 > and it produces them **before** the document commits to anything — because requirement 1 says
