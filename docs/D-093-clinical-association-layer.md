@@ -1,4 +1,4 @@
-# D-079 — The clinical association layer: protein → tumour → burden as a **traversal**, with the normal-tissue differential co-equal, and clinical burden barred from the scorer, the census filter, and every protein-level payload
+# D-093 — The clinical association layer: protein → tumour → burden as a **traversal**, with the normal-tissue differential co-equal, and clinical burden barred from the scorer, the census filter, and every protein-level payload
 
 > **STAGED ENTRY — merge into `docs/README.md` before any ingest runs.** This is a
 > pre-registration. **It is void if code precedes it** (D-075 precedent, D-077 precedent).
@@ -15,6 +15,25 @@
 > `core/`, `db/`, and `app/` fact below is marked with how it is known. Confirm against the live
 > tree before merging (grounding method: repository zip; project_knowledge_search is a fallback,
 > not a continuity mechanism).
+
+> ---
+>
+> ## ⚠⚠ RENUMBERED ON MERGE — D-079 → **D-093**
+>
+> **This entry claimed `D-079`. The live log had already spent it** (the census ingest of 2,807 surface proteins). The document was
+> authored against a snapshot whose highest `### D-` was **D-075**; the log stood at **D-092** when
+> it arrived — seventeen decisions later.
+>
+> ⚠ **The note below is left exactly as written.** It is a true statement about the tree its author
+> read, and rewriting it would falsify the provenance it exists to record. **The claim is corrected;
+> the observation is not.** Its own instruction — *"Check the thing, not the reference to it"* — is
+> what caught this (`F-039`).
+>
+> **Assigned `D-093` on 2026-08-17.** Cross-references to sibling staged entries were
+> renumbered with them; citations to *other* entries were left untouched and are **not reviewed
+> here**.
+>
+> ---
 
 - **Date:** 2026-08-17
 - **Status:** Proposed → Accepted on merge. **Ruled before any ingest, any schema, any supplier call.**

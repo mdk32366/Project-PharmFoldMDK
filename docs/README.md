@@ -130,6 +130,50 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-094 — Claim discipline in educational surfaces: a surface is accountable for the PREMISES it supplies, not only for the claims it makes
+
+- **Date:** authored against a pre-D-076 snapshot · **entered this log:** 2026-08-17
+- **Status:** accepted as a staged pre-registration. ⚠ **No briefing surface has shipped under it.**
+- **Full text:** `docs/D-094-claim-discipline-educational-surfaces.md`
+- ⚠⚠ **RENUMBERED: claimed `D-080`, which the register holds reserved** (*a revert proof operates on committed state*). See `F-039`.
+
+- **The load-bearing ruling (1):** ⚠ **D-028 did not already cover this.** A briefing breaches it by *supplying a premise* — the sentence a reader then reasons from — not only by asserting a claim. **A surface that hands over a false premise has misled without ever making a statement it could be held to.**
+- **(2)** The banned-phrase list is a **gate, not a style guide**. **(3)** One glossary, **as data, singular by construction** — ⚠ the same shape as `plddt.js` being the single source of the band scheme, which this project has already had to repair once (F-038). **(4)** Reading level is a **ruled constraint, not a preference**. **(5)** The `external_value` category — ⚠ **the hole in Constraint A**. **(6)** ⚠ **Disclosure is a MOUNT PRECONDITION, not a caption**: structure-region rendering cannot mount without the `F-040` single-chain disclosure.
+
+- ⚠ **It does not close `F-005` or `F-040`.** Both stay open; this rules only how they are **disclosed**.
+- ⚠ **Bears directly on work that shipped after it was written.** The census surface, the per-protein pages and the pLDDT explainer (D-087, D-089) are exactly the surfaces it governs, and **none was built under it.**
+
+---
+
+### D-093 — The clinical association layer: protein → tumour → burden as a TRAVERSAL, never a protein-level column
+
+- **Date:** authored against a pre-D-076 snapshot · **entered this log:** 2026-08-17
+- **Status:** accepted as a **pre-registration**. ⚠ **Void if code precedes it** — no ingest has run.
+- **Full text:** `docs/D-093-clinical-association-layer.md`
+- ⚠⚠ **RENUMBERED: claimed `D-079`, already spent** by the census ingest of 2,807 surface proteins. See `F-039`.
+
+- **The load-bearing ruling (1):** ⚠⚠ **Clinical burden is a property of the DISEASE.** It attaches **by traversal** and **may never be a protein-level column** — not in the scorer, not in the census filter, not in any protein payload. *A burden number sitting on a protein row is read as a property of the protein, which it is not.*
+- **(2)** Localisation is **named, never inferred**, with an evidence-type enum. **(4)** Survival statistics **carry their tuple or they do not render** — ⚠ and *"mean time to death"* **is not a statistic that exists**. **(5)** The normal-tissue differential is **co-equal, not an appendix** (owner ruling). **(6)** ⚠ **Supplier before contract** — no schema is final until each supplier is confirmed to serve what the entry assumes. **(7)** **Fetch and cache, do not ship**, until the inbound-terms check clears.
+
+- ⚠ **Its "census filter" bar now has a live subject.** When written, the census was a plan; it is now **2,690 folded rows with a browsable per-protein surface**. The bar applies to that surface and **has not been checked against it**.
+
+---
+
+### F-040 — ESMFold folds MONOMERS, so an obligate oligomer's subunit interface is indistinguishable from an antibody-accessible patch
+
+- **Date:** authored against a pre-D-076 snapshot · **entered this log:** 2026-08-17
+- **Status:** ⚠ **OPEN — a finding against the instrument (D-074).** It stays open until ESMFold no longer exhibits it, **or** until every surface reporting features 6 and 7 carries the statement of what they get wrong.
+- **Full text:** `docs/F-040-single-chain-oligomer-interface.md`
+- ⚠⚠ **RENUMBERED: claimed `F-012`, already spent** by *ESMFold's chunked trunk is not output-invariant*. See `F-039`.
+
+- **The finding:** the model predicts a **single chain**. Where a protein is an obligate oligomer, the surface that would be **buried against its partner** is rendered as exposed — ⚠ **indistinguishable, in the output, from a patch an antibody could reach.** Features 6 and 7 are therefore biased **in a direction**, not merely noisily.
+- ⚠ **§2 is the entry:** it separates **what is established** (verifiable from code and the model definition) from **what is reasoned** (everything about magnitude and direction on *this* cohort). **§5 pre-registers the measurement that would settle magnitude, before it runs.**
+- ⚠⚠ **§6: oligomeric state MUST NOT become feature 8, and MUST NOT filter anything.** The finding is a caveat on interpretation, **not a new axis** — adding it as a feature would convert a disclosure into a score.
+
+- ⚠ **It is the same shape as `F-037`, one level down.** F-037: `span_aa` is the largest extracellular segment, not the extracellular content. F-040: the structure is a monomer, not the assembly. **Both are cases where the artifact is not the thing the reader assumes it is**, and neither is visible from the artifact alone.
+
+---
+
 ### D-092 — KEEL V8: prevention and recovery are separate amendments, and only one of them is a session-start check
 
 - **Date:** 2026-08-17
@@ -658,7 +702,7 @@ The document must settle, before anything folds:
 ### F-039 — Three staged documents arrived claiming numbers already written, and one claimed a filename already in use
 
 - **Date:** 2026-08-17
-- **Status:** open — ⚠ **the documents are placed and UNMERGED; the renumbering is the merge step, not done here.**
+- **Status:** ⚠ **CLOSED 2026-08-17 — merged as `D-093`, `D-094`, `F-040`.** The renumbering was done with both documents open, and the collision itself is what this entry records.
 - **What happened:** five documents were delivered for `docs/`. Three are staged log entries, and **each claims an integer the live log has already spent**:
 
   | arrived as | claims | ⚠ live state |
@@ -675,7 +719,7 @@ The document must settle, before anything folds:
   - All five **placed in `docs/`**, each with its **sha256 recorded above/below**.
   - The three staged entries **renamed to `STAGED-<subject>.md`** — ⚠ **the number is removed from the filename**, because a filename asserting `D-079` is a claim on an integer the file does not hold. The claim now lives only inside the document, where the merge step must resolve it.
   - The Planner's closeout renamed to **`CLOSEOUT-2026-08-17-planner-disclosure-arc.md`**.
-  - ⚠ **NOT merged into this log, and NOT renumbered inside the documents.** Renumbering is a decision about what the entries *are*, and it belongs to whoever merges them with both documents open. **Next free: `D-093`, `D-094`, `F-039`** (this entry takes `F-039`; the staged findings take what remains).
+  - ⚠ **Merged 2026-08-17 as `D-093` / `D-094` / `F-040`.** ⚠ **The authors’ snapshot notes were left EXACTLY as written** — they are true statements about the tree each author read, and rewriting one would falsify the provenance it exists to record. **The claim is corrected; the observation is not.** Sibling cross-references were renumbered with them **after reading every citation in context** — `F-012 §8` and *“D-079 decision 6’s supplier-before-contract rule”* resolve to the siblings, not to the spent entries, and a blind rename would have rewritten the meaning. ⚠ **NOT originally merged here.** Renumbering is a decision about what the entries *are*, and it belongs to whoever merges them with both documents open. **Next free: `D-093`, `D-094`, `F-039`** (this entry takes `F-039`; the staged findings take what remains).
 
 - ⚠ **The contents are not reviewed here.** They concern a clinical-association layer, claim discipline in educational surfaces, and a single-chain/oligomer-interface finding against the instrument. **None of that has been checked against the current code**, and the census work of the last two days may bear on all three.
 

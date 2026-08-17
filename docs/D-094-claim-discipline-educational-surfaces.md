@@ -1,4 +1,4 @@
-# D-080 — Claim discipline in educational surfaces: a briefing breaches D-028 by **supplying a premise**, not only by making a claim — plus the glossary as singular data, reading level as a ruled constraint, and the `external_value` category Constraint A never had
+# D-094 — Claim discipline in educational surfaces: a briefing breaches D-028 by **supplying a premise**, not only by making a claim — plus the glossary as singular data, reading level as a ruled constraint, and the `external_value` category Constraint A never had
 
 > **STAGED ENTRY — merge into `docs/README.md` before the briefing surface ships.**
 >
@@ -7,6 +7,25 @@
 > staged; **D-078 reserved by name** in D-077 decision 7 for the F-008 precision A/B; **D-079**
 > staged this session (clinical association layer). **D-080 is next free *if* all of those land as
 > written.** Check the thing, not the reference to it.
+
+> ---
+>
+> ## ⚠⚠ RENUMBERED ON MERGE — D-080 → **D-094**
+>
+> **This entry claimed `D-080`. The live log had already spent it** (reserved: a revert proof operates on committed state). The document was
+> authored against a snapshot whose highest `### D-` was **D-075**; the log stood at **D-092** when
+> it arrived — seventeen decisions later.
+>
+> ⚠ **The note below is left exactly as written.** It is a true statement about the tree its author
+> read, and rewriting it would falsify the provenance it exists to record. **The claim is corrected;
+> the observation is not.** Its own instruction — *"Check the thing, not the reference to it"* — is
+> what caught this (`F-039`).
+>
+> **Assigned `D-094` on 2026-08-17.** Cross-references to sibling staged entries were
+> renumbered with them; citations to *other* entries were left untouched and are **not reviewed
+> here**.
+>
+> ---
 
 - **Date:** 2026-08-17
 - **Status:** Proposed → Accepted on merge.
@@ -17,7 +36,7 @@
   surface self-sufficient); **D-074** (a finding stays open until the instrument carries the
   statement of what it gets wrong); **A-017** (the fixture must discriminate); **UI_Plan_v2 §5**
   (the one-sentence-wide gap) and **§7** (the briefing, metaphor kept, outcome claims bounded);
-  **F-005**; **F-012**; **D-079** (whose clinical terms enter the same glossary).
+  **F-005**; **F-040**; **D-093** (whose clinical terms enter the same glossary).
 - **Provenance (D-016):** Planner raised, owner ruled, 2026-08-17 — *"Entering a D-entry doesn't
   hurt, for the good and proper reasons you bring up."* The reasons: §6 and §7 of the briefing copy
   contain rulings, and **a ruling that lives only in a content file is a ruling nobody will find in
@@ -181,13 +200,13 @@ written such a number is a violation, which is wrong; the honest handling is not
 
 ## Decision (6) — Disclosure is a **mount precondition**, not a caption
 
-**D-074's available exit for F-005 and F-012 is that the instrument carries the statement of what it
+**D-074's available exit for F-005 and F-040 is that the instrument carries the statement of what it
 gets wrong.** A caption satisfies that in letter only, because a caption can be removed in a layout
 change by someone who never read the finding.
 
 **Ruled:**
 
-- **Structure-region rendering on the 3Dmol viewer cannot mount without the F-012 single-chain
+- **Structure-region rendering on the 3Dmol viewer cannot mount without the F-040 single-chain
   disclosure component present.** Not styled beside it — a hard dependency. **Proven by revert:**
   remove the component, the region-rendering test reddens.
 - The same applies to any surface reporting feature 6 or feature 7: the disclosure is a dependency
@@ -206,7 +225,7 @@ change by someone who never read the finding.
 - **It does not amend Constraint A** — it adds the category Constraint A lacked. Derived numbers are
   governed exactly as before.
 - **It does not touch the six features, the scorer, F-004, or any result.**
-- **It does not close F-005 or F-012.** Both remain open; this rules how they are disclosed.
+- **It does not close F-005 or F-040.** Both remain open; this rules how they are disclosed.
 - **It does not supply the 16 topology glossary entries.** Recorded gap.
 - **It does not verify the two external values.** Flagged, unverified, gated for the paper.
 
@@ -218,7 +237,7 @@ change by someone who never read the finding.
 through it.** A correct result read through a wrong mental model produces a wrong conclusion, and
 the product — not the reader — is responsible for that.
 
-The specific DL content the briefing carries is the distinction that F-012 §8 identified as the
+The specific DL content the briefing carries is the distinction that F-040 §8 identified as the
 project's recurring lesson: **the gap between what a network optimised and what we read off its
 output.** ESMFold optimised single-chain structure from sequence. It did not optimise quaternary
 assembly, glycosylation, or binding. Every limitation in §7 of the copy is an instance of that one
@@ -240,7 +259,7 @@ one.
 - No second glossary file exists; a `source`-filtered glossary view fails (decision 3.3).
 - Every UI number carries its kind; a derived and an external number rendering adjacent without
   distinction fails (decision 5).
-- Structure-region rendering cannot mount without the F-012 disclosure; proven by revert
+- Structure-region rendering cannot mount without the F-040 disclosure; proven by revert
   (decision 6).
 - Each of the four limitations in copy §7 links to its owning Limitations entry; broken or missing
   links fail.

@@ -1,4 +1,4 @@
-# F-012 — The single-chain finding: ESMFold folds monomers, so an obligate oligomer's subunit interface is indistinguishable from an antibody-accessible patch — and features 6 and 7 are biased **in a direction**, not merely noisily
+# F-040 — The single-chain finding: ESMFold folds monomers, so an obligate oligomer's subunit interface is indistinguishable from an antibody-accessible patch — and features 6 and 7 are biased **in a direction**, not merely noisily
 
 > **STAGED ENTRY — merge into `docs/README.md`.** A finding against the instrument (**D-074**):
 > it stays open until ESMFold no longer exhibits it, or until every surface reporting features 6
@@ -11,6 +11,25 @@
 >
 > **⚠ Drafted from a project-knowledge snapshot, not a repository zip.** Every code fact below is
 > marked with how it is known and requires confirmation against the live tree.
+
+> ---
+>
+> ## ⚠⚠ RENUMBERED ON MERGE — F-012 → **F-040**
+>
+> **This entry claimed `F-012`. The live log had already spent it** (ESMFold's chunked trunk is not output-invariant). The document was
+> authored against a snapshot whose highest `### D-` was **D-075**; the log stood at **D-092** when
+> it arrived — seventeen decisions later.
+>
+> ⚠ **The note below is left exactly as written.** It is a true statement about the tree its author
+> read, and rewriting it would falsify the provenance it exists to record. **The claim is corrected;
+> the observation is not.** Its own instruction — *"Check the thing, not the reference to it"* — is
+> what caught this (`F-039`).
+>
+> **Assigned `F-040` on 2026-08-17.** Cross-references to sibling staged entries were
+> renumbered with them; citations to *other* entries were left untouched and are **not reviewed
+> here**.
+>
+> ---
 
 - **Date:** 2026-08-17
 - **Status:** **Open.** Established as a structural gap; **unmeasured as to magnitude.** See §2 —
@@ -137,7 +156,7 @@ no tolerance invented after seeing the result).
 
 **Design.** Annotate every ranked target with an oligomeric-state category drawn from a **named
 external annotation with a recorded retrieval date** — UniProt subunit-structure annotation is the
-obvious candidate, confirmed under D-079 decision 6's supplier-before-contract rule. Categories:
+obvious candidate, confirmed under D-093 decision 6's supplier-before-contract rule. Categories:
 `obligate_oligomer` · `induced_dimer` · `monomer` · `unannotated`. **`unannotated` is a category with
 a reason, never merged into `monomer`** — the whole class of errors this project keeps catching is
 absence silently becoming a low value.
@@ -250,5 +269,5 @@ which is worth more to a reader than either individual catch.
 - **It does not claim a measured bias.** §2 governs; §5 is unrun.
 - **It does not name any target as an obligate oligomer.** §3's list is unverified leads.
 - **It does not add a feature, a filter, or a score** (§6).
-- **It does not gate D-079.** It gates the **About-ADCs briefing prose**, by owner ruling,
+- **It does not gate D-093.** It gates the **About-ADCs briefing prose**, by owner ruling,
   2026-08-17.
