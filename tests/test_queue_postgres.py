@@ -25,7 +25,7 @@ pytestmark = pytest.mark.postgres
 BASE = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 
 
-def _enqueue(engine, n=1, created_base=BASE):
+def _enqueue(engine, n=1, created_base=BASE, tier="local"):
     ids = []
     with engine.begin() as c:
         # jobs.analysis_id now has an enforced FK -> protein_analyses (D-019), so each job
@@ -37,9 +37,14 @@ def _enqueue(engine, n=1, created_base=BASE):
         ).scalar_one()
         for i in range(n):
             rid = c.execute(
-                text("INSERT INTO jobs (analysis_id, status, attempts, inference_settings, created_at) "
-                     "VALUES (:a, 'pending', 0, '{}', :ts) RETURNING id"),
-                {"a": parent, "ts": created_base + timedelta(seconds=i)},
+                # ⚠ `tier` is set here because `claim()` filters on it (F-035). Pass `tier=None`
+                # to build the untagged row that no worker may claim — the case only REAL SQL can
+                # prove, since `NULL = 'local'` being unknown is three-valued logic the in-memory
+                # double can only imitate.
+                text("INSERT INTO jobs (analysis_id, status, attempts, inference_settings, "
+                     "created_at, tier) "
+                     "VALUES (:a, 'pending', 0, '{}', :ts, :tier) RETURNING id"),
+                {"a": parent, "ts": created_base + timedelta(seconds=i), "tier": tier},
             ).scalar_one()
             ids.append(rid)
     return ids
@@ -184,3 +189,40 @@ def test_reap_leaves_a_fresh_claim_untouched_on_real_pg(pg_engine):
     reaper = PostgresJobQueue(pg_engine, clock=lambda: BASE + timedelta(minutes=60))
     assert reaper.reap_stale() == 0
     assert _row(pg_engine, jid)["status"] == "claimed"
+
+
+# ── F-035 against the real database ─────────────────────────────────────────────────────────────
+#
+# ⚠⚠ THIS IS THE ONLY PLACE THE NULL BEHAVIOUR IS ACTUALLY PROVEN. The in-memory double compares
+# `j.tier == tier` in Python, where `None == "local"` is plainly False. Postgres reaches the same
+# answer by a different route — `NULL = 'local'` evaluates to UNKNOWN, and a WHERE clause keeps
+# only rows that are TRUE. **Two mechanisms, one outcome, and only one of them is production.**
+
+def test_a_local_worker_cannot_claim_a_rental_row_in_real_sql(pg_engine):
+    q = PostgresJobQueue(pg_engine)
+    _enqueue(pg_engine, 1, tier="rental")
+    assert q.claim("w1", tier="local") is None
+
+
+def test_an_untagged_row_is_claimed_by_nobody_in_real_sql(pg_engine):
+    """⚠⚠ `NULL = :tier` is UNKNOWN, not TRUE — so the row is skipped. If someone ever writes
+    `OR tier IS NULL` to be helpful, this reds and F-035 is back."""
+    q = PostgresJobQueue(pg_engine)
+    _enqueue(pg_engine, 1, tier=None)
+    for t in ("local", "rental"):
+        assert q.claim("w1", tier=t) is None
+
+
+def test_fifo_holds_within_a_tier_in_real_sql(pg_engine):
+    """⚠ The added predicate must not disturb the ordering contract (D-009 §1 Amendment 3)."""
+    q = PostgresJobQueue(pg_engine)
+    ids = _enqueue(pg_engine, 3, tier="local")
+    assert q.claim("w1", tier="local").id == ids[0]
+    assert q.claim("w2", tier="local").id == ids[1]
+
+
+def test_the_claimed_row_carries_its_tier_back(pg_engine):
+    """⚠ The DTO must round-trip the column, or a caller cannot tell what it was handed."""
+    q = PostgresJobQueue(pg_engine)
+    _enqueue(pg_engine, 1, tier="rental")
+    assert q.claim("w1", tier="rental").tier == "rental"
