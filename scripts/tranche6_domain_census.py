@@ -391,58 +391,76 @@ def _span_features(entry: dict[str, str]) -> tuple[list[dict], list[dict]]:
     return up, ip
 
 
-def _agreement_report() -> int:
-    """Task A3 — pairwise boundary agreement at every k, both directions, never one number."""
-    rows = past_context_rows()
-    print(f"population: {len(rows)} rows (D-098)\n")
+#: ⚠⚠ THE FILTER IS REPORTED AT EVERY SETTING, exactly as k is (order §1 A3). The first A3 ran
+#: under `domain_repeat` alone, which made the headline rest on a choice — a filter is a dial
+#: wearing the costume of a measurement in precisely the way a single tolerance is.
+TYPE_SETS: dict[str, Optional[tuple[str, ...]]] = {
+    "all_types": None,
+    "domain_repeat": ("domain", "repeat"),   # the pre-registered choice
+    "domain_only": ("domain",),
+}
 
+
+def _agreement_for(rows: list[dict[str, str]], types: Optional[tuple[str, ...]]) -> dict:
     tot_up = tot_ip = 0
     hits_up = {k: 0 for k in AGREEMENT_K}
     hits_ip = {k: 0 for k in AGREEMENT_K}
     per_row = []
-
     for entry in rows:
+        acc = entry["census_accession"]
         try:
-            up, ip = _span_features(entry)
+            doc = json.loads((UNIPROT_CACHE / f"{acc}.json").read_bytes().decode("utf-8"))
+            payload, _, _ = interpro_cached(acc)
         except FileNotFoundError:
             continue
-        bu, bi = boundaries_of(up), boundaries_of(ip)
+        bu = boundaries_of(domain_like_features(doc))
+        bi = boundaries_of(as_features(interpro_intervals(payload), types=types))
         tot_up += len(bu)
         tot_ip += len(bi)
-        row = {"acc": entry["census_accession"], "n_up": len(bu), "n_ip": len(bi)}
         for k in AGREEMENT_K:
-            mu = matched_within(bu, bi, k)
-            mi = matched_within(bi, bu, k)
-            hits_up[k] += mu
-            hits_ip[k] += mi
-            row[f"up_in_ip_{k}"] = mu
-            row[f"ip_in_up_{k}"] = mi
-        per_row.append(row)
+            hits_up[k] += matched_within(bu, bi, k)
+            hits_ip[k] += matched_within(bi, bu, k)
+        per_row.append({"acc": acc, "n_up": len(bu), "n_ip": len(bi)})
+    return {"tot_up": tot_up, "tot_ip": tot_ip, "hits_up": hits_up,
+            "hits_ip": hits_ip, "per_row": per_row}
 
-    print("=" * 92)
-    print("A3 — BOUNDARY AGREEMENT, UniProt vs InterPro, over the 141")
-    print("⚠ Both directions. A single figure hides which source is the denominator.")
-    print("=" * 92)
-    print(f"  UniProt boundaries  : {tot_up:,}")
-    print(f"  InterPro boundaries : {tot_ip:,}\n")
-    print(f"  {'k':>4s}  {'UniProt->InterPro':>22s}  {'InterPro->UniProt':>22s}")
-    print("  " + "-" * 52)
-    for k in AGREEMENT_K:
-        a = f"{hits_up[k]:,}/{tot_up:,} ({100*hits_up[k]/tot_up:.1f}%)" if tot_up else "-"
-        b = f"{hits_ip[k]:,}/{tot_ip:,} ({100*hits_ip[k]/tot_ip:.1f}%)" if tot_ip else "-"
-        print(f"  {k:>4d}  {a:>22s}  {b:>22s}")
 
-    print("\n  ⚠ rows where NEITHER source annotates anything (a category, not a zero):")
-    none = [r for r in per_row if r["n_up"] == 0 and r["n_ip"] == 0]
-    print(f"    {len(none)} rows" + (": " + ", ".join(r["acc"] for r in none) if none else ""))
-    only_ip = [r for r in per_row if r["n_up"] == 0 and r["n_ip"] > 0]
-    print(f"  ⚠ rows InterPro annotates and UniProt does NOT: {len(only_ip)}")
-    for r in only_ip:
-        print(f"    {r['acc']:8s} uniprot=0  interpro={r['n_ip']//2} domains")
-    only_up = [r for r in per_row if r["n_ip"] == 0 and r["n_up"] > 0]
-    print(f"  ⚠ rows UniProt annotates and InterPro does NOT: {len(only_up)}")
-    for r in only_up:
-        print(f"    {r['acc']:8s} interpro=0  uniprot={r['n_up']//2} domains")
+def _agreement_report() -> int:
+    """Task A3 — boundary agreement at every k, both directions, under every type set.
+
+    ⚠ THE KEY, stated: one row per `census_accession`; a BOUNDARY is one endpoint of one
+    annotated interval, so every domain contributes TWO. Counts are over boundaries, not domains,
+    and not proteins. UniProt's side is `Domain`+`Repeat` features and does not vary with the
+    filter — only InterPro's side does.
+    """
+    rows = past_context_rows()
+    print(f"population : {len(rows)} rows (D-098: tranche=5, span_aa > {TRAINED_CONTEXT})")
+    print("key        : per census_accession; unit = BOUNDARY (each interval contributes 2)")
+    print("uniprot    : Domain + Repeat features, constant across all three type sets\n")
+
+    for name, types in TYPE_SETS.items():
+        res = _agreement_for(rows, types)
+        tu, ti = res["tot_up"], res["tot_ip"]
+        label = "every InterPro type" if types is None else "InterPro types " + "/".join(types)
+        star = "   <- pre-registered" if name == "domain_repeat" else ""
+        print("=" * 92)
+        print(f"A3 [{name}] — {label}{star}")
+        print("=" * 92)
+        print(f"  UniProt boundaries : {tu:,}     InterPro boundaries : {ti:,}")
+        print(f"  {'k':>4s}  {'UniProt->InterPro':>22s}  {'InterPro->UniProt':>22s}")
+        print("  " + "-" * 52)
+        for k in AGREEMENT_K:
+            a = f"{res['hits_up'][k]:,}/{tu:,} ({100*res['hits_up'][k]/tu:.1f}%)" if tu else "-"
+            b = f"{res['hits_ip'][k]:,}/{ti:,} ({100*res['hits_ip'][k]/ti:.1f}%)" if ti else "-"
+            print(f"  {k:>4d}  {a:>22s}  {b:>22s}")
+        pr = res["per_row"]
+        print(f"  rows neither annotates : {sum(1 for r in pr if r['n_up'] == 0 and r['n_ip'] == 0)}")
+        print(f"  rows only InterPro     : {sum(1 for r in pr if r['n_up'] == 0 and r['n_ip'] > 0)}")
+        print(f"  rows only UniProt      : {sum(1 for r in pr if r['n_ip'] == 0 and r['n_up'] > 0)}")
+        print()
+
+    print("⚠ Read the three together. If the headline moves with the filter, the filter is a")
+    print("  free parameter and the design document must say which one it ruled and why.")
     return 0
 
 
