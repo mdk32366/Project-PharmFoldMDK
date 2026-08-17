@@ -77,3 +77,17 @@ def test_conftest_actually_wires_the_guard_in():
     assert "refusal_reason" in src, "conftest does not consult the guard"
     assert "pytest_collection_modifyitems" in src, "the guard is not hooked into collection"
     assert "UsageError" in src, "the guard does not FAIL the run — a skip is what let this happen"
+
+
+# ── ⚠ every .env variant must be ignored, not just the file called `.env` ────────────────────────
+def test_every_env_variant_is_gitignored_not_just_dot_env():
+    """⚠⚠ On 2026-08-17 a backup named `.env.env.bak-precluster-swap` was created during a cluster
+    swap. It held the OLD production database password and was **not ignored** — one unscoped
+    `git add -A` from a public repository.
+
+    The pattern was `.env`, which matches the file called `.env` and nothing else: the narrowest
+    possible reading of an intent that was obviously broader. ⚠ `.env.example` must stay tracked,
+    so the negation is asserted too — a fix that ignores the template breaks every fresh clone."""
+    ignore = (REPO / ".gitignore").read_text(encoding="utf-8")
+    assert ".env*" in ignore, "a .env backup or variant would not be ignored"
+    assert "!.env.example" in ignore, "the template must stay tracked or a fresh clone has no example"

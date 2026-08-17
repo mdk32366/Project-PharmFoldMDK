@@ -239,3 +239,11 @@ data/census/*cache/
 # must never contain .env; the builder asserts that before writing.
 *.zip
 PharmFoldMDK-snapshot-*.zip
+
+# ⚠⚠ ANY .env variant, not just .env. On 2026-08-17 a backup named '.env.env.bak-precluster-swap'
+# was created during a cluster swap; it held the OLD production database password and was NOT
+# ignored — one unscoped 'git add -A' from a public repository. The pattern '.env' matched the
+# file called .env and nothing else, which is the narrowest possible reading of the intent.
+# ⚠ .env.example is force-included below because it is the template and carries no secret.
+.env*
+!.env.example
