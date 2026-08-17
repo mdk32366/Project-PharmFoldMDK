@@ -32,6 +32,7 @@ from typing import Any, Callable, Optional
 from sqlalchemy import select, update
 
 from core.contracts import TIER_RECIPE, FoldSpec
+from core.queue import DEFAULT_TIER
 from core.queue import Job
 from db.models import JobRecord, ProteinAnalysis
 
@@ -44,7 +45,8 @@ class AnalysisNotFound(Exception):
 
 # ── claim → inline FoldSpec (D-031 §1) ────────────────────────────────────────
 
-def build_fold_spec(queue: Any, engine: Any, worker_id: str) -> Optional[FoldSpec]:
+def build_fold_spec(queue: Any, engine: Any, worker_id: str,
+                    tier: str = DEFAULT_TIER) -> Optional[FoldSpec]:
     """Claim a job and assemble the fold spec the worker folds from, inline. Returns
     ``None`` when the queue is empty. The sequence comes from the analysis D-026 stored
     (``meta["sequence"]`` — the exact residues the manifest reviewed); neither it nor the
@@ -59,7 +61,8 @@ def build_fold_spec(queue: Any, engine: Any, worker_id: str) -> Optional[FoldSpe
     recipe fails **loud here**, never folds at a silent default. ``model_revision`` (the pinned
     weights) and ``source``/``ecd_start``/``ecd_end`` (the target's slicing identity) remain
     authoritative from ``inference_settings`` — they are not a compute knob D-042 revises."""
-    job: Optional[Job] = queue.claim(worker_id)
+    # ⚠ The tier reaches the SQL predicate; it is never checked after the claim.
+    job: Optional[Job] = queue.claim(worker_id, tier=tier)
     if job is None:
         return None
     with engine.connect() as conn:

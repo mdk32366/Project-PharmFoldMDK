@@ -78,7 +78,41 @@ def main() -> int:
     print(f"{'ALL':>14} | jobs={grand} across {len(by_tranche)} tranche key(s)")
 
     _reconcile_cohort(by_tranche.get(0, {}))
+    _report_tiers(engine)
     return 0
+
+
+def _report_tiers(engine: Any) -> None:
+    """Pending work BY TIER, and the rows no worker can claim (F-035).
+
+    ⚠⚠ `claim()` filters on `tier = :tier`, so a null-tier job is claimed by nobody — and **an
+    idle worker beside a queue of unclaimable jobs looks exactly like an idle worker beside an
+    empty queue.** One is fine and the other is a stalled crank. This is the only place the
+    difference is visible.
+    """
+    import sqlalchemy as sa
+    from sqlalchemy import func, select
+    from sqlalchemy.orm import Session
+
+    from db.job_tier_backfill import pending_jobs_with_no_tier
+    from db.models import JobRecord
+
+    with Session(engine) as s:
+        rows = s.execute(
+            select(JobRecord.tier, func.count())
+            .where(JobRecord.status == "pending").group_by(JobRecord.tier)).all()
+        orphan = pending_jobs_with_no_tier(engine)
+
+    if not rows:
+        print(f"{'PENDING':>14} | none — the queue is empty (not merely unclaimable)")
+        return
+    for tier, n in sorted(rows, key=lambda r: (r[0] is None, r[0])):
+        label = tier if tier else "⚠ NO TIER"
+        note = "" if tier else "  ⚠⚠ CLAIMABLE BY NOBODY — run db.job_tier_backfill"
+        print(f"{'PENDING':>14} | tier={label:<12} {n:>5}{note}")
+    if orphan:
+        print(f"{'':>14} | ⚠⚠ {orphan} pending job(s) declare no tier. A worker polling this "
+              f"queue will report it EMPTY while these sit here.")
 
 
 def _reconcile_cohort(counts: dict[str, int]) -> None:

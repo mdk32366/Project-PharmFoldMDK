@@ -206,6 +206,10 @@ def enqueue_cohort(
         session.add(JobRecord(
             analysis_id=analysis.id,
             status="pending",
+            # ⚠ F-035: the routing decision this module computed must reach the claim predicate.
+            # Left off, the job is claimable by NOBODY — which is the safe failure, but a silent
+            # one, so `pending_jobs_with_no_tier` counts it.
+            tier=row.tier,
             inference_settings={
                 "model_id": MODEL_ID,
                 "model_revision": MODEL_REVISION,

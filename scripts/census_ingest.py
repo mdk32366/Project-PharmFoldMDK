@@ -257,7 +257,10 @@ def run(argv: Optional[list[str]] = None) -> int:
             )
             s.add(analysis)
             s.flush()
-            s.add(JobRecord(analysis_id=analysis.id, status="pending",
+            # ⚠ `tier` on the JOB (F-035), not only in the analysis meta. `claim()` filters
+            # on it inside one atomic UPDATE, and reaching through a JSON column there would need
+            # dialect-split SQL in the one statement that must not have two versions.
+            s.add(JobRecord(analysis_id=analysis.id, status="pending", tier=p["tier"],
                             inference_settings={**p["inference_settings"],
                                                 "model_id": "facebook/esmfold_v1"}))
         s.commit()

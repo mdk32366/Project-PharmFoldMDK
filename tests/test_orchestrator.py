@@ -33,7 +33,7 @@ class FakeClient:
         self.claim_calls = 0
         self.uploaded, self.completed, self.failed, self.events = [], [], [], []
 
-    def claim(self, worker_id):
+    def claim(self, worker_id, tier="local"):
         self.claim_calls += 1
         if self._claim_raises_auth:
             raise AuthError("POST /jobs/claim -> 401 (bearer token rejected)")

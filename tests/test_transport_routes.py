@@ -53,7 +53,7 @@ class StubQueue:
         self.completed: list[int] = []
         self.failed: list[tuple[int, str]] = []
 
-    def claim(self, worker_id: str) -> Optional[Job]:
+    def claim(self, worker_id: str, tier: str = "local") -> Optional[Job]:
         job, self._claimable = self._claimable, None
         return job
 

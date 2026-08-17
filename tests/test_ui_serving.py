@@ -21,7 +21,7 @@ TOKEN = "test-secret-token"
 
 
 class _DummyQueue:
-    def claim(self, worker_id):  # pragma: no cover - reads never touch the queue
+    def claim(self, worker_id, tier="local"):  # pragma: no cover - reads never touch the queue
         raise AssertionError("a read route touched the queue")
 
 

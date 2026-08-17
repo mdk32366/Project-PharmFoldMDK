@@ -22,6 +22,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
+from core.queue import DEFAULT_TIER
 from app import artifacts as A
 from app.deps import get_artifact_root, get_engine, get_queue, require_token
 
@@ -30,6 +31,10 @@ router = APIRouter()
 
 class ClaimBody(BaseModel):
     worker_id: str
+    # ⚠ OPTIONAL, defaulting to `local` (F-035). A worker that predates this field keeps working
+    # unchanged — making it required would have stopped every running crank at deploy time, which
+    # is a worse failure than the one being fixed.
+    tier: str = DEFAULT_TIER
 
 
 class FailBody(BaseModel):
@@ -40,7 +45,7 @@ class FailBody(BaseModel):
 def claim(body: ClaimBody, queue: Any = Depends(get_queue), engine: Any = Depends(get_engine)):
     """Claim → the fold spec inline (D-031 §1), or 204 when the queue is empty. A bare
     id is never returned — the eight-field body is the contract the loop folds from."""
-    spec = A.build_fold_spec(queue, engine, body.worker_id)
+    spec = A.build_fold_spec(queue, engine, body.worker_id, tier=body.tier)
     if spec is None:
         return Response(status_code=204)
     return asdict(spec)
