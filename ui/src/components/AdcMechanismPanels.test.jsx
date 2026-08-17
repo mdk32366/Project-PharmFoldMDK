@@ -60,6 +60,17 @@ describe('AdcMechanismPanels — the process half, structurally not a model outp
     expect(alt).not.toContain('cyttoxic')
   })
 
+  it('⚠ reserves its aspect-ratio box so lazy loading cannot collapse the figure', () => {
+    renderIt()
+    const img = screen.getByRole('img')
+    // ⚠ Found on the DEPLOYED site, not locally: without intrinsic dimensions the browser cannot
+    // reserve space, `loading="lazy"` leaves a 0-height line, and the caption jumps up under the
+    // heading until the 707 KB fetch resolves. A fast dev server hides this entirely.
+    expect(img.getAttribute('width'), 'intrinsic width must be declared').toBe('2128')
+    expect(img.getAttribute('height'), 'intrinsic height must be declared').toBe('912')
+    expect(img.getAttribute('loading')).toBe('lazy')
+  })
+
   it('carries its OWN disclosure — D-094, not inherited from the schematic', () => {
     const { container } = renderIt()
     const figure = container.querySelector('figure')

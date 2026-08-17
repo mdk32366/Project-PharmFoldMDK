@@ -151,6 +151,8 @@ So the rule is not "be careful" — it is:
 
 - **Deep-learning justification:** unchanged and now doubled — **both** illustrations sit on a surface that also renders real ESMFold output, so the only DL-relevant property is that neither can be mistaken for one. ⚠ **The D-052 guarantee holds for both by the same mechanism**: neither imports `api.js`, and both components' tests assert it independently.
 
+- ⚠ **A defect the local dev server hid, found only on the deployed site.** The raster `<img>` shipped with `loading="lazy"` and **no intrinsic `width`/`height`**, so the browser could not reserve the aspect-ratio box: the figure collapsed to a **0-height line** and the caption jumped up under the heading until the 707 KB fetch resolved. ⚠⚠ **Locally this is invisible** — a dev server on loopback returns the asset faster than the eye resolves the gap, so *the environment that is easiest to check is the one that cannot show this class of defect.* Fixed by declaring the asset's intrinsic **2128×912**; CSS still drives layout. **Proven by revert** (`expected null to be '2128'`, a failure at the assertion, 1 failed / 6 passed), then green at 220.
+
 - **Consequences:** `AdcSchematic.jsx` and its three tests are **restored byte-for-byte from `faf9e32`** rather than retyped — ⚠ *a retyped restoration is a new component wearing an old name.* The cartoon moves to its own component, `AdcMechanismPanels.jsx`, with its own tests and its own class; the `.adc-schematic` SVG rules removed by D-096 are restored, and the raster rules move to `.adc-panels`. **Bundle cost is unchanged** (~707 KB) — the SVG is a few hundred bytes.
 
 ---
