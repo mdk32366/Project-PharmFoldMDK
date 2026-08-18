@@ -10,6 +10,8 @@ CA1 provenance:
   sha256    8453c46c6f4690428c029cf1d7e8dba289ae33b288f874b00105a008dbe62ff7  (copy already on this machine)
   inner     normal_tissue.tsv 82706091 bytes, sha256 73fa766c9f7add6ec6f4e063fc89e3f07c3390ecc44d7633d226b30403e663af
   ⚠ THREE hashes, ONE value — transport checked, not assumed.
+⚠ REGENERATED after DB/DC/DD: three bars, the extremes decomposed, the Level vocabulary,
+  the reliability asymmetry, and CE1 closed on members.
 
 ========================================================================================
 CA3 — THE COLUMN SET, ASSERTED EXACTLY (the ingest is COLUMN-scoped)
@@ -178,35 +180,111 @@ CD — COVERAGE, CATEGORIES FIRST. ⚠ NO PERCENTAGE MAY ABSORB THEM (P1)
     TOTAL                     2,690   sums to the population: True
 
 ============================================================================================
-CD3 — ⚠⚠ THE EMPIRICAL TEST OF THE 'EVERY PROTEIN IS EXPRESSED SOMEWHERE' WARNING
+DB1 — ⚠⚠ 'REACHING' HAD NO STATED RULE. THREE BARS, NOT ONE
 ============================================================================================
-  key: census accessions resolving to exactly one gene (3,351), against pathology.tsv's 20 cancer types
-  reaching ALL 20 cancer types with a detected level : 785  (23.4%)
-  reaching EXACTLY ONE                               : 91
-  reaching NONE                                      : 1,148
+  ⚠ A single setting is a dial wearing the costume of a measurement. `F-043`'s flip
+    rates were withdrawn the day they were published for exactly this.
 
-  full distribution, cancers reached -> proteins:
-      0 :  1,148  #############################################
-      1 :     91  ###
-      2 :     81  ###
-      3 :     51  ##
-      4 :     55  ##
-      5 :     51  ##
-      6 :     42  #
-      7 :     54  ##
-      8 :     62  ##
-      9 :     40  #
-     10 :     67  ##
-     11 :     51  ##
-     12 :     55  ##
-     13 :     53  ##
-     14 :     82  ###
-     15 :     73  ##
-     16 :     84  ###
-     17 :    100  ####
-     18 :    137  #####
-     19 :    189  #######
-     20 :    785  ###############################
+  key: census accessions resolving to exactly ONE gene (3,351), against pathology.tsv's 20 cancer types
+
+  bar                                          all 20     >=10  exactly 1     NONE
+  ----------------------------------------------------------------------------------------
+  any non-zero detection                          785    1,676         91    1,148
+  any `High`                                       35      383        328    1,834
+  qh >= 150 (Kathad's, for comparability)          57      477        298    1,998
+
+  ⚠⚠ THE HEADLINE MOVES WITH THE BAR, WHICH IS THE POINT OF REPORTING THREE.
+
+============================================================================================
+DB2 / DB3 — ⚠⚠ DECOMPOSING THE EXTREMES. 'NONE' AND 'ALL 20' BOTH HAVE CAUSES
+============================================================================================
+
+  bar='any non-zero detection'  reaching NONE: 1,148
+    ihc_panel_empty                             1,008
+    ihc_PRESENT_and_still_at_this_extreme         125  ⚠⚠ a DIFFERENT FACT from the two above
+    ihc_gene_absent                                15
+    sums to the group                           1,148   True
+
+  bar='any non-zero detection'  reaching ALL 20: 785
+    ihc_PRESENT_and_still_at_this_extreme         785  ⚠⚠ a DIFFERENT FACT from the two above
+    sums to the group                             785   True
+
+  bar='any `High`'  reaching NONE: 1,834
+    ihc_panel_empty                             1,008
+    ihc_PRESENT_and_still_at_this_extreme         811  ⚠⚠ a DIFFERENT FACT from the two above
+    ihc_gene_absent                                15
+    sums to the group                           1,834   True
+
+  bar='any `High`'  reaching ALL 20: 35
+    ihc_PRESENT_and_still_at_this_extreme          35  ⚠⚠ a DIFFERENT FACT from the two above
+    sums to the group                              35   True
+
+  bar="qh >= 150 (Kathad's, for comparability)"  reaching NONE: 1,998
+    ihc_panel_empty                             1,008
+    ihc_PRESENT_and_still_at_this_extreme         975  ⚠⚠ a DIFFERENT FACT from the two above
+    ihc_gene_absent                                15
+    sums to the group                           1,998   True
+
+  bar="qh >= 150 (Kathad's, for comparability)"  reaching ALL 20: 57
+    ihc_PRESENT_and_still_at_this_extreme          57  ⚠⚠ a DIFFERENT FACT from the two above
+    sums to the group                              57   True
+
+============================================================================================
+DC1 — ⚠ DOES `pathology.tsv` CARRY THE SAME NON-ORDINAL VALUES?
+============================================================================================
+  ⚠⚠ This lands on `P-004` item 3. If HPA's own vocabulary is not a clean ordinal, the
+     objection is not *the weights are arbitrary* but *the thing being weighted is not
+     consistently ordered* — a stronger claim, and P-004 needs the answer before it
+     makes either.
+
+  column 'High': 14 distinct raw values
+    non-numeric values: NONE — every cell parses as a number
+
+  column 'Medium': 14 distinct raw values
+    non-numeric values: NONE — every cell parses as a number
+
+  column 'Low': 14 distinct raw values
+    non-numeric values: NONE — every cell parses as a number
+
+  column 'Not detected': 14 distinct raw values
+    non-numeric values: NONE — every cell parses as a number
+
+  ⚠ `pathology.tsv` stores COUNTS per level; `normal_tissue.tsv` stores a LEVEL per
+    (tissue, cell). They are different shapes, so 'the same non-ordinal values' can
+    only be asked of the LEVEL vocabulary — which pathology.tsv does not have as a
+    column at all. **Reported as a shape difference, not forced into a comparison.**
+
+============================================================================================
+DC2 — ⚠⚠ THE RELIABILITY ASYMMETRY, COLUMN LISTS SIDE BY SIDE
+============================================================================================
+  pathology.tsv    (11 cols): ['Gene', 'Gene name', 'Cancer', 'High', 'Medium', 'Low', 'Not detected', 'prognostic - favorable', 'unprognostic - favorable', 'prognostic - unfavorable', 'unprognostic - unfavorable']
+  normal_tissue.tsv(6 cols): ['Gene', 'Gene name', 'Tissue', 'Cell type', 'Level', 'Reliability']
+
+  ⚠ `Reliability` in normal_tissue : True
+  ⚠ `Reliability` in pathology     : False
+  ⚠⚠ so the modality driving TARGET SELECTION is the one WITHOUT the quality flag.
+  ⚠ NOT verified here: whether HPA documents the difference anywhere. That is a
+    question about HPA's own documentation, not about these files, and asserting it
+    from the files would be inventing provenance.
+
+============================================================================================
+DD — ⚠⚠ CE1 CLOSED ON MEMBERS, NOT ON TOTALS
+============================================================================================
+  'Equal counts are not the same set' was named in the act of committing it. Compared:
+
+  the census manifest (3,467)
+    via uniprot_accession : 12
+    via antigen name      : 12
+    ⚠ SAME SET           : True
+    in accession join only: none
+    in name join only     : none
+
+  the folded set (2,690)
+    via uniprot_accession :  6
+    via antigen name      :  6
+    ⚠ SAME SET           : True
+    in accession join only: none
+    in name join only     : none
 
 ============================================================================================
 CE1 — `therapeutic_precedent` COVERAGE (a LABEL; never a scoring feature)

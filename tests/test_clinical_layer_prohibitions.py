@@ -47,7 +47,24 @@ BURDEN_TOKENS = ("burden", "survival", "mortality", "incidence", "five_year", "5
 
 #: `D-093` amendment 1 clause 2. ⚠ COLUMN-SCOPED: the column's PRESENCE is the violation, not its
 #: use, because a column present in a stored table is ingested whether or not anything reads it.
-EXCLUDED_COLUMN_PREFIX = "Cancer prognostics"
+#:
+#: ⚠⚠ **THE RULE AS WRITTEN NAMED A COLUMN THAT DOES NOT EXIST.** Amendment 1 clause 2 excludes
+#: every ``Cancer prognostics — … (TCGA)`` column. Measured 2026-08-19 against HPA v22:
+#:
+#:   `Cancer prognostics` as a column prefix : 0 in pathology.tsv, 0 in proteinatlas.tsv
+#:   columns whose name contains `TCGA`      : 0 in either file
+#:   what is ACTUALLY there                  : `prognostic - favorable`,
+#:                                             `unprognostic - favorable`,
+#:                                             `prognostic - unfavorable`,
+#:                                             `unprognostic - unfavorable`   (4, pathology.tsv)
+#:                                             `Pathology prognostics - <cancer>` (17, summary)
+#:
+#: **A guard matching a string that never occurs passes forever while the thing it means to
+#: exclude flows through under its real name** — KEEL-1 V9 Principle 6 clause (c), and the same
+#: shape as the `## P-004` grep that manufactures a false absence. So the match is on the TOKEN,
+#: not the prefix, and the prefix is kept only to document what was originally ruled.
+EXCLUDED_COLUMN_PREFIX_AS_RULED = "Cancer prognostics"
+EXCLUDED_COLUMN_TOKEN = "prognos"
 
 CODE_DIRS = ("core", "app", "worker")
 
@@ -156,7 +173,7 @@ def test_no_cancer_prognostics_column_is_present_in_any_committed_or_cached_tabl
             continue
         delim = "\t" if path.suffix == ".tsv" else ","
         for col in next(csv.reader([head], delimiter=delim), []):
-            if col.strip().startswith(EXCLUDED_COLUMN_PREFIX):
+            if EXCLUDED_COLUMN_TOKEN in col.strip().lower():
                 offenders.append(f"{path.relative_to(REPO)}: {col.strip()!r}")
     assert not offenders, (
         "a `Cancer prognostics` column is PRESENT in a stored table — presence is the violation "
@@ -174,12 +191,23 @@ def test_the_burden_scan_would_catch_a_real_field(tmp_path):
 
 
 def test_the_column_scan_would_catch_a_real_column(tmp_path):
-    """⚠ Same, for the column-scoped rule: a header carrying the excluded prefix must be seen."""
-    header = "Gene,Gene name,Cancer prognostics - breast cancer (TCGA)"
-    cols = next(csv.reader([header]))
-    assert any(c.strip().startswith(EXCLUDED_COLUMN_PREFIX) for c in cols)
+    """⚠⚠ THE REAL COLUMN NAMES, not the one the rule was written against.
+
+    Each name below exists in HPA v22 today, and **the as-ruled prefix misses every one of them.**
+    That miss is asserted rather than described, so if `D-093` amendment 2 ever restates the rule
+    in terms the data actually uses, this test reds and is re-derived deliberately.
+    """
+    real = ["prognostic - favorable", "unprognostic - favorable",
+            "prognostic - unfavorable", "unprognostic - unfavorable",
+            "Pathology prognostics - Breast cancer"]
+    for name in real:
+        cols = next(csv.reader([f"Gene,Gene name,{name}"]))
+        assert any(EXCLUDED_COLUMN_TOKEN in c.strip().lower() for c in cols), name
+        assert not any(c.strip().startswith(EXCLUDED_COLUMN_PREFIX_AS_RULED) for c in cols), (
+            f"{name!r} now matches the as-ruled prefix — the finding has changed, re-derive it")
+
     clean = "Gene,Gene name,Tissue,Cell type,Level,Reliability"
-    assert not any(c.strip().startswith(EXCLUDED_COLUMN_PREFIX)
+    assert not any(EXCLUDED_COLUMN_TOKEN in c.strip().lower()
                    for c in next(csv.reader([clean])))
 
 

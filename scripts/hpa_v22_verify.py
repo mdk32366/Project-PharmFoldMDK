@@ -33,7 +33,8 @@ COUNT_COLS = ("High", "Medium", "Low", "Not detected")
 #: ⚠ Columns deliberately NOT read — third-party data HPA redistributes under other terms
 #: (D-093 amendment 1 item 2). A column present in a stored table is ingested whether or not
 #: anything reads it, so the safe form is to never select them.
-EXCLUDED_PREFIX = "Cancer prognostics"
+EXCLUDED_PREFIX = "Cancer prognostics"  # ⚠ AS RULED; matches 0 v22 columns — see PROGNOSTIC_TOKEN
+PROGNOSTIC_TOKEN = "prognos"  # ⚠⚠ what the v22 files ACTUALLY use: `prognostic - favorable`, `Pathology prognostics - X`
 
 #: Task J's subjects, named by Kathad as omitted with a speculative "potential reasons" clause.
 TASK_J = (("TROP2", "TACSTD2"), ("CLDN18.2", "CLDN18"), ("HER3", "ERBB3"))

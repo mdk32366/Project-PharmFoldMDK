@@ -223,27 +223,151 @@ def main(argv=None) -> int:
             print(f"    {'TOTAL':24s} {sum(c.values()):6,d}   sums to the population: "
                   f"{sum(c.values()) == len(accs)}")
 
-    # ── CD3 the distribution that tests §0's warning ────────────────────────────────────────
+    # ── DB1/DB2/DB3 — the distribution at SEVERAL bars, decomposed by cause ─────────────────
     print("\n" + "=" * W)
-    print("CD3 — ⚠⚠ THE EMPIRICAL TEST OF THE 'EVERY PROTEIN IS EXPRESSED SOMEWHERE' WARNING")
+    print("DB1 — ⚠⚠ 'REACHING' HAD NO STATED RULE. THREE BARS, NOT ONE")
     print("=" * W)
-    n_cancers = Counter()
-    for acc, ensg in resolved.items():
-        rows = pa_by_ensg.get(norm(ensg), [])
-        hit = {r["Cancer"] for r in rows
-               if sum(int(float(r[c] or 0)) for c in ("High", "Medium", "Low")) > 0}
-        n_cancers[len(hit)] += 1
-    total_res = sum(n_cancers.values())
-    print(f"  key: census accessions resolving to exactly one gene ({total_res:,}), against"
-          f" pathology.tsv's 20 cancer types")
-    print(f"  reaching ALL 20 cancer types with a detected level : {n_cancers.get(20, 0):,}"
-          f"  ({100*n_cancers.get(20,0)/max(total_res,1):.1f}%)")
-    print(f"  reaching EXACTLY ONE                               : {n_cancers.get(1, 0):,}")
-    print(f"  reaching NONE                                      : {n_cancers.get(0, 0):,}")
-    print(f"\n  full distribution, cancers reached -> proteins:")
-    for k in sorted(n_cancers):
-        bar = "#" * min(60, n_cancers[k] // 25)
-        print(f"    {k:3d} : {n_cancers[k]:6,d}  {bar}")
+    print("  ⚠ A single setting is a dial wearing the costume of a measurement. `F-043`'s flip")
+    print("    rates were withdrawn the day they were published for exactly this.")
+
+    def bar_any(r):
+        return sum(int(float(r[c] or 0)) for c in ("High", "Medium", "Low")) > 0
+
+    def bar_high(r):
+        return int(float(r["High"] or 0)) > 0
+
+    def bar_qh150(r):
+        counts = {c: int(float(r[c] or 0)) for c in
+                  ("High", "Medium", "Low", "Not detected")}
+        total = sum(counts.values())
+        if total == 0:
+            return False
+        qh = 100 * (counts["Low"] / total + 2 * counts["Medium"] / total
+                    + 3 * counts["High"] / total)
+        return qh >= 150
+
+    BARS = (("any non-zero detection", bar_any),
+            ("any `High`", bar_high),
+            ("qh >= 150 (Kathad's, for comparability)", bar_qh150))
+
+    dists: dict[str, Counter] = {}
+    per_acc: dict[str, dict[str, int]] = {}
+    for label, test in BARS:
+        d = Counter()
+        for acc, ensg in resolved.items():
+            rows = pa_by_ensg.get(norm(ensg), [])
+            n = len({r["Cancer"] for r in rows if test(r)})
+            d[n] += 1
+            per_acc.setdefault(acc, {})[label] = n
+        dists[label] = d
+
+    total_res = sum(dists[BARS[0][0]].values())
+    print(f"\n  key: census accessions resolving to exactly ONE gene ({total_res:,}),"
+          f" against pathology.tsv's 20 cancer types")
+    print(f"\n  {'bar':42s} {'all 20':>8s} {'>=10':>8s} {'exactly 1':>10s} {'NONE':>8s}")
+    print("  " + "-" * (W - 4))
+    for label, _ in BARS:
+        d = dists[label]
+        ge10 = sum(v for k, v in d.items() if k >= 10)
+        print(f"  {label:42s} {d.get(20,0):8,d} {ge10:8,d} {d.get(1,0):10,d} {d.get(0,0):8,d}")
+    print("\n  ⚠⚠ THE HEADLINE MOVES WITH THE BAR, WHICH IS THE POINT OF REPORTING THREE.")
+
+    # ── DB2/DB3 — decompose the extremes BY CAUSE ───────────────────────────────────────────
+    print("\n" + "=" * W)
+    print("DB2 / DB3 — ⚠⚠ DECOMPOSING THE EXTREMES. 'NONE' AND 'ALL 20' BOTH HAVE CAUSES")
+    print("=" * W)
+    for label, _ in BARS:
+        zero, satur = [], []
+        for acc in resolved:
+            n = per_acc[acc][label]
+            (zero if n == 0 else satur if n == 20 else []).append(acc)
+        for tag, group in (("reaching NONE", zero), ("reaching ALL 20", satur)):
+            c = Counter()
+            for acc in group:
+                rows = pa_by_ensg.get(norm(resolved[acc]), [])
+                if not rows:
+                    c["ihc_gene_absent"] += 1
+                elif all(sum(int(float(r[x] or 0)) for x in
+                             ("High", "Medium", "Low", "Not detected")) == 0 for r in rows):
+                    c["ihc_panel_empty"] += 1
+                else:
+                    c["ihc_PRESENT_and_still_at_this_extreme"] += 1
+            print(f"\n  bar={label!r}  {tag}: {len(group):,}")
+            for k, v in c.most_common():
+                mark = "  ⚠⚠ a DIFFERENT FACT from the two above" if k.startswith("ihc_PRESENT") \
+                    else ""
+                print(f"    {k:42s} {v:6,d}{mark}")
+            print(f"    {'sums to the group':42s} {sum(c.values()):6,d}"
+                  f"   {sum(c.values()) == len(group)}")
+
+    # ── DC1 — is pathology.tsv's vocabulary an ordinal? ─────────────────────────────────────
+    print("\n" + "=" * W)
+    print("DC1 — ⚠ DOES `pathology.tsv` CARRY THE SAME NON-ORDINAL VALUES?")
+    print("=" * W)
+    print("  ⚠⚠ This lands on `P-004` item 3. If HPA's own vocabulary is not a clean ordinal, the")
+    print("     objection is not *the weights are arbitrary* but *the thing being weighted is not")
+    print("     consistently ordered* — a stronger claim, and P-004 needs the answer before it")
+    print("     makes either.")
+    vals: dict[str, Counter] = {c: Counter() for c in
+                               ("High", "Medium", "Low", "Not detected")}
+    nonnum: dict[str, Counter] = {c: Counter() for c in vals}
+    for rows in pa_by_ensg.values():
+        for r in rows:
+            for c in vals:
+                v = (r.get(c) or "").strip()
+                vals[c][v] += 1
+                try:
+                    float(v) if v else 0.0
+                except ValueError:
+                    nonnum[c][v] += 1
+    for c in vals:
+        distinct = len(vals[c])
+        print(f"\n  column {c!r}: {distinct} distinct raw values")
+        print(f"    non-numeric values: {dict(nonnum[c]) or 'NONE — every cell parses as a number'}")
+    print(f"\n  ⚠ `pathology.tsv` stores COUNTS per level; `normal_tissue.tsv` stores a LEVEL per")
+    print(f"    (tissue, cell). They are different shapes, so 'the same non-ordinal values' can")
+    print(f"    only be asked of the LEVEL vocabulary — which pathology.tsv does not have as a")
+    print(f"    column at all. **Reported as a shape difference, not forced into a comparison.**")
+
+    # ── DC2 — the reliability asymmetry, side by side ───────────────────────────────────────
+    print("\n" + "=" * W)
+    print("DC2 — ⚠⚠ THE RELIABILITY ASYMMETRY, COLUMN LISTS SIDE BY SIDE")
+    print("=" * W)
+    with pathlib.Path(args.pathology).expanduser().open(encoding="utf-8") as fh:
+        pa_cols = next(csv.reader(fh, delimiter="\t"))
+    with pathlib.Path(args.normal_tissue).expanduser().open(encoding="utf-8") as fh:
+        nt_cols = next(csv.reader(fh, delimiter="\t"))
+    print(f"  pathology.tsv    ({len(pa_cols)} cols): {pa_cols}")
+    print(f"  normal_tissue.tsv({len(nt_cols)} cols): {nt_cols}")
+    print(f"\n  ⚠ `Reliability` in normal_tissue : {'Reliability' in nt_cols}")
+    print(f"  ⚠ `Reliability` in pathology     : {'Reliability' in pa_cols}")
+    print(f"  ⚠⚠ so the modality driving TARGET SELECTION is the one WITHOUT the quality flag.")
+    print(f"  ⚠ NOT verified here: whether HPA documents the difference anywhere. That is a")
+    print(f"    question about HPA's own documentation, not about these files, and asserting it")
+    print(f"    from the files would be inventing provenance.")
+
+    # ── DD — CE1 closed properly: compare the SETS, not the counts ──────────────────────────
+    print("\n" + "=" * W)
+    print("DD — ⚠⚠ CE1 CLOSED ON MEMBERS, NOT ON TOTALS")
+    print("=" * W)
+    print("  'Equal counts are not the same set' was named in the act of committing it. Compared:")
+    if ADC_REF.exists():
+        lines = [l for l in ADC_REF.read_text(encoding="utf-8").splitlines()
+                 if l.strip() and not l.lstrip().startswith("#")]
+        ref = list(csv.DictReader(lines))
+        name_to_acc = {norm(g): a for a, g in genes.items() if g}
+        for pop_label, accs in populations:
+            acc_set = set(accs)
+            by_acc = {r["uniprot_accession"].strip() for r in ref
+                      if r.get("uniprot_accession")} & acc_set
+            by_name = {name_to_acc[norm(r["antigen"])] for r in ref
+                       if r.get("antigen") and norm(r["antigen"]) in name_to_acc} & acc_set
+            print(f"\n  {pop_label}")
+            print(f"    via uniprot_accession : {len(by_acc):2d}")
+            print(f"    via antigen name      : {len(by_name):2d}")
+            print(f"    ⚠ SAME SET           : {by_acc == by_name}")
+            print(f"    in accession join only: {sorted(by_acc - by_name) or 'none'}")
+            print(f"    in name join only     : {sorted(by_name - by_acc) or 'none'}")
 
     # ── CE1 therapeutic_precedent coverage ──────────────────────────────────────────────────
     print("\n" + "=" * W)
