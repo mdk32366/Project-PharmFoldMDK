@@ -247,3 +247,10 @@ PharmFoldMDK-snapshot-*.zip
 # ⚠ .env.example is force-included below because it is the template and carries no secret.
 .env*
 !.env.example
+
+# D-099 control fold: the PAE matrices are 55 MB and regenerable from the committed
+# sample + script. The per-fold d099_provenance.json and the summary ARE committed, so the
+# measurement stays checkable without the matrices in git.
+data/control/d099/*/pae.json
+data/control/d099/*/structure.pdb
+data/control/d099/*/plddt.json
