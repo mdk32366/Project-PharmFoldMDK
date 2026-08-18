@@ -130,6 +130,101 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-046 — Three straddle predicates lived under one name in two modules, and the rule behind `D-095`'s founding numbers had no name at all
+
+- **Date:** 2026-08-19
+- **Status:** ✅ **CLOSED.** **Amended by: `fc8040c`** — one function, `straddle` keyword-only with no default. ⚠ The finding is recorded before the fix in `7591164`, and the two are deliberately separate commits: one commit that both recorded the divergence and deleted it would leave this entry pointing at state no longer reachable.
+
+- **The finding, quoted at `7011e24` so it is checkable after the code is gone.** Two functions, both named `domain_intervals`, both filtering `("Domain", "Repeat")`, differing by one inequality:
+
+  ```python
+  # scripts/tranche6_runs.py:64            — "drop"
+  if a is None or b is None or a < s0 or b > s1:
+      continue
+  out.append((int(a), int(b), f.get("description", ""), f.get("type")))
+
+  # scripts/tranche6_domain_survey.py:67   — "admit_raw"
+  if a is None or b is None or b < s0 or a > s1:
+      continue
+  out.append((a, b, f.get("description", ""), f.get("type")))
+  ```
+
+  ⚠⚠ **`a < s0 or b > s1` admits only what is wholly inside. `b < s0 or a > s1` admits anything overlapping, at its RAW coordinates.** They agree on every protein whose domains sit clear of the span boundary — which is 139 of the 141 — and disagree silently on the two that do not.
+
+- **⚠⚠ THERE ARE THREE RULES, NOT TWO, AND THE THIRD IS THE ONE THAT PRODUCED `D-095`.** `clip` was ruled (`CLOSEOUT-2026-08-18` §5) and unimplemented. `drop` was Task L's. **`admit_raw` was `scripts/tranche6_domain_survey.py`'s, it is what computed FAT1's 2,289 aa and FAT4's 3,037 aa, and it had never been named anywhere in this project.** ⚠ A two-column comparison had already lost it: *the rule was chosen by which module you imported from, which is a default nobody wrote down.*
+
+- **⚠ What it cost, measured rather than estimated.** Over the 141, `admit_raw` counts **45 residues the span does not contain** (in-run total 180,847 against `clip`'s 180,802). That is the same 275-residue definitional divergence recorded in `CLOSEOUT-2026-08-18` §5, seen from the third side.
+
+- **The equivalence proof (`scripts/tranche6_domain_intervals_equivalence.py`).** It carries **frozen verbatim copies** of all three deleted implementations as oracles, because a proof that imports the thing it is proving against proves nothing once that thing is gone.
+
+  | | |
+  |---|---|
+  | corpus | **4,990 documents · 4,669 spans · 41,674 intervals** — cache-wide for `admit_raw`, not sampled |
+  | compared on | ⚠ **hashes of serialised intervals, never on counts** — two interval lists of equal length can differ in every coordinate |
+  | `admit_raw` | `997add511d427cbd48e1` == `997add511d427cbd48e1` |
+  | `drop` | `589ea8b36339398f31cd` == `589ea8b36339398f31cd` |
+  | `clip` | `919a2d005ccbc96e7edc` == `919a2d005ccbc96e7edc` |
+
+  ⚠⚠ **The proof checks itself, and that self-check is the discriminating fixture.** A corpus in which no domain crosses a span boundary makes all three rules agree, so an equivalence proof over it would pass **while proving nothing**. It therefore counts the spans on which the rules actually disagree — **1,296** — and **fails when that count is zero.**
+
+- **⚠⚠ Member: an inequality the data cannot see.** Flipping `b < s0` to `b <= s0` leaves the cache-wide proof **GREEN**, because **no annotated domain in 4,990 documents ends exactly at a span start.** The fixture suite goes **RED**. Three fixtures now pin those boundaries deliberately.
+
+  | flip | corpus | fixtures |
+  |---|---|---|
+  | `a < s0` → `a <= s0` | RED | RED |
+  | ⚠ **`b < s0` → `b <= s0`** | **GREEN** | **RED** |
+  | `a > s1` → `a >= s1` | RED | RED |
+  | `clip` truncation off by one | RED | RED |
+
+  **The two gates are not redundant, and nothing said so until the flip was run.** ⚠ *An inequality the data cannot discriminate has to be pinned by a fixture or it is not pinned at all* — and the corpus was 4,990 documents, which is exactly the size at which a corpus starts to feel like proof.
+
+- **⚠ Member: a named limitation, which is an absence with a cause and not an untested path.** `scripts/tranche6_runs.py` **cannot** be stdout-compared pre- and post-reconciliation, because the pre-change file cannot run against the post-change module — **that is the missing-`straddle` `TypeError` working as designed.** For that script the comparison is on its artifact (`data/census/tranche6_runs.csv`, `1f0a5ca84a2934dc…`, byte-identical and git-clean) and on the function (the cache-wide proof above), not on stdout.
+
+- **Nothing downstream moved, checked on artifacts.** `D-095`'s own evidence script, `scripts/tranche6_domain_survey.py`, produces **byte-identical stdout** pre and post: `aad52b28a7eac3f471666eebaf729eb201526da77e714eac368f7aaef2711cd3`. ⚠ So the entry may be re-cited at a revision with that hash rather than re-derived: **the evidence script's output is unchanged, and here is the hash.**
+
+- **⚠ One thing deliberately NOT changed.** The coordinate read stayed `location.start.value` rather than moving to `_coords`, which additionally rejects an `UNKNOWN` modifier. Measured across all 4,990 cached documents and **9,008** `Domain`/`Repeat` features: **zero** carry an `UNKNOWN` modifier and **zero** lack `start`/`end`. The two reads agree on this cache **by data, not by construction**, so switching would be a behavioural change wearing a refactor's clothes. **Named instead of taken.**
+
+- **Consequences.** `straddle` is keyword-only with **no default**: omitting it raises `TypeError`, an unrecognised value raises `UnknownStraddleRule`, and a positional argument raises. ⚠ `D-095 amendment 1` records `straddle_handling` on every derived artifact beside `merge_rule` and its gap tolerance; **this entry is what makes that parameter nameable at all.**
+
+---
+
+### F-045 — A revert proof certified a flip it never ran: two edits of equal size inside one clock second, and the second executed against the first's bytecode
+
+- **Date:** 2026-08-19
+- **Status:** ⚠ **OPEN — a finding against an instrument (`D-074`).** It closes when a revert proof cannot silently certify an unexecuted flip, **or** when the residual is named and accepted in the open. ⚠ **The forward fix is not closure** — see below.
+- **⚠ What this entry is NOT.** It is **not** the wrong-but-plausible-answer family. `PREWORK-2026-08-19.md` §3 named `F-045` for that; **the number moved to `F-047`**, which is reserved and unwritten. A reader arriving here from the prework is in the wrong entry — ⚠⚠ *which is `F-044`'s subject exactly, and the invariant cannot see it.*
+
+- **The mechanism, in one line.** CPython validates a cached `.pyc` against the source's `(mtime, size)`, with **mtime truncated to seconds**. A driver applied flip 1, ran the suite, restored, then applied flip 2 — **same file, same resulting size, same clock second** — so the interpreter reused flip 1's bytecode and **flip 2 was never executed.**
+
+- **⚠⚠ The first proof reported that flip as CAUGHT.** It printed a red test, a real assertion, and a plausible digest pair. Re-run with `PYTHONDONTWRITEBYTECODE=1`, the same flip is **not caught by the corpus at all** — it is caught only by fixtures written afterwards. **A green that is green for a reason unrelated to the thing under test, and a red that is red for the previous experiment.**
+
+- **⚠ Why this is worse than an ordinary false positive.** `A-016 (any red proves the assertion bites)` and `A-017 (the fixture must reach the code under test)` make the revert proof **the instrument that certifies the other instruments.** A test is believed here because a revert proof reddened it. **A false green in this instrument is a false green wherever it was used**, and it does not announce itself: the output is indistinguishable from a genuine pass.
+
+- **The forward fix, stated as forward-only.** The drivers now run with `PYTHONDONTWRITEBYTECODE=1`. ⚠⚠ **That validates nothing retrospectively, and treating a forward fix as retroactive coverage is the same error one level up.**
+
+- **⚠ The enumeration (Task T), reported with its key and its `unknown`.** *Which prior revert proofs were produced by a driver applying more than one flip in a single run?*
+
+  | population | key | n |
+  |---|---|---|
+  | log entries recording a revert proof | one row per `###` entry in `docs/README.md` | **12** (D-097, D-094, D-090, D-086, D-084, F-039, F-038, F-034, F-026, D-079, D-077, D-075 — 27 mentions) |
+  | test files documenting one | one row per file under `tests/` matching `revert` | **12** |
+  | ⚠ **committed drivers that shell out to `pytest`** | grep over `scripts/ tests/ core/ worker/ app/` | **0** |
+  | `driver_known_multi_flip` | driver identifiable | **2**, both 2026-08-19, both this session |
+  | ⚠⚠ **`driver_unknown`** | driver not identifiable | **all prior proofs** |
+
+  ⚠⚠ **The finding inside the finding: the driver is not a recorded property of a revert proof.** No driver was ever committed, and the ad-hoc ones do not survive their session. So for every prior proof the answer is not *lost* — **it was never captured.** The enumerable set is the proofs; the unenumerable field is how each was applied. *`unknown` is the honest value and it is the majority value.*
+
+- **What was re-certified, so the scope is measured and not argued.** The four flips certified by the defective driver were re-run with bytecode writing disabled, at their current homes: **all four reproduce**, each red at its named test, zero collection errors. ⚠ Their byte deltas are `-18`, `+4`, `-39`, `-2` — **all distinct, so a size collision was impossible among them.** The defect fired only where two flips happened to share a size.
+
+- **⚠ What would actually close this.** Not a framework — `D-074` decision 3. Candidates, none ruled:
+  - **Record the driver beside the proof.** A revert proof states what it broke and what reddened; it does not state how the break reached the interpreter. One line would make Task T answerable next time.
+  - **Assert execution, not just outcome.** A break that also changes an observable string proves the new code ran; a red alone does not distinguish *caught* from *stale*.
+  - ⚠ **`D-080` is adjacent and still reserved** — *a revert proof operates on committed state or on a copy, never on a working tree holding uncommitted work.* This is the same instrument failing for a neighbouring reason, and the two should probably be ruled together.
+
+- **⚠ How it was found.** Not by the suite and not by review. The driver reported four `[PASS]` rows and **two of them carried byte-identical digest pairs** — the same numbers under two different experiments. *A clean number that means something other than it appears to*, which is this project's most productive shape and the reason `F-047` is worth writing.
+
+---
+
 ### F-044 — The citation invariant proves that a reference RESOLVES, never that it resolves to the right thing: it finds holes, not mismatches
 
 - **Date:** 2026-08-17
