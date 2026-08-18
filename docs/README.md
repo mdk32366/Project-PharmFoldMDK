@@ -470,6 +470,27 @@ So the rule is not "be careful" — it is:
 
 - ⚠ **Its "census filter" bar now has a live subject.** When written, the census was a plan; it is now **2,690 folded rows with a browsable per-protein surface**. The bar applies to that surface and **has not been checked against it**.
 
+#### D-093 amendment 1 — HPA is CC BY 4.0: decision 7's conservative default is LIFTED for HPA's own data, and the ingest becomes COLUMN-scoped
+
+- **Date:** 2026-08-17 · **Status:** accepted
+- ⚠ **A sub-entry, not a new integer.** It amends `D-093` in place beneath it, on the `D-099 amendment 1` precedent, so **the next free top-level integer is unchanged** — confirmed against the live log before merging, and recorded in `docs/RESERVED.md` rather than named here. ⚠ *Naming it here cited an integer that did not exist yet, and the citation invariant refused the first draft of this line — a forward reference to nothing is the `D-062` shape however innocuous the sentence.*
+- ⚠ **Recorded as an amendment, not an edit.** Decision 7 ruled the conservative default on the Planner's recollection of **CC BY-SA**. **That recollection was WRONG.** The ruling was correct anyway, for the reason it gave — *reversible in the permissive direction and the opposite is not* — and the reversal costs one commit, as predicted. **The error stays visible.**
+
+1. **HPA's own data is CC BY 4.0** (`proteinatlas.org/about/licence`, read 2026-08-17). Attribution only. ⚠ **No share-alike, and commercial use is explicitly encouraged in the licence text.** **Decision 7's fetch-and-cache-never-commit default is lifted for HPA-generated data.**
+
+2. ⚠⚠ **The ingest is COLUMN-scoped, not file-scoped, and this is the load-bearing clause.** HPA disclaims third-party data it redistributes: *"it is the responsibility of users … to ensure that their utilization of the data does not infringe any of the rights of such third parties."*
+   - **IN:** `High`, `Medium`, `Low`, `Not detected`, `total`, gene and cancer keys — **HPA's own IHC.**
+   - ⚠ **OUT: every `Cancer prognostics – … (TCGA)` column.** TCGA carries bespoke **"User terms"**, unread. **Dropped at ingest, with the drop recorded as a named category** — a column present in a stored table is ingested regardless of whether anything reads it.
+   - ⚠ **This disposes of the entire upstream stack by construction** — Ensembl, GTEx, TCGA, Tabula Sapiens, IntAct, BioPlex, OpenCell, TFClass, DepMap (User terms), IUHPARDB / TCDB / MetabolicAtlas (share-alike), **and AlphaFold 3 (CC BY-NC-SA 4.0)**. ⚠ **The NC entry is why this is scoped rather than waved through:** a non-commercial share-alike clause reaching a commercial deliverable is a stop, not paperwork.
+
+3. **The attribution obligation is FOUR parts, all required together** (`D-093` dec 6 item 5): a primary HPA publication · a reference to `proteinatlas.org` · the specific gene/data used · ⚠ **a version-pinned URL of the form `v##.proteinatlas.org`.** **A bare "Human Protein Atlas" string does not discharge it.**
+
+4. ⚠⚠ **The version is `v22`, and there are now TWO independent reasons.** Kathad pins **HPA v22.0** throughout its Methods, so anything extending the quasi-H-score must come from v22 or it is not comparable — **and HPA's own citation format requires a version anyway.** **`https://v22.proteinatlas.org/about/download`.** ⚠ **Every HPA file fetched on 2026-08-17 is the wrong vintage** and must be refetched from v22.
+
+5. ⚠ **Not legal advice, and the Planner is not a lawyer.** This records what the licence page says and the date it was read. **If anything ships commercially, item 2 is the clause to put in front of someone qualified** — HPA's page offers `contact@proteinatlas.org` for written approval.
+
+- **Consequences:** Task G's inputs become **v22 `pathology.tsv.zip` and `normal_tissue.tsv.zip`, prognostic columns dropped at read.** `D-093` decision 7 continues to bind **every non-HPA supplier** — SEER, GTEx, CPTAC, TCGA — none of which has been read.
+
 ---
 
 ### F-040 — ESMFold folds MONOMERS, so an obligate oligomer's subunit interface is indistinguishable from an antibody-accessible patch
