@@ -1,0 +1,21 @@
+{
+  "model_id": "facebook/esmfold_v1",
+  "model_revision": "75a3841ee059df2bf4d56688166c8fb459ddd97a",
+  "dtype": "int8",
+  "chunk_size": 64,
+  "input_length": 378,
+  "source": "sliced_ecd",
+  "ecd_start": 22,
+  "ecd_end": 399,
+  "truncated": false,
+  "length_cap": null,
+  "original_length": 378,
+  "mean_plddt": 80.89,
+  "ca_atom_count": 378,
+  "folded_at": "2026-08-18T00:28:09.736931+00:00",
+  "torch_version": "2.11.0+cu128",
+  "transformers_version": "5.14.1",
+  "device_name": "NVIDIA RTX PRO 2000 Blackwell Generation Laptop GPU",
+  "cuda_version": "12.8",
+  "nvidia_driver_version": "610.88"
+}

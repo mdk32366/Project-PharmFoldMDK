@@ -190,11 +190,28 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .arch-routes code { font-size: 0.8rem; }
 
 /* D-052 ADC mechanism schematic — an illustration, labelled as such */
+/* D-096: the schematic is a raster illustration, not inline SVG. The former `svg`/`line`/`circle`/
+   `rect`/`text` rules and `.adc-payload circle` were removed as dead — the classes they styled
+   (.adc-antibody/.adc-linker/.adc-payload/.adc-target) existed only inside the old hand-rolled SVG
+   and appear nowhere else in the tree. ⚠ The 460px cap went with them deliberately: it suited a
+   line drawing, and it would render a five-panel strip's lettering illegible. */
+/* D-097: TWO figures, and they are sized for different jobs. `.adc-schematic` is the anatomy
+   diagram — restored with D-096's removal reversed — and stays at the prose measure, because a
+   four-label line drawing is legible small. `.adc-panels` is the process cartoon and does not. */
 .adc-schematic svg { max-width: 460px; width: 100%; height: auto; }
 .adc-schematic line, .adc-schematic circle, .adc-schematic rect { stroke: var(--ink); fill: none; }
 .adc-payload circle { fill: #b7791f; }
 .adc-schematic text { fill: var(--muted); font-size: 12px; text-anchor: middle; }
 .adc-schematic figcaption { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
+
+/* ⚠ The panels break OUT of the 44rem prose column to main's ~57rem content width. The strip is
+   2,128 px of artwork carrying lettering; at the prose measure its captions are decorative rather
+   than readable. It grows rightward from the prose edge only — no centring transform — so it cannot
+   overflow main's left edge at any viewport. */
+.adc-panels { margin: 1.2rem 0; width: min(100vw - 3rem, 56rem); max-width: none; }
+.adc-panels img { display: block; width: 100%; height: auto;
+  border: 1px solid var(--line); border-radius: 6px; }
+.adc-panels figcaption { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
 
 /* D-053 cancer associations — DELIBERATELY NOT the pLDDT band palette (orders §2a): a warm/amber
    expression treatment, a different quantity from a different source than model confidence. */

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { listAnalyses } from '../api.js'
 import { HELDOUT_EXAMPLES } from '../heldoutExamples.js'
 import AdcSchematic from './AdcSchematic.jsx'
+import AdcMechanismPanels from './AdcMechanismPanels.jsx'
 import Term from './Term.jsx'
 
 // ADC framing / onboarding (UI Plan v2 §7): keep the metaphor (it is mechanism, not decoration),
@@ -41,7 +42,7 @@ export default function AdcContext() {
 
       <p>
         Standard chemotherapy is a blunt weapon: it attacks fast-dividing cells all over the body,
-        so it harms healthy tissue along with the tumour. An <strong>antibody–drug conjugate</strong>
+        so it harms healthy tissue along with the tumour. An <strong>antibody–drug conjugate</strong>{' '}
         is a guided one:
       </p>
       <ul className="adc-parts">
@@ -53,6 +54,18 @@ export default function AdcContext() {
 
       <AdcSchematic />
 
+      {/* D-097: anatomy, then process. The schematic above names the parts; the panels below show
+          what those parts do, in order. ⚠ The order is load-bearing — "the linker is cut" in panel
+          3 is unreadable to someone who has not been shown a linker. */}
+      <h3>What happens when it reaches the tumour cell</h3>
+      <p>
+        Those parts act in a sequence. The antibody finds its target on the cell surface and binds
+        it; the cell draws the whole assembly inside; the linker is cut; and the payload is released
+        where it can act. <strong>NECTIN4</strong> is the target below, and enfortumab vedotin
+        (PADCEV) is the ADC — the worked example this project returns to throughout.
+      </p>
+
+      <AdcMechanismPanels />
 
       <h3>What the mechanism does not license</h3>
       <p>

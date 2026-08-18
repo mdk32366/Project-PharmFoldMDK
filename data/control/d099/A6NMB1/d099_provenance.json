@@ -1,0 +1,27 @@
+{
+  "census_accession": "A6NMB1",
+  "arm": "multi",
+  "n_domains_inside_span": 4,
+  "span_aa": 418,
+  "span_start": 17,
+  "span_end": 434,
+  "sequence_sha256": "d7e1f1e3149a855ac2ab440183ed0624e38897cab6b2718e81bd6a07fc820966",
+  "dtype": "int8",
+  "chunk_size": 64,
+  "boundary_method": "sliced_ecd",
+  "span_definition": "v2-ruled-vocabulary-2026-08-07",
+  "artifact_dir_set": true,
+  "artifact_dir": "C:\\Projects\\Project-PharmFoldMDK\\data\\control\\d099",
+  "pae_emitted": true,
+  "pae_matrix_n": 418,
+  "files_written": {
+    "pdb": "C:\\Projects\\Project-PharmFoldMDK\\data\\control\\d099\\A6NMB1\\structure.pdb",
+    "plddt": "C:\\Projects\\Project-PharmFoldMDK\\data\\control\\d099\\A6NMB1\\plddt.json",
+    "pae": "C:\\Projects\\Project-PharmFoldMDK\\data\\control\\d099\\A6NMB1\\pae.json",
+    "provenance": "C:\\Projects\\Project-PharmFoldMDK\\data\\control\\d099\\A6NMB1\\provenance.json"
+  },
+  "ingested": false,
+  "folded_at": "2026-08-18T00:18:47.702328+00:00",
+  "seconds": 68.3,
+  "authorised_by": "D-099 + amendment 1"
+}

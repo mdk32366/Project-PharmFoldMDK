@@ -130,6 +130,855 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-047 — ⚠ The wrong-but-plausible answer: the defect class where nothing errors, nothing is malformed, and the number is wrong
+
+- **Date:** 2026-08-19 · **Status:** ⚠ **OPEN and STANDING.** It accumulates members; it does not close.
+
+- **The shape.** A query, a guard, a grep or a report returns a **well-formed, correctly-typed, plausibly-sized answer that is wrong** — and **nothing objects.** ⚠ **This is not an error class. Errors announce themselves. This class is defined by its silence**, and it is `F-011`'s *plausibility, not error, is the failure mode at scale* applied to the instruments rather than to the data.
+
+- ⚠ **Already doctrine, and the entry cites rather than re-derives it.** **KEEL-1 V9 Principle 8's fifth clause** names it: *"be most suspicious of the well-formed answer: an empty result from a mismatched key, a zero from a stale connection, a 405 read as a 404. In every one of those the wrong answer arrives correctly formatted, and nothing objects."* ⚠⚠ **Three of that clause's examples are this project's own scars.**
+
+- **The members, and THREE OF SIX ARE PLANNER-MADE. That is the point of the entry.**
+
+  1. ⚠⚠ **The `50` that should have been `58`** *(Planner, 2026-08-19)*. The ruling on the engulfing category **quoted a count measured under the strict-both convention while simultaneously ruling the at-or-before / at-or-after convention.** 4 features sit flush at `s0`, 4 flush at `s1`; **those 8 are exactly what the convention moves.** ⚠ **The hazard fired inside the order that commissioned the check for it** — the same order wrote *"which side it falls on is a choice, not a fact."*
+  2. ⚠⚠ **The `## P-004` grep** *(Planner, 2026-08-19)*. Written as a guard against a **false collision** (`P-00[0-9]` returns `DEP-004`/`DEP-005`), it **manufactures a false absence**: P-003 and P-004 carry `⟡`, so their headings are `## ⟡ P-003 —` and `^## P-00` **excludes exactly the two entries the check is about.** The result reads *P-003 is cited with no entry* — clean, confident, false. **Committed in `docs/PREWORK-2026-08-19.md` §2b; corrected by a landing note beside it, the instruction not edited.** ⚠ **Code's own record of the catch: *luck of ordering, not a control.***
+  3. ⚠⚠ **`COMMITTED to docs/ as provenance`, false on four documents** *(Planner, 2026-08-19)*. Four `ORDERS-Code-2026-08-19*` files each assert their own provenance in their header and **none was in the repository.** ⚠ **A document asserting its own provenance cannot be falsified from inside itself** — the sharpest member of the pointer-is-not-proof family. **Cause: paste to Code and commit to repo are two acts, and the header claimed the second because the first had happened.** **Remedy, structural rather than documentary:** the author writes **`TO BE COMMITTED`**, and the landing header — received time, `sha256` as received, and the note that only the header differs — **is stamped by whoever lands it**, on the `ORDERS-Code-2026-08-18-tranche-6-premeasurement.md` precedent. **The author no longer makes the claim, so the author cannot make it falsely.**
+  4. **The `−18 / +4 / −39 / −2` byte deltas** *(Code, self-caught)*. Four true numbers offered as evidence that the re-verification covered the `.pyc` collision. ⚠ **They describe a different driver, in a different file, at different sizes** — the colliding pair was `a < s0 → a <= s0` and `b < s0 → b <= s0`, both **`+1`**. ⚠⚠ *A clean number meaning something other than it appears to, inside the report of a finding about exactly that.* **See `F-045`.**
+  5. **The sum-to-sum partition check** *(Code, self-caught)*. A partition validated by comparing its total to itself — **a tautology that could not fail.** ⚠ **A partition that checks only its total is not checked.** Replaced by a per-cause reconciliation: **2,033 + 215 + 21 + 58 + 0 = 2,327**, and **2,327 + 1,140 = 3,467.**
+  6. **The prior catalogue** (`PREWORK-2026-08-19` §3): a **case-mismatched join returning a clean zero three times** · a **`Staged` secret answering `0` rows** where a restart does not apply it · a **`405` read as a `404`** · **five wrong files in one day, every one real, well-formed, correctly-schema'd data from the right organisation.**
+
+- ⚠⚠ **THE DENOMINATOR IS UNKNOWN AND THIS ENTRY MUST NEVER REPORT A RATE.** Every member above was **caught**. An instance that was never caught leaves no trace by construction — that is the definition of the class. **This is survivorship and must be labelled as such wherever it appears**, exactly as `KEEL-4 V9` §6 requires of the assumption score. **What six members do establish, with no denominator: when this project went looking, it found them. Enough to justify the instrument, and not enough to justify a percentage.**
+
+- **What actually catches this class, from the members rather than from theory:**
+  - ⚠ **A declared length beat a checksum.** Two passages arrived with corrupted `sha256` values; the **stated byte counts** (149 → 120, 289 → 259) caught the corruption the hashes could not.
+  - **Reconcile both directions and per-cause, never total-to-total.**
+  - **Reproduce a known-good subset** — `D-100`'s 337/337 and 1,303/1,303, `M4`'s six reported **as accessions rather than as a count.**
+  - ⚠ **Make the check able to fail on the corpus it runs against.** `F-046`'s invisible inequality and `F-045`'s self-check that fails when the disagreeing-span count is zero are the same move.
+
+- **Relied on by:** `F-044` · `F-045` · `F-046` · `F-048` · `D-095 amendment 1`.
+
+- ⚠ **LANDED BY CODE, 2026-08-19.** Verbatim from `docs/AMENDMENT-2026-08-19-planner-log-entries.md`, which releases this number from `docs/RESERVED.md`. ⚠⚠ **One member of this entry bit the landing of this entry.** Member 3's remedy — *`sha256` as received, stamped by whoever lands it* — **assumes a file changes hands.** This document arrived as **chat text, not as a file**, so **no received-artefact hash exists to record**, and the hash in the landing header is of **Code's transcription**, which is a strictly weaker claim: it proves what was landed, not that it matches what was sent. **The remedy is sound and its precondition was not met. Recorded rather than papered over.**
+
+---
+
+### F-048 — For 58 census proteins the V2 span is a short extracellular loop INSIDE a larger transmembrane domain, and the annotation and the span are describing different objects
+
+- **Date:** 2026-08-19
+- **Status:** ⚠ **OPEN.** It closes when the surface question below is ruled, **or** when the residual is named and accepted. ⚠⚠ **It is NOT a tranche 6 finding** — 0 of the 58 sit in tranche 5, and none is past the trained context. **It is a census finding, and the census is on a live browsable surface.**
+
+- **The finding.** ⚠⚠ **The V2 span is a short extracellular loop inside a larger transmembrane domain. Engulfment is not an annotation artifact; it is what a loop in a multi-pass protein looks like.**
+
+- **How it was found.** Not by looking for it. `clip` was being given a refusal for a case the owner had ruled unruled (`F-046`), and characterising what it would refuse — **58 features, 58 distinct accessions, one each** — turned a data-hygiene category into a statement about molecules. ⚠ *The descriptions were the evidence, not the counts:* **MARVEL · ABC transmembrane type-1/2 · Cytochrome b561 · KASH · HIG1 · UPAR/Ly6**, and the `I` repeats of the plexin/semaphorin-like stack. **Polytopic membrane domains, every one.** 44 `Domain`, 14 `Repeat`.
+
+- **⚠ Why this is a finding and not an observation: it is `F-037`'s shape one layer down.** `F-037` established that **`span_aa` is the largest extracellular segment, not the extracellular content.** For these 58 the largest segment is **a loop**, and the domain annotation describes **the membrane bundle the loop sits inside.** ⚠⚠ **The engulfment is the annotation and the span disagreeing about which object is being described** — one names a multi-pass bundle, the other names a few residues poking out of it.
+
+- **⚠⚠ It vindicates `F-046`'s refusal in one sentence.** Clipping an engulfing feature would have recorded that **a 5-residue loop IS a MARVEL domain** — 100% domain coverage, one domain, exactly span length. **That is not a rounding error in a coverage number. It is a false statement about a molecule, generated silently, on every row it touched.** *Refuse rather than attempt.*
+
+- **⚠⚠ THE SURFACE QUESTION, WHICH IS THE OWNER'S AND IS WHY THIS IS OPEN.** Measured against the live API rather than inferred from the manifest — `GET /api/census`, 2,690 rows, read-only:
+
+  | | |
+  |---|---|
+  | the 58 | **58** |
+  | ⚠⚠ **of those, present on the live browsable surface** | **58 of 58** |
+  | in tranche 5 (held, unfolded) | **0** |
+  | tranche distribution | **31 in tranche 1, 27 in tranche 2**, 0 in 3/4/5 |
+  | `span_aa` min · median · max | **5 · 45 · 145** |
+  | rows at `span_aa` ≤ 20 | **12** |
+  | rows at `span_aa` ≤ 10 | **2** |
+
+  **The shortest is `Q9ULH0`, analysis id 382: a span of FIVE residues (681-685), served with `mean_plddt` 61.38, inside a `KAP NTPase` domain annotated 440-953.** Next is `Q9NX76` at 7 aa inside a MARVEL domain, and `A8MV81` at 11 aa inside HIG1 1-92.
+
+  ⚠ **`D-094`'s mount preconditions have never been checked against a five-residue span**, and a mean pLDDT over 5 residues is a different object from a mean over 500 wearing the same label. **Stop-and-report, per the order: this is a surface question and no remedy is proposed here.**
+
+- **⚠ Where it does NOT reach, measured so the scope is not overstated.** `clip` — the rule that would make the false statement — **never meets these 58 outside the equivalence proof.** Every `clip` call site runs on the 141 (`task_m4`, `task_o2`, `task_regimes`), the ten (`task_m3`), or two named accessions (`task_n`). The three full-census iterations use `admit_raw` and `drop` only. **So `F-046`'s stop-and-report clause does not fire on that axis; this entry's does, on a different one.**
+
+- **⚠ And `no_domains` gains its fourth cause from this, with the denominator stated.** Of the **3,467** rows in `census_manifest.v7.csv`, **2,327 have no domain intervals under `drop`** and 1,140 have at least one (2,327 + 1,140 = 3,467). The causes, each named, checked against an independently counted total rather than against their own sum:
+
+  | cause | what it means | the 141 | census |
+  |---|---|---|---|
+  | `no_domainlike_features_in_the_chain` | the UniProt entry carries no `Domain`/`Repeat` anywhere | **10 — all ten** | 2,033 |
+  | `features_exist_but_none_overlaps_the_span` | annotated, but every feature lies wholly outside `[s0, s1]` | 0 | 215 |
+  | `all_overlapping_features_overhang_a_boundary` | every overlapping feature crosses exactly one edge, so `drop` rejects each | 0 | 21 |
+  | ⚠ `all_overlapping_features_ENGULF_the_span` | **this finding** — dropped because they engulf, not because they are absent | **0** | **58** |
+  | `dropped_mixed_engulfing_and_overhang` | kept as an unfirable branch with its zero | 0 | **0** |
+  | **total** | | **10** | **2,327** |
+
+  **So the 141's ten `no_domains` rows are genuine absences of annotation, not rejections** — the cause each needed, named. ⚠ **And a rejection had been arriving under a label that says absence**, which is the thing `D-085` and the span-category work exist to prevent.
+
+- **⚠ What this does NOT claim.**
+  1. **No claim that the spans are wrong.** The V2 rule is the ruled rule and these are what it produces on multi-pass proteins. **The disagreement is between two descriptions, and naming it is not choosing between them.**
+  2. **No claim about fold quality.** `mean_plddt` on a 5-residue span is reported here as a *fact about what is served*, not as evidence the structure is bad. ⚠ `D-039` already says pLDDT is self-reported and locally scoped; **a 5-residue mean is simply outside anything the convention was calibrated on** (`F-046`'s population-specificity point, and `A-014`).
+  3. **No remedy proposed.** The surface ruling is the owner's, and `D-074` decision 3 warns against answering a finding with a framework.
+
+---
+
+### F-046 — Three straddle predicates lived under one name in two modules, and the rule behind `D-095`'s founding numbers had no name at all
+
+- **Date:** 2026-08-19
+- **Status:** ✅ **CLOSED.** **Amended by: `fc8040c`** — one function, `straddle` keyword-only with no default. ⚠ The finding is recorded before the fix in `7591164`, and the two are deliberately separate commits: one commit that both recorded the divergence and deleted it would leave this entry pointing at state no longer reachable.
+
+- **The finding, quoted at `7011e24` so it is checkable after the code is gone.** Two functions, both named `domain_intervals`, both filtering `("Domain", "Repeat")`, differing by one inequality:
+
+  ```python
+  # scripts/tranche6_runs.py:64            — "drop"
+  if a is None or b is None or a < s0 or b > s1:
+      continue
+  out.append((int(a), int(b), f.get("description", ""), f.get("type")))
+
+  # scripts/tranche6_domain_survey.py:67   — "admit_raw"
+  if a is None or b is None or b < s0 or a > s1:
+      continue
+  out.append((a, b, f.get("description", ""), f.get("type")))
+  ```
+
+  ⚠⚠ **`a < s0 or b > s1` admits only what is wholly inside. `b < s0 or a > s1` admits anything overlapping, at its RAW coordinates.** They agree on every protein whose domains sit clear of the span boundary — which is 139 of the 141 — and disagree silently on the two that do not.
+
+- **⚠⚠ THERE ARE THREE RULES, NOT TWO, AND THE THIRD IS THE ONE THAT PRODUCED `D-095`.** `clip` was ruled (`CLOSEOUT-2026-08-18` §5) and unimplemented. `drop` was Task L's. **`admit_raw` was `scripts/tranche6_domain_survey.py`'s, it is what computed FAT1's 2,289 aa and FAT4's 3,037 aa, and it had never been named anywhere in this project.** ⚠ A two-column comparison had already lost it: *the rule was chosen by which module you imported from, which is a default nobody wrote down.*
+
+- **⚠ What it cost, measured rather than estimated.** Over the 141, `admit_raw` counts **45 residues the span does not contain** (in-run total 180,847 against `clip`'s 180,802). That is the same 275-residue definitional divergence recorded in `CLOSEOUT-2026-08-18` §5, seen from the third side.
+
+- **The equivalence proof (`scripts/tranche6_domain_intervals_equivalence.py`).** It carries **frozen verbatim copies** of all three deleted implementations as oracles, because a proof that imports the thing it is proving against proves nothing once that thing is gone.
+
+  | | |
+  |---|---|
+  | corpus | **4,990 documents · 4,669 spans · 41,674 intervals** — cache-wide for `admit_raw`, not sampled |
+  | compared on | ⚠ **hashes of serialised intervals, never on counts** — two interval lists of equal length can differ in every coordinate |
+  | `admit_raw` | `997add511d427cbd48e1` == `997add511d427cbd48e1` |
+  | `drop` | `589ea8b36339398f31cd` == `589ea8b36339398f31cd` |
+  | `clip` | `919a2d005ccbc96e7edc` == `919a2d005ccbc96e7edc` |
+
+  ⚠⚠ **The proof checks itself, and that self-check is the discriminating fixture.** A corpus in which no domain crosses a span boundary makes all three rules agree, so an equivalence proof over it would pass **while proving nothing**. It therefore counts the spans on which the rules actually disagree — **1,296** — and **fails when that count is zero.**
+
+- **⚠⚠ Member: an inequality the data cannot see.** Flipping `b < s0` to `b <= s0` leaves the cache-wide proof **GREEN**, because **no annotated domain in 4,990 documents ends exactly at a span start.** The fixture suite goes **RED**. Three fixtures now pin those boundaries deliberately.
+
+  | flip | corpus | fixtures |
+  |---|---|---|
+  | `a < s0` → `a <= s0` | RED | RED |
+  | ⚠ **`b < s0` → `b <= s0`** | **GREEN** | **RED** |
+  | `a > s1` → `a >= s1` | RED | RED |
+  | `clip` truncation off by one | RED | RED |
+
+  **The two gates are not redundant, and nothing said so until the flip was run.** ⚠ *An inequality the data cannot discriminate has to be pinned by a fixture or it is not pinned at all* — and the corpus was 4,990 documents, which is exactly the size at which a corpus starts to feel like proof.
+
+- **⚠ Member: a named limitation, which is an absence with a cause and not an untested path.** `scripts/tranche6_runs.py` **cannot** be stdout-compared pre- and post-reconciliation, because the pre-change file cannot run against the post-change module — **that is the missing-`straddle` `TypeError` working as designed.** For that script the comparison is on its artifact (`data/census/tranche6_runs.csv`, `1f0a5ca84a2934dc…`, byte-identical and git-clean) and on the function (the cache-wide proof above), not on stdout.
+
+- **Nothing downstream moved, checked on artifacts.** `D-095`'s own evidence script, `scripts/tranche6_domain_survey.py`, produces **byte-identical stdout** pre and post: `aad52b28a7eac3f471666eebaf729eb201526da77e714eac368f7aaef2711cd3`. ⚠ So the entry may be re-cited at a revision with that hash rather than re-derived: **the evidence script's output is unchanged, and here is the hash.**
+
+- **⚠ One thing deliberately NOT changed.** The coordinate read stayed `location.start.value` rather than moving to `_coords`, which additionally rejects an `UNKNOWN` modifier. Measured across all 4,990 cached documents and **9,008** `Domain`/`Repeat` features: **zero** carry an `UNKNOWN` modifier and **zero** lack `start`/`end`. The two reads agree on this cache **by data, not by construction**, so switching would be a behavioural change wearing a refactor's clothes. **Named instead of taken.**
+
+- **⚠⚠ THE ENGULFING CASE: CLIP's STATED RATIONALE COVERS EDGES AND NOT ENGULFMENT.** `CLOSEOUT-2026-08-18` §5 argues CLIP as *"a clipped straddler occupies its residues; dropping it manufactures a gap at the span boundary that does not exist in the molecule."* **That is an argument about edges.** A feature beginning at-or-before `s0` and ending at-or-after `s1` has **no edge inside the span at all**, so the argument does not reach it, and the owner ruled the case **explicitly NOT ruled** (2026-08-19).
+
+  What `clip` would otherwise do: **replace the span with itself** — one domain of exactly span length, 100% coverage, a single run equal to the whole span. ⚠ For any row past context that manufactures a `run_interior` cut where the annotation asserted no internal boundary. **So `clip` REFUSES** (`UnruledEngulfingFeature`, naming the accession and the feature); `admit_raw` and `drop` are defined on this case and keep their behaviour. *Refuse rather than attempt — the `preflight()` pattern: a case with no ruling is a stop, not a green light.*
+
+  | population | engulfing features | distinct accessions |
+  |---|---|---|
+  | the 141 (`D-098`) | ⚠ **0** — reported because an empty category is a measurement | 0 |
+  | the ten `D-095` subjects | **0** | 0 |
+  | the full census | **58** | **58 — one each, not concentrated** |
+
+  ⚠ **CORRECTION to the figure in the ruling as delivered, which said 50.** 50 is the count under a *strictly*-beyond-both-boundaries test. Under the ruled convention — at-or-before `s0` **and** at-or-after `s1` — it is **58**: 4 features sit flush at `s0` while exceeding `s1`, and 4 sit flush at `s1` while preceding `s0`. **The 8 are exactly what the convention moves, and they are the reason to state it.**
+
+- **⚠⚠ THE BOUNDARY CONVENTION, AND THE FIXTURES THAT ARE THE ONLY THING PINNING IT.** A feature with `a == s0` **and** `b == s1` satisfies *wholly within* and *at-or-before the start and at-or-after the end* at once. **It is classified `engulfing`, and `engulfing` is tested first** — because the hazard is defined by the **clipped result**, not the raw coordinates: `clip` maps every such feature onto exactly `[s0, s1]`, and a domain of exactly span length is the unruled object however far outside it began. ⚠ A convention filing the flush case as `inside` would pass the identical hazard through under a name that says it is safe.
+
+  ⚠⚠ **Measured: that case occurs 0 times in the 141, 0 in the ten, and 0 in the full census.** *The corpus cannot exercise this choice, so only a fixture can pin it* — **the same sentence as the invisible inequality above, applied before the fact rather than after.** Seven deliberate fixtures pin the convention: the flush-both case, the four one-sided boundary cases, and the two one-residue-inside controls.
+
+- **⚠ And `no_domains` gains a cause, which is why the category matters.** A row whose only overlapping features **engulf** the span reports `no_domains` under `drop` **because its features were dropped, not because it carries no annotation** — an absence and a rejection arriving under one label. Causes, summed against an independently counted total:
+
+  | cause | the 141 | full census |
+  |---|---|---|
+  | `no_domainlike_features_in_the_chain` | **10 — all ten** | 2,033 |
+  | `features_exist_but_none_overlaps_the_span` | 0 | 215 |
+  | `all_overlapping_features_overhang_a_boundary` | 0 | 21 |
+  | ⚠ `all_overlapping_features_ENGULF_the_span` | **0** | **58** |
+  | `dropped_mixed_engulfing_and_overhang` | 0 | 0 |
+  | **total** | **10** | **2,327** |
+
+  **So the 141's ten `no_domains` rows are all genuine absences of annotation**, not rejections — the cause each one needed, named.
+
+- **⚠ What the 58 actually are, because a rule should be written against the biology.** 44 `Domain`, 14 `Repeat`; span lengths min 5, median 45, max 145; ⚠⚠ **none past the 1,026 aa trained context, so none can enter tranche 6 today.** The descriptions are MARVEL, ABC transmembrane, Cytochrome b561, KASH, HIG1, UPAR/Ly6 — **polytopic membrane domains.** The V2 span is a short extracellular loop *inside* a larger transmembrane domain. **Engulfment is not an annotation artifact; it is what a loop in a multi-pass protein looks like.** That is an argument for a rule; the rule is the owner's.
+
+- **Consequences.** `straddle` is keyword-only with **no default**: omitting it raises `TypeError`, an unrecognised value raises `UnknownStraddleRule`, and a positional argument raises. ⚠ `D-095 amendment 1` records `straddle_handling` on every derived artifact beside `merge_rule` and its gap tolerance; **this entry is what makes that parameter nameable at all.** ⚠ The gap tolerance itself is **zero uncovered residues**, stated as the number rather than as `start <= prev_end + 1` — see `docs/PASSAGES-2026-08-19-gap-tolerance-and-merge-rule.md`, which exists because that sentence was corrupted three times in transit and the repository does not drop bytes.
+
+---
+
+### F-045 — A revert proof certified a flip it never ran: two edits of equal size inside one clock second, and the second executed against the first's bytecode
+
+- **Date:** 2026-08-19
+- **Status:** ✅ **CLOSED 2026-08-19, on `D-074`'s SECOND clause and explicitly not its first.** ⚠⚠ **Clause 1 — *the instrument no longer exhibits it* — is NOT met and cannot be.** `PYTHONDONTWRITEBYTECODE=1` prevents recurrence in new drivers and **validates nothing retrospectively**; the **23 of 23** prior revert proofs stay `driver_unknown`, and no fix makes them otherwise, because the driver was never a recorded property to recover. **Clause 2 — *it carries in itself the statement of what it gets wrong* — is met by this entry:** the mechanism, the named colliding pair, the controlled reproduction under both cache settings, and the enumeration with its unknown. ⚠ **Closing on clause 2 means the residual is ACCEPTED IN THE OPEN, not repaired.** Every *proven by revert* older than 2026-08-19 in this log is a claim whose method is unrecorded, and that sentence is the closure.
+- **⚠ What this entry is NOT.** It is **not** the wrong-but-plausible-answer family. `PREWORK-2026-08-19.md` §3 named `F-045` for that; **the number moved to `F-047`**, which is reserved and unwritten. A reader arriving here from the prework is in the wrong entry — ⚠⚠ *which is `F-044`'s subject exactly, and the invariant cannot see it.*
+
+- **⚠⚠ THE FINDING, WHICH IS NOT THE `.pyc`.** **The driver is not a recorded property of a revert proof.** This log says *proven by revert* twenty-seven times across twelve entries, and **not one of them records how the break reached the interpreter.** `A-016 (any red proves the assertion bites)` and `A-017 (the fixture must reach the code under test)` are the rules by which this project decides a test is real — so **`A-016` compliance has never been auditable.** The record carries the verdict and discards the method. ⚠ *The `.pyc` collision is how the gap surfaced; the missing field is what it means.*
+
+- **The mechanism, in one line.** CPython validates a cached `.pyc` against the source's `(mtime, size)`, with **mtime truncated to seconds**. A driver applied flip 1, ran the suite, restored, then applied flip 2 — **same file, same resulting size, same clock second** — so the interpreter reused flip 1's bytecode and **flip 2 was never executed.**
+
+- **⚠ THE COLLIDING PAIR, NAMED, AND THE CONTRADICTION IN THE FIRST REPORT OF IT.** Two statements were issued that cannot both bear on the same event, and the second one was irrelevant:
+
+  | | file | delta | fate |
+  |---|---|---|---|
+  | flip 1 `a < s0` → `a <= s0` | `scripts/tranche6_domain_census.py` | **+1** | ran |
+  | ⚠⚠ flip 2 `b < s0` → `b <= s0` | `scripts/tranche6_domain_census.py` | **+1** | **executed flip 1's bytecode** |
+  | flip 3 clip truncation | `scripts/tranche6_domain_census.py` | +4 | ran |
+
+  ⚠ **A third flip, `a > s1` → `a >= s1`, also carries `+1`** and shares the same size; it was added to the driver after the fix, so it never collided, but it was equally exposed.
+
+  ⚠⚠ **The `-18 / +4 / -39 / -2` deltas reported alongside this describe a DIFFERENT driver** — the first one, whose four flips landed in `scripts/tranche6_runs_clip_compare.py` and the census module at different sizes. **They are true and they say nothing about the collision.** They were offered as evidence of the defect's scope and they do not reach its subject: *a clean number that means something other than it appears to*, in the report of a finding about clean numbers that mean something else. **Recorded, not quietly dropped.**
+
+- **⚠ Reproduced under control, so the mechanism is measured rather than inferred.** The three-flip sequence was re-run twice against the same file:
+
+  | | flips 1 and 2 present `(mtime_s, size)` | flip 1 vs flip 2 digests | flip 2 verdict |
+  |---|---|---|---|
+  | bytecode caching **ON** | `(1787066189, 29949)` — **identical** | **identical** | **RED (false)** |
+  | bytecode caching **OFF** | `(1787066190, 29949)` | differ | **GREEN (true)** |
+
+  **The false red was flip 1's result, printed under flip 2's label.** ⚠ And the honest answer underneath is that flip 2 is **not caught by the corpus at all** — it is caught only by fixtures written afterwards.
+
+- **⚠⚠ WHAT THE RE-CERTIFICATION DID AND DID NOT COVER, stated because the distinction is the whole of `F-045`'s reach.** The four flips re-run with bytecode writing disabled were the **first driver's**, at deltas `-18 / +4 / -39 / -2` — **all distinct, so a size collision was impossible among them.** ⚠ **They are NOT the colliding pair.** The colliding pair was re-run separately, by the corrected `§9` driver, which is what produced the corpus-GREEN / fixtures-RED table in `F-046`. **So the defect's own subject was re-verified — but not by the run first cited for it, and the re-certification is a real measurement of something adjacent to the defect rather than of the defect.**
+
+- **⚠⚠ The first proof reported that flip as CAUGHT.** It printed a red test, a real assertion, and a plausible digest pair. Re-run with `PYTHONDONTWRITEBYTECODE=1`, the same flip is **not caught by the corpus at all** — it is caught only by fixtures written afterwards. **A green that is green for a reason unrelated to the thing under test, and a red that is red for the previous experiment.**
+
+- **⚠ Why this is worse than an ordinary false positive.** `A-016 (any red proves the assertion bites)` and `A-017 (the fixture must reach the code under test)` make the revert proof **the instrument that certifies the other instruments.** A test is believed here because a revert proof reddened it. **A false green in this instrument is a false green wherever it was used**, and it does not announce itself: the output is indistinguishable from a genuine pass.
+
+- **The forward fix, stated as forward-only.** The drivers now run with `PYTHONDONTWRITEBYTECODE=1`. ⚠⚠ **That validates nothing retrospectively, and treating a forward fix as retroactive coverage is the same error one level up.**
+
+- **⚠ The enumeration (Task T), reported with its key and its `unknown`.** *Which prior revert proofs were produced by a driver applying more than one flip in a single run?*
+
+  | population | key | n |
+  |---|---|---|
+  | log entries recording a revert proof | one row per `###` entry in `docs/README.md` | **12** (D-097, D-094, D-090, D-086, D-084, F-039, F-038, F-034, F-026, D-079, D-077, D-075 — 27 mentions) |
+  | test files documenting one | one row per file under `tests/` matching `revert` | **12** |
+  | ⚠ **committed drivers that shell out to `pytest`** | grep over `scripts/ tests/ core/ worker/ app/` | **0** |
+  | `driver_known_multi_flip` | driver identifiable | **2**, both 2026-08-19, both this session |
+  | ⚠⚠ **`driver_unknown`** | driver not identifiable | **all prior proofs** |
+
+  ⚠⚠ **The finding inside the finding: the driver is not a recorded property of a revert proof.** No driver was ever committed, and the ad-hoc ones do not survive their session. So for every prior proof the answer is not *lost* — **it was never captured.** The enumerable set is the proofs; the unenumerable field is how each was applied. *`unknown` is the honest value and it is the majority value.*
+
+- **The re-certification's own result, which stands on its own terms.** All four of the first driver's flips reproduce with bytecode writing disabled, each red at its named test, zero collection errors, both files restored byte-identical. **The defect fired only where two flips happened to share a resulting size**, and among those four none did.
+
+- **⚠ The enumeration's integers, with the population named and summing.**
+
+  | population (key) | n | `driver_known` | `driver_unknown` |
+  |---|---|---|---|
+  | log entries recording a revert proof, prior to 2026-08-19 (one `###` entry) | **12** | 0 | **12** |
+  | test files documenting one (one file under `tests/`) | **12** | 0 | **12** |
+  | ⚠ overlap — a test file named inside such an entry (`test_ceiling_probe.py`) | **1** | — | — |
+  | **union: distinct prior revert-proof-bearing artifacts** | **23** | **0** | **23** |
+  | driver runs on 2026-08-19 (this session) | **5** | **5** | 0 |
+
+  ⚠ **`driver_unknown` is 23 of 23, not a word**, and it is 23 **because the field was never captured**, not because records were lost. Committed drivers that shell out to `pytest`: **0**.
+
+- **⚠ What would actually close this.** Not a framework — `D-074` decision 3. Candidates, none ruled:
+  - **Record the driver beside the proof.** A revert proof states what it broke and what reddened; it does not state how the break reached the interpreter. One line would make Task T answerable next time.
+  - **Assert execution, not just outcome.** A break that also changes an observable string proves the new code ran; a red alone does not distinguish *caught* from *stale*.
+  - ⚠ **`D-080` is adjacent and still reserved** — *a revert proof operates on committed state or on a copy, never on a working tree holding uncommitted work.* This is the same instrument failing for a neighbouring reason, and the two should probably be ruled together.
+
+- **⚠ How it was found.** Not by the suite and not by review. The driver reported four `[PASS]` rows and **two of them carried byte-identical digest pairs** — the same numbers under two different experiments. *A clean number that means something other than it appears to*, which is this project's most productive shape and the reason `F-047` is worth writing.
+
+---
+
+### F-044 — The citation invariant proves that a reference RESOLVES, never that it resolves to the right thing: it finds holes, not mismatches
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **OPEN — a finding against an instrument (`D-074`).** It closes when a reference to a numbered entry cannot silently acquire the wrong target, **or** when the residual is named and accepted in the open. ⚠ **Adding a second checker is not automatically the remedy** — `D-074` decision 3 warns against answering a finding with a framework that becomes a second thing to drift.
+
+- **The finding.** The check `RESERVED.md` documents is:
+
+  ```
+  missing = sorted(cited - defined - reserved)
+  ```
+
+  ⚠⚠ **That is a set-membership test on integers.** It proves every cited `D-NNN` / `F-NNN` **exists**. It has no access to what the entry *says*, so it cannot detect a citation that resolves to a **real entry with the wrong content**. **It finds holes. It cannot find mismatches.**
+
+- **⚠ The evidence is a contrast, observed the same day, and the contrast is the finding.**
+
+  | defect | what happened | the invariant |
+  |---|---|---|
+  | **hole** — the then-next-free `D-` integer, cited before it existed | a sub-entry named it in a *"next free … remains …"* line | ⚠ **caught in one run**, first execution, unambiguous |
+  | **mismatch** — `D-095` cited for the wrong thing | `ORDERS-Code-2026-08-18` §3 and `scripts/taskc_multidomain_population.py` both said the PAE comparison *"is a `D-095` decision"* | ⚠⚠ **silent through every run**, in the log and in a committed script |
+
+  When that order was written, `D-095` was the next free integer. It was then taken by **the tranche-6 tiling design document**, which says nothing about a PAE comparison. ⚠ **Both documents were committed, and both passed the invariant, because `D-095` exists.**
+
+- **⚠⚠ Why the mismatch is the worse of the two, which is the whole point.** `D-062`'s recorded harm was *citations treating a missing entry as settled authority, with nothing in the text suggesting it was missing.* **A hole announces itself the moment anyone follows it** — the target is not there. **A mismatch does not.** The reader follows the pointer, finds a real, well-formed, confidently-written entry, and reads it as the authority for a claim it never made. ⚠ **The remedy for `D-062` closed the route that fails loudly and left open the route that fails quietly.**
+
+- **⚠ The same shape is not confined to citations, which is why this is a finding and not a note.** On 2026-08-17, in one HPA download of one version: `proteinatlas.tsv` has `Gene` = **the symbol** (`TSPAN6`); `pathology.tsv` and `normal_tissue.tsv` have `Gene` = **the Ensembl id**, with the symbol in `Gene name`. **A join on `Gene` across them returns a clean, plausible, entirely empty intersection and raises nothing.** `D-100` records the identical trap inside a single file — S3's `Gene` is Ensembl, matching on it gives **0 of 82**. ⚠ *A name that resolves to the wrong object is the general defect; the citation checker is one instance of the blind spot, not the whole of it.*
+
+- **⚠⚠ THE REMEDY ALREADY EXISTS IN THIS REPOSITORY, APPLIED TO ONE NAMESPACE AND NEVER GENERALISED.** `RESERVED.md` rules, for `A-` only:
+
+  > *"every **new** local `A-` reference is written as **`A-0NN (descriptive name)`**, never as a bare number. If a number moves … the citations do not orphan — **the name carries them.**"*
+
+  That was invented because `A-` numbers might **move**. The defect here is a number being **reused** — a different mechanism producing the identical failure, *a citation pointing at the wrong entry*. ⚠ **The mitigation is described as "available now and free" and was scoped to the namespace whose problem prompted it.** This is the project's own recurring sentence: **a rule applied to one shape and not another is not a rule** — the sentence that names the `pytest`/`SELECT` failure of 2026-08-17 and the backtick/encoding failure of the same day.
+
+- **⚠ What this does NOT claim.**
+  1. **The invariant is not broken and must not be weakened.** It is *sound* on the failure mode it was built for and caught a live instance the same day, first run. **This is a finding about its scope, not its correctness.**
+  2. **No claim that other mismatches exist.** ⚠ **One is confirmed (`D-095`); the rest of the log is UNCHECKED**, because checking it requires reading every citation against its target and no tool here does that. *Unmeasured is not zero.*
+  3. **No remedy is adopted here.** Naming the defect is not fixing it, and `D-074` decision 3 is explicit that a framework answering a finding becomes a second thing to drift.
+
+- **Candidate remedies, none ruled, stated so the choice is visible:**
+  - **Generalise the `A-` convention:** cite as **`D-NNN (short name)`**, so a reused integer orphans the name instead of silently re-pointing it. ⚠ Costs nothing at write time and is the only candidate already proven in this repo.
+  - **Forward references never name a bare integer** — the rule that would have prevented both `D-095` *and* the hole above. `RESERVED.md` is the index; the log points at it.
+  - **A content check** — assert each cited entry's title matches the citing context. ⚠ Almost certainly the `D-074` decision-3 trap: it needs maintenance, and a checker nobody trusts is worse than a rule everybody reads.
+
+- ⚠⚠ **This entry tripped its own subject, twice, while being written.** The first draft named the then-next-free integer in the evidence table and again in the remedy list — **and the invariant refused it, immediately, both times.** ⚠ *That is the finding in miniature:* the check is **fast, exact and unarguable** against a hole, including one written by the person documenting holes; and it said nothing at all about `D-095` sitting mismatched in the same file. **The instrument is not unreliable. It is precise about one thing and blind to its neighbour.**
+
+- **⚠ How it was found, because that is evidence about how much else is unchecked.** Not by the invariant, and not by review. **The owner read a sentence in a report and recognised the number had moved under it.** Every automated gate in this repository passed over `D-095` in both the log and a committed script, on every run, for the whole of the day it was wrong.
+
+
+#### F-044 amendment 1 — ⚠⚠ A Planner instance: the reserved row's CLASS matched, its INSTANCE did not, and the pointer that would have shown it was never followed
+
+- **Date:** 2026-08-19 · **Status:** the finding stays **OPEN** — `D-074`: a finding against an instrument stays open until the instrument no longer exhibits it. **This is the instrument exhibiting it, one day after the entry was written.**
+
+- **What happened.** The Planner directed that the `domain_intervals` divergence be written as **`F-014`**, quoting that reservation's text — *"documenting a duplication is not managing it — the tenth instance of the two-paths-to-one-quantity class, and the first where the drift was written down and the writing-down substituted for the fix."* **The class description matched exactly.**
+
+- ⚠⚠ **`F-014` is reserved for a different instance.** `AMENDMENT-2026-08-04-code-feedback.md` §160–165 reserves it for **`scripts/ecd_lengths.py` carrying a hand-duplicated `CEILING_KNOWN_GOOD`/`CEILING_KNOWN_BAD` while `core/manifest.py`'s comment documented the duplication.** `ARCHITECTURE.md:693–697` records that instance **already fixed and guarded** by `tests/test_manifest.py::test_no_second_copy_of_the_ceiling_survives_in_the_tree`.
+
+- ⚠ **The specific failure, and it is sharper than a misread.** `RESERVED.md`'s row carries **two** columns — the class description **and** a pointer, *"Amendment §7, 2026-08-04"*. **The Planner read the description and never followed the pointer.** It then **ordered Code to check the reservation's RELEASE CONDITION** (*held until `d077-local-fold-envelope` merges*) — ⚠⚠ **so it verified the half that had a check and asserted the half that did not.** *Pointer-is-not-proof, one day after writing the rule against it.*
+
+- **Caught by Code**, who followed the pointer and reported the mismatch rather than writing what was ordered. ⚠ **`F-014` remains RESERVED and untouched;** the divergence took `F-046`.
+
+- ⚠ **What this adds to `F-044`.** The original entry establishes that the citation invariant proves a reference **resolves**, never that it resolves to the **right thing**. **This instance shows the same hole in a `RESERVED.md` row**: the whitelist proves a number is legitimately unwritten and has no access to **what it was reserved for.** **The remedy is the one already ruled — cite by number AND name — extended to reservations: a reservation is cited by number and INSTANCE, never by class.**
+
+- ⚠ **LANDED BY CODE, 2026-08-19.** Verbatim from `docs/AMENDMENT-2026-08-19-planner-log-entries.md`. **The release condition itself was verified and holds:** `d077-local-fold-envelope` merged as PR #122 at `d6622f9`, 2026-08-05, an ancestor of both `main` and `HEAD`, with **0** commits unmerged. **So `F-014` is writable today — for its own subject, which is not this one.**
+
+---
+
+### F-042 — ESMFold emits PAE on every forward pass and the pipeline discards it: 2,690 of 2,690 census folds carry none
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **OPEN.** It closes when the local-tier persistence path is repaired **and** the 2,690 existing rows either carry PAE or carry the statement that they do not and why. ⚠ **Repairing the path forward does not close it** — the recorded census stays PAE-less.
+
+- **The finding.** PAE — `predicted_aligned_error` — is the folding head's learned confidence about the **relative position of two residues**. `protein_analyses.pae_json_path` is **NULL on all 2,690 census folds** and non-NULL on **79 of 80** cohort rows (the exception is IGF2R, which never folded). **The model produces the quantity on every forward pass and the pipeline throws it away.**
+
+- **⚠ Not `pae_never_emitted`, and this was established by observation, not inference.** The control fold (`D-099`, commit `cc2551f`) ran **25 local int8 chunk-64 folds — the exact census recipe — and PAE was emitted on 25 of 25, every matrix dimension matching its span.** ⚠ Before that run the two categories were indistinguishable from the database alone, and the difference matters: one is a model limitation, the other is a pipeline defect. **It is the second.**
+
+- **Evidence — the fold-day partition, which reconciles with no residue:**
+
+  | fold day | rows | PAE NULL | PAE set |
+  |---|---|---|---|
+  | 2026-07-23 / 24 / 25 | 75 / 2 / 2 | 0 | **79** |
+  | **2026-08-16** | **2,690** | **2,690** | **0** |
+
+  75 + 2 + 2 + 2,690 = **2,769 against 2,771 rows**; the two missing are IGF2R and `P55073`, which never folded. ⚠ **A clean partition, not a suggestive one.**
+
+- **The mechanism — two persistence paths, both scoped to the paid tier:**
+  1. **The upload stopped carrying PAE** (`D-035` part 2), so `app/artifacts.py:persist` no longer sets the column from the wire.
+  2. **The compensating out-of-band route** (`D-036`) writes the column via `_write_pae_file` → `_update_pae_path`, but it is fed by `worker/main.py:_persist_pae_local`, which fires **only `if artifact_dir:`** — documented *"set on the RENTAL box."*
+
+  **The local tier falls through both.** ⚠⚠ **And the backstop was attached to the expensive path, not the important one:** `scripts/retrieve_rental_pae.py` is *"the blocking gate before pod termination"* — so on rental a missing PAE is loud, and **on local there is no pod to terminate and therefore no gate.** *A guard placed where the money is, not where the data is.*
+
+- **⚠ What the mechanism is NOT, recorded because it was claimed and refuted:**
+  - **Not the tier tags.** `D-090` measures **2,733 local / 38 rental**; census tranches 1–4 total 2,691, all local, so **only 38 rows in the database are tagged rental against 79 carrying PAE.** At least 41 PAE-bearing rows are tagged local. ⚠ `jobs.tier` was **backfilled 2026-08-17 from a length rule** and does not record where a job ran, so it cannot support a tier explanation in either direction.
+  - **The July folds nonetheless ran on rented hardware** — `CLOSEOUT-2026-07-23-full.md`, *"the First Rented Fold."* ⚠ **Tier and date are perfectly confounded in the table**: no local July fold and no rental August fold exist as separate cells, so **the partition that revealed the finding cannot identify its cause.** The code path did that, not the data.
+  - ⚠ **A Planner-proposed discriminator was dead on arrival** — listing July `pae.json` files on the local box returns empty under **both** hypotheses. Recorded because a check that cannot separate its hypotheses is not a check (`F-001`'s shape).
+
+- **⚠⚠ What was actually lost, stated precisely.** `pLDDT` is **per-residue and local** — how sure the model is about where one residue sits. **PAE is pairwise and relative** — whether two residues are confidently positioned *with respect to each other*. **They are not substitutes.** So the census can report confidence about every residue's local geometry and **nothing whatsoever about whether two domains are confidently placed relative to one another** — which is exactly the quantity `D-091` ruling 3 requirement 3 asks for, on the population where re-folding is most expensive.
+
+- **⚠ What this does NOT claim.** **No published result is affected.** `F-004`, `F-005`, `D-075` and the Run A ablation use pLDDT and geometry; **none consumes PAE.** Nothing is invalidated and nothing is re-run.
+
+- **⚠ Why it went unnoticed for a month.** **Nothing consumed PAE**, so its absence produced no error, no warning and no visibly wrong number — the artifacts were correct, complete and plausible. **A capability nothing uses degrades silently**, and this was found only because a *different* question needed it. ⚠ **That is the general lesson and it is not specific to PAE:** the pipeline emits other things nobody reads, and their state is equally unknown.
+
+- **Open decisions this creates, named rather than assumed:**
+  1. **Repair the local persistence path.** ⚠ **Its own entry**, after this finding — repairing it inside the control fold would have begun backfilling the NULLs the finding is about.
+  2. ⚠ **Whether to re-fold the 2,690 to recover PAE is a DECISION, not a remedy.** It is local and costs no money, and `determinism_control.int8.610.88` shows the kernel is deterministic at this recipe, so a re-fold should reproduce. **But it writes 2,690 rows and it is not this entry's to make.**
+  3. ⚠ **Whether the 79 `pae_json_path` files RESOLVE is unanswered** — blocked by a permission denial on the volume, and correctly stopped-and-reported rather than worked around. **A path is not a file.**
+
+---
+
+### D-100 — The Kathad quasi-H-score is reproduced exactly from S3, and the denominator convention is documented rather than recovered
+
+- **Date:** 2026-08-17 (⚠ authored "2026-08-18"; wall clock at merge is 2026-08-17 17:47 — stamped with the real date, as D-095/D-098/D-099 were)
+- **Status:** accepted
+- ⚠ **LOG-LEADS-CODE WAS VIOLATED AND IS RECORDED, NOT BACK-DATED.** The reproduction ran in a Planner sandbox before this entry existed. It was exploratory and wrote nothing to the repository, but the rule does not carve that out. **Stated here rather than tidied away.**
+
+- **Context:** `data/cancer_associations.csv` covers **82 of 3,467** census accessions (2.4%). Extending a clinical association layer to the census needs a method that runs at census scale. Kathad's measure is arithmetic over HPA IHC, so the question was whether we can recompute it — and the test is whether we can reproduce their 82 first.
+
+- **⚠⚠ The source is richer than assumed.** `journal.pone.0308604` **S3** (`s004.xls`, sheet `Target_expression_in_tumor`) is **not a table of scores** — it is **the HPA IHC extract with patient counts**: `High`, `Medium`, `Low`, `Not detected`, `total`. **1,640 rows = 82 × 20, zero nulls in the count columns.** `pathology.tsv` is NOT required for the reproduction.
+
+- **Decision — the convention, and why no degrees of freedom were spent:**
+
+  **`qh = 100 × (Low/total + 2·Medium/total + 3·High/total)`, where `total` INCLUDES `Not detected`.**
+
+  ⚠ **This was read off the file, not recovered by matching.** `percent_law == 100 × Low/total` on **1,640 of 1,640 rows**. The paper publishes its own denominator. **`F-022` therefore does not bite** — the census numbers are not made dependent on Kathad by an inferred step.
+
+- **Evidence — two-sided, which the grid makes possible:**
+
+  | convention | kept | exact value match | ours-only | theirs-only |
+  |---|---|---|---|---|
+  | **A — `/total`** | **337** | **337 / 337** | **0** | **0** |
+  | B — `/detected` | 766 | 204 | 0 | 429 |
+  | P — paper's printed percent columns | 329 | 329 | 8 | 0 |
+
+  ⚠ **All 1,303 below-cutoff pairs are also correctly excluded.** A one-sided check could not have distinguished a systematic downward bias from a legitimate exclusion; this can.
+
+- ⚠ **The join needed `Gene name`, not `Gene`.** S3's `Gene` is **Ensembl**; the symbol is in `Gene name`. Matching on `Gene` gives **0 of 82**; on `Gene name`, **82 of 82**. Cancer labels also differ in case between S3 and our CSV. **Two identifier spaces one column apart, and the first attempt returned a clean, plausible, entirely spurious zero-overlap.**
+
+- ⚠ **A hypothesis in `data/cancer_associations.csv`'s own header is retired by a fact.** That note tested *"dropping any single tumour type yields 296–334, never 290."* **HPA stains 20 cancer types in total** (HPA Cancer index, read 2026-08-18) — so the 20 were **not selected by Kathad** and tumour-type selection was never a lever they had. **The 337-vs-290 gap is something else.**
+
+- **HPA as a census supplier — `D-093` decision 6 item 3, ANSWERED and PASSING:**
+  - **3,333 of 3,467 census accessions (96.1%) join to HPA by UniProt accession directly** — no Ensembl hop, no symbol matching. **140 of the 141 past-context rows.**
+  - ⚠ Named failure categories, not a silent left-join: **862** HPA rows carry no accession · **39** are multi-valued · **72** accessions map to **more than one** HPA gene · **134** census rows absent.
+  - ⚠⚠ **THIS IS PRESENCE IN THE SUMMARY FILE, NOT IN THE IHC SET.** HPA IHC covers **15,312 genes** against 19,973 for RNA. **The census's IHC coverage is unmeasured and is lower than 96.1%.** It bounds everything a census-wide expression axis can claim. **Unmeasured is not zero and is not fine.**
+  - **Items 4 (version pinning) and 5 (attribution string) are NOT answered.** Owner task.
+
+- **Deep-learning justification:** ⚠ **none, and it is declared neutral rather than argued.** This is a curated join and a weighted sum. `D-093` already rules that dressing it as deep learning would be dishonest, and the owner has ruled the DL mandate satisfied and the project in paper mode. **It supplies the comparator the structural axis is measured against; it is not itself a model.**
+
+- **Consequences:**
+  1. **`data/cancer_associations.csv` is confirmed correct and unchanged.** Nothing is rewritten.
+  2. ⚠ **`D-093` decision 7 still bars committing S3 or any HPA table** until inbound terms are read and dated. **This entry authorises the method, not the ingest.**
+  3. The reproduction currently exists **only in a Planner sandbox and will not survive.** Committing it as a tested script is the first order.
+
+#### F-042 amendment 1 — the 79 `pae_json_path` values DO resolve, and the set is an exact bijection
+
+- **Date:** 2026-08-17 · **Status:** ⚠ **This closes open decision 3 only.** `F-042` itself stays **OPEN** — the 2,690 census rows still carry no PAE, and repairing the path forward does not close it.
+- ⚠ **Recorded as an amendment, not an edit.** Decision 3 was written as unanswered and stays as written; the answer is added beneath it.
+
+- **The measurement.** `find /data/artifacts -name pae.json.gz` on the Fly volume, run by the owner at the console after the read was denied to Code — **stopped and reported rather than worked around**, and answered by the person who could.
+
+  | quantity | value |
+  |---|---|
+  | PAE files on the volume | **79** |
+  | the single gap in ids 1–80 | **id 57 — `IGF2R`**, `mean_plddt` NULL, 2,491 aa: the A6000 ceiling failure that never folded |
+  | folded rows with **no** PAE file | **0** |
+  | PAE files with **no** folded row | **0** |
+
+  ⚠ **An exact bijection: the set of PAE files IS the set of folded cohort rows.** Every pointer resolves; nothing is orphaned in either direction. **`pae_on_disk_unregistered` — the order's third category — is empty, measured rather than assumed.**
+
+- ⚠ **Presence was not accepted as the standard.** A count is a floor: a zero-byte or truncated file is still *found*. `find … -size -1k` returned **empty**, so none is a stub — a real PAE matrix for a 200–600 residue protein compresses to tens of kilobytes.
+
+- ⚠ **A retracted check, recorded because it nearly became a finding.** Code first probed the 79 via `HEAD /api/analyses/{id}/structure` and got **405 on all 79**, then reported the dangling-pointer class as *real and present*. **405 is Method Not Allowed, not 404** — the route is `@get`-only and the probe was measuring its own HTTP verb. Re-run with `GET`, all 79 returned 200. *A clean number meaning something other than it appears to is this project's most repeated defect, and it was committed here inside the check for it.*
+
+- ⚠ **What this does NOT establish.** The files are present and plausibly sized. **They have not been read, parsed, or checked for matrix shape** — and **no route can read them**: `/jobs/{job_id}/pae` is a bearer-guarded POST and the read API exposes `structure` and `plddt` only. **PAE is writable, recorded, and unreadable**, which is the same root cause that let `F-042` go unnoticed for a month.
+
+---
+
+---
+
+### F-043 — A hard cutoff on a ~11-patient ordinal statistic: a quarter of Kathad's surviving pairs turn on one pathologist call
+
+- **Date:** 2026-08-17 (⚠ authored "2026-08-18"; stamped with the real date)
+- **Status:** ⚠ **OPEN — a finding against an instrument (`D-074`).** The Kathad filter is this project's comparator. It stays open until the comparator no longer exhibits this, **or** until every surface citing the expression ranking carries the statement of what it gets wrong.
+
+- **The finding.** The quasi-H-score is a weighted percentage over an HPA panel of **median 11, mean 10.2, maximum 12** patients. **246 of 1,640 rows have n ≤ 4; two have n = 2.** At n = 12 the statistic moves in **8.33-point steps**; at n = 4, 25 points. A hard `≥150` cutoff is applied to an estimator that can take only a few dozen distinct values.
+
+  | perturbation | of the 337 kept | of the 1,303 excluded | grid-wide |
+  |---|---|---|---|
+  | **one patient, one category** | **83 (24.6%)** | 33 (2.5%) | 116 (7.1%) |
+  | two patients | 151 (44.8%) | 85 | 236 (14.4%) |
+
+- ⚠⚠ **52 pairs sit at EXACTLY 150.0** — the cutoff lands on the most populated discrete value the estimator can take. `≥150` gives **337**; `>150` gives **286**. **The inequality sign is worth 51 pairs.**
+
+- ⚠ **The method disagrees with itself across two representations in one file.** Using the paper's own printed `percent_` columns with the paper's own formula yields **329**, not 337 — **eight of the exact-150 pairs fall below on rounding alone.**
+
+- **⚠ What is NOT established, stated before anyone cites this:**
+  1. **The 83 is an UPPER BOUND on one-move flips.** It does not yet check that a patient exists in the source category to move — a row with `Low = 0` cannot lose a Low. **The availability constraint must be applied before the number is published.**
+  2. ⚠ **No claim that Kathad's arithmetic is wrong. We reproduced every value exactly** (`D-100`). The finding is about the **stability of the filter's output**, not its correctness.
+  3. ⚠ **Whether the paper's own limitations section states this is UNCHECKED** — the Planner has no search. *"They did not mention it"* is not a claim this entry makes. It decides whether the framing is *quantifying a stated caveat* or *identifying an unstated one*.
+  4. **The antibody choice is a second, independent, unquantified source of movement.** **52.5% of HPA genes carry more than one antibody** (9,140 / 17,407, measured); S3 does not say which was used. **Additive to this finding, not included in it.**
+
+- **Why it matters here.** `F-009` records four clinically-validated ADC targets as false negatives of this filter. ⚠ **Instability at the boundary is a MECHANISM that produces false negatives** — it turns four anecdotes into an expected behaviour. **It does not prove those four arose this way**, and checking whether they sit near the cutoff is a separate, pre-registerable measurement.
+
+#### F-043 amendment 1 — ⚠⚠ THE FLIP RATES ARE WITHDRAWN. The perturbation rule was underspecified in the entry text.
+
+- **Date:** 2026-08-17 · **Status:** ⚠ **The 83 / 33 / 116 and 151 / 85 / 236 figures MUST NOT BE CITED.** Withdrawn same day, before any external use.
+
+- **What happened.** Code could not reproduce **83** under **any of five candidate perturbation rules, including the one the entry appears to describe.** The entry's prose says *"one patient reclassified by one category"*; the arithmetic behind the number was the distance test `|qh − 150| < 100/total`. ⚠ **Those diverge as soon as a single patient can move more than one category** — `Not detected → High` is three steps, not one — and **the entry states neither.**
+
+- ⚠⚠ **This is the same defect the Planner required Code to fix twice on the same day.** A3 was re-run under **three type sets** and reported at **five values of *k*** on the ruling that *a single choice is a dial wearing the costume of a measurement.* **The Planner then published a single flip count under an unstated rule.** Recorded as a **Planner finding**, not absorbed.
+
+- ⚠ **It is also `F-044`'s family, one level down:** a number in the log **whose definition cannot be recovered from the log.** `F-044` is about a citation resolving to the wrong content; this is a measurement resolving to no reconstructable method. **Both fail silently — the entry is well-formed, confident, and unreproducible.**
+
+- **What SURVIVES, unaffected:**
+  - ⚠ **52 pairs at exactly 150.0**; `≥150` → **337**, `>150` → **286**. **Depends on no perturbation rule.** This was already ruled the number that leads.
+  - Panel sizes: median **11**, mean 10.2, max **12**; **246 of 1,640 rows at n ≤ 4**.
+  - The **8 rounding flips** between raw counts and the paper's printed percent columns.
+  - `D-100`'s reproduction — **337/337 and 1,303/1,303** — untouched.
+
+- **The re-derivation, pre-registered here:**
+  1. **All five candidate rules, reported side by side.** ⚠ **Enumerated in advance; no sixth is added after the results are seen.**
+  2. **Availability-constrained and unconstrained for each.** ⚠ **The gap between them is the result**; Code measured **201 → 169** on the 337 under its own rule.
+  3. ⚠⚠ **On the FULL v22 IHC grid — 20,082 genes × 20 cancers, 401,640 rows — with the reproducible funnel depths nested inside it** (5,543 membrane · 4,875 protein-level · 82/337). **`1,731` is NOT among them: stage 3 does not reproduce and is disclosed as a named gap, never approximated.**
+  4. ⚠ **The 337 are survivorship-conditioned** — 82 genes that cleared four further filters *after* the cutoff fired. **A flip rate measured on them is conditioned on survival**, and the population the cutoff acted on is upstream.
+  5. ⚠ **Directional hypothesis, recorded BEFORE measurement and not to be defended if it fails:** stage 6b requires qh > 150 on mRNA as well, which plausibly enriches the 82 for high expressers and pushes near-boundary pairs out — **so 24.6% may UNDERSTATE instability upstream.**
+
+- ⚠ **`F-043`'s status returns to OPEN pending the re-derivation.** Nothing downstream cited the withdrawn figures; **`CLDN18.2` at 133.33, two available moves from 150, is independent of t** ⟵ ⚠ **TRANSMISSION TRUNCATED HERE, TWICE, AT THE IDENTICAL CHARACTER.** The tail was requested and re-sent unchanged. **Merged as received rather than completed by Code** — finishing an owner's sentence is inventing a ruling. **The tail is outstanding.**
+
+##### ⚠ Code's note on merge — one surviving figure is refuted, and it is not corrected in place
+
+- ⚠⚠ **`>150` → 286 is WRONG. The measurement is 285, and the inequality sign is worth 52 pairs, not 51.** All **52** boundary rows are float-**equal** to 150.0 and **none is float-above**, so `337 − 52 = 285` is forced. Re-verified at merge against S3 through `scripts/kathad_reproduction.py`.
+- ⚠ **It is left as written in the bullet above and corrected here instead**, because *corrections are recorded, never patched away* — and because a withdrawal notice that silently edits its own surviving figures is the shape it exists to prevent.
+- ⚠ **The finding is STRENGTHENED by one pair**, not weakened. The `52 at exactly 150.0` figure — the one ruled to lead — is unaffected and independently confirmed.
+
+
+---
+
+### D-099 — The control fold is not tranche 6: PAE is recovered on proteins that need no assembly
+
+- **Date:** 2026-08-17 (⚠ authored "2026-08-18"; wall clock at merge is 2026-08-17 16:57 — stamped with the real date, as D-095 and D-098 were)
+- **Status:** accepted — owner ruling, merged verbatim in substance.
+- ⚠ **`F-042` is cited below and is NOT YET WRITTEN.** It is reserved in `docs/RESERVED.md` so the forward reference is distinguishable from the D-062 defect. **The finding is the owner's to write.**
+
+- **Context:** `D-091` ruling 3 reads *"no GPU, no rental, no ingest until it is written and ruled"*, unqualified. Task C needs PAE on in-context multi-domain proteins; `F-042` establishes the census carries none on any of 2,690 rows. **The only route to the measurement is to fold again**, and that touches a GPU. Code declined to proceed on a Planner footnote and asked for the log entry first. ⚠ **That was correct** — a ruling that lives only in chat is a ruling nobody will find.
+
+- **Decision:** a **control fold** is permitted, defined narrowly by four conditions, **all of which must hold**:
+  1. **Subjects are existing census rows in tranches 3–4 only** — already folded, already ingested, inside the 1,026-residue trained context, single-pass. **No protein new to the system.**
+  2. ⚠⚠ **`boundary_method` stays `sliced_ecd`. `RECOGNISED_BOUNDARY_METHODS` is not touched.** This is the actual thing `D-091` ruling 3 guards: an assembled method one keystroke from a fold before the document that governs it exists.
+  3. ⚠⚠ **NO INGEST.** Artifacts land outside `protein_analyses`. No census row is written, updated, or re-pointed. **The 2,690 keep their NULL `pae_json_path`** — `F-042` is recorded, not patched away.
+  4. **Local tier only.** No rental, no spend, no `WORKER_TIER=rental`.
+
+- ⚠ **What would make it tranche 6, and is therefore barred:** folding any tranche-5 row · folding any protein by domain decomposition · writing a `boundary_source` or an assembled `boundary_method` into any artifact. **If a step requires one of these, it stops and returns here.**
+
+- **Deep-learning justification.** PAE is an output of the folding head — a **learned inter-residue confidence about relative position**, not a heuristic. `D-091` ruling 3 requirement 3 asks whether an assembled model is *a structure or a set of structures*; PAE lets **the network answer it** instead of an argument. ⚠ **And this is the only population where it is answerable:** the question needs a single-pass reference to compare assembly against, and for the 141 that reference cannot exist. **Assembly must be validated where assembly is unnecessary, or not at all.**
+
+- **Sample selection, pre-registered here, BEFORE Task C's counts are read** — ⚠ *choosing subjects after seeing the population is how a control gets picked for the answer it gives.*
+  - Eligible: tranche 3–4 rows with **≥2 UniProt `Domain` features wholly inside the V2 span** (A1's measure, same code path).
+  - Ordered by **`census_accession`, ascending**. If the population exceeds the fold budget, take a fixed number **per domain-count stratum**, in that order.
+  - ⚠⚠ **Never ordered or filtered by pLDDT, mean or per-residue.** Selecting on the confidence neighbour of the outcome is the `D-087` defect — *a default sort by confidence turns a self-report into a ranking* — and here it would choose the control on the variable under test.
+
+- **Consequences:**
+  - **It settles `pae_never_emitted` vs `pae_absent_local_tier` as a by-product** — the one observation Code correctly named as missing. ⚠ **If a local int8 chunked fold emits no `predicted_aligned_error`, `F-042` is a different finding and must be rewritten, not amended.**
+  - ⚠ **The generalisation limit, stated before the result, not after it.** A control on 300–439 aa two-domain proteins is evidence about **two-domain proteins in context**. FAT1 is a stack of ~34 cadherin repeats over 4,160 residues. **The control can show that inter-domain PAE is informative; it cannot show that it stays informative at ten times the length.** The design document says so in whatever it concludes.
+  - The PAE persistence path must be repaired for the control to capture anything — **that repair is `F-042`'s remedy and is in scope here**, but it does not backfill the 2,690.
+
+- **Evidence:** `F-042` (2,690 / 2,690 NULL, fold-day partition reconciling to 2,769 of 2,771); `worker/runner.py:311`; `worker/main.py:_persist_pae_local`.
+
+#### D-099 amendment 1 — the single-domain negative control, and the provenance of the repair
+
+- **Date:** 2026-08-17 · **Status:** accepted, ⚠ **before any control fold ran**
+- ⚠ **Recorded as an amendment, not an edit.** D-099's sample selection was pre-registered incomplete and **the omission is the record**, not a thing to tidy away.
+
+1. ⚠⚠ **A single-domain, length-matched arm is added, and it is what makes the other arm mean anything.** **PAE rises with sequence separation in every structure, domain boundaries or not** — two residues 800 apart have high PAE because they are 800 apart. So an all-multi-domain sample **cannot distinguish *independently-positioned domains* from *residues far apart in sequence*: the two predict the same table.** That is `F-001`'s shape — a metric that is real, well-defined, correctly queried, and measuring the aftermath rather than the thing. **5 single-domain tranche 3–4 rows**, span lengths **bracketing** the multi-domain subjects. ⚠ **Length-matched, never pLDDT-matched** (`D-087`).
+
+2. **Budget: 25 folds** — ⚠ **the arithmetic, restated because the proposal was wrong.** Code proposed "19"; 5 + 5 + 5 + 4 + 1 = **20**. Nothing was dropped, the addition was simply wrong, and the number is corrected upward rather than a stratum shaved to make the error come out right. **20 multi-domain + 5 single-domain = 25.**
+
+3. ⚠ **The 5-domain stratum is EMPTY — verified, 0 rows**, and it is named here because it was silently absent from Code's enumeration. Strata in tranches 3–4: **2 → 118, 3 → 78, 4 → 28, 5 → 0, 6 → 4, 7 → 1.** *An absence is a category with a cause, and this project's most reliable defect-finder is exactly that rule.*
+
+4. ⚠ **A defect in the first selection pass, found and fixed before the GPU.** Taking the first 5 in-band singles by accession produced **228–359 aa against a multi arm of 219–435** — *contained within*, not *bracketing*. ⚠⚠ **The confound this arm exists to break is separation-dependent**, so a baseline stopping short of the longest subjects is missing exactly where separation is largest. Now selected at evenly-spaced targets across the multi arm's range including both endpoints, nearest match, ties by accession: **219–434 vs 219–435.**
+
+5. **The repair is LOCAL-PERSIST ONLY.** The upload path stays broken and `pae_json_path` stays **NULL on all 2,690**. ⚠ **The upload repair is `F-042`'s remedy and takes its own entry, after the finding is written** — repairing it here would backfill the very NULLs the finding is about, which is `D-091` ruling 1's principle: *corrections are recorded, never patched away.*
+
+6. ⚠⚠ **The run's provenance records whether `artifact_dir` was set, on its face.** A capture whose survival depends on an unrecorded environment variable is **the M3 hazard reproduced inside its own remedy** — in three weeks the control's PAE would be another absence with no cause. The flag is recorded, and the **path** rather than any value.
+
+- **Artifact:** `data/census/d099_control_sample.csv` — the sample fixed **before** the GPU spins, via `scripts/d099_control_sample.py`.
+
+---
+
+### D-098 — Tranche 6 is scoped to the 141 past-context rows, not to the ten proteins that motivated it
+
+- **Date:** 2026-08-17 (⚠ the ruling was authored "2026-08-18"; the wall clock is 2026-08-17 — stamped with the real date, as D-095 was)
+- **Status:** accepted — owner ruling.
+- ⚠ **Supersedes the SCOPE clause of `D-091` ruling 3 and of `D-095`.** Both gates stand untouched: D-091 ruling 3's *design document before any folding*, and D-095's *Proposed, not ruled*. **Neither is weakened by this.**
+- ⚠ **Merged at `D-098`, not the `D-095` the ruling claimed.** It was authored against a snapshot predating this session, in which D-095 was free; **D-095, D-096 and D-097 were written and committed (`061eb3f`, `bac7a5c`) before the ruling arrived.** The ruling's own instruction — *"confirm D-095 is still free against the live log before merging"* — is what caught it, and renumbering-on-merge is the `F-039` precedent (D-079→D-093, D-080→D-094, F-012→F-040). ⚠⚠ **The same shape a fourth time in two days: a document reasoning about a log it cannot see.**
+
+- **Context:** `D-091` ruling 3 named ten subjects — FAT1–4, LRP1/1B/2, USH2A, ADGRV1, PKHD1L1. Measured against `census_manifest.v7.csv`, the band those ten sit in (`tranche=5`, `span_aa > 1026`) holds **141 rows**: the ten named, three mucins, and **128 named nowhere** — CDH23, CELSR1–3, TENM1–4, CSMD1/2, DCHS1/2, FRAS1, PKD1, SORL1, STAB1/2, CSPG4, IGF2R among them, every one the same modular-repeat architecture the ruling was written for.
+
+- **Decision:** the tranche 6 design document is scoped to the **141**. Task A of `ORDERS-Code-2026-08-18` measures all 141 under every candidate boundary source.
+
+- **⚠⚠ The reasoning, which is the load-bearing part.** `boundary_method` is a **column**, and a column applies to every row that carries it. Designing the method on the ten longest and then writing it onto 141 rows is **scoping a method to its motivating examples** — the `F-037` shape one level up: *the artifact is not the thing the reader assumes*, where the reader assumes a boundary rule was measured on the protein it was applied to. **The ten were selected by length rank, which is not a property the method is about.**
+
+- **⚠ And the selection was worse than arbitrary — it was systematic.** **102 of the 141** are between 1,027 and 2,000 aa, under 2× the trained context. **Not one of the ten is among them.** The named subjects are the extreme tail, so a criterion validated on them is validated at the point where every source disagrees most.
+
+- **Deep-learning justification:** the quantity in dispute is where ESMFold's 1,026-residue trained context stops holding, and that is a property of **the model**, not of the ten proteins. A boundary rule tuned on 4,000+ residue chains and applied to 1,100-residue chains would be selecting a decomposition for inputs that may not need decomposing. ⚠ **Every candidate source is itself a model output** — Pfam and InterPro boundaries are HMM matches, and UniProt `Domain` on proteins of this size is largely propagated from PROSITE/ProRule profiles. `A-014` holds three times over: **there is no curated ground truth here to pick.** Tranche 6 is a pipeline of models and the design document must say so rather than let UniProt read as fact. ⚠ **This is already measured, not merely asserted:** `F-041` and `D-095` decision 1(c) record **416 of 521** domain features on the ten as `ECO:0000255` sequence-model assertions, 395 citing PROSITE-ProRule, and **zero** carrying experimental evidence.
+
+- **Consequences, stated rather than discovered later:**
+  1. **`D-091` ruling 3 is NOT edited**, and neither is **`D-095`.** Their subject lists stay as written and this entry records the widening. *Corrections are recorded, never patched away.*
+  2. **Task A's cost rises from 10 accessions to 141.** Cache-only for UniProt; the InterPro pull, if A1 shows it is needed, is 141 requests under `census_spans_v2`'s stop-and-report rules. ⚠ **A1's check is already answered and committed as `F-041`: no database in the 4,990-entry cache carries coordinates, and 0 of 22,176 InterPro xrefs declare a count — so the pull IS needed.**
+  3. ⚠ **The three mucins (MUC16, MUC12, MUC17) are now in scope and may not admit a method at all.** Tandem low-complexity repeat is not a stack of independently-folding domains. **If the design document cannot rule a boundary method for them, it names a CATEGORY with a reason** — it does not quietly apply the cadherin-family answer to a protein that is not one. ⚠ This is `D-085`: an exclusion states its scope and its conditions.
+  4. **The criterion in the order's §0/P1 must survive CDH23 and TENM3, not only FAT1.** If it separates the sources on the ten and fails to separate them on the 128, **that is a finding about the criterion**, and it must be reported as one rather than resolved by falling back to the ten.
+  5. ⚠ **This does not authorise any fold.** `D-091` ruling 3's gate is unchanged: no GPU, no rental, no ingest until the design document is written and ruled.
+  6. ⚠ **`D-095` must be revised before it is ruled.** It is `Proposed` and scoped to the ten; its §2 cadherin-stack argument and its §3 unannotated-residue table were measured on ten proteins and **must be re-measured across the 141** before the document is put up for ruling.
+
+- **Evidence:** `census_manifest.v7.csv` ⋈ `census_labels.csv` — 776 tranche-5 rows splitting **566 / 69 / 141** at the 850 and 1,026 boundaries, reconciling with `CLOSEOUT-2026-08-17` §4. ⚠ **Task D re-derives all of these independently**; a disagreement is a defect, not a rounding difference.
+
+---
+
+### D-097 — Both graphics stay, because they answer different questions: the schematic is ANATOMY, the cartoon is PROCESS
+
+- **Date:** 2026-08-17
+- **Status:** accepted — owner ruling, superseding **D-096**'s *replacement* half within the hour.
+- **Supersedes:** D-096 decision to replace. ⚠ **D-096 is NOT amended or deleted.** It shipped, it is committed (`061eb3f`), and it records what was actually done. *Corrections are recorded, never patched away* — a log that edits its own history to look consistent is worth less than one that shows the turn.
+
+- **Context:** D-096 replaced the D-052 hand-rolled SVG with the five-panel raster cartoon. The owner ruled that **the schematic can stay**, and that the cartoon *"illustrates the process that almost anybody can reach without a technical background."* **Both belong in the story on that surface.**
+
+- ⚠⚠ **The ruling is right for a reason worth writing down: they are not two versions of one graphic, they are two different objects.**
+  - **The schematic answers *what an ADC is made of*** — antibody, linker, payload, antigen. It is a **parts diagram**, and it sits directly under the parts list it labels. Four nouns, one drawing.
+  - **The cartoon answers *what an ADC does*** — bind, internalise, cleave, release, kill. It is a **sequence in time**, and no parts diagram can carry it.
+  - ⚠ **Treating them as rivals was the error in D-096.** *"Replace"* was never the question the surface was asking; the surface needed both halves of an explanation and had only ever had one.
+
+- **Order: anatomy before process, and it is not arbitrary.** ⚠ **A reader cannot follow *"the linker is cut"* in panel 3 without having been shown a linker.** The schematic is the vocabulary; the cartoon is the sentence built from it.
+
+- **D-094 compliance: two figures, two disclosures, neither inherited.** Each `figcaption` carries its own *"not a structure produced by this system"*, and the wording differs because the risk differs — ⚠ **the glossy cartoon reads as a depiction of real cellular structure far more readily than a line drawing does**, so its caption names the cell, the antibody and the payload as cartoons drawn at no real scale.
+
+- ⚠ **D-096's blind spot is now HALF recovered, and the half matters.** D-096 named the cost: the graphic's words became pixels, unreadable to the over-claim denylist tests. Restoring the SVG **returns the anatomy labels to version control** — *Antibody*, *Linker*, *Payload*, *Antigen on the tumour cell* are JSX text again, greppable and testable. ⚠⚠ **The cartoon's words remain pixels.** So the honest statement is **not** *"the blind spot is fixed"* — it is **the surface is now half-readable to its own tests**, and the unreadable half is the one carrying `cyttoxic`.
+
+- **Deep-learning justification:** unchanged and now doubled — **both** illustrations sit on a surface that also renders real ESMFold output, so the only DL-relevant property is that neither can be mistaken for one. ⚠ **The D-052 guarantee holds for both by the same mechanism**: neither imports `api.js`, and both components' tests assert it independently.
+
+- ⚠ **A defect the local dev server hid, found only on the deployed site.** The raster `<img>` shipped with `loading="lazy"` and **no intrinsic `width`/`height`**, so the browser could not reserve the aspect-ratio box: the figure collapsed to a **0-height line** and the caption jumped up under the heading until the 707 KB fetch resolved. ⚠⚠ **Locally this is invisible** — a dev server on loopback returns the asset faster than the eye resolves the gap, so *the environment that is easiest to check is the one that cannot show this class of defect.* Fixed by declaring the asset's intrinsic **2128×912**; CSS still drives layout. **Proven by revert** (`expected null to be '2128'`, a failure at the assertion, 1 failed / 6 passed), then green at 220.
+
+- ⚠⚠ **A self-inflicted encoding defect that SHIPPED, and the way it shipped is the lesson.** Proving the lazy-load fix by revert was done with a PowerShell `Get-Content -Raw` → `Set-Content -Encoding utf8` round-trip. That reads UTF-8 as ANSI and rewrites it **double-encoded**: `—` became `â€”`, `⚠` became `âš `, and a `U+FEFF` BOM was prepended. **It deployed to production**, where the caption read *"Illustration â€” not a structure produced by this system."*
+  - ⚠ **It is the exact hazard this project already wrote down, in a costume.** The standing rule is *"for prose containing backticks or markup, write a script FILE — a shell one-liner eats them."* **The rule was obeyed for backticks and not generalised to encoding**, which is *a rule applied to one shape and not another is not a rule* — the same sentence that names the pytest/`SELECT` failure of 2026-08-17.
+  - ⚠⚠ **220 tests passed over it.** Every assertion on this component matches **ASCII substrings**, so the suite was structurally incapable of seeing it. **A screenshot of the deployed page found it** — the second defect in one session found by looking rather than asserting (the first was `conjugateis`).
+  - **Remedy:** the file is rewritten as real UTF-8, carries an explicit encoding warning at the top, and a test now asserts the rendered caption contains a **real em dash** and matches no mojibake marker. ⚠ **Proven by revert** — reintroducing `â€”` reds it at the assertion (1 failed / 7 passed) — then green at 221. A tree-wide scan for mojibake and stray BOMs returns clean.
+
+- **Consequences:** `AdcSchematic.jsx` and its three tests are **restored byte-for-byte from `faf9e32`** rather than retyped — ⚠ *a retyped restoration is a new component wearing an old name.* The cartoon moves to its own component, `AdcMechanismPanels.jsx`, with its own tests and its own class; the `.adc-schematic` SVG rules removed by D-096 are restored, and the raster rules move to `.adc-panels`. **Bundle cost is unchanged** (~707 KB) — the SVG is a few hundred bytes.
+
+---
+
+### D-096 — The ADC mechanism graphic becomes a raster illustration, and the D-052 property is kept by the ABSENT IMPORT rather than by the medium
+
+> ⚠ **SUPERSEDED IN PART by D-097 (same day):** the *replacement* is reversed — the schematic is restored and the cartoon joins it. **Everything else below stands**: the four-asset provenance, the three accepted defects in the shipped pixels, the `alt` divergence, and the named blind spot. ⚠ **This entry is left as written because it is what happened.**
+
+- **Date:** 2026-08-17
+- **Status:** accepted — owner-directed, and the asset is owner-selected.
+- **Touches:** `ui/src/components/AdcSchematic.jsx`, its three tests, `ui/src/assets/`, the `/about` surface (`AdcContext.jsx:54`).
+
+- **Context:** the owner asked for the hand-rolled SVG on **About ADCs** to be replaced with a five-panel illustrated explainer of the PADCEV / NECTIN-4 mechanism. **D-052** built that SVG deliberately, and its reasoning was *not* about drawing: the component **imports nothing from `api.js`**, so it is *structurally* incapable of quietly becoming a model output — *"a label can be edited away by a later hand; an import that does not exist cannot start lying."*
+
+- **Decision: the medium changes, the structural property does not.** A static imported asset takes no props and calls no API, so **the D-052 guarantee survives the swap intact** — and its test (*"invokes NO api.js export"*) still passes for the same reason it always did. ⚠ **The property was never a fact about SVG.** That is worth stating, because the obvious reading of D-052 is *"hand-rolled SVG"*, and the load-bearing half is *"imports nothing."*
+
+- **⚠ Four candidate assets, and the record keeps all four**, because a filename is not an identity:
+
+| version | time | sha256 (first 8) | verdict |
+|---|---|---|---|
+| `grok-image-2e6b3470…` | 11:49 | `A5B26E31` | rejected — thyroid, "cancer destroyer", "Neutralization", whole gland dies |
+| `grok-image-3f66b6ae…` | 11:54 | `A2D7EB2F` | ⚠ rejected — **added captions, corrected nothing**; put the thyroid error into prose |
+| `grok-image-9e579701…` | 12:09 | `D48547A2` | all five original defects fixed; `cytoplasmic`/`conjugated` |
+| **`grok-image-d2ae0c22…`** | **12:14** | **`33AEC70F`** | ⚠ **SHIPPED, owner-selected** |
+
+- ⚠⚠ **The shipped asset carries three known defects, accepted rather than missed.** Recorded here so the record does not read as though they were overlooked: **(1)** panel 4 reads **`cyttoxic`**, a misspelling of *cytotoxic*; **(2)** panel 1 reads **"an antibody-drug conjugation"** where the drug class is a *conjugate*; **(3)** panel 4's artwork shows exploding **hand grenades** while its own caption says **MMAE** is released — the payload drawn is not the payload named. ⚠ The owner selected this version over `D48547A2` with all three stated.
+
+- ⚠ **Why iteration stopped: the errors were rotating, not converging.** Four passes. v2 changed the picture and fixed nothing. v4 was asked to change **two words** and instead produced a non-word (`cyttoxic`), a different wrong form (`conjugation`), and **regressed artwork it was told not to touch** (capsules → grenades). *A generator that cannot reliably edit two words is not an instrument you converge with*, and continuing would have been process theatre.
+
+- ⚠⚠ **The real cost, named because it is invisible: the copy left version control.** The SVG's words were JSX — greppable, diffable, and **readable by the over-claim denylist tests**. The JPEG's words are pixels. **No test in this repo can now read what that graphic says**, and the next reader will not know that. This is a **new blind spot on the exact surface D-094 governs**, and it is the reason the defects above are enumerated here rather than left to a future eye.
+  - **Mitigation, partial and stated as such:** the **`alt` text transcribes all five panels**, so the wording is at least in the DOM, in git, and available to a screen reader — ⚠ **but `alt` is a transcription that can silently drift from the pixels it describes, and nothing checks that it hasn't.**
+  - ⚠ **The transcription is deliberately NOT verbatim, and that is itself a decision.** It reads **`cytotoxic`** and **`conjugate`** where the pixels read `cyttoxic` and `conjugation`. **A transcription exists to convey meaning to a reader who cannot see the image**, and propagating a typo into a screen reader serves nobody. ⚠ The divergence is pinned by test (`expect(alt).not.toContain('cyttoxic')`) so it reads as chosen rather than sloppy — **the alt is the corrected record, the pixels are the shipped artefact, and D-096 is where they are known to differ.**
+
+- **D-094 compliance:** disclosure is a **mount precondition**, and the `figcaption` — *"Schematic illustration — not a structure produced by this system"* — is retained verbatim and still asserted by test. ⚠ **It matters more now, not less:** a glossy rendered cell reads as a depiction of real structure far more readily than a line drawing did.
+
+- **Deep-learning justification:** neutral to the neural core by construction, and that is the point — the graphic sits on the same surface as ESMFold outputs, so the **only** DL-relevant property is that it cannot be mistaken for one. That property is preserved by the absent import (enforced by test), not by the caption.
+
+- ⚠ **A pre-existing defect found by LOOKING at the page, which no test could see.** The rendered copy read **"an antibody–drug conjugate<em>is</em> a guided one"** — no space. Cause: the JSX classic — a newline **adjacent to a closing tag is removed entirely**, not condensed to a space (`AdcContext.jsx`, `</strong>` then a newline then `is`). ⚠ **218 UI tests passed over it**, because every assertion matches on substrings that do not span the join. Fixed with an explicit `{' '}`. **It was on the surface for as long as the paragraph has existed, and only a screenshot found it** — the same lesson as F-038, which also surfaced from looking rather than from asserting.
+
+- **Consequences:** `ui/` gains its **first image asset** (~707 KB) — Vite emits it hashed into `dist/assets`, which `app/main.py:42` already mounts, so **no new serving infrastructure**. ⚠ Bundle payload grows by ~707 KB on a surface that previously shipped a few hundred bytes of inline SVG. **Follow-up available, not taken:** regenerate the artwork **wordless** and render every caption as HTML, which would return the copy to version control and to the denylist tests.
+
+---
+
+### D-095 — Tranche 6 is designed as TILING, not as domain assembly: every residue in exactly one tile, and no concatenated structure
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **PROPOSED — written, not ruled.** D-091 ruling 3 requires *written and ruled* before anything folds. **No GPU, no rental, no ingest has occurred.**
+- **Full text:** `docs/D-095-tranche-6-domain-assembly-design.md`
+- **Evidence:** `scripts/tranche6_domain_survey.py` — read-only, cache-only, exit 0, sha256 per cache file.
+
+- **Context:** D-091 ruling 3 commissioned a design document settling six things before tranche 6 folds anything. `PREWORK-2026-08-18.md` §3 named the cheapest first move — count the domains under UniProt / Pfam / InterPro and check whether they agree. It was run first, and it **changed the design rather than confirming it**. See **F-041** for what it found about the sources.
+
+- ⚠⚠ **The load-bearing measurement: a domain is small, a RUN is not.** Every single domain instance in all ten subjects is inside the 1,026-residue trained context — **the largest anywhere is 247 aa.** But the domains **abut**: FAT1's cadherin repeats share exact boundaries (`35-149`, `150-257`, …), so its 39 domains collapse into **9 contiguous runs, one of 2,289 aa**. FAT4's is **3,037 aa**. ⚠ **A run has no linker to cut at**, so the decision is not *where are the seams* but **where to sever a continuous domain stack** — and in cadherins the inter-repeat interface is exactly what the Ca²⁺ rigidification depends on. ⚠ *Predicted, not measured*, and flagged as the owner's most important call.
+
+- ⚠ **Two regimes, not one.** FAT1–4 have one oversized run each and must be cut inside a stack. LRP1/1B/2, USH2A, ADGRV1 and PKHD1L1 have **no run exceeding context** — natural seams already exist. One rule cannot cover both, so the document writes both.
+
+- ⚠⚠ **The F-037 trap, one level down.** A design that folds *"the domains"* folds **44.7% of PKHD1L1** and discards **2,319 residues** without saying so — the same shape as *`span_aa` is the largest extracellular segment, not the extracellular content*. **ADGRV1 is 33.1% unannotated, LRP2 28.2%.** ⚠ **"Unannotated" is not "disordered"** — nothing in the cache separates genuine disorder from *not yet annotated*, and dropping the residues would convert a limit of the annotation into a claim about the protein.
+
+- **The six decisions.** (1) **UniProt `Domain` + `Repeat`** is the boundary source — ⚠ chosen **by availability, and the artifact must say so**, because it declines to arbitrate the disagreement rather than resolving it; `Repeat` is not optional (dropping it loses 34/34/35/9 repeats from LRP1/LRP1B/LRP2/PKHD1L1). (2) ⚠ **The fold unit is a TILE, not a domain** — **every residue of the span in exactly one tile**, linkers and unannotated regions retained, `tile_cut_kind ∈ {gap, domain_boundary, span_end}` so a cut through a cadherin stack is legible from the artifact alone. (3) ⚠⚠ **An assembly is a SET of structures** — N artifacts, **no concatenated PDB**, because ESMFold predicts no inter-tile geometry and **the file format itself would state orientations that were never predicted.** (4) **`boundary_method = domain_tiled_v1`** — ⚠ purely additive: the column is currently monovalued (`sliced_ecd`, all 3,467 rows), so **every existing row already declares itself and none is retrofitted.** (5) ⚠ **There is no mean pLDDT** — per-tile always; any single figure is `plddt_tilewise_mean`, never `plddt`, and **tile-edge pLDDT is depressed by a known-direction bias that is stated, not corrected.** (6) ⚠ **F-040 compounds**: ADGRV1 is a tile, of a monomer, of a subunit, of the USH2 complex — and **D-094 makes both disclosures a mount precondition**, making this the first surface built *under* D-094 rather than retrofitted to it.
+
+- **Deep-learning justification:** the trained context is a property of the *model*, not of the hardware, so tiling is a modelling decision about what the network was trained to represent. ⚠ The document's central claim — that per-tile confidence is not composable into a whole-molecule confidence — is a statement about what the predictor actually outputs, and it is what keeps a tiled artifact from being read as a 4,000-residue prediction.
+
+- ⚠⚠ **Decision 1(c), added at Planner's P3: the boundary source is ITSELF a model output, and the first draft missed it.** Of **521** domain-like features across the ten, **416 (79.8%) are `ECO:0000255` — automatic assertion from a sequence model**, 395 citing **PROSITE-ProRule**; 14 are curator inference; **≥91 cite nothing at all**; and ⚠⚠ **`ECO:0000269` experimental evidence appears ZERO times, in any of the ten.** FAT1–4, LRP2 and USH2A are **100% sequence-model** boundaries. **So tranche 6 is an HMM deciding where a neural network may cut** — a defensible pipeline, but not what a reader assumes from a column called `boundary_method`. ⚠ It also reframes §1: the disagreement between sources is **a disagreement between models**, not between an annotation and a ground truth, **so no arbiter exists** — which is exactly why decision 1(a) chooses on availability and must say so.
+
+- **Consequences, and what is explicitly NOT settled:** ⚠ the **FAT1–4 cut** may instead warrant declaring them out of scope — a scope ruling, the owner's. `tile_max_aa = 1,000` is **proposed, never measured** (⚠ no tile has ever been folded; F-034's lesson says the number should come from a measurement). ⚠⚠ **Whether tiling bears on tranche 5's 141 past-context rows is flagged and deliberately NOT pursued** — D-091 ruling 2 held tranche 5 entirely, and widening scope on the strength of a proposal is what that ruling forbids. Schema placement deferred: a rejected design needs no schema.
+
+- ⚠ **A recorded error, not patched away.** The first pass of the analysis merged *contiguous* intervals and reported the largest **run** under the heading *largest single domain*, inventing a "3,037 aa domain" for FAT4 where the true largest is **185 aa**. Corrected, and the mistake is preserved in the script's `merge()` docstring — **the run/domain distinction it obscured is the most important structural fact in the document.**
+
+
+#### D-095 amendment 1 — ⚠⚠ The design document is about TILING AT GAPS with a six-row exception, not about cutting cadherin stacks — and `merge_rule` manufactures the problem it exists to solve
+
+- **Date:** 2026-08-19 · **Status:** ⚠ **`D-095` moves PROPOSED → RULED.** `D-091 (tranche 6 design gate)` ruling 3 requires *written **and** ruled*; this amendment discharges the second half. **Tranche 5's 776 rows are released from the design gate by this entry and remain held by `D-091` ruling 2 (rental spend) alone.**
+
+- **Why an amendment and not a rewrite.** `D-095` was written on ten subjects before four things were known. ⚠ **Every correction below is recorded against the original text rather than replacing it** — the run/domain error preserved in the script's `merge()` docstring is the precedent, and the document's most important structural fact came out of that preservation.
+
+- ⚠⚠ **1 — THE HEADLINE IS INVERTED.** **135 of 141 tile at gaps and sever nothing; 6 need exactly one `run_interior` cut each.** `D-095` reads as a document about severing cadherin stacks and is a document about tiling at natural seams with a six-row exception. **The exception is real and it is an exception.**
+
+- **2 — The population is the 141**, per `D-098 (tranche 6 scoped to the 141 past-context rows)`, not the ten that motivated it. ⚠ **Key, stated once and carried everywhere below: one row per `census_accession`, `tranche = 5` AND `span_aa > 1026` strictly.**
+
+- **3 — Decision 1's stated basis is CORRECTED; the choice stands.** *"Chosen by availability"* expired when Task A2 fetched the InterPro **matches** API — **10,592 boundaries with coordinates**, the instrument `F-041 (two of three candidate boundary sources cannot supply a boundary)` named as missing. ⚠ **`F-041`'s deeper point carries the choice instead, and it is the stronger reason: the disagreement is between MODELS, so no arbiter exists** — `ECO:0000255` on **416 of 521** features, `ECO:0000269` **zero times**, and best exact boundary agreement anywhere **58.0%**, which **moves with the type filter** (58.0 / 55.8 / 47.0 at k=0). **A source chosen because no source can be right is a different claim from a source chosen because it was to hand, and only one of them survives a reader.**
+
+- ⚠⚠ **4 — `merge_rule` IS A RULED DECISION, NOT A RECORDED PARAMETER — and it manufactures the problem this document exists to solve.** The shipped rule stands: **abutting OR overlapping**, `start <= prev_end + 1`.
+  - **The counterfactual, and it is why the rule is ruled rather than recorded.** Under **overlapping ONLY**, `rows>ctx` is **0** — under all three straddle rules — and FAT1 is **39 runs, not 9.** ⚠ **The entire tiling problem exists because abutment is joined.**
+  - ⚠⚠ **But overlapping-ONLY does not REMOVE the cut. It RELABELS it.** The 141 are past context **by span**, so tiles are required under every merge rule and `tile_max_aa` binds either way. FAT1's cuts would then land at abutting boundaries — `35-149 | 150-257`, **a gap of ZERO residues** — and be filed as `gap` or `domain_boundary` instead of `run_interior`. **The molecule is severed identically and the artifact stops saying so.**
+  - ⚠ **Under `D-094 (claim discipline in educational surfaces)` the `run_interior` disclosure is a MOUNT PRECONDITION.** Overlapping-ONLY would extinguish the precondition while leaving the hazard exactly where it was. **That is the ruling's whole basis.**
+  - ⚠ **Without this counterfactual in the entry, item 1's headline is a CONSTRUCTION presented as an OBSERVATION** — the 275-residue shape one level up. *Code's framing, adopted.*
+
+- **5 — Gap tolerance is ZERO uncovered residues, and the artifact records `0`.** ⚠ **Not the expression.** `start <= prev_end + 1` reads as a tolerance of one residue and **is not one** — the `+ 1` is an artifact of inclusive coordinates. **100–200 and 201–300 join; 100–200 and 202–300 stay two runs. One uncovered residue is enough to split.**
+
+- **6 — `straddle_handling = CLIP`, and it is ruled FOR ONE-SIDED OVERHANGS ONLY.** Recorded on every derived artifact beside `merge_rule` and its gap tolerance. ⚠ **Three unstated parameters were found on one derived object in two days: a run is a construction, not an observation.**
+  - **CLIP moves nothing in this population's decisions.** Set-identical six under clipping; **2 of 141 rows change at all** — `Q9Y493`/ZAN `n_domains` 16→17, `Q6V1P9`/DCHS2 25→27 with `largest_run` 832→847, leaving DCHS2 **179 aa short of context.** **139 rows byte-identical.**
+  - **Two paths to one quantity, compared on the numbers:** clipped Task L gives **180,802 / 91,500 / 33.6%**, reproducing `tranche6_domains.uniprot.csv` **to the residue**. **CLIP − DROP = 275. Exact.**
+  - ⚠⚠ **THE ENGULFING CASE IS A DISTINCT CATEGORY AND IS EXPLICITLY NOT RULED.** CLIP's stated reason — *a clipped straddler occupies its residues; dropping it manufactures a gap at the span boundary that does not exist in the molecule* — **is about EDGES. An engulfing feature has no edge inside the span, so the reason does not reach it.** Clipping one would assert that the span **is** the domain. **`clip` therefore REFUSES it** (`UnruledEngulfingFeature`) rather than assuming: **0 in the 141, 58 in the census.** See **`F-048`**.
+
+- ⚠ **7 — `tile_max_aa` is a SPEND DECISION and `D-095` nowhere says so.** `known_good = 440` at int8 against a trained context of **1,026** means **every tile over 440 aa needs a rental card** — and **`D-091` ruling 2 holds all rental spend.** ⚠ **Tiling does not avoid rental; it changes the bill.** **The number is measured, not proposed** — `F-034`'s lesson, and `1,000` was never folded.
+
+- **8 — `tile_cut_kind` gains a fourth value, `run_interior`** (owner ruling). FAT1–4 stay **in scope** and are folded, **with the cut made legible from the artifact alone.** ⚠ Under `D-094` its disclosure is a **mount precondition, not a caption** — this is the first surface built *under* `D-094` rather than retrofitted to it.
+
+- **9 — The five-regime table, with its zero printed.** `all_runs_in_context` **123** · `no_domains` **10** · `one_oversized_run` **6** · `single_run_only` **2** · `multiple_oversized_runs` **0** = **141**, identically under both straddle rules. ⚠ **`multiple_oversized_runs` is kept as an unfirable branch carrying its zero: an empty category is a measurement; a deleted one reads as *we never looked*.**
+  - **`single_run_only` is `Q8TEM1`/NUP210 (largest run 74) and `Q9NTG1`/PKDREJ (699)** — both far inside context, **disjoint from the six, not a subset.**
+  - ⚠⚠ **The disjointness is a DATA FACT WITH A NAMED RISK, never a proof.** `classify_regime` tests `len(runs) == 1` **before** counting oversized runs, so a one-run protein whose single run exceeded context would be filed `single_run_only` and **silently vanish from the six.** **Rows in that state today: 0, under all three straddle rules — reported, not omitted.**
+
+- **10 — The founding measurements are RULE-INVARIANT, and the reason is narrower than it looks.** **FAT1 = 2,289 aa and FAT4 = 3,037 aa under `admit_raw`, `drop` and `clip` alike** — ⚠ **because none of the ten carries a straddling domain at all** (0 / 0 / 0). **The rules do not agree on a hard case; the ten contain no hard case.** **No founding number needs amending, and the claim that survives is the narrow one.**
+
+- **11 — `D-095`'s evidence script is re-cited AT A REVISION**, and the claim is stronger than expected. `scripts/tranche6_domain_survey.py` was reconciled at `fc8040c`; ⚠ **its stdout is byte-identical pre and post, `aad52b28a7eac3f471666eebaf729eb201526da77e714eac368f7aaef2711cd3`.** **So the entry does not say *the script changed* — it says *the evidence script's output is unchanged, and here is the hash.*** ⚠ **The comparison could not be made the same way for `scripts/tranche6_runs.py`** — the pre-change file cannot run against the post-change module, which is the missing-`straddle` `TypeError` **working as designed.** **An absence with a cause, not an untested path.**
+
+- **12 — The divergence this amendment was measured across is disclosed, not smoothed.** Three straddle predicates lived under one function name; the numbers above were taken **against the divergent code at `7011e24`** and the code was reconciled afterwards at `fc8040c`, in a separate commit. **See `F-046`.** ⚠ **You cannot measure a divergence you have already removed.**
+
+- **Deep-learning justification, unchanged and reinforced:** the trained context is a property of the **model**, not of the hardware, so tiling is a modelling decision about what the network was trained to represent. ⚠ The document's central claim — **that per-tile confidence is not composable into a whole-molecule confidence** — is a statement about what the predictor actually outputs, and it is what stops a tiled artifact being read as a 4,000-residue prediction.
+
+- **Assumptions relied on:** `A-014 (an upstream model's negative class is a prediction, not a fact)` — twice, since both the boundary source and the surface filter are model outputs.
+
+- **Evidence:** `scripts/tranche6_runs.py` · `scripts/tranche6_domain_survey.py` · `scripts/tranche6_runs_clip_compare.py` · `data/census/tranche6_runs.csv` · `data/census/tranche6_domains.uniprot.csv`. **Commits `7591164`, `fc8040c`, `59b2624`.**
+
+- ⚠ **LANDED BY CODE, 2026-08-19.** Verbatim from `docs/AMENDMENT-2026-08-19-planner-log-entries.md`. **One imprecision is reported rather than silently edited:** item 1's *"135 of 141 tile at gaps"* is `141 − 6`, and **10 of those 135 are the `no_domains` rows**, which have nothing to tile at — assembly there is **undefined, not seamless** (item 9 prints the 10 separately, so the entry is internally consistent; the headline sentence alone is not). **`135 sever nothing` is exact; `135 tile at gaps` over-reaches by the 10.**
+
+---
+
+### F-041 — Two of the three candidate boundary sources cannot supply a boundary, and InterPro cannot supply a count either
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **OPEN** — it is a property of the instrument, and the instrument still exhibits it.
+- **Evidence:** `scripts/tranche6_domain_survey.py` part 1; cache-wide verification over all **4,990** `data/census/spancache` entries.
+
+- **Context:** D-091 ruling 3 and `PREWORK-2026-08-18.md` §3 frame tranche 6's first decision as a **choice among three sources** — *UniProt `Domain` vs Pfam vs InterPro* — warning that **they will not agree.** They do not agree. ⚠ **But that is not the finding.**
+
+- ⚠⚠ **The comparison as posed cannot be run, because two of the three do not carry the object being compared.** In the UniProtKB cache: **UniProt `Domain`/`Repeat` features carry `start`/`end`**; **Pfam carries a count (`MatchStatus`) and no position**; **InterPro carries neither** — family membership only.
+
+- **Cache-wide, with denominators:** **0 of 22,176** InterPro xrefs declare an instance count, against **8,251/8,251** for Pfam, **6,059/6,059** PROSITE, **3,200/3,200** SMART, and 100% for CDD, Gene3D, SUPFAM, PANTHER and FunFam. ⚠ **No database carries coordinates at any point in the cache.** All 4,990 files parsed; **zero counterexamples.** The check was written so that **one hit would have disqualified it**.
+
+- ⚠ **This is a category difference, not a disagreement in number** — the **F-038** shape. Comparing FAT1's *"UniProt 39"* against *"InterPro 9"* compares **39 domain instances** against **9 family memberships**: two different objects, and the comparison would have looked entirely meaningful.
+
+- **The absence has a cause, stated (the "every absence is a CATEGORY" rule):** InterPro's UniProtKB cross-reference is **entry-level by construction** — it records which families the protein belongs to, never how many times or where. ⚠ **The counts and coordinates exist upstream**, in the InterPro *matches* API and InterProScan, **a different instrument this project has never fetched.** So *"use InterPro boundaries"* is **not a parameter change but a new instrument**, with its own cache, provenance and freshness obligations (D-088).
+
+- ⚠ **The disagreement does not even point in one direction.** PROSITE finds **63** where UniProt finds 39 (FAT1) and **8** where UniProt finds 42 (ADGRV1). No systematic offset reconciles them; the sources annotate different things.
+
+- **Consequence:** D-095 decision 1 selects UniProt **by availability**, and ⚠ **that must be legible in the artifact** — otherwise a later reader takes `boundary_method` as a considered verdict that UniProt's annotation is *correct*, which it is not and which this evidence cannot support.
+
+---
+
+### D-094 — Claim discipline in educational surfaces: a surface is accountable for the PREMISES it supplies, not only for the claims it makes
+
+- **Date:** authored against a pre-D-076 snapshot · **entered this log:** 2026-08-17
+- **Status:** accepted as a staged pre-registration. ⚠ **No briefing surface has shipped under it.**
+- **Full text:** `docs/D-094-claim-discipline-educational-surfaces.md`
+- ⚠⚠ **RENUMBERED: claimed `D-080`, which the register holds reserved** (*a revert proof operates on committed state*). See `F-039`.
+
+- **The load-bearing ruling (1):** ⚠ **D-028 did not already cover this.** A briefing breaches it by *supplying a premise* — the sentence a reader then reasons from — not only by asserting a claim. **A surface that hands over a false premise has misled without ever making a statement it could be held to.**
+- **(2)** The banned-phrase list is a **gate, not a style guide**. **(3)** One glossary, **as data, singular by construction** — ⚠ the same shape as `plddt.js` being the single source of the band scheme, which this project has already had to repair once (F-038). **(4)** Reading level is a **ruled constraint, not a preference**. **(5)** The `external_value` category — ⚠ **the hole in Constraint A**. **(6)** ⚠ **Disclosure is a MOUNT PRECONDITION, not a caption**: structure-region rendering cannot mount without the `F-040` single-chain disclosure.
+
+- ⚠ **It does not close `F-005` or `F-040`.** Both stay open; this rules only how they are **disclosed**.
+- ⚠ **Bears directly on work that shipped after it was written.** The census surface, the per-protein pages and the pLDDT explainer (D-087, D-089) are exactly the surfaces it governs, and **none was built under it.**
+
+---
+
+### D-093 — The clinical association layer: protein → tumour → burden as a TRAVERSAL, never a protein-level column
+
+- **Date:** authored against a pre-D-076 snapshot · **entered this log:** 2026-08-17
+- **Status:** accepted as a **pre-registration**. ⚠ **Void if code precedes it** — no ingest has run.
+- **Full text:** `docs/D-093-clinical-association-layer.md`
+- ⚠⚠ **RENUMBERED: claimed `D-079`, already spent** by the census ingest of 2,807 surface proteins. See `F-039`.
+
+- **The load-bearing ruling (1):** ⚠⚠ **Clinical burden is a property of the DISEASE.** It attaches **by traversal** and **may never be a protein-level column** — not in the scorer, not in the census filter, not in any protein payload. *A burden number sitting on a protein row is read as a property of the protein, which it is not.*
+- **(2)** Localisation is **named, never inferred**, with an evidence-type enum. **(4)** Survival statistics **carry their tuple or they do not render** — ⚠ and *"mean time to death"* **is not a statistic that exists**. **(5)** The normal-tissue differential is **co-equal, not an appendix** (owner ruling). **(6)** ⚠ **Supplier before contract** — no schema is final until each supplier is confirmed to serve what the entry assumes. **(7)** **Fetch and cache, do not ship**, until the inbound-terms check clears.
+
+- ⚠ **Its "census filter" bar now has a live subject.** When written, the census was a plan; it is now **2,690 folded rows with a browsable per-protein surface**. The bar applies to that surface and **has not been checked against it**.
+
+#### D-093 amendment 1 — HPA is CC BY 4.0: decision 7's conservative default is LIFTED for HPA's own data, and the ingest becomes COLUMN-scoped
+
+- **Date:** 2026-08-17 · **Status:** accepted
+- ⚠ **A sub-entry, not a new integer.** It amends `D-093` in place beneath it, on the `D-099 amendment 1` precedent, so **the next free top-level integer is unchanged** — confirmed against the live log before merging, and recorded in `docs/RESERVED.md` rather than named here. ⚠ *Naming it here cited an integer that did not exist yet, and the citation invariant refused the first draft of this line — a forward reference to nothing is the `D-062` shape however innocuous the sentence.*
+- ⚠ **Recorded as an amendment, not an edit.** Decision 7 ruled the conservative default on the Planner's recollection of **CC BY-SA**. **That recollection was WRONG.** The ruling was correct anyway, for the reason it gave — *reversible in the permissive direction and the opposite is not* — and the reversal costs one commit, as predicted. **The error stays visible.**
+
+1. **HPA's own data is CC BY 4.0** (`proteinatlas.org/about/licence`, read 2026-08-17). Attribution only. ⚠ **No share-alike, and commercial use is explicitly encouraged in the licence text.** **Decision 7's fetch-and-cache-never-commit default is lifted for HPA-generated data.**
+
+2. ⚠⚠ **The ingest is COLUMN-scoped, not file-scoped, and this is the load-bearing clause.** HPA disclaims third-party data it redistributes: *"it is the responsibility of users … to ensure that their utilization of the data does not infringe any of the rights of such third parties."*
+   - **IN:** `High`, `Medium`, `Low`, `Not detected`, `total`, gene and cancer keys — **HPA's own IHC.**
+   - ⚠ **OUT: every `Cancer prognostics – … (TCGA)` column.** TCGA carries bespoke **"User terms"**, unread. **Dropped at ingest, with the drop recorded as a named category** — a column present in a stored table is ingested regardless of whether anything reads it.
+   - ⚠ **This disposes of the entire upstream stack by construction** — Ensembl, GTEx, TCGA, Tabula Sapiens, IntAct, BioPlex, OpenCell, TFClass, DepMap (User terms), IUHPARDB / TCDB / MetabolicAtlas (share-alike), **and AlphaFold 3 (CC BY-NC-SA 4.0)**. ⚠ **The NC entry is why this is scoped rather than waved through:** a non-commercial share-alike clause reaching a commercial deliverable is a stop, not paperwork.
+
+3. **The attribution obligation is FOUR parts, all required together** (`D-093` dec 6 item 5): a primary HPA publication · a reference to `proteinatlas.org` · the specific gene/data used · ⚠ **a version-pinned URL of the form `v##.proteinatlas.org`.** **A bare "Human Protein Atlas" string does not discharge it.**
+
+4. ⚠⚠ **The version is `v22`, and there are now TWO independent reasons.** Kathad pins **HPA v22.0** throughout its Methods, so anything extending the quasi-H-score must come from v22 or it is not comparable — **and HPA's own citation format requires a version anyway.** **`https://v22.proteinatlas.org/about/download`.** ⚠ **Every HPA file fetched on 2026-08-17 is the wrong vintage** and must be refetched from v22.
+
+5. ⚠ **Not legal advice, and the Planner is not a lawyer.** This records what the licence page says and the date it was read. **If anything ships commercially, item 2 is the clause to put in front of someone qualified** — HPA's page offers `contact@proteinatlas.org` for written approval.
+
+- **Consequences:** Task G's inputs become **v22 `pathology.tsv.zip` and `normal_tissue.tsv.zip`, prognostic columns dropped at read.** `D-093` decision 7 continues to bind **every non-HPA supplier** — SEER, GTEx, CPTAC, TCGA — none of which has been read.
+
+---
+
+### F-040 — ESMFold folds MONOMERS, so an obligate oligomer's subunit interface is indistinguishable from an antibody-accessible patch
+
+- **Date:** authored against a pre-D-076 snapshot · **entered this log:** 2026-08-17
+- **Status:** ⚠ **OPEN — a finding against the instrument (D-074).** It stays open until ESMFold no longer exhibits it, **or** until every surface reporting features 6 and 7 carries the statement of what they get wrong.
+- **Full text:** `docs/F-040-single-chain-oligomer-interface.md`
+- ⚠⚠ **RENUMBERED: claimed `F-012`, already spent** by *ESMFold's chunked trunk is not output-invariant*. See `F-039`.
+
+- **The finding:** the model predicts a **single chain**. Where a protein is an obligate oligomer, the surface that would be **buried against its partner** is rendered as exposed — ⚠ **indistinguishable, in the output, from a patch an antibody could reach.** Features 6 and 7 are therefore biased **in a direction**, not merely noisily.
+- ⚠ **§2 is the entry:** it separates **what is established** (verifiable from code and the model definition) from **what is reasoned** (everything about magnitude and direction on *this* cohort). **§5 pre-registers the measurement that would settle magnitude, before it runs.**
+- ⚠⚠ **§6: oligomeric state MUST NOT become feature 8, and MUST NOT filter anything.** The finding is a caveat on interpretation, **not a new axis** — adding it as a feature would convert a disclosure into a score.
+
+- ⚠ **It is the same shape as `F-037`, one level down.** F-037: `span_aa` is the largest extracellular segment, not the extracellular content. F-040: the structure is a monomer, not the assembly. **Both are cases where the artifact is not the thing the reader assumes it is**, and neither is visible from the artifact alone.
+
+---
+
+### D-092 — KEEL V8: prevention and recovery are separate amendments, and only one of them is a session-start check
+
+- **Date:** 2026-08-17
+- **Status:** V8-a **implemented**; V8-b **proposed, not written**
+- **Context:** the 2026-08-17 destruction was recovered from a Fly backup **nobody had verified existed**. The owner asked whether backup verification should become a session-start check amended into KEEL.
+
+- ⚠⚠ **It should not, and the reason matters more than the answer.** A session-start check **runs when nothing is at risk, passes, and trains the reader to skip it** — the same shape as *a guard downstream of the filter it guards*. And it addresses **the wrong half**: the failure was not *"no backup existed"*, it was *"a destructive test ran against production."* **A backup makes RECOVERY reliable and does nothing about PREVENTION.** Installing it as *the* remedy would file the incident as solved while the hole stayed open.
+
+- **V8-a — PREVENTION (implemented).** `tests/_db_safety.py` + a `pytest_collection_modifyitems` hook: the suite **refuses to run** unless `DATABASE_URL` names a disposable host, and it is a **hard `UsageError`, never a skip** — ⚠ *a skip is exactly what let a destructive suite look harmless.*
+  - ⚠⚠ **The old guard pointed the wrong way.** `pg_engine` *skips unless* Postgres is reachable, so **supplying production credentials ARMED it**. The safety property was *"you probably do not have a database"*, which is not a safety property.
+  - ⚠ **The override is `PHARMFOLD_ALLOW_DESTRUCTIVE_DB=i-know-this-truncates`**, not `1` — a flag someone can flick is a flag someone flicks by habit.
+  - ⚠ **Necessary and NOT sufficient, stated in the module:** a tunnel to production looks exactly like localhost, and `localhost:16380` is one right now. It stops the obvious mistake and cannot stop the subtle one.
+
+- ⚠ **Its own tests found two bugs in it, and one failed OPEN.** `db_host` stopped at the **first** `@`, so a password containing `@` parsed `user:p@ss@prod.example.net` as host **`ss`** — a guard whose parser can read a production host as something else is not a guard. The second: alternation order made `[::1]` parse as `[`, which would have refused legitimate loopback runs. **9 tests, including the exact URL that caused the incident.**
+
+- **V8-b — RECOVERY (proposed).** ⚠ **Not at session start, but as a stated precondition of any destructive operation** — migration, DDL, bulk write, cluster change: *confirm a completed backup exists and state its age.* **It runs exactly when the answer changes what you do**, which is the only time a check gets read.
+
+- **Evidence:** gate **690 passed**, exit 0.
+
+---
+
+### D-091 — Three owner rulings: P55073 folds as a substitution, tranche 5 is held entirely, tranche 6 starts as a design document
+
+- **Date:** 2026-08-17
+- **Status:** accepted
+
+#### Ruling 1 — `P55073` folds under `U`→`C`, and the substitution is recorded IN the artifact
+
+Selenocysteine is the selenium analogue of cysteine, so the backbone prediction is expected to be close. ⚠⚠ **But the sequence folded is NOT the sequence of record**, and that must be legible from the artifact alone.
+
+- ⚠ **It takes its own `span_definition`, not a boolean flag.** A flag can be ignored by a reader, a joiner, or a future surface; a definition string travels with every artifact that cites it and is already the mechanism the project uses to keep V1 and V2 apart (D-081). **An unlabelled substitution is indistinguishable from a correct fold** — the `F-025`/MSLN defect, where something folds, scores and looks entirely normal while being the wrong molecule.
+- ⚠ **The existing failed row is NOT retrofitted.** It stays `failed` with its misleading tensor-shape error, and `F-033` records what that error meant. **Corrections are recorded, never patched away.**
+
+#### Ruling 2 — **ALL 776 rows of tranche 5 are held.** No rental spend until the domain-assembly arc is designed
+
+Not the 566 cheap rows either. ⚠ **The owner declined the split**, and the reasoning is worth keeping: folding the easy band first and reconsidering the hard one later is how the long proteins get handled by whatever is convenient at the time rather than by a method chosen for them.
+
+**Consequences, stated rather than discovered later:**
+- ⚠ **`F-035` remedy item 3 — the length guard — stays BLOCKED.** `preflight()` needs a measured ceiling on rental hardware, and there will be no rental hardware until this unblocks. **The claim-time filter (D-090) is live and is the only half that is closed.**
+- **The 566 single-pass rows wait on work unrelated to them.** Accepted cost.
+- **The local-tier census is therefore the deliverable** as it stands: 2,690 folds, tranches 1–4.
+
+#### Ruling 3 — Tranche 6 begins as a **design document**, with **no folding**
+
+Subjects: **FAT1–4, LRP1/1B/2, USH2A, ADGRV1, PKHD1L1** — stacks of independently-folding domains, each comfortably inside the 1,026-residue trained context. ⚠ **Assembly is not a workaround for these: a single 4,400-residue pass would be the questionable choice even on infinite VRAM.**
+
+The document must settle, before anything folds:
+1. **The domain-boundary source** — UniProt `Domain` features vs Pfam vs InterPro. ⚠ **They will not agree**, and picking one after seeing results is how a boundary gets chosen for the answer it gives.
+2. **Per-domain span rules**, and what happens to inter-domain linkers — ⚠ folded, omitted, or named as a category.
+3. **The assembly step**, and whether an assembled model is a structure or a set of structures.
+4. ⚠⚠ **A `boundary_method` that says so**, because **assembled artifacts are NOT comparable to single-pass folds** and must never share a column with them silently — the `F-037` lesson one level up.
+5. **How pLDDT is reported** for an assembly. ⚠ A mean over concatenated domains is not a mean over a structure.
+
+⚠ **No GPU, no rental, no ingest until it is written and ruled.**
+
+---
+
 ### D-090 — The claim filters on tier, in the SQL: a local worker can no longer take rental work
 
 - **Date:** 2026-08-17
@@ -595,6 +1444,32 @@ So the rule is not "be careful" — it is:
   definitions. ⚠ **The 82 keep IGF2R, TLR3 and TMEM30A as `held_out`, which is now known to be an
   artifact of the old definition rather than a property of those proteins** — recorded here so it is
   never re-discovered as a bug.
+
+---
+
+### F-039 — Three staged documents arrived claiming numbers already written, and one claimed a filename already in use
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **CLOSED 2026-08-17 — merged as `D-093`, `D-094`, `F-040`.** The renumbering was done with both documents open, and the collision itself is what this entry records.
+- **What happened:** five documents were delivered for `docs/`. Three are staged log entries, and **each claims an integer the live log has already spent**:
+
+  | arrived as | claims | ⚠ live state |
+  |---|---|---|
+  | `D-079-clinical-association-layer.md` | `D-079` | **WRITTEN** — *the census: ingest 2,807 surface proteins…* |
+  | `D-080-claim-discipline-educational-surfaces.md` | `D-080` | **RESERVED** — *a revert proof operates on committed state…* |
+  | `F-012-single-chain-oligomer-interface.md` | `F-012` | **WRITTEN** — *ESMFold's chunked trunk is not output-invariant…* |
+
+- ⚠ **This is not carelessness, and the documents say so themselves.** Each carries *"⚠ Confirm the number against the live log before merging"* and states the snapshot it was written against: **highest `### D-` is D-075**. The live log is at **D-092**. **They were authored against a tree seventeen decisions old** — the numbering is stale, not wrong, and the instruction to re-check is the thing that worked.
+
+- ⚠⚠ **AND TWO DIFFERENT DOCUMENTS ARRIVED UNDER ONE FILENAME.** `CLOSEOUT-2026-08-17.md` exists twice: mine (state + the database incident, `048f447a…`, 8,959 B) and the Planner's (*"The disclosure arc"*, `4e3903e1…`, 13,632 B). ⚠ **Copying the incoming file in unchanged would have destroyed the other silently** — no error, no diff, one file. *A filename is not an identity* stops being a slogan here.
+
+- **What was done, and what deliberately was not:**
+  - All five **placed in `docs/`**, each with its **sha256 recorded above/below**.
+  - The three staged entries **renamed to `STAGED-<subject>.md`** — ⚠ **the number is removed from the filename**, because a filename asserting `D-079` is a claim on an integer the file does not hold. The claim now lives only inside the document, where the merge step must resolve it.
+  - The Planner's closeout renamed to **`CLOSEOUT-2026-08-17-planner-disclosure-arc.md`**.
+  - ⚠ **Merged 2026-08-17 as `D-093` / `D-094` / `F-040`.** ⚠ **The authors’ snapshot notes were left EXACTLY as written** — they are true statements about the tree each author read, and rewriting one would falsify the provenance it exists to record. **The claim is corrected; the observation is not.** Sibling cross-references were renumbered with them **after reading every citation in context** — `F-012 §8` and *“D-079 decision 6’s supplier-before-contract rule”* resolve to the siblings, not to the spent entries, and a blind rename would have rewritten the meaning. ⚠ **NOT originally merged here.** Renumbering is a decision about what the entries *are*, and it belongs to whoever merges them with both documents open. **Next free: `D-093`, `D-094`, `F-039`** (this entry takes `F-039`; the staged findings take what remains).
+
+- ⚠ **The contents are not reviewed here.** They concern a clinical-association layer, claim discipline in educational surfaces, and a single-chain/oligomer-interface finding against the instrument. **None of that has been checked against the current code**, and the census work of the last two days may bear on all three.
 
 ---
 
