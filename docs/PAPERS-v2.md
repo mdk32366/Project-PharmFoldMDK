@@ -100,6 +100,143 @@ realistic mistake and must fail at the assertion.*
 
 ---
 
+## ⟡ P-004 — What an expression-threshold target screen can and cannot support (candidate)
+
+- **Registered:** 2026-08-17 · **Status:** candidate. ⚠ **No gate set — owner ruling needed.**
+- **Subject:** ⚠⚠ **the method CLASS, not the paper.** Kathad et al. 2024 is the worked instance
+  because it is fully published *with its underlying data*; the funnel's early steps are credited
+  by its own Methods to Razzaghdoust et al. **Framing it as a critique of one paper makes it
+  perishable and adversarial; framing it as an appraisal of a screen design makes it durable and
+  constructive.**
+
+### ⚠⚠ THE BAR — what makes this a paper rather than an opinion piece
+
+**Every item states whether it is reproducible from published material alone.** A reviewer holding
+the paper and its S3 must be able to check it **without us**. ⚠ **An item that fails this bar is
+recorded here and is NOT part of the argument** — it is a question for the authors.
+
+**And the honest frame, which must lead and never be softened:** *the arithmetic is correct.*
+`D-100` reproduces all **337 kept pairs exactly** and correctly excludes all **1,303** below the
+cutoff, under a denominator convention **read off the published file**, not recovered by matching.
+⚠⚠ **This paper does not claim an error. It claims that the measure carries less than it is read
+to carry, and that the funnel's shape guarantees part of its own conclusion.**
+
+### The items
+
+| # | item | status | reviewer-checkable? |
+|---|---|---|---|
+| 1 | Validation is circular | reasoned | ⚠ **yes — needs no data at all** |
+| 2 | The score conflates prevalence with intensity | **measured** | **yes, from S3** |
+| 3 | The ordinal weights are arbitrary and the result is sensitive to them | **measured** | **yes, from S3** |
+| 4 | Therapeutic index is two thresholds, never a ratio | reasoned | yes |
+| 5 | The cutoff sits on the modal value of a ~11-patient estimator (`F-043`) | **measured** | **yes, from S3** |
+| 6 | Consistency step 6b may be unfirable | ⚠ **hypothesis** | ⚠⚠ **NO — see below** |
+
+---
+
+**1 — ⚠⚠ The validation is guaranteed by the filter.** The Discussion reads: *"22 ADC targets have
+already undergone evaluation in clinical trials or preclinical contexts … demonstrating the validity
+of our approach."* **But the final stage filters on five evidence criteria, of which #4 is "targets
+tested in preclinical setting" and #5 is "targets tested in clinical setting," and genes with none
+of the five were removed.** ⚠ **"Has been tested as an ADC target" is therefore an inclusion
+criterion.** The 22 could not have been absent. **The screen was not validated by recovering them;
+it was constrained to contain them.** *(Reasoned from Methods against Discussion. No data required.)*
+
+**2 — The score collapses two different clinical propositions into one number.** `qh = %low +
+2·%medium + 3·%high` cannot distinguish *how many patients express it* from *how strongly*.
+Measured on the 337: **JAG1/stomach = 200.0 with 11 of 11 patients at medium and none high;
+MERTK/thyroid = 200.0 with 2 high, 1 medium, 1 not detected.** ⚠ **151 of 337 surviving pairs have
+ZERO patients scoring high. 36 have ≥25% of patients at *not detected*.** For an ADC these are
+different problems — payload potency versus patient selection — and **target selection is where that
+distinction is decided.**
+
+**3 — The 1-2-3 weights are a linear scale on a roughly logarithmic quantity, and the answer moves
+a long way.** IHC intensity tracks antigen density approximately logarithmically. Rescaling the
+cutoff proportionally so the comparison is fair: **1-2-3 → 337 pairs · 1-2-4 → 226 · 1-3-9 → 131.**
+⚠ **A 61% reduction under a defensible alternative.** The weights are not stated as a choice and no
+sensitivity is reported.
+
+**4 — Therapeutic index is computed as two independent thresholds and never as a ratio.** Stage 3
+removes anything highly expressed in 13 critical normal tissues; stage 4 keeps anything above 150 in
+tumour. ⚠ **The two are never divided.** A target with excellent tumour-to-normal contrast in one
+indication is dropped for a normal-tissue level that the contrast would have justified — and **the
+13 tissues are fixed and indication-agnostic**, when ADC toxicity depends on payload and linker as
+much as on target.
+
+**5 — `F-043`, and it leads.** ⚠⚠ **52 pairs sit at exactly 150.0** — the cutoff lands on the modal
+discrete value its own estimator can take. `≥150` gives **337**; `>150` gives **285**. **The
+inequality sign is worth 52 pairs.** Panels are median **11**, max **12**; **246 of 1,640 rows have
+n ≤ 4.** ⚠ **This item leads the paper because it depends on no perturbation rule and reproduces
+from the published table in a spreadsheet.** *(The flip-rate figures are WITHDRAWN — `F-043`
+amendment 1 — pending re-derivation under five pre-registered rules.)*
+
+**6 — ⚠⚠ RECORDED, NOT ARGUED.** Consistency step 6b requires `qh > 150` computed on mRNA with
+categories set by quartiles. **If those quartiles are per-gene across samples, roughly 25/50/25 of
+samples fall in each band for every gene, giving `qh = 200` mechanically — a filter that passes
+everything while appearing to validate.** The text does not say whether the quartiles are per-gene
+or global; a later step's wording (*"we used entire gene expression data to identify the first and
+third quartile"*) reads global, which would make 6b meaningful. ⚠ **348 → 123 is the steepest drop
+in the funnel and the paper does not report how many genes 6a and 6b removed separately.**
+⚠⚠ **This is the most damaging item if true and the least defensible as written. It is a question
+for the authors, not a claim — and mixing it into the argument is how a strong paper acquires a soft
+flank.**
+
+### ⚠ Standing methodological observations, not yet items
+
+- **A modality substitution nobody can see.** *"In certain cases IHC data was missing … and we
+  computed target levels using corresponding mRNA expression levels."* ⚠ **4,771 of 20,082 genes
+  (23.8%) have no IHC in any cancer**, and nothing marks which rows were substituted. `F-031`'s
+  shape: two populations in one table. **⚠ Measured clean on the 82 — zero S3 rows are
+  mRNA-derived — so the contamination sits upstream, in the 1,731 → 763 step.**
+- **The antibody choice is undocumented.** ⚠ **52.5% of HPA genes carry more than one antibody**
+  (9,140 / 17,407, measured). S3 does not say which was used. **Additive to item 5, not included in
+  it.**
+- ⚠ **Stage 3 does not reproduce** (`4,875 → 1,731`), so the population the cutoff actually acted on
+  cannot be assembled. **`1,731` is a NAMED GAP in every downstream number and must never be
+  approximated.**
+- **The membrane and surface filters are both model outputs** — HPA *"Predicted membrane proteins"*
+  and SURFY. `A-014` applies twice: **a model's positive class is a prediction, not a fact.**
+
+### ⚠ What this paper does NOT claim
+
+- **Not that the arithmetic is wrong.** It is right, and we say so first.
+- **Not that the 82 are bad targets.** Nothing here evaluates any target.
+- ⚠ **Not that `F-009`'s four validated targets are false negatives of the qh cutoff.** Kathad name
+  **TROP2, HER3 and CLDN18.2 as omitted themselves**, and offer three candidate reasons without
+  testing which. **Measured (Task J): TROP2 max 118.18 and CLDN18.2 max 133.33 — both 0 of 20
+  indications ≥150, so both die at or before the cutoff, presence at stage 4 unconfirmed.
+  ⚠ HER3 reaches 277.78 in 19 of 20 and provably did NOT die there.**
+- ⚠ **Not that our own numbers are independent of theirs.** The denominator convention came from
+  their file. `F-022`: independence of source is not independence of inference.
+
+### The case that is not a mechanism argument
+
+⚠⚠ **`CLDN18.2` in stomach cancer: 4 high, 2 medium, 0 low, 6 not detected, n = 12 → qh 133.33.**
+Step size 8.33. **Two available moves — six *not detected* patients exist — lands it on exactly
+150.00 and inside the filter.** **CLDN18.2 is the target of zolbetuximab, an approved gastric cancer
+therapy, in the indication it was approved for.** *Re-derived independently by Code from a
+separately-downloaded v22 file.*
+
+### Relationship to the other papers
+
+⚠ **This is a robustness analysis of P-001's COMPARATOR, and it must stay standalone.**
+`PAPERS-v2`'s own rule binds: *one paper's scope bound must not become another's thesis.* Folding
+this into P-001 makes P-001 argue two things; **as a separate paper it makes P-001 stronger by
+citation rather than by length.** ⚠ **And P-001 may not cite it as established until it publishes.**
+
+### Open
+
+⚠ **Read Kathad's limitations section into the framing, verbatim.** *Done 2026-08-17:* they state
+the small-IHC-sample caveat and the cutoff caveat **separately and never connect them.**
+**So the contribution is the join and the quantification, not the observation** — and the paper must
+say that in its own introduction rather than let a reviewer say it first.
+
+**Gate, unset:** ⚠ candidate conditions — item 5's re-derivation lands under all five rules · item 6
+is either resolved or explicitly demoted to a question · a full-grid denominator replaces the
+survivorship-conditioned 337 · and the owner rules on whether this precedes or follows P-001.
+
+---
+
 ## The rules that make several papers safe
 
 **Every F-entry names which paper(s) it serves, and a finding written for one paper may not silently
