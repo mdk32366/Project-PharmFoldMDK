@@ -313,6 +313,38 @@ So the rule is not "be careful" — it is:
 
 - **Why it matters here.** `F-009` records four clinically-validated ADC targets as false negatives of this filter. ⚠ **Instability at the boundary is a MECHANISM that produces false negatives** — it turns four anecdotes into an expected behaviour. **It does not prove those four arose this way**, and checking whether they sit near the cutoff is a separate, pre-registerable measurement.
 
+#### F-043 amendment 1 — ⚠⚠ THE FLIP RATES ARE WITHDRAWN. The perturbation rule was underspecified in the entry text.
+
+- **Date:** 2026-08-17 · **Status:** ⚠ **The 83 / 33 / 116 and 151 / 85 / 236 figures MUST NOT BE CITED.** Withdrawn same day, before any external use.
+
+- **What happened.** Code could not reproduce **83** under **any of five candidate perturbation rules, including the one the entry appears to describe.** The entry's prose says *"one patient reclassified by one category"*; the arithmetic behind the number was the distance test `|qh − 150| < 100/total`. ⚠ **Those diverge as soon as a single patient can move more than one category** — `Not detected → High` is three steps, not one — and **the entry states neither.**
+
+- ⚠⚠ **This is the same defect the Planner required Code to fix twice on the same day.** A3 was re-run under **three type sets** and reported at **five values of *k*** on the ruling that *a single choice is a dial wearing the costume of a measurement.* **The Planner then published a single flip count under an unstated rule.** Recorded as a **Planner finding**, not absorbed.
+
+- ⚠ **It is also `F-044`'s family, one level down:** a number in the log **whose definition cannot be recovered from the log.** `F-044` is about a citation resolving to the wrong content; this is a measurement resolving to no reconstructable method. **Both fail silently — the entry is well-formed, confident, and unreproducible.**
+
+- **What SURVIVES, unaffected:**
+  - ⚠ **52 pairs at exactly 150.0**; `≥150` → **337**, `>150` → **286**. **Depends on no perturbation rule.** This was already ruled the number that leads.
+  - Panel sizes: median **11**, mean 10.2, max **12**; **246 of 1,640 rows at n ≤ 4**.
+  - The **8 rounding flips** between raw counts and the paper's printed percent columns.
+  - `D-100`'s reproduction — **337/337 and 1,303/1,303** — untouched.
+
+- **The re-derivation, pre-registered here:**
+  1. **All five candidate rules, reported side by side.** ⚠ **Enumerated in advance; no sixth is added after the results are seen.**
+  2. **Availability-constrained and unconstrained for each.** ⚠ **The gap between them is the result**; Code measured **201 → 169** on the 337 under its own rule.
+  3. ⚠⚠ **On the FULL v22 IHC grid — 20,082 genes × 20 cancers, 401,640 rows — with the reproducible funnel depths nested inside it** (5,543 membrane · 4,875 protein-level · 82/337). **`1,731` is NOT among them: stage 3 does not reproduce and is disclosed as a named gap, never approximated.**
+  4. ⚠ **The 337 are survivorship-conditioned** — 82 genes that cleared four further filters *after* the cutoff fired. **A flip rate measured on them is conditioned on survival**, and the population the cutoff acted on is upstream.
+  5. ⚠ **Directional hypothesis, recorded BEFORE measurement and not to be defended if it fails:** stage 6b requires qh > 150 on mRNA as well, which plausibly enriches the 82 for high expressers and pushes near-boundary pairs out — **so 24.6% may UNDERSTATE instability upstream.**
+
+- ⚠ **`F-043`'s status returns to OPEN pending the re-derivation.** Nothing downstream cited the withdrawn figures; **`CLDN18.2` at 133.33, two available moves from 150, is independent of t** ⟵ ⚠ **TRANSMISSION TRUNCATED HERE, TWICE, AT THE IDENTICAL CHARACTER.** The tail was requested and re-sent unchanged. **Merged as received rather than completed by Code** — finishing an owner's sentence is inventing a ruling. **The tail is outstanding.**
+
+##### ⚠ Code's note on merge — one surviving figure is refuted, and it is not corrected in place
+
+- ⚠⚠ **`>150` → 286 is WRONG. The measurement is 285, and the inequality sign is worth 52 pairs, not 51.** All **52** boundary rows are float-**equal** to 150.0 and **none is float-above**, so `337 − 52 = 285` is forced. Re-verified at merge against S3 through `scripts/kathad_reproduction.py`.
+- ⚠ **It is left as written in the bullet above and corrected here instead**, because *corrections are recorded, never patched away* — and because a withdrawal notice that silently edits its own surviving figures is the shape it exists to prevent.
+- ⚠ **The finding is STRENGTHENED by one pair**, not weakened. The `52 at exactly 150.0` figure — the one ruled to lead — is unaffected and independently confirmed.
+
+
 ---
 
 ### D-099 — The control fold is not tranche 6: PAE is recovered on proteins that need no assembly
