@@ -173,6 +173,41 @@ def test_non_domain_features_are_excluded(kind):
     assert domain_like_features(d) == []
 
 
+# ── Task C / D-099 — the control's eligibility predicate ───────────────────────────────────────
+def test_domain_only_and_domainlike_are_different_populations():
+    """⚠ D-099 says "UniProt `Domain` features". Silently widening to Domain+Repeat would change
+    the control pool — 230 rows vs 277 on the real census. The two must not be interchangeable."""
+    d = doc(feat("Domain", 100, 200), feat("Repeat", 300, 400))
+    feats = domain_like_features(d)
+    only_domain = [f for f in feats if f.get("type") == "Domain"]
+    b_wide = bucket_domains(feats, span_start=50, span_end=500)
+    b_narrow = bucket_domains(only_domain, span_start=50, span_end=500)
+    assert b_wide.n_wholly_inside_span == 2
+    assert b_narrow.n_wholly_inside_span == 1
+
+
+def test_eligibility_threshold_excludes_exactly_one_domain():
+    """⚠ '>=2 wholly inside' — a single-domain protein has no inter-domain interface, so it
+    cannot serve as a control for assembly. Off-by-one here would pollute the pool."""
+    one = bucket_domains(domain_like_features(doc(feat("Domain", 100, 200))),
+                         span_start=50, span_end=500)
+    two = bucket_domains(domain_like_features(doc(feat("Domain", 100, 200),
+                                                  feat("Domain", 250, 350))),
+                         span_start=50, span_end=500)
+    assert one.n_wholly_inside_span == 1 and not (one.n_wholly_inside_span >= 2)
+    assert two.n_wholly_inside_span == 2 and (two.n_wholly_inside_span >= 2)
+
+
+def test_a_domain_outside_the_span_does_not_make_a_protein_eligible():
+    """⚠ THE DISCRIMINATING ONE for Task C: one domain in the span and one outside is NOT a
+    two-domain control. Counting the chain would enrol it and the fold would measure nothing."""
+    d = doc(feat("Domain", 100, 200), feat("Domain", 900, 1000))
+    b = bucket_domains(domain_like_features(d), span_start=50, span_end=500)
+    assert b.n_domainlike_chain == 2
+    assert b.n_wholly_inside_span == 1, "only one domain is in the span"
+    assert not (b.n_wholly_inside_span >= 2), "must NOT be eligible"
+
+
 # ── Task A3 — the agreement table ──────────────────────────────────────────────────────────────
 def test_boundaries_are_starts_and_ends():
     feats = [feat("Domain", 10, 20), feat("Domain", 30, 40)]
