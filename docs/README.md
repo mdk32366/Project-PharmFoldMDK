@@ -263,6 +263,30 @@ So the rule is not "be careful" — it is:
   2. ⚠ **`D-093` decision 7 still bars committing S3 or any HPA table** until inbound terms are read and dated. **This entry authorises the method, not the ingest.**
   3. The reproduction currently exists **only in a Planner sandbox and will not survive.** Committing it as a tested script is the first order.
 
+#### F-042 amendment 1 — the 79 `pae_json_path` values DO resolve, and the set is an exact bijection
+
+- **Date:** 2026-08-17 · **Status:** ⚠ **This closes open decision 3 only.** `F-042` itself stays **OPEN** — the 2,690 census rows still carry no PAE, and repairing the path forward does not close it.
+- ⚠ **Recorded as an amendment, not an edit.** Decision 3 was written as unanswered and stays as written; the answer is added beneath it.
+
+- **The measurement.** `find /data/artifacts -name pae.json.gz` on the Fly volume, run by the owner at the console after the read was denied to Code — **stopped and reported rather than worked around**, and answered by the person who could.
+
+  | quantity | value |
+  |---|---|
+  | PAE files on the volume | **79** |
+  | the single gap in ids 1–80 | **id 57 — `IGF2R`**, `mean_plddt` NULL, 2,491 aa: the A6000 ceiling failure that never folded |
+  | folded rows with **no** PAE file | **0** |
+  | PAE files with **no** folded row | **0** |
+
+  ⚠ **An exact bijection: the set of PAE files IS the set of folded cohort rows.** Every pointer resolves; nothing is orphaned in either direction. **`pae_on_disk_unregistered` — the order's third category — is empty, measured rather than assumed.**
+
+- ⚠ **Presence was not accepted as the standard.** A count is a floor: a zero-byte or truncated file is still *found*. `find … -size -1k` returned **empty**, so none is a stub — a real PAE matrix for a 200–600 residue protein compresses to tens of kilobytes.
+
+- ⚠ **A retracted check, recorded because it nearly became a finding.** Code first probed the 79 via `HEAD /api/analyses/{id}/structure` and got **405 on all 79**, then reported the dangling-pointer class as *real and present*. **405 is Method Not Allowed, not 404** — the route is `@get`-only and the probe was measuring its own HTTP verb. Re-run with `GET`, all 79 returned 200. *A clean number meaning something other than it appears to is this project's most repeated defect, and it was committed here inside the check for it.*
+
+- ⚠ **What this does NOT establish.** The files are present and plausibly sized. **They have not been read, parsed, or checked for matrix shape** — and **no route can read them**: `/jobs/{job_id}/pae` is a bearer-guarded POST and the read API exposes `structure` and `plddt` only. **PAE is writable, recorded, and unreadable**, which is the same root cause that let `F-042` go unnoticed for a month.
+
+---
+
 ---
 
 ### F-043 — A hard cutoff on a ~11-patient ordinal statistic: a quarter of Kathad's surviving pairs turn on one pathologist call
