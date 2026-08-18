@@ -11,6 +11,13 @@
 > (`tests/test_docs_landing_headers.py`) did not exist in the sender's copy. Both hashes are
 > recorded so the received artefact stays checkable.
 >
+> ⚠⚠ **`§3`'s "whether the comparison runs is a `D-095` decision" is a MISRESOLVED citation.**
+> When this order was written `D-095` was the next free integer; it is now **the tranche-6 tiling
+> design document**, which says nothing about a PAE comparison. **The reference resolves to a real
+> entry with the wrong content — worse than an unresolved one, and the citation invariant cannot
+> see it: that check proves a reference RESOLVES, never that it resolves to the right thing.**
+> The comparison takes its own entry.
+>
 > ⚠ **Its `§1` scope is superseded by `D-098`** — which widened tranche 6 to the 141 and is the
 > ruling this order's own scope question asked for. **§2 reserves `F-041` for the PAE finding;
 > `F-041` was already spent** on the boundary-source finding before this order arrived. **The PAE

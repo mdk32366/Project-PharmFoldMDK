@@ -1,8 +1,15 @@
 """Task C of ORDERS-Code-2026-08-18 — the in-context multi-domain population.
 
-⚠ COUNTS ONLY. The order says *"Do not run the comparison"* — whether the fold-whole vs
-fold-domains comparison runs is a `D-095` decision. This establishes whether the population
-exists at all.
+⚠ COUNTS ONLY. The order says *"Do not run the comparison"* — this establishes whether the
+population exists at all.
+
+⚠⚠ CITATION CORRECTED. This file and the order both said the comparison "is a `D-095` decision".
+When the order was written `D-095` was the next free integer; it is now **the tranche-6 tiling
+design document**, which says nothing about a PAE comparison. **The reference resolved to a real
+entry with the wrong content — worse than an unresolved one, and invisible to the citation
+invariant, which checks that a reference RESOLVES and cannot check that it resolves to the right
+thing.** The comparison needs its own entry; `D-101` is the next free integer at the time of
+writing, and it must be confirmed against the live log before it is claimed.
 
 ⚠ SAME CODE PATH AS A1, deliberately. `bucket_domains` is imported from
 `scripts/tranche6_domain_census.py` rather than reimplemented — a second bucketer would be two
@@ -128,7 +135,8 @@ def main() -> int:
         print(f"    {x['acc']:8s} tranche={x['tranche']} span={x['span_aa']:4d} "
               f"domains_inside={x['n_domain_inside']}")
 
-    print("\n⚠ This task COUNTS. It does not run the comparison — that is a D-095 decision.")
+    print("\n⚠ This task COUNTS. It does not run the comparison, which needs its own log entry")
+    print("  (⚠ NOT D-095 — that integer is now the tranche-6 tiling document; see the header).")
     return 0
 
 
