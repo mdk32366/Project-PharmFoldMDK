@@ -122,6 +122,29 @@ def _coords(feature: dict) -> tuple[Optional[int], Optional[int]]:
 STRADDLE_RULES = ("admit_raw", "drop", "clip")
 
 
+#: How an admitted feature sits against its span. ⚠ Four categories, not three: the old
+#: `past s1 / before s0 / both` shape called the fourth case "both ends", which reads as *two
+#: overhangs* when it is a different object — a feature with **no edge inside the span at all**.
+SPAN_RELATIONS = ("inside", "overhang_n", "overhang_c", "engulfing")
+
+
+class UnruledEngulfingFeature(ValueError):
+    """⚠⚠ `clip` has no ruling for a feature that engulfs its span, so it REFUSES.
+
+    `CLOSEOUT-2026-08-18` §5 argues CLIP as *"a clipped straddler occupies its residues; dropping
+    it manufactures a gap at the span boundary that does not exist in the molecule."* **That
+    reasoning is about EDGES.** An engulfing feature has no edge inside the span, so the argument
+    does not reach it, and the owner has explicitly not ruled the case (2026-08-19).
+
+    What `clip` would otherwise do: **replace the span with itself** — one domain of exactly
+    span length, 100% coverage, a single run equal to the whole span. ⚠ For any row past context
+    that manufactures a `run_interior` cut where the annotation asserted no internal boundary.
+
+    ⚠ Refuse rather than attempt, the `preflight()` pattern: **a case with no ruling is a stop,
+    not a green light.** `admit_raw` and `drop` are already defined here and keep their behaviour.
+    """
+
+
 class UnknownStraddleRule(ValueError):
     """⚠ An unrecognised straddle rule RAISES. It is never coerced to a default.
 
@@ -130,8 +153,37 @@ class UnknownStraddleRule(ValueError):
     """
 
 
+def span_relation(a: int, b: int, s0: int, s1: int) -> str:
+    """How feature `[a, b]` sits against span `[s0, s1]`. Assumes they overlap.
+
+    ⚠⚠ **THE BOUNDARY CONVENTION, STATED BECAUSE IT IS A CHOICE AND NOT A FACT.** A feature with
+    `a == s0` **and** `b == s1` satisfies *wholly within* and *at-or-before the start and
+    at-or-after the end* simultaneously. **It is classified `engulfing`, and `engulfing` is tested
+    FIRST.**
+
+    The reason is that the hazard is defined by the CLIPPED RESULT, not by the raw coordinates:
+    `clip` maps any feature with `a <= s0 and b >= s1` onto exactly `[s0, s1]`, and a domain of
+    exactly span length is the unruled object regardless of how far outside it started. ⚠ A
+    convention that put the flush case in `inside` would let the identical hazard through under a
+    name that says it is safe.
+
+    ⚠ Measured 2026-08-19: features with `a == s0 and b == s1` number **0** in the 141, **0** in
+    the ten, **0** in the full census — so **the corpus cannot exercise this choice and only a
+    fixture can.** That is `F-046`'s invisible-inequality lesson applied before the fact rather
+    than after. Eight features *do* sit flush on one side while exceeding the other (4 at `s0`,
+    4 at `s1`), and those the convention moves for real.
+    """
+    if a <= s0 and b >= s1:
+        return "engulfing"
+    if a >= s0 and b <= s1:
+        return "inside"
+    if a < s0:
+        return "overhang_n"
+    return "overhang_c"
+
+
 def domain_intervals(doc: dict, s0: int, s1: int, *,
-                     straddle: str) -> list[tuple[int, int, str, str]]:
+                     straddle: str, acc: str | None = None) -> list[tuple[int, int, str, str]]:
     """Domain-like intervals against the span `[s0, s1]`, under a NAMED straddle rule.
 
     ⚠⚠ `straddle` is keyword-only and has **NO DEFAULT**. A caller that omits it gets a
@@ -172,6 +224,12 @@ def domain_intervals(doc: dict, s0: int, s1: int, *,
             if b < s0 or a > s1:
                 continue
             if straddle == "clip":
+                if span_relation(a, b, s0, s1) == "engulfing":
+                    raise UnruledEngulfingFeature(
+                        f"{acc or '<accession not supplied>'}: feature {a}-{b} "
+                        f"({f.get('type')}: {f.get('description', '')!r}) engulfs span {s0}-{s1}. "
+                        f"clip has no ruling for this case (owner, 2026-08-19) and refuses "
+                        f"rather than manufacturing a span-length domain.")
                 a, b = max(a, s0), min(b, s1)
         out.append((a, b, f.get("description", ""), f.get("type")))
     return sorted(out)

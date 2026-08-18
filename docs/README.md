@@ -184,7 +184,38 @@ So the rule is not "be careful" — it is:
 
 - **⚠ One thing deliberately NOT changed.** The coordinate read stayed `location.start.value` rather than moving to `_coords`, which additionally rejects an `UNKNOWN` modifier. Measured across all 4,990 cached documents and **9,008** `Domain`/`Repeat` features: **zero** carry an `UNKNOWN` modifier and **zero** lack `start`/`end`. The two reads agree on this cache **by data, not by construction**, so switching would be a behavioural change wearing a refactor's clothes. **Named instead of taken.**
 
-- **Consequences.** `straddle` is keyword-only with **no default**: omitting it raises `TypeError`, an unrecognised value raises `UnknownStraddleRule`, and a positional argument raises. ⚠ `D-095 amendment 1` records `straddle_handling` on every derived artifact beside `merge_rule` and its gap tolerance; **this entry is what makes that parameter nameable at all.**
+- **⚠⚠ THE ENGULFING CASE: CLIP's STATED RATIONALE COVERS EDGES AND NOT ENGULFMENT.** `CLOSEOUT-2026-08-18` §5 argues CLIP as *"a clipped straddler occupies its residues; dropping it manufactures a gap at the span boundary that does not exist in the molecule."* **That is an argument about edges.** A feature beginning at-or-before `s0` and ending at-or-after `s1` has **no edge inside the span at all**, so the argument does not reach it, and the owner ruled the case **explicitly NOT ruled** (2026-08-19).
+
+  What `clip` would otherwise do: **replace the span with itself** — one domain of exactly span length, 100% coverage, a single run equal to the whole span. ⚠ For any row past context that manufactures a `run_interior` cut where the annotation asserted no internal boundary. **So `clip` REFUSES** (`UnruledEngulfingFeature`, naming the accession and the feature); `admit_raw` and `drop` are defined on this case and keep their behaviour. *Refuse rather than attempt — the `preflight()` pattern: a case with no ruling is a stop, not a green light.*
+
+  | population | engulfing features | distinct accessions |
+  |---|---|---|
+  | the 141 (`D-098`) | ⚠ **0** — reported because an empty category is a measurement | 0 |
+  | the ten `D-095` subjects | **0** | 0 |
+  | the full census | **58** | **58 — one each, not concentrated** |
+
+  ⚠ **CORRECTION to the figure in the ruling as delivered, which said 50.** 50 is the count under a *strictly*-beyond-both-boundaries test. Under the ruled convention — at-or-before `s0` **and** at-or-after `s1` — it is **58**: 4 features sit flush at `s0` while exceeding `s1`, and 4 sit flush at `s1` while preceding `s0`. **The 8 are exactly what the convention moves, and they are the reason to state it.**
+
+- **⚠⚠ THE BOUNDARY CONVENTION, AND THE FIXTURES THAT ARE THE ONLY THING PINNING IT.** A feature with `a == s0` **and** `b == s1` satisfies *wholly within* and *at-or-before the start and at-or-after the end* at once. **It is classified `engulfing`, and `engulfing` is tested first** — because the hazard is defined by the **clipped result**, not the raw coordinates: `clip` maps every such feature onto exactly `[s0, s1]`, and a domain of exactly span length is the unruled object however far outside it began. ⚠ A convention filing the flush case as `inside` would pass the identical hazard through under a name that says it is safe.
+
+  ⚠⚠ **Measured: that case occurs 0 times in the 141, 0 in the ten, and 0 in the full census.** *The corpus cannot exercise this choice, so only a fixture can pin it* — **the same sentence as the invisible inequality above, applied before the fact rather than after.** Seven deliberate fixtures pin the convention: the flush-both case, the four one-sided boundary cases, and the two one-residue-inside controls.
+
+- **⚠ And `no_domains` gains a cause, which is why the category matters.** A row whose only overlapping features **engulf** the span reports `no_domains` under `drop` **because its features were dropped, not because it carries no annotation** — an absence and a rejection arriving under one label. Causes, summed against an independently counted total:
+
+  | cause | the 141 | full census |
+  |---|---|---|
+  | `no_domainlike_features_in_the_chain` | **10 — all ten** | 2,033 |
+  | `features_exist_but_none_overlaps_the_span` | 0 | 215 |
+  | `all_overlapping_features_overhang_a_boundary` | 0 | 21 |
+  | ⚠ `all_overlapping_features_ENGULF_the_span` | **0** | **58** |
+  | `dropped_mixed_engulfing_and_overhang` | 0 | 0 |
+  | **total** | **10** | **2,327** |
+
+  **So the 141's ten `no_domains` rows are all genuine absences of annotation**, not rejections — the cause each one needed, named.
+
+- **⚠ What the 58 actually are, because a rule should be written against the biology.** 44 `Domain`, 14 `Repeat`; span lengths min 5, median 45, max 145; ⚠⚠ **none past the 1,026 aa trained context, so none can enter tranche 6 today.** The descriptions are MARVEL, ABC transmembrane, Cytochrome b561, KASH, HIG1, UPAR/Ly6 — **polytopic membrane domains.** The V2 span is a short extracellular loop *inside* a larger transmembrane domain. **Engulfment is not an annotation artifact; it is what a loop in a multi-pass protein looks like.** That is an argument for a rule; the rule is the owner's.
+
+- **Consequences.** `straddle` is keyword-only with **no default**: omitting it raises `TypeError`, an unrecognised value raises `UnknownStraddleRule`, and a positional argument raises. ⚠ `D-095 amendment 1` records `straddle_handling` on every derived artifact beside `merge_rule` and its gap tolerance; **this entry is what makes that parameter nameable at all.** ⚠ The gap tolerance itself is **zero uncovered residues**, stated as the number rather than as `start <= prev_end + 1` — see `docs/PASSAGES-2026-08-19-gap-tolerance-and-merge-rule.md`, which exists because that sentence was corrupted three times in transit and the repository does not drop bytes.
 
 ---
 
@@ -194,7 +225,32 @@ So the rule is not "be careful" — it is:
 - **Status:** ⚠ **OPEN — a finding against an instrument (`D-074`).** It closes when a revert proof cannot silently certify an unexecuted flip, **or** when the residual is named and accepted in the open. ⚠ **The forward fix is not closure** — see below.
 - **⚠ What this entry is NOT.** It is **not** the wrong-but-plausible-answer family. `PREWORK-2026-08-19.md` §3 named `F-045` for that; **the number moved to `F-047`**, which is reserved and unwritten. A reader arriving here from the prework is in the wrong entry — ⚠⚠ *which is `F-044`'s subject exactly, and the invariant cannot see it.*
 
+- **⚠⚠ THE FINDING, WHICH IS NOT THE `.pyc`.** **The driver is not a recorded property of a revert proof.** This log says *proven by revert* twenty-seven times across twelve entries, and **not one of them records how the break reached the interpreter.** `A-016 (any red proves the assertion bites)` and `A-017 (the fixture must reach the code under test)` are the rules by which this project decides a test is real — so **`A-016` compliance has never been auditable.** The record carries the verdict and discards the method. ⚠ *The `.pyc` collision is how the gap surfaced; the missing field is what it means.*
+
 - **The mechanism, in one line.** CPython validates a cached `.pyc` against the source's `(mtime, size)`, with **mtime truncated to seconds**. A driver applied flip 1, ran the suite, restored, then applied flip 2 — **same file, same resulting size, same clock second** — so the interpreter reused flip 1's bytecode and **flip 2 was never executed.**
+
+- **⚠ THE COLLIDING PAIR, NAMED, AND THE CONTRADICTION IN THE FIRST REPORT OF IT.** Two statements were issued that cannot both bear on the same event, and the second one was irrelevant:
+
+  | | file | delta | fate |
+  |---|---|---|---|
+  | flip 1 `a < s0` → `a <= s0` | `scripts/tranche6_domain_census.py` | **+1** | ran |
+  | ⚠⚠ flip 2 `b < s0` → `b <= s0` | `scripts/tranche6_domain_census.py` | **+1** | **executed flip 1's bytecode** |
+  | flip 3 clip truncation | `scripts/tranche6_domain_census.py` | +4 | ran |
+
+  ⚠ **A third flip, `a > s1` → `a >= s1`, also carries `+1`** and shares the same size; it was added to the driver after the fix, so it never collided, but it was equally exposed.
+
+  ⚠⚠ **The `-18 / +4 / -39 / -2` deltas reported alongside this describe a DIFFERENT driver** — the first one, whose four flips landed in `scripts/tranche6_runs_clip_compare.py` and the census module at different sizes. **They are true and they say nothing about the collision.** They were offered as evidence of the defect's scope and they do not reach its subject: *a clean number that means something other than it appears to*, in the report of a finding about clean numbers that mean something else. **Recorded, not quietly dropped.**
+
+- **⚠ Reproduced under control, so the mechanism is measured rather than inferred.** The three-flip sequence was re-run twice against the same file:
+
+  | | flips 1 and 2 present `(mtime_s, size)` | flip 1 vs flip 2 digests | flip 2 verdict |
+  |---|---|---|---|
+  | bytecode caching **ON** | `(1787066189, 29949)` — **identical** | **identical** | **RED (false)** |
+  | bytecode caching **OFF** | `(1787066190, 29949)` | differ | **GREEN (true)** |
+
+  **The false red was flip 1's result, printed under flip 2's label.** ⚠ And the honest answer underneath is that flip 2 is **not caught by the corpus at all** — it is caught only by fixtures written afterwards.
+
+- **⚠⚠ WHAT THE RE-CERTIFICATION DID AND DID NOT COVER, stated because the distinction is the whole of `F-045`'s reach.** The four flips re-run with bytecode writing disabled were the **first driver's**, at deltas `-18 / +4 / -39 / -2` — **all distinct, so a size collision was impossible among them.** ⚠ **They are NOT the colliding pair.** The colliding pair was re-run separately, by the corrected `§9` driver, which is what produced the corpus-GREEN / fixtures-RED table in `F-046`. **So the defect's own subject was re-verified — but not by the run first cited for it, and the re-certification is a real measurement of something adjacent to the defect rather than of the defect.**
 
 - **⚠⚠ The first proof reported that flip as CAUGHT.** It printed a red test, a real assertion, and a plausible digest pair. Re-run with `PYTHONDONTWRITEBYTECODE=1`, the same flip is **not caught by the corpus at all** — it is caught only by fixtures written afterwards. **A green that is green for a reason unrelated to the thing under test, and a red that is red for the previous experiment.**
 
@@ -214,7 +270,19 @@ So the rule is not "be careful" — it is:
 
   ⚠⚠ **The finding inside the finding: the driver is not a recorded property of a revert proof.** No driver was ever committed, and the ad-hoc ones do not survive their session. So for every prior proof the answer is not *lost* — **it was never captured.** The enumerable set is the proofs; the unenumerable field is how each was applied. *`unknown` is the honest value and it is the majority value.*
 
-- **What was re-certified, so the scope is measured and not argued.** The four flips certified by the defective driver were re-run with bytecode writing disabled, at their current homes: **all four reproduce**, each red at its named test, zero collection errors. ⚠ Their byte deltas are `-18`, `+4`, `-39`, `-2` — **all distinct, so a size collision was impossible among them.** The defect fired only where two flips happened to share a size.
+- **The re-certification's own result, which stands on its own terms.** All four of the first driver's flips reproduce with bytecode writing disabled, each red at its named test, zero collection errors, both files restored byte-identical. **The defect fired only where two flips happened to share a resulting size**, and among those four none did.
+
+- **⚠ The enumeration's integers, with the population named and summing.**
+
+  | population (key) | n | `driver_known` | `driver_unknown` |
+  |---|---|---|---|
+  | log entries recording a revert proof, prior to 2026-08-19 (one `###` entry) | **12** | 0 | **12** |
+  | test files documenting one (one file under `tests/`) | **12** | 0 | **12** |
+  | ⚠ overlap — a test file named inside such an entry (`test_ceiling_probe.py`) | **1** | — | — |
+  | **union: distinct prior revert-proof-bearing artifacts** | **23** | **0** | **23** |
+  | driver runs on 2026-08-19 (this session) | **5** | **5** | 0 |
+
+  ⚠ **`driver_unknown` is 23 of 23, not a word**, and it is 23 **because the field was never captured**, not because records were lost. Committed drivers that shell out to `pytest`: **0**.
 
 - **⚠ What would actually close this.** Not a framework — `D-074` decision 3. Candidates, none ruled:
   - **Record the driver beside the proof.** A revert proof states what it broke and what reddened; it does not state how the break reached the interpreter. One line would make Task T answerable next time.

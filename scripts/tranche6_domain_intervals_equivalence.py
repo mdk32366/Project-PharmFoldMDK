@@ -43,7 +43,9 @@ from scripts.tranche6_domain_census import (  # noqa: E402
     MANIFEST,
     STRADDLE_RULES,
     UNIPROT_CACHE,
+    UnruledEngulfingFeature,
     domain_intervals,
+    span_relation,
 )
 
 DOMAINLIKE = ("Domain", "Repeat")
@@ -146,6 +148,7 @@ def main() -> int:
         files = files[:args.limit]
 
     running = {r: (hashlib.sha256(), hashlib.sha256()) for r in STRADDLE_RULES}  # (oracle, new)
+    refused, expected_refusals = [], []
     n_docs = n_spans = n_intervals = 0
     n_manifest_spans = 0
     differ = {"drop_vs_clip": 0, "drop_vs_admit_raw": 0, "clip_vs_admit_raw": 0}
@@ -160,9 +163,29 @@ def main() -> int:
         for (s0, s1) in _spans_for(doc, ms):
             n_spans += 1
             got = {}
+            # the clip refusal is PROVEN below, never suppressed. It is not weakened to make
+            # this harness pass: the span is counted here and checked against an independent
+            # classification, so a refusal that stopped happening would fail the proof.
+            engulfs = any(
+                span_relation(int(f["location"]["start"]["value"]),
+                              int(f["location"]["end"]["value"]), s0, s1) == "engulfing"
+                for f in doc.get("features", [])
+                if f.get("type") in DOMAINLIKE
+                and f["location"]["start"].get("value") is not None
+                and f["location"]["end"].get("value") is not None
+                and int(f["location"]["end"]["value"]) >= s0
+                and int(f["location"]["start"]["value"]) <= s1)
+            if engulfs:
+                expected_refusals.append((p.stem, s0, s1))
+                try:
+                    domain_intervals(doc, s0, s1, straddle="clip", acc=p.stem)
+                except UnruledEngulfingFeature:
+                    refused.append((p.stem, s0, s1))
             for rule in STRADDLE_RULES:
+                if rule == "clip" and engulfs:
+                    continue
                 oracle_iv = ORACLES[rule](doc, s0, s1)
-                new_iv = domain_intervals(doc, s0, s1, straddle=rule)
+                new_iv = domain_intervals(doc, s0, s1, straddle=rule, acc=p.stem)
                 o_bytes, n_bytes = _serialise(oracle_iv), _serialise(new_iv)
                 running[rule][0].update(o_bytes)
                 running[rule][1].update(n_bytes)
@@ -170,11 +193,14 @@ def main() -> int:
                     mismatches.append((p.stem, rule, s0, s1, oracle_iv[:3], new_iv[:3]))
                 got[rule] = n_bytes
                 n_intervals += len(new_iv)
-            if got["drop"] != got["clip"]:
+            # ⚠ `clip` is absent from `got` on a refused span, and an absent value is a CATEGORY:
+            # those spans are counted under the refusal above, never folded into a disagreement
+            # count where they would read as agreement.
+            if "clip" in got and got["drop"] != got["clip"]:
                 differ["drop_vs_clip"] += 1
             if got["drop"] != got["admit_raw"]:
                 differ["drop_vs_admit_raw"] += 1
-            if got["clip"] != got["admit_raw"]:
+            if "clip" in got and got["clip"] != got["admit_raw"]:
                 differ["clip_vs_admit_raw"] += 1
 
     W = 100
@@ -197,6 +223,19 @@ def main() -> int:
         print(f"  {rule:11s} {o[:20]:>20s} {n[:20]:>20s}  "
               f"{'IDENTICAL' if match else '*** DIFFERS ***'}")
 
+    print("\n  ⚠⚠ THE ENGULFING REFUSAL — proven, not excluded")
+    print("  " + "-" * (W - 4))
+    print(f"    spans carrying an engulfing feature (independent classification) : "
+          f"{len(expected_refusals):,}")
+    print(f"    spans on which `clip` actually refused                           : "
+          f"{len(refused):,}")
+    print(f"    ⚠ every one refused, same spans in the same order: "
+          f"{expected_refusals == refused}")
+    print(f"    ⚠ `clip` byte-identity is proven on the remaining "
+          f"{n_spans - len(expected_refusals):,} spans. On these it is UNRULED and REFUSES, so")
+    print("      byte-identity is not expected and asserting it would be wrong. `admit_raw` and")
+    print("      `drop` are defined here and are compared on ALL spans, including these.")
+
     print("\n  ⚠⚠ DISCRIMINATION — did the corpus actually exercise the difference?")
     print("  " + "-" * (W - 4))
     for k, v in differ.items():
@@ -210,7 +249,7 @@ def main() -> int:
         for acc, rule, s0, s1, o, n in mismatches:
             print(f"    {acc} {rule} span {s0}-{s1}\n      oracle {o}\n      new    {n}")
 
-    ok = all_match and not vacuous
+    ok = all_match and not vacuous and expected_refusals == refused
     print(f"\n  VERDICT: {'PASS' if ok else '*** FAIL ***'}"
           f"   (byte-identical under all three rules: {all_match}; non-vacuous: {not vacuous})")
     return 0 if ok else 1

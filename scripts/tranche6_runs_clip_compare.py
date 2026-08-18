@@ -50,10 +50,12 @@ if str(REPO) not in sys.path:
 
 from scripts.tranche6_domain_census import (  # noqa: E402
     MANIFEST,
+    SPAN_RELATIONS,
     STRADDLE_RULES,
     UNIPROT_CACHE,
     domain_intervals,
     past_context_rows,
+    span_relation,
 )
 from scripts.tranche6_domain_survey import merge  # noqa: E402
 from scripts.tranche6_runs import TRAINED_CONTEXT, classify_regime  # noqa: E402
@@ -85,34 +87,51 @@ def merge_overlap_only(intervals) -> list[list[int]]:
 
 
 def straddle_overhang(doc: dict, s0: int, s1: int) -> dict:
-    """How far admitted features reach OUTSIDE the span, bucketed by direction.
+    """The FOUR-WAY partition of admitted features against the span, with residue magnitudes.
 
-    ⚠ **Past `s1` and before `s0` are different mistakes**, so they are never summed into one
-    total. A feature crossing both ends is its own bucket rather than being counted twice under a
-    label that says `only`, and it contributes to BOTH residue sums because it really does overhang
-    in both directions.
+    ⚠⚠ **This replaces a three-column `past s1 / before s0 / both` shape, and the fourth column is
+    not a refinement — it is a different object.** *"Both ends"* reads as *two overhangs*, but a
+    feature crossing both boundaries has **no edge inside the span at all**: it is a claim that one
+    annotation covers the entire span and then some. `clip` maps it onto exactly `[s0, s1]`, which
+    is the unruled case (`UnruledEngulfingFeature`).
 
-    ⚠ Admission here is `admit_raw`'s predicate — the rule that produced `D-095`'s founding numbers.
+    ⚠ **Past `s1` and before `s0` remain different mistakes** and are never summed together.
+    Admission is `admit_raw`'s predicate — the rule that produced `D-095`'s founding numbers.
     """
-    o = {"n_admitted": 0, "n_wholly_inside": 0, "n_before_s0_only": 0,
-         "n_past_s1_only": 0, "n_both_ends": 0,
-         "residues_before_s0": 0, "residues_past_s1": 0}
+    o = {"n_admitted": 0, "residues_before_s0": 0, "residues_past_s1": 0}
+    o.update({f"n_{k}": 0 for k in SPAN_RELATIONS})
     for a, b, *_ in domain_intervals(doc, s0, s1, straddle="admit_raw"):
         o["n_admitted"] += 1
-        before, past = a < s0, b > s1
-        if before:
+        if a < s0:
             o["residues_before_s0"] += s0 - a
-        if past:
+        if b > s1:
             o["residues_past_s1"] += b - s1
-        if before and past:
-            o["n_both_ends"] += 1
-        elif before:
-            o["n_before_s0_only"] += 1
-        elif past:
-            o["n_past_s1_only"] += 1
-        else:
-            o["n_wholly_inside"] += 1
+        o[f"n_{span_relation(a, b, s0, s1)}"] += 1
     return o
+
+
+def no_domains_cause(doc: dict, s0: int, s1: int) -> str | None:
+    """Why a row has no domains UNDER `drop` — a category, never a bare zero.
+
+    ⚠⚠ One of these causes is new and is the reason this exists: a protein whose only overlapping
+    features **engulf** the span reports `no_domains` under `drop` **because its features were
+    dropped**, not because it carries no annotation. *An absence and a rejection are different
+    facts and they were arriving under one label.*
+    """
+    if domain_intervals(doc, s0, s1, straddle="drop"):
+        return None
+    domainlike = [f for f in doc.get("features", []) if f.get("type") in ("Domain", "Repeat")]
+    if not domainlike:
+        return "no_domainlike_features_in_the_chain"
+    admitted = domain_intervals(doc, s0, s1, straddle="admit_raw")
+    if not admitted:
+        return "features_exist_but_none_overlaps_the_span"
+    rels = {span_relation(a, b, s0, s1) for a, b, *_ in admitted}
+    if rels == {"engulfing"}:
+        return "all_overlapping_features_ENGULF_the_span"
+    if "engulfing" in rels:
+        return "dropped_mixed_engulfing_and_overhang"
+    return "all_overlapping_features_overhang_a_boundary"
 
 
 def misfiled_single_run(runs) -> bool:
@@ -213,9 +232,12 @@ def task_m1() -> None:
 
 def task_m2(genes) -> None:
     print("\n" + "=" * W)
-    print("TASK M2 — STRADDLERS UNDER `admit_raw`, bucketed BY DIRECTION, three populations")
+    print("TASK M2 / U2 — THE FOUR-WAY PARTITION under `admit_raw`, three populations")
     print("=" * W)
-    print("  ⚠ past `s1` and before `s0` are DIFFERENT MISTAKES and are never summed together.")
+    print("  ⚠ `engulfing` is NOT a refinement of `both ends` — a feature crossing both boundaries")
+    print("    has no edge inside the span, and `clip` has no ruling for it (it REFUSES).")
+    print("  ⚠ features AND the distinct accessions they touch: 58 features on 58 proteins and")
+    print("    58 features on 6 proteins would be different findings.")
     all_rows = _manifest_rows()
     the_141 = past_context_rows()
     the_ten = [r for r in all_rows if r["census_accession"] in TEN]
@@ -223,23 +245,101 @@ def task_m2(genes) -> None:
             ("(b) the ten  [D-095 subjects, D-091 r3]", the_ten),
             ("(c) full census  [census_manifest.v7.csv, every row]", all_rows))
 
-    print(f"\n  {'population':52s} {'rows':>6s} {'feats':>7s} {'>s1':>5s} {'<s0':>5s} "
-          f"{'both':>5s} {'res>s1':>8s} {'res<s0':>8s}")
+    print(f"\n  {'population':52s} {'rows':>5s} {'feats':>6s} "
+          + " ".join(f"{r:>11s}" for r in SPAN_RELATIONS))
     print("  " + "-" * (W - 4))
     for label, rows in pops:
         tot = Counter()
+        accs = {r: set() for r in SPAN_RELATIONS}
         for r in rows:
             o = straddle_overhang(_doc(r["census_accession"]),
                                   int(r["span_start"]), int(r["span_end"]))
             tot.update(o)
-        print(f"  {label:52s} {len(rows):6d} {tot['n_admitted']:7d} "
-              f"{tot['n_past_s1_only']:5d} {tot['n_before_s0_only']:5d} {tot['n_both_ends']:5d} "
-              f"{tot['residues_past_s1']:8d} {tot['residues_before_s0']:8d}")
+            for rel in SPAN_RELATIONS:
+                if o[f"n_{rel}"]:
+                    accs[rel].add(r["census_accession"])
+        print(f"  {label:52s} {len(rows):5d} {tot['n_admitted']:6d} "
+              + " ".join(f"{tot['n_' + r]:11d}" for r in SPAN_RELATIONS))
+        print(f"  {'':52s} {'':5s} {'accs:':>6s} "
+              + " ".join(f"{len(accs[r]):11d}" for r in SPAN_RELATIONS))
+        print(f"  {'':52s} residues before s0 {tot['residues_before_s0']:6d}   "
+              f"past s1 {tot['residues_past_s1']:6d}")
     print("\n  ⚠ CACHE COVERAGE, stated rather than assumed — an absence would be a category:")
     cached = {p.stem for p in UNIPROT_CACHE.glob('*.json')}
     absent = [r['census_accession'] for r in all_rows if r['census_accession'] not in cached]
     print(f"      manifest rows with a cached UniProt doc : {len(all_rows) - len(absent)} "
           f"of {len(all_rows)}   absent: {len(absent)}  {absent[:5] if absent else ''}")
+
+
+def task_u3(genes) -> None:
+    print("\n" + "=" * W)
+    print("TASK U3 — WHAT THE ENGULFING FEATURES ACTUALLY ARE")
+    print("=" * W)
+    eng = []
+    for r in _manifest_rows():
+        acc = r["census_accession"]
+        s0, s1 = int(r["span_start"]), int(r["span_end"])
+        for a, b, desc, typ in domain_intervals(_doc(acc), s0, s1, straddle="admit_raw"):
+            if span_relation(a, b, s0, s1) == "engulfing":
+                eng.append((acc, s0, s1, a, b, typ, desc))
+    print(f"  engulfing features: {len(eng)}   distinct accessions: {len({e[0] for e in eng})}"
+          f"   -> {'one each' if len(eng) == len({e[0] for e in eng}) else 'CONCENTRATED'}")
+    print(f"  type: {dict(Counter(e[5] for e in eng))}")
+    print(f"  flush at s0 (a == s0): {sum(1 for e in eng if e[3] == e[1])}    "
+          f"flush at s1 (b == s1): {sum(1 for e in eng if e[4] == e[2])}    "
+          f"strictly beyond both: {sum(1 for e in eng if e[3] < e[1] and e[4] > e[2])}")
+    lens = sorted(e[2] - e[1] + 1 for e in eng)
+    print(f"  span length of the affected rows: min {lens[0]}  median {lens[len(lens)//2]}  "
+          f"max {lens[-1]}")
+    print(f"  ⚠⚠ any of them past the {TRAINED_CONTEXT} aa trained context? "
+          f"{sum(1 for x in lens if x > TRAINED_CONTEXT)}  — so none can enter tranche 6 today")
+    print("\n  top descriptions:")
+    for d, n in Counter(e[6] for e in eng).most_common(8):
+        print(f"    {n:3d}  {d[:64]}")
+    print("\n  ⚠ Read the descriptions: MARVEL, ABC transmembrane, Cytochrome b561, KASH, HIG1,")
+    print("    UPAR/Ly6 are POLYTOPIC MEMBRANE domains. The V2 span here is a short extracellular")
+    print("    loop INSIDE a larger transmembrane domain — so engulfment is not an annotation")
+    print("    artifact, it is what a loop in a multi-pass protein looks like. ⚠⚠ That is an")
+    print("    argument for a rule, and the rule is the owner's; this reports it, nothing more.")
+
+
+def task_u5(genes) -> None:
+    print("\n" + "=" * W)
+    print("TASK U5 — `no_domains` IS A CATEGORY WITH A CAUSE, AND ONE CAUSE IS NEW")
+    print("=" * W)
+    print("  ⚠ A row whose only overlapping features ENGULF the span reports `no_domains` under")
+    print("    `drop` because they were DROPPED, not because it carries no annotation.")
+    for label, rows in (("the 141", past_context_rows()), ("full census", _manifest_rows())):
+        causes = Counter()
+        rows_by_cause = {}
+        for r in rows:
+            acc = r["census_accession"]
+            c = no_domains_cause(_doc(acc), int(r["span_start"]), int(r["span_end"]))
+            if c:
+                causes[c] += 1
+                rows_by_cause.setdefault(c, []).append(acc)
+        print(f"\n  {label} — rows with no domains under `drop`: {sum(causes.values())} "
+              f"of {len(rows)}")
+        for c in ("no_domainlike_features_in_the_chain",
+                  "features_exist_but_none_overlaps_the_span",
+                  "all_overlapping_features_overhang_a_boundary",
+                  "all_overlapping_features_ENGULF_the_span",
+                  "dropped_mixed_engulfing_and_overhang"):
+            n = causes.get(c, 0)
+            mark = "   ⚠⚠ the new cause" if c.endswith("ENGULF_the_span") and n else ""
+            print(f"    {c:46s} {n:5d}{mark}")
+            if n and c != "no_domainlike_features_in_the_chain" and label == "the 141":
+                print(f"      {rows_by_cause[c]}")
+        # ⚠ The partition check must compare against an INDEPENDENTLY counted total. `sum ==
+        # sum` is a tautology that prints True whatever the causes do, which is a check-shaped
+        # object rather than a check.
+        independent = sum(1 for r in rows
+                          if not domain_intervals(_doc(r["census_accession"]),
+                                                  int(r["span_start"]), int(r["span_end"]),
+                                                  straddle="drop"))
+        print(f"    {'TOTAL':46s} {sum(causes.values()):5d}   ⚠ causes sum to the "
+              f"independently counted {independent} no-domain rows: "
+              f"{sum(causes.values()) == independent}")
 
 
 def task_m3(genes) -> None:
@@ -324,10 +424,17 @@ def task_n(genes) -> None:
                 touch = [run for run in rd if a <= run[1] + gap and b >= run[0] - gap]
                 if not touch:
                     new_runs += 1
+                    print(f"      {m_label:24s} {a}-{b} became its OWN run (touches nothing)")
                 elif len(touch) == 1:
                     absorbed += 1
+                    # ⚠ NAME the run it merged into. "absorbed 1" is a count; the order asked
+                    # which interval, and a count cannot be checked against the molecule.
+                    print(f"      {m_label:24s} {a}-{b} ABSORBED into run "
+                          f"{touch[0][0]}-{touch[0][1]}")
                 else:
                     bridged += len(touch) - 1
+                    print(f"      {m_label:24s} {a}-{b} BRIDGED {len(touch)} runs: "
+                          f"{[f'{r[0]}-{r[1]}' for r in touch]}")
             predicted = new_runs - bridged
             ok = "OK" if predicted == delta else "*** DOES NOT RECONCILE ***"
             print(f"    {m_label:24s} runs {len(rd)} -> {len(rc)}  delta {delta:+d}   "
@@ -413,6 +520,8 @@ def main() -> int:
         genes = {r["census_accession"]: r["gene"] for r in csv.DictReader(fh)}
     task_m1()
     task_m2(genes)
+    task_u3(genes)
+    task_u5(genes)
     task_m3(genes)
     task_m4(genes)
     task_n(genes)

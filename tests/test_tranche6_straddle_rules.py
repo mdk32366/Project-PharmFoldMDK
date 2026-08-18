@@ -35,9 +35,12 @@ if str(REPO) not in sys.path:
 import pytest  # noqa: E402
 
 from scripts.tranche6_domain_census import (  # noqa: E402
+    SPAN_RELATIONS,
     STRADDLE_RULES,
     UnknownStraddleRule,
+    UnruledEngulfingFeature,
     domain_intervals,
+    span_relation,
 )
 from scripts.tranche6_domain_survey import merge  # noqa: E402
 from scripts.tranche6_runs import TRAINED_CONTEXT, classify_regime  # noqa: E402
@@ -180,26 +183,26 @@ def test_overhang_is_bucketed_by_direction():
     )
     o = straddle_overhang(doc, S0, S1)
 
-    assert o["n_before_s0_only"] == 1
-    assert o["n_past_s1_only"] == 1
-    assert o["n_both_ends"] == 1
-    assert o["n_wholly_inside"] == 1
+    assert o["n_overhang_n"] == 1
+    assert o["n_overhang_c"] == 1
+    assert o["n_engulfing"] == 1         # ⚠ NOT "both ends" — it has no edge inside the span
+    assert o["n_inside"] == 1
     assert o["n_admitted"] == 4          # the wholly-outside feature is not admitted
 
-    # ⚠ Residues, per direction, counted once each — `both_ends` contributes to both sums.
+    # ⚠ Residues, per direction, counted once each — the engulfing one contributes to both sums.
     assert o["residues_before_s0"] == 50 + 90
     assert o["residues_past_s1"] == 200 + 1000
 
     # ⚠ The buckets partition what was admitted — an unbucketed straddler would break this.
-    assert (o["n_before_s0_only"] + o["n_past_s1_only"]
-            + o["n_both_ends"] + o["n_wholly_inside"]) == o["n_admitted"]
+    assert sum(o[f"n_{rel}"] for rel in SPAN_RELATIONS) == o["n_admitted"]
 
 
 def test_overhang_is_zero_when_nothing_straddles():
     """An empty category is a measurement: the zero is asserted, not assumed."""
     o = straddle_overhang(_doc(_feature(300, 400, "interior")), S0, S1)
     assert o["n_admitted"] == 1
-    assert o["n_before_s0_only"] == o["n_past_s1_only"] == o["n_both_ends"] == 0
+    assert o["n_inside"] == 1
+    assert o["n_overhang_n"] == o["n_overhang_c"] == o["n_engulfing"] == 0
     assert o["residues_before_s0"] == o["residues_past_s1"] == 0
 
 
@@ -282,6 +285,78 @@ def test_drops_boundary_is_inclusive_at_both_ends():
     assert drop_intervals(one_before, S0, S1) == []
     one_past = _doc(_feature(S0, S1 + 1, "ends_one_past_s1"))
     assert drop_intervals(one_past, S0, S1) == []
+
+
+# ────────────────────── the four-way partition, and the boundary convention it turns on ──
+
+def test_span_relation_partitions_the_four_cases():
+    """The four categories, each with a feature that is unambiguously in it."""
+    assert span_relation(300, 400, S0, S1) == "inside"
+    assert span_relation(50, 400, S0, S1) == "overhang_n"       # begins before, ends within
+    assert span_relation(300, 1200, S0, S1) == "overhang_c"     # begins within, ends after
+    assert span_relation(50, 1200, S0, S1) == "engulfing"       # no edge inside the span at all
+    assert set(SPAN_RELATIONS) == {"inside", "overhang_n", "overhang_c", "engulfing"}
+
+
+def test_the_contested_boundary_is_engulfing_and_only_a_fixture_can_say_so():
+    """⚠⚠ A feature with `a == s0` AND `b == s1` satisfies *wholly within* and *at-or-before the
+    start and at-or-after the end* at once. **It is ruled `engulfing`.**
+
+    ⚠ Measured 2026-08-19: that case occurs **0** times in the 141, **0** in the ten and **0** in
+    the full census. **The corpus cannot exercise this choice, so this fixture is the only thing
+    that pins it** — the same sentence as `F-046`'s invisible inequality, applied before the fact.
+
+    The reason it is `engulfing`: the hazard is the CLIPPED RESULT. `clip` maps every such feature
+    onto exactly `[s0, s1]`, and a domain of exactly span length is the unruled object however far
+    outside it began. A convention filing the flush case as `inside` would pass the identical
+    hazard through under a name that says it is safe.
+    """
+    assert span_relation(S0, S1, S0, S1) == "engulfing"
+
+    # ⚠ The four one-sided boundary cases, each pinned deliberately.
+    assert span_relation(S0, S1 - 1, S0, S1) == "inside"       # flush at s0, ends inside
+    assert span_relation(S0 + 1, S1, S0, S1) == "inside"       # begins inside, flush at s1
+    assert span_relation(S0, S1 + 1, S0, S1) == "engulfing"    # flush at s0, exceeds s1
+    assert span_relation(S0 - 1, S1, S0, S1) == "engulfing"    # precedes s0, flush at s1
+
+    # ⚠ One residue in from either edge and it is an overhang, not engulfment.
+    assert span_relation(S0 - 1, S1 - 1, S0, S1) == "overhang_n"
+    assert span_relation(S0 + 1, S1 + 1, S0, S1) == "overhang_c"
+
+
+def test_clip_refuses_an_engulfing_feature_and_the_other_two_rules_do_not():
+    """⚠⚠ `clip` has no ruling for engulfment (owner, 2026-08-19), so it REFUSES.
+
+    `CLOSEOUT-2026-08-18` §5 argues CLIP from edges — *a clipped straddler occupies its residues,
+    and dropping it manufactures a boundary gap that does not exist in the molecule*. **An
+    engulfing feature has no edge inside the span, so the argument does not reach it.** Refuse
+    rather than attempt: a case with no ruling is a stop, not a green light.
+    """
+    doc = _doc(_feature(50, 1200, "engulfs_the_whole_span"))
+
+    with pytest.raises(UnruledEngulfingFeature):
+        domain_intervals(doc, S0, S1, straddle="clip")
+
+    # ⚠ `admit_raw` and `drop` are DEFINED on this case and keep their behaviour unchanged.
+    assert [(a, b) for a, b, *_ in domain_intervals(doc, S0, S1, straddle="admit_raw")] == [(50, 1200)]
+    assert domain_intervals(doc, S0, S1, straddle="drop") == []
+
+
+def test_the_refusal_names_the_accession_and_the_feature():
+    """A refusal a reader cannot act on is a crash with better manners."""
+    doc = _doc(_feature(50, 1200, "Cytochrome b561"))
+    with pytest.raises(UnruledEngulfingFeature) as exc:
+        domain_intervals(doc, S0, S1, straddle="clip", acc="Q53TN4")
+    msg = str(exc.value)
+    assert "Q53TN4" in msg and "50-1200" in msg and "Cytochrome b561" in msg
+    assert f"{S0}-{S1}" in msg
+
+
+def test_clip_still_works_when_nothing_engulfs():
+    """⚠ The control. The refusal must not fire on an ordinary one-sided straddler."""
+    doc = _doc(_feature(50, 150, "overhang_n"), _feature(900, 1200, "overhang_c"))
+    assert [(a, b) for a, b, *_ in domain_intervals(doc, S0, S1, straddle="clip")] == [
+        (S0, 150), (900, S1)]
 
 
 def test_all_three_rules_agree_when_nothing_straddles():

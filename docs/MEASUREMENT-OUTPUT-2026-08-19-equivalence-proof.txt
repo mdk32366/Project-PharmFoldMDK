@@ -1,0 +1,34 @@
+§9 equivalence proof — captured output
+instrument : scripts/tranche6_domain_intervals_equivalence.py
+repo HEAD  : 0785eebfc230eae02a76f8109ed23af9cb0244f8
+
+====================================================================================================
+§9 EQUIVALENCE PROOF — unified `domain_intervals` vs the three frozen oracles
+====================================================================================================
+  cache documents evaluated : 4,990   (cache-wide, not sampled)
+  spans evaluated           : 4,669  (3,467 manifest spans + straddle-forcing spans)
+  intervals produced        : 41,616
+
+  rule               oracle sha256       unified sha256  verdict
+  ------------------------------------------------------------------------------------------------
+  admit_raw   997add511d427cbd48e1 997add511d427cbd48e1  IDENTICAL
+  drop        589ea8b36339398f31cd 589ea8b36339398f31cd  IDENTICAL
+  clip        1ed76bb57bd2bea9df15 1ed76bb57bd2bea9df15  IDENTICAL
+
+  ⚠⚠ THE ENGULFING REFUSAL — proven, not excluded
+  ------------------------------------------------------------------------------------------------
+    spans carrying an engulfing feature (independent classification) : 58
+    spans on which `clip` actually refused                           : 58
+    ⚠ every one refused, same spans in the same order: True
+    ⚠ `clip` byte-identity is proven on the remaining 4,611 spans. On these it is UNRULED and REFUSES, so
+      byte-identity is not expected and asserting it would be wrong. `admit_raw` and
+      `drop` are defined here and are compared on ALL spans, including these.
+
+  ⚠⚠ DISCRIMINATION — did the corpus actually exercise the difference?
+  ------------------------------------------------------------------------------------------------
+    spans where drop_vs_clip           produce different intervals : 1,238
+    spans where drop_vs_admit_raw      produce different intervals : 1,296
+    spans where clip_vs_admit_raw      produce different intervals : 1,238
+    ⚠ proof is vacuous: False
+
+  VERDICT: PASS   (byte-identical under all three rules: True; non-vacuous: True)

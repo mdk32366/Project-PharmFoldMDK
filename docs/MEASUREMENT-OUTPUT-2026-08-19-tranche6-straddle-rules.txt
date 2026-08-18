@@ -1,9 +1,6 @@
-ORDERS-Code-2026-08-19 Tasks M / N / O — captured output
+ORDERS-Code-2026-08-19 Tasks M / N / O / U — captured output
 instrument : scripts/tranche6_runs_clip_compare.py
-⚠ REGENERATED AFTER THE §9 RECONCILIATION. The pre-reconciliation capture — in which M1
-  reported TWO divergent functions in two modules — is at commit 7591164 and stays reachable.
-  Every measured number below is unchanged; only M1's provenance section differs.
-repo HEAD  : 75911649cee74abdd5270f07c888ba0de1093e68
+repo HEAD  : 0785eebfc230eae02a76f8109ed23af9cb0244f8
 interpreter: Python 3.11.9
 DATABASE_URL at run time: []  (empty — no DB, no network, no GPU)
 
@@ -12,14 +9,14 @@ TASK M1 — PROVENANCE. Which `domain_intervals` does each column use?
 ====================================================================================================
   ⚠ The import lines in this file, quoted verbatim, not described:
         51 | from scripts.tranche6_domain_census import (  # noqa: E402
-        55 |     domain_intervals,
-        58 | from scripts.tranche6_domain_survey import merge  # noqa: E402
-        59 | from scripts.tranche6_runs import TRAINED_CONTEXT, classify_regime  # noqa: E402
+        56 |     domain_intervals,
+        60 | from scripts.tranche6_domain_survey import merge  # noqa: E402
+        61 | from scripts.tranche6_runs import TRAINED_CONTEXT, classify_regime  # noqa: E402
 
   ⚠⚠ POST-RECONCILIATION: all three columns are ONE function under three NAMES.
       module                                        line  signature
       --------------------------------------------------------------------------------------------
-      scripts.tranche6_domain_census                 133  domain_intervals(doc: 'dict', s0: 'int', s1: 'int', *, straddle: 'str') -> 'list[tuple[int, int, str, str]]'
+      scripts.tranche6_domain_census                 185  domain_intervals(doc: 'dict', s0: 'int', s1: 'int', *, straddle: 'str', acc: 'str | None' = None) -> 'list[tuple[int, int, str, str]]'
       rules: ('admit_raw', 'drop', 'clip')
 
       straddle is keyword-only : True
@@ -32,18 +29,74 @@ TASK M1 — PROVENANCE. Which `domain_intervals` does each column use?
     that commit was taken against those two divergent functions, by R3's sequence.
 
 ====================================================================================================
-TASK M2 — STRADDLERS UNDER `admit_raw`, bucketed BY DIRECTION, three populations
+TASK M2 / U2 — THE FOUR-WAY PARTITION under `admit_raw`, three populations
 ====================================================================================================
-  ⚠ past `s1` and before `s0` are DIFFERENT MISTAKES and are never summed together.
+  ⚠ `engulfing` is NOT a refinement of `both ends` — a feature crossing both boundaries
+    has no edge inside the span, and `clip` has no ruling for it (it REFUSES).
+  ⚠ features AND the distinct accessions they touch: 58 features on 58 proteins and
+    58 features on 6 proteins would be different findings.
 
-  population                                             rows   feats   >s1   <s0  both   res>s1   res<s0
+  population                                            rows  feats      inside  overhang_n  overhang_c   engulfing
   ------------------------------------------------------------------------------------------------
-  (a) the 141  [tranche=5 AND span_aa>1026 strictly, D-098]    141    2399     2     1     0       42        3
-  (b) the ten  [D-095 subjects, D-091 r3]                  10     521     0     0     0        0        0
-  (c) full census  [census_manifest.v7.csv, every row]   3467    6491    30    15    50     5632     5842
+  (a) the 141  [tranche=5 AND span_aa>1026 strictly, D-098]   141   2399        2396           1           2           0
+                                                              accs:         131           1           2           0
+                                                       residues before s0      3   past s1     42
+  (b) the ten  [D-095 subjects, D-091 r3]                 10    521         521           0           0           0
+                                                              accs:          10           0           0           0
+                                                       residues before s0      0   past s1      0
+  (c) full census  [census_manifest.v7.csv, every row]  3467   6491        6396          11          26          58
+                                                              accs:        1140          11          26          58
+                                                       residues before s0   5842   past s1   5632
 
   ⚠ CACHE COVERAGE, stated rather than assumed — an absence would be a category:
       manifest rows with a cached UniProt doc : 3467 of 3467   absent: 0  
+
+====================================================================================================
+TASK U3 — WHAT THE ENGULFING FEATURES ACTUALLY ARE
+====================================================================================================
+  engulfing features: 58   distinct accessions: 58   -> one each
+  type: {'Repeat': 14, 'Domain': 44}
+  flush at s0 (a == s0): 4    flush at s1 (b == s1): 4    strictly beyond both: 50
+  span length of the affected rows: min 5  median 45  max 145
+  ⚠⚠ any of them past the 1026 aa trained context? 0  — so none can enter tranche 6 today
+
+  top descriptions:
+     13  I
+      9  MARVEL
+      6  ABC transmembrane type-1 2
+      5  Cytochrome b561
+      4  KASH
+      4  UPAR/Ly6
+      4  ABC transmembrane type-2
+      3  HIG1
+
+  ⚠ Read the descriptions: MARVEL, ABC transmembrane, Cytochrome b561, KASH, HIG1,
+    UPAR/Ly6 are POLYTOPIC MEMBRANE domains. The V2 span here is a short extracellular
+    loop INSIDE a larger transmembrane domain — so engulfment is not an annotation
+    artifact, it is what a loop in a multi-pass protein looks like. ⚠⚠ That is an
+    argument for a rule, and the rule is the owner's; this reports it, nothing more.
+
+====================================================================================================
+TASK U5 — `no_domains` IS A CATEGORY WITH A CAUSE, AND ONE CAUSE IS NEW
+====================================================================================================
+  ⚠ A row whose only overlapping features ENGULF the span reports `no_domains` under
+    `drop` because they were DROPPED, not because it carries no annotation.
+
+  the 141 — rows with no domains under `drop`: 10 of 141
+    no_domainlike_features_in_the_chain               10
+    features_exist_but_none_overlaps_the_span          0
+    all_overlapping_features_overhang_a_boundary       0
+    all_overlapping_features_ENGULF_the_span           0
+    dropped_mixed_engulfing_and_overhang               0
+    TOTAL                                             10   ⚠ causes sum to the independently counted 10 no-domain rows: True
+
+  full census — rows with no domains under `drop`: 2327 of 3467
+    no_domainlike_features_in_the_chain             2033
+    features_exist_but_none_overlaps_the_span        215
+    all_overlapping_features_overhang_a_boundary      21
+    all_overlapping_features_ENGULF_the_span          58   ⚠⚠ the new cause
+    dropped_mixed_engulfing_and_overhang               0
+    TOTAL                                           2327   ⚠ causes sum to the independently counted 2327 no-domain rows: True
 
 ====================================================================================================
 TASK M3 — THE TEN `D-095` SUBJECTS UNDER ALL THREE RULES (merge rule = shipped)
@@ -122,14 +175,20 @@ TASK N — THE +3 / +2 RECONCILIATION, by named interval
   Q9Y493 / ZAN   span 18-2757
     intervals: drop 16 -> clip 17  (+1)
       ADDED  2652-2757  (raw 2652-2797, past s1)  Domain: VWFC 5
+      abutting OR overlapping  2652-2757 ABSORBED into run 2708-2744
     abutting OR overlapping  runs 12 -> 12  delta +0   predicted +0 (new 0, absorbed 1, bridged 0)  [OK]
+      overlapping ONLY         2652-2757 ABSORBED into run 2708-2744
     overlapping ONLY         runs 15 -> 15  delta +0   predicted +0 (new 0, absorbed 1, bridged 0)  [OK]
 
   Q6V1P9 / DCHS2   span 68-2986
     intervals: drop 25 -> clip 27  (+2)
       ADDED  68-167  (raw 65-167, before s0)  Domain: Cadherin 1
       ADDED  2881-2986  (raw 2881-2988, past s1)  Domain: Cadherin 27
+      abutting OR overlapping  68-167 ABSORBED into run 168-413
+      abutting OR overlapping  2881-2986 ABSORBED into run 2140-2880
     abutting OR overlapping  runs 5 -> 5  delta +0   predicted +0 (new 0, absorbed 2, bridged 0)  [OK]
+      overlapping ONLY         68-167 became its OWN run (touches nothing)
+      overlapping ONLY         2881-2986 became its OWN run (touches nothing)
     overlapping ONLY         runs 21 -> 23  delta +2   predicted +2 (new 2, absorbed 0, bridged 0)  [OK]
 
   ⚠ The census-wide totals this accounts for: overlapping-ONLY 2,264 -> 2,266 (+2),
