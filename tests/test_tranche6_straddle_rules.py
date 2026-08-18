@@ -32,18 +32,34 @@ REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from scripts.tranche6_domain_survey import domain_intervals as admit_raw_intervals  # noqa: E402
+import pytest  # noqa: E402
+
+from scripts.tranche6_domain_census import (  # noqa: E402
+    STRADDLE_RULES,
+    UnknownStraddleRule,
+    domain_intervals,
+)
 from scripts.tranche6_domain_survey import merge  # noqa: E402
 from scripts.tranche6_runs import TRAINED_CONTEXT, classify_regime  # noqa: E402
-from scripts.tranche6_runs import domain_intervals as drop_intervals  # noqa: E402
 from scripts.tranche6_runs_clip_compare import (  # noqa: E402
-    clip_intervals,
     merge_overlap_only,
     misfiled_single_run,
     straddle_overhang,
 )
 
 S0, S1 = 100, 1000
+
+
+def admit_raw_intervals(doc, s0, s1):
+    return domain_intervals(doc, s0, s1, straddle="admit_raw")
+
+
+def drop_intervals(doc, s0, s1):
+    return domain_intervals(doc, s0, s1, straddle="drop")
+
+
+def clip_intervals(doc, s0, s1):
+    return domain_intervals(doc, s0, s1, straddle="clip")
 
 
 def _feature(a: int, b: int, desc: str = "d", typ: str = "Domain") -> dict:
@@ -188,6 +204,85 @@ def test_overhang_is_zero_when_nothing_straddles():
 
 
 # ───────────────────────────────────────────────────────────────── the rules agree where they must ──
+
+# ─────────────────────────────────────────── the contract: no default, no silent coercion ──
+
+def test_straddle_has_no_default_and_omitting_it_raises():
+    """⚠⚠ The whole point of the reconciliation. A default would restore the ambiguity.
+
+    Before 2026-08-19 the rule was chosen by WHICH MODULE you imported from, which is a default
+    nobody wrote down. `straddle` is keyword-only with no default, so a caller that does not say
+    which rule it wants does not get one.
+    """
+    import inspect
+    sig = inspect.signature(domain_intervals)
+    param = sig.parameters["straddle"]
+    assert param.kind is inspect.Parameter.KEYWORD_ONLY
+    assert param.default is inspect.Parameter.empty
+
+    with pytest.raises(TypeError):
+        domain_intervals(_doc(), S0, S1)                  # omitted entirely
+    with pytest.raises(TypeError):
+        domain_intervals(_doc(), S0, S1, "clip")          # positional is not accepted
+
+
+def test_an_unrecognised_rule_raises_rather_than_falling_back():
+    """⚠ An unknown rule is a named error, never a coercion to a neighbour."""
+    with pytest.raises(UnknownStraddleRule):
+        domain_intervals(_doc(), S0, S1, straddle="nonsense")
+    with pytest.raises(UnknownStraddleRule):
+        domain_intervals(_doc(), S0, S1, straddle="CLIP")   # ⚠ case matters; near-miss still raises
+    assert STRADDLE_RULES == ("admit_raw", "drop", "clip")
+
+
+# ──────────────────────────────── the boundary cases the CACHE CANNOT discriminate ──
+
+def test_a_domain_ending_exactly_at_s0_is_admitted():
+    """⚠⚠ THE CACHE CANNOT PROVE THIS ONE. Measured 2026-08-19: flipping `b < s0` to `b <= s0`
+    leaves the cache-wide equivalence proof GREEN across 4,990 documents and 4,669 spans, because
+    no annotated domain in the corpus ends exactly at a span start. **An inequality the data
+    cannot discriminate has to be pinned by a fixture or it is not pinned at all.**
+
+    A domain ending at exactly `s0` overlaps the span by one residue. That residue is inside the
+    span, so `admit_raw` and `clip` must keep it.
+    """
+    doc = _doc(_feature(50, S0, "ends_exactly_at_s0"))
+    assert [(a, b) for a, b, *_ in admit_raw_intervals(doc, S0, S1)] == [(50, S0)]
+    assert [(a, b) for a, b, *_ in clip_intervals(doc, S0, S1)] == [(S0, S0)]
+    assert drop_intervals(doc, S0, S1) == []               # it leaves the span, so drop rejects it
+
+    # ⚠ One residue further out and it does NOT overlap — the rule must exclude it.
+    just_outside = _doc(_feature(50, S0 - 1, "ends_one_before_s0"))
+    assert admit_raw_intervals(just_outside, S0, S1) == []
+    assert clip_intervals(just_outside, S0, S1) == []
+
+
+def test_a_domain_starting_exactly_at_s1_is_admitted():
+    """The mirror case at the far boundary, pinning `a > s1` rather than `a >= s1`."""
+    doc = _doc(_feature(S1, 1200, "starts_exactly_at_s1"))
+    assert [(a, b) for a, b, *_ in admit_raw_intervals(doc, S0, S1)] == [(S1, 1200)]
+    assert [(a, b) for a, b, *_ in clip_intervals(doc, S0, S1)] == [(S1, S1)]
+    assert drop_intervals(doc, S0, S1) == []
+
+    just_outside = _doc(_feature(S1 + 1, 1200, "starts_one_past_s1"))
+    assert admit_raw_intervals(just_outside, S0, S1) == []
+    assert clip_intervals(just_outside, S0, S1) == []
+
+
+def test_drops_boundary_is_inclusive_at_both_ends():
+    """⚠ `drop` rejects on `a < s0 or b > s1`, so a domain flush with either edge is KEPT.
+
+    Pins the difference between `<` and `<=` in the drop predicate, which the cache also cannot
+    discriminate on its own.
+    """
+    flush = _doc(_feature(S0, S1, "exactly_the_span"))
+    assert [(a, b) for a, b, *_ in drop_intervals(flush, S0, S1)] == [(S0, S1)]
+
+    one_before = _doc(_feature(S0 - 1, S1, "starts_one_before_s0"))
+    assert drop_intervals(one_before, S0, S1) == []
+    one_past = _doc(_feature(S0, S1 + 1, "ends_one_past_s1"))
+    assert drop_intervals(one_past, S0, S1) == []
+
 
 def test_all_three_rules_agree_when_nothing_straddles():
     """⚠ The control. If these ever disagree here, the difference is not the straddle rule."""

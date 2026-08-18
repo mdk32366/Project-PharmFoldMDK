@@ -32,7 +32,11 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from scripts.tranche6_domain_census import UNIPROT_CACHE, past_context_rows  # noqa: E402
+from scripts.tranche6_domain_census import (  # noqa: E402
+    UNIPROT_CACHE,
+    domain_intervals,
+    past_context_rows,
+)
 from scripts.tranche6_domain_survey import merge  # noqa: E402  — see module docstring
 
 TRAINED_CONTEXT = 1026
@@ -61,21 +65,6 @@ def classify_regime(*, n_domains: int, runs: list[int]) -> str:
     return "one_oversized_run" if over == 1 else "multiple_oversized_runs"
 
 
-def domain_intervals(doc: dict, s0: int, s1: int):
-    """`Domain` + `Repeat` wholly inside the span. ⚠ `Repeat` is not optional — dropping it loses
-    34 LDL-receptor class B repeats from LRP1 alone (`D-095` decision 1(b))."""
-    out = []
-    for f in doc.get("features", []):
-        if f.get("type") not in ("Domain", "Repeat"):
-            continue
-        a = f["location"]["start"].get("value")
-        b = f["location"]["end"].get("value")
-        if a is None or b is None or a < s0 or b > s1:
-            continue
-        out.append((int(a), int(b), f.get("description", ""), f.get("type")))
-    return sorted(out)
-
-
 def main() -> int:
     rows = past_context_rows()
     genes = {}
@@ -88,7 +77,7 @@ def main() -> int:
         acc = r["census_accession"]
         s0, s1 = int(r["span_start"]), int(r["span_end"])
         doc = json.loads((UNIPROT_CACHE / f"{acc}.json").read_bytes().decode("utf-8"))
-        iv = domain_intervals(doc, s0, s1)
+        iv = domain_intervals(doc, s0, s1, straddle="drop")
         runs = [b - a + 1 for a, b in merge(iv)]
         recs.append({
             "acc": acc, "gene": genes.get(acc, ""), "span_aa": int(r["span_aa"]),
@@ -184,7 +173,8 @@ def main() -> int:
         acc = r["census_accession"]
         s0, s1 = int(r["span_start"]), int(r["span_end"])
         doc = json.loads((UNIPROT_CACHE / f"{acc}.json").read_bytes().decode("utf-8"))
-        rr = [b - a + 1 for a, b in merge_overlap_only(domain_intervals(doc, s0, s1))]
+        rr = [b - a + 1 for a, b in
+              merge_overlap_only(domain_intervals(doc, s0, s1, straddle="drop"))]
         tot_ov += len(rr)
         if any(x > TRAINED_CONTEXT for x in rr):
             over_ov += 1

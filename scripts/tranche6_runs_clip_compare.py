@@ -3,22 +3,29 @@
 ⚠⚠ **THERE ARE THREE RULES, NOT TWO**, and the third is the one that produced `D-095`'s founding
 numbers:
 
-| rule | predicate | behaviour | defined in |
-|---|---|---|---|
-| `admit_raw` | `b < s0 or a > s1` rejects | admits straddlers **UNCLIPPED** | `scripts/tranche6_domain_survey.py` |
-| `drop`      | `a < s0 or b > s1` rejects | wholly-inside only, **drops** straddlers | `scripts/tranche6_runs.py` |
-| `clip`      | any overlap, truncated to the span | admits straddlers **CLIPPED** | here, mirroring `bucket_domains` |
+| rule | behaviour | pre-reconciliation home (at `7011e24`) |
+|---|---|---|
+| `admit_raw` | admits straddlers **UNCLIPPED** | `scripts/tranche6_domain_survey.py:67` |
+| `drop`      | wholly-inside only, **drops** straddlers | `scripts/tranche6_runs.py:64` |
+| `clip`      | admits straddlers **CLIPPED** to the span | ⚠ ruled but unimplemented |
 
 ⚠ `admit_raw` had never been named anywhere in this project. A two-column table has already lost it.
 
-The ruling (`CLOSEOUT-2026-08-18.md` §5, given a number by `D-095 amendment 1`) is **CLIP**.
-⚠ **This script does not apply it.** It measures what applying it would change, so the amendment is
-written against numbers rather than against an expectation. `R2`/`R3` of the orders: no behavioural
-change to either shipped `domain_intervals`, and the divergence is disclosed, not reconciled.
+⚠⚠ **THE THREE ARE NOW ONE FUNCTION**, `scripts/tranche6_domain_census.domain_intervals`, taking
+`straddle` as a **keyword-only argument with no default** — a caller that omits it gets a
+`TypeError`, not a behaviour. The divergence is recorded at `7591164` (measured against the
+divergent code, per `R3`'s sequence) and closed by the commit carrying this line. Byte-identity
+against all three pre-change implementations is proven cache-wide by
+`scripts/tranche6_domain_intervals_equivalence.py`, on hashes of serialised intervals rather than
+on counts.
 
-⚠ Nothing is reimplemented. `merge`, `classify_regime`, and BOTH shipped `domain_intervals` are
-IMPORTED from the modules that ship them, so if any of them moves this measurement moves too. Only
-`clip_intervals` and `merge_overlap_only` are defined here, because nothing ships them.
+The ruling (`CLOSEOUT-2026-08-18.md` §5, given a number by `D-095 amendment 1`) is **CLIP**.
+⚠ **This script still does not apply it** — it reports all three side by side. Reconciling the
+implementations is not the same as choosing between the rules, and only the second is a decision.
+
+⚠ Nothing is reimplemented. `domain_intervals`, `merge` and `classify_regime` are IMPORTED from the
+modules that ship them, so if any of them moves this measurement moves too. Only
+`merge_overlap_only` is defined here, because nothing ships it.
 
 ⚠⚠ **`classify_regime` is NOT reordered** (`O1`, and `D-074` decision 3: name the check, do not build
 the framework). The misfiling path is measured and reported with its zero instead.
@@ -41,14 +48,15 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from scripts.tranche6_domain_census import MANIFEST, UNIPROT_CACHE, past_context_rows  # noqa: E402
-from scripts.tranche6_domain_survey import merge  # noqa: E402
-from scripts.tranche6_domain_survey import domain_intervals as admit_raw_intervals  # noqa: E402
-from scripts.tranche6_runs import (  # noqa: E402
-    TRAINED_CONTEXT,
-    classify_regime,
-    domain_intervals as drop_intervals,
+from scripts.tranche6_domain_census import (  # noqa: E402
+    MANIFEST,
+    STRADDLE_RULES,
+    UNIPROT_CACHE,
+    domain_intervals,
+    past_context_rows,
 )
+from scripts.tranche6_domain_survey import merge  # noqa: E402
+from scripts.tranche6_runs import TRAINED_CONTEXT, classify_regime  # noqa: E402
 
 LABELS = REPO / "data" / "census" / "census_labels.csv"
 W = 100
@@ -59,29 +67,6 @@ TEN = ("Q14517", "Q9NYQ8", "Q8TDW7", "Q6V0I7", "Q07954",
 
 REGIMES = ("no_domains", "single_run_only", "one_oversized_run",
            "multiple_oversized_runs", "all_runs_in_context")
-
-
-def clip_intervals(doc: dict, s0: int, s1: int):
-    """`Domain` + `Repeat` overlapping the span, CLIPPED to it — `bucket_domains`' rule.
-
-    ⚠ The difference from the shipped `domain_intervals` is one predicate: it rejects a feature
-    whose coordinates leave the span; this admits it and truncates it. A clipped straddler occupies
-    its residues; dropping it manufactures a gap at the span boundary that does not exist in the
-    molecule — **and a phantom gap is a phantom cut site.**
-    """
-    out = []
-    for f in doc.get("features", []):
-        if f.get("type") not in ("Domain", "Repeat"):
-            continue
-        a = f["location"]["start"].get("value")
-        b = f["location"]["end"].get("value")
-        if a is None or b is None:
-            continue
-        a, b = int(a), int(b)
-        if b < s0 or a > s1:
-            continue
-        out.append((max(a, s0), min(b, s1), f.get("description", ""), f.get("type")))
-    return sorted(out)
 
 
 def merge_overlap_only(intervals) -> list[list[int]]:
@@ -112,7 +97,7 @@ def straddle_overhang(doc: dict, s0: int, s1: int) -> dict:
     o = {"n_admitted": 0, "n_wholly_inside": 0, "n_before_s0_only": 0,
          "n_past_s1_only": 0, "n_both_ends": 0,
          "residues_before_s0": 0, "residues_past_s1": 0}
-    for a, b, *_ in admit_raw_intervals(doc, s0, s1):
+    for a, b, *_ in domain_intervals(doc, s0, s1, straddle="admit_raw"):
         o["n_admitted"] += 1
         before, past = a < s0, b > s1
         if before:
@@ -155,9 +140,9 @@ def record(acc: str, gene: str, span_aa: int, iv, merge_fn=merge) -> dict:
     }
 
 
-INTERVAL_RULES = (("admit_raw", admit_raw_intervals),
-                  ("drop", drop_intervals),
-                  ("clip", clip_intervals))
+#: ⚠ Three NAMES against ONE function. Before the reconciliation these were three separate
+#: callables in two modules; the divergence is recorded at 7591164 and closed here.
+INTERVAL_RULES = tuple((r, r) for r in STRADDLE_RULES)
 MERGE_RULES = (("abutting OR overlapping", merge), ("overlapping ONLY", merge_overlap_only))
 
 
@@ -170,50 +155,60 @@ def _manifest_rows() -> list[dict]:
         return list(csv.DictReader(fh))
 
 
-def _build(rows, genes, iv_fn, merge_fn) -> list[dict]:
+def _build(rows, genes, rule, merge_fn) -> list[dict]:
     out = []
     for r in rows:
         acc = r["census_accession"]
         s0, s1 = int(r["span_start"]), int(r["span_end"])
         out.append(record(acc, genes.get(acc, ""), int(r["span_aa"]),
-                          iv_fn(_doc(acc), s0, s1), merge_fn))
+                          domain_intervals(_doc(acc), s0, s1, straddle=rule), merge_fn))
     return out
-
-
-def _predicate_of(fn) -> str:
-    for line in inspect.getsourcelines(fn)[0]:
-        s = line.strip()
-        if s.startswith("if ") and "s0" in s and "s1" in s:
-            return s
-    return "(clip: any overlap, truncated — see clip_intervals)"
 
 
 # ══════════════════════════════════════════════════════════════════════════════════ the report ══
 
 def task_m1() -> None:
     print("=" * W)
-    print("TASK M1 — PROVENANCE OF THE 2x2. Which `domain_intervals` does the DROP column use?")
+    print("TASK M1 — PROVENANCE. Which `domain_intervals` does each column use?")
     print("=" * W)
-    print("  ⚠ The import line in this file, quoted verbatim, not described:")
+    print("  ⚠ The import lines in this file, quoted verbatim, not described:")
     src = pathlib.Path(__file__).read_text(encoding="utf-8").splitlines()
     for i, line in enumerate(src, 1):
         s = line.strip()
         # ⚠ Only the import statements themselves — a looser match quotes this matcher's own
         # source back at the reader, which is a disclosure that names the wrong lines.
-        if s.startswith("from scripts.tranche6") or s.startswith("domain_intervals as"):
+        if s.startswith("from scripts.tranche6") or s in ("domain_intervals,",):
             print(f"      {i:4d} | {line}")
-    print()
-    print(f"  {'rule':11s} {'module':38s} {'line':>5s}  predicate")
-    print("  " + "-" * (W - 4))
-    for name, fn in INTERVAL_RULES:
-        if name == "clip":
-            print(f"  {name:11s} {'scripts.tranche6_runs_clip_compare':38s} "
-                  f"{inspect.getsourcelines(fn)[1]:5d}  (any overlap, truncated to [s0, s1])")
-            continue
-        print(f"  {name:11s} {fn.__module__:38s} {inspect.getsourcelines(fn)[1]:5d}  "
-              f"{_predicate_of(fn)}")
-    print(f"\n  ⚠ drop is admit_raw? {drop_intervals is admit_raw_intervals}   "
-          f"— the DROP column is genuinely DROP, so the table below stands as measured.")
+
+    print("\n  ⚠⚠ POST-RECONCILIATION: all three columns are ONE function under three NAMES.")
+    print(f"      {'module':44s} {'line':>5s}  signature")
+    print("      " + "-" * (W - 8))
+    sig = inspect.signature(domain_intervals)
+    print(f"      {domain_intervals.__module__:44s} "
+          f"{inspect.getsourcelines(domain_intervals)[1]:5d}  domain_intervals{sig}")
+    print(f"      rules: {STRADDLE_RULES}")
+
+    # ⚠ The contract is asserted at run time, not asserted in prose. A default would silently
+    # restore exactly the ambiguity this task exists to close.
+    has_default = sig.parameters["straddle"].default is not inspect.Parameter.empty
+    kw_only = sig.parameters["straddle"].kind is inspect.Parameter.KEYWORD_ONLY
+    try:
+        domain_intervals({}, 1, 10)
+        omitted = "RETURNED A VALUE  *** the argument is optional ***"
+    except TypeError as exc:
+        omitted = f"TypeError: {exc}"
+    try:
+        domain_intervals({}, 1, 10, straddle="nonsense")
+        unknown = "RETURNED A VALUE  *** an unknown rule was coerced ***"
+    except ValueError as exc:
+        unknown = f"{type(exc).__name__}: {exc}"
+    print(f"\n      straddle is keyword-only : {kw_only}")
+    print(f"      straddle has a default   : {has_default}   (⚠ must be False)")
+    print(f"      omitting it              : {omitted}")
+    print(f"      an unrecognised rule     : {unknown}")
+    print("\n  ⚠ Before 7591164 the DROP column came from `scripts.tranche6_runs` and the")
+    print("    ADMIT_RAW column from `scripts.tranche6_domain_survey`, and the measurement at")
+    print("    that commit was taken against those two divergent functions, by R3's sequence.")
 
 
 def task_m2(genes) -> None:
@@ -309,12 +304,13 @@ def task_n(genes) -> None:
         r = rows[acc]
         s0, s1 = int(r["span_start"]), int(r["span_end"])
         doc = _doc(acc)
-        d_iv, c_iv = drop_intervals(doc, s0, s1), clip_intervals(doc, s0, s1)
+        d_iv = domain_intervals(doc, s0, s1, straddle="drop")
+        c_iv = domain_intervals(doc, s0, s1, straddle="clip")
         added = [iv for iv in c_iv if (iv[0], iv[1]) not in {(x[0], x[1]) for x in d_iv}]
         print(f"\n  {acc} / {genes.get(acc, '')}   span {s0}-{s1}")
         print(f"    intervals: drop {len(d_iv)} -> clip {len(c_iv)}  (+{len(c_iv) - len(d_iv)})")
         for a, b, desc, typ in added:
-            src = next(iv for iv in admit_raw_intervals(doc, s0, s1)
+            src = next(iv for iv in domain_intervals(doc, s0, s1, straddle="admit_raw")
                        if max(iv[0], s0) == a and min(iv[1], s1) == b)
             end = "past s1" if src[1] > s1 else ("before s0" if src[0] < s0 else "?")
             print(f"      ADDED  {a}-{b}  (raw {src[0]}-{src[1]}, {end})  {typ}: {desc[:44]}")

@@ -1,26 +1,35 @@
 ORDERS-Code-2026-08-19 Tasks M / N / O — captured output
 instrument : scripts/tranche6_runs_clip_compare.py
-repo HEAD  : 7011e2402e87745d029b32aaff1c72c4e15628d5
+⚠ REGENERATED AFTER THE §9 RECONCILIATION. The pre-reconciliation capture — in which M1
+  reported TWO divergent functions in two modules — is at commit 7591164 and stays reachable.
+  Every measured number below is unchanged; only M1's provenance section differs.
+repo HEAD  : 75911649cee74abdd5270f07c888ba0de1093e68
 interpreter: Python 3.11.9
 DATABASE_URL at run time: []  (empty — no DB, no network, no GPU)
 
 ====================================================================================================
-TASK M1 — PROVENANCE OF THE 2x2. Which `domain_intervals` does the DROP column use?
+TASK M1 — PROVENANCE. Which `domain_intervals` does each column use?
 ====================================================================================================
-  ⚠ The import line in this file, quoted verbatim, not described:
-        44 | from scripts.tranche6_domain_census import MANIFEST, UNIPROT_CACHE, past_context_rows  # noqa: E402
-        45 | from scripts.tranche6_domain_survey import merge  # noqa: E402
-        46 | from scripts.tranche6_domain_survey import domain_intervals as admit_raw_intervals  # noqa: E402
-        47 | from scripts.tranche6_runs import (  # noqa: E402
-        50 |     domain_intervals as drop_intervals,
+  ⚠ The import lines in this file, quoted verbatim, not described:
+        51 | from scripts.tranche6_domain_census import (  # noqa: E402
+        55 |     domain_intervals,
+        58 | from scripts.tranche6_domain_survey import merge  # noqa: E402
+        59 | from scripts.tranche6_runs import TRAINED_CONTEXT, classify_regime  # noqa: E402
 
-  rule        module                                  line  predicate
-  ------------------------------------------------------------------------------------------------
-  admit_raw   scripts.tranche6_domain_survey            67  if a is None or b is None or b < s0 or a > s1:
-  drop        scripts.tranche6_runs                     64  if a is None or b is None or a < s0 or b > s1:
-  clip        scripts.tranche6_runs_clip_compare        64  (any overlap, truncated to [s0, s1])
+  ⚠⚠ POST-RECONCILIATION: all three columns are ONE function under three NAMES.
+      module                                        line  signature
+      --------------------------------------------------------------------------------------------
+      scripts.tranche6_domain_census                 133  domain_intervals(doc: 'dict', s0: 'int', s1: 'int', *, straddle: 'str') -> 'list[tuple[int, int, str, str]]'
+      rules: ('admit_raw', 'drop', 'clip')
 
-  ⚠ drop is admit_raw? False   — the DROP column is genuinely DROP, so the table below stands as measured.
+      straddle is keyword-only : True
+      straddle has a default   : False   (⚠ must be False)
+      omitting it              : TypeError: domain_intervals() missing 1 required keyword-only argument: 'straddle'
+      an unrecognised rule     : UnknownStraddleRule: straddle='nonsense' is not one of ('admit_raw', 'drop', 'clip')
+
+  ⚠ Before 7591164 the DROP column came from `scripts.tranche6_runs` and the
+    ADMIT_RAW column from `scripts.tranche6_domain_survey`, and the measurement at
+    that commit was taken against those two divergent functions, by R3's sequence.
 
 ====================================================================================================
 TASK M2 — STRADDLERS UNDER `admit_raw`, bucketed BY DIRECTION, three populations

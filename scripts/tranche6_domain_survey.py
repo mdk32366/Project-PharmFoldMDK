@@ -21,7 +21,20 @@ import hashlib
 import json
 import pathlib
 import statistics
+import sys
 from collections import Counter
+
+_REPO = pathlib.Path(__file__).resolve().parents[1]
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
+
+# ⚠ `domain_intervals` used to be defined HERE, differing from the copy in
+# `scripts/tranche6_runs.py` by one inequality: this one admitted straddling domains UNCLIPPED,
+# that one dropped them. They agreed on every protein whose domains sat clear of the span boundary
+# and disagreed silently on the three that did not. ⚠⚠ **This module's rule is `admit_raw`, and it
+# is what produced `D-095`'s founding numbers** — so the call below names it rather than inheriting
+# it. See the equivalence proof in `scripts/tranche6_domain_intervals_equivalence.py`.
+from scripts.tranche6_domain_census import domain_intervals  # noqa: E402
 
 CACHE = pathlib.Path("data/census/spancache")
 MANIFEST = pathlib.Path("data/census/census_manifest.v7.csv")
@@ -62,20 +75,6 @@ def match_count(xref: dict) -> int | None:
 def load(acc: str) -> tuple[dict, str]:
     blob = (CACHE / f"{acc}.json").read_bytes()
     return json.loads(blob.decode("utf-8")), hashlib.sha256(blob).hexdigest()
-
-
-def domain_intervals(doc: dict, s0: int, s1: int) -> list[tuple[int, int, str, str]]:
-    """Domain-like features falling within [s0, s1], sorted by start."""
-    out = []
-    for f in doc.get("features", []):
-        if f.get("type") not in DOMAINLIKE:
-            continue
-        a = f["location"]["start"].get("value")
-        b = f["location"]["end"].get("value")
-        if a is None or b is None or b < s0 or a > s1:
-            continue
-        out.append((a, b, f.get("description", ""), f.get("type")))
-    return sorted(out)
 
 
 def merge(intervals) -> list[list[int]]:
@@ -168,7 +167,7 @@ def main() -> None:
         row = manifest[acc]
         s0, s1 = int(row["span_start"]), int(row["span_end"])
         doc, sha = load(acc)
-        iv = domain_intervals(doc, s0, s1)
+        iv = domain_intervals(doc, s0, s1, straddle="admit_raw")
         sizes = [b - a + 1 for a, b, *_ in iv]
         runs = merge(iv)
         run_sizes = [b - a + 1 for a, b in runs]

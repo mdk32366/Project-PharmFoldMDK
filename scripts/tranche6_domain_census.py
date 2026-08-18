@@ -115,6 +115,68 @@ def _coords(feature: dict) -> tuple[Optional[int], Optional[int]]:
     return (out[0], out[1])
 
 
+#: The three straddle rules. ⚠⚠ **THERE ARE THREE, NOT TWO.** Until 2026-08-19 two of them lived
+#: as separate `domain_intervals` functions in two scripts, differing by one inequality, and the
+#: third — `clip` — was ruled but unimplemented. `admit_raw` produced `D-095`'s founding numbers
+#: and had never been named anywhere in this project.
+STRADDLE_RULES = ("admit_raw", "drop", "clip")
+
+
+class UnknownStraddleRule(ValueError):
+    """⚠ An unrecognised straddle rule RAISES. It is never coerced to a default.
+
+    `D-095 amendment 1` records `straddle_handling` on every derived artifact, and a rule that
+    silently fell back would put an unrecorded parameter on a recorded object.
+    """
+
+
+def domain_intervals(doc: dict, s0: int, s1: int, *,
+                     straddle: str) -> list[tuple[int, int, str, str]]:
+    """Domain-like intervals against the span `[s0, s1]`, under a NAMED straddle rule.
+
+    ⚠⚠ `straddle` is keyword-only and has **NO DEFAULT**. A caller that omits it gets a
+    `TypeError`, not a behaviour. This is the whole point of the reconciliation: the two functions
+    this replaces differed by one inequality, agreed on every protein whose domains sat clear of
+    the span boundary, and disagreed silently on the three that did not.
+
+    - ``admit_raw`` — any overlap, coordinates **UNCLIPPED**. ⚠ Intervals may extend outside the
+      span, so sums over them count residues the span does not contain (45 of them across the 141).
+    - ``drop`` — wholly inside only. ⚠ Manufactures a gap at the span boundary that does not exist
+      in the molecule, **and a phantom gap is a phantom cut site.**
+    - ``clip`` — any overlap, truncated to `[s0, s1]`. The ruled rule (`D-095 amendment 1`), and
+      the rule `bucket_domains` above already uses for residue coverage.
+
+    ⚠ The coordinate read is deliberately the pre-reconciliation one (`location.start.value`) and
+    **not** `_coords`, which additionally rejects an `UNKNOWN` modifier. Measured 2026-08-19 across
+    all 4,990 cached documents and 9,008 `Domain`/`Repeat` features: **zero** carry an `UNKNOWN`
+    modifier and **zero** lack `start`/`end`, so the two reads agree on this cache today. ⚠⚠ That
+    is agreement by DATA, not by construction — changing the read here would be a behavioural
+    change wearing a refactor's clothes, so it is left alone and named instead.
+    """
+    if straddle not in STRADDLE_RULES:
+        raise UnknownStraddleRule(
+            f"straddle={straddle!r} is not one of {STRADDLE_RULES}")
+    out: list[tuple[int, int, str, str]] = []
+    for f in doc.get("features", []):
+        if f.get("type") not in DOMAIN_LIKE:
+            continue
+        a = f["location"]["start"].get("value")
+        b = f["location"]["end"].get("value")
+        if a is None or b is None:
+            continue
+        a, b = int(a), int(b)
+        if straddle == "drop":
+            if a < s0 or b > s1:
+                continue
+        else:
+            if b < s0 or a > s1:
+                continue
+            if straddle == "clip":
+                a, b = max(a, s0), min(b, s1)
+        out.append((a, b, f.get("description", ""), f.get("type")))
+    return sorted(out)
+
+
 def bucket_domains(features: Iterable[dict], *, span_start: int, span_end: int) -> DomainCounts:
     """Bucket domain-like features against the V2 span, and account for the span's residues.
 
