@@ -209,3 +209,119 @@ def test_the_d079_staged_entry_is_a_known_and_uncovered_gap():
     assert LANDING_MARKER in normalise(D079_STAGED.read_text(encoding="utf-8")), (
         "the staged D-079 entry lost its landing header, and NO automated check covers it -- "
         "that is precisely why this gap is asserted rather than described")
+
+
+# ───────────────────────────── the authored-hash contract (BB1-BB3, 2026-08-19) ──
+#
+# ⚠⚠ WHY THIS EXISTS. The landing-header convention assumes a FILE changes hands, so the lander
+# can hash what arrived. A document delivered as CHAT TEXT has no received artefact, and on
+# 2026-08-19 that gap was hit: the lander could only hash its own transcription, which proves what
+# was landed and not that it matches what was sent. The remedy is one clause -- THE AUTHOR HASHES
+# THEIR OWN BYTES AT AUTHORING TIME -- and this is the check that makes it falsifiable.
+#
+# ⚠ A HASH MUST STATE ITS KEY, exactly as a count must. A bare sha256 over an unstated range is
+# unfalsifiable: any mismatch can be explained away by guessing at a different range. The range is
+# declared beside the hash, and this checker recomputes over the DECLARED range only.
+#
+# ⚠ A MISMATCH IS RECORDED, NEVER RESOLVED SILENTLY -- it is evidence about the channel. So the
+# contract does NOT assert authored == landed. It asserts that the LANDED hash the header records
+# is TRUE, and that the MATCH verdict is consistent with the two hashes. A document may honestly
+# record `MATCH: no`.
+
+# ⚠ The optional `> ` prefix is REQUIRED, not defensive: a landing header is a blockquote, so an
+# unprefixed `^` anchor matches nothing and `documents_declaring_an_authored_hash()` returns an
+# empty list — which the A-017(a) non-empty assertion catches, and which would otherwise have made
+# every downstream assertion pass by matching no documents at all.
+_LEAD = r"^[ \t]*>?[ \t]*"
+AUTHORED_RE = re.compile(_LEAD + r"AUTHORED-SHA256:\s*([0-9a-f]{64})\s*$", re.M)
+LANDED_RE = re.compile(_LEAD + r"LANDED-SHA256:\s*([0-9a-f]{64})\s*$", re.M)
+RANGE_RE = re.compile(_LEAD + r"HASH-RANGE:\s*(.+?)\s*->\s*EOF\s*$", re.M)
+MATCH_RE = re.compile(_LEAD + r"HASH-MATCH:\s*(yes|no)\s*$", re.M)
+
+
+def _sha256(text: str) -> str:
+    import hashlib
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def landed_digest(text: str, marker: str) -> str:
+    """sha256 over `marker` -> EOF, where `marker` must begin a LINE.
+
+    ⚠⚠ ANCHORING TO A LINE START IS THE CORRECTNESS OF THIS FUNCTION, not a detail. The
+    `HASH-RANGE:` line in the header necessarily *contains* the marker text, so a plain
+    `text.index(marker)` resolves the range to the header that declares it — hashing the header
+    plus the body and calling it the body. The declared range would silently mean something other
+    than it says, which is the exact class this contract exists to catch.
+
+    ⚠ Raises if the marker begins no line: a range that does not resolve is not a range, and
+    falling back to the whole file would make the check pass on a document whose range had drifted.
+    """
+    m = re.search(r"^" + re.escape(marker), text, re.M)
+    if m is None:
+        raise ValueError(f"declared range marker {marker!r} begins no line in this document")
+    return _sha256(text[m.start():])
+
+
+def documents_declaring_an_authored_hash() -> list[Path]:
+    return [p for p in sorted(DOCS.glob("*.md"))
+            if AUTHORED_RE.search(p.read_text(encoding="utf-8"))]
+
+
+def test_the_authored_hash_fixture_is_non_empty():
+    """⚠ A-017 (a): a check that silently matches nothing passes everything."""
+    found = documents_declaring_an_authored_hash()
+    assert found, ("no docs/ document declares AUTHORED-SHA256 -- if the convention was retired, "
+                   "delete this block deliberately rather than letting it match nothing")
+
+
+@pytest.mark.parametrize("path", documents_declaring_an_authored_hash(),
+                         ids=lambda p: p.name)
+def test_a_declared_authored_hash_carries_its_range_and_a_truthful_landed_hash(path):
+    """⚠⚠ THE LANDED HASH MUST BE TRUE OF THE FILE IT SITS IN.
+
+    This is the assertion a corrupted body has to fail: flip one byte inside the declared range
+    and the recomputation diverges from the recorded `LANDED-SHA256`. **This channel removed 29
+    and 30 bytes from two passages in one week, so the failure mode is measured, not
+    hypothetical.**
+    """
+    text = path.read_text(encoding="utf-8")
+    rng = RANGE_RE.search(text)
+    assert rng, f"{path.name} declares AUTHORED-SHA256 with no HASH-RANGE -- a hash must state its key"
+    marker = rng.group(1).strip("`")
+    assert marker in text, f"{path.name}: declared range marker {marker!r} does not occur in the file"
+
+    recorded = LANDED_RE.search(text)
+    assert recorded, f"{path.name} declares an authored hash but records no LANDED-SHA256"
+    assert landed_digest(text, marker) == recorded.group(1), (
+        f"{path.name}: the recorded LANDED-SHA256 is not the hash of the declared range as the "
+        f"file now stands -- the body changed after the header was written")
+
+    verdict = MATCH_RE.search(text)
+    assert verdict, f"{path.name} records two hashes and no HASH-MATCH verdict"
+    authored = AUTHORED_RE.search(text).group(1)
+    expected = "yes" if authored == recorded.group(1) else "no"
+    assert verdict.group(1) == expected, (
+        f"{path.name}: HASH-MATCH says {verdict.group(1)!r} but the two hashes say {expected!r} "
+        f"-- ⚠ a mismatch is RECORDED, never resolved silently; it is evidence about the channel")
+
+
+def test_a_flipped_byte_inside_the_declared_range_is_caught():
+    """⚠⚠ THE DISCRIMINATING FIXTURE. Everything above passes on a well-formed document whether
+    or not the recomputation is real. This is the case where correct and broken differ: the body
+    is corrupted by exactly one byte and the recorded landed hash must stop being true."""
+    body = "#### BODY\n\nsome authored text.\n"
+    good = f"HASH-RANGE: #### BODY -> EOF\nLANDED-SHA256: {_sha256(body)}\n\n{body}"
+    assert landed_digest(good, "#### BODY") == LANDED_RE.search(good).group(1)
+
+    corrupted = good.replace("some authored text.", "some authored texts")
+    assert len(corrupted) == len(good), "the fixture must flip a byte, not change the length"
+    assert landed_digest(corrupted, "#### BODY") != LANDED_RE.search(corrupted).group(1), (
+        "a one-byte corruption inside the declared range did not change the recomputed digest -- "
+        "the contract would pass on a corrupted body, which is the thing it exists to prevent")
+
+
+def test_the_declared_range_must_resolve():
+    """⚠ A range that does not occur in the file raises rather than falling back to the whole
+    file. A silent fallback would make the check pass on a document whose range had drifted."""
+    with pytest.raises(ValueError):
+        landed_digest("no marker here", "#### ABSENT")

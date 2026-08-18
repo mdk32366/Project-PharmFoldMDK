@@ -19,6 +19,26 @@
 > ⚠ **Code's landing notes are appended inside each entry**, marked `LANDED BY CODE`, and change no
 > Planner text. One imprecision in `D-095 amendment 1` item 1 is reported there rather than edited.
 
+> ⚠⚠ **THE AUTHORED-HASH CONTRACT (`BB1`–`BB3`), and it records a MISMATCH rather than resolving one.**
+>
+> ```
+> AUTHORED-SHA256: 2d25c6dfc154e36cc0b3b0ad7bf60efb3c835c96893275673464c7dcfd478e4a
+> HASH-RANGE: #### D-095 amendment 1 -> EOF
+> LANDED-SHA256: 0cb1084b923ddb29256916635c4057eee68c20035d239dc84301cc8672cd81ea
+> HASH-MATCH: no
+> ```
+>
+> ⚠ **The mismatch is EVIDENCE ABOUT THE CHANNEL AND ABOUT THE LANDER, and it does not resolve to
+> either.** As landed the range is **19,212 bytes** against the authored **18,028**; with Code's
+> three `LANDED BY CODE` bullets removed it is **17,597**, still **431 short**. ⚠⚠ **Code reflowed
+> the Planner's hard-wrapped lines when transcribing, which accounts for at most ~284 of those 431
+> — so roughly 150 bytes remain unexplained and CANNOT be attributed.** The hash cannot separate
+> channel loss from transcription because the lander did not preserve bytes.
+>
+> **The finding that follows: an authored hash is only informative if the lander transcribes
+> verbatim, line breaks included.** The contract is sound; this landing did not meet its
+> precondition, and that is recorded rather than smoothed.
+
 ---
 
 #### D-095 amendment 1 — ⚠⚠ The design document is about TILING AT GAPS with a six-row exception, not about cutting cadherin stacks — and `merge_rule` manufactures the problem it exists to solve
