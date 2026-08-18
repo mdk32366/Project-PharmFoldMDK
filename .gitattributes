@@ -1,0 +1,23 @@
+# ⚠⚠ THIS FILE EXISTS TO PROTECT THE AUTHORED-SHA256 CONTRACT FROM GIT ITSELF.
+#
+# `core.autocrlf=true` on this machine. On CHECKOUT git rewrites LF -> CRLF for anything it
+# considers text — so an artifact committed byte-for-byte would come back out of a fresh clone
+# with different bytes, and its authored `sha256` would no longer match.
+#
+# ⚠ The failure would be silent and it would look like tampering: the hash mismatch is exactly the
+# signal the contract uses to say "the channel altered this", and git would be producing it on a
+# file nothing had touched. **A guard that cannot distinguish corruption from its own toolchain is
+# not a guard.**
+#
+# Measured 2026-08-19: no `.gitattributes` existed, so nothing protected any file from the
+# conversion. The artifacts below are delivered as FILES, hashed by their author over a declared
+# range, and committed unmodified — see `docs/SPEC-2026-08-19-landed-artifact-provenance.md`.
+#
+# `-text` disables all end-of-line conversion in both directions. It is deliberately scoped to the
+# hash-verified artifacts rather than applied to `docs/**`: a blanket rule would change how ~100
+# existing documents round-trip, which is a different decision and not this one.
+
+docs/D-093-amendment-2-paste-ready.md            -text
+docs/ORDERS-Code-step-4-schema-ingest-surface.md -text
+docs/ORDERS-Code-clinical-surface-today.md       -text
+docs/ORDERS-Code-cancer-surface-attribution.md   -text

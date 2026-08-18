@@ -112,30 +112,67 @@ def test_no_protein_level_model_or_payload_carries_a_burden_field():
         + "\n  ".join(offenders))
 
 
-def test_the_scorers_feature_path_is_closed_and_cannot_acquire_a_clinical_feature():
-    """⚠⚠ `CE2`. *"Has been developed as an ADC target"* used to RANK ADC targets is circular —
-    the identical argument that bars GPI status, and the one `P-004` item 1 makes against Kathad's
-    own validation step. **`therapeutic_precedent` is a label and a filter. It is never a feature.**
+#: ⚠⚠ EVERY CLINICAL-LAYER FIELD, not just `therapeutic_precedent` (`EE-0`, step-4 order §6).
+#:
+#: **`P-001` asks whether a STRUCTURE-derived ranking reorders an EXPRESSION-based one.** If any
+#: clinical-layer field reaches the scorer's feature path, **that question stops being answerable**
+#: — the structural axis would be validated against a ranking that already contains expression.
+#: ⚠⚠ **This is worse than the `therapeutic_precedent` circularity, because it would not be visible
+#: in the output.** The ranking would look fine. It would simply be measuring the wrong thing.
+CLINICAL_LAYER_TOKENS = (
+    # the evidence label and its neighbours
+    "therapeutic", "precedent", "adc_reference", "approved", "clinical", "indication",
+    # the tumour axis
+    "tumour", "tumor", "cancer", "pathology", "prognos",
+    # the expression axis — counts, levels, and the derived score
+    "expression", "ihc", "hpa", "atlas", "qh_score", "quasi_h", "h_score",
+    "not_detected", "detected", "panel",
+    # the normal-tissue axis
+    "tissue", "cell_type", "normal_level", "reliability",
+    # the evidence enum itself
+    "evidence_type", "differential",
+)
+
+
+def test_the_scorers_feature_path_is_closed_to_every_clinical_layer_field():
+    """⚠⚠ `CE2` widened by `EE-0`, and this is the most important assertion in the clinical arc.
+
+    *"Has been developed as an ADC target"* used to RANK ADC targets is circular — the identical
+    argument that bars GPI status, and the one `P-004` item 1 makes against Kathad's own validation
+    step. **But `therapeutic_precedent` was only the visible case.**
+
+    ⚠⚠ **An EXPRESSION field reaching the feature vector is the invisible one.** `P-001`'s question
+    is whether structure reorders expression; if expression is *inside* the structural ranking, the
+    comparison is against itself and **nothing in the output would show it.**
 
     ⚠ The closure is structural, not aspirational: `FEATURE_NAMES` is the pre-registered six and
-    `FEATURE_SETS` indexes into it, so a seventh clinical feature cannot be reached by the scorer
-    without changing one of these two objects — and changing either reds this test.
+    `FEATURE_SETS` indexes into it, so a clinical feature cannot be reached by the scorer without
+    changing one of these two objects — and changing either reds this test.
     """
     assert len(FEATURE_NAMES) == 6, "D-027's six is the pre-registration"
     assert len(EXTENDED_FEATURE_NAMES) == 7, "six plus D-075's feature 7, and nothing else"
 
-    barred = BURDEN_TOKENS + ("therapeutic", "precedent", "adc_reference", "approved",
-                              "clinical", "indication", "tumour", "tumor", "cancer")
+    barred = BURDEN_TOKENS + CLINICAL_LAYER_TOKENS
     for name in EXTENDED_FEATURE_NAMES:
         for tok in barred:
             assert tok not in name.lower(), (
-                f"feature {name!r} carries the barred token {tok!r} — a clinical attribute has "
-                f"reached the scorer's feature vector, which D-093 decision 1 and the GPI "
-                f"circularity argument both prohibit")
+                f"feature {name!r} carries the barred token {tok!r} — a clinical-layer attribute "
+                f"has reached the scorer's feature vector. D-093 decision 1 bars it, and P-001's "
+                f"question stops being answerable the moment it is true")
 
     # ⚠ every declared feature SET must index inside the pre-registered six
     for set_name, idx in FEATURE_SETS.items():
         assert all(0 <= i < len(EXTENDED_FEATURE_NAMES) for i in idx), set_name
+
+    # ⚠⚠ and the six themselves are pinned BY NAME, so a rename cannot smuggle one past the token
+    # scan. A feature called `mean_expression_ecd` would pass the loop above only if `expression`
+    # were dropped from the barred list; pinning the exact six makes that a second red, not a
+    # silent widening.
+    assert FEATURE_NAMES == (
+        "ecd_length", "radius_of_gyration", "mean_plddt_ecd",
+        "membrane_proximal_plddt", "sasa_normalized", "largest_patch_fraction"), (
+        "the pre-registered six changed — D-027 is the pre-registration and this is not a "
+        "refactor-safe list")
 
 
 # ────────────────────────────────────────── 4: the column-scoped exclusion, by PRESENCE ──
@@ -211,10 +248,12 @@ def test_the_column_scan_would_catch_a_real_column(tmp_path):
                    for c in next(csv.reader([clean])))
 
 
-@pytest.mark.parametrize("name", ["therapeutic_precedent", "burden_five_year_survival"])
+@pytest.mark.parametrize("name", ["therapeutic_precedent", "burden_five_year_survival",
+                                  "ihc_high_count", "normal_tissue_level", "qh_score_breast",
+                                  "evidence_type_ordinal", "reliability_grade"])
 def test_a_barred_name_would_be_rejected_if_it_reached_the_feature_vector(name):
     """⚠⚠ The prohibition's own negative control. If this ever passes for a name that IS in
     `EXTENDED_FEATURE_NAMES`, the guard above is matching nothing."""
-    barred = BURDEN_TOKENS + ("therapeutic", "precedent", "clinical")
+    barred = BURDEN_TOKENS + CLINICAL_LAYER_TOKENS
     assert any(tok in name.lower() for tok in barred)
     assert name not in EXTENDED_FEATURE_NAMES
