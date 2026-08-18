@@ -130,6 +130,54 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-044 — The citation invariant proves that a reference RESOLVES, never that it resolves to the right thing: it finds holes, not mismatches
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **OPEN — a finding against an instrument (`D-074`).** It closes when a reference to a numbered entry cannot silently acquire the wrong target, **or** when the residual is named and accepted in the open. ⚠ **Adding a second checker is not automatically the remedy** — `D-074` decision 3 warns against answering a finding with a framework that becomes a second thing to drift.
+
+- **The finding.** The check `RESERVED.md` documents is:
+
+  ```
+  missing = sorted(cited - defined - reserved)
+  ```
+
+  ⚠⚠ **That is a set-membership test on integers.** It proves every cited `D-NNN` / `F-NNN` **exists**. It has no access to what the entry *says*, so it cannot detect a citation that resolves to a **real entry with the wrong content**. **It finds holes. It cannot find mismatches.**
+
+- **⚠ The evidence is a contrast, observed the same day, and the contrast is the finding.**
+
+  | defect | what happened | the invariant |
+  |---|---|---|
+  | **hole** — the then-next-free `D-` integer, cited before it existed | a sub-entry named it in a *"next free … remains …"* line | ⚠ **caught in one run**, first execution, unambiguous |
+  | **mismatch** — `D-095` cited for the wrong thing | `ORDERS-Code-2026-08-18` §3 and `scripts/taskc_multidomain_population.py` both said the PAE comparison *"is a `D-095` decision"* | ⚠⚠ **silent through every run**, in the log and in a committed script |
+
+  When that order was written, `D-095` was the next free integer. It was then taken by **the tranche-6 tiling design document**, which says nothing about a PAE comparison. ⚠ **Both documents were committed, and both passed the invariant, because `D-095` exists.**
+
+- **⚠⚠ Why the mismatch is the worse of the two, which is the whole point.** `D-062`'s recorded harm was *citations treating a missing entry as settled authority, with nothing in the text suggesting it was missing.* **A hole announces itself the moment anyone follows it** — the target is not there. **A mismatch does not.** The reader follows the pointer, finds a real, well-formed, confidently-written entry, and reads it as the authority for a claim it never made. ⚠ **The remedy for `D-062` closed the route that fails loudly and left open the route that fails quietly.**
+
+- **⚠ The same shape is not confined to citations, which is why this is a finding and not a note.** On 2026-08-17, in one HPA download of one version: `proteinatlas.tsv` has `Gene` = **the symbol** (`TSPAN6`); `pathology.tsv` and `normal_tissue.tsv` have `Gene` = **the Ensembl id**, with the symbol in `Gene name`. **A join on `Gene` across them returns a clean, plausible, entirely empty intersection and raises nothing.** `D-100` records the identical trap inside a single file — S3's `Gene` is Ensembl, matching on it gives **0 of 82**. ⚠ *A name that resolves to the wrong object is the general defect; the citation checker is one instance of the blind spot, not the whole of it.*
+
+- **⚠⚠ THE REMEDY ALREADY EXISTS IN THIS REPOSITORY, APPLIED TO ONE NAMESPACE AND NEVER GENERALISED.** `RESERVED.md` rules, for `A-` only:
+
+  > *"every **new** local `A-` reference is written as **`A-0NN (descriptive name)`**, never as a bare number. If a number moves … the citations do not orphan — **the name carries them.**"*
+
+  That was invented because `A-` numbers might **move**. The defect here is a number being **reused** — a different mechanism producing the identical failure, *a citation pointing at the wrong entry*. ⚠ **The mitigation is described as "available now and free" and was scoped to the namespace whose problem prompted it.** This is the project's own recurring sentence: **a rule applied to one shape and not another is not a rule** — the sentence that names the `pytest`/`SELECT` failure of 2026-08-17 and the backtick/encoding failure of the same day.
+
+- **⚠ What this does NOT claim.**
+  1. **The invariant is not broken and must not be weakened.** It is *sound* on the failure mode it was built for and caught a live instance the same day, first run. **This is a finding about its scope, not its correctness.**
+  2. **No claim that other mismatches exist.** ⚠ **One is confirmed (`D-095`); the rest of the log is UNCHECKED**, because checking it requires reading every citation against its target and no tool here does that. *Unmeasured is not zero.*
+  3. **No remedy is adopted here.** Naming the defect is not fixing it, and `D-074` decision 3 is explicit that a framework answering a finding becomes a second thing to drift.
+
+- **Candidate remedies, none ruled, stated so the choice is visible:**
+  - **Generalise the `A-` convention:** cite as **`D-NNN (short name)`**, so a reused integer orphans the name instead of silently re-pointing it. ⚠ Costs nothing at write time and is the only candidate already proven in this repo.
+  - **Forward references never name a bare integer** — the rule that would have prevented both `D-095` *and* the hole above. `RESERVED.md` is the index; the log points at it.
+  - **A content check** — assert each cited entry's title matches the citing context. ⚠ Almost certainly the `D-074` decision-3 trap: it needs maintenance, and a checker nobody trusts is worse than a rule everybody reads.
+
+- ⚠⚠ **This entry tripped its own subject, twice, while being written.** The first draft named the then-next-free integer in the evidence table and again in the remedy list — **and the invariant refused it, immediately, both times.** ⚠ *That is the finding in miniature:* the check is **fast, exact and unarguable** against a hole, including one written by the person documenting holes; and it said nothing at all about `D-095` sitting mismatched in the same file. **The instrument is not unreliable. It is precise about one thing and blind to its neighbour.**
+
+- **⚠ How it was found, because that is evidence about how much else is unchecked.** Not by the invariant, and not by review. **The owner read a sentence in a report and recognised the number had moved under it.** Every automated gate in this repository passed over `D-095` in both the log and a committed script, on every run, for the whole of the day it was wrong.
+
+---
+
 ### F-042 — ESMFold emits PAE on every forward pass and the pipeline discards it: 2,690 of 2,690 census folds carry none
 
 - **Date:** 2026-08-17
