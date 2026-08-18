@@ -130,6 +130,77 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-100 — The Kathad quasi-H-score is reproduced exactly from S3, and the denominator convention is documented rather than recovered
+
+- **Date:** 2026-08-17 (⚠ authored "2026-08-18"; wall clock at merge is 2026-08-17 17:47 — stamped with the real date, as D-095/D-098/D-099 were)
+- **Status:** accepted
+- ⚠ **LOG-LEADS-CODE WAS VIOLATED AND IS RECORDED, NOT BACK-DATED.** The reproduction ran in a Planner sandbox before this entry existed. It was exploratory and wrote nothing to the repository, but the rule does not carve that out. **Stated here rather than tidied away.**
+
+- **Context:** `data/cancer_associations.csv` covers **82 of 3,467** census accessions (2.4%). Extending a clinical association layer to the census needs a method that runs at census scale. Kathad's measure is arithmetic over HPA IHC, so the question was whether we can recompute it — and the test is whether we can reproduce their 82 first.
+
+- **⚠⚠ The source is richer than assumed.** `journal.pone.0308604` **S3** (`s004.xls`, sheet `Target_expression_in_tumor`) is **not a table of scores** — it is **the HPA IHC extract with patient counts**: `High`, `Medium`, `Low`, `Not detected`, `total`. **1,640 rows = 82 × 20, zero nulls in the count columns.** `pathology.tsv` is NOT required for the reproduction.
+
+- **Decision — the convention, and why no degrees of freedom were spent:**
+
+  **`qh = 100 × (Low/total + 2·Medium/total + 3·High/total)`, where `total` INCLUDES `Not detected`.**
+
+  ⚠ **This was read off the file, not recovered by matching.** `percent_law == 100 × Low/total` on **1,640 of 1,640 rows**. The paper publishes its own denominator. **`F-022` therefore does not bite** — the census numbers are not made dependent on Kathad by an inferred step.
+
+- **Evidence — two-sided, which the grid makes possible:**
+
+  | convention | kept | exact value match | ours-only | theirs-only |
+  |---|---|---|---|---|
+  | **A — `/total`** | **337** | **337 / 337** | **0** | **0** |
+  | B — `/detected` | 766 | 204 | 0 | 429 |
+  | P — paper's printed percent columns | 329 | 329 | 8 | 0 |
+
+  ⚠ **All 1,303 below-cutoff pairs are also correctly excluded.** A one-sided check could not have distinguished a systematic downward bias from a legitimate exclusion; this can.
+
+- ⚠ **The join needed `Gene name`, not `Gene`.** S3's `Gene` is **Ensembl**; the symbol is in `Gene name`. Matching on `Gene` gives **0 of 82**; on `Gene name`, **82 of 82**. Cancer labels also differ in case between S3 and our CSV. **Two identifier spaces one column apart, and the first attempt returned a clean, plausible, entirely spurious zero-overlap.**
+
+- ⚠ **A hypothesis in `data/cancer_associations.csv`'s own header is retired by a fact.** That note tested *"dropping any single tumour type yields 296–334, never 290."* **HPA stains 20 cancer types in total** (HPA Cancer index, read 2026-08-18) — so the 20 were **not selected by Kathad** and tumour-type selection was never a lever they had. **The 337-vs-290 gap is something else.**
+
+- **HPA as a census supplier — `D-093` decision 6 item 3, ANSWERED and PASSING:**
+  - **3,333 of 3,467 census accessions (96.1%) join to HPA by UniProt accession directly** — no Ensembl hop, no symbol matching. **140 of the 141 past-context rows.**
+  - ⚠ Named failure categories, not a silent left-join: **862** HPA rows carry no accession · **39** are multi-valued · **72** accessions map to **more than one** HPA gene · **134** census rows absent.
+  - ⚠⚠ **THIS IS PRESENCE IN THE SUMMARY FILE, NOT IN THE IHC SET.** HPA IHC covers **15,312 genes** against 19,973 for RNA. **The census's IHC coverage is unmeasured and is lower than 96.1%.** It bounds everything a census-wide expression axis can claim. **Unmeasured is not zero and is not fine.**
+  - **Items 4 (version pinning) and 5 (attribution string) are NOT answered.** Owner task.
+
+- **Deep-learning justification:** ⚠ **none, and it is declared neutral rather than argued.** This is a curated join and a weighted sum. `D-093` already rules that dressing it as deep learning would be dishonest, and the owner has ruled the DL mandate satisfied and the project in paper mode. **It supplies the comparator the structural axis is measured against; it is not itself a model.**
+
+- **Consequences:**
+  1. **`data/cancer_associations.csv` is confirmed correct and unchanged.** Nothing is rewritten.
+  2. ⚠ **`D-093` decision 7 still bars committing S3 or any HPA table** until inbound terms are read and dated. **This entry authorises the method, not the ingest.**
+  3. The reproduction currently exists **only in a Planner sandbox and will not survive.** Committing it as a tested script is the first order.
+
+---
+
+### F-043 — A hard cutoff on a ~11-patient ordinal statistic: a quarter of Kathad's surviving pairs turn on one pathologist call
+
+- **Date:** 2026-08-17 (⚠ authored "2026-08-18"; stamped with the real date)
+- **Status:** ⚠ **OPEN — a finding against an instrument (`D-074`).** The Kathad filter is this project's comparator. It stays open until the comparator no longer exhibits this, **or** until every surface citing the expression ranking carries the statement of what it gets wrong.
+
+- **The finding.** The quasi-H-score is a weighted percentage over an HPA panel of **median 11, mean 10.2, maximum 12** patients. **246 of 1,640 rows have n ≤ 4; two have n = 2.** At n = 12 the statistic moves in **8.33-point steps**; at n = 4, 25 points. A hard `≥150` cutoff is applied to an estimator that can take only a few dozen distinct values.
+
+  | perturbation | of the 337 kept | of the 1,303 excluded | grid-wide |
+  |---|---|---|---|
+  | **one patient, one category** | **83 (24.6%)** | 33 (2.5%) | 116 (7.1%) |
+  | two patients | 151 (44.8%) | 85 | 236 (14.4%) |
+
+- ⚠⚠ **52 pairs sit at EXACTLY 150.0** — the cutoff lands on the most populated discrete value the estimator can take. `≥150` gives **337**; `>150` gives **286**. **The inequality sign is worth 51 pairs.**
+
+- ⚠ **The method disagrees with itself across two representations in one file.** Using the paper's own printed `percent_` columns with the paper's own formula yields **329**, not 337 — **eight of the exact-150 pairs fall below on rounding alone.**
+
+- **⚠ What is NOT established, stated before anyone cites this:**
+  1. **The 83 is an UPPER BOUND on one-move flips.** It does not yet check that a patient exists in the source category to move — a row with `Low = 0` cannot lose a Low. **The availability constraint must be applied before the number is published.**
+  2. ⚠ **No claim that Kathad's arithmetic is wrong. We reproduced every value exactly** (`D-100`). The finding is about the **stability of the filter's output**, not its correctness.
+  3. ⚠ **Whether the paper's own limitations section states this is UNCHECKED** — the Planner has no search. *"They did not mention it"* is not a claim this entry makes. It decides whether the framing is *quantifying a stated caveat* or *identifying an unstated one*.
+  4. **The antibody choice is a second, independent, unquantified source of movement.** **52.5% of HPA genes carry more than one antibody** (9,140 / 17,407, measured); S3 does not say which was used. **Additive to this finding, not included in it.**
+
+- **Why it matters here.** `F-009` records four clinically-validated ADC targets as false negatives of this filter. ⚠ **Instability at the boundary is a MECHANISM that produces false negatives** — it turns four anecdotes into an expected behaviour. **It does not prove those four arose this way**, and checking whether they sit near the cutoff is a separate, pre-registerable measurement.
+
+---
+
 ### D-099 — The control fold is not tranche 6: PAE is recovered on proteins that need no assembly
 
 - **Date:** 2026-08-17 (⚠ authored "2026-08-18"; wall clock at merge is 2026-08-17 16:57 — stamped with the real date, as D-095 and D-098 were)
