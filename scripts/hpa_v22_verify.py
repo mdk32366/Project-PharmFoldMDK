@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import csv
 import pathlib
+from collections import Counter
 import sys
 from typing import Optional
 
@@ -75,11 +76,148 @@ def load_pathology(path: pathlib.Path) -> dict[tuple[str, str], dict]:
     return out
 
 
+#: ⚠ The IN set for `normal_tissue.tsv`, stated as data rather than left to the reader of a loop.
+#: The ingest is COLUMN-scoped (`D-093` amendment 1 clause 2): a column present in a stored table is
+#: ingested whether or not anything reads it, so the column set is asserted EXACTLY, not filtered.
+NORMAL_TISSUE_COLUMNS = ("Gene", "Gene name", "Tissue", "Cell type", "Level", "Reliability")
+
+#: The genes fixed in `docs/PREREGISTRATION-2026-08-19-normal-tissue-acceptance-bar.md` §2 BEFORE
+#: the file was fetched. ⚠ `ZZZ_NOT_A_GENE` is the negative case: a bar with no negative case
+#: cannot fail. Each carries the expectation written down at pre-registration time.
+PREREGISTERED_GENES = (
+    ("CLDN18", "present, concentrated in stomach"),
+    ("ERBB2", "present, broad epithelial"),
+    ("TACSTD2", "present, broad epithelial"),
+    ("INS", "present, essentially pancreas-only — the tissue-specificity control"),
+    ("ZZZ_NOT_A_GENE", "ABSENT — the negative case"),
+)
+
+
+def verify_normal_tissue(path: pathlib.Path) -> int:
+    """`CA2`–`CA4`. ⚠ Reports; it does not ingest. No table is created and no row is written.
+
+    ⚠⚠ There is no external comparator for this file the way S3 is for `pathology.tsv`, so the bar
+    is two independent paths, both pre-registered: transport checked by repeated fetch and hash
+    (done outside this script and reported with it), and named genes checked against expectations
+    fixed before the fetch.
+    """
+    rows = 0
+    tissues: set[str] = set()
+    cells: set[tuple[str, str]] = set()
+    levels: Counter = Counter()
+    reliab: Counter = Counter()
+    genes: set[str] = set()
+    ensgs: set[str] = set()
+    per_gene: Counter = Counter()
+    named: dict[str, list[tuple[str, str, str, str]]] = {g: [] for g, _ in PREREGISTERED_GENES}
+
+    with path.open(encoding="utf-8") as fh:
+        rd = csv.DictReader(fh, delimiter="\t")
+        cols = tuple(rd.fieldnames or ())
+        for r in rd:
+            rows += 1
+            g = (r["Gene name"] or "").strip()
+            t = (r["Tissue"] or "").strip()
+            c = (r["Cell type"] or "").strip()
+            genes.add(g)
+            ensgs.add((r["Gene"] or "").strip())
+            tissues.add(t)
+            cells.add((t, c))
+            levels[(r["Level"] or "").strip()] += 1
+            reliab[(r["Reliability"] or "").strip()] += 1
+            per_gene[g] += 1
+            if g in named:
+                named[g].append((t, c, (r["Level"] or "").strip(), (r["Reliability"] or "").strip()))
+
+    W = 88
+    print("=" * W)
+    print("CA3 — THE COLUMN SET, ASSERTED EXACTLY (the ingest is COLUMN-scoped)")
+    print("=" * W)
+    print(f"  columns as read : {list(cols)}")
+    print(f"  IN set          : {list(NORMAL_TISSUE_COLUMNS)}")
+    extra = [c for c in cols if c not in NORMAL_TISSUE_COLUMNS]
+    missing = [c for c in NORMAL_TISSUE_COLUMNS if c not in cols]
+    print(f"  ⚠ columns present but NOT in the IN set : {extra or 'none'}")
+    print(f"  ⚠ columns expected but ABSENT           : {missing or 'none'}")
+    prog = [c for c in cols if c.startswith(EXCLUDED_PREFIX)]
+    print(f"  ⚠⚠ `{EXCLUDED_PREFIX}` columns present  : {prog or 'none'}"
+          f"   — presence is the violation, not use")
+    print(f"  ⚠ `Reliability` is present here and is ABSENT from `pathology.tsv`: "
+          f"{'Reliability' in cols}")
+    print("     — the modality driving target selection is the one without the quality flag.")
+
+    print("\n" + "=" * W)
+    print("CA4 — THE TISSUE TAXONOMY, AND WHAT AN ABSENCE MEANS")
+    print("=" * W)
+    print(f"  rows                       : {rows:,}")
+    print(f"  distinct Ensembl gene ids  : {len(ensgs):,}")
+    print(f"  distinct gene names        : {len(genes):,}")
+    print(f"  distinct tissues           : {len(tissues):,}")
+    print(f"  distinct (tissue, cell)    : {len(cells):,}")
+    print(f"\n  Level values, with counts — ⚠ every value named, none bucketed:")
+    for k, v in levels.most_common():
+        print(f"    {k or '(empty)':24s} {v:9,d}")
+    print(f"\n  Reliability values:")
+    for k, v in reliab.most_common():
+        print(f"    {k or '(empty)':24s} {v:9,d}")
+
+    full = len(cells)
+    complete = sum(1 for g, n in per_gene.items() if n == full)
+    print(f"\n  ⚠⚠ DOES AN ABSENT ROW MEAN 'not detected' OR 'not tested'?")
+    print(f"    `Not detected` is an EXPLICIT Level value ({levels.get('Not detected', 0):,} rows),")
+    print(f"    so a MISSING (gene, tissue, cell) row is NOT 'not detected' — it is NOT TESTED.")
+    print(f"    genes covering all {full:,} (tissue, cell) pairs : {complete:,} of {len(genes):,}")
+    print(f"    ⚠ so the grid is RAGGED, and the two facts must be stored separately.")
+
+    print("\n" + "=" * W)
+    print("CA2 PATH B — THE PRE-REGISTERED GENES (expectations fixed BEFORE the fetch)")
+    print("=" * W)
+    ok = True
+    for g, expectation in PREREGISTERED_GENES:
+        obs = named[g]
+        print(f"\n  {g}  — expected: {expectation}")
+        if not obs:
+            print(f"    rows: 0   ⚠ ABSENT from the file")
+            if g != "ZZZ_NOT_A_GENE":
+                ok = False
+                print(f"    *** the negative case is the only gene expected absent ***")
+            continue
+        if g == "ZZZ_NOT_A_GENE":
+            ok = False
+            print(f"    *** {len(obs)} rows for a name that does not exist — the lookup is matching "
+                  f"on something other than identity ***")
+            continue
+        detected = [(t, c, lv) for t, c, lv, _ in obs if lv and lv != "Not detected"]
+        by_tissue = Counter(t for t, _, _ in detected)
+        print(f"    rows: {len(obs):3d}   with a detected level: {len(detected):3d} "
+              f"across {len(by_tissue)} tissues")
+        for t, n in by_tissue.most_common(6):
+            best = max((lv for tt, _, lv in detected if tt == t),
+                       key=lambda x: ("Low", "Medium", "High").index(x)
+                       if x in ("Low", "Medium", "High") else -1)
+            print(f"      {t:34s} {n:3d} cell types, strongest {best}")
+        if len(by_tissue) > 6:
+            print(f"      … and {len(by_tissue) - 6} more tissues")
+    print(f"\n  ⚠ VERDICT on the named-gene path: {'HOLDS' if ok else '*** FAILED ***'}")
+    print("  ⚠⚠ This checks the file against expectations WRITTEN DOWN BEFORE IT WAS FETCHED.")
+    print("     It does not make the file correct; it makes a wrong file able to fail.")
+    return 0 if ok else 1
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--pathology", required=True)
-    ap.add_argument("--s3", required=True)
+    ap.add_argument("--pathology")
+    ap.add_argument("--s3")
+    ap.add_argument("--normal-tissue", help="verify HPA v22 normal_tissue.tsv (CA2-CA4)")
     args = ap.parse_args(argv)
+
+    if args.normal_tissue:
+        rc = verify_normal_tissue(pathlib.Path(args.normal_tissue).expanduser())
+        if not (args.pathology and args.s3):
+            return rc
+
+    if not (args.pathology and args.s3):
+        ap.error("--pathology and --s3 are required together (or use --normal-tissue alone)")
 
     path = load_pathology(pathlib.Path(args.pathology).expanduser())
     s3 = load_s3(pathlib.Path(args.s3))
