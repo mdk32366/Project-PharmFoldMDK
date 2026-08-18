@@ -160,6 +160,25 @@ So the rule is not "be careful" — it is:
 
 - **Evidence:** `F-042` (2,690 / 2,690 NULL, fold-day partition reconciling to 2,769 of 2,771); `worker/runner.py:311`; `worker/main.py:_persist_pae_local`.
 
+#### D-099 amendment 1 — the single-domain negative control, and the provenance of the repair
+
+- **Date:** 2026-08-17 · **Status:** accepted, ⚠ **before any control fold ran**
+- ⚠ **Recorded as an amendment, not an edit.** D-099's sample selection was pre-registered incomplete and **the omission is the record**, not a thing to tidy away.
+
+1. ⚠⚠ **A single-domain, length-matched arm is added, and it is what makes the other arm mean anything.** **PAE rises with sequence separation in every structure, domain boundaries or not** — two residues 800 apart have high PAE because they are 800 apart. So an all-multi-domain sample **cannot distinguish *independently-positioned domains* from *residues far apart in sequence*: the two predict the same table.** That is `F-001`'s shape — a metric that is real, well-defined, correctly queried, and measuring the aftermath rather than the thing. **5 single-domain tranche 3–4 rows**, span lengths **bracketing** the multi-domain subjects. ⚠ **Length-matched, never pLDDT-matched** (`D-087`).
+
+2. **Budget: 25 folds** — ⚠ **the arithmetic, restated because the proposal was wrong.** Code proposed "19"; 5 + 5 + 5 + 4 + 1 = **20**. Nothing was dropped, the addition was simply wrong, and the number is corrected upward rather than a stratum shaved to make the error come out right. **20 multi-domain + 5 single-domain = 25.**
+
+3. ⚠ **The 5-domain stratum is EMPTY — verified, 0 rows**, and it is named here because it was silently absent from Code's enumeration. Strata in tranches 3–4: **2 → 118, 3 → 78, 4 → 28, 5 → 0, 6 → 4, 7 → 1.** *An absence is a category with a cause, and this project's most reliable defect-finder is exactly that rule.*
+
+4. ⚠ **A defect in the first selection pass, found and fixed before the GPU.** Taking the first 5 in-band singles by accession produced **228–359 aa against a multi arm of 219–435** — *contained within*, not *bracketing*. ⚠⚠ **The confound this arm exists to break is separation-dependent**, so a baseline stopping short of the longest subjects is missing exactly where separation is largest. Now selected at evenly-spaced targets across the multi arm's range including both endpoints, nearest match, ties by accession: **219–434 vs 219–435.**
+
+5. **The repair is LOCAL-PERSIST ONLY.** The upload path stays broken and `pae_json_path` stays **NULL on all 2,690**. ⚠ **The upload repair is `F-042`'s remedy and takes its own entry, after the finding is written** — repairing it here would backfill the very NULLs the finding is about, which is `D-091` ruling 1's principle: *corrections are recorded, never patched away.*
+
+6. ⚠⚠ **The run's provenance records whether `artifact_dir` was set, on its face.** A capture whose survival depends on an unrecorded environment variable is **the M3 hazard reproduced inside its own remedy** — in three weeks the control's PAE would be another absence with no cause. The flag is recorded, and the **path** rather than any value.
+
+- **Artifact:** `data/census/d099_control_sample.csv` — the sample fixed **before** the GPU spins, via `scripts/d099_control_sample.py`.
+
 ---
 
 ### D-098 — Tranche 6 is scoped to the 141 past-context rows, not to the ten proteins that motivated it
