@@ -130,6 +130,57 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-048 — For 58 census proteins the V2 span is a short extracellular loop INSIDE a larger transmembrane domain, and the annotation and the span are describing different objects
+
+- **Date:** 2026-08-19
+- **Status:** ⚠ **OPEN.** It closes when the surface question below is ruled, **or** when the residual is named and accepted. ⚠⚠ **It is NOT a tranche 6 finding** — 0 of the 58 sit in tranche 5, and none is past the trained context. **It is a census finding, and the census is on a live browsable surface.**
+
+- **The finding.** ⚠⚠ **The V2 span is a short extracellular loop inside a larger transmembrane domain. Engulfment is not an annotation artifact; it is what a loop in a multi-pass protein looks like.**
+
+- **How it was found.** Not by looking for it. `clip` was being given a refusal for a case the owner had ruled unruled (`F-046`), and characterising what it would refuse — **58 features, 58 distinct accessions, one each** — turned a data-hygiene category into a statement about molecules. ⚠ *The descriptions were the evidence, not the counts:* **MARVEL · ABC transmembrane type-1/2 · Cytochrome b561 · KASH · HIG1 · UPAR/Ly6**, and the `I` repeats of the plexin/semaphorin-like stack. **Polytopic membrane domains, every one.** 44 `Domain`, 14 `Repeat`.
+
+- **⚠ Why this is a finding and not an observation: it is `F-037`'s shape one layer down.** `F-037` established that **`span_aa` is the largest extracellular segment, not the extracellular content.** For these 58 the largest segment is **a loop**, and the domain annotation describes **the membrane bundle the loop sits inside.** ⚠⚠ **The engulfment is the annotation and the span disagreeing about which object is being described** — one names a multi-pass bundle, the other names a few residues poking out of it.
+
+- **⚠⚠ It vindicates `F-046`'s refusal in one sentence.** Clipping an engulfing feature would have recorded that **a 5-residue loop IS a MARVEL domain** — 100% domain coverage, one domain, exactly span length. **That is not a rounding error in a coverage number. It is a false statement about a molecule, generated silently, on every row it touched.** *Refuse rather than attempt.*
+
+- **⚠⚠ THE SURFACE QUESTION, WHICH IS THE OWNER'S AND IS WHY THIS IS OPEN.** Measured against the live API rather than inferred from the manifest — `GET /api/census`, 2,690 rows, read-only:
+
+  | | |
+  |---|---|
+  | the 58 | **58** |
+  | ⚠⚠ **of those, present on the live browsable surface** | **58 of 58** |
+  | in tranche 5 (held, unfolded) | **0** |
+  | tranche distribution | **31 in tranche 1, 27 in tranche 2**, 0 in 3/4/5 |
+  | `span_aa` min · median · max | **5 · 45 · 145** |
+  | rows at `span_aa` ≤ 20 | **12** |
+  | rows at `span_aa` ≤ 10 | **2** |
+
+  **The shortest is `Q9ULH0`, analysis id 382: a span of FIVE residues (681-685), served with `mean_plddt` 61.38, inside a `KAP NTPase` domain annotated 440-953.** Next is `Q9NX76` at 7 aa inside a MARVEL domain, and `A8MV81` at 11 aa inside HIG1 1-92.
+
+  ⚠ **`D-094`'s mount preconditions have never been checked against a five-residue span**, and a mean pLDDT over 5 residues is a different object from a mean over 500 wearing the same label. **Stop-and-report, per the order: this is a surface question and no remedy is proposed here.**
+
+- **⚠ Where it does NOT reach, measured so the scope is not overstated.** `clip` — the rule that would make the false statement — **never meets these 58 outside the equivalence proof.** Every `clip` call site runs on the 141 (`task_m4`, `task_o2`, `task_regimes`), the ten (`task_m3`), or two named accessions (`task_n`). The three full-census iterations use `admit_raw` and `drop` only. **So `F-046`'s stop-and-report clause does not fire on that axis; this entry's does, on a different one.**
+
+- **⚠ And `no_domains` gains its fourth cause from this, with the denominator stated.** Of the **3,467** rows in `census_manifest.v7.csv`, **2,327 have no domain intervals under `drop`** and 1,140 have at least one (2,327 + 1,140 = 3,467). The causes, each named, checked against an independently counted total rather than against their own sum:
+
+  | cause | what it means | the 141 | census |
+  |---|---|---|---|
+  | `no_domainlike_features_in_the_chain` | the UniProt entry carries no `Domain`/`Repeat` anywhere | **10 — all ten** | 2,033 |
+  | `features_exist_but_none_overlaps_the_span` | annotated, but every feature lies wholly outside `[s0, s1]` | 0 | 215 |
+  | `all_overlapping_features_overhang_a_boundary` | every overlapping feature crosses exactly one edge, so `drop` rejects each | 0 | 21 |
+  | ⚠ `all_overlapping_features_ENGULF_the_span` | **this finding** — dropped because they engulf, not because they are absent | **0** | **58** |
+  | `dropped_mixed_engulfing_and_overhang` | kept as an unfirable branch with its zero | 0 | **0** |
+  | **total** | | **10** | **2,327** |
+
+  **So the 141's ten `no_domains` rows are genuine absences of annotation, not rejections** — the cause each needed, named. ⚠ **And a rejection had been arriving under a label that says absence**, which is the thing `D-085` and the span-category work exist to prevent.
+
+- **⚠ What this does NOT claim.**
+  1. **No claim that the spans are wrong.** The V2 rule is the ruled rule and these are what it produces on multi-pass proteins. **The disagreement is between two descriptions, and naming it is not choosing between them.**
+  2. **No claim about fold quality.** `mean_plddt` on a 5-residue span is reported here as a *fact about what is served*, not as evidence the structure is bad. ⚠ `D-039` already says pLDDT is self-reported and locally scoped; **a 5-residue mean is simply outside anything the convention was calibrated on** (`F-046`'s population-specificity point, and `A-014`).
+  3. **No remedy proposed.** The surface ruling is the owner's, and `D-074` decision 3 warns against answering a finding with a framework.
+
+---
+
 ### F-046 — Three straddle predicates lived under one name in two modules, and the rule behind `D-095`'s founding numbers had no name at all
 
 - **Date:** 2026-08-19
