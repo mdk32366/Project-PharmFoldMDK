@@ -130,6 +130,48 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-042 — ESMFold emits PAE on every forward pass and the pipeline discards it: 2,690 of 2,690 census folds carry none
+
+- **Date:** 2026-08-17
+- **Status:** ⚠ **OPEN.** It closes when the local-tier persistence path is repaired **and** the 2,690 existing rows either carry PAE or carry the statement that they do not and why. ⚠ **Repairing the path forward does not close it** — the recorded census stays PAE-less.
+
+- **The finding.** PAE — `predicted_aligned_error` — is the folding head's learned confidence about the **relative position of two residues**. `protein_analyses.pae_json_path` is **NULL on all 2,690 census folds** and non-NULL on **79 of 80** cohort rows (the exception is IGF2R, which never folded). **The model produces the quantity on every forward pass and the pipeline throws it away.**
+
+- **⚠ Not `pae_never_emitted`, and this was established by observation, not inference.** The control fold (`D-099`, commit `cc2551f`) ran **25 local int8 chunk-64 folds — the exact census recipe — and PAE was emitted on 25 of 25, every matrix dimension matching its span.** ⚠ Before that run the two categories were indistinguishable from the database alone, and the difference matters: one is a model limitation, the other is a pipeline defect. **It is the second.**
+
+- **Evidence — the fold-day partition, which reconciles with no residue:**
+
+  | fold day | rows | PAE NULL | PAE set |
+  |---|---|---|---|
+  | 2026-07-23 / 24 / 25 | 75 / 2 / 2 | 0 | **79** |
+  | **2026-08-16** | **2,690** | **2,690** | **0** |
+
+  75 + 2 + 2 + 2,690 = **2,769 against 2,771 rows**; the two missing are IGF2R and `P55073`, which never folded. ⚠ **A clean partition, not a suggestive one.**
+
+- **The mechanism — two persistence paths, both scoped to the paid tier:**
+  1. **The upload stopped carrying PAE** (`D-035` part 2), so `app/artifacts.py:persist` no longer sets the column from the wire.
+  2. **The compensating out-of-band route** (`D-036`) writes the column via `_write_pae_file` → `_update_pae_path`, but it is fed by `worker/main.py:_persist_pae_local`, which fires **only `if artifact_dir:`** — documented *"set on the RENTAL box."*
+
+  **The local tier falls through both.** ⚠⚠ **And the backstop was attached to the expensive path, not the important one:** `scripts/retrieve_rental_pae.py` is *"the blocking gate before pod termination"* — so on rental a missing PAE is loud, and **on local there is no pod to terminate and therefore no gate.** *A guard placed where the money is, not where the data is.*
+
+- **⚠ What the mechanism is NOT, recorded because it was claimed and refuted:**
+  - **Not the tier tags.** `D-090` measures **2,733 local / 38 rental**; census tranches 1–4 total 2,691, all local, so **only 38 rows in the database are tagged rental against 79 carrying PAE.** At least 41 PAE-bearing rows are tagged local. ⚠ `jobs.tier` was **backfilled 2026-08-17 from a length rule** and does not record where a job ran, so it cannot support a tier explanation in either direction.
+  - **The July folds nonetheless ran on rented hardware** — `CLOSEOUT-2026-07-23-full.md`, *"the First Rented Fold."* ⚠ **Tier and date are perfectly confounded in the table**: no local July fold and no rental August fold exist as separate cells, so **the partition that revealed the finding cannot identify its cause.** The code path did that, not the data.
+  - ⚠ **A Planner-proposed discriminator was dead on arrival** — listing July `pae.json` files on the local box returns empty under **both** hypotheses. Recorded because a check that cannot separate its hypotheses is not a check (`F-001`'s shape).
+
+- **⚠⚠ What was actually lost, stated precisely.** `pLDDT` is **per-residue and local** — how sure the model is about where one residue sits. **PAE is pairwise and relative** — whether two residues are confidently positioned *with respect to each other*. **They are not substitutes.** So the census can report confidence about every residue's local geometry and **nothing whatsoever about whether two domains are confidently placed relative to one another** — which is exactly the quantity `D-091` ruling 3 requirement 3 asks for, on the population where re-folding is most expensive.
+
+- **⚠ What this does NOT claim.** **No published result is affected.** `F-004`, `F-005`, `D-075` and the Run A ablation use pLDDT and geometry; **none consumes PAE.** Nothing is invalidated and nothing is re-run.
+
+- **⚠ Why it went unnoticed for a month.** **Nothing consumed PAE**, so its absence produced no error, no warning and no visibly wrong number — the artifacts were correct, complete and plausible. **A capability nothing uses degrades silently**, and this was found only because a *different* question needed it. ⚠ **That is the general lesson and it is not specific to PAE:** the pipeline emits other things nobody reads, and their state is equally unknown.
+
+- **Open decisions this creates, named rather than assumed:**
+  1. **Repair the local persistence path.** ⚠ **Its own entry**, after this finding — repairing it inside the control fold would have begun backfilling the NULLs the finding is about.
+  2. ⚠ **Whether to re-fold the 2,690 to recover PAE is a DECISION, not a remedy.** It is local and costs no money, and `determinism_control.int8.610.88` shows the kernel is deterministic at this recipe, so a re-fold should reproduce. **But it writes 2,690 rows and it is not this entry's to make.**
+  3. ⚠ **Whether the 79 `pae_json_path` files RESOLVE is unanswered** — blocked by a permission denial on the volume, and correctly stopped-and-reported rather than worked around. **A path is not a file.**
+
+---
+
 ### D-100 — The Kathad quasi-H-score is reproduced exactly from S3, and the denominator convention is documented rather than recovered
 
 - **Date:** 2026-08-17 (⚠ authored "2026-08-18"; wall clock at merge is 2026-08-17 17:47 — stamped with the real date, as D-095/D-098/D-099 were)
