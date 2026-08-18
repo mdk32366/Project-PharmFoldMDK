@@ -93,3 +93,18 @@ def test_boundary_1026_is_exact():
     assert classify_regime(n_domains=5, runs=[1027]) == "single_run_only"
     assert classify_regime(n_domains=5, runs=[1026, 200]) == "all_runs_in_context"
     assert classify_regime(n_domains=5, runs=[1027, 200]) == "one_oversized_run"
+
+
+# ── the order's exact discriminating fixture ───────────────────────────────────────────────────
+def test_ORDER_fixture_abutting_merges_to_one_201aa_run():
+    """⚠ The order's fixture, verbatim: 100-200 and 201-300 merge to ONE run of 201 aa."""
+    runs = merge(iv((100, 200), (201, 300)))
+    assert runs == [[100, 300]]
+    assert runs[0][1] - runs[0][0] + 1 == 201
+
+
+def test_ORDER_fixture_one_gap_does_NOT_merge():
+    """⚠ And 100-200 with 202-300 must NOT merge — residue 201 is a real gap."""
+    runs = merge(iv((100, 200), (202, 300)))
+    assert runs == [[100, 200], [202, 300]]
+    assert len(runs) == 2

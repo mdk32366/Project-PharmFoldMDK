@@ -151,6 +151,78 @@ def main() -> int:
             if cc.get(name):
                 print(f"    {name:26s} {cc[name]:4d}")
 
+    # ── ⚠ THE MERGE RULE, STATED — it is a choice and it changes the answer ──────────────────
+    print("\n" + "=" * 96)
+    print("⚠⚠ THE MERGE RULE IS A CHOICE AND MUST BE STATED, NOT ABSORBED")
+    print("=" * 96)
+    print("  SHIPPED RULE: abutting OR overlapping — `start <= prev_end + 1`.")
+    print("    100-200 + 201-300 -> ONE run of 201 aa.  100-200 + 202-300 -> TWO runs.")
+    print("  ⚠ The alternative — overlapping ONLY (`start <= prev_end`) — gives a different")
+    print("    answer, and on abutting cadherin repeats it gives a WILDLY different one.")
+    print()
+
+    def merge_overlap_only(intervals):
+        runs = []
+        for a, b, *_ in intervals:
+            if runs and a <= runs[-1][1]:
+                runs[-1][1] = max(runs[-1][1], b)
+            else:
+                runs.append([a, b])
+        return runs
+
+    print(f"  {'rule':28s} {'total runs':>11s} {'rows w/ run>ctx':>16s} {'FAT1 runs':>10s}")
+    print("  " + "-" * 70)
+    fat1 = next((x for x in recs if x["acc"] == "Q14517"), None)
+    tot_shipped = sum(x["n_runs"] for x in recs)
+    over_shipped = sum(1 for x in recs if x["runs_over_context"] > 0)
+    print(f"  {'abutting OR overlapping':28s} {tot_shipped:11d} {over_shipped:16d} "
+          f"{fat1['n_runs'] if fat1 else 0:10d}   <- SHIPPED")
+
+    tot_ov = over_ov = 0
+    fat1_ov = 0
+    for r in rows:
+        acc = r["census_accession"]
+        s0, s1 = int(r["span_start"]), int(r["span_end"])
+        doc = json.loads((UNIPROT_CACHE / f"{acc}.json").read_bytes().decode("utf-8"))
+        rr = [b - a + 1 for a, b in merge_overlap_only(domain_intervals(doc, s0, s1))]
+        tot_ov += len(rr)
+        if any(x > TRAINED_CONTEXT for x in rr):
+            over_ov += 1
+        if acc == "Q14517":
+            fat1_ov = len(rr)
+    print(f"  {'overlapping ONLY':28s} {tot_ov:11d} {over_ov:16d} {fat1_ov:10d}")
+    print(f"\n  ⚠ FAT1: {fat1['n_runs'] if fat1 else 0} runs under the shipped rule, {fat1_ov} "
+          f"under overlap-only. **The abutment IS the phenomenon** — a rule that")
+    print("    does not join abutting intervals cannot see a cadherin stack at all.")
+
+    # ── residues in runs vs outside ──────────────────────────────────────────────────────────
+    print("\n" + "=" * 96)
+    print("RESIDUES IN RUNS vs OUTSIDE (within the V2 span)")
+    print("=" * 96)
+    tot_span = tot_in = 0
+    for x, r in zip(recs, rows):
+        tot_span += x["span_aa"]
+        tot_in += sum(x["runs"])
+    print(f"  span residues total : {tot_span:,}")
+    print(f"  inside a run        : {tot_in:,} ({100*tot_in/tot_span:.1f}%)")
+    print(f"  ⚠ outside every run : {tot_span-tot_in:,} ({100*(tot_span-tot_in)/tot_span:.1f}%)")
+
+    # ── distribution of largest run ──────────────────────────────────────────────────────────
+    print("\n" + "=" * 96)
+    print("DISTRIBUTION OF LARGEST RUN — ⚠ the 10 zero-domain rows carry NO run")
+    print("   (a category with a cause, not a largest-run of zero)")
+    print("=" * 96)
+    bands = [(0, 0), (1, 200), (201, 400), (401, 700), (701, 1026), (1027, 2000), (2001, 99999)]
+    for lo, hi in bands:
+        if lo == 0 and hi == 0:
+            n = sum(1 for x in recs if x["n_domains"] == 0)
+            print(f"  {'no domains at all':>18s} : {n:4d}   ⚠ category, not a zero")
+            continue
+        n = sum(1 for x in recs if x["n_domains"] > 0 and lo <= x["largest_run"] <= hi)
+        label = f"{lo:,}-{hi:,}" if hi < 99999 else f"{lo:,}+"
+        mark = "   ⚠ past the trained context" if lo > TRAINED_CONTEXT else ""
+        print(f"  {label:>18s} : {n:4d}{mark}")
+
     with OUT.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["acc", "gene", "span_aa", "n_domains", "n_runs",
                                            "largest_run", "runs_over_context", "regime"])
