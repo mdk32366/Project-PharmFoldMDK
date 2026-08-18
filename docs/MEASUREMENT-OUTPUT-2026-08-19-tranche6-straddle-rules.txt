@@ -1,0 +1,176 @@
+ORDERS-Code-2026-08-19 Tasks M / N / O — captured output
+instrument : scripts/tranche6_runs_clip_compare.py
+repo HEAD  : 7011e2402e87745d029b32aaff1c72c4e15628d5
+interpreter: Python 3.11.9
+DATABASE_URL at run time: []  (empty — no DB, no network, no GPU)
+
+====================================================================================================
+TASK M1 — PROVENANCE OF THE 2x2. Which `domain_intervals` does the DROP column use?
+====================================================================================================
+  ⚠ The import line in this file, quoted verbatim, not described:
+        44 | from scripts.tranche6_domain_census import MANIFEST, UNIPROT_CACHE, past_context_rows  # noqa: E402
+        45 | from scripts.tranche6_domain_survey import merge  # noqa: E402
+        46 | from scripts.tranche6_domain_survey import domain_intervals as admit_raw_intervals  # noqa: E402
+        47 | from scripts.tranche6_runs import (  # noqa: E402
+        50 |     domain_intervals as drop_intervals,
+
+  rule        module                                  line  predicate
+  ------------------------------------------------------------------------------------------------
+  admit_raw   scripts.tranche6_domain_survey            67  if a is None or b is None or b < s0 or a > s1:
+  drop        scripts.tranche6_runs                     64  if a is None or b is None or a < s0 or b > s1:
+  clip        scripts.tranche6_runs_clip_compare        64  (any overlap, truncated to [s0, s1])
+
+  ⚠ drop is admit_raw? False   — the DROP column is genuinely DROP, so the table below stands as measured.
+
+====================================================================================================
+TASK M2 — STRADDLERS UNDER `admit_raw`, bucketed BY DIRECTION, three populations
+====================================================================================================
+  ⚠ past `s1` and before `s0` are DIFFERENT MISTAKES and are never summed together.
+
+  population                                             rows   feats   >s1   <s0  both   res>s1   res<s0
+  ------------------------------------------------------------------------------------------------
+  (a) the 141  [tranche=5 AND span_aa>1026 strictly, D-098]    141    2399     2     1     0       42        3
+  (b) the ten  [D-095 subjects, D-091 r3]                  10     521     0     0     0        0        0
+  (c) full census  [census_manifest.v7.csv, every row]   3467    6491    30    15    50     5632     5842
+
+  ⚠ CACHE COVERAGE, stated rather than assumed — an absence would be a category:
+      manifest rows with a cached UniProt doc : 3467 of 3467   absent: 0  
+
+====================================================================================================
+TASK M3 — THE TEN `D-095` SUBJECTS UNDER ALL THREE RULES (merge rule = shipped)
+====================================================================================================
+  acc       gene      rule         doms  runs  largest  >ctx
+  ------------------------------------------------------------------------------------------------
+  Q14517    FAT1      admit_raw      39     9     2289     1
+                      drop           39     9     2289     1
+                      clip           39     9     2289     1
+
+  Q9NYQ8    FAT2      admit_raw      35     8     1674     1
+                      drop           35     8     1674     1
+                      clip           35     8     1674     1
+
+  Q8TDW7    FAT3      admit_raw      38     9     2291     1
+                      drop           38     9     2291     1
+                      clip           38     9     2291     1
+
+  Q6V0I7    FAT4      admit_raw      42    10     3037     1
+                      drop           42    10     3037     1
+                      clip           42    10     3037     1
+
+  Q07954    LRP1      admit_raw      87    30      360     0
+                      drop           87    30      360     0
+                      clip           87    30      360     0
+
+  Q9NZR2    LRP1B     admit_raw      88    51      223     0
+                      drop           88    51      223     0
+                      clip           88    51      223     0
+
+  P98164    LRP2      admit_raw      77    50      224     0
+                      drop           77    50      224     0
+                      clip           77    50      224     0
+
+  O75445    USH2A     admit_raw      47    21      782     0
+                      drop           47    21      782     0
+                      clip           47    21      782     0
+
+  Q8WXG9    ADGRV1    admit_raw      42    40      157     0
+                      drop           42    40      157     0
+                      clip           42    40      157     0
+
+  Q86WI1    PKHD1L1   admit_raw      26    25      223     0
+                      drop           26    25      223     0
+                      clip           26    25      223     0
+
+  ⚠⚠ THE TWO FOUNDING NUMBERS OF `D-095` — do they move?
+      FAT1 largest_run — D-095 records 2289.  admit_raw=2289  drop=2289  clip=2289   MOVES: False
+      FAT4 largest_run — D-095 records 3037.  admit_raw=3037  drop=3037  clip=3037   MOVES: False
+      ⚠ `D-095` was computed by `tranche6_domain_survey.py`, whose rule is `admit_raw`.
+
+====================================================================================================
+TASK M4 — THE 2x3: merge_rule x straddle_rule, on the 141
+====================================================================================================
+  merge_rule `abutting OR overlapping` = `start <= prev_end + 1`
+    ⚠ GAP TOLERANCE IS ZERO UNCOVERED RESIDUES: 100-200 + 201-300 joins (adjacent);
+      100-200 + 202-300 does not (one uncovered residue at 201).
+
+  merge_rule               straddle     runs  rows>ctx  FAT1  oversized set (ACCESSIONS, not a count)
+  ------------------------------------------------------------------------------------------------
+  abutting OR overlapping  admit_raw    1532         6     9  ['Q14517', 'Q6V0I7', 'Q8TDW7', 'Q8WXI7', 'Q9H251', 'Q9NYQ8']
+  abutting OR overlapping  drop         1532         6     9  ['Q14517', 'Q6V0I7', 'Q8TDW7', 'Q8WXI7', 'Q9H251', 'Q9NYQ8']  <- SHIPPED
+  abutting OR overlapping  clip         1532         6     9  ['Q14517', 'Q6V0I7', 'Q8TDW7', 'Q8WXI7', 'Q9H251', 'Q9NYQ8']
+  overlapping ONLY         admit_raw    2266         0    39  (empty)
+  overlapping ONLY         drop         2264         0    39  (empty)
+  overlapping ONLY         clip         2266         0    39  (empty)
+
+  ⚠⚠ READ THE `rows>ctx` COLUMN. Under `overlapping ONLY` it is ZERO under ALL THREE
+     straddle rules. The six rows needing a cut exist because abutment is joined.
+  ⚠ straddle_rule moves the run TOTAL. merge_rule moves WHICH ROWS NEED A CUT.
+
+====================================================================================================
+TASK N — THE +3 / +2 RECONCILIATION, by named interval
+====================================================================================================
+
+  Q9Y493 / ZAN   span 18-2757
+    intervals: drop 16 -> clip 17  (+1)
+      ADDED  2652-2757  (raw 2652-2797, past s1)  Domain: VWFC 5
+    abutting OR overlapping  runs 12 -> 12  delta +0   predicted +0 (new 0, absorbed 1, bridged 0)  [OK]
+    overlapping ONLY         runs 15 -> 15  delta +0   predicted +0 (new 0, absorbed 1, bridged 0)  [OK]
+
+  Q6V1P9 / DCHS2   span 68-2986
+    intervals: drop 25 -> clip 27  (+2)
+      ADDED  68-167  (raw 65-167, before s0)  Domain: Cadherin 1
+      ADDED  2881-2986  (raw 2881-2988, past s1)  Domain: Cadherin 27
+    abutting OR overlapping  runs 5 -> 5  delta +0   predicted +0 (new 0, absorbed 2, bridged 0)  [OK]
+    overlapping ONLY         runs 21 -> 23  delta +2   predicted +2 (new 2, absorbed 0, bridged 0)  [OK]
+
+  ⚠ The census-wide totals this accounts for: overlapping-ONLY 2,264 -> 2,266 (+2),
+    abutting-OR-overlapping 1,532 -> 1,532 (+0). Three intervals arrive in both cases;
+    ⚠⚠ the +0 is the stronger check, because a run count that does not move is exactly
+    what an interval silently failing to arrive would also look like.
+
+====================================================================================================
+TASK O2 — THE `classify_regime` MISFILING PATH, named not built
+====================================================================================================
+  ⚠ `classify_regime` returns `single_run_only` on `len(runs) == 1` BEFORE `over` is
+    computed, so a one-run protein past context would vanish from the six.
+    ⚠⚠ NOT REORDERED (O1). Counted, and reported with its zero:
+
+    single_run_only rows whose single run exceeds context [admit_raw ] : 0
+    single_run_only rows whose single run exceeds context [drop      ] : 0
+    single_run_only rows whose single run exceeds context [clip      ] : 0
+
+  ⚠ The disjointness of `single_run_only` from the oversized set is therefore a DATA
+    FACT with a named risk, never a proof. `D-095 amendment 1` records it that way.
+
+====================================================================================================
+REGIME CENSUS — five regimes, every outcome named including the zeros
+====================================================================================================
+  regime                        admit_raw       drop       clip
+  ------------------------------------------------------------------------------------------------
+  no_domains                           10         10         10
+  single_run_only                       2          2          2
+  one_oversized_run                     6          6          6
+  multiple_oversized_runs               0          0          0
+  all_runs_in_context                 123        123        123
+  TOTAL                               141        141        141
+
+  ⚠ SINGLE_RUN_ONLY, per rule — disjoint from the oversized set?
+    admit_raw  n=2 — Q8TEM1/NUP210 largest_run=74 · Q9NTG1/PKDREJ largest_run=699   any oversized? False
+    drop       n=2 — Q8TEM1/NUP210 largest_run=74 · Q9NTG1/PKDREJ largest_run=699   any oversized? False
+    clip       n=2 — Q8TEM1/NUP210 largest_run=74 · Q9NTG1/PKDREJ largest_run=699   any oversized? False
+
+  ⚠ THE OVERSIZED SET, per rule, AS ACCESSIONS
+    admit_raw  n=6  ['Q14517', 'Q6V0I7', 'Q8TDW7', 'Q8WXI7', 'Q9H251', 'Q9NYQ8']
+    drop       n=6  ['Q14517', 'Q6V0I7', 'Q8TDW7', 'Q8WXI7', 'Q9H251', 'Q9NYQ8']
+    clip       n=6  ['Q14517', 'Q6V0I7', 'Q8TDW7', 'Q8WXI7', 'Q9H251', 'Q9NYQ8']
+
+  PER-ROW CHANGES, drop -> clip (every field)
+    Q9Y493    ZAN        n_domains: 16 -> 17
+    Q6V1P9    DCHS2      n_domains: 25 -> 27  largest_run: 832 -> 847
+    rows changed: 2 of 141   unchanged: 139
+
+  THE 275 RESIDUES — two paths to one quantity, compared on the COUNTS
+    admit_raw  span 272,302  in-run 180,847 (66.4%)  outside 91,455   ⚠ EXCEEDS the span: counts residues the span does not contain
+    drop       span 272,302  in-run 180,527 (66.3%)  outside 91,775
+    clip       span 272,302  in-run 180,802 (66.4%)  outside 91,500
+    ⚠ clip - drop = 275 residues  — and `tranche6_domains.uniprot.csv` (Task A) records 180,802.
