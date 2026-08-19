@@ -187,6 +187,40 @@ So the rule is not "be careful" — it is:
 **Relied on by:** `D-079` · `D-093` · `F-043` · `F-049`
 **Assumptions relied on:** none new.
 
+#### D-102 amendment 1 — What the lens shipped as, and the four places the condition is enforced rather than promised
+
+- **Date:** 2026-08-20 · **Status:** accepted
+- ⚠ **A sub-entry, not a new integer.** It amends `D-102` in place beneath it, on the `D-099 amendment 1` precedent, so **the next free top-level integer is unchanged**
+- ⚠ `D-102` was written with *"the filter and the sort are unbuilt as of this entry."* **They are now built.** This entry closes that sentence.
+
+**THE CONDITION WAS *"STATE WHAT IT IS"*, AND A CONDITION THAT LIVES ONLY IN PROSE IS A HOPE.** Four places it is structural instead.
+
+1. **`StainingView` HAS NO BARE FRACTION FIELD.** `lens`, `patients_positive` and `patients_tested` are siblings of the value and `fraction` is a derived property. ⚠ **A consumer cannot obtain the number without having been handed the two things that make it mean something.** Asserted: `test_no_value_can_be_read_without_its_lens_and_its_n`.
+2. **`view()` REFUSES AN UNNAMED LENS** rather than defaulting to one. ⚠ A silent default is exactly how an unlabelled figure enters a system.
+3. **BOTH LENSES RIDE ON EVERY ROW.** The supplier computes and returns both, so **the page cannot quietly pick one** — the choice belongs to the reader and reaching it does not require a round trip.
+4. **THE CELL PRINTS THE n, ALWAYS**, and under `best_panel` the cancer it came from. `100%` alone is not a figure this surface can render.
+
+**THE FLOOR, AND WHY IT IS NOT ZERO.** `DEFAULT_MIN_PATIENTS = 10`. ⚠⚠ `F-043`: panels are median **11**, max **12**, and **246 of 1,640** sit at n ≤ 4. **Without a floor a 4-of-4 outranks an 11-of-12 — the small panel wins precisely because it is small.** `test_a_tiny_perfect_panel_does_not_beat_a_large_strong_one` asserts the defect at `min_patients=1` and its absence at the default, so the guard is proven in both directions rather than assumed in one. ⚠ **Excluded panels are COUNTED on the payload** (`panels_excluded_small`), never silently dropped.
+
+**TWO ABSENCES, KEPT APART.** `never_scored` (HPA holds no panel — **nobody looked**) and `no_panel_meets_floor` (panels exist; none reaches the floor **the reader set**). ⚠⚠ **Collapsing them would report a choice the READER made as a fact about the PROTEIN.** A third, `not_covered`, distinguishes a census row HPA never covered at all. ⚠ And `0 of 12` is `measured` — **a protein that never stains is a RESULT, not missing data**, which matters because that is 3.5% of scored genes.
+
+**THE DECLARED LIST IS RENDERED, NOT IMPLIED.** The critical tissues print on the surface beside the control that uses them. ⚠⚠ **The owner ruled a named list is a lens and not a judgement — but only because it is STATED. A reader who cannot see the list cannot disagree with it, and a list nobody can disagree with is doing a verdict's work in a filter's clothes.**
+
+- ⚠⚠ **And a tissue the data has never heard of is REPORTED.** `unknown_critical_tissues()` compares the declared names against the supplier's own vocabulary and surfaces any that match nothing. **A filter naming a tissue that does not occur removes nothing, reports nothing, and looks like it worked** — the `Cancer prognostics` defect exactly (`D-093 amendment 2` §3). ⚠ Asserted against HPA's real tissue strings, so a typo in the list cannot pass.
+- ⚠ **Only `High` counts as a hit.** Folding in `Medium` would be a threshold nobody ruled, on an ordinal scale with no distance defined on it.
+- ⚠⚠ **The flag cannot render without amendment 5's caveat**: `normal_basis` rides on the payload and the surface prints *"three individuals per tissue… this is a flag, not a safety measurement."*
+
+**WHAT DID NOT CHANGE, DELIBERATELY.**
+
+- ⚠⚠ **The page still arrives sorted by ACCESSION.** `D-102` licenses a sort the reader *chooses*; it does not license a page that arrives already ordered. **A default stained-% sort would be the ranking the bar exists to prevent, delivered by a different route.** Asserted.
+- ⚠ **Nothing divides.** The critical-tissue exclusion is an independent criterion evaluated on its own edge — **a filter, never a subtraction** (`D-093` ruling 4). Asserted: the rendered surface contains no ratio.
+- ⚠ **The structural profile column remains a STATUS**, never a value (`D-079` amendment 1 ruling 2). Untouched.
+
+**PROVEN BY REVERT.** Making `withLens` ignore the reader's choice and always read `best_panel` — the precise defect the ruling forbids — reds three tests **at the assertion**: `expected 100 to be 25`, `expected 11 to be 44`, and the rendered value failing to change. ⚠ The other eight stayed green, so the failures isolate the lens rather than the component.
+
+**Relied on by:** `D-102` · `D-093 amendment 5` · `F-043`
+**Assumptions relied on:** none new.
+
 ---
 
 ### D-101 — A protein is findable by the names people actually use, and an alias is a way IN, never a second identity

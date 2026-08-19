@@ -480,3 +480,33 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   font-size: 0.88rem;
   line-height: 1.55;
 }
+
+/* ⚠⚠ The lens control (D-102). Presented as a READING CHOICE, not a filter widget: the radio
+   group changes what the Stained % column means, so the meaning is printed under it at full size
+   rather than tucked into a tooltip. */
+.lens-control {
+  margin: 0.6rem 0 0.9rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--rule, #2d3748);
+  border-radius: 4px;
+}
+.lens-control fieldset { border: 0; padding: 0; margin: 0 0 0.4rem; }
+.lens-control legend {
+  padding: 0; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin-bottom: 0.3rem;
+}
+.lens-option { margin-right: 1.1rem; cursor: pointer; }
+.lens-option .lens-name { margin-left: 0.3rem; }
+.lens-meaning { margin: 0.25rem 0; font-size: 0.9rem; line-height: 1.5; }
+.lens-caveat { color: var(--warn, #b7791f); }
+/* ⚠ the 728-vs-16 line is the evidence for the control existing; it is not decoration */
+.lens-why {
+  margin: 0.35rem 0 0.5rem; font-size: 0.85rem; color: var(--muted); line-height: 1.5;
+}
+.lens-critical { display: block; margin-top: 0.5rem; font-size: 0.88rem; line-height: 1.6; }
+.lens-tissues { color: var(--muted); }
+.lens-basis { display: block; color: var(--warn, #b7791f); font-size: 0.82rem; }
+/* ⚠ the n is quieter than the percentage but never absent */
+.stained-n, .stained-where { color: var(--muted); font-size: 0.82rem; font-weight: 400; }
+.crit-none { color: var(--muted); }
+.crit-hit { color: var(--warn, #b7791f); font-weight: 600; }
