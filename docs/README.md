@@ -3414,6 +3414,77 @@ Naming them here rather than implying the audit was broader than it was.
 
 **Relied on by:** `F-052` · `F-021`.
 
+#### D-079 amendment 5 — Decision 1's other two clauses, audited: both HOLD, one is contained rather than asserted, and the audit's first pass missed the decks entirely
+
+- **Date:** 2026-08-19 · **Status:** ⚠ **An AUDIT, not a change.** Decision 1's rulings are
+  untouched. `D-079 amendment 4` verified the import clause and said in terms *"this entry has
+  verified neither"* of the other two. **This closes that.**
+- **How known (`D-016`):** `scripts/audit_d079_dec1_clause2.py` and
+  `scripts/audit_d079_dec1_decks.py` over the committed tree, plus read-only SQL as
+  `pharmfold-readonly`. Both instruments committed, so the result is re-derivable.
+
+---
+
+**CLAUSE A — *"no census statistic presented as evidence about ADC suitability in any artifact,
+deck, or briefing."* ✅ HOLDS.**
+
+**34 markdown and JSX files scanned** for a census figure and suitability language in one sentence:
+**5 candidates, 0 violations.** Four carry an explicit negation — they are the prohibitions
+themselves. The fifth reads *"128 GPI-anchored census proteins, 127 have a single candidate"*, where
+*candidate* means a protein **chain**, not a drug target.
+
+⚠⚠ **AND THE FIRST PASS MISSED THE DECKS COMPLETELY.** It scanned `.md` and `.jsx`. **Decision 1
+names "deck" in its own text**, and two are version-controlled — `docs/PharmFoldMDK_Deck.pptx` (14
+slides) and `docs/slide_lastthree.pptx` (1). ⚠ *An audit scoped to the file types its author
+happened to think of is `F-052`'s subject, inside the audit written to answer `F-052`'s subject.*
+
+**Extracted and read: ZERO census figures across all 15 slides.** Every number is cohort work — 82,
+79 of 82 folded, 12 labelled positives, n=12. **The decks are about the validation study and do not
+mention the census.**
+
+⚠ **The `ROADMAP` describes the barred operation and is NOT a violation.** Phase 2 reads *"Given a
+comprehensive census of ADC-targetable antigens, rank them by structural suitability."* **It gates
+itself on the same trigger decision 1 names:** *"Phase 2 is gated on `D-075` … **this gate is the
+single most important line in the roadmap**."* A plan that names its own gate is the discipline
+working, not a leak.
+
+⚠ **The notebook is clean**: no census figure, and its two uses of *"good target"* are the research
+question and an explicit disclaimer — *"never calibrated into a real chance this is a good target
+(`F-006`)"*.
+
+---
+
+**CLAUSE B — *"no refit — `ranking_run` id=2 is read from its row."* ✅ HOLDS, ⚠ contained rather
+than asserted.**
+
+- **Five ranking runs; the newest is 2026-08-06**, thirteen days before this audit and before any
+  of this session's work. **No run was created, no score written.**
+- **Only `scripts/fit_scorer.py` writes `TargetScore` / `RankingResult`**, and it is **not in the
+  deployed image** — `.dockerignore` excludes `scripts/` and the Dockerfile copies exactly one file.
+  ⚠ That exclusion has been asserted by test since 2026-08-19, naming the fitter explicitly.
+- **Nothing in `app/`, `core/` or `worker/` calls the fitter.** CI runs `alembic upgrade head` and
+  never the fitter.
+- ⚠ `core/enqueue.py` can create a `RankingRun` — but it **selects an existing run for the
+  target-list version first**, and **0 rows carry an empty `scorer_version`**, so it has never
+  created one.
+
+**⚠⚠ THE RESIDUAL, AND IT IS THE SAME SHAPE THAT MADE AMENDMENT 4 NECESSARY. Nothing asserts the
+property.** The fitter is absent from production **by packaging**, not by a check that a new scored
+run has not appeared. *The clause is true today because nobody has refitted* — which is precisely
+what the import clause's separation rested on before it turned out to be fiction. **Named rather
+than counted as enforcement.**
+
+---
+
+**⚠ WHAT AN AUDIT OF THIS CLAUSE CANNOT REACH, STATED SO THE RESULT IS NOT OVERSOLD.**
+Clause A governs an **act of presentation**. This audit covers **version-controlled artifacts
+only**: a deck shown in a meeting and never committed, a figure pasted into an email, or a sentence
+spoken over a slide are outside any instrument this project can build. ⚠⚠ **No test will ever
+enforce this clause.** It is a habit, and the only thing that maintains it is someone re-reading a
+claim before saying it out loud.
+
+**Relied on by:** `F-052`.
+
 ---
 
 ### F-016 — The `Non_Surface` marker in the reconstructed Table S3 is a section heading, not a partition: everything below it is the **whole** membraneome

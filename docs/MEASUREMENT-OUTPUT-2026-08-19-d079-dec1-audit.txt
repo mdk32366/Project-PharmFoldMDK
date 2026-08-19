@@ -1,0 +1,36 @@
+MEASUREMENT OUTPUT — 2026-08-19 — D-079 decision 1, the two unaudited clauses
+instruments: scripts/audit_d079_dec1_clause2.py · scripts/audit_d079_dec1_decks.py
+             + read-only SQL as pharmfold-readonly against pharmfoldmdk
+
+=== CLAUSE: no census statistic as evidence about ADC suitability ===
+  files scanned            : 34
+  candidate co-occurrences : 5
+    carrying a negation    : 4   (prohibitions, not claims)
+  ⚠ WITHOUT a negation     : 1   <- these need reading
+
+  --- ui/src/components/CensusTable.jsx
+      This table sorts on every column (D-087), so a // profile VALUE here would be one header click from a ranked shortlist of 1,397 proteins.
+
+
+=== THE DECKS — found only on the second pass; the first scanned .md/.jsx only ===
+============================================================================================
+PharmFoldMDK_Deck.pptx — 14 slides
+============================================================================================
+[slide 1]  · suitability language
+[slide 2]  · suitability language
+[slide 3]  · suitability language
+[slide 4]  · suitability language
+[slide 5]
+[slide 6]
+[slide 7]
+[slide 8]  · suitability language
+[slide 9]  · suitability language
+[slide 10]
+[slide 11]  · suitability language
+[slide 12]  · suitability language
+[slide 13]  · suitability language
+[slide 14]  · suitability language
+============================================================================================
+slide_lastthree.pptx — 1 slides
+============================================================================================
+[slide 1]
