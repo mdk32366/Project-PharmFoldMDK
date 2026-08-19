@@ -526,7 +526,24 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
             .where(ProteinAnalysis.pdb_path.isnot(None))
             .order_by(ProteinAnalysis.input_value)          # ⚠ accession, a neutral default
         ).all()
-    return [census_projection(r) for r in rows]
+    out = [census_projection(r) for r in rows]
+
+    # ⚠⚠ THE STAINING LENSES (D-102). Attached here rather than in `census_projection` because it
+    # needs the database and the projection is a pure shape over one row.
+    # ⚠ BOTH lenses ride on every row. Sending one would be the page choosing for the reader, and
+    # the whole point of D-102 is that the choice is the reader's and must be named.
+    # ⚠ A protein with no staining entry carries `None` and the surface renders a CATEGORY: HPA
+    # covers fewer proteins than the census holds, and 960 of 2,687 are absent entirely.
+    try:
+        from app.census_staining_read import staining_by_gene
+        stain = staining_by_gene(engine)
+    except Exception:                      # noqa: BLE001
+        # ⚠ A missing or unmigrated clinical table must not take the census page down. The
+        # surface degrades to what it showed before the lens existed — it does NOT show zeros.
+        stain = {}
+    for row in out:
+        row["staining"] = stain.get(row.get("gene")) if row.get("gene") else None
+    return out
 
 
 def census_untranched_count(engine: Any) -> int:

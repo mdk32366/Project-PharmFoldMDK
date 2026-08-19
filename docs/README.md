@@ -187,6 +187,40 @@ So the rule is not "be careful" — it is:
 **Relied on by:** `D-079` · `D-093` · `F-043` · `F-049`
 **Assumptions relied on:** none new.
 
+#### D-102 amendment 1 — What the lens shipped as, and the four places the condition is enforced rather than promised
+
+- **Date:** 2026-08-20 · **Status:** accepted
+- ⚠ **A sub-entry, not a new integer.** It amends `D-102` in place beneath it, on the `D-099 amendment 1` precedent, so **the next free top-level integer is unchanged**
+- ⚠ `D-102` was written with *"the filter and the sort are unbuilt as of this entry."* **They are now built.** This entry closes that sentence.
+
+**THE CONDITION WAS *"STATE WHAT IT IS"*, AND A CONDITION THAT LIVES ONLY IN PROSE IS A HOPE.** Four places it is structural instead.
+
+1. **`StainingView` HAS NO BARE FRACTION FIELD.** `lens`, `patients_positive` and `patients_tested` are siblings of the value and `fraction` is a derived property. ⚠ **A consumer cannot obtain the number without having been handed the two things that make it mean something.** Asserted: `test_no_value_can_be_read_without_its_lens_and_its_n`.
+2. **`view()` REFUSES AN UNNAMED LENS** rather than defaulting to one. ⚠ A silent default is exactly how an unlabelled figure enters a system.
+3. **BOTH LENSES RIDE ON EVERY ROW.** The supplier computes and returns both, so **the page cannot quietly pick one** — the choice belongs to the reader and reaching it does not require a round trip.
+4. **THE CELL PRINTS THE n, ALWAYS**, and under `best_panel` the cancer it came from. `100%` alone is not a figure this surface can render.
+
+**THE FLOOR, AND WHY IT IS NOT ZERO.** `DEFAULT_MIN_PATIENTS = 10`. ⚠⚠ `F-043`: panels are median **11**, max **12**, and **246 of 1,640** sit at n ≤ 4. **Without a floor a 4-of-4 outranks an 11-of-12 — the small panel wins precisely because it is small.** `test_a_tiny_perfect_panel_does_not_beat_a_large_strong_one` asserts the defect at `min_patients=1` and its absence at the default, so the guard is proven in both directions rather than assumed in one. ⚠ **Excluded panels are COUNTED on the payload** (`panels_excluded_small`), never silently dropped.
+
+**TWO ABSENCES, KEPT APART.** `never_scored` (HPA holds no panel — **nobody looked**) and `no_panel_meets_floor` (panels exist; none reaches the floor **the reader set**). ⚠⚠ **Collapsing them would report a choice the READER made as a fact about the PROTEIN.** A third, `not_covered`, distinguishes a census row HPA never covered at all. ⚠ And `0 of 12` is `measured` — **a protein that never stains is a RESULT, not missing data**, which matters because that is 3.5% of scored genes.
+
+**THE DECLARED LIST IS RENDERED, NOT IMPLIED.** The critical tissues print on the surface beside the control that uses them. ⚠⚠ **The owner ruled a named list is a lens and not a judgement — but only because it is STATED. A reader who cannot see the list cannot disagree with it, and a list nobody can disagree with is doing a verdict's work in a filter's clothes.**
+
+- ⚠⚠ **And a tissue the data has never heard of is REPORTED.** `unknown_critical_tissues()` compares the declared names against the supplier's own vocabulary and surfaces any that match nothing. **A filter naming a tissue that does not occur removes nothing, reports nothing, and looks like it worked** — the `Cancer prognostics` defect exactly (`D-093 amendment 2` §3). ⚠ Asserted against HPA's real tissue strings, so a typo in the list cannot pass.
+- ⚠ **Only `High` counts as a hit.** Folding in `Medium` would be a threshold nobody ruled, on an ordinal scale with no distance defined on it.
+- ⚠⚠ **The flag cannot render without amendment 5's caveat**: `normal_basis` rides on the payload and the surface prints *"three individuals per tissue… this is a flag, not a safety measurement."*
+
+**WHAT DID NOT CHANGE, DELIBERATELY.**
+
+- ⚠⚠ **The page still arrives sorted by ACCESSION.** `D-102` licenses a sort the reader *chooses*; it does not license a page that arrives already ordered. **A default stained-% sort would be the ranking the bar exists to prevent, delivered by a different route.** Asserted.
+- ⚠ **Nothing divides.** The critical-tissue exclusion is an independent criterion evaluated on its own edge — **a filter, never a subtraction** (`D-093` ruling 4). Asserted: the rendered surface contains no ratio.
+- ⚠ **The structural profile column remains a STATUS**, never a value (`D-079` amendment 1 ruling 2). Untouched.
+
+**PROVEN BY REVERT.** Making `withLens` ignore the reader's choice and always read `best_panel` — the precise defect the ruling forbids — reds three tests **at the assertion**: `expected 100 to be 25`, `expected 11 to be 44`, and the rendered value failing to change. ⚠ The other eight stayed green, so the failures isolate the lens rather than the component.
+
+**Relied on by:** `D-102` · `D-093 amendment 5` · `F-043`
+**Assumptions relied on:** none new.
+
 ---
 
 ### D-101 — A protein is findable by the names people actually use, and an alias is a way IN, never a second identity
@@ -1820,6 +1854,57 @@ temptation to cite it here is exactly the class of error this entry catalogues.*
 **Relied on by:** `D-093` · `D-093 amendment 2` · `F-047`
 
 **Assumptions relied on:** `A-014 (an upstream model's negative class is a prediction, not a fact)` — ⚠ **IHC is an assay, not a model, so `A-014` does NOT apply to these edges.** *Recorded because the temptation to cite it here is the class of error `D-093` already catalogues.*
+
+#### D-093 amendment 5 — ⚠⚠ Ruling 4's open question is ANSWERED: no file publishes the counts, the XML makes them DERIVABLE, and the normal-tissue denominator is THREE
+
+- **Date:** 2026-08-20 · **Status:** accepted
+- ⚠ **A sub-entry, not a new integer.** It amends `D-093` in place beneath it, on the `D-099 amendment 1` precedent, so **the next free top-level integer is unchanged**
+- ⚠ **Amendment 3 remains CLAIMED and UNWRITTEN** — the licence finding, cited by `F-047 amendment 1` and by `docs/HPA-licence-2026-08-19-as-read.md` (*"§1 remains UNRESOLVED"*). This entry takes **5**, as amendment 4 took 4, and does not touch that reservation.
+
+**RULING 4 ASKED A QUESTION AND REQUIRED AN ANSWER ON THE RECORD.** Its own words: *"⚠ **Open, and named: does HPA publish a normal-tissue file carrying patient counts?** **Unchecked. If one exists, this ruling is revisited on the record.**"* It was checked on 2026-08-20.
+
+**THE ANSWER, IN THREE PARTS, AND THE SECOND PART IS THE ONE THAT MATTERS.**
+
+**1. No published file carries them.** All **38** downloadable artifacts on `v22.proteinatlas.org/about/download` were enumerated. The normal-tissue file is stated as *"Gene, Tissue, Cell type, Level, Reliability"* — ordinal only. `pathology.tsv` is the only file with counts and it is **tumour-only**. ⚠ **So ruling 4's literal trigger did not fire.**
+
+**2. ⚠⚠ BUT THE XML MAKES THE DENOMINATOR DERIVABLE, SO RULING 4's STATED REASON IS NOW FALSIFIABLE.** The download page is **silent** on the XML rather than negative — *absence of a statement is not a statement of absence* — so the schema itself was read. `proteinatlas.xml.gz` carries, per gene and per tissue, individual `<patient>` elements with `<patientId>`, `<sex>`, `<age>`, `<level>`, `<quantity>`, `<location>` and `<sample>` children. **There is no count attribute, but a count is obtained by counting the elements.**
+
+- ⚠⚠ **Ruling 4 says *"a quasi-H-score cannot be computed on the normal side — it has no denominator"*. That sentence is now WRONG.** The denominator exists; it is one derivation away.
+- ⚠ **A bar whose stated reason is false is a bar waiting to be removed by whoever notices.** The conclusion is sound and the reasoning is not, and *a rule kept for a reason that does not hold is not kept.*
+
+**3. ⚠⚠ THE FACT THAT REPLACES THE REASON — AND IT MAKES THE BAR STRONGER, NOT WEAKER.** From HPA's own assays-and-annotation page: *"Normal tissues are represented by samples from **three individuals** each, one core per individual, except for endometrium, skin, soft tissue and stomach, which are represented by samples from six individuals each and parathyroid gland, which is represented by one sample."*
+
+**THE NORMAL-TISSUE DENOMINATOR IS THREE.**
+
+- **A tumour panel is median 11, max 12** (`F-043`). A ratio would put **11-of-12 over 2-of-3** and return a number with decimal places on both sides of it.
+- ⚠⚠ **Having the denominator would be WORSE than lacking it.** A missing quantity is visibly missing. A quantity computed on n=3 **looks exactly like one computed on n=300**, and it would make two things appear commensurable when one of them cannot resolve anything short of uniform staining.
+- ⚠ `F-043` treats n ≤ 4 as a problem on the tumour side, where it affects **246 of 1,640** panels. **On the normal side n=3 is not an edge case — it is the design, everywhere, for every protein.**
+
+**⚠ RULING 4's CONCLUSION STANDS. ITS REASON IS REPLACED.**
+
+> **NOT:** *"no ratio, because the normal side has no denominator."*
+> **BUT:** *"no ratio, because the normal-tissue denominator is **three individuals**, and a ratio built on it invites a comparison the sample size cannot support."*
+
+⚠ **The revised reason survives contact with the XML; the original does not.** ⚠⚠ **And the open question is now CLOSED** — not by the answer it anticipated, but by a better one. *Recorded as a correction, not patched away: ruling 4's original sentence stays in amendment 2 where it was written.*
+
+**A SECOND FINDING FROM THE SAME PAGE, AND IT IS ABOUT DATA ALREADY SHIPPED.** ⚠ **HPA does not document how the annotated `Level` is decided when the three individuals disagree.** The page states the annotation parameters — staining intensity, fraction of stained cells, subcellular localisation — and **says nothing about inter-individual discordance.** The surface renders that aggregate as *"strong staining"*. **We are displaying a summary whose summarisation rule is unstated at source**, and that is now said on the card rather than known only here.
+
+**⚠⚠ WHAT SHIPPED WITH THIS ENTRY — the asymmetry the layout was creating.**
+
+The tumour half prints its n on **every row**: *"10 of 12 samples stained"*. The normal half printed *"2 of 3 cell types"* — ⚠ **which reads as a sample size and is not one.** Two halves side by side, equal in position, unequal in evidential weight, **and nothing on the card said so.** A reader comparing a confident *"High"* against *"10 of 12"* was comparing **three people against twelve patients** without being told.
+
+- **`clin-normal-basis` now states**: three individuals per tissue; the cell-type figure is **not** a patient count; and the disagreement rule is **not documented at the source**.
+- ⚠ **Deliberately NOT styled as fine print.** It corrects a reading the layout itself invites, and *a caveat that reads as a footnote has already lost that argument.*
+- **Proven by revert**: removing the block reds `states that the normal-tissue half rests on three individuals` **at the assertion**, not at an error.
+
+**⚠ WHAT THIS ENTRY DOES NOT DO.**
+
+- **It does not license an XML ingest.** ⚠ Deriving counts would be a **new supplier** requiring `D-093` decision 6's five answers in full — and item (5), the verbatim attribution string, is **still unanswered for the two files already ingested.**
+- ⚠⚠ **It does not make the two edges commensurable.** Filtering on each independently — which `D-102` licenses — is **not** combining them. **Nothing divides.**
+- **It does not touch the licence question.** Amendment 3 is still owed, and the email draft the as-read document names as the resolution instrument is **still absent from the tree**.
+
+**Relied on by:** `D-093 amendment 2` · `F-043` · `D-102`
+**Assumptions relied on:** none new. ⚠ `A-014` still does not apply — **IHC is an assay, not a model** — and three individuals is a small assay, not a weak prediction.
 
 ---
 

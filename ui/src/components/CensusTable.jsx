@@ -26,6 +26,12 @@ const COLUMNS = [
   // category sorts into GROUPS, which orders nothing by suitability. `numeric: false` on purpose:
   // there is no magnitude to compare.
   { key: 'profile_status', label: 'Profile', numeric: false },
+  // ⚠⚠ SORTABLE, AND THAT IS RULED (D-102): "the ability to sort by a stained fraction is just
+  // another way of looking at data, and it's not a rank either." The column header states the
+  // lens, and the n rides in the cell — a percentage without its denominator is barred by the
+  // ruling's own condition.
+  { key: 'stained_pct', label: 'Stained %', numeric: true },
+  { key: 'critical_n', label: 'Critical tissue', numeric: true },
 ]
 
 // ⚠ The four statuses, rendered as words rather than as a token. The three REFUSAL causes stay
@@ -36,6 +42,40 @@ const PROFILE_LABEL = {
   refused_out_of_distribution: 'outside fitted range',
   refused_span_below_floor: 'span too short to describe',
   refused_features_incomplete: 'measurements incomplete',
+}
+
+// ⚠⚠ THE TWO LENSES (D-102). Named on the surface because naming them IS the owner's ruling:
+// "as long as you state what it is, it is neither judgement nor measurement". Over the same 1,727
+// census genes, "stains in 100% of patients" is 728 proteins by best-panel and 16 pooled — a
+// factor of 45 from identical data. An unlabelled figure here would be actively misleading.
+export const LENSES = {
+  best_panel: {
+    label: 'best single cancer',
+    meaning: 'the one cancer type where this protein stained in the largest share of patients',
+    caveat: 'a maximum over ~20 small panels, so a high figure is partly a selection effect',
+  },
+  pooled: {
+    label: 'all cancers pooled',
+    meaning: 'every panel added together — one fraction over all patients examined',
+    caveat: 'a protein strong in one cancer and absent elsewhere reads low here, correctly',
+  },
+}
+
+// ⚠ Derived onto the row so the existing sort can see it. The lens is applied HERE and once, so a
+// column can never show one lens while a caption names another.
+export function withLens(rows, lens) {
+  return rows.map((r) => {
+    const s = r.staining?.[lens]
+    const f = s && s.patients_tested ? s.patients_positive / s.patients_tested : null
+    return {
+      ...r,
+      stained_pct: f == null ? null : Math.round(f * 1000) / 10,
+      stained_n: s?.patients_tested ?? null,
+      stained_cancer: s?.cancer ?? null,
+      stained_category: s?.category ?? (r.staining ? 'never_scored' : 'not_covered'),
+      critical_n: r.staining ? (r.staining.critical_normal_high?.length ?? 0) : null,
+    }
+  })
 }
 
 // ⚠ null sorts LAST in both directions. A missing pLDDT is not a low one, and letting it float to
@@ -86,15 +126,27 @@ const PAGE = 200
 
 export default function CensusTable({ rows, onSelect }) {
   const [query, setQuery] = useState('')
+  // ⚠⚠ DEFAULT SORT IS STILL ACCESSION. D-102 licenses a sort the READER chooses; it does not
+  // license the page arriving already ordered. A default stained-% sort would be the ranking the
+  // bar exists to prevent, delivered by a different route.
   const [sort, setSort] = useState({ key: 'accession', dir: 'asc' })
   const [showAll, setShowAll] = useState(false)
+  const [lens, setLens] = useState('best_panel')
+  const [excludeCritical, setExcludeCritical] = useState(false)
+
+  const lensed = useMemo(() => withLens(rows, lens), [rows, lens])
 
   const shown = useMemo(() => {
     const col = COLUMNS.find((c) => c.key === sort.key) ?? COLUMNS[0]
-    return filterRows(rows, query)
+    // ⚠ the critical-tissue exclusion is an INDEPENDENT criterion on its own edge — a filter, never
+    // a subtraction from the tumour figure. D-093 ruling 4: nothing divides.
+    const base = excludeCritical ? lensed.filter((r) => r.critical_n === 0) : lensed
+    return filterRows(base, query)
       .slice()
       .sort((a, b) => compare(a, b, col.key, col.numeric, sort.dir))
-  }, [rows, query, sort])
+  }, [lensed, query, sort, excludeCritical])
+
+  const declared = rows.find((r) => r.staining)?.staining
 
   const toggle = (key) =>
     setSort((s) => ({ key, dir: s.key === key && s.dir === 'asc' ? 'desc' : 'asc' }))
@@ -127,6 +179,64 @@ export default function CensusTable({ rows, onSelect }) {
           onChange={(e) => setQuery(e.target.value)}
         />
       </label>
+
+      {/* ⚠⚠ THE LENS CONTROL. D-102's condition is "state what it is", and this is where it is
+          stated. The control is not a preference — it changes what the Stained % column MEANS, so
+          the meaning is printed under it rather than hidden in a tooltip. */}
+      <div className="lens-control">
+        <fieldset>
+          <legend>How to read &ldquo;stained&rdquo;</legend>
+          {Object.entries(LENSES).map(([key, l]) => (
+            <label key={key} className="lens-option">
+              <input
+                type="radio"
+                name="stain-lens"
+                value={key}
+                checked={lens === key}
+                onChange={() => setLens(key)}
+              />
+              <span className="lens-name">{l.label}</span>
+            </label>
+          ))}
+        </fieldset>
+        <p className="lens-meaning">
+          <strong>{LENSES[lens].label}:</strong> {LENSES[lens].meaning}.{' '}
+          <span className="lens-caveat">⚠ {LENSES[lens].caveat}.</span>
+        </p>
+        {/* ⚠⚠ THE NUMBER THAT MAKES THIS CONTROL NECESSARY RATHER THAN DECORATIVE. */}
+        <p className="lens-why">
+          The same 1,727 proteins read very differently: <strong>728</strong> stain in 100% of
+          patients under <em>best single cancer</em>, and <strong>16</strong> do under{' '}
+          <em>all cancers pooled</em>. Neither is wrong — they answer different questions.
+        </p>
+
+        {declared && (
+          <label className="lens-critical">
+            <input
+              type="checkbox"
+              checked={excludeCritical}
+              onChange={(e) => setExcludeCritical(e.target.checked)}
+            />{' '}
+            Hide proteins staining <strong>High</strong> in tissue you cannot afford to hit
+            {/* ⚠⚠ THE LIST IS DECLARED, NOT IMPLIED. The owner ruled a named list is a lens and
+                not a judgement — but only because it is STATED. A reader who cannot see the list
+                cannot disagree with it, and a list nobody can disagree with is a verdict. */}
+            <span className="lens-tissues">
+              {' '}— {declared.critical_tissues_declared.join(', ')}
+            </span>
+            {declared.critical_tissues_unknown?.length > 0 && (
+              <span className="caveat">
+                {' '}⚠ named but absent from the source vocabulary:{' '}
+                {declared.critical_tissues_unknown.join(', ')} — these exclude nothing
+              </span>
+            )}
+            <span className="lens-basis">
+              {' '}⚠ Normal tissue is {declared.normal_basis}; this is a flag, not a safety
+              measurement.
+            </span>
+          </label>
+        )}
+      </div>
 
       {/* ⚠⚠ THE COUNT REPORTS WHAT IS ON SCREEN, not what matched. The first version printed
           `shown.length` while the table rendered `visible.length` — so the page read
@@ -225,6 +335,34 @@ export default function CensusTable({ rows, onSelect }) {
                       {PROFILE_LABEL[r.profile_status] ?? r.profile_status}
                     </span>
                   ) : '—'}
+                </td>
+
+                {/* ⚠⚠ THE PERCENTAGE NEVER TRAVELS ALONE. D-102's condition, enforced in the cell:
+                    the n rides with it, and under the best-panel lens so does the cancer it came
+                    from. A bare "100%" over 4 patients and over 40 are different facts. */}
+                <td className="num stained-cell">
+                  {r.stained_pct == null ? (
+                    <span className="unknown">
+                      {r.stained_category === 'not_covered' ? 'not covered'
+                        : r.stained_category === 'never_scored' ? 'never scored'
+                        : 'no panel ≥ floor'}
+                    </span>
+                  ) : (
+                    <>
+                      <strong>{r.stained_pct}%</strong>
+                      <span className="stained-n"> of {r.stained_n}</span>
+                      {r.stained_cancer && (
+                        <span className="stained-where"> · {r.stained_cancer}</span>
+                      )}
+                    </>
+                  )}
+                </td>
+
+                {/* ⚠ a COUNT of declared tissues hit, not a verdict. 0 is a real result. */}
+                <td className="num">
+                  {r.critical_n == null ? '—'
+                    : r.critical_n === 0 ? <span className="crit-none">none</span>
+                    : <span className="crit-hit">{r.critical_n}</span>}
                 </td>
               </tr>
             )

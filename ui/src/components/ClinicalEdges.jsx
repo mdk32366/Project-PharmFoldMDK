@@ -88,6 +88,20 @@ export default function ClinicalEdges({ block }) {
             A protein that also sits on healthy tissue is a harder target — the payload cannot
             tell the two apart.
           </p>
+          {/* ⚠⚠ THE TWO HALVES ARE CO-EQUAL IN POSITION AND UNEQUAL IN EVIDENTIAL WEIGHT, AND
+              UNTIL NOW THE SURFACE DID NOT SAY SO. The tumour half prints its n on every row
+              ("10 of 12 samples stained"). This half printed "2 of 3 cell types" — which LOOKS
+              like a sample size and is not one. HPA's own methods page: normal tissues are
+              "represented by samples from three individuals each, one core per individual".
+              ⚠ A reader comparing 10-of-12 against a confident-looking "High" is comparing
+              twelve patients against three people, and nothing on the card told them. */}
+          <p className="clin-normal-basis">
+            <strong>Read the weight of this, not just the word.</strong> The atlas stains{' '}
+            <strong>three individuals per tissue</strong> (a few tissues six, one just one), so a
+            level here rests on far fewer people than the tumour counts above. The cell-type figure
+            below is <em>not</em> a patient count. ⚠ How the level is decided when those
+            individuals disagree is <strong>not documented at the source</strong>.
+          </p>
           <ul className="clin-normals">
             {normals.map((n) => (
               <li key={n.tissue}>
