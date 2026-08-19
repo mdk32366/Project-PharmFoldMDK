@@ -83,3 +83,8 @@ data/census/surface_confirmation.v1.csv -text
 docs/D-075-amendment-1-paste-ready.md              -text
 docs/ORDERS-Code-invariant-amendment-references.md -text
 docs/D-093-amendment-2-paste-ready.md              -text
+
+# ⚠ The 2026-08-20 reissue and its order, both declaring an AUTHORED-SHA256 over a line-start
+# anchored range. Protected at landing (F-047 member 15).
+docs/D-093-amendment-3-REISSUE.md                        -text
+docs/ORDERS-Code-licence-quotation-and-attribution-audit.md -text

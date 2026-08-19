@@ -90,20 +90,10 @@ def test_every_declared_form_actually_matches_something_it_claims_to():
         assert rx.search(samples[name]), name
 
 
-#: ⚠⚠ STRICT XFAIL, AND IT IS A SELF-REMOVING MARKER — NOT A SUPPRESSION.
-#: The orders were: run red, land `D-093 amendment 3`, run green. **Amendment 3 could not be
-#: landed** — the file the orders' sha256 identifies contains `#### D-093 amendment 2`, which is
-#: already in the log (9,327 vs 9,328 chars, identical title). The hash MATCHED, so transmission was
-#: faithful; the wrong file was attached. Reported, not worked around.
-#: ⚠ `strict=True` means that the moment amendment 3 lands, this test XPASSes — and a strict xfail
-#: that passes FAILS THE SUITE. The declaration cannot be forgotten or silently outlive the defect;
-#: whoever lands amendment 3 is forced to delete this marker.
-#: ⚠⚠ The citation is NOT removed to make this green. §5: a citation removed is a finding erased.
-@pytest.mark.xfail(
-    strict=True,
-    reason="D-093 amendment 3 is cited and unwritten. The Planner holds it; the file transmitted "
-           "with its hash contained amendment 2 instead. Landing amendment 3 turns this XPASS, "
-           "which fails the suite until this marker is removed.")
+# ⚠ The strict xfail that stood here was REMOVED when `D-093 amendment 3` (reissue) landed.
+# It XPASSed the moment the amendment existed, and a strict xfail that passes fails the suite —
+# which is exactly what forced this deletion. ⚠⚠ The marker could not outlive the defect, and
+# that was the point of making it strict rather than a plain skip.
 @pytest.mark.skipif(not pathlib.Path("docs/README.md").exists(), reason="log absent")
 def test_the_live_log_resolves_every_amendment_it_cites():
     """⚠⚠ THIS TEST IS THE POINT. It was RED on `D-093 amendment 3` when written, against the real

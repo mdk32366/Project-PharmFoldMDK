@@ -17,7 +17,16 @@ const PRESENT = {
     { tissue: 'bronchus', highest: 'High', cell_types: 3, detected_in: 2 },
     { tissue: 'colon', highest: 'Medium', cell_types: 4, detected_in: 1 },
   ],
-  source: 'Human Protein Atlas v22 — pathology.tsv and normal_tissue.tsv. CC BY-SA 3.0.',
+  source: 'Human Protein Atlas v22 — pathology.tsv and normal_tissue.tsv.',
+  licence_statement: {
+    attributive: 'The Human Protein Atlas states, on its Licence & Citation page',
+    quotation: 'The Human Protein Atlas is licensed under the Creative Commons ' +
+      'Attribution-ShareAlike 3.0 International License for all copyrightable parts of our ' +
+      // ⚠ the source's own text ends with an unbalanced quote; reproduced exactly
+      `database, specifically indicated in the downloadable XML format with 'source="HPA".`,
+    url: 'https://v22.proteinatlas.org/about/licence',
+    date_read: '2026-08-20',
+  },
   boundary: 'Immunohistochemistry: how many patient samples stained for this protein.',
 }
 
@@ -106,6 +115,38 @@ describe('ClinicalEdges', () => {
     expect(t).not.toMatch(/quasi H-score/i)
     expect(t).not.toMatch(/Highly expressed in these tumour types/i)
     expect(t).toMatch(/Immunohistochemistry/i)
+  })
+
+
+  // ⚠⚠ NB4 — THREE SEPARATE ASSERTIONS, NOT ONE. Each declared property gets its own test, so a
+  // regression names WHICH property was lost. KEEL-1 V9 Principle 6.
+  it('quotes the page as REPORTED SPEECH, never adopting the licence', () => {
+    const t = text(PRESENT)
+    expect(t).toMatch(/The Human Protein Atlas states, on its Licence & Citation page/)
+    // ⚠ adoption is exactly what the ruling refuses
+    expect(t).not.toMatch(/this data is licensed under/i)
+    expect(t).not.toMatch(/we are licensed/i)
+  })
+
+  it('renders a RESOLVABLE LINK with the quotation', () => {
+    const { container } = render(<ClinicalEdges block={PRESENT} />)
+    const a = container.querySelector('.clin-licence a')
+    expect(a).not.toBeNull()
+    expect(a.getAttribute('href')).toBe('https://v22.proteinatlas.org/about/licence')
+    // ⚠ the v22 host, not www — they state DIFFERENT licences and v22 is what was ingested
+    expect(a.getAttribute('href')).toMatch(/v22\./)
+  })
+
+  it('renders the DATE READ with the quotation', () => {
+    expect(text(PRESENT)).toMatch(/read 2026-08-20/)
+  })
+
+  // ⚠⚠ VERBATIM, and the surface does NOT editorialise on someone else's page.
+  it('quotes verbatim including "3.0 International" and does not correct it', () => {
+    const t = text(PRESENT)
+    expect(t).toMatch(/Attribution-ShareAlike 3\.0 International License/)
+    expect(t).not.toMatch(/does not exist/i)
+    expect(t).not.toMatch(/is not a licence/i)
   })
 
   it('renders nothing at all when the block is absent', () => {
