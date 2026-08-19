@@ -5,9 +5,23 @@
 // the 82 and only the 82 — **a census row appearing there is a named stop condition.**
 //
 // So this page shows the census as a POPULATION: how many proteins, how they were measured, and
-// what was deliberately not done to them. ⚠ It shows NO score, NO rank, NO ordering by suitability,
-// and NO per-protein row — because a per-protein list on a public surface is one sort control away
-// from being read as a shortlist.
+// what was deliberately not done to them. ⚠ It shows NO score, NO rank and NO ordering by
+// suitability.
+//
+// ⚠⚠ TWO CLAUSES OF THIS COMMENT WENT STALE AND ARE CORRECTED HERE RATHER THAN DELETED, because
+// they are the same defect the log records twice (F-049 amendment 2, instance 4): a sentence that
+// keeps its wording while the world moves under it, with no diff and no failing test to mark the
+// moment.
+//   · It said "and NO per-protein row — because a per-protein list on a public surface is one sort
+//     control away from being read as a shortlist." ⚠ REVERSED by the owner under D-087 —
+//     "why hide it under a bushel?" — and CensusTable has shown per-protein rows since. The worry
+//     was answered by construction (default order is accession; no score column; sorting is not
+//     scoring), not by omission.
+//   · "EXPLICITLY UNSCORED" is still true of the CENSUS PAGE and of the database — no census row
+//     is scored or ranked — but as of D-079 amendment 1 (ruled by amendment 2) each protein's own
+//     page carries a STRUCTURAL PROFILE: the pre-registered model applied to its measured
+//     features. ⚠ Not a score by ruling 1, and this file must not pretend the output does not
+//     exist merely because it is called something else.
 //
 // ⚠ EVERY FIGURE IS COUNTED OFF data/census/census_manifest.v7.csv AND ITS PROVENANCE. Numbers are
 // LITERALS here for the same reason the glossary's are (D-053 dec 5): a definition — or a frozen
@@ -15,6 +29,30 @@
 // these are updated in the same commit that moves the artifact, or they are wrong.
 
 export const CENSUS = {
+  // ── what was DONE to the population (D-079 amendment 3) ──
+  // ⚠ Frozen literals like every figure here, and for the same reason (D-053 dec 5). Counted
+  // 2026-08-19 by scripts/census_profile_report.py over census_features.v1.jsonl
+  // (sha256 c08f9f1d…) with the model in data/census/run2_raw_scale_model.json. If the artifact
+  // or the bar moves, these move in the same commit or they are wrong.
+  profile: {
+    measuredOn: '2026-08-19',
+    folded: 2690,
+    withFeatures: 2632,
+    profiled: 1397,
+    refused: 1293,
+    refusedOutOfRange: 1225,
+    refusedSpanBelowFloor: 58,
+    refusedIncomplete: 10,
+    // the span of the values that survive, and the cohort's own for comparison (F-006)
+    bandMin: 0.1065,
+    bandMax: 0.2927,
+    cohortBandMin: 0.116,
+    cohortBandMax: 0.285,
+    // why the refusals happen, in one pair of numbers
+    censusMedianPlddtEcd: 57.0,
+    cohortMedianPlddtEcd: 72.4,
+  },
+
   // ── the population ──
   manifestRevision: 7,
   manifestRows: 3467,

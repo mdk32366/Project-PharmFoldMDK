@@ -405,3 +405,16 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 
 .sprofile-mount ul { margin: 0.2rem 0; padding-left: 1.1rem; }
 .sprofile-mount li { font-size: 0.83rem; color: var(--muted); padding: 0.12rem 0; }
+
+/* Census "what we found" + "how to read it" (D-079 amendment 3).
+   ⚠ Same slate as the profile block on the protein page, not the pLDDT palette and not an accent
+   reserved for a verdict — the page reports a result, it does not endorse one. */
+.census-found, .census-howread { margin: 1.2rem 0; }
+.census-found .found-list { list-style: none; margin: 0.5rem 0; padding: 0; }
+.census-found .found-list li { padding: 0.15rem 0; color: var(--muted); font-size: 0.9rem; }
+.found-n { display: inline-block; min-width: 3.6rem; text-align: right; margin-right: 0.6rem;
+  color: var(--ink); font-variant-numeric: tabular-nums; }
+.census-found .found-why { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-left: 3px solid #6b7280;
+  background: #6b728011; font-size: 0.9rem; }
+.census-howread .howread { margin: 0.4rem 0; padding-left: 1.3rem; }
+.census-howread .howread li { padding: 0.25rem 0; font-size: 0.9rem; }
