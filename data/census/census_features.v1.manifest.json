@@ -1,0 +1,28 @@
+{
+  "PYTHONHASHSEED": "0",
+  "base_url": "https://pharmfoldmdk.fly.dev",
+  "bytes": 1325934,
+  "census_rows_expected": 2690,
+  "code_revision": "8db7345d871bf6b0c6fdca962189ead27488f2ea",
+  "ended_utc": "2026-08-19T03:53:19.569271+00:00",
+  "feature_version": "e67a8cf30c1c",
+  "key": "one line per row of /api/census (analysis_id = protein_analyses.id); counts sum to census_rows_expected only when partial is false",
+  "lines": 2690,
+  "outcome_counts_this_pass": {
+    "<resumed>": 35,
+    "ok": 2597,
+    "refused_span_below_floor": 58
+  },
+  "outcomes_vocabulary": [
+    "ok",
+    "refused_span_below_floor",
+    "structure_file_absent",
+    "structure_malformed",
+    "extraction_error"
+  ],
+  "output": "census_features.v1.jsonl",
+  "partial": false,
+  "sha256": "c08f9f1dace9f71c5ed8c472c8b6d4363ac9c12dccd1baf8ee328bf2de591863",
+  "started_utc": "2026-08-19T03:15:17.746168+00:00",
+  "wrote_database_rows": false
+}
