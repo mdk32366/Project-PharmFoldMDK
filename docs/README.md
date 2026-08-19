@@ -441,6 +441,86 @@ find it — **and which now has a sharper thing to state than *"two of six featu
 
 ---
 
+#### F-049 amendment 2 — ⚠⚠ Two more instances, both closed on the surface — and one was a claim that stayed TRUE ONLY BY A NAMING RULE
+
+- **Date:** 2026-08-19 · **Status:** `F-049` stays **OPEN.** ⚠ Its closure condition is about
+  `scorer_version` — *two runs cannot be presented as comparable on the strength of a matching
+  version string* — and neither instance below touches that. **These are members of the family,
+  not the finding.**
+
+---
+
+**INSTANCE 3 — `ranked` meant two populations on two live endpoints. CLOSED IN THE PAYLOAD.**
+
+`/api/coverage` reported `ranked = 67`; `/api/ranking` reported `n_ranking_set = 56`. Both correct,
+eleven rows apart, **and neither payload said which population it counted.**
+
+⚠ **A CORRECTION FIRST, BECAUSE I REPORTED THIS WRONG.** I told the owner there was *"no statement
+anywhere of which population either describes."* **That is false for the UI**: `D-066` decision 2
+already renders *"67 ranked · 56 rankable after the pLDDT-50 floor"* beside the scorer table, and it
+was verified live in the deployed bundle. **The defect was the JSON only** — for a consumer that
+never renders the page. *I repeated an order's wording without checking the surface.*
+
+**Closed by `population_key` on both routes**: each number names its kind and points **by name and
+by route** at the number it is not. Every partition cell is keyed, not only `ranked` — *a rule
+applied to one cell and not the others is not a rule.*
+
+⚠⚠ **AND THE GUARD WAS DEFEATED TWICE BY MY OWN REVERT PROOF BEFORE IT HELD.**
+- **Attempt 1, a token scan.** Rewriting `n_ranking_set`'s description as a *disposition*
+  description while keeping every required token (`plddt`, `floor`, `coverage.ranked`,
+  `/api/coverage`) left **all six tests green.** *A token scan pins that words are PRESENT, never
+  that the sentence MEANS what it should*, and keyword-stuffing walks straight through it.
+- **Attempt 2, a prose ban — which reddened on CORRECT code.** Asserting `"MANIFEST DISPOSITION"`
+  absent from `n_ranking_set` matched the legitimate **disclaimer**, *"it is NOT `coverage.ranked`,
+  which is the manifest disposition."* ⚠ **Prose cannot distinguish *I am one* from *that other one
+  is one*.**
+- **What held: the KIND became STRUCTURED DATA.** `kind` is the claim, `text` is for the human.
+  ⚠⚠ **When a test must check what a string MEANS, the meaning belongs in a field, not in the
+  string.** That generalises past this payload and is the reusable part of this amendment.
+
+---
+
+**INSTANCE 4 — ⚠⚠ A PAGE ASSERTED THE ABSENCE OF A THING THAT WAS ABOUT TO EXIST, AND WOULD HAVE
+STAYED "TRUE" BY DEFINITION.**
+
+`/census` said *"None of these proteins has been scored or ranked."* **True when written**: no model
+output existed for any census protein. The structural profile (`D-079` amendment 1, ruled by
+amendment 2) put the pre-registered model's output one click away, on `/census/:id`.
+
+⚠ **Every literal clause still held** — measured before touching anything: census `target_scores`
+**0**, feature rows bound to a ranking run **0**, default order accession, no score column.
+⚠⚠ **The sentence would nonetheless have been true only because ruling 1 decided to call the output
+something other than a score.** *A claim that survives on what we decided to call something is not
+the claim the reader is reading.*
+
+**This is `F-049`'s family INVERTED.** The parent entry is *one word meaning two things*. This is
+**one thing carrying two words — and a page asserting the absence of one of them.**
+
+⚠ **The page's own justification had already gone false and nobody re-read it:** `CensusView`'s
+header comment read *"there is no score column, **because there is no score**."* There is no score
+COLUMN; there **is** a model output. **Corrected in place, the old wording kept visible.**
+
+**Closed by disclosure rather than by deletion**: both true clauses stay, and the sentence now names
+the profile, calls it *a measurement, not a verdict*, and states that **no protein is ordered by
+it.** Six tests pin the disclosure to the **same sentence** — *a disclosure three sections down is a
+different claim from a qualified one* — and one asserts **no `0.xxxx` figure appears in any table
+row**, so the disclosure cannot become the feature.
+
+⚠ **It never shipped false.** The branch was unmerged when the owner asked whether the claim was
+still true. **The defect was scheduled, not shipped, and it was caught by re-reading a sentence
+against a changed world rather than by any test.**
+
+---
+
+**⚠ WHAT THE TWO INSTANCES ADD TO THE FAMILY.**
+**Instance 3 is a word that acquired a second meaning. Instance 4 is a claim that kept its meaning
+while the world moved under it.** ⚠⚠ **The second is harder, because nothing about the sentence
+changes when it goes wrong** — there is no diff, no failing test, and no moment at which anyone
+edits the false thing into place. **What caught it was a person re-reading a claim they already
+believed.**
+
+**Relied on by:** `D-079 amendment 3` · `F-052`.
+
 ---
 
 ### F-047 — ⚠ The wrong-but-plausible answer: the defect class where nothing errors, nothing is malformed, and the number is wrong
@@ -3144,6 +3224,78 @@ offenders #1 and #2 (33.1%, 18.5%) and are the pair `F-051` shows carries **38.6
 **Relied on by:** `D-089` · `F-048` · `F-051`.
 **Assumptions relied on:** `A-014` (twice — the surface filter and the cohort's labels are both model
 outputs) · `A-016`.
+
+#### D-079 amendment 3 — The profile is BUILT and LIVE on the census protein page; what enforces each ruling, and the one risk framing cannot remove
+
+- **Date:** 2026-08-19 · **Status:** amendment 1's rulings are **implemented**, not merely ruled.
+  Shipped at release **v79**, `main` `f80c280`. ⚠ This entry records what was built and what was
+  deliberately **not** built; it grants no new permission.
+- **Surface:** `/census/:id` — the page carrying the 3D structure. **No new route** (`D-089`
+  ruling 7): a block on the response `/api/census/{analysis_id}` already served.
+
+---
+
+**⚠ THE PAGE ORDER IS PART OF THE RULING, NOT LAYOUT.**
+*"Not scored, not ranked"* → **3D structure** → confidence → identity and spans →
+**structural profile** → cancer associations. **The reader is told the protein is unscored BEFORE
+being shown a structure-derived number**, and a test asserts that document order rather than
+trusting the file to keep it.
+
+---
+
+**HOW EACH RULING IS ENFORCED — the mechanism, not the intention.**
+
+| ruling | enforced by |
+|---|---|
+| **1** the name | AST scan of **defined** names; and no payload **key** may contain score/rank/suitability |
+| **2** never ranked | `ProfileResult` defines no `__lt__`, so `sorted()` **raises**; no ordering helper, no `sorted()` call; `profile_many` preserves the caller's order and drops nothing |
+| **3** refusal is a category | exactly one of `value`/`refusal` — **both-absent and both-present each raise**; refusals precede the arithmetic; nothing is clamped |
+| **4** mount preconditions | they ride **inside** the payload, so a client cannot receive the number without the frame — and they **render on refused proteins too** |
+| **5** the wall | see below |
+| **6** `F-048`'s 58 | refused **before** any arithmetic, read from `extraction_outcome` rather than recomputed |
+| **8** the bar | only `min`/`max` are read; `p05`/`p95`/`sd` sit in the same file and are deliberately not consulted |
+
+⚠⚠ **RULING 5 FORCED A DESIGN DECISION AND THE HONEST ONE COST MORE.** `get_census_detail` lives in
+`app/reads.py`, which ruling 5's test forbids from reaching the profile. Wiring it there would have
+turned that test red. **Relaxing a wall test so a new feature fits is satisfying a test by editing
+it** — so `app/census_profile_read.py` is a **separate supplier**, the route layer composes the two,
+and neither imports the other. **Verified transitively, not by a single-file import check.**
+
+**⚠ And the model is applied without importing the fitter**: thirteen parameters recovered from
+persisted values, reproducing run 2's 56 persisted scores to `2.2e-16` against a committed fixture.
+*Accept by reproduction, not by label.*
+
+---
+
+**⚠⚠ THE RESIDUAL, NAMED BECAUSE FRAMING CANNOT REMOVE IT.**
+
+**1,397 census proteins now carry a number, and those numbers span 0.1065–0.2927 — a band 0.19
+wide on a 0-to-1 scale.** Every guard is in place: the word is never *score*, the value never
+appears without the cohort's own `0.116–0.285` beside it, the refusal is rendered at equal weight,
+and five preconditions sit in the same frame.
+
+⚠ **None of that stops a reader opening two proteins in two tabs and subtracting.** *A value is a
+measurement; a rank is a recommendation* — and a reader can manufacture the second from the first
+without the surface participating. **The guards make the claim honest; they do not make the
+comparison impossible, and this entry does not pretend otherwise.**
+
+**Two mitigations were identified and NOT taken**, recorded so choosing them later is a decision
+rather than a discovery: **rendering the band position without digits**, and **gating the value
+behind an explicit reveal.** ⚠ Both remain available; neither was ruled.
+
+---
+
+**⚠ WHAT WAS DELIBERATELY NOT BUILT.**
+- **Nothing persists the profile.** It is computed per request from `protein_features`. Where a
+  computed profile is STORED is the decision amendment 2 declined to make, and it is still not made.
+- ⚠⚠ **`refused_out_of_distribution` still has no column, and must not become
+  `extraction_outcome`.** That column records what happened at EXTRACTION; this refusal is decided
+  at PROFILE time against a bar that can change **without a single feature changing**. Pooling them
+  would make a bar adjustment look like a re-extraction.
+- **No census row is scored or ranked**, measured after shipping: `target_scores` joined to census
+  tranches returns **0**, and `/api/ranking` carries no profile.
+
+**Relied on by:** `D-089` · `F-048` · `F-051` · `F-049 amendment 2`.
 
 ---
 
