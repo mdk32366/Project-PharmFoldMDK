@@ -116,4 +116,10 @@ def get_census_detail(analysis_id: int, engine: Any = Depends(get_engine)) -> di
     record = reads.get_census_detail(engine, analysis_id)
     if record is None:
         raise HTTPException(status_code=404, detail="unknown census analysis")
+    # ⚠ D-079 amendment 1, ruled by amendment 2. Composed HERE, at the route, from a supplier that
+    # `app/reads.py` does not import — ruling 5's wall is checkable at file granularity because the
+    # module serving run 2's scores and the module serving census profiles are different files.
+    # ⚠⚠ D-089 ruling 7: no second route. A block on the response this route already serves.
+    from app.census_profile_read import census_profile_block
+    record["structural_profile_block"] = census_profile_block(engine, analysis_id)
     return record

@@ -371,3 +371,37 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   padding: 0.6rem 0.9rem; margin-top: 0.7rem; color: #cbd5e0; font-size: 0.92rem;
 }
 .census-protein .census-detail { border-left: 0; }
+
+/* Census structural profile (D-079 amendment 1, ruled by amendment 2).
+   ⚠⚠ DELIBERATELY NOT THE SCORER PANEL'S LOOK, and not the pLDDT band palette. D-089 warns the
+   profile block must not become the scorer panel by another name, and a shared visual language is
+   how that happens without anyone deciding it. Slate-grey, flat, no accent colour reserved for a
+   verdict — a measurement, not a result.
+   ⚠ The refusal is styled at the SAME weight as a value, never as an error or an absence: ruling 3
+   makes refusal an outcome, and a greyed-out panel would read as "missing". */
+.sprofile { margin: 1rem 0; padding: 0.8rem 1rem; border-left: 3px solid #6b7280; background: #6b728011; }
+.sprofile h3 { margin: 0 0 0.4rem; }
+.sprofile h4 { margin: 0.8rem 0 0.3rem; font-size: 0.9rem; }
+.sprofile-what { font-size: 0.9rem; margin: 0 0 0.6rem; }
+
+.sprofile-value { margin: 0.3rem 0 0; }
+.sprofile-figure { font-size: 1.6rem; font-variant-numeric: tabular-nums; margin: 0.2rem 0; color: var(--ink); }
+/* the band the value is placed against — the cohort's own fitted span (F-006) */
+.sprofile-band { position: relative; height: 6px; border-radius: 3px; background: var(--line); margin: 0.4rem 0 0.3rem; }
+.sprofile-band-fill { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--ink); }
+.sprofile-band-label { font-size: 0.82rem; color: var(--muted); margin: 0.1rem 0; }
+.sprofile-band-note { font-size: 0.82rem; color: var(--muted); margin: 0.2rem 0 0; font-style: italic; }
+
+.sprofile-refused { margin: 0.3rem 0 0; }
+.sprofile-refusal-cat { margin: 0.2rem 0; color: var(--ink); }
+.sprofile-refusal-why { font-size: 0.85rem; color: var(--muted); margin: 0.2rem 0; }
+.sprofile-oor { font-size: 0.85rem; margin: 0.2rem 0; }
+.sprofile-refusal-note { font-size: 0.82rem; color: var(--muted); margin: 0.3rem 0 0; font-style: italic; }
+
+.sprofile-bar { margin: 0.6rem 0 0; font-size: 0.85rem; }
+.sprofile-bar summary { cursor: pointer; color: var(--muted); }
+.sprofile-bar p { margin: 0.3rem 0; color: var(--muted); }
+.sprofile-prov { font-size: 0.8rem; }
+
+.sprofile-mount ul { margin: 0.2rem 0; padding-left: 1.1rem; }
+.sprofile-mount li { font-size: 0.83rem; color: var(--muted); padding: 0.12rem 0; }

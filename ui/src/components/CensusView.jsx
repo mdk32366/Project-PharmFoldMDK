@@ -13,7 +13,15 @@ import CensusTable from './CensusTable.jsx'
 //
 // ⚠ The original worry was real and is answered by CONSTRUCTION, not by omission:
 //   · default order is ACCESSION, never pLDDT — the page does not arrive having chosen
-//   · there is no score column, because there is no score
+//   · there is no score column, and no census row is scored or ranked
+//     ⚠⚠ CORRECTED 2026-08-19: this line read "there is no score column, BECAUSE THERE IS NO
+//     SCORE." That second clause became FALSE when D-079 amendment 1 was ruled and the structural
+//     profile landed on /census/:id — the pre-registered model IS applied to every census
+//     protein's features. There is no score COLUMN; there is a model output, called something
+//     else by ruling 1. ⚠ The old wording survived only because nobody re-read it against the new
+//     state, and the page's headline sentence was true on a NAMING RULE rather than on a fact.
+//     Kept visible rather than deleted: F-049's family inverted — one thing with two words, and
+//     the page asserted the absence of one of them.
 //   · every row carries `scored: false` with its reason, from the API, not from the UI's memory
 //   · sorting is not scoring: the reader orders the data, the project does not endorse an order
 // ⚠ What the old rule bought was safety through invisibility, and that has its own cost —
@@ -36,8 +44,11 @@ export default function CensusView() {
       {/* ⚠ The disclaimer sits ABOVE the numbers, not below them. A reader who stops after the
           headline figure must already have met the limit. */}
       <p className="census-bar">
-        <strong>None of these proteins has been scored or ranked.</strong> This is a count of what
-        is measurable, not a list of candidates — and it is not comparable to the ranked 82.
+        <strong>None of these proteins has been scored or ranked.</strong> Each carries a{' '}
+        <strong>structural profile</strong> — the model applied to its measured features — which is
+        a measurement, not a verdict, and <strong>no protein is ordered by it</strong>. This is a
+        count of what is measurable, not a list of candidates — and it is not comparable to the
+        ranked 82.
       </p>
 
       <section className="census-counts">
