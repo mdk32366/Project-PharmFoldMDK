@@ -1,0 +1,80 @@
+{
+  "caveat": "sd_ddof0 is the RAW spread of these 56. It equals the standardizer sd_k only if the standardizer used ddof=0 on this population; sd_k itself is NOT recoverable (F-049 amendment 1).",
+  "features": {
+    "ecd_length": {
+      "max": 1652.0,
+      "mean": 413.26785714285717,
+      "med": 427.5,
+      "min": 13.0,
+      "p05": 21.0,
+      "p25": 159.5,
+      "p75": 609.75,
+      "p95": 896.75,
+      "sd_ddof0": 327.6453053374852,
+      "sd_ddof1": 330.61048166144946
+    },
+    "largest_patch_fraction": {
+      "max": 1.0,
+      "mean": 0.7345359182527414,
+      "med": 0.8318492955719661,
+      "min": 0.3180902614062037,
+      "p05": 0.36376120336859585,
+      "p25": 0.5231645835903278,
+      "p75": 0.9082485338053741,
+      "p95": 1.0,
+      "sd_ddof0": 0.2177623064601542,
+      "sd_ddof1": 0.21973304623529735
+    },
+    "mean_plddt_ecd": {
+      "max": 81.3953569172122,
+      "mean": 69.00267166096452,
+      "med": 72.42822980992138,
+      "min": 50.489629932812285,
+      "p05": 52.988190584926436,
+      "p25": 65.3439796424035,
+      "p75": 74.7197653568382,
+      "p95": 76.92040630132598,
+      "sd_ddof0": 8.017462787870627,
+      "sd_ddof1": 8.090020491123452
+    },
+    "membrane_proximal_plddt": {
+      "max": 79.50208470225334,
+      "mean": 66.00202505706375,
+      "med": 68.0759386031651,
+      "min": 43.47639204359349,
+      "p05": 51.70158086610692,
+      "p25": 59.99618005657876,
+      "p75": 72.83117613244441,
+      "p95": 76.39210367566544,
+      "sd_ddof0": 8.415003558542379,
+      "sd_ddof1": 8.491158989160143
+    },
+    "radius_of_gyration": {
+      "max": 0.7587988276191461,
+      "mean": 0.1560009406191747,
+      "med": 0.09898889366515069,
+      "min": 0.031184144515250572,
+      "p05": 0.04023985267772056,
+      "p25": 0.061744394053135615,
+      "p75": 0.1255369886173847,
+      "p95": 0.6190038770763118,
+      "sd_ddof0": 0.17704425145584513,
+      "sd_ddof1": 0.17864649453443926
+    },
+    "sasa_normalized": {
+      "max": 141.68464228663044,
+      "mean": 71.02066621218401,
+      "med": 62.149577936337735,
+      "min": 44.06427089609694,
+      "p05": 50.879254717769186,
+      "p25": 57.36457487232817,
+      "p75": 70.5597338782527,
+      "p95": 126.30441156599595,
+      "sd_ddof0": 23.917094720040616,
+      "sd_ddof1": 24.13354342797747
+    }
+  },
+  "key": "the 56 rows of target_scores at ranking_run_id=2, joined protein_features.analysis_id; raw scale; percentiles by linear interpolation",
+  "n": 56,
+  "provenance": "read-only as pharmfold-readonly against pharmfoldmdk, 2026-08-19; LB re-extracted these stored values with current code to a byte-identical whole-set digest 82bec83577f8b80e9d4085b7b8720cc7f731f3c435e5d20e830958499e1edf57"
+}

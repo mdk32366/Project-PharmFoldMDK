@@ -1,0 +1,145 @@
+HB / HC3 / FA2 / FA3 / FB1 / FB2 — captured output
+instrument : fly mpg users create + fly mpg connect --username pharmfold-readonly
+cluster    : zp2wjrej9lwodn4q      database: pharmfoldmdk
+run        : 2026-08-19, read-only role, owner-authorised
+⚠ No credential appears in this file. `fly mpg connect` authenticates via the fly auth
+  token; no password was generated, requested, printed or stored.
+
+================================================================================
+HB1/HB3 — THE ROLE WAS CREATED BY THE PLATFORM, NOT BY HAND-WRITTEN SQL
+================================================================================
+  fly mpg users create zp2wjrej9lwodn4q --username pharmfold-readonly --role reader
+
+  ⚠ First attempt REJECTED: "user_name must contain only lowercase letters, numbers,
+    and dashes, starting with a letter" — `pharmfold_readonly` (underscore) is invalid.
+    Renamed to `pharmfold-readonly`. Recorded because the constraint is not obvious.
+
+  users list:
+     NAME               │ ROLE
+     fly-user           │ schema_admin
+     pharmfold-readonly │ reader
+
+================================================================================
+⚠⚠ A NEAR-MISS, RECORDED: `fly mpg connect` DEFAULTS TO THE WRONG DATABASE
+================================================================================
+  The cluster carries TWO databases:  fly-db  and  pharmfoldmdk
+  `fly mpg connect` with no --database lands in `fly-db`, whose tables are
+  countries · metrics · timeseries · update_logs  — Fly's sample data, not ours.
+
+  ⚠ The first privilege sweep ran there and returned a clean, well-formed, entirely
+    correct answer ABOUT THE WRONG OBJECT. Had the TRUNCATE proof run there it would
+    have "proven" the reader safe against a database that is not ours.
+  ⚠⚠ F-047's class, third instance this week. Caught by reading the table names.
+
+================================================================================
+HB4 — THE REFUSAL, PROVEN AT THE DATABASE (database: pharmfoldmdk)
+================================================================================
+  privileges, all 8 real tables:
+
+      tablename      | sel | ins | upd | del | trunc
+  ---------------------+-----+-----+-----+-----+-------
+   alembic_version     | t   | f   | f   | f   | f
+   analysis_embeddings | t   | f   | f   | f   | f
+   jobs                | t   | f   | f   | f   | f
+   protein_analyses    | t   | f   | f   | f   | f
+   protein_features    | t   | f   | f   | f   | f
+   ranking_results     | t   | f   | f   | f   | f
+   ranking_runs        | t   | f   | f   | f   | f
+   target_scores       | t   | f   | f   | f   | f
+
+   rolname            | rolsuper | rolcreatedb | rolcreaterole | rolbypassrls
+   pharmfold-readonly | f        | f           | f             | f
+   tables owned by the reader: 0
+
+  the attempts, each wrapped in a transaction that was rolled back — VERBATIM:
+
+    BEGIN;  TRUNCATE TABLE jobs;
+      ERROR:  permission denied for table jobs
+    BEGIN;  INSERT INTO ranking_runs (target_list_version, scorer_version) VALUES (...);
+      ERROR:  permission denied for table ranking_runs
+    BEGIN;  DELETE FROM protein_analyses WHERE id = -1;
+      ERROR:  permission denied for table protein_analyses
+
+  ⚠ AND THE CONTROL, because a role that refused everything would look identical:
+    SELECT count(*) FROM protein_analyses  ->  2,771
+    SELECT count(*) FROM jobs              ->  2,771
+
+  ⚠⚠ 2,771 is the number from the 2026-08-17 truncation — "2,771 rows to 1". Fully
+     recovered, and now read back through a role that cannot repeat it.
+
+================================================================================
+HC3 — PRODUCTION'S MIGRATION STATE
+================================================================================
+  alembic_version in production : 0009_job_tier
+  head in the tree              : 0009_job_tier  (9 migration files, 0001..0009)
+  ⚠ MATCHES. So the chain is fully applied — and DEP-005's recorded acceptance
+    criterion ("alembic current reports head (0002)") is SEVEN migrations stale.
+
+================================================================================
+FB1 — EVERY RANKING RUN
+================================================================================
+ id |  created   |   run_kind    | scorer_version |    target_list_version    | n_scored
+----+------------+---------------+----------------+---------------------------+----------
+  1 | 2026-07-23 | preregistered | ad9b11f9a358   | Kathad-2024-PLOSONE-S3-82 |        0
+  2 | 2026-07-27 | preregistered | 91e646e4a289   | Kathad-2024-PLOSONE-S3-82 |       56
+  3 | 2026-07-27 | sensitivity   | a927dc4532b7   | Kathad-2024-PLOSONE-S3-82 |       56
+  4 | 2026-07-27 | sensitivity   | a927dc4532b7   | Kathad-2024-PLOSONE-S3-82 |       56
+  5 | 2026-08-06 | sensitivity   | 5ccab48772b5   | Kathad-2024-PLOSONE-S3-82 |       56
+
+  ⚠ FIVE runs, and no run beyond id=5 — the log's account (2 preregistered, 3/4
+    ablations, 5 geom_proxy) is COMPLETE. Nothing undocumented has been run.
+
+  ⚠⚠ BUT TWO RUNS CARRY run_kind='preregistered', NOT ONE. id=1 has ZERO scored rows
+     — D-064 decision 3's invalid zero-positive run, "marked, not overwritten".
+     So `run_kind='preregistered'` alone does NOT identify the pre-registered result;
+     the `valid ∧` half of /api/ranking's filter is doing essential work. A query
+     filtering on run_kind alone would return two runs, one of them empty.
+
+================================================================================
+FB2 — IS scorer_version SUFFICIENT TO IDENTIFY PARAMETERS?  ⚠⚠ NO, MEASURED
+================================================================================
+ scorer_version | runs | run_ids
+----------------+------+---------
+ a927dc4532b7   |    2 | 3,4
+ 5ccab48772b5   |    1 | 5
+ 91e646e4a289   |    1 | 2
+ ad9b11f9a358   |    1 | 1
+
+  ⚠ Runs 3 and 4 SHARE a version string. F-005 records them as no_plddt (5 params)
+    and plddt_only (3 params). Same string, different models — now confirmed IN
+    PRODUCTION rather than inferred from the log. This is F-049's evidence upgraded
+    from "the log says" to "the database shows".
+
+================================================================================
+FA2 — THE 40 vs 56, AS A SET DIFFERENCE AND NOT AS ARITHMETIC
+================================================================================
+  key: the 56 accessions with a target_scores row at ranking_run_id=2, against
+       data/cohort_82_ecd.csv largest_span_aa via core.manifest.tier_for_span
+
+  the 56, by tier:      local 30 · rental 26 · TOTAL 56
+
+  local-tier cohort targets (D-041's "40")  : 40
+  scored at run 2                           : 56
+  local-tier AND scored                     : 30
+  ⚠ local-tier but NOT scored               : 10
+      O00592 O95196 P24530 P32302 Q01814 Q15858 Q9BXS9 Q9NQ40 Q9UP95 Q9UPC5
+  ⚠ scored but NOT local-tier               : 26   (all 26 rental-tier)
+
+  ⚠⚠ SO THE DIFFERENCE OF 16 IS A NET FIGURE HIDING A 10-OUT / 26-IN EXCHANGE.
+     D-041's 40 and F-006's 56 are NOT the same population at two moments. 26
+     rental-tier targets were folded and scored; 10 local-tier ones never were.
+     "Explained by a sentence" would have been wrong in both directions.
+
+  ⚠ NOT claimed here: WHY those 10 are unscored. Ranking-set membership is decided by
+    a predicate (D-064), and this measurement does not evaluate it. An absence with a
+    cause not yet named is still an absence with a cause to name.
+
+================================================================================
+FA3 — LABELLED AND POSITIVE, RECONCILED BOTH DIRECTIONS
+================================================================================
+  Group B positives in the cohort (core.adc_reference.group_b_accessions) : 12
+  of those, scored at run 2                                               : 12
+  positives NOT scored                                                    :  0
+
+  ⚠ Matches F-006's recorded labelled fraction of 12/56 exactly, and the reverse
+    direction is empty — no positive is missing from the run.

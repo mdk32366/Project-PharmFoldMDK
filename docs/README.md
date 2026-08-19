@@ -130,6 +130,188 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-051 — ⚠⚠ "The two confidence features" is really one: `membrane_proximal_plddt` carries 32.2% of attribution and `mean_plddt_ecd` 6.4%
+
+- **Date:** 2026-08-19 · **Status:** ⚠ **OPEN.** An observation with a pre-registered fork —
+  **not a conclusion and not a reinterpretation of `F-005`.**
+- **How known (`D-016`):** read-only SQL as the `pharmfold-readonly` role against `target_scores` and
+  `protein_features`, **run 2, 56 targets**. ⚠ **No fit, no refit, no new ranking run.** Instruments
+  committed as `scripts/fd1_recover_coefficients.py` and `scripts/fd1_attribution_share.py` — **the
+  numbers are re-derivable, not quoted.**
+
+---
+
+**THE MEASUREMENT.** Mean share of total absolute attribution across the 56 scored targets:
+
+| feature | share |
+|---|---|
+| ⚠⚠ **`membrane_proximal_plddt`** | **32.2%** |
+| `largest_patch_fraction` | **24.0%** |
+| `radius_of_gyration` | 16.6% |
+| `ecd_length` | 12.3% |
+| `sasa_normalized` | 8.5% |
+| ⚠ **`mean_plddt_ecd`** | **6.4%** |
+| **the confidence pair together** | **38.6%** |
+
+**`32.2 / 6.4 = 5.03` — a factor of five between the pair.**
+**Per target: median 40.8% · max 72.5% · ⚠ 11 of 56 above 50%.**
+
+**THE RECOVERY THIS RESTS ON IS EXACT, AND IT WAS CHECKED THREE WAYS.**
+- **All 56 rows lie on one line per feature — max residual `~1e-16`.** Attributions are precisely
+  `coefficient × standardized feature`, as `D-041` decision 1 documents.
+- ⚠⚠ **The feature↔attribution PAIRING was tested, not inherited: all 6×6 combinations, diagonal
+  `~1e-16`, every off-diagonal `~1e-1`.** **A transposed index would have produced six plausible
+  slopes and an entirely wrong attribution story.**
+- ⚠ **The fit population is confirmed as these 56**: the `FD1`-implied means agree with means computed
+  directly from `protein_features` over the same 56 to **`≤6.9e-09`.**
+
+⚠ **The intercept fell out of the same recovery — `-1.324660466`, implied identically by all 56 rows,
+spread `1.11e-15`** — so **seven parameters are known on the raw scale and fully determine the
+model's predictions.** ⚠⚠ **But NOT the standardized coefficients: `sd_k` is not persisted, and
+computing it over the fit set would be fitting.** See `F-049` amendment 1.
+
+---
+
+**WHAT THIS ADDS TO `F-005`, AND WHAT IT DOES NOT.**
+`F-005` measured **`FULL 0.607 / 8-of-12`** against **`no_plddt 0.562 / 6-of-12`** — two of six
+features carry the difference. ⚠⚠ **This says the work inside that pair is done almost entirely by
+ONE of them, and it is the MEMBRANE-PROXIMAL one.**
+⚠ **`F-005`'s result is unchanged. Its READING is what this bears on, and the reading is `P-001`'s to
+settle.**
+
+**⚠⚠ THE FORK, PRE-REGISTERED HERE SO IT IS NOT CHOSEN AFTER THE FACT.**
+
+**A — the circularity reading.** A dominant *global* confidence feature would suggest the score partly
+tracks **how PDB-like a sequence is**; the PDB is enriched for studied proteins, which is enriched for
+existing drug targets. ⚠ **The same circularity that bars GPI status and `therapeutic_precedent`,
+through a side door.**
+
+**B — the informative-uncertainty reading.** A dominant *membrane-proximal* confidence feature
+suggests **ESMFold is uncertain near the membrane boundary, and that uncertainty is itself
+informative about the region an ADC must reach.**
+
+⚠⚠ **THE MEASUREMENT FAVOURS B AND DOES NOT ESTABLISH IT. The dominant feature is REGIONAL, not
+global — which is what A would have predicted least.** ⚠ **`D-075`'s `geom_proxy` — `membrane_proximal_sasa`, the confidence-blind measure of the same region — is the instrument that
+separates them, and `F-017` records it firing at `0.6607 / 0.6324 / 8-of-12`.** **Whether that
+settles the fork is a `P-001` question and is not settled here.**
+
+---
+
+**⚠⚠ WHAT THIS ENTRY DOES NOT CLAIM. THE FIRST IS LOAD-BEARING.**
+- ⚠⚠ **ATTRIBUTION SHARE IS NOT VARIANCE EXPLAINED.** The features are correlated — `D-075` records
+  feature 7 against pLDDT at **Pearson −0.49, Spearman −0.55** — and the share decomposes **one linear
+  predictor**, not causal contribution. **A 32.2% share is not a 32.2% causal role.** *(Code's
+  caution, adopted verbatim.)*
+- ⚠ **Not that `mean_plddt_ecd` is useless.** A small share in a correlated set is evidence about
+  **this decomposition on these 56 targets**, not about no contribution.
+- ⚠ **Not a proposal to change `FEATURE_NAMES`.** `D-027`'s six IS the pre-registration, the gate
+  asserts `len == 6`, and **a feature dropped because its share looked small is a post-hoc model
+  change** — what `D-041`'s pre-registration exists to prevent.
+- ⚠ **Not generalisable past the cohort.** 56 targets, 12 labelled positives, an
+  **expression-selected** cohort — `A-014` and `F-011` both apply to the label side.
+- ⚠⚠ **Not a statement about the census.** No census row is scored (`D-089`), **and no census row
+  carries a feature row at all** — 0 of 2,690.
+
+**Assumptions relied on:** `A-014` — the cohort's labels descend from an expression screen.
+**Relied on by:** ⚠ `P-001`, which must state the confidence dependence rather than let a reviewer
+find it — **and which now has a sharper thing to state than *"two of six features are confidence."***
+
+### F-049 — `scorer_version` establishes that two runs used the same CODE, never that they used the same PARAMETERS — and nothing persisted makes `D-041`'s reproducibility claim checkable
+
+- **Date:** 2026-08-19
+- **Status:** ⚠ **OPEN — a finding against an instrument (`D-074`).** It closes when two runs cannot be presented as comparable on the strength of a matching version string, **or** when the residual is named and accepted in the open. ⚠ **Naming what would have to be persisted is not persisting it** — `D-074` decision 3, and this entry deliberately stops at the naming.
+
+- **The finding.** `ranking_runs.scorer_version` is a **code** version. It says the same source produced both runs. ⚠⚠ **It says nothing about the seven numbers the model actually is**, and two runs of identical code on different inputs have different parameters by construction.
+
+- **⚠ The evidence is already in the log and is not an argument.** `F-005` records the two `D-065` ablations:
+
+  | run | id | feature set | parameters | `scorer_version` |
+  |---|---|---|---|---|
+  | `no_plddt` | 3 | features 1, 2, 5, 6 | **5** | `a927dc4532b7` |
+  | `plddt_only` | 4 | features 3, 4 | **3** | `a927dc4532b7` |
+
+  **Same string. Different parameter counts. Already shipped.** ⚠ Not a hypothetical collision — *the version string was already carrying two different models on the day it was introduced.*
+
+- **⚠⚠ The consequence, and it reaches the surface.** `/api/ranking` filters `valid ∧ run_kind='preregistered'` and **the version travels with the rows**. So a reader — or a later query — comparing two runs on a matching `scorer_version` is comparing *nothing that was checked*. **`run_kind` is what actually separates the pre-registered run from the ablations; `scorer_version` looks like it does the same job and does not.** *A field that appears to identify a model and identifies a checkout.*
+
+- **⚠ What `ranking_runs` actually persists**, read from `db/models.py` rather than assumed:
+
+  ```
+  id · target_list_version · scorer_version · run_kind · created_at
+  ```
+
+  **No coefficients. No standardizer mean or sd. No λ.** Per target, `target_scores` carries `score`, `rank` and the six `β_k·x_k` `attributions`; `ranking_results` carries the LOO distribution.
+
+- **⚠⚠ SO `D-041` CLAIMS THE FIT IS REPRODUCIBLE AND NOTHING STORED MAKES THAT CHECKABLE.** The parameters of a **pre-registered** run cannot be recovered from the record. **This is `F-045`'s shape at the level of a result rather than an instrument:** *the record says what was done and not enough to redo it.* ⚠ The claim may well be true — this is not evidence that it is false — **but it is unfalsifiable from the record, and an unfalsifiable reproducibility claim is a belief with a decision number.**
+
+- **What would have to be persisted for `FB3` to be answerable without fitting.** ⚠ **Named, not built:**
+  1. the **seven parameters** — six coefficients on standardized features plus the intercept;
+  2. the standardizer's **per-feature mean and sd**, without which a standardized coefficient cannot be reconstructed from anything;
+  3. the **selected λ**, since a 13-point grid chosen by inner CV is part of what produced them.
+
+  ⚠ **Item 2 is the one that bites.** The per-feature attributions *are* persisted, so `attribution_k(i) = coef_k · x̂_k(i)` and the **raw-scale** slope `coef_k / sd_k` is recoverable from persisted values. **The standardized coefficient — which `D-041` decision 1 makes the attribution basis — is not**, and recovering `sd_k` by computing it over the fit set would be **reconstructing the standardizer, which is fitting.**
+
+- **⚠ What this does NOT claim.**
+  1. **Not that any run is wrong.** `F-004`'s and `F-005`'s reported numbers stand; this is about what can be *rechecked*, not about what was computed.
+  2. **Not that `scorer_version` is useless.** It correctly detects that the code changed. ⚠ It is precise about one thing and blind to its neighbour — **`F-044`'s exact shape, in a database column rather than in a citation.**
+  3. **No remedy is adopted here.** Persisting parameters is a schema change with its own entry, and `D-074` decision 3 warns against answering a finding with a framework.
+
+- **⚠ How it was found.** Not by review and not by a test. The Planner asked whether `FD1` could be answered from persisted values instead of a refit; checking the model to answer that question surfaced what the model does **not** hold. *The question was about arithmetic and the answer was about the record.*
+
+
+#### F-049 amendment 1 — ⚠⚠ The entry was too broad. The MODEL is recoverable from persisted values; the STANDARDIZED coefficients are not, and only the second half survives
+
+- **Date:** 2026-08-19 · **Status:** `F-049` stays **OPEN**, on a **narrower** claim. ⚠ **Written the same day as the entry it corrects, because the measurement that refutes half of it was run hours later.**
+
+- **What the entry said.** *"`D-041` claims the fit is reproducible and NOTHING STORED MAKES THAT CHECKABLE … the record says what was done and not enough to redo it."* ⚠⚠ **The second clause is wrong as written, and the measurement is not close.**
+
+- **What was actually recovered**, from persisted values only, by exact linear solve — **a reproduction, not a fit** (`GE4`):
+
+  `attribution_k(i) = coef_k · x̂_k(i) = coef_k · (x_k(i) − mean_k) / sd_k`
+
+  is exactly linear in the raw feature, so across the 56 scored rows at `ranking_run_id = 2`:
+
+  | k | feature | raw-scale coefficient `coef_k / sd_k` | implied `mean_k` |
+  |---|---|---|---|
+  | 0 | `ecd_length` | **+0.0001536014218** | 413.26786 |
+  | 1 | `radius_of_gyration` | **−0.4576446602** | 0.15600094 |
+  | 2 | `mean_plddt_ecd` | **+0.003082622556** | 69.002672 |
+  | 3 | `membrane_proximal_plddt` | **+0.01459632517** | 66.002025 |
+  | 4 | `sasa_normalized` | **−0.001590501602** | 71.020666 |
+  | 5 | `largest_patch_fraction` | **−0.3924876377** | 0.73453592 |
+
+  **And the intercept, which `GE` did not anticipate: `−1.324660466`**, implied identically by all 56 rows (spread `1.11e-15`).
+
+  ⚠⚠ **So SEVEN parameters are known on the raw scale, and they fully determine the model's predictions.** *A model whose predictions can be reproduced exactly is reproducible in the sense that matters to a reader checking a result.*
+
+- **⚠ `GE2`'s self-check, which was the point rather than the coefficients.** Max residual per feature: `5.6e-17 · 3.5e-17 · 4.9e-17 · 3.9e-16 · 9.7e-17 · 5.6e-17` — float noise. **Every one of the 56 rows lies on the same line, for all six features.** No drift, no non-determinism, and **`attributions` are exactly what `D-041` decision 1 documents them to be.** ⚠ *The instrument was checked and it passed; the finding is that the entry overstated what the check would show.*
+
+- **⚠ The pairing was TESTED, not assumed.** All 6 × 6 combinations of attribution index against feature column were fitted: the diagonal returns ~`1e-16`, every off-diagonal ~`1e-1`. **The documented ordering is confirmed by measurement rather than inherited from a comment.**
+
+- **What survives, and it is the sharper half.** ⚠⚠ **`sd_k` is not persisted, so `coef_k` and `sd_k` remain entangled — only their ratio is determined.** The **standardized** coefficients, which `D-041` decision 1 makes the **attribution basis for comparing features against each other**, cannot be recovered. Computing `sd` over the fit set would reconstruct the standardizer, which is fitting and is barred.
+  - ⚠ **Signs DO survive**, since `sd_k > 0`: `ecd_length` **+** · `radius_of_gyration` **−** · `mean_plddt_ecd` **+** · `membrane_proximal_plddt` **+** · `sasa_normalized` **−** · `largest_patch_fraction` **−**.
+  - **So `FB3` — *are run 2's coefficients still reproducible today* — remains unanswerable without fitting**, and that was the entry's real subject.
+
+- **⚠⚠ AND A SEPARATE FINDING THE RECOVERY EXPOSED: "the two pLDDT features" is one feature.** Read straight off the persisted attributions, no coefficients needed:
+
+  | feature | mean \|attribution\| | share |
+  |---|---|---|
+  | `membrane_proximal_plddt` | 0.101982 | **32.2%** |
+  | `largest_patch_fraction` | 0.075954 | 24.0% |
+  | `radius_of_gyration` | 0.052473 | 16.6% |
+  | `ecd_length` | 0.038851 | 12.3% |
+  | `sasa_normalized` | 0.026843 | 8.5% |
+  | ⚠ `mean_plddt_ecd` | 0.020237 | **6.4%** |
+
+  **The two confidence features carry 38.6% of total attribution magnitude — but `membrane_proximal_plddt` alone is 32.2% and `mean_plddt_ecd` is 6.4%, a factor of five.** ⚠ `F-005` reports `plddt_only` (both confidence features, three parameters) matching the full model; **this says the work inside that pair is done almost entirely by ONE of them.** Per target: median **40.8%**, max **72.5%**, and **11 of 56 targets have pLDDT carrying over half** their attribution.
+  - ⚠ **Stated as an observation, not a conclusion.** Attribution magnitude is not importance, and `D-041` decision 1 makes `β·x` the attribution basis without making it a ranking of features. **Whether this reopens `F-005`'s reading is the Planner's.**
+
+- **Why the entry was too broad.** It was written from `db/models.py` — *what the schema stores* — and concluded about *what can be recovered*. ⚠⚠ **Those are different questions, and the second needs the data, not the schema.** *Reasoning from the shape of the record to the limits of the record, without querying it.*
+
+---
+
+---
+
 ### F-047 — ⚠ The wrong-but-plausible answer: the defect class where nothing errors, nothing is malformed, and the number is wrong
 
 - **Date:** 2026-08-19 · **Status:** ⚠ **OPEN and STANDING.** It accumulates members; it does not close.
@@ -158,6 +340,108 @@ So the rule is not "be careful" — it is:
 - **Relied on by:** `F-044` · `F-045` · `F-046` · `F-048` · `D-095 amendment 1`.
 
 - ⚠ **LANDED BY CODE, 2026-08-19.** Verbatim from `docs/AMENDMENT-2026-08-19-planner-log-entries.md`, which releases this number from `docs/RESERVED.md`. ⚠⚠ **One member of this entry bit the landing of this entry.** Member 3's remedy — *`sha256` as received, stamped by whoever lands it* — **assumes a file changes hands.** This document arrived as **chat text, not as a file**, so **no received-artefact hash exists to record**, and the hash in the landing header is of **Code's transcription**, which is a strictly weaker claim: it proves what was landed, not that it matches what was sent. **The remedy is sound and its precondition was not met. Recorded rather than papered over.**
+
+
+#### F-047 amendment 1 — ⚠⚠ Eight more members in one day, ELEVEN of twenty-one now Planner-made — and the catch rate, not the count, is the finding
+
+- **Date:** 2026-08-19 · **Status:** `F-047` stays **OPEN and STANDING.** It accumulates; it does not
+  close.
+
+⚠ **Why an amendment rather than a rewrite:** the original entry's six members stand unchanged. **A
+class entry that is edited to look tidier loses the thing that makes it evidence — that the members
+arrived one at a time, in the course of ordinary work, and that most were caught by someone other
+than their author.**
+
+---
+
+**14 — ⚠ The Planner asked a question the log had answered three weeks earlier.** *(Planner)*
+It opened a scoring discussion asking whether the fitted scores are calibrated probabilities or an
+ordering. **`F-006` (2026-07-29) already ruled: *the fitted scores are compressed toward the base
+rate, and are not calibrated probabilities* — min 0.116, median 0.220, max 0.285, n 56.** ⚠ **Not a
+wrong answer: a confident question built on `D-041` and `core/features.py` with no search of the
+findings.** **Same root as the rest of the class — reasoning from a partial read that produced
+something well-formed.**
+
+**15 — ⚠⚠ `core.autocrlf=true` would have broken every authored hash on a fresh clone.** *(Code,
+caught BEFORE it fired)*
+Git rewrites LF→CRLF on checkout, so a clone's bytes differ from the commit's and **the verification
+guard would have reported corruption on files nothing had touched** — ⚠ **a guard manufacturing its
+own failure signal, indistinguishable from the channel corruption it was built to detect. We would
+have chased the channel.** **No `.gitattributes` existed; one was added, scoped to the four files,
+and proven by round-tripping each through git's own checkout filter.**
+⚠ **The only member so far caught before producing a wrong answer rather than after.**
+
+**16 — ⚠⚠ An order cited an artifact in the present tense before it existed.** *(Planner)*
+`ORDERS-Code-cancer-surface-attribution.md` §0 stated the licence text *"is landing as
+`docs/HPA-licence-2026-08-19-as-read.md`."* **It was not in the repository and had never been
+created**, so **`D-093` amendment 3's entire licence finding cited an artifact that did not exist.**
+⚠ *A commit message naming a decision is not evidence the decision was logged* — **and this is its
+sibling: an order naming an artifact is not evidence the artifact was created.** **Closed by landing
+the file with its verbatim region hashed.**
+
+**17 — ⚠ The Planner criticised a leak that a decision had already prevented.** *(Planner)*
+It argued the scorer is *"fitted on tens of targets and applied to 2,690 census rows."*
+⚠⚠ **No census row is scored. All 2,690 carry `scored=False`**, because `D-089` rules *a page per
+census protein, deliberately without a scorer panel.* **The premise was false and the snapshot could
+have said so.** ⚠ **It points the good way: the risk was foreclosed three weeks earlier by a decision
+nobody re-read.**
+
+**18 — ⚠⚠ A hash range whose markers appeared twice hashed ZERO BYTES.** *(Code)*
+The header describing the range contained the range markers, so a plain `index()` matched the
+header's copy and the region resolved empty. **A valid `sha256` of nothing — and it would have
+matched itself forever.** ⚠ **Anchored to line starts.** ⚠⚠ **Second occurrence in one day of a
+marker line containing its own marker**, and **the argument for a declared BYTE COUNT beside every
+hash: a stated length caught a corruption that two truncated checksums could not.**
+
+**19 — ⚠⚠ A correction that inverted the control it was correcting.** *(Planner)*
+Having under-delegated a production write, the Planner *corrected* itself by instructing the owner to
+hand-run an Alembic migration — ⚠ **precisely the operation KEEL step 16 exists to stop a human
+performing.** *Hand-deploy dies; manual = emergencies only.* **It proposed making the owner the tired
+person at the terminal that branch protection was built against.**
+
+**20 — ⚠⚠ And the correction to THAT was also uninformed.** *(Planner)*
+The log had already ruled both halves: ***"Phase 1 — the initial migration is run BY HAND,
+supervised, BEFORE the first deploy"***, and phase 2, ***"a `release_command` … ruled but wired AFTER
+phase 1 succeeds."*** ⚠⚠ **The Planner was right, then wrong, then right again, and had read the entry
+at no point.** **Both moves were made from doctrine rather than from the log**, and the second
+happened to land where the log already was. ⚠ *Arriving at the correct place by accident is not the
+same as knowing it*, and the accident is what this member records.
+
+**21 — ⚠⚠ A privilege sweep proved a role safe against the wrong database.** *(Code)*
+`fly mpg connect` with no `--database` lands in `fly-db`, holding Fly's sample tables — `countries`,
+`metrics`, `timeseries`, `update_logs`. **The first sweep ran there and returned a clean,
+well-formed, entirely correct answer about the wrong object.** ⚠ **Had the `TRUNCATE` proof run
+there, it would have "proven" the reader safe against a database that is not ours.**
+⚠⚠ **Caught by reading the table names. No check caught it; looking did.**
+**Standing rule adopted: `--database` is ALWAYS EXPLICIT, never defaulted** — ⚠ *a dial with a
+default that does not announce itself*, the same defect the missing-`straddle` `TypeError` closed.
+
+---
+
+**⚠⚠ THE COUNT IS NOT THE FINDING. THE CATCH RATE IS.**
+
+**Twenty-one members; eleven Planner-made.** ⚠ **An entry in this family listing only the Builder's
+instances would be a false reading of the record — and one listing only the Planner's would be a
+different false reading.** **Members 15, 18 and 21 are Code's, all three self-caught, and 15 is the
+only member in the entry caught before it produced a wrong answer at all.**
+
+⚠⚠ **AND THE DENOMINATOR REMAINS UNKNOWN. THIS ENTRY STILL REPORTS NO RATE.** Every member was
+**caught**; an uncaught instance leaves no trace **by construction**, which is the definition of the
+class. **Survivorship, labelled as such, exactly as `KEEL-4` V9 §6 requires of the assumption score.**
+**What twenty-one members establish, with no denominator: when this project goes looking, it finds
+them. Enough to justify the instrument, not enough to justify a percentage.**
+
+**⚠ What the day's members add to *what catches this class*, from the members rather than from
+theory:**
+- ⚠⚠ **A control case in every proof.** Three write verbs refusing looks identical to a role that
+  refuses everything — **two `SELECT`s returning 2,771 is what made the refusal a measurement.**
+- ⚠ **Name the target explicitly; never accept a default.** Member 21, and the `straddle` `TypeError`.
+- ⚠ **A declared byte count beside every hash.** Members 18 and the truncated checksums.
+- ⚠⚠ **Read the log before correcting from doctrine.** Members 14, 17 and 20 — **three in one day,
+  all Planner, all preventable by one search.**
+
+**Relied on by:** `F-044` · `F-045` · `F-046` · `F-048` · `F-049` · `D-093 amendment 2` ·
+`D-093 amendment 3`.
 
 ---
 
@@ -904,6 +1188,139 @@ So the rule is not "be careful" — it is:
 5. ⚠ **Not legal advice, and the Planner is not a lawyer.** This records what the licence page says and the date it was read. **If anything ships commercially, item 2 is the clause to put in front of someone qualified** — HPA's page offers `contact@proteinatlas.org` for written approval.
 
 - **Consequences:** Task G's inputs become **v22 `pathology.tsv.zip` and `normal_tissue.tsv.zip`, prognostic columns dropped at read.** `D-093` decision 7 continues to bind **every non-HPA supplier** — SEER, GTEx, CPTAC, TCGA — none of which has been read.
+
+
+#### D-093 amendment 2 — ⚠⚠ The layer ships on two edges without survival; the exclusion rule named a column that does not exist; and the normal-tissue differential is NOT a subtraction
+
+- **Date:** 2026-08-19 · **Status:** accepted. ⚠ **This entry is what discharges decision 6 for HPA
+  and unblocks schema, ingest and surface.** Nothing was ingested before it.
+- **Evidence:** `docs/CC-2026-08-19-decision-6-supplier-answers.md`, branch
+  `census/clinical-edges-survey`, tip `392ba1d`. Bar pre-registered at `d0fd95e` **before the fetch**,
+  so the ordering is checkable from history rather than asserted.
+
+**⚠ Where the deep learning is.** The census exists as a structural instrument; this layer is what
+lets a structure-derived ranking be *compared* against an expression-derived one — `P-001`'s whole
+question. ⚠⚠ **It is also the point of maximum risk to that comparison: if the clinical edge is
+built as an expression threshold, the structural axis is being validated against the thing `P-004`
+argues is under-powered.** Ruling 4 exists for that reason.
+
+---
+
+**RULING 1 — The layer SHIPS WITHOUT SURVIVAL. Edge 3 is held and its absence is a visible category.**
+Decision 4 mandates a burden tuple; amendment 1 clause 2 removed the only redistributed survival
+data. ⚠⚠ **The schema mandates a field nothing licensed can populate.** `burden_supplier_unlicensed`
+renders wherever a burden would have appeared — **never a blank, never a zero, never an omission.**
+⚠ **SEER, GLOBOCAN/IARC, TCGA/GDC and CPTAC are UNATTEMPTED, not failed** — a category with a cause.
+
+**RULING 2 — Edges 1 and 2 ship together.** `pathology.tsv` v22 (protein → tumour) and
+`normal_tissue.tsv` v22 (protein → normal tissue). Decision 5 makes the second **co-equal, not an
+appendix.**
+
+**RULING 3 — `therapeutic_precedent` is a LABEL and may NEVER be a scoring feature.** ⚠⚠ *"Has been
+developed as an ADC target"* used to rank ADC targets is circular — **the identical argument that
+bars GPI status, and the identical argument `P-004` item 1 makes against Kathad's own validation
+step.** The circularity warning renders **in the same frame as the label**, the GPI-badge pattern:
+attribute and liability together, never as a positive signal.
+
+**RULING 4 — ⚠⚠ THE NORMAL-TISSUE DIFFERENTIAL IS NOT A SUBTRACTION, AND CO-EQUAL DOES NOT MEAN
+COMPARED.**
+`pathology.tsv` serves **four patient COUNTS** per (gene × cancer). `normal_tissue.tsv` serves **one
+ordinal LEVEL** per (gene × tissue × cell type) and ⚠⚠ **carries NO PATIENT COUNTS AT ALL.**
+- **A quasi-H-score cannot be computed on the normal side — it has no denominator.**
+- ⚠ **No tumour-normal ratio, difference, contrast or index is computed from these two suppliers.**
+  **Putting them either side of a minus sign is two incomparable quantities in one expression.**
+- **Decision 5 is satisfied by CO-EQUAL DISPLAY**: both edges rendered side by side, **each in its own
+  units**, with the incomparability stated on the surface. ⚠ **The ratio is PRE-REGISTERED AS NOT
+  COMPUTABLE FROM THIS SUPPLIER** — an absence with a cause, not an unfilled intention.
+- ⚠ **Open, and named: does HPA publish a normal-tissue file carrying patient counts?** **Unchecked.
+  If one exists, this ruling is revisited on the record.**
+
+**RULING 5 — Absence is stored in TWO LAYERS, because the same fact arrives under two encodings.**
+No IHC for a gene is `ihc_panel_empty` (**1,008**) in `pathology.tsv`, which lists nearly every gene,
+and `ihc_gene_absent` (**1,023**) in `normal_tissue.tsv`, which omits it. ⚠ **One fact, two supplier
+encodings.**
+- **`supplier_encoding`** — `row_absent` · `row_present_panel_empty`. **What the supplier did.**
+- **`derived_fact`** — `no_ihc_available`. **What is true of the protein.**
+- **The surface renders the derived fact; the record keeps the encoding.** ⚠⚠ **Two paths to one
+  quantity — in the DATA rather than in our code — compared once, on purpose, and kept.**
+
+**RULING 6 — ⚠ An absent row means NOT TESTED, never NOT DETECTED.** `Not detected` is an **explicit**
+value (565,839 rows), and **0 of 15,313 genes cover all 266 (tissue, cell) pairs** — the grid is
+**ragged**. **Stored as separate facts.**
+
+**RULING 7 — ⚠⚠ `Level` IS NOT A FOUR-VALUE ORDINAL and no code may treat it as one.** Beside
+`Not detected` / `Low` / `Medium` / `High` there are **`N/A` 1,860 · `Ascending` 172 ·
+`Descending` 73 · `Not representative` 9 = 2,114 rows.** ⚠ **`Ascending` and `Descending` are
+GRADIENTS — they are not positions on a scale and no weighting can place them.** **A test asserts the
+full value set and reds when an unhandled value appears.**
+
+**RULING 8 — ⚠ The reliability asymmetry is disclosed and no asymmetric filter is applied.**
+`normal_tissue.tsv` carries `Reliability` — **`Uncertain` on 182,628 rows** — and **`pathology.tsv`
+carries none.** ⚠⚠ **Filtering normals on quality while being unable to filter tumours introduces a
+DIRECTIONAL bias.** **Either side is filtered identically or neither is; if ever applied, the
+asymmetry is stated in the same frame.** *`F-012`'s pattern: a bias of known direction is stated,
+never corrected.*
+
+---
+
+**CORRECTION 1 — ⚠⚠ AMENDMENT 1 CLAUSE 2 NAMES A COLUMN THAT DOES NOT EXIST.**
+It excludes every `Cancer prognostics — … (TCGA)` column. **Measured against v22: ZERO columns begin
+`Cancer prognostics` and ZERO contain `TCGA`, in either `pathology.tsv` or `proteinatlas.tsv`.**
+What is actually present: **four** `prognostic - favorable` / `unprognostic - …` columns in
+`pathology.tsv`, and **seventeen** `Pathology prognostics - <cancer>` in `proteinatlas.tsv`.
+
+⚠⚠ **A licence-compliance guard has been passing since 2026-08-17 by matching a string that never
+occurs, while the data it means to exclude sits in the file accepted at `D-100` under its real name.**
+**KEEL-1 V9 Principle 6 clause (c)**, and the same shape as the `## P-004` grep.
+
+- **Clause 2 is corrected to match the token `prognos`**, case-insensitive, across **column names**.
+- ⚠ **The as-ruled prefix's failure to match the real names is ITSELF asserted**, so a future
+  restatement of the rule reds the test and is re-derived deliberately.
+- ⚠ **Code's own prohibition test inherited the defect** and has been retargeted and proven RED
+  against both real v22 names.
+- ⚠ **One thing to measure and state rather than assume: is every cached artifact under `data/` free
+  of a prognostic column?** **If the cached copy is clean, that is LUCK STANDING IN FOR PROCESS and
+  is recorded as such, not as compliance.**
+- **`F-047` member 9.** No new integer.
+
+**CORRECTION 2 — ⚠ Decision 6 has FIVE questions across FIVE suppliers, and the Planner cited three.**
+Repeated in the supplier survey and two orders. ⚠⚠ **`F-044`'s class — citing an entry by content it
+does not have — third instance this week.** **`F-047` member 10 (Planner).**
+- **HPA is answered on FOUR of five.** ⚠⚠ **Item 5 — *the verbatim required attribution string* —
+  is UNANSWERED for both files.** **A supplier confirmed on four of five items is not a supplier
+  confirmed**, and this entry does not record it as one.
+- ⚠ **Item 5 is WRITING, not research** — the four-part obligation is already specified in amendment
+  1 clause 3. **It is read from `https://v22.proteinatlas.org/about/licence` and recorded verbatim
+  with the date read**, because *amendment 1 exists because a licence was recalled rather than read.*
+- **HPA passes question 3** with a pinned mapping, so it enters the schema; ⚠ **the entry states the
+  gap rather than inheriting it as a pass.**
+
+**CORRECTION 3 — ⚠⚠ `D-093`'s five listed gate assertions never existed.** The entry describes them
+under *"written before any code"*; **zero hits at `b7ecc2a`.** **A pre-registration asserting a test
+surface that was never built is `F-047`'s class at the level of a decision entry** — well-formed,
+confident, and unfalsifiable from inside itself. ⚠ **Found only because the order said *report whether
+each exists* rather than *implement these*.** **`F-047` member 8 (Planner).** The five tests are now
+written and each proven RED — **the remedy lands after the finding, not instead of it.**
+
+---
+
+**WHAT THIS ENTRY DOES NOT LICENSE**
+
+- ⚠ **Not an association claim.** Every rendered edge carries its evidence type, and
+  `differential_expression` is labelled as such — **never as *"associated with"*.** *Every surface
+  protein is expressed somewhere.*
+- ⚠⚠ **Not a coverage percentage ahead of its categories.** The bar changes the answer by a factor of
+  22: **all-20 is 785 at any detection, 57 at `qh ≥ 150`, and 35 at any `High`.** **`23.4%` may not be
+  quoted without the table.**
+- ⚠ **Not a resolution of `Q3MIW9` MUCL3** — HPA and Ensembl name disjoint genes and it is left
+  unresolved. **Not a resolution of the 21 `accession_ambiguous` KIR/HLA/OR loci.**
+- ⚠ **Not a burden of any kind on a protein payload** — decision 1 stands unchanged. **The prohibition
+  is on BURDEN, not on EXPRESSION**; an IHC edge is not barred.
+- ⚠⚠ **Not a licence characterisation of any supplier other than HPA.**
+
+**Assumptions relied on:** `A-014 (an upstream model's negative class is a prediction, not a fact)` —
+⚠ **IHC is an assay, not a model, so `A-014` does NOT apply to these edges.** *Recorded because the
+temptation to cite it here is exactly the class of error this entry catalogues.*
 
 ---
 
@@ -2335,6 +2752,102 @@ the census now creates the overlap need directly.
 - [ ] Scorer-import refusal green and revert-proven.
 - [ ] 2,807 + 2,209 + 2,793 + 2 ingested under four tags, nothing dropped, nothing pooled.
 - [ ] fp16 local ceiling probed; overlap sample size + seed recorded before the first overlap fold.
+
+#### D-079 amendment 1 — ⚠⚠ The census may carry a STRUCTURAL PROFILE, which is not a score, is never ranked, and is REFUSED where the standardizer is out of range
+
+- **Date:** 2026-08-19 · **Status:** ⚠⚠ **PRE-REGISTRATION. Void if code precedes it.** `D-079`'s own
+  clause, inherited deliberately. **No census profile is computed before this entry is ruled.**
+- **Amends:** `D-079`'s bar on scoring census rows, which `D-089` cites as *"`D-079` bars scoring any
+  census row."* ⚠ **The bar is NARROWED, not lifted.**
+- **Owner ruling, 2026-08-19:** the census should carry a structure-derived value. **This entry rules
+  what that value may be and what it may never become.**
+
+---
+
+**⚠⚠ WHY THE BAR EXISTED, RESTATED SO NARROWING IT IS A DECISION AND NOT AN EROSION.**
+
+`D-079`'s title is *"…and spend none of the pre-registration on it."* **`P-001` asks whether a
+structure-derived ranking reorders an expression-derived one, on the 82.** ⚠⚠ **If census values are
+ever compared back into that question — or if the scorer is refit to behave better on the census —
+the comparison is contaminated and `P-001` is unanswerable.** **Ruling 5 is the wall.**
+
+---
+
+**RULING 1 — ⚠⚠ IT IS NOT CALLED A SCORE, AND THE NAME IS THE RULING.**
+The census value is **`structural_profile`**. **Never `score`. Never `rank`. Never `suitability`.**
+⚠ **`D-068`'s discipline is that a number carries its status; `F-049`'s family is a word meaning two
+things on two surfaces, and it bit three times on 2026-08-19** — `scorer_version`, `run_kind`, and
+`ranked` at **67 on `/api/coverage` against 56 on `/api/ranking`.** **A fourth is not acceptable.**
+
+**RULING 2 — ⚠⚠ NO RANKING, ANYWHERE, INCLUDING BY SORT ORDER.**
+**A value is a measurement; a rank is a recommendation.** ⚠ **The census has no labels, so nothing
+justifies one.** **No `rank` column, no default sort by profile, no "top N".** ⚠ **A sortable column
+is a ranking with extra steps** — if the surface permits sorting on it, the mount preconditions
+travel with the sorted view.
+
+**RULING 3 — ⚠⚠ REFUSAL IS AN OUTCOME, AND IT IS THE POINT OF THIS ENTRY.**
+The standardizer's mean and `sd_k` were fit on **56 targets**. ⚠ **Applying them to a
+surfaceome-wide population puts standardized values wherever the census distribution happens to
+fall, and values far from zero produce extreme logits from small raw coefficients.**
+- **Per feature, a census value outside the cohort's fit range yields
+  `refused_out_of_distribution` — a CATEGORY, not a number, not a clamp, not a `None`.**
+- ⚠ **The `preflight()` pattern**: *a case with no ruling is a stop, not a green light.*
+  ⚠⚠ **And `F-049`'s lesson applies — a refusal that is written but unwired is decoration.** **It is
+  wired at the call site or it does not exist.**
+- **The range test is pre-registered in the order accompanying this entry and is measured BEFORE any
+  profile is computed.** ⚠ **If most of the census falls outside range, the honest product is a
+  refusal at scale and this entry's ruling 1 becomes moot** — **both outcomes are committed here, at
+  equal prominence, before the measurement exists** (`F-022`).
+
+**RULING 4 — ⚠ THE MOUNT PRECONDITIONS, IN FRAME, NOT IN A FOOTNOTE.** `D-094`. **Every rendered
+profile carries, in the same frame:**
+- **unlabelled** — ⚠⚠ **there is no leave-one-out out here.** `D-041`'s whole defence of the small
+  model is that **LOO exposes overfitting as noise**; on 2,690 unlabelled proteins **that instrument
+  does not exist.**
+- **out of the fit population** — 56 targets from an **expression-selected** cohort (`A-014`,
+  `F-011`: an upstream screen's positive class is a prediction, not a fact).
+- **not a probability** — `F-006`: the cohort's own values span **0.116 to 0.285**, compressed toward
+  the base rate. ⚠ **Whatever the census yields will be narrower and will be read as a probability
+  by everyone who sees it unless the frame says otherwise.**
+- ⚠⚠ **`F-051`: `membrane_proximal_plddt` carries 32.2% of attribution** — **the dominant feature is
+  a confidence value, and confidence is precisely what differs most between a studied cohort and the
+  unstudied two-thirds of the membraneome.** **The feature doing the most work is the one most
+  likely to misbehave out of distribution.**
+
+**RULING 5 — ⚠⚠ THE WALL. The profile may NEVER re-enter the cohort's arc.**
+- **No census profile is compared to, merged with, or ranked against any cohort score.**
+- ⚠⚠ **The scorer is NEVER refit to improve census behaviour.** **A refit is not pre-committed
+  anywhere** (`FC3`, measured) and one made after seeing census output is post-hoc by construction.
+- **`FEATURE_NAMES` stays at six.** ⚠ `D-027`'s six IS the pre-registration and the gate asserts
+  `len == 6`.
+- ⚠ **A test enforces this, proven RED**: wire a census profile into anything the cohort ranking
+  reads, and the gate stops it. **The `EE-0` pattern, including the RENAME route** — *pin by name, a
+  token scan is defeated by renaming.*
+
+**RULING 6 — ⚠ `F-048`'s 58 are excluded at the point of computation, not filtered at display.**
+**Geometric features on a five-residue fold are not a weak signal.** ⚠⚠ **`Q9ULH0` is a 5-residue
+span and `min span_aa` across the 58 is 5.** **They carry `refused_span_below_floor` as a category.**
+**A value computed and then hidden is a value that will eventually be exported.**
+
+**RULING 7 — the surface reuses, never duplicates.** ⚠ `D-089`'s pattern: `get_structure_path` is not
+tranche-filtered and already serves any analysis id. **A second route for one artifact is a second
+source with nothing comparing them.**
+
+---
+
+**⚠ WHAT THIS AMENDMENT DOES NOT DO**
+- **It does not lift `D-079`'s bar on SCORING.** ⚠ **It rules that a differently-named,
+  never-ranked, refusable quantity is permitted. The bar on scoring stands.**
+- ⚠⚠ **It does not license the profile as evidence for anything.** **Not for `P-001`, not for
+  `P-002`, not for target selection, not for the atlas business case.** **What it is for is a
+  separate decision that has not been made.**
+- ⚠ **It does not touch `D-089`.** **A census page still carries no scorer panel** — *a census
+  protein given a page that looks like a ranked target's page is how a reader concludes wrongly*, and
+  a profile block must not become that page by another name.
+- ⚠ **It does not pre-commit a refit at any n**, on the census or on rental folds.
+
+**Assumptions relied on:** `A-014` (twice — the surface filter and the cohort's labels are both model
+outputs) · `A-016`.
 
 ---
 

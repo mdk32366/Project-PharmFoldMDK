@@ -1,0 +1,150 @@
+MEASUREMENT OUTPUT — 2026-08-19/20 — LA/LB/LC pre-flight + run, and the KB re-run
+instruments : scripts/census_extract_features.py · scripts/census_ood_distribution.py
+artifact    : data/census/census_features.v1.jsonl (+ .manifest.json)
+baseline    : data/census/cohort_feature_baseline.json
+⚠ NO DATABASE ROW WAS WRITTEN. wrote_database_rows: false in the manifest.
+
+=== LC — the run manifest ===
+{
+  "PYTHONHASHSEED": "0",
+  "base_url": "https://pharmfoldmdk.fly.dev",
+  "bytes": 1325934,
+  "census_rows_expected": 2690,
+  "code_revision": "8db7345d871bf6b0c6fdca962189ead27488f2ea",
+  "ended_utc": "2026-08-19T03:53:19.569271+00:00",
+  "feature_version": "e67a8cf30c1c",
+  "key": "one line per row of /api/census (analysis_id = protein_analyses.id); counts sum to census_rows_expected only when partial is false",
+  "lines": 2690,
+  "outcome_counts_this_pass": {
+    "<resumed>": 35,
+    "ok": 2597,
+    "refused_span_below_floor": 58
+  },
+  "outcomes_vocabulary": [
+    "ok",
+    "refused_span_below_floor",
+    "structure_file_absent",
+    "structure_malformed",
+    "extraction_error"
+  ],
+  "output": "census_features.v1.jsonl",
+  "partial": false,
+  "sha256": "c08f9f1dace9f71c5ed8c472c8b6d4363ac9c12dccd1baf8ee328bf2de591863",
+  "started_utc": "2026-08-19T03:15:17.746168+00:00",
+  "wrote_database_rows": false
+}
+
+=== KB — the distribution measurement ===
+  cohort baseline: cohort_feature_baseline.json  (n=56, key: the 56 rows of target_scores at ranking_run_id=2, joined protein_features.analysis_id; raw scale; percentiles by linear interpolation)
+  artifact: census_features.v1.jsonl  lines 2690  partial=False  sha256 c08f9f1dace9f71c...
+
+====================================================================================================
+KC3 / LC3 — OUTCOMES, AND THEY SUM TO THE ARTIFACT WITH ITS KEY STATED
+====================================================================================================
+    ok                              2632
+    refused_span_below_floor          58
+    TOTAL                           2690   (census rows expected: 2690)
+
+  ⚠ of the 'ok' rows, carrying a COMPLETE six-vector: 2622 / 2632
+  ⚠ null columns among the incomplete — a category, never a zero:
+    radius_of_gyration                10
+      radius_of_gyration: fewer than two CA atoms (no gyration to compute)             10
+
+====================================================================================================
+KB1 — THE CENSUS DISTRIBUTION, SIX STATISTICS, AGAINST THE COHORT'S
+====================================================================================================
+  ⚠ DENOMINATOR: 2622 rows with a complete six-vector, out of 2690 in the artifact.
+
+  ecd_length
+    cohort  n    56   min          13  p05          21  med       427.5  p95      896.75  max        1652
+    census  n  2622   min           2  p05          11  med          54  p95      379.95  max         439
+  radius_of_gyration
+    cohort  n    56   min    0.031184  p05     0.04024  med    0.098989  p95       0.619  max      0.7588
+    census  n  2622   min    0.048945  p05    0.064567  med     0.27571  p95     0.76786  max      7.9112
+  mean_plddt_ecd
+    cohort  n    56   min       50.49  p05      52.988  med      72.428  p95       76.92  max      81.395
+    census  n  2622   min      24.854  p05      39.993  med      57.009  p95      77.768  max      89.246
+  membrane_proximal_plddt
+    cohort  n    56   min      43.476  p05      51.702  med      68.076  p95      76.392  max      79.502
+    census  n  2622   min      22.933  p05      38.164  med      56.101  p95      78.654  max      94.845
+  sasa_normalized
+    cohort  n    56   min      44.064  p05      50.879  med       62.15  p95       126.3  max      141.68
+    census  n  2622   min      40.455  p05      55.927  med      107.72  p95      147.01  max      321.38
+  largest_patch_fraction
+    cohort  n    56   min     0.31809  p05     0.36376  med     0.83185  p95           1  max           1
+    census  n  2622   min     0.20745  p05     0.49367  med     0.98463  p95           1  max           1
+
+====================================================================================================
+KB2 — THE OUT-OF-RANGE COUNT, AT THREE BARS, NOT ONE
+====================================================================================================
+  k  feature                        strict min-max           p05-p95           +/-3 sd
+  --------------------------------------------------------------------------------------------
+  0  ecd_length                      146 (  5.6%)      271 (10.3%)        0 ( 0.0%)
+  1  radius_of_gyration              142 (  5.4%)      289 (11.0%)      222 ( 8.5%)
+  2  mean_plddt_ecd                  868 ( 33.1%)     1192 (45.5%)      346 (13.2%)
+  3  membrane_proximal_plddt         484 ( 18.5%)     1211 (46.2%)      210 ( 8.0%)
+  4  sasa_normalized                 201 (  7.7%)      694 (26.5%)      181 ( 6.9%)
+  5  largest_patch_fraction           18 (  0.7%)       30 ( 1.1%)        0 ( 0.0%)
+
+====================================================================================================
+KB3 — ⚠⚠ THE UNION. THIS IS THE NUMBER THAT DECIDES THE AMENDMENT
+====================================================================================================
+  STRICT (cohort observed min-max)
+    out of range on AT LEAST ONE feature -> REFUSED :  1225 / 2622 =  46.7%
+    out of range on ALL SIX                        :     0 / 2622 =   0.0%
+    ⚠ profile COMPUTABLE (in range on all six)      :  1397 / 2622 =  53.3%
+
+  p05-p95
+    out of range on AT LEAST ONE feature -> REFUSED :  1820 / 2622 =  69.4%
+    out of range on ALL SIX                        :     0 / 2622 =   0.0%
+    ⚠ profile COMPUTABLE (in range on all six)      :   802 / 2622 =  30.6%
+
+  +/-3 standardized units
+    out of range on AT LEAST ONE feature -> REFUSED :   638 / 2622 =  24.3%
+    out of range on ALL SIX                        :     0 / 2622 =   0.0%
+    ⚠ profile COMPUTABLE (in range on all six)      :  1984 / 2622 =  75.7%
+
+====================================================================================================
+KB4 — HOW MANY FEATURES EACH ROW FAILS: 0..6, SUMMING TO THE DENOMINATOR
+====================================================================================================
+  STRICT:
+    fails 0 features :  1397    53.3%
+    fails 1 feature  :   710    27.1%
+    fails 2 features :   419    16.0%
+    fails 3 features :    80     3.1%
+    fails 4 features :     9     0.3%
+    fails 5 features :     7     0.3%
+    fails 6 features :     0     0.0%
+    TOTAL            :  2622
+
+  p05-p95:
+    fails 0 features :   802    30.6%
+    fails 1 feature  :   477    18.2%
+    fails 2 features :   872    33.3%
+    fails 3 features :   435    16.6%
+    fails 4 features :    19     0.7%
+    fails 5 features :    17     0.6%
+    fails 6 features :     0     0.0%
+    TOTAL            :  2622
+
+  +/-3 sd:
+    fails 0 features :  1984    75.7%
+    fails 1 feature  :   331    12.6%
+    fails 2 features :   296    11.3%
+    fails 3 features :     8     0.3%
+    fails 4 features :     3     0.1%
+    fails 5 features :     0     0.0%
+    fails 6 features :     0     0.0%
+    TOTAL            :  2622
+
+====================================================================================================
+⚠ THE PLANNER'S PRE-REGISTERED EXPECTATION, SCORED AGAINST THE RESULT
+====================================================================================================
+  recorded before the measurement existed: 'ecd_length the worst offender,
+  mean_plddt_ecd the mildest, and a MINORITY of the census out of range on the strict test.'
+    worst offender on strict : mean_plddt_ecd  (868 rows)  -> expectation MISSED
+    mildest on strict        : largest_patch_fraction  (18 rows)  -> expectation MISSED
+    minority out of range    : 1225/2622 = 46.7%  -> expectation HELD
+
+  ⚠ Scored, not adjusted. The expectation was written down before the number existed,
+    which is the only thing that makes this line worth printing (F-022).

@@ -1,0 +1,294 @@
+ORDERS-Code-2026-08-19-clinical-edges-1-and-2 — captured output
+instruments : scripts/hpa_v22_verify.py --normal-tissue ; scripts/hpa_census_coverage.py
+repo HEAD   : d0fd95e0e91bb71ab7c1a50ea5244b365e4661de
+CA1 provenance:
+  URL       https://v22.proteinatlas.org/download/normal_tissue.tsv.zip
+  retrieved 2026-08-18T19:28:56Z and 19:28:59Z (two independent fetches)
+  bytes     5606031   http 200   application/zip
+  sha256    8453c46c6f4690428c029cf1d7e8dba289ae33b288f874b00105a008dbe62ff7  (fetch A)
+  sha256    8453c46c6f4690428c029cf1d7e8dba289ae33b288f874b00105a008dbe62ff7  (fetch B)
+  sha256    8453c46c6f4690428c029cf1d7e8dba289ae33b288f874b00105a008dbe62ff7  (copy already on this machine)
+  inner     normal_tissue.tsv 82706091 bytes, sha256 73fa766c9f7add6ec6f4e063fc89e3f07c3390ecc44d7633d226b30403e663af
+  ⚠ THREE hashes, ONE value — transport checked, not assumed.
+⚠ REGENERATED after DB/DC/DD: three bars, the extremes decomposed, the Level vocabulary,
+  the reliability asymmetry, and CE1 closed on members.
+
+========================================================================================
+CA3 — THE COLUMN SET, ASSERTED EXACTLY (the ingest is COLUMN-scoped)
+========================================================================================
+  columns as read : ['Gene', 'Gene name', 'Tissue', 'Cell type', 'Level', 'Reliability']
+  IN set          : ['Gene', 'Gene name', 'Tissue', 'Cell type', 'Level', 'Reliability']
+  ⚠ columns present but NOT in the IN set : none
+  ⚠ columns expected but ABSENT           : none
+  ⚠⚠ `Cancer prognostics` columns present  : none   — presence is the violation, not use
+  ⚠ `Reliability` is present here and is ABSENT from `pathology.tsv`: True
+     — the modality driving target selection is the one without the quality flag.
+
+========================================================================================
+CA4 — THE TISSUE TAXONOMY, AND WHAT AN ABSENCE MEANS
+========================================================================================
+  rows                       : 1,194,479
+  distinct Ensembl gene ids  : 15,318
+  distinct gene names        : 15,313
+  distinct tissues           : 64
+  distinct (tissue, cell)    : 266
+
+  Level values, with counts — ⚠ every value named, none bucketed:
+    Not detected               565,839
+    Medium                     302,651
+    Low                        183,677
+    High                       140,198
+    N/A                          1,860
+    Ascending                      172
+    Descending                      73
+    Not representative               9
+
+  Reliability values:
+    Approved                   460,449
+    Enhanced                   390,450
+    Uncertain                  182,628
+    Supported                  160,952
+
+  ⚠⚠ DOES AN ABSENT ROW MEAN 'not detected' OR 'not tested'?
+    `Not detected` is an EXPLICIT Level value (565,839 rows),
+    so a MISSING (gene, tissue, cell) row is NOT 'not detected' — it is NOT TESTED.
+    genes covering all 266 (tissue, cell) pairs : 0 of 15,313
+    ⚠ so the grid is RAGGED, and the two facts must be stored separately.
+
+========================================================================================
+CA2 PATH B — THE PRE-REGISTERED GENES (expectations fixed BEFORE the fetch)
+========================================================================================
+
+  CLDN18  — expected: present, concentrated in stomach
+    rows:  83   with a detected level:   5 across 4 tissues
+      lung                                 2 cell types, strongest Medium
+      gallbladder                          1 cell types, strongest Low
+      stomach 1                            1 cell types, strongest High
+      stomach 2                            1 cell types, strongest High
+
+  ERBB2  — expected: present, broad epithelial
+    rows: 126   with a detected level:  41 across 29 tissues
+      skin 2                               4 cell types, strongest Medium
+      skin 1                               3 cell types, strongest Low
+      testis                               3 cell types, strongest Medium
+      breast                               2 cell types, strongest Medium
+      cervix                               2 cell types, strongest Medium
+      kidney                               2 cell types, strongest Low
+      … and 23 more tissues
+
+  TACSTD2  — expected: present, broad epithelial
+    rows:  99   with a detected level:  28 across 21 tissues
+      skin 1                               4 cell types, strongest High
+      skin 2                               4 cell types, strongest High
+      kidney                               2 cell types, strongest Medium
+      breast                               1 cell types, strongest Low
+      bronchus                             1 cell types, strongest Medium
+      cervix                               1 cell types, strongest Medium
+      … and 15 more tissues
+
+  INS  — expected: present, essentially pancreas-only — the tissue-specificity control
+    rows: 103   with a detected level:   1 across 1 tissues
+      pancreas                             1 cell types, strongest High
+
+  ZZZ_NOT_A_GENE  — expected: ABSENT — the negative case
+    rows: 0   ⚠ ABSENT from the file
+
+  ⚠ VERDICT on the named-gene path: HOLDS
+  ⚠⚠ This checks the file against expectations WRITTEN DOWN BEFORE IT WAS FETCHED.
+     It does not make the file correct; it makes a wrong file able to fail.
+
+============================================================================================
+CB1 — THE PINNED MAPPING, AND IT IS READ TWO INDEPENDENT WAYS FROM ONE RECORD
+============================================================================================
+  instrument : UniProt entries cached in data/census/spancache/ (pinned by the cache,
+               not fetched live). Path A = the `HPA` cross-reference id.
+               Path B = the `Ensembl` cross-reference `GeneId`, version stripped.
+
+  key: one row per census_accession in census_manifest.v7.csv
+  accessions                                    : 3,467
+  both paths present                            : 3,331
+  the two paths AGREE exactly                    : 3,137
+  ⚠ the two paths DISAGREE                       : 289  ['A5D6W6', 'A6NI73', 'B0FP48', 'B6A8C7', 'O00548']
+
+============================================================================================
+CB3 — CARDINALITY OF THE HOP (counts must sum to the manifest, key stated)
+============================================================================================
+  exactly_one_gene          3,351
+  accession_ambiguous          21
+  hpa_absent                   95
+  TOTAL                     3,467   sums to the manifest: True
+  ⚠⚠ ambiguous, REPORTED AND NOT RESOLVED (P2): 21
+       P43632  KIR2DS4    -> ['ENSG00000274406', 'ENSG00000274947', 'ENSG00000274957', 'ENSG00000275353', 'ENSG00000275731', 'ENSG00000276154', 'ENSG00000276395', 'ENSG00000276634', 'ENSG00000276885', 'ENSG00000283870', 'ENSG00000283882', 'ENSG00000284264']
+       Q14952  KIR2DS3    -> ['ENSG00000277163', 'ENSG00000277657', 'ENSG00000278306', 'ENSG00000284039', 'ENSG00000288487']
+       Q8NGT9  OR2A1      -> ['ENSG00000212807', 'ENSG00000221970']
+       Q8N743  KIR3DL3    -> ['ENSG00000274639', 'ENSG00000276196']
+       P01920  HLA-DQB1   -> ['ENSG00000225824', 'ENSG00000231286', 'ENSG00000233209']
+       P43631  KIR2DS2    -> ['ENSG00000274438', 'ENSG00000274518', 'ENSG00000275253', 'ENSG00000275452', 'ENSG00000275583', 'ENSG00000275735', 'ENSG00000275737', 'ENSG00000276139', 'ENSG00000276258', 'ENSG00000276425', 'ENSG00000277885', 'ENSG00000278152', 'ENSG00000278300', 'ENSG00000284033', 'ENSG00000284511']
+       Q8NHK3  KIR2DL5B   -> ['ENSG00000275436', 'ENSG00000275937', 'ENSG00000278481', 'ENSG00000284089']
+       Q14953  KIR2DS5    -> ['ENSG00000274739', 'ENSG00000275047', 'ENSG00000277650', 'ENSG00000284217', 'ENSG00000288206', 'ENSG00000288357']
+
+============================================================================================
+CB2 — BOTH DIRECTIONS (Part C Step 19: a one-directional check cannot see orphans)
+============================================================================================
+
+  normal_tissue.tsv
+    HPA gene ids in the file                        : 15,318
+    census ENSGs NOT present in the file            : 1,021
+    ⚠ file gene ids reached by NO census accession   : 12,992
+      (the census is a surfaceome subset, so this is expected to be large — it is reported because an orphan count nobody states is an orphan count nobody checks)
+
+  pathology.tsv
+    HPA gene ids in the file                        : 20,090
+    census ENSGs NOT present in the file            : 15
+    ⚠ file gene ids reached by NO census accession   : 16,758
+      (the census is a surfaceome subset, so this is expected to be large — it is reported because an orphan count nobody states is an orphan count nobody checks)
+
+============================================================================================
+CD — COVERAGE, CATEGORIES FIRST. ⚠ NO PERCENTAGE MAY ABSORB THEM (P1)
+============================================================================================
+
+  the census manifest (3,467)  ×  normal_tissue.tsv
+    ihc_present               2,008
+    ihc_gene_absent           1,023
+    ihc_panel_empty             320
+    hpa_absent                   95
+    accession_ambiguous          21
+    TOTAL                     3,467   sums to the population: True
+
+  the census manifest (3,467)  ×  pathology.tsv
+    ihc_present               2,328
+    ihc_gene_absent              15
+    ihc_panel_empty           1,008
+    hpa_absent                   95
+    accession_ambiguous          21
+    TOTAL                     3,467   sums to the population: True
+
+  the folded set (2,690)  ×  normal_tissue.tsv
+    ihc_present               1,472
+    ihc_gene_absent             868
+    ihc_panel_empty             249
+    hpa_absent                   81
+    accession_ambiguous          20
+    TOTAL                     2,690   sums to the population: True
+
+  the folded set (2,690)  ×  pathology.tsv
+    ihc_present               1,721
+    ihc_gene_absent              13
+    ihc_panel_empty             855
+    hpa_absent                   81
+    accession_ambiguous          20
+    TOTAL                     2,690   sums to the population: True
+
+============================================================================================
+DB1 — ⚠⚠ 'REACHING' HAD NO STATED RULE. THREE BARS, NOT ONE
+============================================================================================
+  ⚠ A single setting is a dial wearing the costume of a measurement. `F-043`'s flip
+    rates were withdrawn the day they were published for exactly this.
+
+  key: census accessions resolving to exactly ONE gene (3,351), against pathology.tsv's 20 cancer types
+
+  bar                                          all 20     >=10  exactly 1     NONE
+  ----------------------------------------------------------------------------------------
+  any non-zero detection                          785    1,676         91    1,148
+  any `High`                                       35      383        328    1,834
+  qh >= 150 (Kathad's, for comparability)          57      477        298    1,998
+
+  ⚠⚠ THE HEADLINE MOVES WITH THE BAR, WHICH IS THE POINT OF REPORTING THREE.
+
+============================================================================================
+DB2 / DB3 — ⚠⚠ DECOMPOSING THE EXTREMES. 'NONE' AND 'ALL 20' BOTH HAVE CAUSES
+============================================================================================
+
+  bar='any non-zero detection'  reaching NONE: 1,148
+    ihc_panel_empty                             1,008
+    ihc_PRESENT_and_still_at_this_extreme         125  ⚠⚠ a DIFFERENT FACT from the two above
+    ihc_gene_absent                                15
+    sums to the group                           1,148   True
+
+  bar='any non-zero detection'  reaching ALL 20: 785
+    ihc_PRESENT_and_still_at_this_extreme         785  ⚠⚠ a DIFFERENT FACT from the two above
+    sums to the group                             785   True
+
+  bar='any `High`'  reaching NONE: 1,834
+    ihc_panel_empty                             1,008
+    ihc_PRESENT_and_still_at_this_extreme         811  ⚠⚠ a DIFFERENT FACT from the two above
+    ihc_gene_absent                                15
+    sums to the group                           1,834   True
+
+  bar='any `High`'  reaching ALL 20: 35
+    ihc_PRESENT_and_still_at_this_extreme          35  ⚠⚠ a DIFFERENT FACT from the two above
+    sums to the group                              35   True
+
+  bar="qh >= 150 (Kathad's, for comparability)"  reaching NONE: 1,998
+    ihc_panel_empty                             1,008
+    ihc_PRESENT_and_still_at_this_extreme         975  ⚠⚠ a DIFFERENT FACT from the two above
+    ihc_gene_absent                                15
+    sums to the group                           1,998   True
+
+  bar="qh >= 150 (Kathad's, for comparability)"  reaching ALL 20: 57
+    ihc_PRESENT_and_still_at_this_extreme          57  ⚠⚠ a DIFFERENT FACT from the two above
+    sums to the group                              57   True
+
+============================================================================================
+DC1 — ⚠ DOES `pathology.tsv` CARRY THE SAME NON-ORDINAL VALUES?
+============================================================================================
+  ⚠⚠ This lands on `P-004` item 3. If HPA's own vocabulary is not a clean ordinal, the
+     objection is not *the weights are arbitrary* but *the thing being weighted is not
+     consistently ordered* — a stronger claim, and P-004 needs the answer before it
+     makes either.
+
+  column 'High': 14 distinct raw values
+    non-numeric values: NONE — every cell parses as a number
+
+  column 'Medium': 14 distinct raw values
+    non-numeric values: NONE — every cell parses as a number
+
+  column 'Low': 14 distinct raw values
+    non-numeric values: NONE — every cell parses as a number
+
+  column 'Not detected': 14 distinct raw values
+    non-numeric values: NONE — every cell parses as a number
+
+  ⚠ `pathology.tsv` stores COUNTS per level; `normal_tissue.tsv` stores a LEVEL per
+    (tissue, cell). They are different shapes, so 'the same non-ordinal values' can
+    only be asked of the LEVEL vocabulary — which pathology.tsv does not have as a
+    column at all. **Reported as a shape difference, not forced into a comparison.**
+
+============================================================================================
+DC2 — ⚠⚠ THE RELIABILITY ASYMMETRY, COLUMN LISTS SIDE BY SIDE
+============================================================================================
+  pathology.tsv    (11 cols): ['Gene', 'Gene name', 'Cancer', 'High', 'Medium', 'Low', 'Not detected', 'prognostic - favorable', 'unprognostic - favorable', 'prognostic - unfavorable', 'unprognostic - unfavorable']
+  normal_tissue.tsv(6 cols): ['Gene', 'Gene name', 'Tissue', 'Cell type', 'Level', 'Reliability']
+
+  ⚠ `Reliability` in normal_tissue : True
+  ⚠ `Reliability` in pathology     : False
+  ⚠⚠ so the modality driving TARGET SELECTION is the one WITHOUT the quality flag.
+  ⚠ NOT verified here: whether HPA documents the difference anywhere. That is a
+    question about HPA's own documentation, not about these files, and asserting it
+    from the files would be inventing provenance.
+
+============================================================================================
+DD — ⚠⚠ CE1 CLOSED ON MEMBERS, NOT ON TOTALS
+============================================================================================
+  'Equal counts are not the same set' was named in the act of committing it. Compared:
+
+  the census manifest (3,467)
+    via uniprot_accession : 12
+    via antigen name      : 12
+    ⚠ SAME SET           : True
+    in accession join only: none
+    in name join only     : none
+
+  the folded set (2,690)
+    via uniprot_accession :  6
+    via antigen name      :  6
+    ⚠ SAME SET           : True
+    in accession join only: none
+    in name join only     : none
+
+============================================================================================
+CE1 — `therapeutic_precedent` COVERAGE (a LABEL; never a scoring feature)
+============================================================================================
+  rows: 13   columns: ['drug', 'application_number', 'antigen', 'uniprot_accession', 'source_citation', 'marketing_status', 'development_stage']
+    the census manifest (3,467)      joins best on column 'antigen': 12 matched
+    the folded set (2,690)           joins best on column 'antigen': 6 matched

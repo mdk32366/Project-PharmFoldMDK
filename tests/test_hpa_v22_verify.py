@@ -54,3 +54,65 @@ def test_string_counts_are_coerced():
 
 def test_blank_counts_are_zero_not_an_error():
     assert panel_counts({"High": "", "Medium": "1", "Low": "", "Not detected": "2"}) == (0, 1, 0, 2)
+
+
+# ───────────────────────────────── CB4 — the census↔HPA join, and the fixture that breaks it ──
+#
+# ⚠⚠ A JOIN TEST THAT PASSES ON CLEAN DATA IS TESTING NOTHING (KEEL-1 V9 Principle 6 clause (c)).
+# The census keys on UniProt accession, HPA on Ensembl gene id — a two-hop mapping — and *a
+# case-mismatched join returning a clean zero three times* is a catalogued `F-047` member. So the
+# fixture below is deliberately DIRTY: mixed case, leading and trailing whitespace, and a version
+# suffix. Every one of those is a real shape in these files, and each would silently produce an
+# empty intersection under a naive `==`.
+
+from scripts.hpa_census_coverage import ensg_from_entry, norm  # noqa: E402
+
+
+def _entry(hpa_id=None, ensembl_gene=None):
+    xr = []
+    if hpa_id is not None:
+        xr.append({"database": "HPA", "id": hpa_id, "properties": []})
+    if ensembl_gene is not None:
+        xr.append({"database": "Ensembl", "id": "ENST00000264162.7",
+                   "properties": [{"key": "GeneId", "value": ensembl_gene}]})
+    return {"uniProtKBCrossReferences": xr}
+
+
+def test_the_join_key_survives_case_and_whitespace():
+    """⚠ The discriminating fixture. Delete `.strip().upper()` from `norm` and this reds."""
+    dirty = ("  ensg00000115850  ", "ENSG00000115850", "ensg00000115850\t", " Ensg00000115850 ")
+    assert len({norm(x) for x in dirty}) == 1, "the join key is not case/whitespace stable"
+    assert norm(dirty[0]) == "ENSG00000115850"
+
+    # ⚠ and the control: a NAIVE join over the same values produces four distinct keys, which is
+    # exactly the clean-zero intersection this test exists to prevent.
+    assert len(set(dirty)) == 4
+
+
+def test_the_ensembl_gene_id_is_unversioned_before_it_is_joined():
+    """HPA's files carry `ENSG00000115850`; UniProt's Ensembl xref carries `ENSG00000115850.10`.
+    ⚠ Joining them without stripping the version is a clean zero on every row."""
+    hpa, ens = ensg_from_entry(_entry(hpa_id="ENSG00000115850",
+                                      ensembl_gene="ENSG00000115850.10"))
+    assert hpa == {"ENSG00000115850"}
+    assert ens == {"ENSG00000115850"}, "the Ensembl version suffix was not stripped"
+
+
+def test_more_than_one_gene_is_returned_as_a_set_and_never_resolved():
+    """⚠⚠ `P2`: `accession_ambiguous` is a CATEGORY, not a resolution rule. The extractor returns
+    a SET so that *more than one* is representable at all — a scalar return would have to invent a
+    first-match or alphabetical tie-break simply to have a value, and that is a dial nobody
+    recorded."""
+    doc = {"uniProtKBCrossReferences": [
+        {"database": "HPA", "id": "ENSG00000000001", "properties": []},
+        {"database": "HPA", "id": "ENSG00000000002", "properties": []},
+    ]}
+    hpa, _ = ensg_from_entry(doc)
+    assert hpa == {"ENSG00000000001", "ENSG00000000002"}
+    assert len(hpa) == 2, "ambiguity was collapsed to a single value somewhere"
+
+
+def test_an_entry_with_no_hpa_or_ensembl_xref_yields_empty_sets_not_a_guess():
+    """`hpa_absent` is a category with a cause. ⚠ Empty sets, never a fabricated id."""
+    assert ensg_from_entry({"uniProtKBCrossReferences": []}) == (set(), set())
+    assert ensg_from_entry({}) == (set(), set())
