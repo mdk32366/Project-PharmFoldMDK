@@ -468,3 +468,15 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   opacity: 0.75;
   margin-right: 0.25rem;
 }
+
+/* ⚠ The normal-tissue basis caveat. Deliberately NOT styled as a footnote: it corrects a reading
+   the layout invites — two halves side by side implying equal weight — and a caveat that reads as
+   fine print has already lost that argument. */
+.clin-normal-basis {
+  margin: 0.4rem 0 0.7rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--warn, #b7791f);
+  background: rgba(183, 121, 31, 0.08);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}

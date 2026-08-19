@@ -48,6 +48,18 @@ describe('ClinicalEdges', () => {
     expect(section.querySelector('details')).toBeNull()
   })
 
+  // ⚠⚠ CO-EQUAL IN POSITION, UNEQUAL IN EVIDENTIAL WEIGHT — and the surface must say so.
+  // HPA stains THREE individuals per normal tissue. The tumour half prints its n on every row;
+  // this half printed "2 of 3 cell types", which reads as a sample size and is not one.
+  it('states that the normal-tissue half rests on three individuals', () => {
+    const t = text(PRESENT)
+    expect(t).toMatch(/three individuals per tissue/i)
+    // ⚠ and that the cell-type figure is not a patient count
+    expect(t).toMatch(/not.{0,6}a patient count/i)
+    // ⚠ and that the source does not document how disagreement is resolved
+    expect(t).toMatch(/not\s+documented at the source/i)
+  })
+
   it('says WHY the healthy-tissue half matters, in plain words', () => {
     expect(text(PRESENT)).toMatch(/the payload cannot tell the two apart/i)
   })
