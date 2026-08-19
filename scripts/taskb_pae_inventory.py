@@ -116,6 +116,9 @@ def self_check() -> None:
     print(f"self-check: {len(statements())} statements, all bare SELECT, no DML/DDL, no separators")
 
 
+from db.dburl import normalize_db_url  # noqa: E402
+
+
 def proxy_url() -> tuple[str, str]:
     """(url, redacted) — DATABASE_URL from .env, repointed at the local proxy.
 
@@ -134,9 +137,11 @@ def proxy_url() -> tuple[str, str]:
 
     # repoint host:port at the proxy, keep user/password/dbname
     url = re.sub(r"@[^/@]+/", f"@{PROXY_HOST}:{PROXY_PORT}/", url, count=1)
-    url = url.replace("postgres://", "postgresql+psycopg://", 1)
-    if url.startswith("postgresql://"):
-        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+    # ⚠ Was a hand-rolled copy of db/dburl.py's rule. It WORKED — and that is the point: a
+    # second implementation of a documented single-source helper goes stale silently, the first
+    # time the helper learns a new scheme. `normalize_db_url` is idempotent and leaves an
+    # already-driver-bearing URL alone, so it is a drop-in here.
+    url = normalize_db_url(url)
     redacted = re.sub(r"//[^@]+@", "//<redacted>@", url)
     return url, redacted
 
