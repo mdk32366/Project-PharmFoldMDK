@@ -122,3 +122,63 @@ describe('the cohort ceiling must not leak onto a census page (F-038)', () => {
     expect(screen.queryByText(/89\.25 is the highest|census max/i)).not.toBeInTheDocument()
   })
 })
+
+// ── the structural profile ON THE BASEBALL CARD (D-079 amendment 1, ruled by amendment 2) ──
+//
+// ⚠⚠ THE PROFILE REACHES THIS PAGE THROUGH `CensusDetail`, WHICH IS EMBEDDED HERE. That is a real
+// dependency and an invisible one: nothing else renders `CensusDetail`, so if it is ever un-embedded
+// or the block stops being threaded through, the profile disappears from the only page that shows
+// the protein in 3D — and no test of `CensusDetail` alone would notice. These pin it to the CARD.
+const BLOCK = {
+  kind: 'structural_profile', status: 'computed', structural_profile: 0.1876, refusal: null,
+  out_of_range_features: [],
+  mount_preconditions: ['unlabelled — there is no leave-one-out here.', 'not a probability — F-006.'],
+  provenance: 'run 2 (scorer_version 91e646e4a289)',
+  bar: 'cohort observed min-max. Not p05-p95; not +/-3 sd.',
+  band_context: { cohort_fitted_min: 0.116, cohort_fitted_max: 0.285,
+    note: 'This axis does not separate targets by much.' },
+  support_used: {},
+}
+
+describe('CensusProteinView — the structural profile on the 3D page', () => {
+  it('renders the profile on the SAME page as the structure viewer', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({ ...DETAIL, structural_profile_block: BLOCK })
+    const { container } = view()
+    await waitFor(() => expect(screen.getByTestId('structure')).toBeTruthy())
+    expect(container.textContent).toMatch(/Structural profile/)
+    expect(container.textContent).toMatch(/0\.1876/)
+  })
+
+  it('places the profile AFTER the "not scored, not ranked" statement (placement is the ruling)', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({ ...DETAIL, structural_profile_block: BLOCK })
+    const { container } = view()
+    await waitFor(() => expect(container.textContent).toMatch(/Structural profile/))
+    const t = container.textContent
+    // ⚠ The reader is told the protein is unscored BEFORE being shown a structure-derived number.
+    expect(t.indexOf('Not scored')).toBeGreaterThan(-1)
+    expect(t.indexOf('Not scored')).toBeLessThan(t.indexOf('Structural profile'))
+  })
+
+  it('still says "not scored, not ranked" WITH the profile present — the profile did not replace it', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({ ...DETAIL, structural_profile_block: BLOCK })
+    const { container } = view()
+    await waitFor(() => expect(container.textContent).toMatch(/Structural profile/))
+    expect(container.textContent).toMatch(/Not scored, not ranked/)
+    expect(container.textContent).toMatch(/not a score and not a rank/i)
+  })
+
+  it('carries no scorer panel even now (D-089) — the profile is not it under another name', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({ ...DETAIL, structural_profile_block: BLOCK })
+    const { container } = view()
+    await waitFor(() => expect(container.textContent).toMatch(/Structural profile/))
+    expect(container.textContent).not.toMatch(/Scorer result/)
+    expect(container.textContent).not.toMatch(/What moved this score/)
+  })
+
+  it('a page whose API response carries no block renders no empty panel', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue(DETAIL)   // no structural_profile_block at all
+    const { container } = view()
+    await waitFor(() => expect(screen.getByTestId('structure')).toBeTruthy())
+    expect(container.textContent).not.toMatch(/Structural profile/)
+  })
+})
