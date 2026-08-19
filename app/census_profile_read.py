@@ -56,3 +56,52 @@ def census_profile_block(engine: Any, analysis_id: int) -> Optional[dict]:
 
     return profile_payload(
         features, accession=accession, span_below_floor=span_below_floor)
+
+
+#: The status vocabulary shown in the census TABLE. ⚠⚠ A CATEGORY, NEVER A MAGNITUDE.
+#: `D-079` amendment 1 ruling 2: *"a sortable column is a ranking with extra steps."* The table is
+#: sortable on every column by design (D-087), so a VALUE column would be one header click from a
+#: ranked shortlist of 1,397 proteins — with `null` sorting last, the refusals would sweep to the
+#: bottom and nothing on screen would say the order means nothing. A status column sorts into
+#: GROUPS, which orders nothing by suitability.
+PROFILE_STATUSES = (
+    "computed",
+    "refused_out_of_distribution",
+    "refused_span_below_floor",
+    "refused_features_incomplete",
+)
+
+
+def census_profile_statuses(engine: Any) -> dict[int, str]:
+    """`{analysis_id: status}` for every census row, in ONE query.
+
+    ⚠⚠ THE VALUE IS COMPUTED AND DELIBERATELY DISCARDED. `structural_profile()` is the single
+    implementation of the bar — recomputing "is it in range" here would be a second copy that
+    drifts from the first (`F-052`). So the real function runs and **only its status is kept**; no
+    number is returned, so none can reach the list payload. A test asserts the payload carries no
+    float.
+
+    ⚠ The three refusal causes stay DISTINCT. Pooling 1,225 + 58 + 10 into one "n/a" would lose
+    the reason, and *an absence is a category with a cause*.
+    """
+    from core.structural_profile import structural_profile
+
+    out: dict[int, str] = {}
+    with Session(engine) as session:
+        rows = session.execute(
+            select(ProteinAnalysis.id, ProteinAnalysis.input_value, ProteinFeatures)
+            .outerjoin(ProteinFeatures, ProteinFeatures.analysis_id == ProteinAnalysis.id)
+            .where(ProteinAnalysis.cohort_tranche != COHORT_TRANCHE)
+        ).all()
+
+    for analysis_id, accession, feat in rows:
+        if feat is None:
+            features: dict[str, Optional[float]] = {n: None for n in FEATURE_NAMES}
+            below = False
+        else:
+            features = {n: getattr(feat, n) for n in FEATURE_NAMES}
+            below = feat.extraction_outcome == "refused_span_below_floor"
+        result = structural_profile(features, accession=accession, span_below_floor=below)
+        # ⚠ only the CATEGORY escapes this function. `result.value` is not read.
+        out[analysis_id] = "computed" if not result.is_refused else result.refusal.category
+    return out

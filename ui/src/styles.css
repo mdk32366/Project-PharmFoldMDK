@@ -418,3 +418,10 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   background: #6b728011; font-size: 0.9rem; }
 .census-howread .howread { margin: 0.4rem 0; padding-left: 1.3rem; }
 .census-howread .howread li { padding: 0.25rem 0; font-size: 0.9rem; }
+
+/* Census profile STATUS column (D-079 amendment 1 ruling 2 — a category, never a value).
+   ⚠ Both states at the same weight and the same size. A greyed-out or italic refusal would read as
+   "missing", and ruling 3 makes a refusal an OUTCOME. Neither state is coloured as good or bad. */
+.profile-computed, .profile-refused { font-size: 0.85rem; }
+.profile-computed { color: var(--ink); }
+.profile-refused { color: var(--muted); }
