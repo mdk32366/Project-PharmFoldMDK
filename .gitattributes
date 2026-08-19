@@ -76,3 +76,10 @@ data/census/protein_aliases.v1.csv -text
 # ⚠ The second-instrument artifact (D-103), derived from a pinned proteinatlas.tsv and compared
 # against it by tests. Protected at creation rather than after a hash mismatch taught us to.
 data/census/surface_confirmation.v1.csv -text
+
+# ⚠ The three documents received 2026-08-20, two of which declare an AUTHORED-SHA256 over a
+# line-start-anchored range. F-047 member 15 recurring: CRLF on checkout changes the bytes and the
+# hash stops matching a file nothing touched. Added at landing, not after a mismatch.
+docs/D-075-amendment-1-paste-ready.md              -text
+docs/ORDERS-Code-invariant-amendment-references.md -text
+docs/D-093-amendment-2-paste-ready.md              -text
