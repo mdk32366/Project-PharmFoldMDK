@@ -130,6 +130,137 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-052 — A convention that exists, is documented, and is obeyed by every caller except the newest one — and each test written to close it was scoped to its author's own field of view
+
+- **Date:** 2026-08-20 · **Written by:** Code, about Code. **Status:** ⚠ **OPEN.** It closes when a
+  convention in this repository is enforced by a derived check rather than by observation, or when
+  the residual is named and accepted.
+- **How known (`D-016`):** three instances in one session, each found by running the code in an
+  environment that was not the author's. **Two failed on the production host after passing every
+  local check; one was caught locally by an unrelated precondition.**
+
+⚠ **A correction inside the entry that reports it: I described these to the owner as *"three
+failures on the host."* Two were on the host. The `.gitattributes` instance was caught locally, by
+the ingest's source check.** *Three of a class, two of them on the host* — recorded rather than
+rounded, because the whole subject here is claims that are almost right.
+
+---
+
+**⚠⚠ THE SHAPE, STATED BEFORE THE INSTANCES SO THEY ARE NOT THREE ANECDOTES.**
+
+**A rule exists. It is written down. Every existing caller obeys it. The next caller does not — and
+nothing red fires, because the rule was never a check.** ⚠ **In all three the author had read the
+rule; in two, the author had *written a test for it* and the test passed on the broken code.**
+
+---
+
+**INSTANCE 1 — `.gitattributes` scoped to a directory.** *(caught locally, by an unrelated guard)*
+Full record at **`F-047 amendment 2`, member 22.** The rule protected four `docs/` files; a pinned
+artifact landed under `data/`, was checked out CRLF, and stopped matching its manifest.
+⚠ Caught because `scripts/census_ingest_features.py` verifies its source **before** writing.
+
+**INSTANCE 2 — a transitive import of a module the image does not ship.** *(production host)*
+```
+scripts/census_ingest_features.py → core.clinical_ingest → scripts.kathad_reproduction
+ModuleNotFoundError: No module named 'scripts.kathad_reproduction'
+```
+⚠⚠ **A test for exactly this existed and passed.** It regex-scanned the ingest's **own** imports for
+`scripts.*` and found none, while its docstring promised the failure it did not check — *"would
+build fine and fail at run time, on the production host."* **A one-file scan answers *does this file
+import a stranger*; the question is *can it REACH one*. One level of indirection, and one level was
+enough.** ⚠ **The cause was accidental coupling, not a missing file:** `core/clinical_ingest.py`
+imports the Kathad helpers for the `D-100` grid, which `verify_source` never touches. **Fixed by
+moving four provenance helpers into `core/source_pin.py` — stdlib only — not by shipping more.**
+
+**INSTANCE 3 — an engine built from a raw `DATABASE_URL`.** *(production host)*
+```
+ModuleNotFoundError: No module named 'psycopg2'
+```
+`db/dburl.py`'s own docstring says *"This one helper is applied by BOTH the serving tier and the
+migration environment, so a future re-attach ... cannot silently break either path again."*
+⚠⚠ **Five callers obeyed it. The sixth was mine.** ⚠ **It failed AFTER every other guard passed** —
+artifact hash verified, 2,690 rows loaded, outcome vocabulary checked — **because the connection is
+the last thing that happens.** The guards worked; none was pointed here.
+
+---
+
+**⚠⚠ AND THE SECOND-ORDER FINDING, WHICH IS THE REASON THIS IS AN ENTRY AND NOT THREE FOOTNOTES.**
+
+**Each remedy was, on its first attempt, scoped the same way the defect was.**
+- **Instance 1's** first blast-radius scan required the hash on its marker's line and reported **3**
+  files; deriving the set from the tree found **6**.
+- **Instance 2's** test checked direct imports; the defect was transitive.
+- **Instance 3's** test was written, then **reddened on correct code** — it required the normalizer
+  to wrap `create_engine`'s first *argument*, a coding SHAPE, and
+  `scripts/taskb_pae_inventory.py` legitimately normalises inside a helper and passes the result
+  down. ⚠ *A test that reddens on correct code is worse than no test*, and that sentence had been
+  written about a different guard **the same day**.
+
+**⚠ THE FIX THAT WORKED, ALL THREE TIMES, WAS TO DERIVE THE SET RATHER THAN ENUMERATE IT** — pinned
+artifacts derived from the tree; the import graph walked rather than the file scanned; every module
+that builds an engine found rather than the ones remembered. **An enumerated rule protects the
+members its author could see.**
+
+**⚠ AND INSTANCE 3'S DERIVED CHECK IMMEDIATELY FOUND A FOURTH INSTANCE NOBODY WAS LOOKING FOR:**
+`scripts/taskb_pae_inventory.py` had **hand-reimplemented** the normalisation inline. **It works —
+which is the point.** *A second implementation of a documented single-source helper goes stale
+silently, the first time the helper learns a new scheme.* ⚠ **It was fixed, not exempted:** an
+exemption satisfies a test by editing the test.
+
+---
+
+**⚠⚠ THE CONDITION THAT HID ALL THREE, NAMED.** Every local verification ran with **the whole
+repository on the path**, against a database reached the way this laptop reaches it. **The serving
+image ships `app/ core/ db/ data/` and one script; production hands over a bare `postgresql://`.**
+⚠ **A test environment richer than production is not a test of production**, and *"it passed
+locally"* was true and worthless in all three.
+**The instrument that would have caught instances 2 and 3 before the first deploy is not exotic: it
+is `cp -r` of the shipped subset into a temp directory.** It exists now
+(`docs/MEASUREMENT-OUTPUT-…`, the simulated layout) and it reproduced both failures.
+
+**⚠ WHAT THIS ENTRY DOES NOT CLAIM.**
+- **Not that the guards failed.** `D-058`'s stdlib pin, the artifact hash, the acceptance bar and
+  the pLDDT floor all held. **Three conventions had no check at all** — that is a different fact
+  from a check that missed.
+- ⚠ **Not a proposal to build a framework.** `D-074` decision 3: *do not answer a finding with a
+  framework that becomes a second thing to drift.* Three derived tests, each ten lines of `ast`.
+- ⚠ **Not generalisable to a rate.** Three instances, one session, one author, no denominator —
+  `F-047`'s survivorship caveat applies unchanged.
+
+---
+
+**⚠⚠ INSTANCE 4, AND IT HAPPENED INSIDE THE COMMIT THAT LANDS THIS ENTRY.**
+
+The regression test written for instance 1 detects a pinned artifact by searching for
+`AUTHORED-SHA256`. **Writing the sentence *"docs carrying `AUTHORED-SHA256`"* into this entry made
+`docs/README.md` match it** — and the gate went red claiming the LOG was an unprotected pinned
+artifact. **The log declares no hash over itself.** ⚠ *A detector that cannot tell a MENTION from a
+DECLARATION reddens on correct files*, which is the failure instance 3's first test already made
+once, the same day.
+
+⚠ **Tightened to require the declaration form — and the tightening immediately produced the
+OPPOSITE error, one edit later.** `AMENDMENT-2026-08-19-planner-log-entries.md` declares with a
+**colon** (`AUTHORED-SHA256: <hash>`), which the stricter pattern missed: **a real pin, undetected.**
+**Broad detector → false positive; narrow detector → false negative; two edits apart, one afternoon.**
+
+⚠⚠ **And it exposed two files I had protected on a wrong reading.**
+`ORDERS-Code-2026-08-19-clinical-edges-1-and-2.md` and
+`SPEC-2026-08-19-supplier-survey-clinical-edges.md` state **in their own text** that *"no
+`AUTHORED-SHA256` IS DECLARED, AND THAT IS DELIBERATE."* **They were never pinned.** The
+`.gitattributes` entries stay — `-text` on an unpinned document costs nothing, and removing them
+would erase the evidence — **with the misreading recorded beside them rather than tidied away.**
+
+**⚠ What instance 4 adds: the derived check is not a solution, it is a smaller problem.** Deriving
+the set removed the *enumeration* failure and left the *predicate* failure — and the predicate is
+now the thing scoped to what its author can see. **This entry does not claim that is solved.**
+
+---
+
+**Relied on by:** ⚠ `F-021`, whose first clause is now closed by `uq_protein_features_analysis_id`
+while the entry itself remains reserved-unwritten.
+**Assumptions relied on:** `A-016` (any red proves the assertion bites) — twice, since two of the
+three remedies were themselves proven only by a revert that reddened at the assertion.
+
 ### F-051 — ⚠⚠ "The two confidence features" is really one: `membrane_proximal_plddt` carries 32.2% of attribution and `mean_plddt_ecd` 6.4%
 
 - **Date:** 2026-08-19 · **Status:** ⚠ **OPEN.** An observation with a pre-registered fork —
@@ -442,6 +573,53 @@ theory:**
 
 **Relied on by:** `F-044` · `F-045` · `F-046` · `F-048` · `F-049` · `D-093 amendment 2` ·
 `D-093 amendment 3`.
+
+#### F-047 amendment 2 — ⚠⚠ Member 15 RECURRED, on a data artifact, and was caught by an unrelated ingest's source check rather than by anything watching for it
+
+- **Date:** 2026-08-20 · **Status:** `F-047` stays **OPEN and STANDING.** It accumulates; it does
+  not close.
+
+⚠ **One member, landed on its own rather than held for a batch.** `F-047 amendment 1` recorded eight
+at once because they arrived in one day. **Holding this one until a second appears would make the
+entry a summary of a session rather than a record of an event** — and member 15's whole point was
+that it was caught *before* it fired. This one fired.
+
+---
+
+**22 — ⚠⚠ `core.autocrlf` broke a hash-pinned artifact after the guard against it already existed.**
+*(Code, caught by an unrelated instrument)*
+
+**Member 15 is the parent and it reads: *"`core.autocrlf=true` would have broken every authored hash
+on a fresh clone"* — caught before it fired, closed by adding `.gitattributes`, scoped to the four
+`docs/` files that existed that day.** ⚠ **The scoping is the defect.** When
+`data/census/census_features.v1.jsonl` landed — committed LF, blob intact, **matching its manifest
+inside git** — the checkout filter handed back 2,690 CRLF lines and a `sha256` of `0a17cab2…`
+against a pinned `c08f9f1d…`. **Nothing had touched the file.**
+
+⚠ **What caught it was not a guard aimed at this.** `scripts/census_ingest_features.py` verifies its
+source before writing, and the *first thing the ingest did was refuse the ingest*. **No test, no
+review and no checklist was watching the artifact; an unrelated precondition happened to look.**
+
+⚠⚠ **AND THE FIRST MEASUREMENT OF THE BLAST RADIUS WAS ITSELF TOO NARROW.** A scan requiring the
+`sha256` on the same line as its marker reported **3** affected files. The regression test derives
+the pinned set from the tree instead — *docs carrying `AUTHORED-SHA256`, plus any artifact named as
+a manifest's `output`* — and found **3 more** that wrap the hash across lines. **Ten files, not
+four, not three.** ⚠ *The remedy had been scoped to what the detector happened to see, one level up
+from the original defect scoping the rule to the directory that happened to exist.*
+
+**Closed as a class, not as an instance:** `tests/test_hash_pinned_artifacts_are_protected.py`
+derives the set rather than listing it, so the next pinned artifact is covered without anyone
+remembering to widen anything. ⚠ **Three assertions, because the declaration and the bytes are
+different claims:** marked `-text`, **not CRLF on disk**, and *the census artifact still hashes to
+its own manifest*. **A `.gitattributes` entry added without re-checking-out the file reads as a fix
+while the bytes stay wrong.**
+
+⚠ **What this adds to *what catches this class*:** **a rule written against today's members is a
+rule against today's members.** Members 15 and 22 are the same defect at two scopes — the second
+made possible by the first's remedy being enumerated rather than derived. **`F-052` records this as
+one of three instances in a single session and is the entry that generalises it.**
+
+**Relied on by:** `F-052`.
 
 ---
 

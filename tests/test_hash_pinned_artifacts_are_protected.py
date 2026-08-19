@@ -24,9 +24,26 @@ import re
 REPO = pathlib.Path(__file__).resolve().parent.parent
 GITATTRS = REPO / ".gitattributes"
 
-# A file is HASH-PINNED if it declares an AUTHORED-SHA256 over itself, or if it is named as the
-# `output` of a manifest that pins a sha256 for it.
-AUTHORED = re.compile(rb"AUTHORED-SHA256")
+# A file is HASH-PINNED if it DECLARES an `AUTHORED-SHA256` over itself — the marker followed by
+# `= <64 hex>` — or if it is named as the `output` of a manifest that pins a sha256 for it.
+#
+# ⚠⚠ THE DECLARATION FORM IS REQUIRED, AND THE REASON IS THIS TEST'S OWN HISTORY. It first matched
+# a bare `AUTHORED-SHA256` anywhere in the file, and went red on `docs/README.md` the moment an
+# entry was written that DESCRIBES the rule — *"docs carrying `AUTHORED-SHA256`"*. The log is not a
+# pinned artifact; it declares no hash over itself. ⚠ A detector that cannot tell a MENTION from a
+# DECLARATION reddens on correct files, and a test that reddens on correct code is worse than none.
+# ⚠ `re.S` because real declarations wrap the range across a newline before the `=`.
+#
+# ⚠⚠ AND THE STRICTER FORM IMMEDIATELY EXPOSED TWO ERRORS IN THE OTHER DIRECTION, BOTH MINE:
+#   - `AMENDMENT-2026-08-19-planner-log-entries.md` declares with a COLON (`AUTHORED-SHA256: <hash>`),
+#     not `= `<hash>``. A real declaration the first stricter regex MISSED — the narrow-detector
+#     failure, arriving one edit after the broad-detector failure. Both forms are accepted now.
+#   - `ORDERS-Code-2026-08-19-clinical-edges-1-and-2.md` and
+#     `SPEC-2026-08-19-supplier-survey-clinical-edges.md` say, in their own text, *"no
+#     `AUTHORED-SHA256` IS DECLARED, AND THAT IS DELIBERATE."* They were never pinned. I added them
+#     to `.gitattributes` on 2026-08-20 believing otherwise; the entries are harmless and stay, and
+#     the mistaken reading is recorded there rather than quietly removed.
+AUTHORED = re.compile(rb"AUTHORED-SHA256.{0,200}?[=:]\s*`?[0-9a-f]{64}`?", re.S)
 
 
 def _protected() -> set[str]:
