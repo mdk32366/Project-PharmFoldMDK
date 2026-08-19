@@ -277,8 +277,14 @@ def main(argv=None) -> int:
     print(f"  artifact  {ART.name}  {len(rows)} rows  sha256 {sha[:16]}…  partial={manifest['partial']}")
     print(f"  outcomes  {dict(Counter(r['outcome'] for r in rows))}")
 
+    # ⚠ normalize_db_url is NOT optional and I learned that on the host. Fly's attach writes a
+    # bare `postgresql://`, which SQLAlchemy maps to psycopg2 — not installed (D-012 pins
+    # psycopg 3). Every other engine-builder in the tree already routes through this helper;
+    # this one did not, and failed at `import psycopg2` after passing every other guard.
     from sqlalchemy import create_engine
-    engine = create_engine(url, future=True)
+
+    from db.dburl import normalize_db_url
+    engine = create_engine(normalize_db_url(url), future=True)
     try:
         report = ingest(engine, rows, manifest, sha, dry_run=args.dry_run)
     except (IngestRefused, IngestBarFailed) as e:
