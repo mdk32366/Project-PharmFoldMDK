@@ -470,6 +470,19 @@ def _census_context() -> dict[str, Any]:
     return _CENSUS_CTX
 
 
+def _hpa_attribution(gene: str | None, view: str) -> dict[str, Any] | None:
+    """The four elements for one HPA-derived value.
+
+    ⚠ A missing ENSG map degrades to an absent link WITH ITS REASON — never a broken anchor, and
+    never a silently omitted citation, because the licence makes citation a precondition of display.
+    """
+    try:
+        from core.hpa_attribution import attribution_block
+        return attribution_block(gene, view)
+    except Exception:                      # noqa: BLE001
+        return None
+
+
 def _surface_payload(accession: str, gene: str | None) -> dict[str, Any] | None:
     """⚠ A missing artifact degrades to None and the surface says nothing — never a false negative."""
     try:
@@ -593,6 +606,12 @@ def get_census_detail(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]
     gene = out.get("gene")
     hits = (payload.get("associations") or {}).get(gene) if gene else None
     out["cancer_associations"] = {
+        # ⚠⚠ HPA ATTRIBUTION ON A SURFACE THAT CITES A PAPER. `D-100` established that Kathad's S3
+        # is a VERBATIM EXTRACT of `pathology.tsv` — 1,640/1,640 rows, all four count columns
+        # identical. **Citing the paper is not citing HPA.** The obligation attaches to the
+        # underlying source whichever route the numbers took, and `D-053` predates the clinical
+        # layer — so this surface has rendered HPA data unattributed longer than any other.
+        "attribution": _hpa_attribution(gene, "pathology"),
         "status": "covered" if hits is not None else "not_covered",
         "hits": hits or [],
         "source": payload.get("source"),

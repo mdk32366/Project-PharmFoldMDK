@@ -91,3 +91,7 @@ docs/ORDERS-Code-licence-quotation-and-attribution-audit.md -text
 
 # ⚠ The deferral entry, AUTHORED-SHA256 over first #### -> EOF. Protected at landing.
 docs/D-093-amendment-7-paste-ready.md -text
+
+docs/ORDERS-Code-attribute-every-surface.md -text
+docs/D-093-amendment-8-paste-ready.md      -text
+data/census/hpa_ensg_map.csv               -text

@@ -540,3 +540,15 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   border-left: 2px solid var(--rule, #2d3748);
   font-size: 0.85rem; font-style: italic; line-height: 1.55; color: var(--muted);
 }
+
+/* ⚠⚠ HPA attribution. The licence makes citation a PRECONDITION of display, not a footnote, so
+   this is styled to be legible rather than to disappear — a credit nobody can read is not a
+   credit. It sits with the data it attributes, never in a page footer. */
+.hpa-attrib { margin: 0.6rem 0 0; font-size: 0.78rem; line-height: 1.55; color: var(--muted); }
+.hpa-attrib-link { display: inline-block; margin-bottom: 0.2rem; }
+.hpa-attrib-nolink { display: inline-block; margin-bottom: 0.2rem; font-style: italic; }
+.hpa-attrib-cite { margin: 0.1rem 0; }
+.hpa-attrib-credit { margin: 0.1rem 0 0; }
+.hpa-attrib-credit-label { text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.68rem; }
+.stained-link { text-decoration: none; }
+.stained-link:hover { text-decoration: underline; }

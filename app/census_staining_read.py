@@ -19,6 +19,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.hpa_attribution import attribution_block
 from core.staining_lens import (
     BEST_PANEL,
     CRITICAL_TISSUES,
@@ -73,7 +74,10 @@ def staining_by_gene(engine: Any, min_patients: int = DEFAULT_MIN_PATIENTS) -> d
     out: dict[str, dict] = {}
     for gene in set(panels) | set(normals):
         hits = critical_hits(normals.get(gene, ()))
+        # ⚠ the staining lens renders values computed FROM pathology.tsv and normal_tissue.tsv,
+        # so the obligation attaches here exactly as it does to the panels themselves.
         out[gene] = {
+            "attribution": attribution_block(gene, "pathology"),
             "min_patients": min_patients,
             "best_panel": _as_block(view(panels.get(gene, ()), BEST_PANEL, min_patients)),
             "pooled": _as_block(view(panels.get(gene, ()), POOLED, min_patients)),

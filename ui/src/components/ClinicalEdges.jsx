@@ -18,6 +18,8 @@
 //
 // ⚠ No ratio is shown. tumour_normal_ratio() raises by design (ruling 4) and nothing here divides.
 
+import HpaAttribution from './HpaAttribution.jsx'
+
 const LEVEL_WORD = {
   High: 'strong', Medium: 'moderate', Low: 'weak', 'Not detected': 'none',
 }
@@ -117,6 +119,10 @@ export default function ClinicalEdges({ block }) {
       )}
 
       <BurdenSlot />
+      {/* ⚠⚠ PER VIEW, not per page: the tumour panel links to /pathology and the normal
+          panel to /tissue. A single block per page does not discharge the precondition. */}
+      <HpaAttribution attribution={block.attribution_tumour} view="pathology" />
+      <HpaAttribution attribution={block.attribution_normal} view="normal_tissue" />
       <p className="clin-source">{block.source}</p>
 
       {/* ⚠⚠ THE SURFACE QUOTES THE PAGE — owner ruling R1. It does NOT adopt the licence.

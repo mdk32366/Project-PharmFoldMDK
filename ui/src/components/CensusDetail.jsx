@@ -2,6 +2,7 @@ import { bandFor } from '../plddt.js'
 import StructuralProfile from './StructuralProfile.jsx'
 import ClinicalEdges from './ClinicalEdges.jsx'
 import SurfaceCheck from './SurfaceCheck.jsx'
+import HpaAttribution from './HpaAttribution.jsx'
 
 // One census protein. Four questions, in the order a reader asks them: what is it, what did we
 // fold, how confident is the model, and what is it associated with.
@@ -108,6 +109,12 @@ function Associations({ assoc }) {
           <strong>unknown</strong>, not <em>none</em>. {assoc.coverage_note}.
         </p>
         <p className="source">Source: {assoc.source}</p>
+        {/* ⚠⚠ A FIFTH HPA-RENDERING SURFACE, found by the PC3 guard on its FIRST RUN — not by NC,
+            not by the Planner, and not by my own enumeration, all three of which stopped at the
+            component boundary. This block renders qh_score inline, separately from the
+            `Associations` component beside it, and qh is pathology.tsv through our formula
+            (D-100: S3 is a verbatim extract, 1,640/1,640). */}
+        <HpaAttribution attribution={assoc.attribution} view="pathology" />
       </div>
     )
   }

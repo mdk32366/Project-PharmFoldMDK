@@ -39,6 +39,7 @@ from typing import Any, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.hpa_attribution import attribution_block
 from core.clinical_layer import LEVEL_ORDINAL, CATEGORY_LAYERS, layers_of
 from db.models import ClinicalNormalTissue, ClinicalPathology
 
@@ -167,6 +168,11 @@ def clinical_block(engine: Any, gene_name: Optional[str]) -> dict:
         # v22 says Attribution-ShareAlike 3.0 International, www says Attribution 4.0 International.
         # They are DIFFERENT LICENCES. v22 governs, because v22 is what was ingested.
         "licence_statement": dict(HPA_LICENCE_STATEMENT),
+        # ⚠⚠ THE FOUR ELEMENTS, PER VIEW. The licence makes citation a PRECONDITION of
+        # display, so each edge carries its own deep link — the tumour panel to /pathology and
+        # the normal-tissue panel to /tissue. A single block per page does not discharge it.
+        "attribution_tumour": attribution_block(gene_name, "pathology"),
+        "attribution_normal": attribution_block(gene_name, "normal_tissue"),
         "source": ("Human Protein Atlas v22 — pathology.tsv (protein → tumour, IHC) and "
                    "normal_tissue.tsv (protein → normal tissue)."),
         "boundary": ("Immunohistochemistry: how many patient samples stained for this protein. "

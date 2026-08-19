@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { bandFor } from '../plddt.js'
+import HpaAttribution from './HpaAttribution.jsx'
 
 // The census surface (D-087). Searchable, sortable, and deliberately UNRANKED.
 //
@@ -183,6 +184,10 @@ export default function CensusTable({ rows, onSelect }) {
       {/* ⚠⚠ THE LENS CONTROL. D-102's condition is "state what it is", and this is where it is
           stated. The control is not a preference — it changes what the Stained % column MEANS, so
           the meaning is printed under it rather than hidden in a tooltip. */}
+      {/* ⚠ The publication, website reference and data credit for the whole staining column.
+          The per-datum LINK is on each cell above; these three are properties of the source. */}
+      <HpaAttribution attribution={declared?.attribution} view="pathology" />
+
       <div className="lens-control">
         <fieldset>
           <legend>How to read &ldquo;stained&rdquo;</legend>
@@ -349,7 +354,16 @@ export default function CensusTable({ rows, onSelect }) {
                     </span>
                   ) : (
                     <>
-                      <strong>{r.stained_pct}%</strong>
+                      {/* ⚠⚠ THE PER-DATUM LINK. This cell renders an HPA-derived value, so the
+                          citation precondition attaches to the CELL, not to the page. */}
+                      {r.staining?.attribution?.deep_link ? (
+                        <a href={r.staining.attribution.deep_link} rel="noopener noreferrer"
+                           target="_blank" className="stained-link">
+                          <strong>{r.stained_pct}%</strong>
+                        </a>
+                      ) : (
+                        <strong>{r.stained_pct}%</strong>
+                      )}
                       <span className="stained-n"> of {r.stained_n}</span>
                       {r.stained_cancer && (
                         <span className="stained-where"> · {r.stained_cancer}</span>
