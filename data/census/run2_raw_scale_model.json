@@ -1,0 +1,42 @@
+{
+  "caveat": "slope_raw is coef_k/sd_k. coef_k and sd_k stay ENTANGLED (F-049 amendment 1) - only the ratio is determined, which is all the PREDICTION needs. Do not read slope_raw as a standardized coefficient.",
+  "feature_order": [
+    "ecd_length",
+    "radius_of_gyration",
+    "mean_plddt_ecd",
+    "membrane_proximal_plddt",
+    "sasa_normalized",
+    "largest_patch_fraction"
+  ],
+  "form": "structural_profile = logistic( intercept + SUM_k slope_k * (x_k - mean_k) )",
+  "intercept": -1.324660465982808,
+  "max_abs_residual_per_feature": {
+    "ecd_length": 2.7755575615628914e-17,
+    "largest_patch_fraction": 9.71445146547012e-17,
+    "mean_plddt_ecd": 4.85722573273506e-17,
+    "membrane_proximal_plddt": 5.828670879282072e-16,
+    "radius_of_gyration": 1.3877787807814457e-16,
+    "sasa_normalized": 4.163336342344337e-17
+  },
+  "mean_raw": {
+    "ecd_length": 413.26785714285717,
+    "largest_patch_fraction": 0.7345359182527414,
+    "mean_plddt_ecd": 69.00267166096452,
+    "membrane_proximal_plddt": 66.0020250570637,
+    "radius_of_gyration": 0.1560009406191746,
+    "sasa_normalized": 71.020666212184
+  },
+  "name": "run2_raw_scale_model",
+  "provenance": "RECOVERED from persisted values, never read from a fitted object: TargetScore.attributions and protein_features over the 56 rows at ranking_run_id=2, read-only as pharmfold-readonly. FD1/F-049 amendment 1 established the recovery; this file is the same arithmetic committed so the profile needs no import of core/scorer.py (D-079 dec 1).",
+  "ranking_run_id": 2,
+  "reproduction_max_abs_error_vs_persisted_score": 2.220446049250313e-16,
+  "scorer_version": "91e646e4a289",
+  "slope_raw": {
+    "ecd_length": 0.00015360142179027424,
+    "largest_patch_fraction": -0.3924876376909821,
+    "mean_plddt_ecd": 0.003082622556308873,
+    "membrane_proximal_plddt": 0.014596325168356307,
+    "radius_of_gyration": -0.45764466021813327,
+    "sasa_normalized": -0.0015905016017121064
+  }
+}

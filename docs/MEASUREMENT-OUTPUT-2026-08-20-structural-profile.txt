@@ -1,0 +1,62 @@
+MEASUREMENT OUTPUT — 2026-08-20 — the census structural profile, first computation
+instrument : scripts/census_profile_report.py over core/structural_profile.py
+⚠ WRITES NOTHING — no database, no file. D-079 amendment 2 ruled the profile may be BUILT;
+  where it is PERSISTED and how it is RENDERED are separate decisions.
+
+================================================================================================
+CENSUS STRUCTURAL PROFILE — D-079 amendment 1, ruled by amendment 2 (2026-08-20)
+================================================================================================
+  artifact   census_features.v1.jsonl  2690 rows  sha256 c08f9f1dace9f71c…
+  model      run2_raw_scale_model  run 2  scorer_version 91e646e4a289
+  reproduces run 2's persisted scores to 2.2e-16 over the 56 fit rows
+  bar        the cohort's OBSERVED min–max (amendment 2 ruling 8)
+  ⚠ NOT p05–p95 (fires inside the training support) and NOT ±3 sd (rests on sd_k, which F-049 amendment 1 proves is not recoverable)
+
+================================================================================================
+THE OUTCOME, AND IT SUMS TO THE ARTIFACT
+================================================================================================
+    profile_computed                  1397    51.9%
+    refused_out_of_distribution       1225    45.5%
+    refused_span_below_floor            58     2.2%
+    refused_features_incomplete         10     0.4%
+    TOTAL                             2690
+
+  ⚠⚠ RULING 1 AND RULING 3 ARE BOTH OPERATIVE: 1397 carry a profile, 1293 carry a refusal.
+
+================================================================================================
+WHICH FEATURE PUT A ROW OUT OF RANGE — a row can fail more than one, so these do NOT sum
+================================================================================================
+    ecd_length                     146    11.9% of the 1225 out-of-distribution refusals
+    radius_of_gyration             142    11.6% of the 1225 out-of-distribution refusals
+    mean_plddt_ecd                 868    70.9% of the 1225 out-of-distribution refusals
+    membrane_proximal_plddt        484    39.5% of the 1225 out-of-distribution refusals
+    sasa_normalized                201    16.4% of the 1225 out-of-distribution refusals
+    largest_patch_fraction          18     1.5% of the 1225 out-of-distribution refusals
+
+  how many features each refused row fails:
+    1 feature :   710
+    2 features:   419
+    3 features:    80
+    4 features:     9
+    5 features:     7
+
+================================================================================================
+THE PROFILE'S DISTRIBUTION — a value, never an ordering (ruling 2)
+================================================================================================
+    n 1397   min 0.1065   p25 0.1340   median 0.1761   p75 0.2233   max 0.2927
+    ⚠ F-006 records the COHORT's own fitted values spanning 0.116–0.285. This span is 0.1861 wide.
+    ⚠⚠ No target is named here and none is ranked. The distribution is the claim;
+       which protein sits where is a surface decision this script does not make.
+
+================================================================================================
+RULING 4 — THE MOUNT PRECONDITIONS, IN THE SAME FRAME AS THE NUMBERS
+================================================================================================
+    1. unlabelled — there is no leave-one-out here. D-041's defence of the small model is that LOO exposes overfitting as noise; on unlabelled census proteins that instrument does not exist.
+    2. out of the fit population — 56 targets from an expression-selected cohort (A-014, F-011: an upstream screen's positive class is a prediction, not a fact).
+    3. not a probability — F-006 records the cohort's own values spanning 0.116 to 0.285, compressed toward the base rate. Whatever the census yields is narrower and will be read as a probability unless the frame says otherwise.
+    4. confidence-dominated — F-051 measures membrane_proximal_plddt carrying 32.2% of attribution and the confidence pair 38.6%. The feature doing the most work is the one most likely to misbehave out of distribution, and the measurement confirmed it: the two confidence features are the #1 and #2 out-of-range offenders (33.1% and 18.5%).
+    5. the mean_plddt_ecd bound is partly a selection artefact — the cohort minimum of 50.49 is very largely D-041's ranking-set floor (mean_plddt >= 50), not a natural limit, and 831 of that feature's 868 refusals fall below it. Real support gap AND selection rule at once; never present it as pure distribution shift (amendment 2, ruling 9).
+
+  ⚠⚠ AND WHAT THIS IS NOT LICENSED FOR (amendment 1, unamended): not P-001, not P-002,
+     not target selection, not the atlas business case. Permission to build is not
+     permission to conclude.
