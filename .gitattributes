@@ -57,6 +57,12 @@ docs/ORDERS-Code-census-out-of-distribution.md             -text
 # same line as the marker; these three wrap it, so a narrower regex under-reported the class. The
 # test derives the set from the tree instead, and found them. ⚠⚠ The lesson is the one this file
 # already records one level up: the fix was scoped to what the detector happened to see.
+# ⚠ CORRECTION, 2026-08-20: of the three below, only the AMENDMENT actually declares a hash (in a
+# COLON form the detector first missed). The other two state in their own text that "no
+# AUTHORED-SHA256 IS DECLARED, AND THAT IS DELIBERATE" — I added them on a wrong reading of a
+# too-broad regex. They stay: `-text` on an unpinned document costs nothing, and removing them
+# would erase the evidence of the misreading. ⚠⚠ Both errors are the same class as the defect this
+# file exists to prevent — a detector scoped to what its author could see. See `F-052`.
 docs/AMENDMENT-2026-08-19-planner-log-entries.md       -text
 docs/ORDERS-Code-2026-08-19-clinical-edges-1-and-2.md  -text
 docs/SPEC-2026-08-19-supplier-survey-clinical-edges.md -text
