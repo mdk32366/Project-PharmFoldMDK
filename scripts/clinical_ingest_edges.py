@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import hashlib
 import json
 import os
 import pathlib
@@ -160,7 +161,17 @@ def ingest(engine, *, dry_run: bool, downloads: pathlib.Path) -> dict:
         marker = s.execute(
             text("SELECT source_sha256 FROM ingest_markers WHERE ingest_name = :n"),
             {"n": INGEST_NAME}).first()
-        combined = "+".join(SOURCES[k] for k in sorted(SOURCES))
+        # ⚠⚠ ONE sha256 IDENTIFYING THE PAIR, not two concatenated. `ingest_markers.source_sha256`
+        # is String(64) — sized for a single digest — and joining two with "+" produced 129
+        # characters and a StringDataRightTruncation at the very last statement of the ingest.
+        # ⚠ The database refused it and the whole transaction rolled back: 247,552 rows and a
+        # passing D-100 bar, all discarded, because a marker would not fit. The column contract
+        # held where my arithmetic did not.
+        # ⚠ A digest OF the two digests is a legitimate single identity for "this pair of sources",
+        # is stable and reproducible, and the individual hashes are kept in `detail` so nothing is
+        # lost — a pair identity that cannot name its members would be worse than the bug.
+        combined = hashlib.sha256(
+            "+".join(f"{k}:{SOURCES[k]}" for k in sorted(SOURCES)).encode()).hexdigest()
         if marker is not None and marker[0] == combined:
             report["outcome"] = "noop_rerun"
             return report
@@ -211,7 +222,8 @@ def ingest(engine, *, dry_run: bool, downloads: pathlib.Path) -> dict:
                             "nothing persists:\n  - " + "\n  - ".join(failures))
 
         detail = (f"scope: {report['scope_key']}; columns refused: "
-                  f"{','.join(PATHOLOGY_REFUSED)}")
+                  f"{','.join(PATHOLOGY_REFUSED)}; sources: "
+                  + "; ".join(f"{k}={SOURCES[k]}" for k in sorted(SOURCES)))
         s.execute(text("DELETE FROM ingest_markers WHERE ingest_name = :n"), {"n": INGEST_NAME})
         s.execute(text(
             "INSERT INTO ingest_markers (ingest_name, source_path, source_sha256, rows_written,"

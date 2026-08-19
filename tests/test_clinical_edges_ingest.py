@@ -147,3 +147,61 @@ def test_the_grain_prevents_a_duplicate_normal_tissue_row(engine):
                                    level="Low", reliability="Enhanced"))
         with pytest.raises(IntegrityError):
             s.commit()
+
+
+# ── the marker fits its column ──────────────────────────────────────────────
+
+def test_every_marker_field_the_INGEST_WRITES_fits_its_declared_width(engine, monkeypatch):
+    """⚠⚠ THIS FAILED IN PRODUCTION AND THE DATABASE CAUGHT IT, NOT A TEST.
+
+    `ingest_markers.source_sha256` is `String(64)` — sized for ONE digest. The first version joined
+    the two source hashes with `+`, produced 129 characters, and died on
+    `StringDataRightTruncation` at the LAST statement of the transaction. ⚠ 247,552 rows and a
+    passing `D-100` bar were discarded because a marker would not fit.
+
+    ⚠⚠ AND THE FIRST VERSION OF THIS TEST DID NOT CATCH IT EITHER. It recomputed the digest with
+    its own `hashlib.sha256(...)` and asserted THAT was 64 chars — so flipping the script back to
+    the broken concatenation left it green. **A test that reimplements the thing it checks is
+    checking itself.** This one runs the real `ingest()` and reads what actually landed.
+
+    ⚠ SQLite does not enforce `VARCHAR` length and Postgres does, which is why production found
+    this and the local suite did not. So the widths are asserted HERE, in Python, against the
+    values the code really wrote.
+    """
+    widths = {"ingest_name": 80, "source_path": 400, "source_sha256": 64, "code_revision": 64}
+    rows = [{"Gene": "ENSG1", "Gene name": "AAA", "Cancer": "c", "High": "0", "Medium": "0",
+             "Low": "0", "Not detected": "0"}]
+    norm = [{"Gene": "ENSG1", "Gene name": "AAA", "Tissue": "t", "Cell type": "ct",
+             "Level": "High", "Reliability": "Enhanced"}]
+    monkeypatch.setattr(CE, "our_genes", lambda: {"AAA"})
+    monkeypatch.setattr(CE, "read_source",
+                        lambda p, s, m, k: rows if "pathology" in str(p) else norm)
+    # ⚠ The D-100 grid bar is neutralised HERE and only here: this fixture has one synthetic gene,
+    # so the grid is empty and the bar correctly refuses it. The subject of THIS test is the marker
+    # width; the bar has its own test, and leaving it armed would make this test fail for a reason
+    # that is not its claim.
+    import core.clinical_ingest as ci
+    monkeypatch.setattr(ci, "assert_grid_or_refuse", lambda a, b: type("V", (), {
+        "rows": 0, "kept": 0, "excluded": 0, "ok": True})())
+    CE.ingest(engine, dry_run=False, downloads=pathlib.Path("."))
+
+    with Session(engine) as s:
+        got = s.execute(text(
+            "SELECT ingest_name, source_path, source_sha256, code_revision, detail"
+            " FROM ingest_markers WHERE ingest_name = :n"), {"n": CE.INGEST_NAME}).first()
+    assert got is not None, "the ingest wrote no marker"
+    values = dict(zip(("ingest_name", "source_path", "source_sha256", "code_revision"), got[:4]))
+    over = {k: (len(v or ""), widths[k]) for k, v in values.items() if len(v or "") > widths[k]}
+    assert not over, f"the ingest wrote values exceeding their column width: {over}"
+
+
+def test_the_individual_source_hashes_survive_in_detail():
+    """⚠ A pair identity that cannot name its members would be worse than the bug it fixed. Both
+    hashes must remain recoverable from the marker's free-text `detail` (a TEXT column)."""
+    import ast
+
+    src = (REPO / "scripts" / "clinical_ingest_edges.py").read_text(encoding="utf-8")
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "ingest")
+    body = ast.unparse(fn)
+    assert "sources:" in body, "detail no longer records the individual source hashes"
