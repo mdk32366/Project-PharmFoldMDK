@@ -130,6 +130,65 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-102 — A STATED LENS is neither a judgement nor a measurement, and sorting is a lens: the owner's ruling, and the finding that makes the statement load-bearing
+
+- **Date:** 2026-08-20 · **Status:** accepted · **Ruled by:** the owner, on two questions Code raised and refused to answer for itself
+- ⚠ **Recorded BEFORE the code it licenses.** The filter and the sort are unbuilt as of this entry.
+
+**THE TWO QUESTIONS, AND THE RULING.** Code proposed a way to select proteins by tumour staining and stopped at two clauses it would not decide alone.
+
+1. **Is a named list of critical normal tissues a judgement?** — ⚠ **Ruled: NO.** *"As long as you state what it is, it is neither judgement nor measurement. It's just a way of looking at the proteins the way they empirically occur in nature."*
+2. **Is sorting by stained fraction a ranking?** — ⚠ **Ruled: NO.** *"The ability to sort by a stained fraction is just another way of looking at data, and it's not a rank either."*
+
+**⚠⚠ THE DISTINCTION THIS DRAWS, AND IT IS THE USEFUL ONE.** `D-079` decision 1 bars a **score** — an INTERPRETATION asserted by the system about a protein's suitability. It does not bar **looking**. A lens re-presents what was already measured; it adds no claim. **The bar is on the system asserting merit, not on the user choosing a view.** ⚠ `D-079` amendment 1 ruling 2's "never ranked, incl. sort order" **stands and is not weakened** — it binds the STRUCTURAL PROFILE, which is a model output. **An observed patient count is not a model output**, and that is the difference.
+
+**THE CONDITION IS THE WHOLE RULING: *state what it is*.** ⚠⚠ And a measurement made while writing this entry shows the condition is load-bearing rather than ceremonial.
+
+**Over the 1,727 folded census genes with at least one cancer panel of n ≥ 10 patients — one population, one dataset, two lenses:**
+
+| Stained fraction | Lens A: **best single panel** | Lens B: **all panels pooled** |
+| --- | --- | --- |
+| **100% of patients** | **728 — 42.2%** | **16 — 0.9%** |
+| 90–99% | 142 — 8.2% | 183 — 10.6% |
+| 50–75% | 235 — 13.6% | 269 — 15.6% |
+| ≤25% | 158 — 9.1% | **649 — 37.6%** |
+| **never stains in any panel** | **101 — 5.8%** | 101 — 5.8% |
+
+- ⚠⚠ **A factor of forty-five on the headline row, from the same numbers.** "Stains in 100% of patients" describes **42.2%** of the census under lens A and **0.9%** under lens B.
+- **Lens A is a MAXIMUM over ~20 panels of median 11 patients.** Taking the best of twenty small samples returns 100% constantly — *the figure is substantially a selection effect, not a property of the protein.* `F-043` is the reason: median panel **11**, max **12**.
+- ⚠ **Neither lens is wrong and neither is the default.** They answer different questions: *"is there a tumour type where this protein is nearly always present?"* versus *"across the cancers examined, how often is it present?"*
+- ⚠⚠ **So an unlabelled figure is not a weaker version of a labelled one — it is a different number wearing the same words.** This is `F-049`'s family shape: one name over two populations.
+
+**A COUNT THE OWNER ASKED FOR, WITH ITS KEYS.** *How many proteins never stain in any cancer?*
+
+| Count | Key |
+| --- | --- |
+| **533 — 3.5%** never stain | of **15,313** genes with ≥1 patient scored, HPA v22 `pathology.tsv`, all 20 panels pooled |
+| **91 — 5.3%** never stain | of the **1,727** folded census genes HPA scored |
+| **960** | census genes HPA never scored — ⚠ **nobody looked**, a category, not a zero |
+| **4,769** | genes with a ROW but **zero patients scored** — ⚠ a row is not a result |
+
+⚠⚠ **Staining is very nearly universal, and that is the finding.** Only **3.5%** of scored proteins never stain anywhere. **"Stains well in tumours" therefore selects almost nothing** — 870 of 2,687 census genes clear ≥90% on their best panel. **The discrimination is on the NORMAL-TISSUE side**, where excluding High staining in heart, liver, kidney, lung, cerebral cortex or bone marrow takes 870 to **440**.
+
+**WHAT THIS LICENSES.**
+
+1. **A filter over stated criteria**, and **a user-initiated sort** on an observed quantity.
+2. ⚠ **Every figure names its lens and carries its n.** A stained fraction without its denominator, or without saying best-panel versus pooled, is barred by the ruling's own condition.
+3. **A named critical-tissue list is permitted as a stated lens.** ⚠ The list is DECLARED on the surface, never implicit — the reader must be able to disagree with it, which requires seeing it.
+4. **A minimum-n gate**, because `F-043` makes 4-of-4 outrank 11-of-12 in any unguarded ordering.
+
+**WHAT THIS DOES NOT LICENSE.**
+
+- ⚠⚠ **`D-093` ruling 4 STANDS: nothing divides the two edges.** Filtering on each edge independently is not combining them. **A tumour-normal ratio remains uncomputed** — and see the amendment being written separately: HPA's normal tissue is **three individuals per tissue**, so a derivable denominator would be worse than none.
+- ⚠ **No burden, ever, as a filter criterion** — `D-093` decision 1. Clinical burden is a property of the disease.
+- ⚠ **The structural profile is still never sorted** — `D-079` amendment 1 ruling 2 is untouched by this entry.
+- ⚠ **Nothing here becomes a default.** The surface still arrives unordered; a lens is chosen by the reader, not pre-applied by the page.
+
+**Relied on by:** `D-079` · `D-093` · `F-043` · `F-049`
+**Assumptions relied on:** none new.
+
+---
+
 ### D-101 — A protein is findable by the names people actually use, and an alias is a way IN, never a second identity
 
 - **Date:** 2026-08-20 · **Status:** accepted · **Author:** Code, on an owner-reported defect
