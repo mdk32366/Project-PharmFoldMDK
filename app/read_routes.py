@@ -44,6 +44,12 @@ def get_analysis(analysis_id: int, engine: Any = Depends(get_engine)) -> dict:
     record = reads.get_analysis(engine, analysis_id)
     if record is None:
         raise HTTPException(status_code=404, detail="unknown analysis")
+    # ⚠⚠ THE SAME BLOCK THE CENSUS CARD GETS, DELIBERATELY. The 82 targets already carry the D-053
+    # EXPRESSION grid; this is the IHC panel, a different measurement from a different source over
+    # a different population. They sit as two distinct sections and are never merged — D-093's
+    # traversal framing, and F-049's family is why the distinction is kept visible.
+    from app.clinical_read import clinical_block
+    record["clinical_block"] = clinical_block(engine, record.get("gene"))
     return record
 
 
@@ -133,4 +139,8 @@ def get_census_detail(analysis_id: int, engine: Any = Depends(get_engine)) -> di
     # ⚠⚠ D-089 ruling 7: no second route. A block on the response this route already serves.
     from app.census_profile_read import census_profile_block
     record["structural_profile_block"] = census_profile_block(engine, analysis_id)
+    # ⚠ D-093 edges 1 and 2 — the human-legible half: which tumours stained, and which
+    # normal tissues also stain. Composed at the route from its own supplier.
+    from app.clinical_read import clinical_block
+    record["clinical_block"] = clinical_block(engine, record.get("gene"))
     return record

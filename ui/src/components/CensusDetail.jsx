@@ -1,5 +1,6 @@
 import { bandFor } from '../plddt.js'
 import StructuralProfile from './StructuralProfile.jsx'
+import ClinicalEdges from './ClinicalEdges.jsx'
 
 // One census protein. Four questions, in the order a reader asks them: what is it, what did we
 // fold, how confident is the model, and what is it associated with.
@@ -187,6 +188,10 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
           become one by another name. The order of the page is part of that: the reader is told
           this protein is unscored BEFORE being shown a structure-derived number. */}
       <StructuralProfile block={detail.structural_profile_block} />
+      {/* ⚠ D-093 edges 1+2 — the human-legible half, BELOW the structural
+          profile: the reader meets what the protein IS before what a model
+          says about it. */}
+      <ClinicalEdges block={detail.clinical_block} />
       <Associations assoc={detail.cancer_associations} />
     </section>
   )

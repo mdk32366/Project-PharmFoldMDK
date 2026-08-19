@@ -425,3 +425,28 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .profile-computed, .profile-refused { font-size: 0.85rem; }
 .profile-computed { color: var(--ink); }
 .profile-refused { color: var(--muted); }
+
+/* Cancer connection — D-093 edges 1 and 2, on both card types.
+   ⚠⚠ DELIBERATELY NOT `.assoc`'s look. The D-053 expression grid sits directly above this on a
+   target page; if the two shared a visual language a reader would read them as one claim, which
+   is the merge D-093's traversal framing exists to prevent. Different border colour, different
+   list shape, different typography. */
+.clin { margin: 1rem 0; padding: 0.8rem 1rem; border-left: 3px solid #7a5c9e; background: #7a5c9e11; }
+.clin h3 { margin: 0 0 0.4rem; }
+.clin h4 { margin: 0.9rem 0 0.3rem; font-size: 0.9rem; }
+.clin-boundary { font-size: 0.9rem; margin: 0 0 0.4rem; }
+.clin-absent { color: var(--muted); font-size: 0.88rem; margin: 0.2rem 0; }
+.clin-normal-why { font-size: 0.85rem; color: var(--muted); margin: 0.1rem 0 0.3rem; font-style: italic; }
+
+.clin-tumours, .clin-normals { list-style: none; margin: 0.2rem 0; padding: 0; }
+.clin-tumours li, .clin-normals li { display: flex; justify-content: space-between; gap: 1rem;
+  padding: 0.18rem 0; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+.clin-cancer, .clin-tissue { color: var(--ink); }
+.clin-count, .clin-level { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.clin-cells { font-size: 0.8rem; }
+
+/* ⚠ Ruling 1: the burden slot RENDERS, at full weight. A greyed-out or collapsed treatment would
+   read as "not relevant" rather than "known missing, and here is why". */
+.clin-burden { margin-top: 0.9rem; padding-top: 0.5rem; border-top: 1px dashed var(--line); }
+.clin-burden-missing { font-size: 0.85rem; margin: 0.2rem 0; }
+.clin-source { font-size: 0.78rem; color: var(--muted); margin: 0.6rem 0 0; }

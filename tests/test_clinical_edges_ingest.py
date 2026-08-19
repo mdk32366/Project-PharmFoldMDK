@@ -205,3 +205,72 @@ def test_the_individual_source_hashes_survive_in_detail():
               if isinstance(n, ast.FunctionDef) and n.name == "ingest")
     body = ast.unparse(fn)
     assert "sources:" in body, "detail no longer records the individual source hashes"
+
+
+# ── the surface supplier: both cards, both edges ────────────────────────────
+
+def _seed_edges(engine, gene="AAA"):
+    with Session(engine) as s:
+        s.add(ClinicalPathology(gene="ENSG1", gene_name=gene, cancer="ovarian cancer",
+                                high=3, medium=7, low=1, not_detected=2))
+        s.add(ClinicalPathology(gene="ENSG1", gene_name=gene, cancer="stomach cancer",
+                                high=0, medium=0, low=0, not_detected=6))
+        s.add(ClinicalNormalTissue(gene="ENSG1", gene_name=gene, tissue="bronchus",
+                                   cell_type="respiratory epithelial cells", level="High",
+                                   reliability="Enhanced"))
+        s.add(ClinicalNormalTissue(gene="ENSG1", gene_name=gene, tissue="bronchus",
+                                   cell_type="ciliated cells", level="Not detected",
+                                   reliability="Enhanced"))
+        s.commit()
+
+
+def test_the_block_carries_both_edges_and_NO_burden_field(engine):
+    """⚠ `D-093` decision 5: co-equal. A block with tumours and no normal tissues would be the
+    flattering half, and ruling 1's burden slot must be present even though nothing fills it."""
+    from app.clinical_read import clinical_block
+    _seed_edges(engine)
+    b = clinical_block(engine, "AAA")
+    assert b["status"] == "ihc_present"
+    assert [t["cancer"] for t in b["tumours"]][0] == "ovarian cancer"   # ordered by stained share
+    assert b["tumours"][0]["patients_positive"] == 11
+    assert b["tumours"][0]["patients_tested"] == 13
+    assert [n["tissue"] for n in b["normal_tissues"]] == ["bronchus"]
+    # ⚠⚠ AND THE BLOCK CARRIES NO BURDEN FIELD — D-093 decision 1 bars one on a protein payload.
+    # The refusal renders from the COMPONENT (ruling 1 is a surface obligation, not a data one).
+    assert not [k for k in b if "burden" in k.lower()], b.keys()
+
+
+def test_an_uncovered_gene_is_a_category_not_an_empty_block(engine):
+    """⚠⚠ 960 of 2,687 folded census genes are absent from HPA's IHC. *Nobody looked* and *looked
+    and found nothing* are different facts, and the common case must not read as the rare one."""
+    from app.clinical_read import clinical_block
+    b = clinical_block(engine, "NOSUCHGENE")
+    assert b["status"] == "ihc_gene_absent"
+    assert b["layers"] == ("mapped_one_gene", "row_absent", "no_ihc_available")
+
+
+def test_the_block_computes_no_ratio_between_the_edges(engine):
+    """⚠ Ruling 4: the edges are not commensurable, and `tumour_normal_ratio()` raises by design.
+    The payload must carry no key that divides one by the other."""
+    from app.clinical_read import clinical_block
+    _seed_edges(engine)
+    b = clinical_block(engine, "AAA")
+    bad = [k for k in b if "ratio" in k.lower() or "score" in k.lower()]
+    assert not bad, f"the block carries a combined figure: {bad}"
+
+
+def test_a_non_ordinal_level_never_becomes_the_highest(engine):
+    """⚠⚠ `Ascending`, `Descending`, `N/A` and `Not representative` are OUTSIDE the ordinal scale.
+    Ranking one against `High` is exactly what `IncomparableEdges` forbids."""
+    from app.clinical_read import clinical_block
+    with Session(engine) as s:
+        s.add(ClinicalNormalTissue(gene="E", gene_name="BBB", tissue="liver",
+                                   cell_type="hepatocytes", level="Ascending",
+                                   reliability="Approved"))
+        s.add(ClinicalNormalTissue(gene="E", gene_name="BBB", tissue="liver",
+                                   cell_type="bile duct cells", level="Low",
+                                   reliability="Approved"))
+        s.commit()
+    b = clinical_block(engine, "BBB")
+    liver = [n for n in b["normal_tissues"] if n["tissue"] == "liver"]
+    assert liver and liver[0]["highest"] == "Low", liver
