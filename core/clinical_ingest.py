@@ -29,6 +29,15 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from scripts.kathad_reproduction import is_kept, normalise_cancer, qh_score  # noqa: E402
+# ⚠ MOVED, not copied (see core/source_pin.py): these are provenance helpers, not clinical
+# ones, and living here coupled every ingest to `scripts.kathad_reproduction`. Re-exported so
+# existing callers and tests are unchanged.
+from core.source_pin import (  # noqa: E402,F401
+    IngestRefused,
+    is_noop_rerun,
+    sha256_of,
+    verify_source,
+)
 
 #: The figures `D-100` established. ⚠ Named constants, not literals buried in an assertion, so a
 #: change to any of them is a diff a reviewer sees.
@@ -38,13 +47,6 @@ D100_ROWS = 1640
 
 COUNT_FIELDS = ("high", "medium", "low", "not_detected")
 
-
-class IngestRefused(RuntimeError):
-    """⚠⚠ Raised when the ingest may not commit. The caller MUST roll back.
-
-    It is an exception rather than a returned `False` because a boolean invites a caller to log it
-    and carry on — and *a failing check nobody is forced to obey is decoration* (Principle 9).
-    """
 
 
 @dataclass
@@ -127,37 +129,4 @@ def assert_grid_or_refuse(ingested_rows, s3_rows) -> GridVerdict:
 
 # ── GC4 / GC5 — the source pin, and what happens when it does not match ──────────────────────
 
-def sha256_of(path: pathlib.Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
-
-def verify_source(path: pathlib.Path, expected_sha256: str) -> str:
-    """⚠⚠ HARD ERROR, NEVER A SKIP — KEEL-1 V9 Principle 6's direction clause.
-
-    An absent file and a hash mismatch are **different refusals with different messages**, because
-    they are different facts: one is *the input is not here*, the other is *the input is not the one
-    that was pinned*. ⚠ **A guard that returns quietly when its input is missing is the shape that
-    armed the truncation** — *"you probably do not have a database"* is not a safety property.
-    """
-    if not path.exists():
-        raise IngestRefused(
-            f"source file {path} is ABSENT. The ingest refuses rather than proceeding with "
-            f"whatever else is on disk — an absent input is not an empty one.")
-    got = sha256_of(path)
-    if got != expected_sha256:
-        raise IngestRefused(
-            f"source file {path} does not match its pinned sha256.\n"
-            f"  pinned {expected_sha256}\n  actual {got}\n"
-            f"⚠ This is a NEW ingest of a DIFFERENT file, not a re-run of the pinned one. "
-            f"Re-pin deliberately or supply the pinned file; do not proceed.")
-    return got
-
-
-def is_noop_rerun(recorded_hashes: dict[str, str], current_hashes: dict[str, str]) -> bool:
-    """`GC4` idempotency. ⚠ A second run against the SAME hashes is a no-op; against DIFFERENT
-    hashes it is a new ingest and must say so rather than silently appending."""
-    return bool(recorded_hashes) and recorded_hashes == current_hashes

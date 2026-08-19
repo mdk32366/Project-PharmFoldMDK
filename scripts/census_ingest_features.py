@@ -43,7 +43,11 @@ from collections import Counter
 REPO = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-from core.clinical_ingest import IngestRefused, verify_source  # noqa: E402
+# ⚠ core.source_pin, NOT core.clinical_ingest. The helpers are identical (re-exported there),
+# but clinical_ingest imports scripts.kathad_reproduction for the D-100 grid, and that module
+# is deliberately not shipped in the serving image. Importing it here built fine and died on
+# the production host. The import an ingest reaches for first must drag nothing behind it.
+from core.source_pin import IngestRefused, verify_source  # noqa: E402
 from core.features import FEATURE_NAMES  # noqa: E402
 
 ART = REPO / "data" / "census" / "census_features.v1.jsonl"
