@@ -470,6 +470,15 @@ def _census_context() -> dict[str, Any]:
     return _CENSUS_CTX
 
 
+def _surface_payload(accession: str, gene: str | None) -> dict[str, Any] | None:
+    """⚠ A missing artifact degrades to None and the surface says nothing — never a false negative."""
+    try:
+        from core.surface_confirmation import payload_for
+        return payload_for(accession, gene)
+    except Exception:                      # noqa: BLE001
+        return None
+
+
 def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
     """One census row for the list. ⚠ Carries NO score and no rank — D-079 decision 1."""
     ctx = _census_context()
@@ -485,6 +494,10 @@ def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
         # ⚠ Other names this protein goes by — searched, never displayed as identity. The gene
         # symbol stays the row's name; an alias is a way IN, not a second title.
         "aliases": ctx["aliases"].get(acc) or None,
+        # ⚠⚠ THE SECOND INSTRUMENT (D-103). Every census row asserts an extracellular span from
+        # ONE source — UniProt topology. This is an INDEPENDENT reading of the same claim, from
+        # antibody imaging. A category, never a score: it says what the two instruments did.
+        "surface_check": _surface_payload(acc, lab.get("gene")),
         "tranche": row.cohort_tranche,
         "span_aa": meta.get("span_aa"),
         "span_start": meta.get("ecd_start"),

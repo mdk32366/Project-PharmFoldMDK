@@ -72,3 +72,7 @@ docs/SPEC-2026-08-19-supplier-survey-clinical-edges.md -text
 # change the file's bytes under any future pin — the same class as the members above, added
 # when the file was created rather than after a hash mismatch taught us to.
 data/census/protein_aliases.v1.csv -text
+
+# ⚠ The second-instrument artifact (D-103), derived from a pinned proteinatlas.tsv and compared
+# against it by tests. Protected at creation rather than after a hash mismatch taught us to.
+data/census/surface_confirmation.v1.csv -text

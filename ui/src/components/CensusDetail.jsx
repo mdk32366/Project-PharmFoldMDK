@@ -1,6 +1,7 @@
 import { bandFor } from '../plddt.js'
 import StructuralProfile from './StructuralProfile.jsx'
 import ClinicalEdges from './ClinicalEdges.jsx'
+import SurfaceCheck from './SurfaceCheck.jsx'
 
 // One census protein. Four questions, in the order a reader asks them: what is it, what did we
 // fold, how confident is the model, and what is it associated with.
@@ -202,6 +203,10 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
       {/* ⚠ D-093 edges 1+2 — the human-legible half, BELOW the structural
           profile: the reader meets what the protein IS before what a model
           says about it. */}
+      {/* ⚠ Placed BEFORE the clinical edges and after the span it comments on: it is a check on
+          the census's own claim, not a fact about the disease. Ordering says what a thing is. */}
+      <SurfaceCheck check={detail.surface_check} />
+
       <ClinicalEdges block={detail.clinical_block} />
       <Associations assoc={detail.cancer_associations} />
     </section>
