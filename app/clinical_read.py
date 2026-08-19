@@ -126,8 +126,19 @@ def clinical_block(engine: Any, gene_name: Optional[str]) -> dict:
         "gene": gene_name,
         "tumours": tumours,
         "normal_tissues": normals,
+        # ⚠⚠ THE LICENCE IS NOT SETTLED AND THIS STRING MUST NOT PRETEND IT IS. I first shipped
+        # "CC BY-SA 3.0" here, which picks a side in a dispute the log records as OPEN:
+        #   · D-093 amendment 1 (2026-08-17) ruled "HPA is CC BY 4.0 — the BY-SA recollection
+        #     was WRONG";
+        #   · HPA's own page, read verbatim on 2026-08-19, says "Attribution-ShareAlike 3.0
+        #     International" — ⚠ a licence that DOES NOT EXIST (3.0 is Unported or ported;
+        #     International arrived with 4.0);
+        #   · and `D-093 amendment 3 §1` — the entry that would resolve it — is UNWRITTEN.
+        # ⚠ So the surface states what is KNOWN (the source, and that we attribute it) and
+        # declines to assert redistribution terms nobody here can currently name.
         "source": ("Human Protein Atlas v22 — pathology.tsv (protein → tumour, IHC) and "
-                   "normal_tissue.tsv (protein → normal tissue). CC BY-SA 3.0."),
+                   "normal_tissue.tsv (protein → normal tissue). Attributed to HPA; the exact "
+                   "licence version is unresolved and under query with the source."),
         "boundary": ("Immunohistochemistry: how many patient samples stained for this protein. "
                      "An EXPRESSION observation — not causation, not a claim the protein drives "
                      "the disease, and not a clinical indication."),
