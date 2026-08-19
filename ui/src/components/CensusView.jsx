@@ -37,8 +37,16 @@ export default function CensusView() {
 
       <p className="lede">
         Alongside the 82 ranked targets, this project measured a much larger set of human membrane
-        proteins to find out how many of them <em>could</em> be folded at all. <strong>That count is
-        what this page reports.</strong>
+        proteins: which of them have an outward-facing stretch precise enough to model, what those
+        structures look like, and <strong>what the pre-registered model says when it is pointed at
+        them</strong>.
+        {/* ⚠⚠ THIS SENTENCE WENT STALE ONCE AND THE REPLACEMENT RECORDS IT. It read "…to find out
+            how many of them could be folded at all. That count is what this page reports." True
+            when written; it described the project as of the FOLDING and stopped describing it once
+            features were extracted and the profile was ruled. ⚠ A page whose opening line lags its
+            own work under-reports that work — the same defect as F-049 amendment 2 instance 4, on
+            a thesis rather than on a disclaimer, and with the same absence of any signal: no diff,
+            no failing test, nothing edits the false thing into place. */}
       </p>
 
       {/* ⚠ The disclaimer sits ABOVE the numbers, not below them. A reader who stops after the
@@ -103,6 +111,72 @@ export default function CensusView() {
       </section>
 
       <CensusBrowser />
+
+      <section className="census-found">
+        <h3>What we found</h3>
+        {/* ⚠⚠ THE PAGE HAD FOUR SECTIONS ABOUT WHAT THE NUMBERS ARE NOT AND NONE REPORTING A
+            RESULT. That imbalance is not modesty — a page that only hedges reads as a page with
+            nothing to hedge about, and it made three weeks of measurement look like a fold count.
+            ⚠ Every disclaimer below is KEPT; this section states the achievement so the limits
+            are read as limits on something. */}
+        <p>
+          Every folded protein was measured on the same six structural features as the 82, and the
+          pre-registered model was applied to each. <strong>{CENSUS.profile.profiled.toLocaleString()}</strong>{' '}
+          of the <strong>{CENSUS.profile.folded.toLocaleString()}</strong> folded proteins carry a
+          structural profile. <strong>{CENSUS.profile.refused.toLocaleString()}</strong> are refused,
+          each with a named cause.
+        </p>
+        <ul className="found-list">
+          <li>
+            <span className="found-n">{CENSUS.profile.refusedOutOfRange.toLocaleString()}</span>{' '}
+            fall outside the range the model was fitted on
+          </li>
+          <li>
+            <span className="found-n">{CENSUS.profile.refusedSpanBelowFloor}</span>{' '}
+            have a span the features cannot describe
+          </li>
+          <li>
+            <span className="found-n">{CENSUS.profile.refusedIncomplete}</span>{' '}
+            have no complete set of measurements
+          </li>
+        </ul>
+        <p className="found-why">
+          ⚠ <strong>The refusals are the finding, not a shortfall.</strong> These proteins are less
+          confidently modelled than the 82 — median confidence over the outward-facing stretch is{' '}
+          <strong>{CENSUS.profile.censusMedianPlddtEcd}</strong> here against{' '}
+          <strong>{CENSUS.profile.cohortMedianPlddtEcd}</strong> in the cohort — and the two
+          features carrying most of the model&rsquo;s weight are the two that leave its range first.
+          A model fitted on 56 well-studied proteins says less about the rest of the membrane than
+          its own arithmetic would suggest, and this is where that shows.
+        </p>
+      </section>
+
+      <section className="census-howread">
+        <h3>How to read a structural profile</h3>
+        {/* ⚠⚠ "How to read it" means how to read the REFUSAL and the BAND. It must never become
+            "how to use it": D-079 dec 1's not-licensed list and amendment 1's "does not license
+            the profile as evidence for anything — not P-001, not P-002, not target selection, not
+            the atlas business case" both stand unamended. */}
+        <ol className="howread">
+          <li>
+            <strong>A refusal is information, not a gap.</strong> It means this protein sits outside
+            the range the model was fitted on, so no number is shown. A number produced by
+            extrapolating past that range would look like the others and mean something different.
+          </li>
+          <li>
+            <strong>The values sit in a narrow band.</strong> All{' '}
+            {CENSUS.profile.profiled.toLocaleString()} lie between{' '}
+            <strong>{CENSUS.profile.bandMin}</strong> and <strong>{CENSUS.profile.bandMax}</strong>,
+            in much the same range as the cohort&rsquo;s own fitted values (
+            {CENSUS.profile.cohortBandMin}&ndash;{CENSUS.profile.cohortBandMax}).
+          </li>
+          <li>
+            <strong>It does not compare.</strong> Not between two census proteins, and not against
+            the ranked 82. It is a measurement of one structure against one model&rsquo;s range —
+            not a position in any order.
+          </li>
+        </ol>
+      </section>
 
       <section className="census-limits">
         <h3>What these numbers do not mean</h3>

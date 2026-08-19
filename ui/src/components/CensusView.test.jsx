@@ -160,3 +160,71 @@ describe('CensusView — the unscored claim must disclose the profile', () => {
     expect(t).toMatch(/no protein is ordered by it/i)
   })
 })
+
+// ── "What we found" and "How to read it" (D-079 amendment 3) ──────────────
+//
+// ⚠⚠ THE PAGE HAD FOUR SECTIONS ABOUT WHAT THE NUMBERS ARE NOT AND NONE REPORTING A RESULT. That
+// under-reported three weeks of measurement as a fold count. These tests pin the result AND pin the
+// line it must not cross: "how to read it" may never become "how to use it".
+describe('CensusView — what we found, and how to read it', () => {
+  const t = () => render(<CensusView />).container.textContent
+
+  it('reports the profile counts, and they reconcile to the folded total', () => {
+    const x = t()
+    expect(x).toMatch(/1,397/)
+    expect(x).toMatch(/2,690/)
+    expect(x).toMatch(/1,293/)
+    expect(CENSUS.profile.profiled + CENSUS.profile.refused).toBe(CENSUS.profile.folded)
+  })
+
+  it('breaks the refusals down by cause, and the parts sum to the whole', () => {
+    const p = CENSUS.profile
+    expect(p.refusedOutOfRange + p.refusedSpanBelowFloor + p.refusedIncomplete).toBe(p.refused)
+    const x = t()
+    expect(x).toMatch(/1,225/)
+    expect(x).toMatch(/fall outside the range the model was fitted on/)
+  })
+
+  it('calls the refusals a finding rather than a shortfall, and says WHY with both medians', () => {
+    const x = t()
+    expect(x).toMatch(/refusals are the finding, not a shortfall/i)
+    expect(x).toMatch(/57/)
+    expect(x).toMatch(/72\.4/)
+  })
+
+  it('states the band width without inviting a comparison across it', () => {
+    const x = t()
+    expect(x).toMatch(/0\.1065/)
+    expect(x).toMatch(/0\.2927/)
+    expect(x).toMatch(/It does not compare/i)
+    expect(x).toMatch(/not against the ranked 82/i)
+  })
+
+  // ⚠⚠ THE LINE THIS SECTION MUST NOT CROSS. D-079 dec 1's not-licensed list and amendment 1's
+  // "does not license the profile as evidence for anything" both stand. Asserted by ABSENCE, so a
+  // future edit toward usefulness reddens.
+  it('never tells the reader how to USE the profile', () => {
+    // ⚠⚠ SCOPED TO THE TWO SECTIONS THIS COMMIT ADDED, AND THE FIRST VERSION WAS NOT. It banned
+    // /shortlist/ across the whole page and matched an existing DISCLAIMER — "A count is not a
+    // shortlist." That is the third time today a blanket word-ban has reddened on correct text
+    // (F-052, and F-049 amendment 2 instance 3). ⚠ A ban on a word cannot tell a prohibition from
+    // a violation; the claim I actually want is that the sections I wrote give no usage guidance,
+    // and the rest of the page's hedges are not mine to police.
+    const { container } = render(<CensusView />)
+    const mine = [...container.querySelectorAll('.census-found, .census-howread')]
+      .map((e) => e.textContent).join(' ')
+    expect(mine.length).toBeGreaterThan(200)          // the scan reaches real text, not an empty set
+    expect(mine).not.toMatch(/best candidate|most promising|shortlist|top target/i)
+    expect(mine).not.toMatch(/higher (is|means) better/i)
+    expect(mine).not.toMatch(/prioriti[sz]e/i)
+    expect(mine).not.toMatch(/which targets? to/i)
+    expect(mine).not.toMatch(/should (pick|choose|look)/i)
+  })
+
+  it('keeps every existing limit — the result did not replace the hedges', () => {
+    const x = t()
+    expect(x).toMatch(/None of these proteins has been scored or ranked/)
+    expect(x).toMatch(/What these numbers do not mean/)
+    expect(x).toMatch(/not a list of candidates/)
+  })
+})
