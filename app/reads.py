@@ -455,7 +455,16 @@ def _census_context() -> dict[str, Any]:
     if sp.is_file() and seg_verdict == FRESH:
         segs = {r["census_accession"]: r for r in _csv.DictReader(sp.open(encoding="utf-8"))}
 
-    _CENSUS_CTX.update({"labels": labels, "segments": segs,
+    # ⚠⚠ ALIASES, so a name a person would actually type reaches the protein it names. The census
+    # is keyed on HGNC symbols; the ADC field is not. `CD30` is here as `TNFRSF8` and reads as
+    # absent to anyone who searches the antigen name — the owner hit exactly that.
+    # ⚠ Derived from the pinned UniProt cache, never typed: see `scripts/build_protein_aliases.py`.
+    # ⚠ A missing index yields an empty map and the search degrades to what it does today — it
+    # does NOT fail, and it does not silently claim a protein has no other names.
+    from core.protein_aliases import aliases_by_accession
+    alias_map = aliases_by_accession()
+
+    _CENSUS_CTX.update({"labels": labels, "segments": segs, "aliases": alias_map,
                         "segments_verdict": seg_verdict, "segments_note": seg_note,
                         "labels_verdict": lab_verdict, "labels_note": lab_note})
     return _CENSUS_CTX
@@ -473,6 +482,9 @@ def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
         "accession": acc,
         "gene": lab.get("gene") or None,
         "label": lab.get("label") or None,
+        # ⚠ Other names this protein goes by — searched, never displayed as identity. The gene
+        # symbol stays the row's name; an alias is a way IN, not a second title.
+        "aliases": ctx["aliases"].get(acc) or None,
         "tranche": row.cohort_tranche,
         "span_aa": meta.get("span_aa"),
         "span_start": meta.get("ecd_start"),

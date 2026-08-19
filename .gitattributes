@@ -66,3 +66,9 @@ docs/ORDERS-Code-census-out-of-distribution.md             -text
 docs/AMENDMENT-2026-08-19-planner-log-entries.md       -text
 docs/ORDERS-Code-2026-08-19-clinical-edges-1-and-2.md  -text
 docs/SPEC-2026-08-19-supplier-survey-clinical-edges.md -text
+
+# ⚠ The alias index is DERIVED from the pinned UniProt cache and is compared against it by
+# `tests/test_protein_aliases.py`. CRLF on checkout would not break that test, but it would
+# change the file's bytes under any future pin — the same class as the members above, added
+# when the file was created rather than after a hash mismatch taught us to.
+data/census/protein_aliases.v1.csv -text

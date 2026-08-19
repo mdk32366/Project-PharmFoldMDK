@@ -66,6 +66,15 @@ export default function CensusProteinView({ id }) {
           {detail.accession}
           {detail.label ? ` · ${detail.label}` : ''}
         </p>
+        {/* ⚠⚠ The other names this protein goes by, on the card itself. `TNFRSF8` is `CD30` to
+            everyone who reads about the drug, and a reader who cannot see that connection cannot
+            tell they have found the protein they were looking for. Secondary, never a rename. */}
+        {detail.aliases?.length > 0 && (
+          <p className="protein-aliases">
+            <span className="aka-label">Also known as</span>{' '}
+            {detail.aliases.slice(0, 6).join(' · ')}
+          </p>
+        )}
         {/* ⚠ Said at the top, where a reader arriving from a search engine meets it first — not
             buried under the structure they came to look at. */}
         <p className="census-bar">
