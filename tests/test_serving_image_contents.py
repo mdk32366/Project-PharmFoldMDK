@@ -105,13 +105,71 @@ def test_the_allowed_script_exists_so_the_copy_cannot_silently_be_a_typo():
         assert (REPO / rel).is_file(), f"{rel} is copied into the image but does not exist"
 
 
+def _local_module_path(mod: str) -> pathlib.Path | None:
+    p = REPO / (mod.replace(".", "/") + ".py")
+    return p if p.is_file() else None
+
+
+def _transitive_imports(entry: str) -> dict[str, str]:
+    """Every first-party module reachable from `entry`, mapped to the module that pulled it in.
+
+    ⚠ Walks the graph rather than one file. Depth is the whole point — see the test below."""
+    import ast
+
+    seen: set[str] = set()
+    via: dict[str, str] = {}
+    stack = [entry]
+    while stack:
+        mod = stack.pop()
+        if mod in seen:
+            continue
+        seen.add(mod)
+        path = _local_module_path(mod)
+        if path is None:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        deps: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                deps.update(a.name for a in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+                deps.add(node.module)
+        for d in deps:
+            if d.split(".")[0] in ("app", "core", "db", "scripts", "worker"):
+                via.setdefault(d, mod)
+                stack.append(d)
+    return via
+
+
 def test_the_ingest_needs_nothing_from_scripts_that_is_not_shipped():
-    """⚠ The copied script must not import a sibling that stays out of the image — that would
-    build fine and fail at run time, on the production host, which is the worst place to find it."""
-    src = (REPO / "scripts" / "census_ingest_features.py").read_text(encoding="utf-8")
-    sibling = re.findall(r"^\s*from\s+scripts\.(\w+)|^\s*import\s+scripts\.(\w+)",
-                         src, re.M)
-    names = {a or b for a, b in sibling}
-    allowed = {pathlib.Path(p).stem for p in ALLOWED_SCRIPTS}
-    assert names <= allowed, (
-        f"the ingest imports scripts that do not ship: {sorted(names - allowed)}")
+    """⚠⚠ THIS TEST WAS TOO SHALLOW AND PRODUCTION FOUND THE GAP, WHICH IS THE WORST WAY TO
+    FIND IT. It originally regex-scanned the ingest's OWN imports for `scripts.*` — and passed,
+    because the ingest imported `core.clinical_ingest`, which imports
+    `scripts.kathad_reproduction` for the `D-100` grid. The image built clean and the run died on
+    the production host at `ModuleNotFoundError`.
+
+    ⚠ A one-file scan answers *"does this file import a stranger"*; the question that matters is
+    *"can this file REACH one"*. Those differ by exactly one level of indirection, and one level
+    was enough. The fix was to move the four provenance helpers into `core/source_pin.py`, which
+    imports the standard library and nothing else.
+
+    Now the graph is walked, and the module that pulled a violation in is NAMED — because
+    "something imports scripts" is not an actionable failure.
+    """
+    via = _transitive_imports("scripts.census_ingest_features")
+    allowed = set(ALLOWED_SCRIPTS) | {"scripts.census_ingest_features"}
+    allowed_mods = {p[:-3].replace("/", ".") if p.endswith(".py") else p for p in allowed}
+    leaked = {m: src for m, src in via.items()
+              if m.startswith("scripts.") and m not in allowed_mods}
+    assert not leaked, (
+        "the shipped ingest can reach scripts/ modules that do NOT ship — it will build clean "
+        "and fail at run time on the production host:\n  " +
+        "\n  ".join(f"{m}  (pulled in by {src})" for m, src in sorted(leaked.items())))
+
+
+def test_source_pin_stays_free_of_first_party_dependencies():
+    """⚠ The guarantee that makes the fix hold. `core/source_pin.py` is what an ingest reaches
+    for first; if it ever grows a first-party import, the coupling comes straight back and this
+    time through the module that was created to prevent it."""
+    via = _transitive_imports("core.source_pin")
+    assert not via, f"core.source_pin acquired first-party dependencies: {sorted(via)}"
