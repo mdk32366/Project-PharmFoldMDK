@@ -1974,6 +1974,34 @@ Measured against SEER's ICD-O-3/WHO-2008 site recode categories, read 2026-08-20
 
 ---
 
+**⚠⚠ CORRECTION AND DEEPENING, SAME DAY: "4 OF 20 DO NOT JOIN" WAS TRUE BUT SHALLOW. THE COLUMN IS TWO AXES.**
+
+The owner asked whether **GDC** — NIH, open tier, full API — could serve as the crosswalk. **It was queried directly** (`api.gdc.cancer.gov/cases?facets=primary_site`, open access, *"No authentication or authorization is necessary"*, 2026-08-20). **70 distinct values**, and they are **ICD-O-3 TOPOGRAPHY**: *bronchus and lung*, *brain*, *skin*, *lymph nodes*, *hematopoietic and reticuloendothelial systems*.
+
+⚠⚠ **And that is what exposes the real defect. ICD-O codes a tumour on TWO INDEPENDENT AXES — TOPOGRAPHY (where it is) and MORPHOLOGY (what it is). HPA's `Cancer` column collapses both into one free-text field.**
+
+| Axis | n | HPA strings |
+| --- | --- | --- |
+| **Topography** — genuinely sites | 14 | breast · cervical · colorectal · endometrial · liver · lung · ovarian · pancreatic · prostate · renal · skin · stomach · testis · thyroid |
+| ⚠⚠ **Morphology** — **NOT sites at all** | **5** | **carcinoid · glioma · lymphoma · melanoma · urothelial** |
+| ⚠ Regional grouping — neither axis | 1 | head and neck |
+
+- ⚠⚠ **THE PROOF THAT THIS IS NOT A MISSING CROSSWALK: `melanoma` and `skin cancer` ARE BOTH IN THE LIST, AS SIBLINGS.** Melanoma is a morphology that **occurs at** the topography *skin*. HPA carries them as if they were alternatives at the same level. **They are not alternatives; one is a subtype located within the other.** No mapping table can repair that, because the source column is not a vocabulary — **it is two vocabularies interleaved.**
+- ⚠ **This CORRECTS the row above.** `melanoma` was placed in *"joins cleanly"* because SEER happens to carry a **Melanoma of the Skin** category. That was reasoning from the target vocabulary backwards, and it hid the axis problem. **The correction is recorded here rather than edited into the table**, so the shallower reading stays visible.
+- ⚠⚠ **AND SEER'S OWN RECODE MIXES AXES TOO.** Its top-level categories — verified from the fetched list — include **Lymphoma, Myeloma, Leukemia, Mesothelioma, Kaposi Sarcoma**, which are **morphologies, not sites**, sitting beside *Breast*, *Urinary System* and *Digestive System*, which are sites. **So this is not one clean vocabulary and one messy one. It is TWO DIFFERENTLY-MIXED vocabularies**, and that is strictly worse: a crosswalk between them cannot be pinned, because the two mixtures do not partition the same space.
+
+**⚠ SO GDC IS NOT THE CROSSWALK, AND NOTHING IS.** The owner's instinct — NIH, open, API — was right about **access** and the access is genuinely the best of the four suppliers. But **item 3 does not fail for want of a mapping table; it fails because the source field is not on one axis.** A crosswalk can only join spaces that are separately well-formed.
+
+**⚠⚠ WHAT GDC CANNOT DO AT ALL, AND THE DATA MODEL THE OWNER SUPPLIED IS THE EVIDENCE.** The GDC Data Model organises everything as `program.name-project.code` → `case` (e.g. `TCGA-LAML`), with entity types *project, case, demographic, sample, read_group*. **There is no population entity and no denominator anywhere in the model**, because there is not meant to be.
+
+- **Incidence is not merely unavailable from GDC — it is not derivable in principle.** Incidence requires a population at risk. GDC has **cases within projects**.
+- ⚠⚠ **Survival looks derivable and that is the trap.** `vital_status` and `days_to_death` exist per case, so a number can be computed. But TCGA is a **convenience cohort** — tumours selected for molecular profiling, conditioned on stage, institution, consent and treatment era. **Decision 4's tuple requires a `population` field, and *"people whose tumours were sequenced"* is not one.**
+- ⚠ **The same applies to CPTAC**, which is likewise US Government and likewise open — *and likewise a proteomic case series, not a register.* **Favourable licence terms do not make a cohort into a population.**
+
+**⚠⚠ THREE SUPPLIERS IN ONE DAY WHOSE FAILURE MODE IS A CONFIDENT WRONG ANSWER, NOT AN ERROR** — SEER's *skin excluding basal and squamous*, GDC/CPTAC survival over a selected cohort, and HPA's two-axis column. **Each would compute, return a plausible figure with decimal places, and be silently about a different thing than the reader assumes.** `F-047` is the standing entry for this class and this is the largest single addition to it yet. ⚠ **None of the three is a licensing problem, and all three would have survived a licence review.**
+
+---
+
 **⚠⚠ HELD FOR THE OWNER, AND DELIBERATELY NOT RULED HERE.**
 
 Both suppliers point at the same alternative, and **NCI states it in its own words**: *"Consider linking directly to our content rather than reproducing it, as our content may be updated over time."*
