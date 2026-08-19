@@ -206,3 +206,65 @@ def profile_many(rows: Sequence[Mapping], *, refused_accessions: frozenset[str] 
             r["features"], accession=acc, span_below_floor=acc in refused_accessions))
     assert len(out) == len(rows), "profile_many dropped a row — refusals are returned, never filtered"
     return out
+
+
+# ── the renderable block ─────────────────────────────────────────────────────
+#
+# ⚠⚠ D-089 AND AMENDMENT 1 BOTH WARN ABOUT THIS EXACT OBJECT: *"a census page still carries no
+# scorer panel — a profile block must not become that page by another name."* So the payload is
+# shaped to be hard to mistake for one:
+#   · it carries NO `score`, `rank`, `percentile` or `suitability` key (ruling 1);
+#   · a refusal is a CATEGORY with a cause, never an empty field the reader fills in (ruling 3);
+#   · the mount preconditions travel INSIDE the payload, so a surface cannot render the number
+#     without also receiving the frame (ruling 4). They are not a sibling key the UI may skip;
+#   · `band_context` ships the cohort's own span, so the value is never shown alone.
+def profile_payload(
+    features: Mapping[str, Optional[float]],
+    *,
+    accession: str,
+    span_below_floor: bool = False,
+) -> dict:
+    """The census structural profile as a renderable block. ⚠ Never returns a bare number."""
+    result = structural_profile(
+        features, accession=accession, span_below_floor=span_below_floor)
+    model = load_model()
+    support = load_support()
+
+    block: dict = {
+        "kind": "structural_profile",
+        "status": "refused" if result.is_refused else "computed",
+        "structural_profile": result.value,
+        "refusal": None if result.refusal is None else {
+            "category": result.refusal.category,
+            "detail": result.refusal.detail,
+        },
+        "out_of_range_features": list(result.out_of_range_features),
+        # ⚠ ruling 4 — in the payload, so a surface cannot render the value without the frame.
+        "mount_preconditions": list(MOUNT_PRECONDITIONS),
+        "provenance": (
+            f"run {model['ranking_run_id']} (scorer_version {model['scorer_version']}), applied "
+            f"from thirteen parameters recovered from persisted values; reproduces that run's 56 "
+            f"persisted scores to "
+            f"{model['reproduction_max_abs_error_vs_persisted_score']:.1e}"),
+        "bar": (
+            "refused where any feature falls outside the cohort's OBSERVED min-max — the fit "
+            "population's actual support (D-079 amendment 2 ruling 8). Not p05-p95, which fires "
+            "inside the training support; not +/-3 sd, which rests on a standard deviation that "
+            "is not recoverable (F-049 amendment 1)."),
+        # ⚠ the value is never shown alone: the cohort's own span is the only context that makes
+        # a number in 0..1 readable, and F-006 is why.
+        "band_context": {
+            "cohort_fitted_min": 0.116,
+            "cohort_fitted_max": 0.285,
+            "note": ("F-006: the cohort's own fitted values span 0.116-0.285, compressed toward "
+                     "the base rate. The census values that survive the refusal sit in "
+                     "essentially the same band. This axis does not separate targets by much."),
+        },
+        "support_used": {n: {"min": lo, "max": hi} for n, (lo, hi) in support.items()},
+    }
+    # ⚠ asserted, not documented: the payload must never carry a scoring word as a KEY.
+    for key in block:
+        low = key.lower()
+        assert not any(b in low for b in ("score", "rank", "suitab")) or key == "structural_profile", \
+            f"payload key {key!r} names the value a score/rank/suitability — ruling 1"
+    return block
