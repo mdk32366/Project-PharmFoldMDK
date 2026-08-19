@@ -1906,6 +1906,91 @@ The tumour half prints its n on **every row**: *"10 of 12 samples stained"*. The
 **Relied on by:** `D-093 amendment 2` · `F-043` · `D-102`
 **Assumptions relied on:** none new. ⚠ `A-014` still does not apply — **IHC is an assay, not a model** — and three individuals is a small assay, not a weak prediction.
 
+#### D-093 amendment 6 — ⚠⚠ Two burden suppliers READ, not recalled: NCI grants, IARC reserves — and the tumour vocabulary fails on 4 of 20 before either licence matters
+
+- **Date:** 2026-08-20 · **Status:** accepted as a RECORD of what was read. ⚠ **One clause is owner-held and explicitly NOT ruled here** — see the closing section
+- ⚠ **A sub-entry, not a new integer.** It amends `D-093` in place beneath it, on the `D-099 amendment 1` precedent, so **the next free top-level integer is unchanged**
+- ⚠ **Amendment 3 remains CLAIMED and UNWRITTEN** — the HPA licence finding. Untouched by this entry, which concerns two DIFFERENT suppliers.
+
+**WHY THIS ENTRY EXISTS.** `D-093` amendment 1 clause 2 stated *"Four of five candidate suppliers are UNREAD — SEER, GLOBOCAN/IARC, TCGA/GDC, CPTAC. None is characterised here, because **`D-093` amendment 1 exists because a licence was recalled rather than read.**"* **Two of the four have now been READ.** The owner obtained both texts; they are recorded verbatim in substance below, with the date read.
+
+---
+
+**⚠⚠ SUPPLIER 1 — NCI / SEER. THE FIRST CLEAR LICENCE GRANT THIS PROJECT HAS OBTAINED FROM ANY SUPPLIER.**
+
+NCI's reuse policy (reviewed 2025-03-12, read 2026-08-20): *"Unless otherwise indicated, **all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission. Credit the National Cancer Institute as the source.**"*
+
+- **Item 5 (the verbatim attribution string) is ANSWERED**: *"Credit the National Cancer Institute as the source"*, plus for digital reproduction a link to the original product by title. ⚠⚠ **That is more than HPA has supplied** — item 5 remains unanswered for both files already ingested.
+- **Item 2 (open or controlled tier) is ANSWERED, and the answer is BOTH.** SEER is two products:
+  - **Research Data / Research Plus** — case-level. ⚠ **Controlled**: *"Each person who will access the data must submit a separate request and acknowledge the data agreements and limitations."*
+  - **Aggregate statistics / SEER\*Explorer** — no agreement referenced. **This is the tier a burden tuple needs.**
+- ⚠ **THE GAP, AND IT IS NARROW BUT REAL. The reuse policy never mentions DATA.** It governs *text, graphics, the NCI logo, patient education publications and translations* — an **information-products** policy. And *"unless otherwise indicated"* is live, because NCI **does** otherwise indicate for SEER Research Data. **That the DUA is about patient-record confidentiality rather than copyright, and so should not reach aggregate statistics, is an INFERENCE — the page does not say it.**
+- ⚠ **Neither the SEER citation page nor the SEER access page states a copyright status or addresses redistribution at all.** Checked, both, 2026-08-20. **The absence of a restriction is not a grant.**
+- **The instrument for closing it is named on the page itself: `NCIinfo@nih.gov`.** One question: *does the reuse policy extend to SEER aggregate statistics.*
+
+**⚠⚠ AND A TRAP IN THE PRODUCT THE OWNER FOUND FIRST.** The **Preliminary Incidence Estimates** are the WRONG product for a burden tuple, by their own documentation: *"selected registries meeting predefined completeness criteria"*, *"Subject to revision: **Yes**"*, *"Use with caution"*, and **the registry selection is re-derived each year**.
+
+- Decision 4 requires `population` and `as_of` in the tuple. ⚠⚠ **A population that is redefined every release is one name over N populations — `F-049`'s family shape exactly**, and it would be invisible because the product name never changes.
+- A sha256 pin would refuse on every revision — correct behaviour, permanent churn.
+- **Use the OFFICIAL statistics**: November submission, April release, all eligible registries, *"typically more than 98% complete"*, revision *"unlikely"*.
+
+---
+
+**⚠⚠ SUPPLIER 2 — IARC / GLOBOCAN. THE OPPOSITE ANSWER, AND "WHO" IS WHY THE RECOLLECTION WOULD HAVE BEEN WRONG.**
+
+IARC Terms of Use, read 2026-08-20, clause 1: *"Materials made available by IARC/WHO **enjoy copyright protection under the Berne Convention**... IARC **exercises copyright** over its Materials... **All rights are reserved.**"*
+
+- ⚠ **A WHO specialized agency is NOT a public-domain publisher.** The intuition that carries from NCI does not carry here, and *this is precisely the shape of error amendment 1 was written about* — a licence assumed from the institution rather than read from the page.
+- **The grant is fenced.** Extracts are free for *"research, private study, educational or non-commercial purposes **with limited circulation**"*, attribution required. **Written permission is required for THREE separate triggers**: *substantial portions* · *wider circulation* · *any use other than research/educational/non-commercial*.
+- ⚠⚠ **This project plausibly trips two.** Ingesting incidence across tumour sites is arguably a **substantial portion**; and **a public website is not "limited circulation."** The non-commercial term is satisfied today and would bar a commercial future — **the same term that disposed of AlphaFold 3 in amendment 1 clause 2.**
+- **Item 5 IS answered, and verbatim**: `[© International Agency for Research on Cancer] [Author] [Year of publication] [Title of Material] [Page number] [Location on IARC website] [Date accessed and/or downloaded]`.
+- ⚠ **Clause 2 is HPA's disclaimer again** — third-party material inside IARC material, and *"the risk of claims resulting from such infringement rests solely with the User."* **GLOBOCAN is compiled from national registries, so third-party components are near-certain.** This is why amendment 1 clause 2 made the HPA ingest COLUMN-scoped, and the same reasoning applies here.
+- ⚠⚠ **Clause 12A: the terms are UNILATERALLY MUTABLE** — *"IARC may amend these Terms of Use and Conditions at any time, and such amendments will be effective immediately"*, with continued use deemed acceptance. **A source pinned by sha256 whose terms are not pinned at all is a new shape for this project** and the pin does not protect against it.
+- ⚠ **Clause 8 is an INDEMNIFICATION.** The user agrees to hold IARC harmless against claims arising from use. **That is a contractual obligation, not merely a permission**, and it is unusual for a data source.
+- **The instrument is named and explicitly invited: IARC Publications, written permission.**
+
+---
+
+**⚠⚠ AND NOW THE FINDING THAT MATTERS BEFORE EITHER LICENCE DOES: THE VOCABULARY DOES NOT JOIN.**
+
+Decision 6 item 3 — *"whether the identifier space joins to UniProt accession without a lossy intermediate... **A supplier that cannot answer (3) with a pinned mapping does not enter the schema.**"* For the burden edge the identifier is the **tumour site**, and burden attaches by TRAVERSAL, so a SEER figure must land on one of **HPA's 20 cancer strings**.
+
+Measured against SEER's ICD-O-3/WHO-2008 site recode categories, read 2026-08-20:
+
+| Verdict | Count | Tumour types |
+| --- | --- | --- |
+| **Joins cleanly** | 11 | breast · cervical · lung · ovarian · pancreatic · prostate · stomach · testis · thyroid · melanoma · lymphoma |
+| **Joins by a DEFINED operation** | 5 | colorectal *(SEER splits colon/rectum — sum)* · liver *(SEER bundles intrahepatic bile duct)* · renal *(bundles renal pelvis)* · endometrial *(SEER: corpus uteri)* · glioma *(a histology subset of Brain and Nervous System)* |
+| ⚠⚠ **DOES NOT JOIN** | **4** | **carcinoid · skin cancer · head and neck · urothelial** |
+
+- **`carcinoid` is a HISTOLOGY, not a site.** It occurs across GI, lung and pancreas. SEER's site recode has no such category — it would require a **different vocabulary entirely** (a histology recode). ⚠ This is item 3's *"lossy intermediate"* in its purest form.
+- ⚠⚠ **`skin cancer` IS THE DANGEROUS ONE, AND IT IS THE WHOLE REASON THIS SECTION EXISTS.** SEER's category is **literally named** *"Skin excluding Basal and Squamous"*. **The overwhelming majority of skin cancers are not in SEER at all.** A join on the string would **succeed**, return a number, and be **silently about a different disease population**. The other three fail LOUDLY — a missing mapping is visible. **This one would produce a confident, plausible, wrong answer**, which is `F-047`'s class exactly.
+- **`head and neck`** spans two top-level SEER groups — Oral Cavity and Pharynx **plus** larynx from Respiratory.
+- **`urothelial`** spans bladder, renal pelvis and ureter; SEER reports these separately, and renal pelvis is already inside *renal*.
+
+⚠ **HONEST LIMIT ON THE ABOVE.** The **top-level categories and the skin exclusion are verified** from SEER's own recode page — the exclusion is verbatim in the category NAME. **The sub-site mappings in row 2 are Code's own knowledge and are NOT verified against the recode table.** They must be checked before anything is built on them. *Recorded as unverified rather than presented as measured.*
+
+**⚠ SO THE HONEST SHAPE OF A BURDEN EDGE IS 16 OF 20, NOT 20.** The remaining four render a stated refusal — `burden_site_unmappable` alongside the existing `burden_supplier_unlicensed` — **a category with a cause, which is the pattern already shipped.** ⚠⚠ **A burden edge that silently covered 16 and left 4 blank would be the absent-value defect;** naming the cause is what makes it a finding instead.
+
+---
+
+**⚠⚠ HELD FOR THE OWNER, AND DELIBERATELY NOT RULED HERE.**
+
+Both suppliers point at the same alternative, and **NCI states it in its own words**: *"Consider linking directly to our content rather than reproducing it, as our content may be updated over time."*
+
+**LINKING IS NOT REPRODUCTION.** A burden slot that names the tumour, states the source and **links** to the SEER or GLOBOCAN figure would tie the protein to something a person understands **while triggering none of IARC's three permission clauses** and requiring no resolution of NCI's data-versus-text gap.
+
+- ⚠ **But that is a DIFFERENT LAYER from the one decision 4 pre-registered.** Decision 4 ruled *"a burden statistic is a tuple or it is not a number"* — a rendered tuple, ours, with `population` and `as_of`. **A link is not a tuple.** It cannot be filtered on, cannot be traversed, and cannot be checked by a test.
+- ⚠⚠ **Choosing between them is a decision about what the layer IS, and it is the owner's.** Code will not take it by implementation. **The two options, stated so the ruling is a choice and not a default:**
+  1. **INGEST** the SEER official aggregates for the 16 joinable sites — a real tuple, filterable and testable — after `NCIinfo@nih.gov` confirms the reuse policy reaches SEER data. **US-only.**
+  2. **LINK** to both SEER and GLOBOCAN — worldwide coverage, no permission needed, no ingest — but **decision 4's tuple is abandoned** and must be superseded on the record rather than quietly dropped.
+- ⚠ **They are not exclusive**, and the likely answer is 1 for SEER and 2 for GLOBOCAN until IARC grants written permission.
+
+**WHAT REMAINS UNREAD:** **TCGA/GDC** and **CPTAC**. ⚠ Both are molecular repositories and **neither can populate a burden tuple** — they serve a different edge. *Recorded so the "four unread suppliers" line is not read as four candidates for this job.*
+
+**Relied on by:** `D-093 amendment 1` · `D-093 amendment 2` · `F-047` · `F-049`
+**Assumptions relied on:** none new. ⚠ **And one explicitly REFUSED**: that a government or intergovernmental publisher implies public-domain terms. **NCI grants and IARC reserves.** *The institution does not tell you the licence; only the licence does.*
+
 ---
 
 ### F-040 — ESMFold folds MONOMERS, so an obligate oligomer's subunit interface is indistinguishable from an antibody-accessible patch
