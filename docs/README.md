@@ -130,6 +130,50 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-049 — `scorer_version` establishes that two runs used the same CODE, never that they used the same PARAMETERS — and nothing persisted makes `D-041`'s reproducibility claim checkable
+
+- **Date:** 2026-08-19
+- **Status:** ⚠ **OPEN — a finding against an instrument (`D-074`).** It closes when two runs cannot be presented as comparable on the strength of a matching version string, **or** when the residual is named and accepted in the open. ⚠ **Naming what would have to be persisted is not persisting it** — `D-074` decision 3, and this entry deliberately stops at the naming.
+
+- **The finding.** `ranking_runs.scorer_version` is a **code** version. It says the same source produced both runs. ⚠⚠ **It says nothing about the seven numbers the model actually is**, and two runs of identical code on different inputs have different parameters by construction.
+
+- **⚠ The evidence is already in the log and is not an argument.** `F-005` records the two `D-065` ablations:
+
+  | run | id | feature set | parameters | `scorer_version` |
+  |---|---|---|---|---|
+  | `no_plddt` | 3 | features 1, 2, 5, 6 | **5** | `a927dc4532b7` |
+  | `plddt_only` | 4 | features 3, 4 | **3** | `a927dc4532b7` |
+
+  **Same string. Different parameter counts. Already shipped.** ⚠ Not a hypothetical collision — *the version string was already carrying two different models on the day it was introduced.*
+
+- **⚠⚠ The consequence, and it reaches the surface.** `/api/ranking` filters `valid ∧ run_kind='preregistered'` and **the version travels with the rows**. So a reader — or a later query — comparing two runs on a matching `scorer_version` is comparing *nothing that was checked*. **`run_kind` is what actually separates the pre-registered run from the ablations; `scorer_version` looks like it does the same job and does not.** *A field that appears to identify a model and identifies a checkout.*
+
+- **⚠ What `ranking_runs` actually persists**, read from `db/models.py` rather than assumed:
+
+  ```
+  id · target_list_version · scorer_version · run_kind · created_at
+  ```
+
+  **No coefficients. No standardizer mean or sd. No λ.** Per target, `target_scores` carries `score`, `rank` and the six `β_k·x_k` `attributions`; `ranking_results` carries the LOO distribution.
+
+- **⚠⚠ SO `D-041` CLAIMS THE FIT IS REPRODUCIBLE AND NOTHING STORED MAKES THAT CHECKABLE.** The parameters of a **pre-registered** run cannot be recovered from the record. **This is `F-045`'s shape at the level of a result rather than an instrument:** *the record says what was done and not enough to redo it.* ⚠ The claim may well be true — this is not evidence that it is false — **but it is unfalsifiable from the record, and an unfalsifiable reproducibility claim is a belief with a decision number.**
+
+- **What would have to be persisted for `FB3` to be answerable without fitting.** ⚠ **Named, not built:**
+  1. the **seven parameters** — six coefficients on standardized features plus the intercept;
+  2. the standardizer's **per-feature mean and sd**, without which a standardized coefficient cannot be reconstructed from anything;
+  3. the **selected λ**, since a 13-point grid chosen by inner CV is part of what produced them.
+
+  ⚠ **Item 2 is the one that bites.** The per-feature attributions *are* persisted, so `attribution_k(i) = coef_k · x̂_k(i)` and the **raw-scale** slope `coef_k / sd_k` is recoverable from persisted values. **The standardized coefficient — which `D-041` decision 1 makes the attribution basis — is not**, and recovering `sd_k` by computing it over the fit set would be **reconstructing the standardizer, which is fitting.**
+
+- **⚠ What this does NOT claim.**
+  1. **Not that any run is wrong.** `F-004`'s and `F-005`'s reported numbers stand; this is about what can be *rechecked*, not about what was computed.
+  2. **Not that `scorer_version` is useless.** It correctly detects that the code changed. ⚠ It is precise about one thing and blind to its neighbour — **`F-044`'s exact shape, in a database column rather than in a citation.**
+  3. **No remedy is adopted here.** Persisting parameters is a schema change with its own entry, and `D-074` decision 3 warns against answering a finding with a framework.
+
+- **⚠ How it was found.** Not by review and not by a test. The Planner asked whether `FD1` could be answered from persisted values instead of a refit; checking the model to answer that question surfaced what the model does **not** hold. *The question was about arithmetic and the answer was about the record.*
+
+---
+
 ### F-047 — ⚠ The wrong-but-plausible answer: the defect class where nothing errors, nothing is malformed, and the number is wrong
 
 - **Date:** 2026-08-19 · **Status:** ⚠ **OPEN and STANDING.** It accumulates members; it does not close.
