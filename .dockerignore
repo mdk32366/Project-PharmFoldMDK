@@ -18,6 +18,17 @@ scripts/
 requirements-dev.txt
 requirements-dev.lock
 
+# ⚠⚠ ONE EXCEPTION, AND IT IS DELIBERATELY ONE FILE AND NOT THE DIRECTORY.
+# The census feature ingest has to run somewhere with both a DATABASE_URL and the artifact. On
+# the machine is the better place: the credential never leaves it, which is how migration 0010
+# was applied. But `COPY scripts/` would put all 60 scripts on the production host, SEVEN of
+# which write — including `fit_scorer.py`, which creates ranking runs and refits.
+# ⚠ `D-079` decision 1 forbids a refit outright ("no refit — ranking_run id=2 is read from its
+# row"). Shipping the fitter to production would put a forbidden operation one `fly ssh` away
+# and behind no guard at all. A convenience is not worth converting a ruled prohibition into an
+# honour system.
+!scripts/census_ingest_features.py
+
 # DEMO-ONLY: the miniature-demo notebook and its GPU dependency world never enter the
 # image (ORDERS 2026-07-30 §1). The Dockerfile already COPYs only app/core/db/data + the
 # runtime lock, so this is belt-and-braces against a future sloppy COPY dragging the

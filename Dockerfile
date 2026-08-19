@@ -37,6 +37,13 @@ COPY core/ ./core/
 COPY db/ ./db/
 COPY data/ ./data/
 
+# ⚠ The census feature ingest ONLY — not `scripts/`. It runs on the machine so the database
+# credential never leaves it (the same reason migration 0010 was applied here), and it needs
+# `data/census/census_features.v1.jsonl`, which the line above already ships. Everything else in
+# `scripts/` stays out, `fit_scorer.py` above all: `D-079` dec 1 bars a refit, and a barred
+# operation must not be sitting on the production host waiting for someone to type it.
+COPY scripts/census_ingest_features.py ./scripts/
+
 # The built React bundle from stage 1 — static files only, no Node (DEP-006). app_from_env
 # serves it under / with /api and /jobs matched FIRST (route ordering).
 COPY --from=ui-build /ui/dist ./ui_dist
