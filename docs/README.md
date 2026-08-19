@@ -3027,6 +3027,124 @@ source with nothing comparing them.**
 **Assumptions relied on:** `A-014` (twice — the surface filter and the cohort's labels are both model
 outputs) · `A-016`.
 
+#### D-079 amendment 2 — ⚠⚠ Amendment 1 is RULED. The measured outcome was NEITHER pre-registered branch, so ruling 1 and ruling 3 are BOTH operative — and the range bar is fixed at the cohort's observed support
+
+- **Date:** 2026-08-20 · **Status:** ⚠⚠ **`D-079 amendment 1` moves PRE-REGISTRATION → RULED.**
+  The `D-095 amendment 1` precedent: the parent's status line is **not patched**; the transition is
+  recorded here. **The census structural profile may now be built.**
+- **Owner ruling, 2026-08-20.** ⚠ Amendment 1's rulings 1–7 stand **unchanged**; this entry adds the
+  range bar they were written around and records what the measurement actually returned.
+
+---
+
+**⚠ FIRST, THE PRECONDITION, CHECKED RATHER THAN ASSERTED.** Amendment 1 reads *"PRE-REGISTRATION.
+Void if code precedes it."* Measured at ruling time: **no `structural_profile` identifier exists
+anywhere in `app/`, `core/`, `db/`, `scripts/` or `ui/src/`**; **`target_scores` joined to
+`protein_analyses` returns 0 rows for every census tranche**; and the only `core/scorer` mentions on
+a census path are **docstrings stating the prohibition**, not imports. ⚠ **The pre-registration is
+intact and therefore rulable.** *A pre-registration that nobody checked before ruling is a
+formality.*
+
+---
+
+**⚠⚠ THE MEASUREMENT CAME BACK AS A THIRD OUTCOME, AND THE ENTRY MUST SAY SO.**
+
+Ruling 3 pre-registered a disjunction: *"If most of the census falls outside range, the honest
+product is a refusal at scale and this entry's ruling 1 becomes moot."* **Most of it does not.**
+Over the **2,622** folded census rows carrying a complete six-vector — key: `cohort_tranche > 0`,
+`pdb_path IS NOT NULL`, all six `D-027` features non-null:
+
+| bar | refused | profile computable |
+|---|---|---|
+| **strict — the cohort's observed min–max** | **1,225 = 46.7%** | **1,397 = 53.3%** |
+| `p05–p95` | 1,820 = 69.4% | 802 = 30.6% |
+| `±3 sd` (ddof=0) | 638 = 24.3% | 1,984 = 75.7% |
+
+**Out of range on ALL SIX features: 0, at every bar.**
+
+⚠⚠ **So neither branch fired. Ruling 1 is NOT moot and ruling 3 is NOT moot — they are operative on
+different halves of one population**, and roughly half. **A refusal at ~47% is not an edge case and
+not a failure; it is the product.** ⚠ *Both outcomes were committed at equal prominence before the
+number existed, and the number turned out to be a third thing. The entry records that rather than
+picking whichever branch it is nearest.*
+
+---
+
+**RULING 8 — ⚠⚠ THE BAR IS THE COHORT'S OBSERVED MIN–MAX, AND NAMING IT IS THE RULING.**
+
+*A single setting is a dial wearing the costume of a measurement* (`F-043`). **All three bars are
+recorded above; this rules which one fires**, and why the other two do not:
+
+- ⚠⚠ **`±3 sd` is refused as a THRESHOLD because it rests on a parameter that is not recoverable.**
+  `F-049 amendment 1` establishes that `sd_k` and `coef_k` remain entangled — only their ratio is
+  determined. The computable bar is `mean_k ± 3·sd_raw(56)` at `ddof=0`, which equals ±3 *standardized*
+  units **only if** the standardizer used `ddof=0` on exactly those 56, and `ddof=1` moves it ~0.9%.
+  **A refusal threshold must not rest on an assumption about a number nobody can read back.**
+- ⚠ **`p05–p95` is refused because it fires INSIDE the training support.** It discards 10% of the
+  cohort's own observed range, so it would refuse census values the model demonstrably *did* see.
+  **That is not an out-of-distribution refusal; it is a different and unruled conservatism.**
+- ✅ **Strict is the actual support of the fit population.** No distributional assumption, no
+  unrecoverable parameter, and it **never refuses a value the model was fit on**. The claim it
+  licenses is the narrow one the frame can defend: *this target's features lie within the range the
+  scorer has seen.*
+
+⚠ **The other two stay recorded, not deleted** — a reader must be able to see that the choice
+existed and moved the answer from 24.3% to 69.4%.
+
+---
+
+**RULING 9 — ⚠⚠ A CAVEAT THAT TRAVELS WITH THE HEADLINE, BECAUSE IT CUTS AGAINST IT.**
+
+`mean_plddt_ecd` is the worst offender under ruling 8 — **868 of 2,622 (33.1%)**, and **831 of those
+868 fall BELOW the cohort minimum of 50.49**. ⚠ **That minimum is very largely an artefact of
+`D-041`'s ranking-set floor (`mean_plddt ≥ 50`), not a natural limit of the population.** The census
+has no such floor.
+
+⚠⚠ **The refusal still stands** — the model genuinely never saw values there, so it is a real gap in
+the fit support — **but the frame must never present 33.1% as pure distribution shift.** It is
+*a selection rule and a support gap at once*, and `D-094`'s mount preconditions must say so wherever
+that number appears. ⚠ **Recorded because it weakens the cleanest reading of this entry's own
+headline.**
+
+---
+
+**⚠ WHAT THE MEASUREMENT DID TO THE PLANNER'S PRE-REGISTERED EXPECTATION — SCORED, NOT ADJUSTED.**
+
+*"`ecd_length` the worst offender, `mean_plddt_ecd` the mildest, a MINORITY out of range on the
+strict test."* ⚠⚠ **Inverted on both feature claims:** `ecd_length` is **146 rows (5.6%)**, nearly the
+mildest; `mean_plddt_ecd` is **the worst**. The minority claim **held, at 46.7%, and only just.**
+**`F-022`: the expectation was written down before the number existed, which is the only reason it
+can be scored at all.**
+
+⚠ **And the inversion confirms ruling 4's last bullet by measurement**: *"the feature doing the most
+work is the one most likely to misbehave out of distribution."* The two confidence features are
+offenders #1 and #2 (33.1%, 18.5%) and are the pair `F-051` shows carries **38.6% of attribution**.
+**Predicted in advance, then measured.**
+
+---
+
+**⚠ WHAT THIS RULING DOES NOT DO, AND THE FIRST IS THE ONE THAT MATTERS.**
+
+- ⚠⚠ **It does not lift `D-079`'s bar on SCORING, and it licenses no new claim.** Amendment 1's
+  *"does not license the profile as evidence for anything — not `P-001`, not `P-002`, not target
+  selection, not the atlas business case"* stands **verbatim and unamended.** *Permission to build is
+  not permission to conclude.*
+- ⚠ **It does not make the profile exist.** Rulings 1, 2, 4, 5, 6 and 7 are **obligations, not
+  descriptions** — the name, the no-ranking rule, the in-frame mount preconditions, the wall with its
+  revert-proven test, the `F-048` exclusion at computation, and route reuse. **None is built.** A
+  profile shipped without ruling 5's test is the thing ruling 5 exists to prevent.
+- ⚠⚠ **`refused_out_of_distribution` has no home yet, and it is NOT `extraction_outcome`.** That
+  column records what happened when features were EXTRACTED; this refusal is decided at PROFILE
+  time, against a bar that can change without a single feature changing. **Pooling them would make a
+  bar adjustment look like a re-extraction.** Where it lives is an implementation decision this entry
+  does not make.
+- ⚠ **It does not pre-commit a refit at any n**, and does not touch `D-089`: a census page still
+  carries no scorer panel, and a profile block must not become that panel by another name.
+
+**Relied on by:** `D-089` · `F-048` · `F-051`.
+**Assumptions relied on:** `A-014` (twice — the surface filter and the cohort's labels are both model
+outputs) · `A-016`.
+
 ---
 
 ### F-016 — The `Non_Surface` marker in the reconstructed Table S3 is a section heading, not a partition: everything below it is the **whole** membraneome
