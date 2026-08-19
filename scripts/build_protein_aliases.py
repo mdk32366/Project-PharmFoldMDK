@@ -111,9 +111,13 @@ def build() -> list[dict]:
 def main() -> int:
     rows = build()
     OUT.parent.mkdir(parents=True, exist_ok=True)
+    # ⚠ `lineterminator="\n"` is NOT redundant with `newline="\n"`. `csv.writer` emits CRLF by
+    # dialect on every platform, and `newline="\n"` only stops Python translating it further — so
+    # the first version of this file landed CRLF while every other data artifact in the tree is LF.
+    # Deterministic, but inconsistent, and inconsistency is what makes a hash mismatch ambiguous.
     with OUT.open("w", encoding="utf-8", newline="\n") as fh:
         w = csv.DictWriter(fh, fieldnames=["alias", "alias_upper", "accession", "gene", "kind",
-                                           "ambiguous"])
+                                           "ambiguous"], lineterminator="\n")
         w.writeheader()
         for r in sorted(rows, key=lambda r: (r["alias_upper"], r["accession"])):
             w.writerow(r)
