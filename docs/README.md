@@ -1646,6 +1646,73 @@ written and each proven RED — **the remedy lands after the finding, not instea
 ⚠ **IHC is an assay, not a model, so `A-014` does NOT apply to these edges.** *Recorded because the
 temptation to cite it here is exactly the class of error this entry catalogues.*
 
+#### D-093 amendment 4 — ⚠⚠ The cancer connection SHIPPED on both card types; a guard caught me putting burden on a protein; and the surface asserted a licence the log calls UNRESOLVED
+
+- **Date:** 2026-08-19 · **Status:** accepted
+- ⚠ **A sub-entry, not a new integer.** It amends `D-093` in place beneath it, on the `D-099 amendment 1` precedent, so **the next free top-level integer is unchanged**
+- ⚠⚠ **This is amendment 4 and NOT amendment 3, and the reason is a collision.** `D-093 amendment 3` is **already claimed by a different finding and remains unwritten.** It is cited twice in the present tense: once in `F-047 amendment 1`'s *relied on by* line, and once in `docs/HPA-licence-2026-08-19-as-read.md`, which states *"Status of the finding this supports: `D-093` amendment 3 §1 remains UNRESOLVED."* ⚠ **Taking 3 for the surface work would have silently retitled a reserved slot** — `F-044`'s shape — a reference silently acquiring the wrong target, which is what RESERVED.md means by *"the pointer that exists to prevent it"* — and **the prior claim wins.** ⚠ *Corrected in place before merge:* this sentence first cited `F-050`, which is the RESERVED guard-direction sweep and not this shape at all. **The citation invariant caught it** — HEAD ran clean and the entry took it to one dangling id. A mis-citation and an invariant breach in the same six characters, inside the entry warning about exactly that. So this entry takes 4 and **amendment 3 stays owed, for the licence.**
+
+**WHAT SHIPPED.** PR #158, merged to `main` at `853ea90`, deployed **v84**. The clinical edge layer reaches a human being for the first time: a **Cancer connection** section on **both** card types, per the owner's ruling of option 2.
+
+- **The section states patient COUNTS, not a score.** *"Of 12 ovarian tumours tested, 10 stained positive."* That sentence is read the same way by a clinician, a reviewer and a stranger, and it is the entire point of the layer. ⚠ **The counts travel with the fraction and never collapse into a bare percentage**, because 10-of-12 and 100-of-120 are different facts and a percentage hides which one is on the screen.
+- **Both edges, co-equal, in the same section** (`decision 5`, `amendment 2 ruling 2`). The tumour panel alone is the flattering half. MSLN stains in 83% of ovarian tumours **and** stains High in bronchus, fallopian tube and placenta; a card showing only the first would be selling rather than describing. ⚠ **Asserted, not intended:** the normal-tissue half is in the same `section.clin` and there is **no `<details>` element in the component** — it cannot be put behind a fold without reddening a test.
+
+**THE COUNTS, WITH THEIR KEYS.** ⚠ Every count here states the population it is over, because a coverage number without a key is the `F-049` family error.
+
+| Count | Over which key |
+| --- | --- |
+| **67,280** `clinical_pathology` rows · **180,272** `clinical_normal_tissue` rows | what the two ingests wrote, schema at `0011_clinical_edges` |
+| **3,364** genes carry a tumour edge | HPA `pathology.tsv` v22, keyed by gene symbol |
+| **2,213** genes carry a **positive** panel | subset of the above where any sample stained |
+| **960 of 2,687** folded census genes are **absent** from HPA IHC | the folded census, NOT the manifest |
+
+- ⚠⚠ **`ihc_gene_absent` is a CATEGORY, not an empty panel,** and it is the common case rather than an edge case. HPA's antibody coverage is smaller than its RNA coverage. *"No data"* would read as *"tested and found nothing"*, which is a **different and false claim**; the surface says **nobody looked**.
+- ⚠ **Scope caveat.** `ihc_gene_absent` is only meaningful against the key it is measured on. The manifest is **3,466** genes and the folded census is **2,687**; a coverage figure quoted without saying which is being used is not a figure.
+
+**⚠⚠ THE CATEGORY ERROR A GUARD CAUGHT — recorded because it is the whole reason decision 1 is written the way it is.** My first version returned `burden` and `burden_note` **on the protein block**. `test_no_protein_level_model_or_payload_carries_a_burden_field` reddened on it.
+
+- **Decision 1 says clinical burden is a property of the DISEASE.** It attaches **by traversal** and may never be a protein-level column. A `burden` key on a protein payload asserts *that a protein has an incidence and a lethality.* **It does not; a disease does.**
+- ⚠⚠ **The fix changed the SHAPE, not the name.** Renaming the field to slip past the check was available and would have left the category error intact underneath a different word. **The fields were removed entirely** and the copy moved into the component, where it belongs: the refusal is identical for every protein and every disease, so carrying it per-protein was **duplicating a constant AND miscategorising it.**
+- *Accept by reproduction, not by label:* the guard is the reason this is a finding rather than a defect that shipped.
+
+**RULINGS THAT HELD.**
+
+- **Ruling 1 renders.** `burden_supplier_unlicensed` appears **wherever a burden would have appeared — never a blank, never a zero, never an omission** — on covered and uncovered proteins alike. SEER, GLOBOCAN/IARC, TCGA/GDC and CPTAC are named **UNATTEMPTED, not failed**: ⚠ nobody has approached them and been refused, and the surface says so in those words. A missing section reads as *"not relevant"*; a stated refusal reads as *"we know this is missing and why."*
+- **Ruling 4 holds: nothing divides.** No ratio, no combined figure, no score. `core.clinical_layer.tumour_normal_ratio()` raises by design and `test_the_block_computes_no_ratio_between_the_edges` asserts the block computes none.
+- **`D-079` decision 1 is not breached by the sort order.** One protein's own tumours are ordered by how much of the panel stained, for legibility. ⚠ **That is never proteins ordered against each other**, which is what decision 1 bars.
+- **A non-ordinal level never becomes `highest`.** `N/A`, `Ascending`, `Descending` and `Not representative` are excluded from the ordinal comparison rather than sorted into it — comparing them against the scale is exactly what `IncomparableEdges` forbids.
+
+**⚠⚠ AND IT IS NOT THE `D-053` EXPRESSION GRID IT SITS BESIDE.** `CancerAssociations` shows the paper's quasi H-score over the 82; this shows HPA immunohistochemistry over 3,364 genes. **Different measurement, different source, different population — and the 82 appear in BOTH.** `F-049`'s family is one thing wearing two names; this is the inverse risk, **two things a reader would happily merge into one.** ⚠ *Asserted, not intended:* the two components share **zero CSS classes** (14 and 8, intersection empty), so they cannot drift into looking like one section.
+
+**⚠⚠ A DEFECT IN WHAT SHIPPED, FOUND WHILE WRITING THIS ENTRY AND FIXED.** The surface stated the source licence as `CC BY-SA 3.0`. ⚠ **That picks a side in a dispute this log records as OPEN.** Three statements about one licence:
+
+| Where | What it says |
+| --- | --- |
+| `D-093 amendment 1` (2026-08-17) | *"HPA is CC BY 4.0"* — and that the **BY-SA recollection was WRONG** |
+| HPA's own page, read verbatim (2026-08-19) | *"Attribution-ShareAlike 3.0 International"* |
+| what I shipped to users | `CC BY-SA 3.0` |
+
+- ⚠⚠ **The licence HPA names does not exist.** CC 3.0 licences are *Unported* or jurisdiction-ported; *International* arrived with **4.0**. **No amount of re-reading fixes that.**
+- ⚠ So amendment 1 corrected a BY-SA recollection to BY 4.0 — and the source's own text then said **BY-SA**. **Amendment 1's correction is itself now in question**, which is precisely what amendment 3 §1 is reserved to settle.
+- **The fix:** the surface now states what is **known** — the source, and that we attribute it — and **declines to assert redistribution terms nobody here can currently name.** ⚠ A public surface asserting someone else's licence terms as settled fact, while the log calls them unresolved, is a claim we cannot support.
+- ⚠⚠ **The named resolution instrument does not exist.** `docs/HPA-licence-2026-08-19-as-read.md` says *"`docs/EMAIL-DRAFT-HPA-licence-clarification.md` is the resolution instrument."* **That file is ABSENT from the tree.** `F-047` member 16's exact shape — an artifact cited in the present tense before it exists — and it is the second instance in this entry alone.
+
+**⚠⚠ AND A DEFECT IN THE RESERVATION MACHINERY, FOUND BY THE ABOVE.** Correcting the mis-citation meant NAMING `F-050` in order to record what it had been — and the invariant went red again on the correction itself. The cause is not the correction.
+
+- ⚠⚠ **`docs/RESERVED.md` reserves integers TWO ways, and only one is machine-visible.** Fourteen reservations are **table rows**; `F-050` was reserved **in prose only** — *"the sweep takes `F-050`"*. The citation invariant reads rows. **So a RESERVED integer was invisible to the very check that exists to protect reservations**, and the invariant ran clean only because nothing had ever cited it.
+- ⚠ **A rule applied to one shape of reservation and not the other is not a rule.** Fixed by adding the `F-050` row, marked in the row itself as **recording a declaration this file already made** — not a new reservation, and no reservation retired by substitution.
+- ⚠ **This is `F-044`'s class again** — the invariant finds holes, not mismatches, and here it could not even find the hole. *Recorded, not patched away:* the sequence was mis-cite → caught → correct → caught again → root cause. **The second catch was the valuable one.**
+
+**STILL OWED, and owned by the Planner, not closed here.**
+
+1. **`D-093 amendment 3` — the licence finding.** §1 unresolved. Cited by `F-047 amendment 1` and by the as-read document.
+2. **The email draft** the as-read document names as the instrument. Until it exists, the query it describes has not been sent and the licence cannot resolve.
+3. ⚠ **`INS` is outside the ingest scope**, so Path B's control is not repeatable against the database.
+
+**Relied on by:** `D-093` · `D-093 amendment 2` · `F-047`
+
+**Assumptions relied on:** `A-014 (an upstream model's negative class is a prediction, not a fact)` — ⚠ **IHC is an assay, not a model, so `A-014` does NOT apply to these edges.** *Recorded because the temptation to cite it here is the class of error `D-093` already catalogues.*
+
 ---
 
 ### F-040 — ESMFold folds MONOMERS, so an obligate oligomer's subunit interface is indistinguishable from an antibody-accessible patch
