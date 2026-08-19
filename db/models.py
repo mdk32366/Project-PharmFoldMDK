@@ -27,6 +27,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -159,6 +160,12 @@ class ProteinFeatures(Base):
     __table_args__ = (
         Index("ix_protein_features_analysis_id", "analysis_id"),
         Index("ix_protein_features_ranking_run_id", "ranking_run_id"),
+        Index("ix_protein_features_extraction_outcome", "extraction_outcome"),
+        # ⚠⚠ One fold, one feature vector (0010). Without this the loader's pure INSERT took 80
+        # rows to 160 in two generations (F-021) and nothing was red. Declared HERE as well as in
+        # the migration so the SQLite `create_all` test path enforces what Postgres enforces —
+        # a constraint that exists only in the migration is untested by every test we run.
+        UniqueConstraint("analysis_id", name="uq_protein_features_analysis_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -190,6 +197,12 @@ class ProteinFeatures(Base):
     # The D-041 §5 floor, stored as read from the fold — not recomputed (D-058 dec 3).
     mean_plddt: Mapped[float | None] = mapped_column(Float, nullable=True)  # 0–100
     below_plddt_floor: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    # ⚠ Why the extraction outcome is a COLUMN and not an entry in `null_reasons` (0010): a row
+    # REFUSED at computation (D-079 amendment 1 ruling 6) and a row that FAILED to compute are
+    # different facts that both present as nulls. Pooling them loses the one the ruling requires
+    # be a category. Vocabulary lives in `scripts/census_extract_features.py::OUTCOMES`.
+    extraction_outcome: Mapped[str | None] = mapped_column(String(40), nullable=True)
 
     feature_version: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
     computed_at: Mapped[datetime] = mapped_column(

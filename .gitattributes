@@ -28,3 +28,35 @@ docs/ORDERS-Code-ingest-through-the-gate.md -text
 docs/ORDERS-Code-backup-readonly-phase1-F049.md -text
 docs/F-047-amendment-1-paste-ready.md -text
 docs/ORDERS-Code-rekey-rental-and-FD1.md -text
+
+# ── 2026-08-20 — the same defect, on a DATA artifact, caught by the ingest's own guard ──
+#
+# ⚠⚠ `F-047` member 15 recurred. The rule above was scoped to `docs/` and nobody widened it when a
+# hash-pinned artifact landed under `data/`. `census_features.v1.jsonl` was committed LF (the blob
+# is intact and matches its manifest), checked out CRLF, and its sha256 on disk became
+# `0a17cab2…` against a pinned `c08f9f1d…`. **Nothing had touched the file.**
+#
+# ⚠ It was found because `census_ingest_features.py` verifies its source before writing — the
+# first thing the ingest does refused the ingest. That is the guard working, and it is also the
+# measure of how the earlier one was scoped: a rule applied to one directory and not another is
+# not a rule.
+#
+# ⚠ The pins below are the manifest's, not a comment's — re-derive, never trust this line.
+data/census/census_features.v1.jsonl          -text
+data/census/census_features.v1.manifest.json  -text
+data/census/cohort_feature_baseline.json      -text
+
+docs/CLOSEOUT-2026-08-19.md                                -text
+docs/PREWORK-2026-08-20.md                                 -text
+docs/ORDERS-Code-census-feature-extraction-overnight.md    -text
+docs/F-051-paste-ready.md                                  -text
+docs/D-079-amendment-structural-profile-paste-ready.md     -text
+docs/ORDERS-Code-census-out-of-distribution.md             -text
+
+# ⚠ And three more the FIRST measurement missed. My initial scan required the sha256 to sit on the
+# same line as the marker; these three wrap it, so a narrower regex under-reported the class. The
+# test derives the set from the tree instead, and found them. ⚠⚠ The lesson is the one this file
+# already records one level up: the fix was scoped to what the detector happened to see.
+docs/AMENDMENT-2026-08-19-planner-log-entries.md       -text
+docs/ORDERS-Code-2026-08-19-clinical-edges-1-and-2.md  -text
+docs/SPEC-2026-08-19-supplier-survey-clinical-edges.md -text
