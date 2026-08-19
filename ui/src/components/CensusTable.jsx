@@ -75,7 +75,9 @@ export default function CensusTable({ rows, onSelect }) {
         <strong>{rows.length.toLocaleString()}</strong> folded proteins.{' '}
         <strong>Not scored, not ranked, not ordered by suitability.</strong> These are structures
         and their measured properties; no judgement of target quality has been applied to any of
-        them.
+        them. Each protein&rsquo;s page carries a <strong>structural profile</strong> — a
+        measurement derived from its structure, never a verdict — and this table neither shows it
+        nor orders by it.
       </p>
 
       <label className="census-search">

@@ -196,3 +196,28 @@ describe('the row cap', () => {
     expect(screen.getAllByRole('row').length - 1).toBe(ROWS.length)
   })
 })
+
+// ⚠ The same claim, the same drift risk. This table says "not scored, not ranked, not ordered by
+// suitability" — all three still TRUE — but a reader is one click from a page carrying the model's
+// output, so the sentence must say so rather than rely on ruling 1's naming.
+describe('CensusTable — the unscored claim discloses the profile', () => {
+  it('keeps all three true clauses and adds the disclosure', () => {
+    const { container } = render(<CensusTable rows={ROWS} />)
+    const t = container.textContent
+    expect(t).toMatch(/Not scored, not ranked, not ordered by suitability/)
+    expect(t).toMatch(/no judgement of target quality has been applied/)
+    expect(t).toMatch(/structural profile/)
+  })
+
+  it('says the TABLE neither shows the profile nor orders by it (ruling 2)', () => {
+    const { container } = render(<CensusTable rows={ROWS} />)
+    expect(container.textContent).toMatch(/neither shows it nor orders by it/)
+  })
+
+  it('and still renders no profile value in any row', () => {
+    const { container } = render(<CensusTable rows={ROWS} />)
+    // ⚠ the disclosure must not become the feature: no 0.xxxx figure anywhere in the table body
+    const body = container.querySelector('tbody')
+    if (body) expect(body.textContent).not.toMatch(/0\.\d{4}/)
+  })
+})

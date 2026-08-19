@@ -127,3 +127,36 @@ describe('batches are batches', () => {
     expect(foldable + absent).toBe(rows)
   })
 })
+
+// ⚠⚠ THE CLAIM MUST TRACK THE SURFACE, AND ONCE IT DID NOT. Until 2026-08-19 this page said
+// "None of these proteins has been scored or ranked" full stop — true when written, because no
+// model output existed for a census protein. The structural profile (D-079 amendment 1, ruled by
+// amendment 2) made it true only by virtue of ruling 1's NAMING rule, one click from a page
+// showing the model's output. ⚠ A claim that survives on what we decided to call something is not
+// the claim the reader is reading. These tests pin the disclosure, so the sentence cannot drift
+// back out of step with what the site actually shows.
+describe('CensusView — the unscored claim must disclose the profile', () => {
+  const text = () => render(<CensusView />).container.textContent
+
+  it('still says none is scored or ranked, because that half is TRUE', () => {
+    const t = text()
+    expect(t).toMatch(/None of these proteins has been scored or ranked/)
+  })
+
+  it('discloses the structural profile in the same sentence, not elsewhere on the page', () => {
+    const t = text()
+    const claim = t.indexOf('None of these proteins has been scored or ranked')
+    const disclosure = t.indexOf('structural profile')
+    expect(disclosure).toBeGreaterThan(-1)
+    // ⚠ within the same paragraph's worth of text — a disclosure three sections down is a
+    // different claim from a qualified one.
+    expect(disclosure - claim).toBeGreaterThan(0)
+    expect(disclosure - claim).toBeLessThan(400)
+  })
+
+  it('says the profile is a measurement and that nothing is ordered by it (ruling 2)', () => {
+    const t = text()
+    expect(t).toMatch(/measurement, not a verdict/)
+    expect(t).toMatch(/no protein is ordered by it/i)
+  })
+})
