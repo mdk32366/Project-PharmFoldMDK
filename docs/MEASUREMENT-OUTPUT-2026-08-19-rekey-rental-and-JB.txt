@@ -1,0 +1,157 @@
+JA / JB / JC — captured output
+source    : live reads via pharmfold-readonly, --database pharmfoldmdk ALWAYS EXPLICIT
+run read  : ranking_run_id = 2 only (JB3)
+repo HEAD : 69f9237590f416d2e1b1af0723a7ba0c61857eba
+
+==============================================================================================
+JA1 — THE CURRENT UNFOLDED SET, MEASURED AGAINST THE DATABASE
+==============================================================================================
+  key   : the 82 cohort accessions in data/cohort_82_ecd.csv
+  joined: protein_analyses.input_value (input_type='uniprot')
+  FOLDED means: a protein_analyses row EXISTS and pdb_path IS NOT NULL
+          ⚠ reported beside mean_plddt and protein_features so the definition is visible
+    folded (pdb_path present)           79
+    no protein_analyses row              2
+    row exists, NOT folded               1
+    TOTAL                               82
+
+  ⚠⚠ COHORT TARGETS UNFOLDED TODAY: 3   (D-041 recorded 29 rental-tier unfolded)
+
+==============================================================================================
+JA2 — LABELLED AND POSITIVE AMONG THE UNFOLDED, against BOTH denominators
+==============================================================================================
+  unfolded cohort targets                          : 3
+  ⚠ of those, Group B POSITIVES                     : 0
+  denominator A — positives scored at run 2         : 12
+  denominator B — Group B positives across the 82   : 12
+  ⚠ D-040's '~22 positives across the 82' is a THIRD figure and is not this one.
+
+==============================================================================================
+JA3 — THE UNFOLDED, BUCKETED BY THE LOCAL CEILING. ROWS, NOT COUNTS
+==============================================================================================
+  acc       gene        span_aa              band  positive?  in db?
+  ----------------------------------------------------------------------------------------
+  Q9NYQ8    FAT2           4030             >=630          -      NO
+  Q8WXI7    MUC16         14451             >=630          -      NO
+  P11717    IGF2R             -  no_span_measured          -     yes
+
+==============================================================================================
+JA4 — FC's ANSWER RE-STATED AGAINST THE CURRENT SET. DID IT MOVE?
+==============================================================================================
+               band   FC (stale, n=29)   CURRENT  positives now
+  ------------------------------------------------------------------
+              <=440          0 (0 pos)         0              0
+            441-629         13 (3 pos)         0              0
+              >=630         16 (3 pos)         2              0
+   no_span_measured                n/a         1              0
+
+  ⚠⚠ THE CEILING-CLIMB QUESTION: positives recoverable in 441-629 by climbing 440 -> ~630
+     FC said 3.  Current: 0.
+
+==============================================================================================
+JA5 — THE 13 no_span_measured. ARE THEY STILL UNMEASURED, AND WHY?
+==============================================================================================
+  cohort rows with no largest_span_aa in cohort_82_ecd.csv : 13
+    folded anyway                 12
+    row in db, unfolded            1
+
+  acc       gene        folded?  plddt?  features?  error (from the CSV)
+  ----------------------------------------------------------------------------------------
+  O14798    TNFRSF10C       yes     yes         no  
+  O15455    TLR3            yes     yes        yes  
+  P11717    IGF2R            NO      no        yes  
+  P35052    GPC1            yes     yes        yes  
+  P51801    CLCNKB          yes     yes        yes  
+  Q13421    MSLN            yes     yes         no  
+  Q16880    UGT8            yes     yes        yes  
+  Q6UXF1    TMEM108         yes     yes        yes  
+  Q6ZNA5    FRRS1           yes     yes        yes  
+  Q7Z5N4    SDK1            yes     yes        yes  
+  Q8N4M1    SLC44A3         yes     yes        yes  
+  Q9NV96    TMEM30A         yes     yes         no  
+  Q9UJA9    ENPP5           yes     yes        yes  
+
+==============================================================================================
+JA6 — THE 10 LOCAL-TIER TARGETS NOT SCORED AT RUN 2: WHICH PREDICATE DO THEY FAIL?
+==============================================================================================
+  local-tier and NOT scored at run 2: 10
+
+  acc       gene         span  in db?  folded?  plddt?  features?  positive?
+  ----------------------------------------------------------------------------------------
+  O00592    PODXL         439     yes      yes     yes         NO          -
+  O95196    CSPG5         393     yes      yes     yes         NO          -
+  P24530    EDNRB          75     yes      yes     yes         NO          -
+  P32302    CXCR5          55     yes      yes     yes         NO          -
+  Q01814    ATP2B2         37     yes      yes     yes         NO          -
+  Q15858    SCN9A          79     yes      yes     yes         NO          -
+  Q9BXS9    SLC26A6        50     yes      yes     yes         NO          -
+  Q9NQ40    SLC52A3        62     yes      yes     yes         NO          -
+  Q9UP95    SLC12A4       122     yes      yes     yes         NO          -
+  Q9UPC5    GPR34          61     yes      yes     yes         NO          -
+
+  ⚠ why they are not in the ranking set, by cause:
+    folded but NO protein_features row                    10
+    TOTAL                                                 10
+
+JB3 — RUN READ: ranking_run_id = 2 ONLY.
+  ⚠ Runs 3 and 4 share a scorer_version at 5 and 3 parameters; mixing rows across runs
+    would produce a clean, stable, meaningless slope. One run, stated.
+  rows: 56
+
+==============================================================================================
+JB4 — x_k(i) = 0, WHERE THE RATIO IS UNDEFINED. A CATEGORY, NOT A DROP
+==============================================================================================
+  0 ecd_length                 x_k == 0 :   0   x_k IS NULL :   0
+  1 radius_of_gyration         x_k == 0 :   0   x_k IS NULL :   0
+  2 mean_plddt_ecd             x_k == 0 :   0   x_k IS NULL :   0
+  3 membrane_proximal_plddt    x_k == 0 :   0   x_k IS NULL :   0
+  4 sasa_normalized            x_k == 0 :   0   x_k IS NULL :   0
+  5 largest_patch_fraction     x_k == 0 :   0   x_k IS NULL :   0
+  ⚠ total rows where the RATIO is undefined: 0
+  ⚠ none is dropped silently and none is coerced (F-020: an absent measurement coerced to
+    zero and fit as though measured).
+
+==============================================================================================
+JB2 — THE ORDER'S RATIO TEST, RUN AS SPECIFIED
+==============================================================================================
+  k  feature                           min ratio        max ratio       spread
+  ----------------------------------------------------------------------------------------
+  0  ecd_length                   -0.00472936246   0.000115176161      0.00484
+  1  radius_of_gyration             -0.363557802       1.83175589          2.2
+  2  mean_plddt_ecd               -0.00113030577   0.000469338456       0.0016
+  3  membrane_proximal_plddt      -0.00756252873    0.00247856721         0.01
+  4  sasa_normalized             -0.000793248762   0.000972992156      0.00177
+  5  largest_patch_fraction          -0.10419137      0.513847143        0.618
+
+  ⚠⚠ THE RATIO IS NOT CONSTANT. Under JB2's stated reading that is a deviation and
+     therefore a finding — but the finding is about the FORMULA, not the data.
+
+==============================================================================================
+JB1/JB2 — THE CORRECT RELATION: slope AND intercept, and THEN the rows agree
+==============================================================================================
+  k  feature                       slope = coef/sd   max|resid|  rows agreeing
+  ----------------------------------------------------------------------------------------
+  0  ecd_length                    0.0001536014218     5.55e-17      56/56    
+  1  radius_of_gyration              -0.4576446602     3.47e-17      56/56    
+  2  mean_plddt_ecd                 0.003082622556     4.86e-17      56/56    
+  3  membrane_proximal_plddt         0.01459632517     3.89e-16      56/56    
+  4  sasa_normalized               -0.001590501602     9.71e-17      56/56    
+  5  largest_patch_fraction          -0.3924876377     5.55e-17      56/56    
+
+  ⚠ every row of every feature agrees to within 1e-12 — so the attributions ARE exactly
+    coefficient x standardized feature, and the earlier 'deviation' was the missing mean.
+
+==============================================================================================
+JB5 — THE SIGNS, AND WHAT PUSHES A TARGET UP
+==============================================================================================
+  ecd_length                 +   higher value pushes the score UP
+  radius_of_gyration         -   higher value pushes the score DOWN
+  mean_plddt_ecd             +   higher value pushes the score UP  <- pLDDT
+  membrane_proximal_plddt    +   higher value pushes the score UP  <- pLDDT
+  sasa_normalized            -   higher value pushes the score DOWN
+  largest_patch_fraction     -   higher value pushes the score DOWN
+
+  ⚠ BOTH confidence features push UP: a target the model is more confident about scores
+    higher. ⚠⚠ That is the direction the paper's confidence section has to state plainly —
+    the axis rewards being well-predicted, and F-005 already shows the pair carries the
+    result. Sign and magnitude point the same way.
