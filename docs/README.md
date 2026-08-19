@@ -172,6 +172,58 @@ So the rule is not "be careful" — it is:
 
 - **⚠ How it was found.** Not by review and not by a test. The Planner asked whether `FD1` could be answered from persisted values instead of a refit; checking the model to answer that question surfaced what the model does **not** hold. *The question was about arithmetic and the answer was about the record.*
 
+
+#### F-049 amendment 1 — ⚠⚠ The entry was too broad. The MODEL is recoverable from persisted values; the STANDARDIZED coefficients are not, and only the second half survives
+
+- **Date:** 2026-08-19 · **Status:** `F-049` stays **OPEN**, on a **narrower** claim. ⚠ **Written the same day as the entry it corrects, because the measurement that refutes half of it was run hours later.**
+
+- **What the entry said.** *"`D-041` claims the fit is reproducible and NOTHING STORED MAKES THAT CHECKABLE … the record says what was done and not enough to redo it."* ⚠⚠ **The second clause is wrong as written, and the measurement is not close.**
+
+- **What was actually recovered**, from persisted values only, by exact linear solve — **a reproduction, not a fit** (`GE4`):
+
+  `attribution_k(i) = coef_k · x̂_k(i) = coef_k · (x_k(i) − mean_k) / sd_k`
+
+  is exactly linear in the raw feature, so across the 56 scored rows at `ranking_run_id = 2`:
+
+  | k | feature | raw-scale coefficient `coef_k / sd_k` | implied `mean_k` |
+  |---|---|---|---|
+  | 0 | `ecd_length` | **+0.0001536014218** | 413.26786 |
+  | 1 | `radius_of_gyration` | **−0.4576446602** | 0.15600094 |
+  | 2 | `mean_plddt_ecd` | **+0.003082622556** | 69.002672 |
+  | 3 | `membrane_proximal_plddt` | **+0.01459632517** | 66.002025 |
+  | 4 | `sasa_normalized` | **−0.001590501602** | 71.020666 |
+  | 5 | `largest_patch_fraction` | **−0.3924876377** | 0.73453592 |
+
+  **And the intercept, which `GE` did not anticipate: `−1.324660466`**, implied identically by all 56 rows (spread `1.11e-15`).
+
+  ⚠⚠ **So SEVEN parameters are known on the raw scale, and they fully determine the model's predictions.** *A model whose predictions can be reproduced exactly is reproducible in the sense that matters to a reader checking a result.*
+
+- **⚠ `GE2`'s self-check, which was the point rather than the coefficients.** Max residual per feature: `5.6e-17 · 3.5e-17 · 4.9e-17 · 3.9e-16 · 9.7e-17 · 5.6e-17` — float noise. **Every one of the 56 rows lies on the same line, for all six features.** No drift, no non-determinism, and **`attributions` are exactly what `D-041` decision 1 documents them to be.** ⚠ *The instrument was checked and it passed; the finding is that the entry overstated what the check would show.*
+
+- **⚠ The pairing was TESTED, not assumed.** All 6 × 6 combinations of attribution index against feature column were fitted: the diagonal returns ~`1e-16`, every off-diagonal ~`1e-1`. **The documented ordering is confirmed by measurement rather than inherited from a comment.**
+
+- **What survives, and it is the sharper half.** ⚠⚠ **`sd_k` is not persisted, so `coef_k` and `sd_k` remain entangled — only their ratio is determined.** The **standardized** coefficients, which `D-041` decision 1 makes the **attribution basis for comparing features against each other**, cannot be recovered. Computing `sd` over the fit set would reconstruct the standardizer, which is fitting and is barred.
+  - ⚠ **Signs DO survive**, since `sd_k > 0`: `ecd_length` **+** · `radius_of_gyration` **−** · `mean_plddt_ecd` **+** · `membrane_proximal_plddt` **+** · `sasa_normalized` **−** · `largest_patch_fraction` **−**.
+  - **So `FB3` — *are run 2's coefficients still reproducible today* — remains unanswerable without fitting**, and that was the entry's real subject.
+
+- **⚠⚠ AND A SEPARATE FINDING THE RECOVERY EXPOSED: "the two pLDDT features" is one feature.** Read straight off the persisted attributions, no coefficients needed:
+
+  | feature | mean \|attribution\| | share |
+  |---|---|---|
+  | `membrane_proximal_plddt` | 0.101982 | **32.2%** |
+  | `largest_patch_fraction` | 0.075954 | 24.0% |
+  | `radius_of_gyration` | 0.052473 | 16.6% |
+  | `ecd_length` | 0.038851 | 12.3% |
+  | `sasa_normalized` | 0.026843 | 8.5% |
+  | ⚠ `mean_plddt_ecd` | 0.020237 | **6.4%** |
+
+  **The two confidence features carry 38.6% of total attribution magnitude — but `membrane_proximal_plddt` alone is 32.2% and `mean_plddt_ecd` is 6.4%, a factor of five.** ⚠ `F-005` reports `plddt_only` (both confidence features, three parameters) matching the full model; **this says the work inside that pair is done almost entirely by ONE of them.** Per target: median **40.8%**, max **72.5%**, and **11 of 56 targets have pLDDT carrying over half** their attribution.
+  - ⚠ **Stated as an observation, not a conclusion.** Attribution magnitude is not importance, and `D-041` decision 1 makes `β·x` the attribution basis without making it a ranking of features. **Whether this reopens `F-005`'s reading is the Planner's.**
+
+- **Why the entry was too broad.** It was written from `db/models.py` — *what the schema stores* — and concluded about *what can be recovered*. ⚠⚠ **Those are different questions, and the second needs the data, not the schema.** *Reasoning from the shape of the record to the limits of the record, without querying it.*
+
+---
+
 ---
 
 ### F-047 — ⚠ The wrong-but-plausible answer: the defect class where nothing errors, nothing is malformed, and the number is wrong

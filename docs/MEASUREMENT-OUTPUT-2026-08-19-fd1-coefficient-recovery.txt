@@ -1,0 +1,98 @@
+FD1 / GE — coefficient recovery from PERSISTED values. A reproduction, not a fit.
+source   : target_scores + protein_features at ranking_run_id = 2, read via pharmfold-readonly
+instrument: scratchpad solve (exact linear), reported here; no fitting, no writes
+repo HEAD : 15bdd8e6f9d7a784c45bd2322477cb9248c8afc6
+
+rows: 56   attribution vector length: 6
+rows with all six features non-null: 56
+⚠ rows dropped for a null feature: 0  — a null is a category (D-027 null-with-a-reason), never an imputed mean
+
+============================================================================================
+STEP 1 — ⚠ THE PAIRING IS TESTED, NOT ASSUMED
+============================================================================================
+  max |residual| of attribution[j] against feature[k]. The documented ordering is
+  accepted only if the DIAGONAL is the one that fits.
+
+                   0          1          2          3          4          5
+  attr0      5.6e-17    1.7e-01    2.1e-01    1.9e-01    1.9e-01    2.0e-01
+  attr1      2.2e-01    3.5e-17    2.7e-01    2.7e-01    1.6e-01    2.3e-01
+  attr2      5.9e-02    5.1e-02    4.9e-17    3.9e-02    4.6e-02    4.3e-02
+  attr3      3.3e-01    3.5e-01    2.7e-01    3.9e-16    3.7e-01    3.2e-01
+  attr4      8.7e-02    8.3e-02    9.5e-02    9.7e-02    9.7e-17    8.6e-02
+  attr5      1.8e-01    1.4e-01    1.4e-01    1.4e-01    1.4e-01    5.6e-17
+
+  best-fitting feature per attribution index: {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+  ⚠ diagonal (j == k) for every index: True
+
+============================================================================================
+STEP 2 — ⚠⚠ DO ALL 56 ROWS AGREE? (GE2 — the self-check IS the point)
+============================================================================================
+  k  feature                       slope = coef/sd   max|resid|        rel
+  --------------------------------------------------------------------------------------
+  0  ecd_length                    0.0001536014218     5.55e-17    2.9e-16
+  1  radius_of_gyration              -0.4576446602     3.47e-17    1.3e-16
+  2  mean_plddt_ecd                 0.003082622556     4.86e-17    8.5e-16
+  3  membrane_proximal_plddt         0.01459632517     3.89e-16    1.2e-15
+  4  sasa_normalized               -0.001590501602     9.71e-17    8.6e-16
+  5  largest_patch_fraction          -0.3924876377     5.55e-17    3.4e-16
+
+  ⚠ a residual at float-noise level (~1e-16) means EVERY row lies on one line —
+    the attributions are exactly coefficient x standardized feature, as documented.
+
+============================================================================================
+STEP 3 — WHAT IS RECOVERED, AND WHAT IS NOT
+============================================================================================
+  k  feature                        raw-scale coef     implied mean_k
+  --------------------------------------------------------------------------------------
+  0  ecd_length                    0.0001536014218          413.26786
+  1  radius_of_gyration              -0.4576446602         0.15600094
+  2  mean_plddt_ecd                 0.003082622556          69.002672
+  3  membrane_proximal_plddt         0.01459632517          66.002025
+  4  sasa_normalized               -0.001590501602          71.020666
+  5  largest_patch_fraction          -0.3924876377         0.73453592
+
+  ⚠⚠ NOT RECOVERED: the STANDARDIZED coefficient, which is what D-041 decision 1 makes
+     the attribution basis and what FD1 asked for. slope = coef_k / sd_k, and sd_k is not
+     persisted. Computing sd over the fit set would reconstruct the standardizer — that is
+     fitting, and GE3 forbids it.
+
+============================================================================================
+STEP 4 — ⚠ THE INTERCEPT, checked rather than assumed
+============================================================================================
+  score = sigmoid(intercept + sum_k attribution_k) if the attributions are the full
+  linear predictor. Solving for the intercept from each row and asking whether they agree:
+    implied intercept  min -1.324660466   max -1.324660466   spread 1.11e-15
+    ⚠⚠ ALL 56 ROWS AGREE -> the intercept is recovered exactly: -1.324660466
+    So SEVEN parameters are now known on the raw scale: six slopes and this intercept.
+
+key: the 56 target_scores rows at ranking_run_id = 2
+
+PER-FEATURE ATTRIBUTION MAGNITUDE, across the 56
+  k  feature                     mean |attr|    share   max |attr|
+  ----------------------------------------------------------------------
+  0  ecd_length                     0.038851    12.3%     0.190271
+  1  radius_of_gyration             0.052473    16.6%     0.275867
+  2  mean_plddt_ecd                 0.020237     6.4%     0.057069  <- pLDDT
+  3  membrane_proximal_plddt        0.101982    32.2%     0.328791  <- pLDDT
+  4  sasa_normalized                0.026843     8.5%     0.112391
+  5  largest_patch_fraction         0.075954    24.0%     0.163450
+     TOTAL                          0.316340   100.0%
+
+  ⚠⚠ THE TWO pLDDT FEATURES CARRY 38.6% OF TOTAL ATTRIBUTION MAGNITUDE
+     — two of six features, 38.6% of the weight.
+
+  ⚠ per-target share, because a mean can hide a bimodal split:
+     min 2.9%  q1 28.1%  median 40.8%  q3 47.9%  max 72.5%
+     targets where pLDDT carries > 50% of attribution: 11 of 56
+
+  SIGNS of the standardized coefficients — recoverable even though the MAGNITUDES are
+  not, because sign(coef_k) == sign(coef_k / sd_k) and sd_k > 0 always:
+    ecd_length                 +
+    radius_of_gyration         -
+    mean_plddt_ecd             +
+    membrane_proximal_plddt    +
+    sasa_normalized            -
+    largest_patch_fraction     -
+
+  ⚠ Higher mean pLDDT and higher membrane-proximal pLDDT both push the score UP;
+    radius of gyration, normalised SASA and largest-patch fraction push it DOWN.
