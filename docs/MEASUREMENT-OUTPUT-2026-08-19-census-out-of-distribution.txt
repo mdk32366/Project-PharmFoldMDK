@@ -1,0 +1,181 @@
+MEASUREMENT OUTPUT — 2026-08-19 — KA/KB/KC/KD/KE, the census out-of-distribution question
+instrument : scripts/k_ood_census.py + scripts/kc1_engulfing_range.py, read-only
+connection : fly mpg connect zp2wjrej9lwodn4q --username pharmfold-readonly --database pharmfoldmdk
+             (--database EXPLICIT — the standing rule from F-047 member 21)
+verified   : current_database=pharmfoldmdk  current_user=pharmfold-readonly
+no credential appears in this file; fly mpg connect authenticates via the fly auth token
+
+====================================================================================================
+KA1 — THE COHORT'S RANGE, FROM THE FIT POPULATION'S RAW FEATURES
+====================================================================================================
+  key      : the 56 rows of target_scores at ranking_run_id = 2
+  joined   : protein_features.analysis_id = target_scores.analysis_id
+  columns  : the six D-027 FEATURE_NAMES, raw scale, read as the pharmfold-readonly role
+  percentile method: linear interpolation on the sorted sample (numpy 'linear')
+  rows loaded: 56   rows with a complete six-vector: 56
+
+  k  feature                            min         p05         p25      median         p75         p95         max
+  ------------------------------------------------------------------------------------------------
+  0  ecd_length                          13          21       159.5       427.5      609.75      896.75        1652
+  1  radius_of_gyration            0.031184     0.04024    0.061744    0.098989     0.12554       0.619      0.7588
+  2  mean_plddt_ecd                   50.49      52.988      65.344      72.428       74.72       76.92      81.395
+  3  membrane_proximal_plddt         43.476      51.702      59.996      68.076      72.831      76.392      79.502
+  4  sasa_normalized                 44.064      50.879      57.365       62.15       70.56       126.3      141.68
+  5  largest_patch_fraction         0.31809     0.36376     0.52316     0.83185     0.90825           1           1
+
+====================================================================================================
+KA2 — TWO PATHS TO ONE QUANTITY: FD1's IMPLIED MEANS vs THE DIRECT MEANS OF THE 56
+====================================================================================================
+  ⚠ If any disagrees, the fit population is NOT the 56 and every F-050 number needs re-keying.
+
+  k  feature                         FD1 implied   direct mean/56     abs diff    rel diff  verdict
+  ------------------------------------------------------------------------------------------------
+  0  ecd_length                        413.26786        413.26786     2.86e-06    6.91e-09  AGREE
+  1  radius_of_gyration               0.15600094       0.15600094     6.19e-10    3.97e-09  AGREE
+  2  mean_plddt_ecd                    69.002672        69.002672     3.39e-07    4.91e-09  AGREE
+  3  membrane_proximal_plddt           66.002025        66.002025     5.71e-08    8.65e-10  AGREE
+  4  sasa_normalized                   71.020666        71.020666     2.12e-07    2.99e-09  AGREE
+  5  largest_patch_fraction           0.73453592       0.73453592     1.75e-09    2.38e-09  AGREE
+
+  ALL SIX AGREE — the fit population IS these 56.
+
+====================================================================================================
+KA3 — THE ±3 STANDARDIZED-UNIT BAR: THE METHOD, AND WHY IT IS NOT FITTING
+====================================================================================================
+  ⚠⚠ I FIRST WROTE THIS AS TWO INDEPENDENT PATHS AGREEING. THAT WAS WRONG, AND THE
+     CORRECTION IS RECORDED HERE RATHER THAN PATCHED AWAY.
+
+  The claimed recovery was:
+    attribution_k(i) = coef_k * xhat_k(i)                        (proven exact in JB/FD1)
+    "the standardizer was fit on these 56, so sd(xhat_k over 56) = 1"
+    therefore sd(attribution_k) = |coef_k|,  and  sd_k = |coef_k| / |r_k|
+
+  ⚠⚠ Work it through without assuming that middle step and it collapses to an IDENTITY:
+    xhat_i    = (x_i - mean) / sd_k
+    sd(xhat)  = sd_raw(56) / sd_k
+    sd(attr)  = |coef_k| * sd_raw(56) / sd_k = |r_k| * sd_raw(56)
+    so   sd(attr)/|r_k|  ==  sd_raw(56),  ALWAYS, whatever sd_k actually is.
+
+  ⚠ "Path A" and "Path B" are therefore THE SAME PATH written twice. Their agreement below
+     is arithmetic, not evidence, and it would have agreed to 1e-10 even if the standardizer
+     had been fit on a different population entirely. Printed anyway, labelled as what it is.
+
+  ⚠⚠ SO sd_k IS NOT RECOVERED, and F-049 amendment 1's surviving half STANDS: coef_k and
+     sd_k remain entangled and only their ratio r_k is determined. What IS established is
+     KA2 — the six MEANS match the raw means of these 56 exactly — which is real evidence
+     the standardizer was fit on this population, but says nothing about the ddof used.
+
+  THEREFORE the third bar is reported as: mean_k +/- 3 * sd_raw(56), and it equals a true
+  +/-3 standardized units IF AND ONLY IF the standardizer used ddof=0 on these same 56.
+  ⚠ ddof=1 moves it by ~0.9% (both printed). No model is fit; no value is standardized into
+     any scorer; the bar is a descriptive threshold over a population KA1 already describes.
+
+  k  feature                       sd(attr)/|r_k|      sd raw ddof0    rel diff        B ddof1
+  ------------------------------------------------------------------------------------------------
+  0  ecd_length                        327.645305        327.645305    6.33e-11       330.6105
+  1  radius_of_gyration               0.177044251       0.177044251    3.96e-11      0.1786465
+  2  mean_plddt_ecd                    8.01746279        8.01746279    1.00e-10        8.09002
+  3  membrane_proximal_plddt           8.41500356        8.41500356    1.13e-10       8.491159
+  4  sasa_normalized                   23.9170947        23.9170947    1.81e-10       24.13354
+  5  largest_patch_fraction           0.217762306       0.217762306    2.30e-11       0.219733
+
+  ⚠ the two columns agree to ~1e-10 — as they MUST, algebraically. NOT a confirmation.
+  ⚠ The ±3 bar below is mean_k +/- 3*sd_raw(56) at ddof=0, with the caveat above.
+
+====================================================================================================
+KC3 — HOW MANY OF THE CENSUS HAVE A COMPLETE SIX-FEATURE ROW AT ALL
+====================================================================================================
+  census analyses (cohort_tranche > 0)              : 2691
+  ⚠ of those, FOLDED (pdb_path IS NOT NULL)          : 2690   <- the denominator
+    not folded                                      : 1
+  ⚠⚠ folded AND carrying a complete six-vector       : 0
+     shortfall                                      : 2690
+
+  the shortfall BY CAUSE — an absence is a category, never a zero:
+    no protein_features ROW at all                2690
+    TOTAL                                         2690
+
+====================================================================================================
+KB1 — THE CENSUS DISTRIBUTION, SAME SIX STATISTICS
+====================================================================================================
+  key        : protein_analyses.cohort_tranche IN (1,2,3,4), pdb_path IS NOT NULL
+  ⚠ DENOMINATOR: 2690 folded — NOT 3,467 manifest, NOT 2691 census rows.
+  ⚠ statistics computed over the 0 rows carrying the feature; per-feature n stated.
+
+  k  feature                        n         min         p05      median         p95         max
+  ------------------------------------------------------------------------------------------------
+  0  ecd_length                     0   NO VALUES EXIST — no census row carries this feature
+  1  radius_of_gyration             0   NO VALUES EXIST — no census row carries this feature
+  2  mean_plddt_ecd                 0   NO VALUES EXIST — no census row carries this feature
+  3  membrane_proximal_plddt        0   NO VALUES EXIST — no census row carries this feature
+  4  sasa_normalized                0   NO VALUES EXIST — no census row carries this feature
+  5  largest_patch_fraction         0   NO VALUES EXIST — no census row carries this feature
+
+====================================================================================================
+KB2 — THE OUT-OF-RANGE COUNT, AT THREE BARS, NOT ONE
+====================================================================================================
+  ⚠ evaluated over the 0 folded census rows with a COMPLETE six-vector.
+  ⚠ 'no_features_row' is NOT 'out_of_range' and is reported separately at KC2/KC3.
+
+  ⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠
+  KB2, KB3 AND KB4 HAVE NO DENOMINATOR, AND THAT IS THE ANSWER TO THE ORDER.
+  ⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠⚠
+
+  Not one of the 2690 folded census rows carries a protein_features row, so there is
+  no census feature value to place inside or outside the cohort's range. The out-of-range
+  count is not 0%, not 100%, and not small: it is UNDEFINED, because the input to the test
+  does not exist.
+
+  ⚠⚠ The order pre-registered two outcomes — 'largely inside the fit range' (ruling 1
+     operative) and 'largely outside' (ruling 3 operative, refusal at scale). ⚠ THE MEASURED
+     OUTCOME IS NEITHER. It is a third state the pre-registration did not enumerate: the
+     question cannot be asked yet.
+
+  ⚠ Reported rather than worked around. Extracting features over 2,690 census rows to make
+     the test runnable is compute and is not ordered (§6), and inferring the distribution
+     from the cohort would be inventing the measurement this order exists to take.
+
+  ⚠ The Planner's recorded expectation — 'ecd_length the worst offender, mean_plddt_ecd the
+     mildest, a MINORITY out of range on the strict test' — is NEITHER confirmed NOR
+     contradicted. It stands untested, and the pre-registration that recorded it is intact.
+
+  The one feature that CAN be placed without extraction is ecd_length, because it is the
+  span length and the span is in the committed manifest. That is done at KC1.
+
+
+  manifest rows (census_manifest.v7.csv): 3467
+  rows with a numeric span      : 3467
+  rows with a cached UniProt doc: 3467   (no cached doc: 0)
+
+  ⚠⚠ ENGULFING (F-048) accessions recomputed: 58   [entry records 58]
+
+  their span_aa: min 5 · median 45 · max 145
+
+  the cohort's ecd_length range (KA1): strict [13, 1652] · p05-p95 [21, 896.75]
+
+  ⚠⚠ KC1 — where the 58 fall on ecd_length, the ONE feature available without extraction:
+    inside p05-p95                                                  46
+    inside strict, but below p05                                     8
+    BELOW the cohort strict min (out of range on ecd_length alone)   4
+    TOTAL                                                           58
+
+  the shortest, the ones ruling 6 is written for:
+  acc        span    span range  engulfing feature
+  --------------------------------------------------------------------------------------------
+  Q9ULH0        5       681-685  440-953 Domain: KAP NTPase
+  Q9NX76        7         61-67  33-160 Domain: MARVEL
+  P21145       11       115-125  18-151 Domain: MARVEL
+  A8MV81       11         48-58  1-92 Domain: HIG1
+  O15439       13       756-768  711-1005 Domain: ABC transmembrane type-1 2
+  Q9P298       14         48-61  1-94 Domain: HIG1
+  Q4VC39       14         68-81  20-106 Domain: HIG1
+  Q8N4S9       16       276-291  188-367 Domain: MARVEL
+  O14569       16       107-122  14-217 Domain: Cytochrome b561
+  Q8N8Q1       16       113-128  22-224 Domain: Cytochrome b561
+  Q53TN4       18       180-197  15-220 Domain: Cytochrome b561
+  P49447       19       180-198  19-220 Domain: Cytochrome b561
+
+  ⚠ and are they FOLDED / in the census DB population at all?
+    of the 58, folded in protein_analyses: 58
+    ⚠ every one of them carries NO protein_features row (KC3), so ruling 3 cannot
+      evaluate them on any feature and ruling 6 is the ONLY refusal that can fire today.
