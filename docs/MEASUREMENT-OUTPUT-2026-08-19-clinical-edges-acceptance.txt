@@ -1,0 +1,54 @@
+MEASUREMENT OUTPUT — 2026-08-19 — the HPA v22 acceptance bar, and the edge ingest dry run
+bar: docs/PREREGISTRATION-2026-08-19-normal-tissue-acceptance-bar.md (committed d0fd95e, BEFORE the fetch)
+
+=== PATH A — transport, two retrievals two days apart ===
+  pathology.tsv.zip      962edf13680f34c1eea1f6ffc19768c07b4efe700239e4f052cf812104740b92   3,609,172 bytes
+    leg A  on-machine 2026-08-17 18:46   leg B  fresh fetch 2026-08-19 10:38   AGREE
+  normal_tissue.tsv.zip  8453c46c6f4690428c029cf1d7e8dba289ae33b288f874b00105a008dbe62ff7   5,606,031 bytes
+    leg A  on-machine 2026-08-17 18:48   leg B  fresh fetch 2026-08-19 10:39   AGREE
+  URL: https://v22.proteinatlas.org/download/{pathology,normal_tissue}.tsv.zip
+  ⚠ TWO paths, not three. A third same-day copy agreed and was later deleted, so that leg is
+    recorded but not reproducible. Two paths across two days is stated as what it is.
+
+=== a WRONG file was sitting beside the right ones ===
+  'pathology (1).tsv' — 9,097 bytes, 13 rows, 34 columns, header full of
+  'Cancer prognostics - <tumour> (TCGA)'. A search-result export, not the IHC file.
+  ⚠ A glob on pathology*.tsv would have taken it. Since removed by the owner.
+
+=== PATH B — the five genes, fixed in the bar BEFORE the fetch ===
+  CLDN18          present, detected in 4 of 64 tissues; stomach 1 AND stomach 2 carry signal   EXPECTED restricted/stomach  PASS
+  ERBB2           present, 29 tissues                                                          EXPECTED broad epithelial    PASS
+  TACSTD2         present, 21 tissues                                                          EXPECTED broad epithelial    PASS
+  INS             present, detected in EXACTLY 1 tissue: pancreas                              EXPECTED pancreas-only       PASS
+  ZZZ_NOT_A_GENE  0 rows                                                                       EXPECTED absent              PASS
+
+  the REAL negative control: ihc_gene_absent = 960 of 2,687 folded-census gene names (35.7%)
+  ⚠ the bar: this count cannot be zero if the file is what it claims. It is not zero.
+
+=== the layer was written BLIND and matches the file exactly ===
+  Level values in normal_tissue.tsv : Ascending, Descending, High, Low, Medium, N/A, Not detected, Not representative
+  LEVEL_VALUES in core/clinical_layer.py : the same eight, no extras, none unused
+
+=== D-100 reproduced from the v22 file (recorded from Kathad S3) ===
+  rows      recorded 1640   reproduced 1640   MATCH
+  kept      recorded  337   reproduced  337   MATCH
+  excluded  recorded 1303   reproduced 1303   MATCH
+
+=== RNA CROSS-CHECK — different assay, different file, same v22 release ===
+  ⚠ corroboration, NOT a Path A leg: different bytes can never confirm a sha256.
+  INS      IHC 1 tissue (pancreas)        RNA Tissue enriched, pancreas 12983.6
+  CLDN18   IHC lung + stomach             RNA Group enriched, lung 252.2; stomach 1 724.9
+  ERBB2    IHC 29 tissues                 RNA Low tissue specificity, detected in all
+  TACSTD2  IHC 21 tissues                 RNA Tissue enhanced, esophagus/salivary/skin
+  ⚠⚠ CLDN18 is the strongest: two assays independently name the same two tissues.
+
+=== THE INGEST DRY RUN (local SQLite; nothing written to production) ===
+  scope_key: census ∪ cohort gene names from committed CSVs — 3,466 genes
+  pathology_source_rows: 401800
+  pathology_scoped: 67280
+  normal_source_rows: 1194479
+  normal_scoped: 180272
+  columns_kept_pathology: ['Gene', 'Gene name', 'Cancer', 'High', 'Medium', 'Low', 'Not detected']
+  columns_refused_pathology: ['prognostic - favorable', 'unprognostic - favorable', 'prognostic - unfavorable', 'unprognostic - unfavorable']
+  d100: {'rows': 1640, 'kept': 337, 'excluded': 1303, 'ok': True}
+  outcome: dry_run_rolled_back

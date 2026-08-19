@@ -275,3 +275,64 @@ class RankingResult(Base):
 # out of Base.metadata is what lets the SQLite create_all test path stay clean and avoids adding
 # a pgvector Python dependency. The pgvector path is exercised by the migration in the `postgres`
 # CI job, which is where it should be proven.
+
+
+class ClinicalPathology(Base):
+    """EDGE 1 — protein → tumour, HPA v22 `pathology.tsv` IHC panel counts (`D-093`).
+
+    ⚠⚠ SEVEN COLUMNS OF ELEVEN. The source carries four `prognostic-*` columns and they are
+    deliberately absent: `D-093` amendment 1 clause 2 makes a prognostic column's PRESENCE the
+    violation, because HPA redistributes TCGA-derived prognostics under bespoke User terms nobody
+    here has read. The omission is the licence decision made structural, not an oversight.
+
+    ⚠ Row-scoped to 3,466 gene names — the census MANIFEST ∪ the 82 cohort, not the folded
+    census — so a protein folded later already has its edges. 67,280 of 401,800 source rows. This
+    table does NOT answer questions about genes outside that union.
+    """
+
+    __tablename__ = "clinical_pathology"
+    __table_args__ = (
+        Index("ix_clinical_pathology_gene_name", "gene_name"),
+        UniqueConstraint("gene_name", "cancer", name="uq_clinical_pathology_gene_cancer"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    gene: Mapped[str] = mapped_column(String(24), nullable=False)          # ENSG
+    gene_name: Mapped[str] = mapped_column(String(48), nullable=False)
+    cancer: Mapped[str] = mapped_column(String(96), nullable=False)
+    # ⚠ NOT NULL: an empty panel is 0/0/0/0 — `row_present_panel_empty`, a CATEGORY — never a null.
+    high: Mapped[int] = mapped_column(Integer, nullable=False)
+    medium: Mapped[int] = mapped_column(Integer, nullable=False)
+    low: Mapped[int] = mapped_column(Integer, nullable=False)
+    not_detected: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class ClinicalNormalTissue(Base):
+    """EDGE 2 — protein → normal tissue, HPA v22 `normal_tissue.tsv` (`D-093` decision 5).
+
+    ⚠ CO-EQUAL WITH EDGE 1, NOT AN APPENDIX. Amendment 2 ruling 2 ships them together; a tumour
+    signal without its normal-tissue differential is the half that flatters a target.
+
+    ⚠⚠ THE GRAIN CARRIES A DISTINCTION THE SURFACE NEEDS. `Not detected` is an explicit level;
+    a MISSING (gene, tissue, cell type) row means the pair was never tested. Measured: 0 of 15,313
+    genes cover all 266 pairs, so the grid is ragged and *tested-and-negative* vs *not tested* is a
+    real difference (`TESTED_STATE`, ruling 6).
+    """
+
+    __tablename__ = "clinical_normal_tissue"
+    __table_args__ = (
+        Index("ix_clinical_normal_tissue_gene_name", "gene_name"),
+        Index("ix_clinical_normal_tissue_tissue", "tissue"),
+        UniqueConstraint("gene_name", "tissue", "cell_type",
+                         name="uq_clinical_normal_tissue_grain"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    gene: Mapped[str] = mapped_column(String(24), nullable=False)
+    gene_name: Mapped[str] = mapped_column(String(48), nullable=False)
+    tissue: Mapped[str] = mapped_column(String(64), nullable=False)
+    cell_type: Mapped[str] = mapped_column(String(96), nullable=False)
+    #: ⚠ one of `core.clinical_layer.LEVEL_VALUES`. Validated by the ingest against that module —
+    #: a database CHECK here would be a second copy of the rule, and the two would drift.
+    level: Mapped[str] = mapped_column(String(24), nullable=False)
+    reliability: Mapped[str] = mapped_column(String(24), nullable=False)
