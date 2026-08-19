@@ -209,9 +209,16 @@ describe('CensusTable — the unscored claim discloses the profile', () => {
     expect(t).toMatch(/structural profile/)
   })
 
-  it('says the TABLE neither shows the profile nor orders by it (ruling 2)', () => {
+  // ⚠ THIS ASSERTION CHANGED WITH THE CLAIM, AND THAT IS WHY IT WENT RED. It pinned "this table
+  // neither shows it nor orders by it" — true until the Profile STATUS column landed. The table now
+  // shows WHETHER a profile could be computed, never WHAT it was. The test tracks the new claim
+  // rather than being deleted, and the substantive guarantee is asserted separately below: no
+  // value ever appears in a row.
+  it('says the column reports only WHETHER a profile exists, not what it was', () => {
     const { container } = render(<CensusTable rows={ROWS} />)
-    expect(container.textContent).toMatch(/neither shows it nor orders by it/)
+    const t = container.textContent
+    expect(t).toMatch(/says only whether one could be computed, never what it was/)
+    expect(t).toMatch(/A refusal is about range, not merit/)
   })
 
   it('and still renders no profile value in any row', () => {
@@ -219,5 +226,54 @@ describe('CensusTable — the unscored claim discloses the profile', () => {
     // ⚠ the disclosure must not become the feature: no 0.xxxx figure anywhere in the table body
     const body = container.querySelector('tbody')
     if (body) expect(body.textContent).not.toMatch(/0\.\d{4}/)
+  })
+})
+
+// ── the Profile STATUS column (D-079 amendment 1 ruling 2) ────────────────
+//
+// ⚠⚠ THE COLUMN EXISTS TO SURFACE THE FINDING WITHOUT HANDING ANYONE A RANKING. The table sorts on
+// every column (D-087). A VALUE column would be one header click from 1,397 proteins ordered
+// highest-first with the 1,293 refusals swept to the bottom. A CATEGORY sorts into groups, which
+// orders nothing by suitability. These tests pin both halves: the status is shown, and no number is.
+const STATUS_ROWS = [
+  { ...ROWS[0], id: 1, accession: 'A0AVI2', profile_status: 'computed' },
+  { ...ROWS[0], id: 2, accession: 'Q9UHC9', profile_status: 'refused_out_of_distribution' },
+  { ...ROWS[0], id: 3, accession: 'Q9ULH0', profile_status: 'refused_span_below_floor' },
+  { ...ROWS[0], id: 4, accession: 'P11111', profile_status: 'refused_features_incomplete' },
+]
+
+describe('CensusTable — the Profile status column', () => {
+  it('renders a Profile header and a word per row, never a number', () => {
+    const { container } = render(<CensusTable rows={STATUS_ROWS} />)
+    const t = container.textContent
+    expect(t).toMatch(/Profile/)
+    expect(t).toMatch(/computed/)
+    // ⚠⚠ THE LOAD-BEARING ASSERTION: no profile VALUE anywhere in the table body.
+    const body = container.querySelector('tbody')
+    expect(body.textContent).not.toMatch(/0\.\d{3,}/)
+  })
+
+  it('keeps the three refusal causes DISTINCT rather than pooling them into "n/a"', () => {
+    const { container } = render(<CensusTable rows={STATUS_ROWS} />)
+    const t = container.querySelector('tbody').textContent
+    expect(t).toMatch(/outside fitted range/)
+    expect(t).toMatch(/span too short to describe/)
+    expect(t).toMatch(/measurements incomplete/)
+  })
+
+  it('renders an em dash, not a blank, when a row has no status at all', () => {
+    const { container } = render(<CensusTable rows={[{ ...ROWS[0], id: 9 }]} />)
+    expect(container.querySelector('tbody').textContent).toMatch(/—/)
+  })
+
+  it('the column is declared non-numeric, so sorting groups rather than orders a magnitude', () => {
+    const { container } = render(<CensusTable rows={STATUS_ROWS} />)
+    const heads = [...container.querySelectorAll('th')].map((h) => h.textContent)
+    expect(heads.some((h) => /Profile/.test(h))).toBe(true)
+    // sorting by it must not reorder into anything resembling a ranked value list: the visible
+    // cells are words, and words are all we can sort.
+    const cells = [...container.querySelectorAll('tbody tr')]
+      .map((tr) => tr.lastElementChild.textContent)
+    expect(cells.every((c) => !/\d/.test(c))).toBe(true)
   })
 })

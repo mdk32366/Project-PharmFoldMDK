@@ -103,7 +103,18 @@ def list_census(engine: Any = Depends(get_engine)) -> list[dict]:
     and every row states `scored: false` with its reason rather than relying on the absence of a
     field to convey it.
     """
-    return reads.list_census(engine)
+    rows = reads.list_census(engine)
+    # ⚠⚠ A STATUS, NEVER A VALUE. D-079 amendment 1 ruling 2: the census table is sortable on every
+    # column (D-087), so a profile VALUE here would be one header click from a ranked shortlist —
+    # and with null sorting last, the 1,293 refusals would sweep to the bottom with nothing on
+    # screen saying the order means nothing. The supplier computes the profile and keeps only its
+    # CATEGORY; `structural_profile()` stays the single implementation of the bar.
+    # ⚠ Composed at the route, from a module `app/reads.py` does not import — ruling 5's wall.
+    from app.census_profile_read import census_profile_statuses
+    statuses = census_profile_statuses(engine)
+    for r in rows:
+        r["profile_status"] = statuses.get(r.get("id"))
+    return rows
 
 
 @read_router.get("/census/{analysis_id}")

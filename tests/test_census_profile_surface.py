@@ -181,3 +181,55 @@ def test_app_reads_cannot_reach_the_profile(engine, tmp_path):
             if cand.is_file() and m.split(".")[0] in ("app", "core", "db", "scripts"):
                 stack.append(str(cand.relative_to(REPO)).replace("\\", "/"))
     assert not hits, f"app/reads.py reaches the profile via {hits} — ruling 5"
+
+
+# ── the LIST payload: a status, and provably never a value ─────────────────
+
+def test_the_census_list_carries_a_status_and_no_value(engine, tmp_path):
+    """⚠⚠ THE GUARANTEE THE COLUMN RESTS ON. `D-079` amendment 1 ruling 2: the census table sorts on
+    every column (`D-087`), so a profile VALUE in this payload would be one header click from a
+    ranked shortlist. The supplier computes the profile and keeps only its CATEGORY — asserted here
+    against the wire, not against the supplier's intention."""
+    _seed(engine, features=_mid(), accession="Q00001")
+    feats = _mid()
+    feats["ecd_length"] = 99999.0
+    _seed(engine, features=feats, accession="Q00002")
+    _seed(engine, features=_mid(), outcome="refused_span_below_floor", accession="Q00003")
+    _seed(engine, accession="Q00004")                       # no feature row at all
+
+    rows = _client(engine, tmp_path).get("/api/census").json()
+    got = {r["accession"]: r["profile_status"] for r in rows}
+    assert got["Q00001"] == "computed"
+    assert got["Q00002"] == "refused_out_of_distribution"
+    assert got["Q00003"] == "refused_span_below_floor"
+    assert got["Q00004"] == "refused_features_incomplete"
+
+    # ⚠ no float anywhere in the payload that could be a profile value
+    import json as _json
+    blob = _json.dumps(rows)
+    assert "structural_profile" not in blob, "the list payload leaked the profile value"
+    for r in rows:
+        assert not isinstance(r.get("profile_status"), float)
+
+
+def test_every_status_is_in_the_declared_vocabulary(engine, tmp_path):
+    """⚠ A vocabulary that silently accepts an unknown token is how a category becomes a blank."""
+    from app.census_profile_read import PROFILE_STATUSES
+
+    _seed(engine, features=_mid(), accession="Q00005")
+    rows = _client(engine, tmp_path).get("/api/census").json()
+    for r in rows:
+        assert r["profile_status"] in PROFILE_STATUSES, r["profile_status"]
+
+
+def test_the_status_supplier_never_reads_the_value():
+    """⚠⚠ Structural, not textual: the AST of `census_profile_statuses` must contain no `.value`
+    access. A grep would match the comment that says the value is not read — which is exactly the
+    false positive `F-052` records three times over."""
+    import ast
+
+    tree = ast.parse((REPO / "app" / "census_profile_read.py").read_text(encoding="utf-8"))
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "census_profile_statuses")
+    attrs = {n.attr for n in ast.walk(fn) if isinstance(n, ast.Attribute)}
+    assert "value" not in attrs, "the status supplier reads the profile value"

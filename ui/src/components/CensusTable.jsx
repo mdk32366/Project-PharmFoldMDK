@@ -21,7 +21,22 @@ const COLUMNS = [
   { key: 'topology', label: 'Topology', numeric: false },
   { key: 'mean_plddt', label: 'pLDDT', numeric: true },
   { key: 'tranche', label: 'Tranche', numeric: true },
+  // ⚠⚠ A STATUS, NOT A VALUE, AND THAT IS RULING 2. This table sorts on every column (D-087), so a
+  // profile VALUE here would be one header click from a ranked shortlist of 1,397 proteins. A
+  // category sorts into GROUPS, which orders nothing by suitability. `numeric: false` on purpose:
+  // there is no magnitude to compare.
+  { key: 'profile_status', label: 'Profile', numeric: false },
 ]
+
+// ⚠ The four statuses, rendered as words rather than as a token. The three REFUSAL causes stay
+// distinct — pooling 1,225 + 58 + 10 into one "n/a" would lose the reason, and an absence is a
+// category with a cause.
+const PROFILE_LABEL = {
+  computed: 'computed',
+  refused_out_of_distribution: 'outside fitted range',
+  refused_span_below_floor: 'span too short to describe',
+  refused_features_incomplete: 'measurements incomplete',
+}
 
 // ⚠ null sorts LAST in both directions. A missing pLDDT is not a low one, and letting it float to
 // the top of an ascending sort would put unmeasured rows where the worst rows belong.
@@ -76,8 +91,11 @@ export default function CensusTable({ rows, onSelect }) {
         <strong>Not scored, not ranked, not ordered by suitability.</strong> These are structures
         and their measured properties; no judgement of target quality has been applied to any of
         them. Each protein&rsquo;s page carries a <strong>structural profile</strong> — a
-        measurement derived from its structure, never a verdict — and this table neither shows it
-        nor orders by it.
+        measurement derived from its structure, never a verdict. The <strong>Profile</strong> column
+        below says only whether one could be computed, never what it was.{' '}
+        <strong>A refusal is about range, not merit</strong>: it means the protein sits outside the
+        span of values the model was fitted on, which is a fact about the model&rsquo;s reach and not
+        about the protein.
       </p>
 
       <label className="census-search">
@@ -178,6 +196,16 @@ export default function CensusTable({ rows, onSelect }) {
                   {r.mean_plddt != null ? r.mean_plddt.toFixed(1) : <span className="unknown">not measured</span>}
                 </td>
                 <td className="num">{r.tranche}</td>
+                {/* ⚠ The status is a word, never a number. `profile-refused` and `profile-computed`
+                    are styled at the SAME weight: a refusal is an outcome (ruling 3), not a gap. */}
+                <td>
+                  {r.profile_status ? (
+                    <span className={r.profile_status === 'computed'
+                      ? 'profile-computed' : 'profile-refused'}>
+                      {PROFILE_LABEL[r.profile_status] ?? r.profile_status}
+                    </span>
+                  ) : '—'}
+                </td>
               </tr>
             )
           })}
