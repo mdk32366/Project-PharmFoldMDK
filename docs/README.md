@@ -130,6 +130,72 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-021 — A loader that inserts where it must update, rewrites inputs it was not asked to touch, and binds to the most recent run by default — three clauses with three different fates, and only one is repaired
+
+- **Date reserved:** 2026-08-05, `RULING-2026-08-05-STOP-feature-7-not-extracted.md` §3.6 ·
+  **Written:** 2026-08-19 · **Status:** ⚠ **OPEN.** It closes when
+  `scripts/extract_features.py --load` upserts, or when the residual below is named and accepted.
+- ⚠ **Written because it was cited before it existed.** `F-052` names `F-021` under *relied on by*,
+  and the log pointed at a finding with no entry. **A reserved number that is cited is owed.**
+
+---
+
+**⚠⚠ THE ENTRY'S POINT IS THAT THE THREE CLAUSES DID NOT MOVE TOGETHER.** A class entry that reports
+*"fixed"* or *"open"* for a three-part defect loses the only interesting thing about it.
+
+**CLAUSE 1 — inserts where it must update. ⚠ CONTAINED, NOT REPAIRED.**
+`scripts/extract_features.py:181` is still `session.add(ProteinFeatures(...))` — a pure insert, no
+delete, no upsert. **The code is unchanged.** What changed is underneath it: migration `0010` added
+`uq_protein_features_analysis_id`, measured in production. ⚠ So a second `--all --load` no longer
+takes 80 rows to 160; **it raises `IntegrityError` and writes nothing.**
+⚠⚠ **That is containment, and containment is worth less than it looks.** The loader still expresses
+the wrong intent; the database now refuses it. **A caller who reads the code learns the wrong rule
+and finds out at the constraint.** Recorded as a residual rather than as a fix.
+
+**CLAUSE 2 — rewrites inputs it was not asked to touch. ✅ CLOSED, and by construction.**
+`fill_feature_7` writes `membrane_proximal_sasa` **and nothing else**, in place, keyed by
+`analysis_id`: **only where NULL** (an existing value is never overwritten, *including a legitimate
+`0.0` — a fully buried window is a measurement, not an absence*), **`ranking_run_id` untouched**,
+and **row count before == row count after, asserted inside the transaction.** ⚠ Not "we were
+careful": the properties are checked where they could fail.
+
+**CLAUSE 3 — binds to the most recent run by default. ✅ REMOVED at the CLI, ⚠ with dead code left.**
+`--load` now errors without `--ranking-run`; the default that resolved to
+`order_by(RankingRun.id.desc())` — id=4, `plddt_only`, on a docstring assumption true when one run
+existed — was **deleted, not corrected.** ⚠ **The residue: `load_features()` still carries an
+`if ranking_run_id is None` branch resolving to the newest run.** Unreachable from the CLI,
+reachable by a direct call. **Named here rather than left for someone to find, and it is worse now
+than when written: the newest run is id=5, a `sensitivity` run.**
+
+---
+
+**⚠⚠ AND THE THING THAT MAKES THE RESIDUAL LEGIBLE: TWO LOADERS NOW WRITE THE SAME TABLE UNDER
+DIFFERENT DISCIPLINES.**
+
+| | `scripts/extract_features.py --load` | `scripts/census_ingest_features.py` |
+|---|---|---|
+| write | **pure INSERT** | **UPSERT**, by `analysis_id` |
+| re-run | raises at the constraint | **no-op**, keyed to the source `sha256` |
+| bar | none | acceptance bar **inside** the transaction, rollback proven |
+| `ranking_run_id` | **required** by flag | **NULL** — a category: *belongs to no run* |
+
+⚠ **The newer one is what the older one should be.** That is not an argument for deleting the older
+one — it fits the cohort, which does belong to a run — **but a reader comparing them learns two
+different rules for one table, and only one of them is enforced by anything but a constraint.**
+
+---
+
+**⚠ WHY IT WAS RESERVED FOR TWO WEEKS AND WHAT THAT COST.** Nothing. **The defect never fired**: the
+`--load` path was not run again, and the census ingest was written fresh. ⚠⚠ **But the reservation
+was doing no work either** — it named a hazard that a later author would not have read, and the
+protection that actually arrived was a **unique constraint added for a different reason.**
+*A reserved number is a note to a future reader who has no reason to look for it.*
+
+**⚠ What closes this entry:** `--load` upserting, or an accepted statement that the constraint is
+the guard and the loader's intent is left wrong on purpose. **Neither has been ruled.**
+
+**Relied on by:** `F-052` · `D-079 amendment 3`.
+
 ### F-052 — A convention that exists, is documented, and is obeyed by every caller except the newest one — and each test written to close it was scoped to its author's own field of view
 
 - **Date:** 2026-08-20 · **Written by:** Code, about Code. **Status:** ⚠ **OPEN.** It closes when a
@@ -3296,6 +3362,57 @@ behind an explicit reveal.** ⚠ Both remain available; neither was ruled.
   tranches returns **0**, and `/api/ranking` carries no profile.
 
 **Relied on by:** `D-089` · `F-048` · `F-051` · `F-049 amendment 2`.
+
+#### D-079 amendment 4 — ⚠⚠ Decision 1 claimed a guard that did not exist. It exists now, and the claim is corrected rather than quietly made true
+
+- **Date:** 2026-08-19 · **Status:** ⚠ **A CORRECTION to decision 1's wording.** Its rulings are
+  unchanged; what changes is that the sentence describing how they were enforced was false.
+
+---
+
+**WHAT DECISION 1 SAYS, VERBATIM:**
+
+> *"Forbidden until D-075 fires: no census row scored, ranked, or ordered by suitability — **no
+> census path imports `core/scorer.py` or the fitter, asserted by test and proven by revert** · …"*
+
+**⚠⚠ MEASURED 2026-08-19: THE ONLY SUCH ASSERTION IN THE TREE RAN THE OTHER DIRECTION.**
+`tests/test_census_split.py:224` — `test_census_is_not_reachable_from_the_scorer` — asserts that
+`core/scorer.py` and `core/features.py` do not import census or foldability. **That is the
+`D-077` dec 1.1 guard, and it is a real one.** ⚠ **It says nothing about a census path importing the
+scorer**, which is the direction decision 1's sentence claims.
+
+**So for the whole life of the census the sentence read as a description and was a hope.** ⚠ Nothing
+had ever stopped a census module importing `core/scorer.py`; the separation held because nobody
+wrote the import, which is *observation*, not enforcement — **`F-052`'s subject exactly, and this is
+its clearest instance because the decision text asserted the check by name.**
+
+---
+
+**⚠ THE GUARD EXISTS NOW, AND IT WAS BUILT BECAUSE THE PROFILE FORCED THE QUESTION.**
+`tests/test_structural_profile.py::test_the_profile_does_not_import_the_scorer_or_the_fitter`
+inspects import **nodes**, so an alias cannot pass — **proven by revert with
+`import core.scorer as _aliased_to_dodge_a_token_scan`**, the `EE-0` rename route, which reddens at
+the assertion. And its sibling asserts the wall's other face: `core/scorer.py`, `core/features.py`,
+`app/reads.py` and `scripts/fit_scorer.py` cannot reach `core/structural_profile.py`.
+
+⚠⚠ **The profile is what made the gap visible.** Building a census path that legitimately *wanted*
+the model was the first time anyone asked what actually stopped it — **and the answer was nothing.**
+*A prohibition that has never been tested by someone trying to do the thing is a prohibition nobody
+has tested.*
+
+---
+
+**⚠ WHY THIS IS AN AMENDMENT AND NOT AN EDIT.** Decision 1's sentence could have been left alone —
+it is true today. **Leaving it would destroy the evidence that it was false for weeks**, and the
+interesting fact is not that the guard exists but that **a decision asserted its existence, was
+cited and relied upon, and nobody checked.** *Corrections recorded, never patched away.*
+
+⚠ **And the same reading applies to the rest of the clause, unaudited.** Decision 1 also claims *"no
+census statistic presented as evidence about ADC suitability in any artifact, deck, or briefing"*
+and *"no refit — `ranking_run` id=2 is read from its row."* **This entry has verified neither.**
+Naming them here rather than implying the audit was broader than it was.
+
+**Relied on by:** `F-052` · `F-021`.
 
 ---
 
