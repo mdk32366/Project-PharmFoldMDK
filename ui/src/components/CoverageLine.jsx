@@ -48,6 +48,14 @@ export default function CoverageLine({ coverage, rows }) {
         <li>
           <span className="cell-n">{coverage.ranked}</span> ranked
           <span className="cell-detail">{rankedFolded} folded · {rankedUnfolded} awaiting fold (rental)</span>
+          {/* F-049's third instance. `ranked` is the D-024 disposition and is ELIGIBILITY, not
+              membership of the ranking set — /api/ranking's `n_ranking_set` is smaller because a
+              pLDDT floor is applied downstream. ⚠ D-066 still binds: this component cannot see
+              that floor, so it points at the page that does the arithmetic and states NO size. */}
+          <span className="cell-detail">
+            eligible to be ranked — a pLDDT floor removes more at scoring time; the scorer page
+            reconciles the two
+          </span>
         </li>
         <li>
           <span className="cell-n">{coverage.held_out}</span> held out

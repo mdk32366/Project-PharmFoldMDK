@@ -234,6 +234,39 @@ def _coverage_row(row: ManifestRow, folded: dict[str, int],
     }
 
 
+# ── F-049's third instance: `ranked` names two populations on two routes ─────
+#
+# `/api/coverage` says `ranked = 67`; `/api/ranking` says `n_ranking_set = 56`. Both are right.
+# The defect is that neither payload said WHICH population it counted, so a consumer reading the
+# JSON had one word, two numbers, and no way to close the gap. D-016: every claim names how it is
+# known. ⚠ The UI was never the defect — D-066 dec 2 already renders the 67 → 56 reconciliation
+# beside the scorer table; a JSON consumer never sees that page.
+#
+# ⚠⚠ Each description points AT the number it is NOT, by name and by route. A description that
+# only says what a number IS still lets a reader assume the other one means the same thing.
+COVERAGE_POPULATION_KEY = {
+    "denominator": {"kind": "MANIFEST_COUNT", "text": (
+        "The 82 cohort targets, computed by `build_manifest()` from the committed CSVs (D-023). "
+        "Never read from `protein_analyses` — that would make the denominator a function of how "
+        "much work has happened (D-024)."
+    )},
+    "ranked": {"kind": "MANIFEST_DISPOSITION", "text": (
+        "MANIFEST DISPOSITION (D-024): not excluded and not held out. Computed from the committed "
+        "CSVs before any fold exists, so it counts targets that are ELIGIBLE to be ranked. "
+        "⚠ It is NOT membership of the ranking set and applies no pLDDT floor: see "
+        "`n_ranking_set` on /api/ranking, which is smaller."
+    )},
+    "held_out": {"kind": "MANIFEST_DISPOSITION", "text": (
+        "MANIFEST DISPOSITION: boundary-method incomparable (D-021 §1a). Held out of the ranking "
+        "regardless of fold state. Disjoint from `ranked` and from `excluded`."
+    )},
+    "excluded": {"kind": "MANIFEST_DISPOSITION", "text": (
+        "MANIFEST DISPOSITION: named and oversize (D-022). Excluded wins over held_out wins over "
+        "ranked, so the three cells partition the denominator exactly."
+    )},
+}
+
+
 def coverage_payload(engine: Any) -> dict[str, Any]:
     """The D-038 coverage supplier: the D-024 ``coverage`` object over the full cohort plus the
     per-target drill-down, ``fold_status`` joined from the DB.
@@ -253,12 +286,35 @@ def coverage_payload(engine: Any) -> dict[str, Any]:
     projected = [_coverage_row(r, folded, failed) for r in rows]
     return {
         "coverage": coverage(rows),
+        "population_key": COVERAGE_POPULATION_KEY,
         "failed": sum(1 for r in projected if r["fold_status"] == "failed"),
         "rows": projected,
     }
 
 
 # ── ranking (D-062): the persisted scorer result (F-004), latest VALID run only ─
+#
+# The other half of the `ranked` collision — see COVERAGE_POPULATION_KEY above. ⚠ These two
+# descriptions must stay DIFFERENT TEXT: giving both populations one description would re-create
+# the defect inside its own fix, and a test pins that.
+RANKING_POPULATION_KEY = {
+    "n_ranking_set": {"kind": "FIT_TIME_MEASUREMENT", "text": (
+        "Rows the scorer actually consumed at FIT TIME: ranked AND folded AND "
+        "mean_plddt >= plddt_floor (D-060 dec 5). A DATABASE property, measured after folding. "
+        "⚠ It is NOT `coverage.ranked` on /api/coverage, which is the manifest disposition, "
+        "applies no floor, and is larger. The difference is rows below the floor, plus ranked "
+        "rows not folded — each named, never dropped (`excluded` carries the reasons)."
+    )},
+    "n_fit_positives": {"kind": "FIT_TIME_MEASUREMENT", "text": (
+        "Group B positives INSIDE `n_ranking_set`, joined by ACCESSION (D-064 dec 1). "
+        "⚠ Not the Group B positives across the 82, which is a different and larger figure."
+    )},
+    "distribution": {"kind": "FIT_TIME_MEASUREMENT", "text": (
+        "The labelled positives with their percentile in this run — `spearman_n` rows, NOT the "
+        "`n_ranking_set` rows the model scored. ⚠ A consumer treating this as the scored set "
+        "reads the wrong population."
+    )},
+}
 
 def _score_projection(score: TargetScore, row: ProteinAnalysis) -> dict[str, Any]:
     """One ranked target row: rank · symbol · structural score · the six β_k·x_k attributions
@@ -331,6 +387,7 @@ def ranking_payload(engine: Any) -> dict[str, Any]:
 
         return {
             "result_status": _result_status(result.loo_status, result.fulldata_status),
+            "population_key": RANKING_POPULATION_KEY,
             "run": {
                 "id": run.id,
                 "target_list_version": run.target_list_version,

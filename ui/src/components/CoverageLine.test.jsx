@@ -38,4 +38,23 @@ describe('CoverageLine', () => {
     expect(t).not.toMatch(/once the scorer/i)
     expect(t).not.toMatch(/the ranking[^.]*covers/i)
   })
+
+  // F-049's third instance, the UI half. `ranked` here is the D-024 DISPOSITION; on /api/ranking
+  // `n_ranking_set` is a smaller, floor-filtered number. A reader who sees only this page has no
+  // way to know the word means something narrower elsewhere.
+  //
+  // ⚠ D-066 still binds: this component CANNOT see the floor, so it must not state the ranking's
+  // size. It says the cell is an ELIGIBILITY and points at the page that does the arithmetic —
+  // a pointer, never a count.
+  it('names `ranked` as an eligibility and points at the floor, without claiming its size', () => {
+    const { container } = render(<CoverageLine coverage={COVERAGE} rows={ROWS} />)
+    const t = container.textContent
+    expect(t).toMatch(/eligible/i)
+    expect(t).toMatch(/floor/i)
+    // ⚠ and it must STILL make no claim about the ranking's size — the pointer must not become
+    // the unverifiable claim D-066 removed.
+    expect(t).not.toMatch(/covers these/i)
+    expect(t).not.toMatch(/the ranking[^.]*covers/i)
+    expect(t).not.toMatch(/\b56\b/)
+  })
 })
