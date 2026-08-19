@@ -130,6 +130,70 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-103 — A SECOND INSTRUMENT on the claim the whole census rests on, and the secretory route is SUPPORT rather than contradiction
+
+- **Date:** 2026-08-20 · **Status:** accepted · **Author:** Code
+- ⚠ The integer was confirmed against the live log before writing, and `docs/RESERVED.md`'s next-free pointer moved in the SAME commit that spent it.
+
+**⚠⚠ THE CLAIM, AND THE FACT THAT IT HAD ONE SOURCE.** Every one of the **3,467** manifest rows asserts an extracellular span, and **every single one was decided the same way**: `boundary_method: sliced_ecd`, with `span_rule: vocabulary` (**3,342**) or `gpi_rule_A` (**125**). That is **UniProt topology annotation — one instrument, never independently checked.**
+
+⚠⚠ **In a project whose most-repeated defect class is *two paths to one quantity, never compared*, the most load-bearing claim on the platform had only one path.** Everything downstream — the folds, the spans, the profile, the staining panels — is conditioned on *"this protein is on the cell surface"*, and nothing had ever tested it.
+
+**THE SECOND INSTRUMENT IS GENUINELY DIFFERENT, WHICH IS THE ENTIRE VALUE.** HPA's subcellular data is **immunofluorescence** — antibodies photographed in fixed cells. UniProt topology is **sequence and curation**. ⚠ **They fail in completely different ways**, so agreement is evidence and disagreement is informative. *Two readings of the same sequence would have been neither*, and that distinction is stated on the surface rather than assumed of the reader.
+
+⚠ **It costs no new supplier and no new licence.** `proteinatlas.tsv` v22 is already in hand and already cleared; the ingest is **COLUMN-scoped** on amendment 1 clause 2's reasoning, reading five columns and never touching the 17 excluded `Pathology prognostics`.
+
+---
+
+**⚠⚠ THE RULE THIS ENTRY EXISTS TO FIX IN PLACE: A GOLGI OR VESICLE CALL DOES NOT REFUTE A SURFACE ASSIGNMENT.**
+
+The secretory route **is** ribosome → ER → Golgi → vesicle → plasma membrane. **A genuine surface protein can sit predominantly in that pipeline at steady state.** Reading *"not plasma membrane"* as *"not a surface protein"* would produce a **confident, plausible, wrong answer about real biology** — and it would have been the **fourth** instance of that class found in a single day, after SEER's *skin excluding basal and squamous*, GDC survival over a selected cohort, and HPA's two-axis cancer column.
+
+- **So the route is its own category and reads as SUPPORT.** `MSLN` is the case that proves it: GPI-anchored, unambiguously a surface protein, and imaged in **Vesicles**. Under a naive rule it would have been reported as a contradiction.
+- **Proven by revert**: making the route return `unreconciled` reds six parametrised assertions **at the assertion**, one per route compartment.
+
+**THE READING, WITH ITS KEYS.** ⚠ Over the **2,690** folded census proteins:
+
+| Category | n | % | What it means |
+| --- | --- | --- | --- |
+| `if_not_attempted` | **1,426** | 53.0% | ⚠⚠ **HPA holds the gene and never imaged it — NOBODY LOOKED.** The largest category by far |
+| `corroborated_route` | 519 | 19.3% | imaged on the secretory route — **support** |
+| `corroborated_membrane` | 366 | 13.6% | imaged at the plasma membrane — direct agreement |
+| `mixed` | 226 | 8.4% | several compartments, or one that neither supports nor contradicts |
+| `unreconciled` | **78** | 2.9% | ⚠ hard to reconcile — see the three causes |
+| `gene_absent_from_supplier` | 73 | 2.7% | not in the imaging atlas at all |
+| `no_gene_symbol` | 2 | 0.1% | nothing to look up |
+
+- ⚠ **Of the 1,189 actually imaged, 885 corroborate** — membrane or route. **78 do not.**
+- ⚠⚠ **The headline is NOT "only 366 are really surface proteins."** That sentence is available, wrong, and exactly the error the route category exists to prevent.
+
+**⚠⚠ AND A DISAGREEMENT IS NOT A VERDICT ON THE PROTEIN.** Three causes are possible and **this comparison cannot distinguish them**: the UniProt annotation may be wrong; the HPA antibody may be non-specific or the cell line may not express the protein; or the protein may **genuinely do both**, at different times or in different tissues. **All three render on the card whenever the category does.** A category shown alone would let a reader convict the protein of a claim the evidence cannot support.
+
+---
+
+**⚠⚠ TWO DEFECTS IN CODE'S OWN WORK, BOTH CAUGHT BY THE DISCIPLINE RATHER THAN BY INSPECTION.**
+
+1. **THE EXTRACTOR MERGED TWO ABSENCES.** The first build skipped supplier rows carrying no imaging call — and that **silently converted *"HPA has this gene and never imaged it"* into *"not in the source"***. The first measurement therefore reported **1,499 `gene_absent_from_supplier`**; the true split is **1,426 not-attempted + 73 absent**. ⚠ *A 20-fold error in the wrong direction, on precisely the distinction this project insists on most.* Fixed by emitting every row; asserted by a test that fails if fewer than 5,000 blank-call rows survive.
+2. **THE JOIN WAS FIRST-WINS.** `setdefault` silently took whichever supplier row parsed first. ⚠⚠ **`Q6IEY1` is carried by TWO rows — `OR4F16` and `OR4F3`, olfactory-receptor paralogues sharing one UniProt entry** — so an accession is **not** unique to a supplier row. **This is the two-paths-to-one-identifier defect, in the module written to compare two paths.** Fixed: candidates are kept as a list, and an identifier whose rows **disagree about the reading** returns `supplier_row_ambiguous` rather than a coin toss. *Here the two rows agree, so nothing changes today — the mechanism is what was wrong.*
+
+⚠ **It was found only because a test COMPARED the accession path against the symbol path instead of trusting either.** The comparison was written to justify a design choice and it caught a bug instead.
+
+**⚠ AND A STALE NUMBER, CORRECTED RATHER THAN DELETED.** The first docstring claimed the accession join *"reaches 1,185 rows, symbol 1,179 — safe and strictly worse"*. **That was measured against the buggy artifact** and stopped being true when the bug was fixed. Measured correctly: **2,579 resolve both ways, 16 accession-only, 20 symbol-only.** ⚠⚠ **Neither path dominates.** Accession stays primary **on principle** — it is the census's key, and `D-093` decision 6 item (3) disqualifies a join through a lossy intermediate — **not because it reaches further, which it does not.** *A number that was right about the wrong artifact is the failure worth remembering.*
+
+---
+
+**WHAT THIS IS NOT.**
+
+- ⚠⚠ **Not a score, not a confidence, not a grade.** It reports what two instruments did. **No ordering is defined over the categories and none may be invented** — asserted by a test that greps the module for `rank`, `score`, `confidence_score` and `quality`.
+- ⚠ **Not a refutation of anything.** `corroborates == False` is returned by `if_not_attempted`, which means **nobody looked**. Any consumer reading that as a negative finding is making the error the module exists to prevent.
+- ⚠ **Not a filter, and not sortable into a shortlist.** `D-102` licenses a reader-chosen lens over an observed quantity; **a category is not that quantity.**
+- ⚠ **HPA's `Reliability (IF)` is carried verbatim and labelled as HPA's own.** It is their confidence in their imaging call, never ours in the protein.
+
+**Relied on by:** `D-079` · `D-093 amendment 1` · `F-047`
+**Assumptions relied on:** none new. ⚠ **And one explicitly refused**: that a single well-curated source needs no second opinion. **It was the only claim on the platform that had never had one.**
+
+---
+
 ### D-102 — A STATED LENS is neither a judgement nor a measurement, and sorting is a lens: the owner's ruling, and the finding that makes the statement load-bearing
 
 - **Date:** 2026-08-20 · **Status:** accepted · **Ruled by:** the owner, on two questions Code raised and refused to answer for itself

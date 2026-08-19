@@ -1,0 +1,13 @@
+{
+  "source_file": "proteinatlas.tsv",
+  "source_sha256": "f926a89145dd48f78d7bb31ff7bc54eb922f665e2b041f42a4eea0834efec7b1",
+  "columns_read": [
+    "Gene",
+    "Uniprot",
+    "Subcellular main location",
+    "Subcellular additional location",
+    "Reliability (IF)"
+  ],
+  "rows_written": 20090,
+  "note": "COLUMN-SCOPED per D-093 amendment 1 clause 2. The 17 'Pathology prognostics' columns in this same file are the excluded class and were not read."
+}
