@@ -5,6 +5,7 @@ import Confidence from './Confidence.jsx'
 import PlddtExplainer from './PlddtExplainer.jsx'
 import Provenance from './Provenance.jsx'
 import CancerAssociations from './CancerAssociations.jsx'
+import ClinicalEdges from './ClinicalEdges.jsx'
 import TargetScorerPanel from './TargetScorerPanel.jsx'
 
 // The single-target experience (UI Plan v2 §3.2): structure coloured by pLDDT, confidence with its
@@ -58,7 +59,13 @@ export default function TargetView({ id }) {
         <Provenance detail={detail} />
       </div>
       <TargetScorerPanel detail={detail} ranking={ranking} />
+      {/* ⚠⚠ TWO DISTINCT SECTIONS, NEVER MERGED. Above: the D-053 EXPRESSION grid,
+          the paper's quasi H-score over the 82. Below: HPA IMMUNOHISTOCHEMISTRY over
+          3,364 genes — patient counts, a different measurement from a different
+          source. The 82 appear in both, which is exactly why they keep separate
+          headings and separate wording. */}
       <CancerAssociations symbol={detail.gene} />
+      <ClinicalEdges block={detail.clinical_block} />
     </article>
   )
 }
