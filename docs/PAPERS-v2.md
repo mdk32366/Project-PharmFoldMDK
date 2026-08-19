@@ -237,6 +237,111 @@ survivorship-conditioned 337 · and the owner rules on whether this precedes or 
 
 ---
 
+## ⟡ AMENDMENT — 2026-08-20 — Evidence coverage becomes a claim, and it bears on three existing items
+
+> ⚠ **Written by Code against `D-103` and `D-103 amendment 1`.** The register's own rule applies: *a
+> finding written for one paper may not silently become another's thesis.* This amendment therefore
+> states which load the finding carries in each item, rather than letting it drift.
+
+---
+
+## P-005 — Half of a target census has never been independently checked, and the unchecked half is the interesting half (candidate)
+
+- **Status:** **Candidate — and ⚠ the best-evidenced candidate in this register**, which is an
+  uncomfortable thing to say next to `P-002`. It has a measurement before it has a draft.
+- **The gate:** *unset — owner ruling needed.* ⚠⚠ The honest question is **not** whether the finding
+  is true but **whether it is a paper or a methods section.** See the bar below.
+- **The claim:** in a structural target census assembled from curated annotation, **the proportion of
+  entries carrying independent corroboration of the assumption the census is built on is
+  approximately half**, the missingness is **informative**, and the corroboration rate is
+  nonetheless **stable across the axes that predict it**. The unchecked entries are systematically
+  the **less-studied** ones — so *a discovery pipeline's evidence is thinnest exactly where its value
+  is highest.*
+
+**⟡ THE EVIDENCE IT ALREADY HAS** — stated first, because `P-002`'s named failure mode is *one good
+question and four unverified protein names*, and this item must not be read as another of those.
+
+| | |
+| --- | --- |
+| Census proteins | **2,690** |
+| ⚠⚠ never imaged by the second instrument — **nobody looked** | **1,426 (53.0%)** |
+| imaged | **1,189** |
+| corroborated (membrane or secretory route) | **885 (74.4%)** |
+| unreconciled | **78 (2.9%)** |
+| **missingness is informative:** median span imaged vs unimaged | **84 aa vs 42 aa** |
+| **missingness is informative:** validated antibody elsewhere | **79.0% vs 55.3%** |
+| ⚠ **corroboration rate across five span bands** | **73.7 · 75.8 · 73.9 · 75.4 · 72.4%** |
+| ⚠ **corroboration rate, better- vs less-studied** | **73.9% vs 76.4%** |
+
+- **Draws on:** `D-103` (the instrument and the categories) · `D-103 amendment 1` (the MNAR test) ·
+  `F-047` (why a plausible wrong answer is the risk) · HPA immunofluorescence and UniProt topology as
+  primary sources, both already read and licensed.
+- ⚠ **The methodological move that is actually novel is the NULL.** Testing for informative
+  missingness and **reporting that the rate did not move** is rarely done; most work either ignores
+  missingness or assumes it away. *Code expected the pessimistic result and did not get it, and that
+  is the part worth publishing.*
+
+**⚠⚠ THE BAR — what would make this a paper rather than a well-run internal check**
+
+1. ⚠ **A third instrument.** The finding's own limit is that **corroboration is measurable only where
+   corroboration exists.** Cell-surface capture proteomics or mass-spec surfaceomics would be
+   independent of *both* annotation and antibody imaging. **Without a third instrument this is a
+   careful description of two; with one it becomes a claim about evidence bases.**
+2. **Generality.** The anti-correlation between novelty and evidence should be demonstrable on a
+   census that is not ours. **One platform's coverage table is a methods section. The same shape in
+   two independent censuses is a finding.**
+3. **A stated denominator convention.** ⚠ `53.0%` is over the **2,690 folded** rows; the manifest is
+   **3,467**. *A coverage figure without its key is not a figure*, and this item must fix one before
+   drafting.
+
+**⚠ WHAT THIS ITEM DOES NOT CLAIM**
+
+- **Not that the 1,426 are wrong.** They are **unchecked**, which is a different word, and the
+  distinction is the whole point.
+- ⚠⚠ **Not that 74.4% extrapolates to them.** `D-103 amendment 1` licenses *"no bias detected on two
+  observable axes"* and explicitly refuses *"the rate applies to the remainder."*
+- **Not a criticism of HPA.** An imaging atlas covers what it has validated antibodies for; that is a
+  constraint on the field, not a defect in the supplier.
+- ⚠ **Not a confidence score, and it must never become one.** See the bearing on `P-001` below.
+
+---
+
+### ⚠ What this does to the items already in the register
+
+**`P-001` — the structural axis.** ⚠⚠ **The strongest bearing, and it is a scope bound rather than
+support.** `P-001`'s subject is a structural signal over extracellular spans. **For roughly half the
+census the claim *"this span is extracellular"* has no independent check** — so any result stated
+over the whole census is stated over a population whose defining property is verified for one half
+and assumed for the other.
+
+- **This does not invalidate anything.** It means the population must be **described**, and `P-001`
+  now has the numbers to describe it precisely rather than assert it.
+- ⚠ **The tempting error is to convert coverage into a per-protein confidence weight.** `D-079`
+  decision 1 bars scoring census rows, and `D-103` defines **no ordering over its categories**. The
+  category is a **stated condition on the claim**, never a term in a score.
+
+**`P-002` — the surfaceome negative class.** ⚠ The bearing is **evidential, and it cuts toward
+`P-002`'s own thesis.** `P-002` argues the negative class is defined by *steady-state localization
+under normal conditions*. `D-103`'s **519 `corroborated_route`** proteins are observed
+**predominantly in the secretory pathway rather than at the membrane** — which is a measured instance
+of *steady-state localization differing from functional localization*, on this project's own data.
+
+- ⚠⚠ **But `P-002`'s failure mode applies here too and is not discharged.** This is corroborating
+  texture for one clause of a claim that still lacks curation, sourcing and a method. **It is not a
+  measurement of condition-dependent trafficking**, and reading it as one would be the promotion this
+  register exists to prevent.
+
+**`P-004` — what an expression-threshold screen can and cannot support.** The bearing is **shape, not
+evidence.** `P-004` argues a threshold on a small ordinal statistic under-powers a claim. `P-005`
+argues a coverage figure under-describes an evidence base. ⚠ **Both are the same species of
+argument — a number that looks like a property of the biology and is substantially a property of the
+instrument** — and if both proceed, the register's rule applies: *same shape, two loads, written
+down.*
+
+**`P-003`** — no bearing. Recorded so the absence is a statement rather than an omission.
+
+---
+
 ## The rules that make several papers safe
 
 **Every F-entry names which paper(s) it serves, and a finding written for one paper may not silently

@@ -192,6 +192,57 @@ The secretory route **is** ribosome → ER → Golgi → vesicle → plasma memb
 **Relied on by:** `D-079` · `D-093 amendment 1` · `F-047`
 **Assumptions relied on:** none new. ⚠ **And one explicitly refused**: that a single well-curated source needs no second opinion. **It was the only claim on the platform that had never had one.**
 
+#### D-103 amendment 1 — ⚠⚠ The missingness IS informative, and the corroboration rate is FLAT anyway: a null result, reported as one
+
+- **Date:** 2026-08-20 · **Status:** accepted
+- ⚠ **A sub-entry, not a new integer.** It amends `D-103` in place beneath it, on the `D-099 amendment 1` precedent, so **the next free top-level integer is unchanged**
+
+**THE QUESTION THE OWNER ASKED, AND IT IS THE RIGHT ONE.** `D-103` reports that **885 of 1,189 imaged census proteins corroborate (74.4%)** and that **1,426 were never imaged**. ⚠⚠ **That rate describes the imaged subset. Whether it says anything about the other 1,426 depends entirely on whether being imaged is independent of being corroborated** — and `D-103` did not ask.
+
+**⚠⚠ STEP 1 — THE MISSINGNESS IS NOT RANDOM. MEASURED, ON TWO OBSERVABLE AXES.**
+
+| | imaged (**1,189**) | never imaged (**1,426**) |
+| --- | --- | --- |
+| **median extracellular span** | **84 aa** | **42 aa** |
+| **has a validated HPA antibody elsewhere** *(a tumour IHC panel exists)* | **79.0%** | **55.3%** |
+
+**HPA images bigger, better-studied proteins.** That is textbook *missing not at random*, and the expected consequence is that the corroborated set is enriched for well-characterised proteins — **precisely the ones whose UniProt topology annotation is most likely to be right.** ⚠ On that reasoning **74.4% would be an optimistic bound rather than an estimate.**
+
+**⚠⚠ STEP 2 — IT IS NOT. THE CORROBORATION RATE IS FLAT ACROSS BOTH AXES.**
+
+| Span band | imaged | corroborated | rate |
+| --- | --- | --- | --- |
+| under 30 aa | 274 | 202 | **73.7%** |
+| 30–59 | 244 | 185 | **75.8%** |
+| 60–119 | 153 | 113 | **73.9%** |
+| 120–299 | 337 | 254 | **75.4%** |
+| 300+ | 181 | 131 | **72.4%** |
+
+| Antibody availability | imaged | corroborated | rate |
+| --- | --- | --- | --- |
+| **has** a tumour IHC panel | 939 | 694 | **73.9%** |
+| **no** tumour IHC panel | 250 | 191 | **76.4%** |
+
+⚠⚠ **A three-percentage-point spread across a tenfold range of span length, and a two-point spread across the better-studied/less-studied split.** *The properties that predict being IMAGED do not predict CORROBORATING.* **So the observable selection bias does not translate into a bias in the rate**, and the reasoning in step 1 — which was Code's own first expectation — **is not supported by the data.**
+
+**⚠ WHAT THIS DOES AND DOES NOT LICENSE. THE DISTINCTION IS THE ENTIRE VALUE OF THE ENTRY.**
+
+- ✅ **It licenses saying**: on the two axes that can be tested, the corroboration rate is stable, so **no bias was detected** in the estimate.
+- ⚠⚠ **It does NOT license saying the 74.4% applies to the 1,426.** This is an **argument from absence of detected bias, not proof of absence.** A hidden axis — one correlated with both imaging and annotation quality but with neither span nor antibody availability — remains entirely possible and **cannot be excluded from inside the observed set.**
+- ⚠⚠ **THE LIMIT IS IRREDUCIBLE, NOT A GAP IN EFFORT. Corroboration can only be measured where corroboration exists.** No amount of analysis of the imaged set can establish what the unimaged set would have shown. **Only a third instrument can**, and naming that is more useful than any further slicing of this one.
+- ⚠ **A NULL RESULT IS REPORTED AS A NULL RESULT.** Code expected step 2 to confirm step 1's pessimism and it did not. *Recorded because a test that came out the reassuring way is exactly the one a project is tempted not to write down.*
+
+**⚠⚠ AND THE STRUCTURAL OBSERVATION, WHICH OUTLIVES THESE NUMBERS.**
+
+**Novelty and evidence are anti-correlated, and no method repairs it.** The purpose of a 2,690-protein census is to reach past the well-known targets. But the well-known targets are exactly the ones with validated antibodies, published imaging and an independent second opinion — **as the 79.0% versus 55.3% split measures directly.**
+
+⚠ **So a discovery platform's least-evidenced rows are, by construction, the ones it most wants to say something new about.** This is a property of the field's evidence base rather than of any pipeline, it applies to every target-discovery effort and not only this one, and **it bounds what any of them can honestly claim.**
+
+**WHAT IT CHANGES ON THE SURFACES: nothing, deliberately.** ⚠ No category is recomputed, no protein is reclassified, and no confidence is derived. **This entry is about how the existing numbers may be READ**, and `D-103`'s categories already carry their own causes. *An analysis that concluded "no detected bias" and then quietly promoted a rate to an estimate would be the defect it was written to prevent.*
+
+**Relied on by:** `D-103` · `P-005`
+**Assumptions relied on:** none new. ⚠ **And one explicitly refused**: that a measured rate over an observed subset describes the unobserved remainder. **It describes what was observed. That is the whole of it.**
+
 ---
 
 ### D-102 — A STATED LENS is neither a judgement nor a measurement, and sorting is a lens: the owner's ruling, and the finding that makes the statement load-bearing
