@@ -130,6 +130,55 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-101 — A protein is findable by the names people actually use, and an alias is a way IN, never a second identity
+
+- **Date:** 2026-08-20 · **Status:** accepted · **Author:** Code, on an owner-reported defect
+- ⚠ **The integer was confirmed against the live log before writing, and `docs/RESERVED.md`'s next-free pointer was moved in the SAME commit that spent it.** ⚠⚠ The pointer is NOT restated here: two copies of one fact is how that pointer came to name a reserved integer in the first place, and a log entry naming the next free number would dangle until someone spent it — *the pointer that exists to prevent a collision is the thing that most recently caused one.*
+
+**⚠⚠ THE DEFECT, FOUND BY THE OWNER, AND IT IS WORSE THAN A MISSING FEATURE.** The owner searched the surfaces for **HER2**, **HER3** and **CD30** and found none of them. **Two of the three were present the whole time.**
+
+| Searched | Actually | Why it read as absent |
+| --- | --- | --- |
+| **CD30** | ✅ folded in the census as **`TNFRSF8`**, `analysis_id 2619` | the search matches accession, gene and label; **none of the three contains "CD30"** |
+| **HER2** | ✅ in the 82-target cohort as **`ERBB2`** — Kadcyla *and* Enhertu | same; the label is *"Receptor tyrosine-protein kinase erbB-2"* |
+| **HER3** | ❌ genuinely absent | ⚠ a different cause entirely — see the closing clause |
+
+⚠⚠ **A search that answers "no protein matches" for a protein we hold does not report a gap — it manufactures one.** The platform is keyed on HGNC gene symbols; the ADC field speaks in CD numbers and receptor families. **The two vocabularies were never joined, so the surface silently disagreed with its own user about what it contained.** That is `F-036`'s class — *an unfetched row carries an empty value* — relocated from a data path to a query path, and it is more dangerous here because the person reading it concludes something about the WORLD, not about the tool.
+
+**RULED.**
+
+1. **The surfaces resolve ALIASES**, not only accession, gene and label. Shipped on the census search and on both card headers as *"Also known as"*.
+2. ⚠⚠ **The aliases are DERIVED, NEVER TYPED.** They are extracted from `data/census/spancache/` — the same pinned UniProt cache `D-093` decision 6 item (3) used for the accession join, already in the tree and already versioned. **`D-093 amendment 1` exists because a licence was RECALLED rather than READ**, and a hand-written `HER2 -> ERBB2` map is that same act. `tests/test_protein_aliases.py::test_every_alias_is_present_in_the_pinned_uniprot_cache` asserts each sampled alias string **literally occurs in the entry it claims to come from**.
+3. ⚠⚠ **AN AMBIGUOUS ALIAS RESOLVES TO ALL OF ITS ACCESSIONS AND SAYS SO.** One alias can name several proteins. **Picking the first is the two-paths-to-one-identifier defect — this project's most-repeated class — and an alias index is precisely where it hides.** `resolve()` returns every match with `ambiguous` set; the caller shows the ambiguity rather than guessing.
+4. **Punctuation is normalised on BOTH sides.** UniProt stores `PDL1`, `NECTIN4`, `HER2`; people type `PD-L1`, `NECTIN-4`, `HER-2`. ⚠ Normalising only the query would have left the primary symbols unreachable by their hyphenated spellings — the fix has to apply to the stored side too, or it is a rule applied to one shape and not the other.
+5. ⚠ **An alias is a way IN, never a second identity.** Matching one does not rename the row, does not reorder it, and does not promote it. The gene symbol remains the record's name; *"Also known as"* renders quieter than the symbol above it, by rule and by stylesheet.
+
+**THE INDEX, WITH ITS KEYS.** ⚠ Every count states what it is over.
+
+| Count | Key |
+| --- | --- |
+| **17,112** alias rows over **4,376** accessions | `data/census/spancache/` — 4,990 cached UniProt entries |
+| **16,824** distinct raw alias strings · **16,182** after normalisation | the 642 difference is spellings that fold together |
+| **201** raw alias strings name more than one accession | emitted and marked `ambiguous`, never resolved |
+| **28** collisions **introduced** by stripping punctuation | ⚠ the measured PRICE of ruling 4, asserted at that number so a change must be looked at |
+| kinds: `gene_synonym` · `cd_antigen` · `alt_short` · `alt_full` | ⚠ the collisions cluster in `alt_full`, which describes what a protein DOES rather than naming it |
+
+⚠ **The primary gene symbol is never emitted as an alias of itself** — it already matches, and re-emitting it would inflate the index with rows that change no result.
+
+**⚠⚠ A TEST THAT PASSED FOR THE WRONG REASON, CAUGHT BY THE REVERT PROOF.** `finds NECTIN4 when the user types the hyphenated NECTIN-4` was green — because the protein's **label is literally "Nectin-4"**, so the raw substring path matched and the normalisation under test was never executed. Reverting the normalisation left it green. **A test that cannot go red is not evidence.** A row was added whose gene, label and aliases contain no hyphen at all (`CD274` / *Programmed cell death 1 ligand 1* / `PDL1`), and the fixture now **asserts the absence of the hyphen** before asserting the match, so the proof cannot rot back into the same shape. Both paths were then proven red at the assertion — 5 failures for the alias path, 2 for normalisation — never at an error.
+
+**⚠⚠ WHAT THIS DOES NOT FIX, STATED SO NOBODY READS IT AS FIXED.**
+
+- **HER2 and HER3 are still not in the census, and no alias can change that.** They are in the manifest and were never overlooked: their extracellular spans are **630 aa** and **624 aa**, and both are assigned to the **rental tier** — HER2 measured `over_local_ceiling`, HER3 `unmeasured_local_ceiling`, alongside **EGFR (621)** and **HER4 (626)**. ⚠ **The entire ERBB family clusters at the local fold ceiling.** An alias index makes a protein findable; it does not fold one.
+- ⚠ **`untested_band` is NOT `above_local`.** HER3, EGFR and HER4 are **unmeasured**, not proven too large. Reading them as "too big" would convert an absence of measurement into a negative result — `F-018`'s class.
+- ⚠ **The target surface has no search box** (82 rows, browsable), so `ERBB2` was always visible there by eye. This entry makes it *recognisable* as HER2; it did not make it *present*.
+- ⚠⚠ **Nothing here ranks, groups or filters proteins by any property.** The same request that asked for aliases also asked to group proteins by how well they stain against tumours. **That is a different question and it is NOT ruled here** — it runs at `D-079` decision 1 and at `D-093` ruling 4, and it needs its own dated entry before any code. `tests/test_protein_aliases.py::test_the_alias_module_neither_scores_nor_ranks` asserts the module imports neither the scorer nor the structural profile, because *a resolver that also sorted would be decision 1 wearing a search box.*
+
+**Relied on by:** `D-079` · `D-093`
+**Assumptions relied on:** none new. ⚠ The UniProt cache is relied on as an IDENTITY source here, having been relied on as a MAPPING source in `D-093` decision 6 — *the same instrument, and its failure would now be visible in two places at once.*
+
+---
+
 ### F-021 — A loader that inserts where it must update, rewrites inputs it was not asked to touch, and binds to the most recent run by default — three clauses with three different fates, and only one is repaired
 
 - **Date reserved:** 2026-08-05, `RULING-2026-08-05-STOP-feature-7-not-extracted.md` §3.6 ·

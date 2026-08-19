@@ -50,12 +50,32 @@ function compare(a, b, key, numeric, dir) {
   return dir === 'asc' ? c : -c
 }
 
+// ⚠⚠ PUNCTUATION IS NOT DECORATION IN THIS DOMAIN. UniProt stores `PDL1`, `NECTIN4`, `HER2`;
+// people type `PD-L1`, `NECTIN-4`, `HER-2`. Comparing raw strings answers "no protein matches that
+// search" for a protein we hold, which is the worst answer a search can give — it reads as absence.
+export function normalizeQuery(text) {
+  return String(text ?? '').toUpperCase().replace(/[^A-Z0-9]+/g, '')
+}
+
+// ⚠⚠ AND THE NAME PEOPLE KNOW IS OFTEN NOT THE NAME WE STORE. The census is keyed on HGNC symbols;
+// the ADC field speaks in CD numbers and receptor families. `CD30` is here as `TNFRSF8` and `HER2`
+// is a target as `ERBB2` — both read as MISSING to anyone who searches the name on the label of the
+// drug. Aliases come from the pinned UniProt cache (`core/protein_aliases.py`), never typed.
+// ⚠ An alias is a way IN, not a second identity: matching one does not rename the row.
 export function filterRows(rows, query) {
-  const q = query.trim().toLowerCase()
-  if (!q) return rows
-  return rows.filter((r) =>
-    [r.accession, r.gene, r.label].some((v) => v && String(v).toLowerCase().includes(q)),
-  )
+  const raw = query.trim().toLowerCase()
+  if (!raw) return rows
+  const q = normalizeQuery(query)
+  return rows.filter((r) => {
+    // the original substring behaviour is preserved for names with spaces and punctuation
+    if ([r.accession, r.gene, r.label].some((v) => v && String(v).toLowerCase().includes(raw))) {
+      return true
+    }
+    if (!q) return false
+    return [r.accession, r.gene, r.label, ...(r.aliases ?? [])].some(
+      (v) => v && normalizeQuery(v).includes(q),
+    )
+  })
 }
 
 // ⚠⚠ A CAP, AND IT IS STATED. The first version rendered all 2,629 rows: a 116,000px table body
@@ -99,10 +119,10 @@ export default function CensusTable({ rows, onSelect }) {
       </p>
 
       <label className="census-search">
-        <span className="sr-only">Search by accession, gene or protein name</span>
+        <span className="sr-only">Search by accession, gene, protein name or alias</span>
         <input
           type="search"
-          placeholder="Search accession, gene or protein name…"
+          placeholder="Search accession, gene, protein name or alias (HER2, CD30, TROP2)…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

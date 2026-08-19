@@ -157,6 +157,17 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
           <p className="protein-name">
             {detail.label ?? <span className="unknown">name unknown</span>}
           </p>
+          {/* ⚠⚠ THE NAME ON THE DRUG LABEL IS OFTEN NOT THE NAME ON THIS PAGE. This protein is
+              `TNFRSF8` here and `CD30` everywhere a clinician reads about it. Showing the other
+              names is what lets a reader confirm they are looking at the protein they meant — the
+              owner searched CD30 and concluded it was absent.
+              ⚠ SECONDARY, never a rename: the gene symbol above stays the row's identity. */}
+          {detail.aliases?.length > 0 && (
+            <p className="protein-aliases">
+              <span className="aka-label">Also known as</span>{' '}
+              {detail.aliases.slice(0, 6).join(' · ')}
+            </p>
+          )}
         </>
       )}
 
