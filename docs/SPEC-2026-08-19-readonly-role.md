@@ -10,6 +10,50 @@
 
 ---
 
+## §0 — ⚠⚠ CORRECTION, 2026-08-19, same day: §2's HAND-WRITTEN SQL IS THE WRONG INSTRUMENT
+
+**The owner asked why a password was suddenly needed after weeks without one. The question was
+correct and the answer is that it was not.**
+
+⚠ **Nothing that existed required a password. Code has never connected to the database** — every
+figure reported to date came from committed files, the log, the public read API, or `fly` CLI
+metadata, with `DATABASE_URL` printed empty before each run. **The password requirement was created
+by §2 itself**, which opens `CREATE ROLE … LOGIN PASSWORD`, and then asked the owner to supply the
+password that Code's own statement demanded. **That is circular, and it is recorded rather than
+edited away.**
+
+⚠⚠ **Fly Managed Postgres already serves this as a first-class role**, checked after the question
+rather than before writing §2:
+
+```
+fly mpg users create <CLUSTER_ID> --username <name> --role reader
+                                  # roles: schema_admin | writer | reader
+fly mpg connect <CLUSTER_ID> --username <name>
+                                  # NO password flag — authenticates via the existing fly auth token
+```
+
+**Measured on `zp2wjrej9lwodn4q`: one user, `fly-user`, role `schema_admin`.** So the cluster has a
+single full-rights user today, and a `reader` beside it is one command with **no credential passing
+through anyone's hands.**
+
+- **This is `D-093` decision 6's own discipline — *supplier before contract* — applied to the
+  PLATFORM instead of to a data source, and not applied.** §2 specified a bespoke thing without first
+  asking what the supplier serves. ⚠ **Same shape as the `Cancer prognostics` guard**: a rule written
+  against something assumed rather than checked.
+- ⚠ **`HB2`'s constraint is satisfied by construction, not by discipline.** A password that is never
+  generated cannot be printed, echoed or transcribed.
+
+**⚠⚠ AND `HB4` MATTERS MORE, NOT LESS.** Code does **not** know what Fly's `reader` role grants —
+whether it is `SELECT`-only, whether it excludes `TRUNCATE`, whether it owns anything. **The grant
+was never the point; the proof was.** With a hand-written `GRANT` the privileges are legible in the
+statement; with a platform role **the only way to know what `reader` means is to connect as it and
+try to break something.** §4's proof is now the sole source of that knowledge.
+
+⚠ **§2 is left standing below, not deleted** — it remains the correct instrument *if* `reader` turns
+out to grant more than `SELECT`, and a reader comparing the two paths should be able to see both.
+
+---
+
 ## §1 — ⚠ What this role protects against, and what it does not
 
 **It protects us from our own `pytest`.** `D-092` refuses production **by hostname**, and
