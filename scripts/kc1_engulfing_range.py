@@ -72,7 +72,12 @@ print("\n  the shortest, the ones ruling 6 is written for:")
 print(f"  {'acc':9s} {'span':>5s} {'span range':>13s}  engulfing feature")
 print("  " + "-" * 92)
 for e in sorted(engulfing, key=lambda e: e["span"])[:12]:
-    print(f"  {e['acc']:9s} {e['span']:>5d} {f'{e['s0']}-{e['s1']}':>13s}  "
+    # ⚠ NOT a nested same-quote f-string. That is PEP 701 (Python 3.12+) and this project runs
+    # 3.11 in the venv AND in CI — the file could not even be PARSED here. Authored and run under
+    # a 3.14 interpreter by mistake, which is the same "verified in a richer environment than
+    # production" defect F-052 records. The span range is built first, then formatted.
+    span_range = "%d-%d" % (e['s0'], e['s1'])
+    print(f"  {e['acc']:9s} {e['span']:>5d} {span_range:>13s}  "
           f"{e['a']}-{e['b']} {e['type']}: {e['desc']}")
 
 print("\n  ⚠ and are they FOLDED / in the census DB population at all?")
