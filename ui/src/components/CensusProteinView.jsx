@@ -78,8 +78,12 @@ export default function CensusProteinView({ id }) {
         {/* ⚠ Said at the top, where a reader arriving from a search engine meets it first — not
             buried under the structure they came to look at. */}
         <p className="census-bar">
-          <strong>Not scored, not ranked.</strong> This protein was folded to find out whether it
-          could be; it has not been assessed as a target, and it is not comparable to the ranked 82.
+          {/* ⚠ The bar asserted "this protein WAS FOLDED" on every card, including the ones that
+              were never folded — a false claim sitting directly above a NOT FOLDED banner. */}
+          <strong>Not scored, not ranked.</strong>{' '}
+          {detail.folded === false
+            ? 'This protein has not been folded, so nothing has been measured from a structure — and it has not been assessed as a target either. It is not comparable to the ranked 82.'
+            : 'This protein was folded to find out whether it could be; it has not been assessed as a target, and it is not comparable to the ranked 82.'}
         </p>
       </header>
 
