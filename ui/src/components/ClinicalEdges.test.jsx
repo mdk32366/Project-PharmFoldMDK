@@ -83,24 +83,40 @@ describe('ClinicalEdges', () => {
     // reader was being told the obstacle was permission, which obtaining a licence would not fix.
     // ⚠ Third test this week found pinning defective copy, after `App.test.jsx` and
     // `TargetList.sort.test.jsx`. A test asserting the wrong sentence defends it.
-    expect(t).toMatch(/vocabulary, not permission/i)
-    expect(t).toMatch(/two independent axes/i)
-    expect(t).toMatch(/unattempted, not failed/i)
+    // ⚠⚠ THE CLAIM MOVED AGAIN, AND THE PREVIOUS ONE WAS FALSE (owner ruling, WA).
+    // "the tumour names cannot be matched up" generalised FOUR measured failures of TWENTY into a
+    // total impossibility. The invariant is what survives: state that we do not have the data,
+    // WITHOUT claiming the join is impossible and WITHOUT a count before one is measured.
+    expect(t).toMatch(/we do not have that data/i)
+    expect(t).toMatch(/some tumour names/i)
+    expect(t).toMatch(/how many is being measured/i)
+    // ⚠ no total-impossibility claim
+    expect(t).not.toMatch(/cannot be matched up/i)
+    // ⚠ and no count until it is measured
+    expect(t).not.toMatch(/(four|4|sixteen|16) of (twenty|20)/i)
   })
 
-  // ⚠⚠ The silent-join case, which is the reason the section exists at all: a string match on
-  // "skin cancer" SUCCEEDS against a registry category named "Skin excluding Basal and Squamous"
-  // and returns a number about a different population. `F-047`'s class, stated on the surface.
-  it('names the join that would succeed and be wrong', () => {
-    const t = text(PRESENT)
-    expect(t).toMatch(/Skin excluding Basal and Squamous/i)
-    expect(t).toMatch(/fails silently|quietly be about a different population/i)
+  // ⚠⚠ THE SILENT-JOIN EXPLANATION HAS LEFT THE CARD, DELIBERATELY. ~150 words explaining an
+  // absence, on 2,690 cards, outweighed the tumour panel below that HAS data — which is how a
+  // reader concludes the protein has none. The skin case is real and is recorded in the crosswalk
+  // document; what the CARD must not do is explain at length in place of showing.
+  it('keeps the absence to one line and does not explain at card length', () => {
+    // ⚠ measure THE BLOCK, not everything after its heading. A text slice ran on into the source
+    // line and the licence quotation and reported 616 characters for a two-sentence paragraph.
+    const { container } = render(<ClinicalEdges block={PRESENT} />)
+    const burden = container.querySelector('.clin-burden')
+    expect(burden).not.toBeNull()
+    expect(burden.textContent.trim().length).toBeLessThan(320)
+    expect(burden.textContent).not.toMatch(/Skin excluding Basal and Squamous/i)
+    // ⚠ one paragraph of body, not a section
+    expect(burden.querySelectorAll('p').length).toBe(1)
   })
 
   it('renders the burden slot even when the protein is NOT covered', () => {
     const t = text(ABSENT)
     expect(t).toMatch(/How common, how deadly/)
-    expect(t).toMatch(/unattempted, not failed/i)
+    // ⚠ ruling 1 — the slot renders, never omitted; the WORDING is the part that moved
+    expect(t).toMatch(/we do not have that data/i)
   })
 
   // ⚠ an absent gene is a category, not an empty panel

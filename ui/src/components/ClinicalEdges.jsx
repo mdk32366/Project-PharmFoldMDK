@@ -201,27 +201,20 @@ function BurdenSlot() {
           why the others are unattempted. `D-093` amendment 6 measured the actual obstacle, and it
           is a VOCABULARY problem, not a licensing one — so a reader was being given a reason that
           would not be fixed by obtaining a licence. */}
+      {/* ⚠⚠ ONE LINE, AND THE PREVIOUS VERSION WAS FALSE (owner ruling, 2026-08-21 · `WA`).
+          It said *"the tumour names cannot be matched up"* — a claim of total impossibility.
+          `D-093` amendment 6 measured **four failures out of twenty**. Generalising four into all
+          twenty is not a caveat, it is a false statement, and replacing a false claim with a true
+          one waits on nothing.
+          ⚠ AND ~150 WORDS EXPLAINING AN ABSENCE, ON 2,690 CARDS, OUTWEIGHED THE TUMOUR PANEL BELOW
+          THAT HAS DATA — which is how a reader concludes the protein has none. The explanation
+          belongs on the crosswalk page; the card gets the fact.
+          ⚠ No number here until `VA`/`WB` reports: "how many" is being measured, and printing a
+          count before it is measured would repeat the error in the other direction. */}
       <p className="clin-burden-missing">
-        <strong>Not shown — the tumour names cannot be matched up.</strong> How often each cancer
-        occurs, how lethal it is, and how many people survive it are <em>not</em> on this page.
-        The obstacle is measured, and it is <strong>vocabulary, not permission</strong>: cancer
-        registries code a tumour on two independent axes — <em>where</em> it is and <em>what</em> it
-        is — and the atlas column used here collapses both into one free-text name, so the two
-        cannot be joined reliably.
-      </p>
-      {/* ⚠⚠ THE EXAMPLE IS ON THIS VERY CARD. `normal_tissue.tsv` lists "skin 1" and "skin 2" as
-          separate entries; the tumour side has the harder version of the same problem. */}
-      <p className="clin-burden-missing note">
-        ⚠ <strong>And a join that looked successful would be the worse outcome.</strong>{' '}
-        <em>Skin cancer</em> would match a registry category literally named{' '}
-        <em>&ldquo;Skin excluding Basal and Squamous&rdquo;</em> — which omits the overwhelming
-        majority of skin cancers. It would return a number, and the number would quietly be about a
-        different population. Three other tumour names fail loudly; this one fails silently.
-      </p>
-      <p className="clin-burden-missing note">
-        Separately, one redistributable source was withdrawn on licensing grounds. The public
-        registries are <strong>unattempted, not failed</strong> — nobody has approached them and
-        been refused.
+        <strong>Incidence and survival are not shown — we do not have that data.</strong> Some
+        tumour names in this atlas cannot be reliably matched to registry categories; how many is
+        being measured.
       </p>
     </div>
   )
