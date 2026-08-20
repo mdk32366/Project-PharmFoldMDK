@@ -13,8 +13,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-vi.mock('../api.js', () => ({ listAnalyses: vi.fn(), getCoverage: vi.fn() }))
-import { listAnalyses, getCoverage } from '../api.js'
+vi.mock('../api.js', () => ({ listAnalyses: vi.fn(), getCoverage: vi.fn(), getRanking: vi.fn() }))
+import { listAnalyses, getCoverage, getRanking } from '../api.js'
 import TargetList from './TargetList.jsx'
 
 // Distinct values so every ordering is unambiguous.
@@ -41,8 +41,13 @@ const COVERAGE = {
 }
 
 const renderList = () => render(<MemoryRouter><TargetList /></MemoryRouter>)
+// ⚠ Column 1 is now Rank (the scorer's ordering, owner ruling 2026-08-21), so the gene is the
+// SECOND cell. Reading `td` blindly returned the rank cause and every ordering assertion compared
+// four identical strings — green for the wrong reason in one direction, red in the other.
 const bodyGenes = () =>
-  screen.getAllByRole('row').slice(1).map((r) => r.querySelector('td')?.textContent.trim())
+  screen.getAllByRole('row').slice(1)
+    .map((r) => r.querySelectorAll('td')[1]?.textContent.trim())
+    .filter((v) => v !== undefined)
 
 const header = (re) => screen.getAllByRole('columnheader').find((h) => re.test(h.textContent))
 const clickHeader = (re) => {
@@ -55,6 +60,8 @@ beforeEach(() => {
   getCoverage.mockReset()
   listAnalyses.mockResolvedValue(ROWS)
   getCoverage.mockResolvedValue(COVERAGE)
+  // ⚠ no ranking in these fixtures: these suites test sorting/confidence, not the rank axis.
+  getRanking.mockResolvedValue({ rows: [] })
 })
 
 async function ready() {
@@ -62,11 +69,29 @@ async function ready() {
   await waitFor(() => expect(screen.getAllByRole('row').length).toBeGreaterThan(1))
 }
 
-describe('default order is unchanged (the ceiling-at-a-glance story depends on it)', () => {
-  it('loads sorted by mean pLDDT descending, with the absent row trailing', async () => {
+// ⚠⚠ THIS SUITE ASSERTED THE DEFECT. It was titled "default order is unchanged (the
+// ceiling-at-a-glance story depends on it)" and pinned mean pLDDT descending — the default the owner
+// ruled against on 2026-08-21, because `F-051` puts `membrane_proximal_plddt` at 32.2% of the
+// scorer's attribution, making it a ranking by a third of the real ranking. ⚠ A test pinning a
+// defective default DEFENDS it; that is the second instance this week, after `App.test.jsx`.
+//
+// ⚠ These fixtures serve NO ranking run, deliberately: this suite tests the wiring of the OTHER
+// columns. The rank default and the partition have their own suite (`TargetList.rank.test.jsx`).
+describe('with no ranking served, the default is a STATED fallback and never an implied order', () => {
+  it('falls back to accession ascending rather than pretending to a rank order', async () => {
     renderList()
     await ready()
-    expect(bodyGenes()).toEqual(['NECTIN4', 'SDK1', 'PTPRZ1', 'IGF2R'])
+    expect(bodyGenes()).toEqual(['SDK1', 'IGF2R', 'PTPRZ1', 'NECTIN4'])  // A7 < P11 < P23 < Q92
+  })
+
+  it('says a rank is missing for a shared reason, not by inventing a per-row cause', async () => {
+    // ⚠⚠ The bug this caught during the build: `rankCause` fell through to the floor branch and
+    // labelled NECTIN4 — a 77.26 pLDDT fold — "excluded by the pre-registered pLDDT floor of 50".
+    renderList()
+    await ready()
+    const body = screen.getByRole('table').textContent
+    expect(body).toMatch(/no ranking run is currently served/)
+    expect(body).not.toMatch(/excluded by the pre-registered mean pLDDT floor/)
   })
 })
 
@@ -79,7 +104,8 @@ describe('every existing column sorts, asc → desc → back to default', () => 
     clickHeader(/gene/i)
     expect(bodyGenes()).toEqual(['SDK1', 'PTPRZ1', 'NECTIN4', 'IGF2R'])
     clickHeader(/gene/i)
-    expect(bodyGenes()).toEqual(['NECTIN4', 'SDK1', 'PTPRZ1', 'IGF2R'])   // default restored
+    // ⚠ the default is now the rank axis; with no ranking served it is the stated accession fallback
+    expect(bodyGenes()).toEqual(['SDK1', 'IGF2R', 'PTPRZ1', 'NECTIN4'])   // default restored
   })
 
   it('sorts by Accession alphabetically', async () => {
@@ -148,7 +174,8 @@ describe('sorting composes with the tier filter, and adds no new axis', () => {
     renderList()
     await ready()
     fireEvent.change(screen.getByLabelText(/tier/i), { target: { value: 'rental' } })
-    expect(bodyGenes()).toEqual(['SDK1', 'PTPRZ1', 'IGF2R'])
+    // ⚠ default is the rank axis; unserved here, so the stated accession fallback
+    expect(bodyGenes()).toEqual(['SDK1', 'IGF2R', 'PTPRZ1'])
     clickHeader(/gene/i)
     expect(bodyGenes()).toEqual(['IGF2R', 'PTPRZ1', 'SDK1'])
   })
@@ -180,6 +207,6 @@ describe('resilience — the coverage join is additive, never load-bearing for t
     getCoverage.mockRejectedValue(new Error('coverage down'))
     renderList()
     await ready()
-    expect(bodyGenes()).toEqual(['NECTIN4', 'SDK1', 'PTPRZ1', 'IGF2R'])
+    expect(bodyGenes()).toEqual(['SDK1', 'IGF2R', 'PTPRZ1', 'NECTIN4'])
   })
 })

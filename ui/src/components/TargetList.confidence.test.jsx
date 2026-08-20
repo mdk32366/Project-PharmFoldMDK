@@ -21,8 +21,8 @@ import { MemoryRouter } from 'react-router-dom'
 
 // getCoverage is mocked too: TargetList now joins /api/coverage client-side for the
 // absent-value reason (no route change). It is additive - the list renders without it.
-vi.mock('../api.js', () => ({ listAnalyses: vi.fn(), getCoverage: vi.fn() }))
-import { getCoverage, listAnalyses } from '../api.js'
+vi.mock('../api.js', () => ({ listAnalyses: vi.fn(), getCoverage: vi.fn(), getRanking: vi.fn() }))
+import { getCoverage, getRanking, listAnalyses } from '../api.js'
 import TargetList from './TargetList.jsx'
 import { BANDS, COHORT_MAX_PLDDT, bandFor } from '../plddt.js'
 
@@ -41,6 +41,8 @@ beforeEach(() => {
   getCoverage.mockReset()
   listAnalyses.mockResolvedValue(ROWS)
   getCoverage.mockResolvedValue({ rows: [] })
+  // ⚠ no ranking in these fixtures: these suites test sorting/confidence, not the rank axis.
+  getRanking.mockResolvedValue({ rows: [] })
 })
 
 describe('confidence demotion — the column header says what the band labels already say', () => {

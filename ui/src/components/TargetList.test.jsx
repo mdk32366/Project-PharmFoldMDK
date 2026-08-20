@@ -16,8 +16,9 @@ import { MemoryRouter } from 'react-router-dom'
 vi.mock('../api.js', () => ({
   listAnalyses: vi.fn(),
   getCoverage: vi.fn(),
+  getRanking: vi.fn(),
 }))
-import { getCoverage, listAnalyses } from '../api.js'
+import { getCoverage, getRanking, listAnalyses } from '../api.js'
 import TargetList from './TargetList.jsx'
 
 const ROWS = [
@@ -35,6 +36,8 @@ beforeEach(() => {
   getCoverage.mockReset()
   listAnalyses.mockResolvedValue(ROWS)
   getCoverage.mockResolvedValue({ rows: [] })
+  // ⚠ no ranking in these fixtures: these suites test sorting/confidence, not the rank axis.
+  getRanking.mockResolvedValue({ rows: [] })
 })
 
 describe('TargetList — tier legibility (D-048 §3.2)', () => {
