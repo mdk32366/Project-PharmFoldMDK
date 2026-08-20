@@ -83,6 +83,24 @@ export function withLens(rows, lens) {
   })
 }
 
+// ⚠⚠ THREE OUTCOMES, NOT ONE. "Waiting on rented capacity" was shown for 29 proteins whose fold
+// ALREADY EXISTS among the ranked 82 — same span, rental hardware — and for IGF2R, which was tried
+// there and died of CUDA OOM. A queue position, an existing result and a failed attempt are three
+// different facts, and the row said the same thing for all of them.
+export function notFoldedTitle(r) {
+  if (r.cohort_fold) {
+    const c = r.cohort_fold.mean_plddt
+    return 'not folded in the census — but folded among the 82 ranked targets'
+      + (c != null ? ` at mean confidence ${c}` : '')
+  }
+  if (r.cohort_attempt_failed) {
+    const why = r.cohort_attempt_failed.reason
+    return 'not folded — attempted among the 82 and failed'
+      + (why ? `: ${why.slice(0, 70)}` : '')
+  }
+  return r.not_folded_copy
+}
+
 // ⚠ null sorts LAST in both directions. A missing pLDDT is not a low one, and letting it float to
 // the top of an ascending sort would put unmeasured rows where the worst rows belong.
 function compare(a, b, key, numeric, dir) {
@@ -339,9 +357,12 @@ export default function CensusTable({ rows, onSelect }) {
                       The reason travels with it: "above the ceiling" and "never tested" are
                       different claims, and one row is neither — nothing records its reason at all,
                       which is a defect rather than a category. */}
+                  {/* ⚠ The row carries the same three-way distinction as the card. A tooltip saying
+                      "waiting on rented capacity" over a protein whose fold exists is the same
+                      false claim, just smaller and harder to notice. */}
                   {r.folded === false ? (
-                    <span className="badge badge-unfolded" title={r.not_folded_copy}>
-                      NOT FOLDED
+                    <span className="badge badge-unfolded" title={notFoldedTitle(r)}>
+                      {r.cohort_fold ? 'NOT FOLDED HERE' : 'NOT FOLDED'}
                     </span>
                   ) : r.topology === 'intermittent' ? (
                     <span className="badge badge-intermittent" title={`${r.segment_count} extracellular segments; ${r.discarded_aa} aa not folded`}>

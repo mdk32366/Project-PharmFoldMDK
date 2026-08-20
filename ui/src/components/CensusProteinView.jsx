@@ -94,7 +94,45 @@ export default function CensusProteinView({ id }) {
       {detail.folded === false ? (
         <section className="unfolded-card">
           <h3>NOT FOLDED</h3>
-          <p className="unfolded-why"><strong>{detail.not_folded_copy}.</strong></p>
+          {/* ⚠⚠ THREE OUTCOMES, AND THE CARD USED TO STATE ONLY ONE. "Waiting on rented capacity"
+              was shown for 29 proteins whose fold ALREADY EXISTS in the ranked 82 — at the same
+              span, on rental hardware — and for IGF2R, which was tried on rental and died of CUDA
+              OOM. A queue position, an existing result and a failed attempt are three different
+              facts and the card said the same thing for all of them. */}
+          {detail.cohort_fold ? (
+            <p className="unfolded-why">
+              <strong>Not folded in the census — but a fold of this protein exists.</strong>{' '}
+              It is one of the <strong>82 ranked targets</strong>, and there it was folded on
+              rented hardware
+              {detail.cohort_fold.mean_plddt != null && (
+                <> at a mean confidence of <strong>{detail.cohort_fold.mean_plddt}</strong></>
+              )}.{' '}
+              {/* ⚠ D-081: the two populations are measured under different span definitions, so
+                  the reader is given the spans rather than an assurance they are the same. */}
+              <span className="caveat">
+                ⚠ The two are measured separately — this census span is{' '}
+                <strong>{detail.span_aa} aa</strong>
+                {detail.cohort_fold.fold_length
+                  ? <> and the ranked fold covered <strong>{detail.cohort_fold.fold_length} aa</strong></>
+                  : null}
+                , so compare them before treating one as the other.
+              </span>
+            </p>
+          ) : detail.cohort_attempt_failed ? (
+            <p className="unfolded-why">
+              <strong>Not folded — and it was tried.</strong> This protein is one of the 82 ranked
+              targets, and the fold was attempted there on rented hardware and{' '}
+              <strong>failed</strong>
+              {detail.cohort_attempt_failed.reason && (
+                <>: <code>{detail.cohort_attempt_failed.reason.slice(0, 90)}</code></>
+              )}.{' '}
+              <span className="caveat">
+                ⚠ That is not a queue position. Renting more capacity does not obviously fix it.
+              </span>
+            </p>
+          ) : (
+            <p className="unfolded-why"><strong>{detail.not_folded_copy}.</strong></p>
+          )}
           <p>
             Its extracellular stretch is{' '}
             <strong>{detail.span_aa} aa (amino acids)</strong> — long by the standards of what this

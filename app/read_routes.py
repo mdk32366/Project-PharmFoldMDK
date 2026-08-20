@@ -183,7 +183,12 @@ def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> di
             acc = analysis_id.strip().upper()
             row = next((r for r in unfolded_rows() if r["accession"] == acc), None)
             if row is not None:
-                return dict(row)
+                # ⚠⚠ THE SAME ATTACHMENT AS THE LIST, AND IT MUST BE. The card is where a reader
+                # actually decides what to believe, so a card that omitted the cohort fold while
+                # the list showed it would be the worse half of the defect, not a smaller one.
+                out = dict(row)
+                reads._attach_cohort_fold(engine, [out])
+                return out
         if outcome == "cohort":
             raise HTTPException(
                 status_code=404,
