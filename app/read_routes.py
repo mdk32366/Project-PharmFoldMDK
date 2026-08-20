@@ -148,6 +148,17 @@ def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> di
         resolved = int(analysis_id)
     else:
         resolved, outcome = reads.resolve_census_accession(engine, analysis_id)
+        # ⚠⚠ THE NEVER-FOLDED MANIFEST IS CHECKED BEFORE THE COHORT VERDICT, AND THE ORDER IS THE
+        # WHOLE BUG. `P04626`/ERBB2 is in BOTH populations: it is one of the ranked 82 AND a census
+        # manifest row that was never folded. Asking "is it cohort?" first answered yes and 404'd
+        # the very card the census list had just linked to. A protein being in one population does
+        # not stop it being in the other, and this route serves the census one.
+        if resolved is None:
+            from core.census_unfolded import unfolded_rows
+            acc = analysis_id.strip().upper()
+            row = next((r for r in unfolded_rows() if r["accession"] == acc), None)
+            if row is not None:
+                return dict(row)
         if outcome == "cohort":
             raise HTTPException(
                 status_code=404,
@@ -155,18 +166,10 @@ def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> di
                         "under a different span definition (D-081) and is served at /targets, not "
                         "here." % analysis_id.strip().upper()))
         if resolved is None:
-            # ⚠⚠ A NEVER-FOLDED MANIFEST PROTEIN IS A CARD, NOT A 404. HER2 is in the manifest and
-            # has no analysis row, so `resolve` finds nothing — but the protein exists and the
-            # reader clicked it from the list. A 404 here would recreate, one page along, exactly
-            # the "no such protein" answer the list was fixed to stop giving.
-            from core.census_unfolded import unfolded_rows
-            acc = analysis_id.strip().upper()
-            row = next((r for r in unfolded_rows() if r["accession"] == acc), None)
-            if row is not None:
-                return dict(row)
             raise HTTPException(
                 status_code=404,
-                detail="no census protein carries the accession %s" % acc)
+                detail=("no census protein carries the accession %s"
+                        % analysis_id.strip().upper()))
     record = reads.get_census_detail(engine, resolved)
     if record is None:
         raise HTTPException(status_code=404, detail="unknown census analysis")

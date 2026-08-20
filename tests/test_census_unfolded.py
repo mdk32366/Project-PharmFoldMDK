@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import pytest
 
+import pathlib
+
 from core.census_unfolded import REASON_COPY, counts_by_reason, unfolded_rows
 
 ROWS = {r["accession"]: r for r in unfolded_rows()}
@@ -51,3 +53,19 @@ def test_no_fold_derived_value_is_reported_for_a_row_with_no_fold():
 
 def test_a_row_with_no_analysis_carries_no_id_to_link_by():
     assert all(r["id"] is None for r in list(ROWS.values())[:50])
+
+
+def test_a_protein_in_BOTH_populations_still_serves_its_census_card():
+    """⚠⚠ `P04626`/ERBB2 is one of the ranked 82 AND a census manifest row that was never folded.
+
+    The route asked "is it cohort?" first, answered yes, and 404'd the card the census list had
+    just linked to. **Being in one population does not stop a protein being in the other**, and
+    this route serves the census one. The ordering is the whole fix.
+    """
+    src = pathlib.Path("app/read_routes.py").read_text(encoding="utf-8")
+    unfolded_at = src.index("unfolded_rows")
+    cohort_at = src.index('if outcome == "cohort"')
+    assert unfolded_at < cohort_at, (
+        "the cohort verdict is reached before the never-folded manifest is consulted, which 404s "
+        "every protein that is in both populations — ERBB2 among them")
+    assert "P04626" in ROWS, "ERBB2 must be in the never-folded manifest for that path to matter"
