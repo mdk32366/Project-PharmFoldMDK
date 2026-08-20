@@ -576,13 +576,24 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
     # have to parse fine print to learn the protein exists. A row with a STATUS beats a paragraph.
     # ⚠ They carry no fold-derived value at all — no pLDDT, no profile, no staining — and each
     # absence is a category, never a zero.
+    # ⚠⚠ THE ROWS ARE ADDED BEFORE THE ENRICHMENT, AND THAT ORDERING IS THE FIX. The first version
+    # wrapped BOTH in one `try`, so an AttributeError inside `_attach_cohort_fold` — reading a
+    # column that does not exist — silently dropped ALL 777 unfolded rows from production. The
+    # census list went back to 2,690 and HER2 vanished again, with no error anywhere.
+    # ⚠ A degradation that removes 777 rows is not a degradation, it is the original defect
+    # restored by an exception handler. The list survives without the enrichment; it must never
+    # survive without the rows.
     try:
         from core.census_unfolded import unfolded_rows
         unfolded = [dict(r) for r in unfolded_rows()]
-        _attach_cohort_fold(engine, unfolded)
-        out.extend(unfolded)
     except Exception:                      # noqa: BLE001
-        pass                               # ⚠ a missing manifest degrades to the folded list alone
+        unfolded = []                      # ⚠ only a missing MANIFEST can empty this
+    out.extend(unfolded)
+    if unfolded:
+        try:
+            _attach_cohort_fold(engine, unfolded)
+        except Exception:                  # noqa: BLE001
+            pass                           # ⚠ enrichment is optional; the rows are not
     return out
 
 
@@ -619,6 +630,11 @@ def _attach_cohort_fold(engine: Any, rows: list[dict]) -> None:
                 .where(ProteinAnalysis.input_value.in_(accs))
             ).all()
         }
+    # ⚠ one query for the failure texts, from the JOB records where they actually live
+    try:
+        errors = _failed_accessions(engine)
+    except Exception:                      # noqa: BLE001
+        errors = {}                        # ⚠ a missing reason is a blank, never a dropped row
     for row in rows:
         c = cohort.get(row.get("accession"))
         if c is None:
@@ -635,7 +651,11 @@ def _attach_cohort_fold(engine: Any, rows: list[dict]) -> None:
             # ⚠⚠ in the cohort and unfolded THERE too — an attempt, not a queue position
             row["cohort_attempt_failed"] = {
                 "analysis_id": c.id,
-                "reason": (c.error or "").strip() or None,
+                # ⚠⚠ `ProteinAnalysis` HAS NO `error` COLUMN. The first version read `c.error`,
+                # which raised AttributeError — and the caller's broad `except` swallowed it and
+                # silently dropped all 777 unfolded rows from the census list in production. The
+                # failure text lives on the JOB, not the analysis: `failed_target_errors()`.
+                "reason": (errors or {}).get(row.get("accession")),
             }
     return
 

@@ -68,3 +68,52 @@ def test_the_population_boundary_is_not_crossed_by_the_route():
     seg = seg[:seg.index("@read_router")] if "@read_router" in seg else seg
     assert '"cohort"' in seg and "D-081" in seg
     assert "RedirectResponse" not in seg
+
+
+# ⚠⚠ THE REGRESSION THAT REACHED PRODUCTION, AND THE TEST THAT WOULD HAVE CAUGHT IT.
+# `_attach_cohort_fold` read `c.error`; `ProteinAnalysis` has no such column. The AttributeError
+# was swallowed by a broad `except` around BOTH the row-building and the enrichment, so the census
+# list silently returned to 2,690 rows and HER2 vanished again — with nothing logged and nothing red.
+def test_the_unfolded_rows_are_added_BEFORE_the_enrichment_can_fail():
+    """⚠ A degradation that removes 777 rows is not a degradation. It is the original defect
+    restored by an exception handler.
+
+    ⚠⚠ AST, NOT STRING INDICES. The first version of this test compared `src.index(...)` positions
+    and reddened on correct code — because it found `_attach_cohort_fold` in the COMMENT above the
+    fix. A test that greps prose for the thing it forbids matches its own warning: `F-052`'s shape,
+    reproduced inside the test written to catch it. **The question is which statements share a
+    `try`, and only the tree can answer it.**
+    """
+    fn = _fn(READS, "list_census")
+
+    def _mentions(node, name: str) -> bool:
+        return any(isinstance(n, ast.Name) and n.id == name for n in ast.walk(node))
+
+    guarded = [t for t in ast.walk(fn)
+               if isinstance(t, ast.Try) and _mentions(t, "_attach_cohort_fold")]
+    assert guarded, "the enrichment must stay guarded — it is optional"
+
+    for t in guarded:
+        for stmt in t.body:
+            dump = ast.dump(stmt)
+            assert "attr='extend'" not in dump, (
+                "`out.extend(unfolded)` shares a `try` with the enrichment: one AttributeError "
+                "inside `_attach_cohort_fold` deletes all 777 unfolded rows and the census looks "
+                "merely short. The rows go in FIRST, outside the guard.")
+
+
+def test_the_attachment_reads_a_column_that_exists():
+    """⚠⚠ The defect in one line: `c.error` on a model with no `error` column.
+
+    The failure text lives on the JOB record, not the analysis — `_failed_accessions`."""
+    fn = _fn(READS, "_attach_cohort_fold")
+    code = "\n".join(ast.dump(n) for n in fn.body)
+    assert "attr='error'" not in code, "ProteinAnalysis has no `error` column"
+    assert "_failed_accessions" in code
+
+    models = pathlib.Path("db/models.py").read_text(encoding="utf-8")
+    seg = models[models.index("class ProteinAnalysis"):]
+    seg = seg[:seg.index("class ", 10)]
+    # ⚠ every attribute the attachment reads off the row must be a real column
+    for attr in ("id", "mean_plddt", "pdb_path", "meta", "input_value"):
+        assert attr + ":" in seg, attr

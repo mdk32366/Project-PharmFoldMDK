@@ -130,6 +130,57 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-054 — ⚠⚠ 1,012 green tests certified a feature that was ENTIRELY ABSENT from production: every test asserted the SHAPE of the code, none asserted that a row came back, and a broad `except` converted one attribute error into 777 silently missing rows
+
+- **Date:** 2026-08-20 · **Status:** ⚠ **OPEN** · **Author:** Code
+- ⚠ The integer was confirmed against the live log before writing, and `docs/RESERVED.md`'s next-free pointer moved in the SAME commit that spent it.
+- ⚠⚠ **Self-reported. The author of this entry is the author of the defect, and shipped it to production the same afternoon it fixed the thing it deleted.**
+
+**WHAT HAPPENED.** PR #175/#176 deployed **v98** with the day's headline fix: the **777 never-folded census proteins**, added to the census list so that `HER2`/`ERBB2` — the owner's original question — is findable at all. The gate was green: **1,012 passed, 19 skipped**, plus 333 UI tests. Walking the surface after deploy:
+
+| | |
+| --- | --- |
+| `/census/P11717` | **HTTP 500** |
+| `/api/census` rows, live | **2,690** |
+| manifest rows | **3,467** |
+| unfolded rows actually served | **0 of 777** |
+
+**⚠ THE FEATURE WAS NOT DEGRADED. IT WAS ABSENT**, and the census had silently returned to exactly its pre-fix state — the state the owner had reported as a defect that morning.
+
+**THE CAUSE, IN ONE ATTRIBUTE.** `_attach_cohort_fold` read `c.error` to render a failed cohort attempt. **`ProteinAnalysis` has no `error` column.** The failure text lives on the JOB — `JobRecord.error` — and the helper that joins it, `_failed_accessions`, was **already in the same file, four hundred lines above the line that invented a second way to get it**. ⚠ That half is ordinary: a wrong attribute, an `AttributeError`, a 500 on the card route. It is loud and it is findable.
+
+**⚠⚠ THE HALF THAT IS THE FINDING.** The `try` did not guard the enrichment. It guarded **both the row construction and the enrichment together**:
+
+```python
+try:
+    unfolded = [dict(r) for r in unfolded_rows()]   # ← the 777 rows
+    _attach_cohort_fold(engine, unfolded)           # ← optional decoration, and it raised
+    out.extend(unfolded)                            # ← never reached
+except Exception:
+    pass                                            # ⚠ "degrades to the folded list alone"
+```
+
+The comment stated the intent — *tolerate a missing manifest* — and the code delivered something else entirely: **any fault anywhere in the block deletes 777 rows and returns a well-formed, HTTP 200, shorter list.** A handler written to survive an absent file was the mechanism that made present data absent.
+
+**⚠⚠ WHY 1,012 TESTS SAW NOTHING.** All five tests covering this code parse the module with `ast` and assert on the tree: *does the function mention `cohort_attempt_failed`*, *does it avoid `commit`*, *does `census_span_aa` appear*. Every one passed, and every one would still pass today with the defect restored. **An AST test asks whether code was WRITTEN. It cannot ask whether it RUNS**, and it can never see a column that does not exist, because the column's absence is a fact about the database and the test never reaches one.
+
+⚠ This is not an argument against the structural tests — three of them caught real inversions this week. It is the observation that **the suite had no test of the other kind at all** for this path, so the two questions were never distinguished and the weaker one stood in for both.
+
+**HOW IT WAS FOUND: by walking the surface, after deploy.** Not by the gate, not by the deploy, not by a health check. ⚠ **That is the third defect this week found only by walking** — `F-052`'s exact observation, recurring inside the week `F-052` was written, in code written by the person who wrote `F-052`.
+
+**⚠ WHAT THIS IS NOT.** Not `F-047`: nothing here was wrong-but-plausible, and no number was subtly off. **The answer was missing, and absence rendered as a shorter list** — which is worse than a wrong number, because a wrong number can be checked against something and a row that was never sent cannot.
+
+**THE RESIDUAL, MEASURED.** Across `app/`, `core/` and `worker/` there are **9** `try` blocks with a broad, silent handler. **After this repair, 0 of them guard a statement that adds rows to a caller's list** (measured by AST: an `append`/`extend` inside the guarded body). ⚠ The widest surviving handler is `worker/runner.py:254`, guarding **4** statements, and **it has not been audited** — width is the risk, and 4 statements under one `except Exception` is the same shape at a smaller size.
+
+**WHAT SHIPPED.**
+1. The reason is read from `_failed_accessions` — the existing helper, already filtered to `COHORT_TRANCHE`, so it cannot leak a census failure onto a cohort row.
+2. ⚠⚠ **The rows are extended into the list BEFORE anything that can raise touches them.** The guard now wraps the enrichment alone. Enrichment is optional; the rows are not.
+3. Two tests, **both proved by revert — red at the assertion, not an error**. ⚠ The first version of the ordering test compared string offsets and reddened on correct code, because it matched `_attach_cohort_fold` **in its own explanatory comment** — `F-052`'s shape reproduced inside the test written to catch it, the fourth instance this week. It now walks the tree and asks which statements share a `try`.
+
+**WHY IT STAYS OPEN.** The repair is specific to one route. What is not closed: **nothing in the gate asserts that any surface returns rows.** ⚠ A test that fetches the census list and asserts `>= 3,467` rows — or asserts that `ERBB2` is in it — did not exist before this entry and does not exist now, because it needs a database the gate does not have. **Until an end-to-end assertion exists somewhere, the class is open and the next instance will also ship green.**
+
+---
+
 ### D-103 — A SECOND INSTRUMENT on the claim the whole census rests on, and the secretory route is SUPPORT rather than contradiction
 
 - **Date:** 2026-08-20 · **Status:** accepted · **Author:** Code
