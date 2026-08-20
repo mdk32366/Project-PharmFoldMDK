@@ -50,6 +50,17 @@ def _reason(tier_reason: str) -> str:
 
 
 @functools.lru_cache(maxsize=1)
+def _aliases() -> dict:
+    """⚠ Accession -> other names. A never-folded row needs these MORE than a folded one: it is
+    the row a reader reaches for by its clinical name (`HER2`), not by its HGNC symbol."""
+    try:
+        from core.protein_aliases import aliases_by_accession
+        return aliases_by_accession()
+    except Exception:                      # noqa: BLE001
+        return {}
+
+
+@functools.lru_cache(maxsize=1)
 def unfolded_rows() -> list[dict]:
     """Every manifest row with no fold, shaped like a census row so one table holds both."""
     if not (MANIFEST.exists() and FEATURES.exists()):
@@ -93,7 +104,11 @@ def unfolded_rows() -> list[dict]:
                 # ⚠ a CATEGORY, not None: "no fold to profile" is not "profile refused"
                 "profile_status": "not_folded",
                 "staining": None,
-                "aliases": None,
+                # ⚠⚠ ALIASES, AND LEAVING THEM None WAS THE BUG THAT MADE THIS WHOLE CHANGE USELESS.
+                # The row for ERBB2 existed and `HER2` still returned nothing, because the alias
+                # index is what joins the two — so the protein the owner asked for was in the table
+                # and still unreachable by the name they typed. A row nobody can find is not shown.
+                "aliases": _aliases().get(acc) or None,
                 "surface_check": None,
                 "scored": False,
             })
