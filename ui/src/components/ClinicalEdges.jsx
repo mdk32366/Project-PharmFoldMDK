@@ -19,6 +19,7 @@
 // ⚠ No ratio is shown. tumour_normal_ratio() raises by design (ruling 4) and nothing here divides.
 
 import { HpaDeepLink } from './HpaAttribution.jsx'
+import { ofCount, plural } from '../plural.js'
 
 const LEVEL_WORD = {
   High: 'strong', Medium: 'moderate', Low: 'weak', 'Not detected': 'none',
@@ -89,7 +90,7 @@ export default function ClinicalEdges({ block, heading, scopeNote }) {
                 {/* ⚠ the COUNTS, not just the fraction. 10 of 12 and 100 of 120 are different
                     facts, and a bare percentage hides which one you are reading. */}
                 <strong>{t.patients_positive}</strong> of <strong>{t.patients_tested}</strong>{' '}
-                samples stained
+                {plural(t.patients_tested, 'sample')} stained
               </span>
             </li>
           ))}
@@ -131,7 +132,7 @@ export default function ClinicalEdges({ block, heading, scopeNote }) {
                 <span className="clin-tissue">{n.tissue}</span>
                 <span className="clin-level">
                   {LEVEL_WORD[n.highest] ?? n.highest} staining
-                  <span className="clin-cells"> · {n.detected_in} of {n.cell_types} cell types</span>
+                  <span className="clin-cells"> · {ofCount(n.detected_in, n.cell_types, 'cell type')}</span>
                 </span>
               </li>
             ))}
