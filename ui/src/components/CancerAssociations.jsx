@@ -7,6 +7,8 @@ import { getAssociations } from '../api.js'
 // Deliberately NOT the pLDDT band palette (orders §2a): a different quantity from a different source
 // must not read as model confidence, so it imports nothing from plddt.js and uses its own classes.
 // Every count here derives from the payload; the paper's 290/16 are the only literals (dec 5).
+import HpaAttribution from './HpaAttribution.jsx'
+
 export default function CancerAssociations({ symbol }) {
   const [data, setData] = useState(null)
   const [failed, setFailed] = useState(false)
@@ -47,6 +49,11 @@ export default function CancerAssociations({ symbol }) {
         and 16 targets in more than 7 tumour types — a filtering step the published files do not
         expose — so it is labelled our derivation, never "the paper's 290."
       </p>
+      {/* ⚠⚠ D-100: Kathad's S3 is a VERBATIM EXTRACT of pathology.tsv, 1,640/1,640.
+          Citing the paper is not citing HPA. D-053 predates the clinical layer, so this
+          surface rendered HPA data unattributed longer than any other. */}
+      <HpaAttribution attribution={data.attribution} view="pathology" />
+
     </section>
   )
 }

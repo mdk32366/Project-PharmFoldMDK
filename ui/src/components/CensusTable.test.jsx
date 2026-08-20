@@ -72,10 +72,26 @@ describe('CensusTable', () => {
     expect(screen.getByText(/Not scored, not ranked, not ordered by suitability/i)).toBeInTheDocument()
   })
 
-  it('says a search matched nothing rather than showing an empty table silently', () => {
+  // ⚠⚠ REWRITTEN after walking the live surface. The old wording — "no protein matches that
+  // search" — reads as "this protein does not exist", and for the census that is usually FALSE.
+  // The owner searched HER2 and got it. HER2 IS in the manifest; it was never folded, because at
+  // 630 aa it sits above the local GPU ceiling. "Not folded" and "not found" are different facts
+  // and the surface was reporting the wrong one.
+  it('distinguishes "not in the folded census" from "no such protein"', () => {
     render(<CensusTable rows={ROWS} />)
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'zzzz' } })
-    expect(screen.getByText(/no protein matches that search/i)).toBeInTheDocument()
+    expect(screen.getByText(/nothing in the FOLDED census matches/i)).toBeInTheDocument()
+    expect(screen.getByText(/not the same as/i)).toBeInTheDocument()
+    // ⚠ and it names the proteins the owner actually looked for
+    expect(document.body.textContent).toMatch(/HER2, HER3, EGFR and\s+HER4/)
+  })
+
+  // ⚠ the placeholder must not advertise a protein the surface cannot return
+  it('does not offer HER2 as a search example, because HER2 is not folded', () => {
+    render(<CensusTable rows={ROWS} />)
+    const ph = screen.getByRole('searchbox').getAttribute('placeholder')
+    expect(ph).toMatch(/alias/)
+    expect(ph).not.toMatch(/HER2/)
   })
 })
 

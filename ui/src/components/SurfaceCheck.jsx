@@ -11,6 +11,8 @@
 //
 // ⚠ Nothing here is a score, a confidence or a grade. There is no ordering over these categories.
 
+import HpaAttribution from './HpaAttribution.jsx'
+
 const COPY = {
   corroborated_membrane: {
     head: 'Confirmed at the cell surface',
@@ -98,6 +100,11 @@ export default function SurfaceCheck({ check }) {
           cannot tell them apart from here, so all three are printed. Showing the category without
           them would let a reader conclude the protein is not a surface protein, which is a claim
           this comparison cannot support. */}
+      {/* ⚠⚠ THIS SURFACE RENDERS HPA VALUES — subcellular locations and HPA's own Reliability (IF)
+          from proteinatlas.tsv — and it shipped on 2026-08-20 WITHOUT attribution, after the audit
+          that found the gap. F-052: a convention obeyed by every caller except the newest one. */}
+      <HpaAttribution attribution={check.attribution} view="protein" />
+
       {check.unreconciled_causes?.length > 0 && (
         <div className="surfchk-causes">
           <p><strong>Any of three things could explain that, and this cannot tell which:</strong></p>

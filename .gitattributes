@@ -76,3 +76,31 @@ data/census/protein_aliases.v1.csv -text
 # ⚠ The second-instrument artifact (D-103), derived from a pinned proteinatlas.tsv and compared
 # against it by tests. Protected at creation rather than after a hash mismatch taught us to.
 data/census/surface_confirmation.v1.csv -text
+
+# ⚠ The three documents received 2026-08-20, two of which declare an AUTHORED-SHA256 over a
+# line-start-anchored range. F-047 member 15 recurring: CRLF on checkout changes the bytes and the
+# hash stops matching a file nothing touched. Added at landing, not after a mismatch.
+docs/D-075-amendment-1-paste-ready.md              -text
+docs/ORDERS-Code-invariant-amendment-references.md -text
+docs/D-093-amendment-2-paste-ready.md              -text
+
+# ⚠ The 2026-08-20 reissue and its order, both declaring an AUTHORED-SHA256 over a line-start
+# anchored range. Protected at landing (F-047 member 15).
+docs/D-093-amendment-3-REISSUE.md                        -text
+docs/ORDERS-Code-licence-quotation-and-attribution-audit.md -text
+
+# ⚠ The deferral entry, AUTHORED-SHA256 over first #### -> EOF. Protected at landing.
+docs/D-093-amendment-7-paste-ready.md -text
+
+docs/ORDERS-Code-attribute-every-surface.md -text
+docs/D-093-amendment-8-paste-ready.md      -text
+data/census/hpa_ensg_map.csv               -text
+
+docs/D-093-amendment-8-paste-ready.md -text
+docs/D-093-amendment-9-paste-ready.md -text
+docs/D-095-amendment-2-paste-ready.md -text
+docs/CORRECTION-2026-08-20-F-043-amendment-numbering.md -text
+
+docs/F-052-amendment-1-paste-ready.md -text
+
+docs/D-079-amendment-6-paste-ready.md -text

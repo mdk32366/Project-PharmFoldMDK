@@ -209,7 +209,13 @@ def payload_for(accession: str | None, gene_symbol: str | None,
                 path: str | None = None) -> dict:
     """The renderable block. ⚠ Carries the CAUSES, so the surface cannot show a bare category."""
     v = check_for(accession, gene_symbol, path)
+    # ⚠⚠ THIS SURFACE RENDERS HPA VALUES TOO — subcellular locations and HPA's own Reliability (IF),
+    # both from `proteinatlas.tsv`. It was built on 2026-08-20, AFTER the audit that found the
+    # attribution gap, and it shipped without attribution. `F-052`: a convention obeyed by every
+    # caller except the newest one.
+    from core.hpa_attribution import attribution_block
     return {
+        "attribution": attribution_block(gene_symbol, "protein"),
         "category": v.category,
         "main_locations": list(v.main_locations),
         "if_reliability": v.if_reliability,           # ⚠ HPA's own confidence, labelled as theirs

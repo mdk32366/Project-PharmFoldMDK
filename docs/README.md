@@ -577,6 +577,78 @@ would erase the evidence — **with the misreading recorded beside them rather t
 the set removed the *enumeration* failure and left the *predicate* failure — and the predicate is
 now the thing scoped to what its author can see. **This entry does not claim that is solved.**
 
+#### F-052 amendment 1 — ⚠⚠ The strongest instance yet: two of the five uncovered surfaces were built by the author of the convention, hours after documenting it — and the guard found the fifth mid-report
+
+- **Date:** 2026-08-20 · **Status:** `F-052` stays **OPEN.** ⚠ **Deriving the set removed the
+  ENUMERATION failure and left the PREDICATE failure; the derived checks in the tree remain PARTIAL.**
+
+---
+
+**1 — THE MEASUREMENT.** `PA` enumerated every surface rendering HPA-derived data, **both directions**
+— components back to their source, **and every HPA-sourced field forward to wherever it surfaces.**
+
+| # | component | renders | audited before `PA`? |
+|---|---|---|---|
+| 1 | `ClinicalEdges` | patient counts, normal levels | ✅ `NC` |
+| 2 | `CancerAssociations` | quasi H-score | ❌ named by the Planner |
+| 3 | ⚠ `SurfaceCheck` | subcellular, `Reliability` (IF) | ❌ **built this session** |
+| 4 | ⚠ `CensusTable` | stained %, n, critical count | ❌ **built this session** |
+| 5 | ⚠⚠ `CensusDetail` | `qh_score`, inline | ❌ **found by the `PC3` guard** |
+
+**The Planner said two was *"a floor, not a total."* It was 40% of the answer.**
+
+**2 — ⚠⚠ TWO OF THE FIVE WERE BUILT BY THE AUTHOR OF THE CONVENTION, AFTER THE AUDIT THAT FOUND THE
+GAP.** Code's own words: ***"That's `F-052` landing on me directly, not as an abstraction."***
+
+⚠ **`F-052`'s subject is *a convention that exists, is documented, and is obeyed by every caller
+except the newest one*.** **Here the newest callers were written by the person who had documented the
+convention hours earlier, in the same session, while the remedy for the previous instance was still
+in flight.**
+
+⚠⚠ **That is not carelessness and recording it as carelessness would teach nothing. It is the class's
+actual mechanism: a convention lives in the author's ATTENTION, not in the code, until something
+enforces it — and attention does not survive a context switch, even a short one, even in the person
+who wrote it down.**
+
+**3 — ⚠⚠ THE GUARD FIRED BEFORE THE REPORT CLAIMING FOUR WAS FINISHED.**
+
+`PC3` — *a test that fails when a new HPA-rendering surface appears uncovered* — **found
+`CensusDetail` on its first run.** It renders `qh_score` **inline, in its own list, separately from
+the `CancerAssociations` component it also mounts.**
+
+⚠ ***"`NC` missed it, your count missed it, and my own enumeration stopped at the component boundary,
+which is exactly the scoping failure `PC3` exists to catch."***
+
+**This is the amendment's most useful line, and it is the difference between the previous instances
+and this one:** ⚠⚠ **every earlier member of this class was caught by a person, later. This one was
+caught by a structure, immediately** — **and it caught the enumeration that was being written to
+close it.**
+
+**4 — ⚠ What this changes about the remedy, and it is narrow.**
+
+- **The enumeration alone would NOT have found the fifth.** ⚠ **A one-time census of surfaces is a
+  snapshot; the defect is that the set GROWS.** **`PC3` is the part that survives the session.**
+- ⚠ **The reverse direction is what found 3 and 4** — *every HPA-sourced field forward to wherever it
+  surfaces*. **A forward-only enumeration reproduces the author's field of view, which is the defect.**
+- ⚠⚠ **`F-052` still does NOT close.** `D-074`: **a finding against an instrument stays open until the
+  instrument no longer exhibits it.** **`PC3` covers HPA-rendering surfaces and nothing else** — the
+  predicate failure is unrepaired everywhere else, **and this entry is evidence the class recurs
+  within hours under ordinary work.**
+
+**5 — ⚠ Two sentences from the run worth preserving, because they stop a re-derivation.**
+***"A filename is not a modality"*** — `pathology.tsv` is IHC, and the 2017 *pathology atlas of the
+human cancer transcriptome* is the wrong paper despite matching the name.
+***"A hyperlink to a site is not a credit"*** — the image/data credit is its own element and its own
+obligation.
+
+**6 — ⚠ And one honest test-naming defect, reported rather than tidied.** Removing the `href` reddened
+the **`PD`** (`v22`) assertion rather than the link assertion, **because deleting the anchor leaves
+the version filter with nothing to check.** ⚠⚠ **A correct red under the wrong name** — the
+*error-red versus failure-red* distinction, applied to which test claims the catch. **Recorded as
+observed.**
+
+**Relied on by:** `F-047` · `D-093 amendment 9`.
+
 ---
 
 **Relied on by:** ⚠ `F-021`, whose first clause is now closed by `uq_protein_features_analysis_id`
@@ -1698,6 +1770,90 @@ one of three instances in a single session and is the entry that generalises it.
 
 - ⚠ **LANDED BY CODE, 2026-08-19.** Verbatim from `docs/AMENDMENT-2026-08-19-planner-log-entries.md`. **One imprecision is reported rather than silently edited:** item 1's *"135 of 141 tile at gaps"* is `141 − 6`, and **10 of those 135 are the `no_domains` rows**, which have nothing to tile at — assembly there is **undefined, not seamless** (item 9 prints the 10 separately, so the entry is internally consistent; the headline sentence alone is not). **`135 sever nothing` is exact; `135 tile at gaps` over-reaches by the 10.**
 
+#### D-095 amendment 2 — ⚠⚠ Ten rows have NO LEGAL CUT SITE, tiling is mandatory for all of them, and amendment 1 discharged the design gate with that hole in it
+
+- **Date:** 2026-08-20 · **Status:** **RULED.** ⚠ §2 confirmed by the owner, 2026-08-20.
+- **Amends:** `D-095 amendment 1`, which moved `D-095` PROPOSED → RULED and discharged
+  `D-091 (tranche 6 design gate)` ruling 3.
+
+---
+
+**1 — ⚠⚠ THE HOLE, AND IT WAS SHIPPED INSIDE THE AMENDMENT THAT CLOSED THE GATE.**
+
+`D-095` decision 2 defines `tile_cut_kind ∈ {gap, domain_boundary, span_end}`, and amendment 1 added
+a fourth, **`run_interior`**.
+
+**Ten of the 141 carry NO `Domain` or `Repeat` anywhere in the UniProt entry** — cause
+`no_domainlike_features_in_the_chain`, **10 of 10, a single cause, established at `U5`/`Y2` as a
+GENUINE ABSENCE OF ANNOTATION rather than a rejection.**
+
+⚠⚠ **So they have no gap, no domain boundary, and no run interior. Under the current vocabulary
+there is NO LEGAL CUT SITE** — and **every one exceeds the 1,026 trained context, so tiling is
+MANDATORY REGARDLESS OF HARDWARE**, because the trained context is a property of the **model**, not
+of the card. ⚠ **Under `D-094` cut legibility is a MOUNT PRECONDITION: these ten cannot mount.**
+
+⚠⚠ **Amendment 1's headline decomposition was 125 tile at gaps · 10 have nothing to tile at · 6 need
+one `run_interior` cut. The middle term was printed and its consequence was not seen.** **A category
+with a count and no ruling — one week after the engulfing category was exactly that, and the Planner
+wrote both.**
+
+**2 — ⚠⚠ RULING (owner, 2026-08-20): a FIFTH `tile_cut_kind` value, `unannotated_interior`.**
+
+- **`unannotated_interior` DISCLOSES the cut as ARBITRARY rather than disguising it as a seam.**
+  ⚠⚠ **The alternative is not "a better cut" — no better cut exists, because there is no annotation
+  to place one.** **The choice is between an arbitrary cut that SAYS SO and an arbitrary cut wearing
+  the name of a boundary.**
+- ⚠ **Under `D-094` its disclosure is a MOUNT PRECONDITION**, identically to `run_interior` — **the
+  cut is legible from the artifact alone or the row does not mount.**
+- **THE OFFSET RULE IS A RECORDED PARAMETER, NOT A DEFAULT.** ⚠⚠ **`tile_offset_rule` is written on
+  every affected artifact beside `merge_rule`, its gap tolerance, and `straddle_handling`** — *three
+  unstated parameters were found on one derived object in two days; a fourth will not be added
+  silently.* **A default that does not announce itself is the defect `straddle`'s `TypeError`
+  closed.**
+
+**⚠ THE COUNTERFACTUAL, STATED SO THE RULING IS A CHOICE AND NOT A DRIFT — HOLD THE TEN.**
+**Weighed and rejected.** ⚠ The case for holding was real and is recorded: **a 1,500-residue span cut
+blindly into two 750-residue tiles can produce two structures that are individually confident and
+jointly meaningless**, and **the absence of any domain annotation may itself be informative** —
+poorly characterised, disordered, or genuinely unusual proteins. **We would be risking
+plausible-looking output on exactly the rows least able to warn us.**
+
+**⚠⚠ THE OWNER'S REASONING, AND IT IS WHY A BEATS B RATHER THAN MERELY DIFFERING FROM IT:** *"if the
+worst happens and there are ten 3K residue spans, then we'll figure it out again at that point with a
+smaller batch of proteins remaining."*
+
+⚠⚠ **THE LABEL IS WHAT MAKES THAT LATER DECISION POSSIBLE.** **Under `D-094`, `unannotated_interior`
+renders on every affected tile — so if the ten turn out to need four blind cuts each, the artifact
+SAYS SO on its face and the re-decision is made against rendered evidence.** **Holding them would
+have deferred the identical question to a later date with NO ARTIFACT TO LOOK AT.** ⚠ **A rule that
+fires and produces a labelled bad outcome beats no rule, because the label is what makes the outcome
+visible.**
+
+**3 — ⚠⚠ THE TEN ARE COUNTED AND NOT ENUMERATED. THAT IS AN OUTSTANDING MEASUREMENT, NAMED HERE.**
+
+`docs/README.md:1064` and `MEASUREMENT-OUTPUT-2026-08-19-tranche6-straddle-rules.txt:86` both give
+**10**. ⚠ **`BC2` ordered accession, gene and `span_aa` per row and it has not reported.**
+**`BC3` ordered the tile count for each at THREE values of `tile_max_aa` — 440, 630, 1,026 — and it
+has not reported.**
+
+⚠⚠ **A count of ten is not ten rows**, and this entry does not pretend to know which they are.
+**The enumeration lands as evidence beneath this amendment when it exists; the ruling does not wait
+on it, because the vocabulary gap is established by the count alone.**
+
+**4 — ⚠ What this does NOT do.**
+- ⚠⚠ **It does not widen the boundary source.** `D-095` decision 1(b) rules `Domain` + `Repeat`, and
+  **adding a feature type to give these ten something to cut at would be changing the instrument to
+  suit the result.**
+- **It does not authorise folding anything.** ⚠ **Tranche 5's 776 rows remain held by `D-091` ruling
+  2 — RENTAL SPEND — and that ruling is untouched here.**
+- ⚠ **It does not revisit `merge_rule`, gap tolerance or `straddle_handling`** — amendment 1 rules all
+  three and the counterfactual for `merge_rule` is stated there.
+- **It does not claim the ten are foldable, only that they are TILEABLE-IF-RULED.** ⚠ Whether a span
+  with no domain annotation folds usefully at all is a different question and is not answered here.
+
+**Assumptions relied on:** ⚠ `A-014` — **UniProt topology and domain annotation is a curated MODEL of
+the protein, and its silence about these ten is the model's silence, not the molecule's.**
+
 ---
 
 ### F-041 — Two of the three candidate boundary sources cannot supply a boundary, and InterPro cannot supply a count either
@@ -1902,6 +2058,108 @@ written and each proven RED — **the remedy lands after the finding, not instea
 **Assumptions relied on:** `A-014 (an upstream model's negative class is a prediction, not a fact)` —
 ⚠ **IHC is an assay, not a model, so `A-014` does NOT apply to these edges.** *Recorded because the
 temptation to cite it here is exactly the class of error this entry catalogues.*
+
+#### D-093 amendment 3 — ⚠⚠ The licence page says ShareAlike, amendment 1 says CC BY 4.0, the attribution obligation is PER-DATUM — and the surface now QUOTES rather than asserts
+
+- **Date:** 2026-08-19, ⚠ **reissued 2026-08-20 against `b06d378`.** · **Status:** ⚠ **partly OPEN.**
+  Decision 6 item 5 is **ANSWERED**; the licence **IDENTITY is UNRESOLVED and owner-held.**
+- **Evidence:** `docs/HPA-licence-2026-08-19-as-read.md`, verbatim region
+  `sha256 4ac225892312f56c6843ea16a7da7c1bcdd798bfda48b088badd15b7b583b13d`, 4,177 bytes.
+- ⚠⚠ **Why this entry was missing for four days: it was written, hashed, handed over, and never
+  committed — while being cited three times in the present tense.** **Amendments 4, 5 and 6 all
+  landed on top of the gap, and the citation invariant could not see it because `D-093 amendment 3`
+  matches `D-093`, which exists.** **`F-044`'s shape one level down.**
+
+---
+
+**1 — ⚠⚠ THE LICENCE IDENTITY IS UNRESOLVED AND IS NOT BEING FLIPPED.**
+
+Three statements about one licence, and the entry records the disagreement rather than preferring the
+newest:
+
+| source | says |
+|---|---|
+| `D-093` amendment 1 clause 1, read 2026-08-17 | **CC BY 4.0** — *attribution only, no share-alike* |
+| ⚠ HPA's own page, read verbatim 2026-08-19 | ***"Attribution-ShareAlike 3.0 International"*** |
+| ⚠⚠ the surface, as shipped and then fixed | **`CC BY-SA 3.0`** — see item 6 |
+
+⚠⚠ **THE LICENCE HPA NAMES DOES NOT EXIST.** CC 3.0 licences are *Unported* or jurisdiction-ported;
+*International* arrived with **4.0**. **No amount of re-reading fixes that.**
+
+⚠⚠ **AND THE SCOPE CLAUSE NAMES XML TWICE, NEVER THE FLAT FILES WE INGESTED.** *"…all copyrightable
+parts of our database, **specifically indicated in the downloadable XML format with
+`source="HPA"`**"*, and again in the closing section: *"for example, using our **XML-files**."*
+⚠ **It is therefore plausible that `pathology.tsv` and `normal_tissue.tsv` are not addressed by this
+page at all — a third answer, distinct from either candidate licence.**
+
+⚠ **THE HOST WAS NOT CAPTURED.** `v22.proteinatlas.org/about/licence` and
+`www.proteinatlas.org/about/licence` may serve different terms, and **the ingested data is v22.**
+**This is a NAMED OPEN ITEM and item 5 rules how it closes.**
+
+**2 — ⚠ THE SHAREALIKE TENSION WITH DECISION 7, RECORDED AND OWNER-HELD.**
+Decision 7: *the project's own licensing is closed — no license, all rights retained.* ⚠⚠ **ShareAlike
+is copyleft.** Whether a surface displaying HPA values is an **Adaptation** (triggering it) or a
+**Collection** (not) is a legal question, not a reading question. **Recorded as an exposure. The
+Planner is not a lawyer and does not rule it.**
+
+**3 — ⚠⚠ DECISION 6 ITEM 5, ANSWERED — AND IT IS NOT FOUR PARTS. IT IS PER-DATUM.**
+**General case, two obligations:** a **Primary publication**, AND the website
+**Human Protein Atlas proteinatlas.org**.
+**Specific case — OURS, because we display per-gene data downloaded from the site — adds two:**
+image/data credit **Human Protein Atlas**, AND ⚠⚠ *"citation to the specific image, gene, or data
+used and the URL that links directly to that information in a manner that will allow a third party to
+navigate to that image or data on the site"* at `v##.proteinatlas.org`, **`v22` being ours to state.**
+⚠⚠ **A FOOTER DOES NOT DISCHARGE THIS.** **Amendment 1 clause 3's "four parts" collapsed the general
+and specific cases into one list and DROPPED the image/data credit.**
+
+**4 — ⚠ THE LICENCE IMPOSES A `D-094` MOUNT PRECONDITION IN ITS OWN WORDS.**
+*"Be sure that our content is never displayed in the absence of such citation."* **The citation
+renders with the datum or the datum does not render.** ⚠ **This is not our discipline applied to a
+licence; it is the licence stating our discipline.**
+
+**5 — ⚠⚠ RULING (owner, 2026-08-20): THE SURFACE QUOTES THE PAGE. IT DOES NOT ASSERT, AND IT DOES NOT
+GO SILENT.**
+
+**This supersedes amendment 4's fix in the direction of MORE information, not less.** ⚠ Amendment 4
+made the surface *"decline to assert redistribution terms nobody here can currently name"* — **that
+removed a false claim and left a reader unable to verify anything.**
+
+**Owner's ruling, in his words:** *"Say what the page says. We are grounding the source so that it is
+verifiable, and we're not claiming that information as our own."*
+
+**What that requires, and each part is a condition:**
+- ⚠⚠ **REPORTED SPEECH, NOT ADOPTION.** *"The Human Protein Atlas states, on its Licence & Citation
+  page…"* followed by the quotation. **Never *"this data is licensed under…"***
+- ⚠ **The quotation is VERBATIM, including *"3.0 International"*.** **The surface does not
+  editorialise about HPA's own naming** — that observation lives in item 1, in the log, where it
+  belongs. **Correcting someone else's page on our page is worse than quoting it.**
+- ⚠⚠ **A LINK AND A DATE READ, or the quotation is not grounded.** *"Verifiable"* means a reader can
+  reach the same words. **This is why item 1's uncaptured host must close first** — §6 of the
+  accompanying order.
+- **The per-datum obligation of item 3 renders regardless**, under either candidate licence.
+
+**6 — ⚠⚠ WHAT THE SURFACE ACTUALLY DID, RECORDED BECAUSE IT IS THE THIRD STATEMENT.**
+**The shipped surface stated `CC BY-SA 3.0`** — ⚠ **picking a side in a dispute this log records as
+open, and picking the STRICTER one.** **Found and fixed by Code while writing amendment 4.**
+⚠ **And the Planner, analysing the exposure on 2026-08-20, stated the surface asserted *CC BY 4.0* —
+the opposite side — from recollection rather than from the tree.** **`F-047`, Planner: a confident,
+well-formed claim about our own surface, refuted by an entry already in the log.**
+
+**7 — ⚠ WHICH PRIMARY PUBLICATION, BECAUSE THE OBVIOUS CHOICE IS WRONG.**
+**Cite Uhlén M et al., *Tissue-based map of the human proteome*, Science (2015), DOI
+`10.1126/science.1260419`** — the antibody/IHC paper, listed first. ⚠⚠ **NOT Uhlen M et al.,
+*A pathology atlas of the human cancer TRANSCRIPTOME* (2017), despite matching our filename.**
+**`pathology.tsv` is IHC, not transcriptome. Selecting by title similarity would cite the wrong
+modality in the citation that discharges the obligation.**
+
+---
+
+**⚠ WHAT THIS ENTRY DOES NOT DO**
+- **It does not determine which licence governs**, nor rule on Adaptation versus Collection.
+- ⚠ **It does not change decision 7.**
+- **It does not authorise rendering any HPA value without its per-datum link.**
+- ⚠⚠ **It does not close the host question.** *"Say what the page says"* requires knowing **which
+  page**, and that is measured before the quotation ships.
 
 #### D-093 amendment 4 — ⚠⚠ The cancer connection SHIPPED on both card types; a guard caught me putting burden on a protein; and the surface asserted a licence the log calls UNRESOLVED
 
@@ -2133,6 +2391,302 @@ Both suppliers point at the same alternative, and **NCI states it in its own wor
 
 **Relied on by:** `D-093 amendment 1` · `D-093 amendment 2` · `F-047` · `F-049`
 **Assumptions relied on:** none new. ⚠ **And one explicitly REFUSED**: that a government or intergovernmental publisher implies public-domain terms. **NCI grants and IARC reserves.** *The institution does not tell you the licence; only the licence does.*
+
+#### D-093 amendment 7 — ⚠⚠ The owner DEFERS the HPA licence query, knowingly, on a stated basis — and this entry exists so the deferral is a decision rather than a silence
+
+- **Date:** 2026-08-20 · **Status:** ruled. ⚠ **The licence IDENTITY remains UNRESOLVED** — see
+  `D-093 amendment 3`. **This entry rules the QUERY, not the licence.**
+- **Type:** an **owner risk-acceptance ruling.** ⚠⚠ **The Planner does not hold this and did not make
+  it.** *`KEEL-3` gives the owner rulings, credentials, destructive operations and the decision to
+  stop; this is the first of those.*
+
+---
+
+**THE RULING, IN THE OWNER'S WORDS (2026-08-20):**
+
+> *"You provided me with a path where we could dispense with the email and I chose to take that
+> path… We noticed it and properly attributed it, but we didn't reach out and verify it."*
+
+**`docs/EMAIL-DRAFT-HPA-licence-clarification.md` is NOT SENT and is not the resolution instrument.**
+
+---
+
+**1 — ⚠ THE BASIS, ITEMISED, BECAUSE A DEFERRAL WITHOUT ONE IS A SILENCE.**
+
+The Planner's exposure analysis identified three actions that retire most of the exposure **without
+HPA's involvement**, and the owner ruled all three. **The deferral rests on them and on nothing else:**
+
+| # | mitigation | state at this entry |
+|---|---|---|
+| 1 | ⚠ **The surface QUOTES the page rather than asserting terms** — reported speech, verbatim, with a resolvable link and the date read | **RULED** (amendment 3 item 5); ⚠ **implementation pending `NA`/`NB`** |
+| 2 | **The log's standing authority is corrected** — amendment 3 lands and the log stops saying *"HPA is CC BY 4.0"* | **RULED**; pending merge |
+| 3 | ⚠⚠ **Per-datum attribution actually shipped** | ⚠⚠ **UNVERIFIED. `NC` is auditing it.** |
+
+⚠⚠ **ITEM 3 IS THE LOAD-BEARING ONE AND IT IS THE ONE NOT YET ESTABLISHED.** **The owner's *"properly
+attributed"* is the CONDITION this ruling rests on, not a finding.** ⚠ **If `NC` reports that
+per-datum linking did not ship with `D-093 amendment 4`'s panels, the basis of this deferral is
+incomplete and THE RULING RETURNS TO THE OWNER.** **Recorded here so that return is automatic rather
+than remembered.**
+
+**2 — ⚠⚠ WHAT IS BEING ACCEPTED, STATED PLAINLY SO IT CANNOT LATER READ AS AN OVERSIGHT.**
+
+- **The licence identity stays unresolved.** *"Attribution-ShareAlike 3.0 International"* on the page
+  against *"CC BY 4.0"* in amendment 1 clause 1 — ⚠ **and the named licence does not exist.**
+- ⚠ **Whether ShareAlike applies, and whether the surface is an Adaptation or a Collection, is
+  unanswered.** **Only HPA could have answered it and we are not asking.**
+- ⚠⚠ **If HPA later says ShareAlike applies and the surface is an Adaptation, the surface will
+  already have been public** — and `D-093` decision 7's *no license, all rights retained* would be in
+  direct tension with a copyleft obligation. **That is the accepted residual.**
+- **The scope question stays open too:** the page names the **XML format twice and the flat files
+  never**, ⚠ so it is possible the ingested TSVs are not addressed by that page at all — **a third
+  answer, unavailable to us by choice.**
+
+**3 — ⚠⚠ THE SENTENCE THAT MAKES THIS HONEST, AND IT CUTS AGAINST US.**
+
+**This project's record documents that we noticed.** The as-read page is committed, amendment 3
+details the discrepancy, and three entries cite it. ⚠⚠ **That record converts an honest mistake into
+a knowing one, and the owner has accepted that trade deliberately.**
+
+⚠ **The methodology that makes this project defensible is the same methodology that makes *we saw it
+and didn't ask* discoverable. It is not possible to have the first property without the second, and
+this entry does not pretend otherwise.**
+
+**4 — ⚠ A DANGLING FORWARD REFERENCE THIS RULING CREATES, CORRECTED IN THE OPEN.**
+
+`docs/HPA-licence-2026-08-19-as-read.md` names the email draft as ***"the resolution instrument."***
+⚠⚠ **Under this ruling that sentence is false, and the file it names has never existed** — `F-047`
+member 16's shape, now compounded.
+
+**Remedy: a landing-style NOTE beside it, not an edit.** ⚠ **The as-read document records a page as
+read on one day and is never updated** — its own rule. **The note records that the named instrument
+was not used, cites this amendment, and leaves the original sentence visible.**
+
+**5 — ⚠⚠ WHAT REOPENS THIS. Named triggers, not a review cadence.**
+
+*A register kept by conviction lasts about three weeks* — `KEEL-4` V9 §3. **These are events, not dates:**
+
+1. ⚠⚠ **`NC` reports that per-datum attribution did not ship** — item 1's condition fails.
+2. ⚠⚠ **PUBLICATION.** **`P-004` or `P-001` citing HPA data must state a licence position in its
+   methods.** ⚠ *"We used HPA under terms we did not verify"* is not a methods sentence, and **a
+   paper arguing another group's screen carries less than it is read to carry cannot be careless
+   about its own sources.** **This is the trigger most likely to fire.**
+3. **HPA contacts us**, on any subject.
+4. **The surface goes beyond DISPLAY** — redistribution, bulk export, an API serving HPA values, or
+   any derived dataset offered for download. ⚠ **Display is the narrowest use and this ruling is
+   scoped to it.**
+5. **`D-093` decision 7's closed licensing is revisited**, in which case the ShareAlike tension may
+   dissolve or sharpen and must be re-examined either way.
+
+**6 — ⚠ WHAT THIS ENTRY DOES NOT DO.**
+- **It does not determine the licence.** ⚠ **A deferral is not a resolution and this entry must never
+  be cited as one.**
+- ⚠ **It does not delete the email draft or the intent.** **The draft remains unwritten to the tree;
+  if a trigger fires, it is written and sent, and `amendment 3` item 5's grounding work is already
+  done.**
+- **It does not weaken items 1–3.** ⚠⚠ **They are the basis. Weakening any of them reopens this
+  ruling by construction.**
+- **It does not touch decision 6 item 5** — the verbatim attribution obligation is **answered** in
+  amendment 3 item 3 and is independent of the licence identity.
+
+**Assumptions relied on:** ⚠ **none, deliberately.** *An assumption is a thing relied on without
+having decided to; this entry is the opposite — a reliance decided on, in the open, with its
+conditions and its triggers named.*
+
+#### D-093 amendment 8 — ⚠⚠ The licence identity is RESOLVED by measurement: v22 is BY-SA 3.0, www is BY 4.0, both readings were correct about different pages — and the owner rules the response proportionate
+
+- **Date:** 2026-08-20 · **Status:** ⚠ **the licence IDENTITY is CLOSED.** The attribution gap is
+  **OPEN** and is the only thing here that was ever urgent.
+- **Supersedes:** `D-093 amendment 3` §1 *(on the day it landed)*, and the premise of
+  `D-093 amendment 7` §2.
+
+---
+
+**1 — ⚠⚠ MEASURED, AND IT DISSOLVES A FOUR-DAY DISPUTE.**
+
+Both pages fetched in one session, **status 200, ZERO redirects, distinct `sha256`:**
+
+| host | states |
+|---|---|
+| ⚠⚠ **`v22.proteinatlas.org/about/licence`** | ***"Creative Commons Attribution-ShareAlike 3.0 International License"*** |
+| `www.proteinatlas.org/about/licence` | *"Creative Commons Attribution 4.0 International License"* |
+
+⚠⚠ **NOBODY MISREAD ANYTHING. HPA CHANGED ITS LICENCE BETWEEN RELEASES.** **`D-093` amendment 1
+clause 1 read the CURRENT page and applied it to a **v22** ingest; `docs/HPA-licence-2026-08-19-as-read.md`
+recorded the correct page.** **Two accurate readings of two different documents, reported as a
+disagreement for four days.**
+
+⚠ **`v22` GOVERNS, because v22 is what we ingested.** **The licence is CC BY-SA 3.0.**
+**`NA4`: the v22 page today matches the as-read verbatim region — no change between 08-19 and 08-20,
+so no new dated file.**
+
+**2 — ⚠ Corrections, recorded rather than patched.**
+- **Amendment 1 clause 1 is corrected**: not an error of reading, **an error of PAGE**. ⚠ It remains
+  in the log with this amendment beside it.
+- **Amendment 3 §1's framing — *"three statements, unresolved, not being flipped"* — is superseded.**
+  ⚠ **It was resolvable by two HTTP requests the entire time, and the Planner wrote an entry
+  characterising it as irreducible.**
+- ⚠⚠ **The Planner then treated the resolution as an ESCALATION.** *"The residual is now live rather
+  than hypothetical"* read as bad news; **knowing the licence is strictly better than not knowing,
+  and the entry says so.** **`F-047`, Planner — a correct measurement given a wrong valence.**
+
+**3 — ⚠⚠ THE VERSION PIN ACQUIRED A SECOND FUNCTION NOBODY PREDICTED.** `D-100` pinned v22 for
+Kathad comparability and HPA's own citation format. **It also pinned the LICENCE.** ⚠ **A later
+ingest from `www` would silently sit under different terms, and nothing in the pipeline would have
+noticed.** **Any future HPA ingest states its host, and the host determines the terms.**
+
+**4 — ⚠⚠ AMENDMENT 7's CONDITION HAS FAILED, AND THE RULING RETURNS AS THAT ENTRY REQUIRES.**
+`NC`, measured against `ClinicalEdges.jsx`: **no `href`, no `<a>`, no `proteinatlas` URL anywhere.
+A single plain-text source line PER PAGE, not per datum. No primary publication of either modality —
+⚠ *it is not the wrong paper; there is no paper.* No image/data credit as its own element.**
+
+⚠⚠ **So *"we noticed it and properly attributed it"* is not yet true. We noticed it and NAMED the
+source. We did not attribute it as the licence requires** — and BY-SA 3.0 words that obligation as a
+precondition: ***"be sure that our content is never displayed in the absence of such citation."***
+
+**⚠ THIS IS THE ONLY ITEM HERE THAT WAS EVER URGENT, it is required under every reading including the
+scope reading in §6, and it is entirely ours** — **no reply from HPA was ever going to change it.**
+
+**5 — ⚠ THE OWNER'S PROPORTIONALITY RULING, 2026-08-20, RECORDED AS A POSITION AND NOT AS A CONCESSION.**
+
+> *"Honestly this feels like overcaution. I'm not selling any of this, but I am writing a paper about
+> it. We are not asserting that any of the data we are using is ours."*
+
+**Ruled, and the Planner agrees on the substance:**
+- ⚠⚠ **THE PAPER AND THE SURFACE ARE DIFFERENT ARTIFACTS UNDER DIFFERENT REGIMES.** **A paper using
+  HPA data is governed by CITATION NORMS, not licence terms** — thousands do, the journal handles it,
+  and **no paper is licensed BY-SA for containing HPA figures.** **Licence terms bear on the SURFACE.**
+- **Non-commercial academic display, attributed, asserting no ownership, is the most benign use
+  there is.** ⚠ **Enforcement risk is effectively nil and this entry does not pretend otherwise.**
+- ⚠ **The Planner over-weighted §6 and says so here rather than leaving the record implying urgency
+  the facts do not support.**
+
+**6 — The residual, scoped honestly and parked.**
+- **ShareAlike distinguishes a COLLECTION** (unmodified work alongside independent works — attribute,
+  no SA) **from an ADAPTATION** (based upon, modified, recast — SA bites). ⚠⚠ **If it bites, it binds
+  the ADAPTATION — the clinical edges layer — NOT the platform, the scorer, the census or the code.**
+- ⚠ **NAMED OPEN ITEM, and it is the one fact that most moves this: does `qh` RENDER on the surface,
+  or is it ingest-only?** **`qh` is computed from their counts by our formula and is therefore not
+  their data unmodified.** **If only HPA's own counts and levels display, the Collection reading is
+  much the stronger. One measurement.**
+- ⚠ **A complication a lawyer would want, recorded not resolved:** HPA is Swedish; **the EU sui
+  generis database right protects substantial extraction regardless of originality, and CC 3.0 does
+  not license sui generis rights — 4.0 does.**
+- ⚠⚠ **And the scope clause has a reading worse than either candidate**: *"all copyrightable parts of
+  our database, **specifically indicated in the downloadable XML format**."* **If the grant is limited
+  to the XML, the TSVs may not be licensed at all** — *no permission granted*, a third answer.
+  **Recorded; not pursued.**
+
+**7 — ⚠ What holds this in place, and it is one sentence rather than a review.**
+**Per-protein DISPLAY is the narrowest possible use.** `D-093` amendment 7 trigger 4 already fires on
+**redistribution, bulk export, an API serving HPA values, or any derived dataset offered for
+download.** ⚠ **That trigger is what keeps §6 parked. It is not parked because it was decided; it is
+parked because the use stays narrow.**
+
+**8 — ⚠⚠ WHAT ACTUALLY MATTERS FOR THE PAPER, AND IT IS NOT LICENSING.**
+**One methods sentence, correct: the source, the version, and the terms.**
+⚠⚠ **`P-004` argues another group's screen carries less than it is read to carry. A paper making that
+argument cannot be wrong about its own source** — **and *"HPA under CC BY 4.0"* would have been wrong,
+because our ingest is v22 and v22 is BY-SA 3.0.** **That error was live for three days and is
+corrected here.**
+
+---
+
+**⚠ WHAT THIS ENTRY DOES NOT DO** — it does not rule Adaptation versus Collection · it does not change
+`D-093` decision 7 · ⚠ **it does not reopen amendment 7's deferral, which was the right call and is
+now right for a better reason: the question the email would have asked has been answered by
+measurement** · and it does not authorise rendering any HPA value without attribution.
+
+#### D-093 amendment 9 — Trigger 1 fired: per-datum attribution was never built, it is being built, and the deferral stands on that condition
+
+- **Date:** 2026-08-20 · **Status:** ruled. **Deferral re-affirmed, conditional on §3.**
+- **Amends:** `D-093 amendment 7`, by its own return mechanism — **and corrects that entry's tone,
+  §5.**
+
+---
+
+**1 — The return mechanism worked, and that is the durable part.**
+
+Amendment 7 made per-datum attribution the load-bearing condition of the deferral, marked it
+**UNVERIFIED**, and wrote the return into the entry. **`NC` measured it: FALSE — none of amendment 3
+item 3's four elements was ever built.** No `href`, no anchor, no `proteinatlas` URL; **one plain-text
+source line per page**; no primary publication; no image/data credit.
+
+⚠ **The condition was already false when amendment 7 landed and nobody had to remember to check.**
+**That is the argument for writing a return into an entry rather than onto a task list.**
+
+| # | mitigation | state |
+|---|---|---|
+| 1 | surface quotes the page, `v22` link, date read | ✅ **fact** |
+| 2 | log's standing authority corrected | ✅ **fact** |
+| 3 | per-datum attribution | ⚠ **not built. In progress.** |
+
+**2 — The gap is older and wider than either audit saw, and that is the useful finding.**
+
+`NC` examined `ClinicalEdges.jsx`. That component's own header names a second surface:
+*"`CancerAssociations` (D-053) shows the paper's quasi H-score over the 82."*
+
+- ⚠⚠ **`qh` renders.** **That answers `D-093 amendment 8` §6's named open item** — the fact that most
+  bears on the Adaptation reading — **and it answers it the less convenient way. Recorded, parked
+  under amendment 7 trigger 4.**
+- ⚠ **`D-053` predates the clinical layer**, so HPA-derived values have been on the surface longer
+  than four days without per-datum links. **The gap is older than the entry that found it.**
+- ⚠ **The route does not launder the source.** `CancerAssociations` reads Kathad's S3, and `D-100`
+  established S3 is a **verbatim extract of `pathology.tsv`, 1,640 / 1,640.** **Citing the paper is
+  not citing HPA.**
+- **Two surfaces is a floor.** `PA` enumerates the set in both directions.
+
+**3 — The ruling (owner, 2026-08-20): deferral re-affirmed, conditional on attribution shipping.**
+
+**The owner has ruled *"so let's attribute it by all means."*** **Condition 3 is in flight, not
+refused, and the deferral stands once `PA`/`PB`/`PC` land.**
+
+⚠ **An unconditional re-affirmation was offered and declined** — it would have meant a deferral whose
+stated basis was known false. **Sending the email was offered and declined**, and `amendment 8`
+removed most of its point: **the licence identity is resolved by measurement, and the only remaining
+question is Adaptation-versus-Collection, which HPA is not obliged to answer.**
+
+**4 — ⚠⚠ WHY WE ARE DOING THIS, STATED PROPERLY, BECAUSE THE EARLIER DRAFT GOT IT WRONG.**
+
+**The reason to attribute per datum is NOT exposure. It is that a reader should be able to verify any
+number they see.**
+
+⚠⚠ **That is this project's own standard pointed outward.** *Every claim names how it is known*
+(`D-016`) · *a count states its key* · *accept by reproduction, not by label*. **A rendered HPA value
+with no link back to HPA fails our rule before it fails theirs**, and the licence happens to agree.
+
+⚠ **So this is not a concession extracted by a licence. It is the thing the platform would want
+anyway**, and `D-094`'s mount-precondition machinery already exists to carry it.
+
+**5 — ⚠ A correction to amendment 7's TONE, and it is a correction of fact, not of feeling.**
+
+Amendment 7 §3 says the record *"converts an honest mistake into a knowing one."*
+⚠⚠ **That is true of the mechanism and wrong about the magnitude, and the magnitude is what a reader
+takes away.**
+
+**Stated accurately:** **non-commercial academic display of publicly-downloadable data, from a
+publisher that expressly encourages research use, with the source named and the licence quoted.**
+**The shortfall is that attribution is per page rather than per datum.** ⚠ **No crime, no commercial
+gain, no redistribution, no claim of ownership** — **and `D-093` decision 7's *all rights retained*
+has never been asserted over HPA's data, only over ours.**
+
+⚠ **Amendment 7's sentence is not deleted; this paragraph is read alongside it.** **A record that
+overstates misleads exactly as much as one that understates, and the next reader of that entry will
+be a reviewer, a collaborator or an institution.**
+
+**6 — Trigger 2 has three claimants, not two.** Amendment 7 named `P-004` and `P-001`. ⚠ **`P-005`
+cites HPA coverage figures directly and is a paper ABOUT evidence coverage**, so its methods sentence
+is adjacent to its subject. *(Code's addition.)*
+
+**7 — Two habits worth keeping.** The re-attached reissue was verified **byte-identical to what had
+already landed rather than assumed** — *the check whose absence caused the wrong attachment*. **And
+the as-read document's pinned region was re-asserted AFTER its note was added** — ⚠ *a note added to
+a hash-pinned document is exactly where a region silently shifts.*
+
+---
+
+**⚠ What this entry does not do** — it does not resolve Adaptation versus Collection · it does not
+change decision 7 · **and it does not close trigger 1: the condition is in flight and `PA` will show
+whether it has been met.**
 
 ---
 
@@ -3973,6 +4527,108 @@ claim before saying it out loud.
 
 **Relied on by:** `F-052`.
 
+#### D-079 amendment 6 — ⚠⚠ The census splits: about half can carry a structural profile and about half must be REFUSED, which is neither branch amendment 1 committed to
+
+- **Date:** 2026-08-20 · **Status:** ruled. ⚠ **`D-079` remains a pre-registration and remains void if
+  code precedes it. No profile has been computed.**
+- **Amends:** `D-079 amendment 1`, whose ruling 3 pre-registered a fork the measurement did not take.
+
+---
+
+**1 — ⚠⚠ THE MEASUREMENT, AND IT IS A THIRD STATE.**
+
+Amendment 1 was written as a fork: **profile the census, or refuse at scale.** `KB` measured the
+census feature artifact (`census_features.v1.jsonl`, 2,690/2,690, `sha256 c08f9f1d…591863`) against
+the cohort's fit range:
+
+| bar | refused | computable | of |
+|---|---|---|---|
+| **STRICT (cohort min–max)** | **1,225 — 46.7%** | **1,397 — 53.3%** | 2,622 |
+| p05–p95 | 1,820 — 69.4% | 802 — 30.6% | 2,622 |
+| ±3 sd *(ddof caveat)* | 638 — 24.3% | 1,984 — 75.7% | 2,622 |
+| ⚠ **out of range on ALL SIX** | **0 at every bar** | | |
+
+⚠ **Denominator is 2,622, not 2,690** — the **58** `refused_span_below_floor` (`F-048`) and **10**
+`fewer than two CA atoms` account for 68. **State which, every time.**
+
+**⚠⚠ RULING 1 AND RULING 3 ARE BOTH OPERATIVE, ON DIFFERENT HALVES OF ONE POPULATION.** **Refusal at
+~47% is the common case, not an edge case, and amendment 1 did not anticipate a split.**
+
+**2 — ⚠ THE BAR IS RULED: STRICT (cohort observed min–max), and the other two are REPORTED beside it.**
+
+⚠⚠ **The bar changes the answer by a factor of nearly three and choosing one silently would be a dial
+wearing the costume of a measurement.** **Strict is ruled because it is the only bar with no free
+parameter: it is the range the standardizer was actually fit over.** ⚠ **p05–p95 discards real
+observed values; ±3 sd inherits a `ddof` choice and `sd_k` is not persisted (`F-049` amendment 1).**
+
+**⚠ All three render wherever the count is stated. The surface names which bar it is using, in frame.**
+
+**3 — ⚠⚠ THE HARD PART IS THE SURFACE, NOT THE RULING.**
+
+**Half the census showing a number and half showing a category is `D-089`'s hazard MIRRORED.**
+`D-089`: *a census protein given a page that looks like a ranked target's page is how a reader
+concludes wrongly.* ⚠⚠ **Now the inverse: a reader seeing `refused_out_of_distribution` beside a
+neighbour's profile will conclude THE REFUSED ONE IS WORSE.** **It is not. It is unmeasurable by this
+instrument.**
+
+**Ruled, and each is a condition:**
+- ⚠⚠ **The refusal is not rendered as a deficiency, an absence, or a low value.** **It states the
+  CAUSE:** *this protein's ‹feature› falls outside the range the model was fitted over, so no profile
+  is computed.* **Never a blank, never a zero, never a dash.**
+- ⚠ **The refused rows are NOT sorted below the profiled ones, and NOT filtered out by default.**
+  **Amendment 1 ruling 2 bars ranking including by sort order; a default sort that sinks refusals is
+  a ranking of evidence availability.**
+- ⚠⚠ **The refusal names WHICH feature or features put it out of range.** **A protein refused on
+  `ecd_length` and one refused on `mean_plddt_ecd` are different facts** — and `KB4`'s distribution
+  of how many features each row fails is the evidence.
+- ⚠ **Both counts render together wherever either does** — **1,397 computable and 1,225 refused, of
+  2,622, at the strict bar.** **A page showing only the profiled half is the flattering half**, which
+  is `D-093` decision 5's argument applied here.
+
+**4 — ⚠⚠ THE PLANNER'S PRE-REGISTERED EXPECTATION SCORED TWO MISSES, AND THE MISSES ARE THE RESULT.**
+
+| predicted | measured |
+|---|---|
+| `ecd_length` **worst offender** | ⚠⚠ **MISSED** — 146 rows, **5.6%**, nearly the mildest |
+| `mean_plddt_ecd` **mildest** | ⚠⚠ **MISSED** — 868 rows, **33.1%**, **the worst** |
+| **a minority** out of range | **HELD**, at **46.7%** — *and only just* |
+
+⚠⚠ **Amendment 1 ruling 4 predicted the MECHANISM while the Planner predicted the opposite OUTCOME
+from it:** *"the feature doing the most work is the one most likely to misbehave out of
+distribution."* **Confirmed — the two confidence features are offenders #1 and #2, they are `F-051`'s
+pair carrying 38.6% of attribution, and the census sits far below the cohort on both.**
+
+**⚠ THE CAUTION TRAVELS WITH THE NUMBER, WHEREVER IT APPEARS:** **the ranking set requires
+`mean_plddt ≥ 50`, so 831 of the 868 strict failures fall below a floor the COHORT had and the CENSUS
+does not.** **33.1% is a floor artefact as much as a distribution shift, and it must never be quoted
+without that sentence.**
+
+⚠ **This is scoreable only because it was written before the number existed.** **`F-022`, applied to
+the Planner rather than to a run.**
+
+**5 — ⚠ What is UNCHANGED from amendment 1, restated because a split invites erosion.**
+- **`structural_profile`. Never `score`, never `rank`, never `suitability`.**
+- ⚠ **No ranking, including by sort order.**
+- **`F-048`'s 58 excluded AT COMPUTATION**, carrying `refused_span_below_floor` — ⚠ **and now
+  measurably distinct from `refused_out_of_distribution`: two refusals, two causes, never pooled.**
+- ⚠⚠ **The profile NEVER re-enters the cohort's arc, and the scorer is NEVER refit to improve census
+  behaviour.** **`P-001` is unanswerable if it does.**
+- **`FEATURE_NAMES` stays at six.**
+- ⚠ **`D-089` unchanged: a census page still carries no scorer panel**, and a profile block must not
+  become that page by another name.
+
+**6 — ⚠ What this entry does NOT do.**
+- **It does not authorise computing any profile.** ⚠ **The surface contract in §3 is a precondition,
+  not a description of something built.**
+- ⚠⚠ **It does not license reading the refused half as a negative result.** *Unmeasurable by this
+  instrument* is not *worse*, and the entry says so in the frame the reader sees.
+- **It does not change the bar later.** ⚠ **Strict is ruled here, before any profile exists; changing
+  it after seeing which proteins fall out is the shape `D-075` decision 5 bars.**
+
+**Assumptions relied on:** ⚠ `A-014` — **twice: the surfaceome filter that produced the census, and
+the expression screen that produced the cohort whose range defines the bar.** **The fit range is a
+property of a selected population, not of proteins.**
+
 ---
 
 ### F-016 — The `Non_Surface` marker in the reconstructed Table S3 is a section heading, not a partition: everything below it is the **whole** membraneome
@@ -5259,6 +5915,120 @@ reason this block exists.
 its own window, under separate owner authorisation. The proxies are frozen with source, query
 string, and date recorded **before** any Run B result is read, and re-running from the frozen
 snapshot must be byte-identical.
+
+#### D-075 amendment 1 — ⚠⚠ A FOURTH confound, and it is upstream of the other three: which sequence was folded at all
+
+- **Date:** 2026-08-20 · **Status:** ruled. ⚠⚠ **`D-075` remains a pre-registration and remains void
+  if code precedes it. `geom_proxy` is unbuilt and unrun, and nothing below may be run until this
+  amendment is merged.**
+- **Prompted by:** `D-103 (a second instrument on the claim the whole census rests on)` and
+  `D-103 amendment 1`.
+- **Drafted by Code** as `docs/PROPOSAL-Planner-2026-08-20-D-075-amendment-1-span-selection-confound.md`;
+  ⚠ **ruled here with three changes, each named below rather than folded in.**
+
+---
+
+**⟡ Fourth item, added 2026-08-20 with `### D-103` — the span-selection confound.**
+
+Feature 7 is computed over a **membrane-proximal window whose position is fixed by the extracellular
+span boundary.** ⚠ **That boundary is supplied by UniProt topology annotation for every row in the
+cohort** — `boundary_method: sliced_ecd`, `span_rule: vocabulary` or `gpi_rule_A` — **with no
+alternative source anywhere in the pipeline.** `D-103` supplies a second instrument for the first
+time and finds, **on `D-075`'s own 82**: `corroborated_membrane` **25** · `corroborated_route` **14**
+· `mixed` **10** · `unreconciled` **2** · ⚠⚠ `if_not_attempted` **31 (37.8%)**. **Corroborated: 39 of
+82, 47.6%.**
+
+⚠⚠ **So this design cannot separate *"membrane-proximal geometry carries the signal"* from
+*"membrane-proximal geometry reflects how the span was CHOSEN."*** If the boundary rule is
+systematically off — even slightly, even for a subset — feature 7 measures the geometry of a window
+placed by **annotation** rather than by **biology**, and a `geom_proxy` result in **either direction**
+inherits it.
+
+⚠ **Distinct from the three items above, which all concern the FOLD** — its precision, its recipe,
+its coordinates. **This concerns the INPUT to the fold.** **A confidence-blind feature set does not
+become boundary-blind:** `geom_proxy` was designed to remove **confidence** information, not
+**annotation dependence.**
+
+⚠ **No claim in either direction.** *"The 31 unexamined spans are fine"* is exactly as unsupported as
+the opposite. `D-103 amendment 1` measured corroboration as **flat** across span length
+(73.7 / 75.8 / 73.9 / 75.4 / 72.4%) and across how well-studied a protein is (73.9% vs 76.4%) —
+⚠⚠ **which licenses *"no bias detected"* and NOT *"the corroborated rate applies to the
+unexamined."*** **The limit is irreducible: corroboration is measurable only where corroboration
+exists.**
+
+---
+
+**RULING (a) — ACCEPTED AS PROPOSED, and made structural rather than documentary.**
+Every `geom_proxy` output row carries its `D-103` category **alongside** the value.
+⚠⚠ **It MUST NOT enter the model — not as a feature, not as a sample weight, not as a filter.**
+**Evidence availability is a property of HPA's ANTIBODY CATALOGUE, not of the protein**, and
+`D-103` defines **no ordering** over its categories, deliberately.
+⚠ **Code's addition to the proposal: a prohibition test, proven RED, on the `EE-0` pattern —
+INCLUDING THE RENAME ROUTE.** Wiring a `D-103` category into the feature path must redden, **and so
+must renaming it first**; *a token scan is defeated by renaming, and the pre-registered six are
+pinned by name.*
+
+**RULING (b) — ACCEPTED, AND WIDENED TO THREE ARMS. All three pre-registered here; all three reported
+unconditionally.**
+
+| arm | n | status |
+|---|---|---|
+| **all 82** | 82 | ⚠⚠ **AUTHORITATIVE** |
+| corroborated only | **39** | robustness read-out |
+| ⚠ **all 82 minus the two `unreconciled`** | **80** | sensitivity read-out |
+
+⚠⚠ **THE FULL 82 IS AUTHORITATIVE, AND THE REASON IS RULING (a).** **Making the corroborated subset
+authoritative would let evidence availability select the analysis population — the same
+antibody-catalogue artifact that (a) bars from the model, arriving through the back door as a
+sampling frame.** ⚠ **A property that may not be a feature may not be a filter either.**
+
+⚠ **`n = 39` is small and this entry says so BEFORE the run, not after.** `D-075` Decision (0)
+establishes that at `n = 12` a median is not a stable anchor; **39 is better and is still not large,
+and the stratified arm carries wider intervals by construction.**
+
+**⚠⚠ AND THE INTERPRETATION OF DISAGREEMENT IS FIXED NOW, BOTH WAYS:**
+- **Arms AGREE** → ⚠ **this weakens the fourth item and does not eliminate it.** **The 31 unexamined
+  cannot be checked in either direction, so agreement is evidence about the 39, not about the 82.**
+- **Arms DISAGREE** → ⚠⚠ **that is a RESULT, not a reconciliation problem.** It would mean the axis
+  behaves differently where the span carries independent corroboration — **which is direct evidence
+  about the span-selection confound itself, and is more interesting than either arm alone.**
+
+**RULING — ⚠ THE TWO `unreconciled` PROTEINS ARE KEPT** (owner, 2026-08-20). **They are not dropped,
+and `D-075` Decision (5)'s anti-fishing discipline is satisfied because this is ruled BEFORE the
+run.**
+**"Accounted for" is given a measurable meaning rather than a rhetorical one:**
+1. ⚠ **Both are NAMED in the result entry, with their conflict described** — not summarised as *"two
+   unreconciled."*
+2. **They are included in the authoritative arm and in the corroborated-only arm's complement.**
+3. ⚠⚠ **The 80-row sensitivity arm exists precisely so their contribution is VISIBLE rather than
+   argued.** **It is pre-registered, reported unconditionally, and is NOT authoritative** — *a third
+   arm chosen after seeing the first two would be fishing; declared before the run, it is
+   `D-065`'s report-at-several-settings discipline.*
+
+**RULING (c) — ACCEPTED.** `D-075` Decision (6)'s closing sentence gains a fourth clause: ⚠ **a
+`geom_proxy` survival excludes neither precision, nor recipe, nor coordinate-mediated correlation,
+NOR SPAN SELECTION.**
+
+---
+
+**⚠ WHAT THIS AMENDMENT DOES NOT DO**
+
+- ⚠⚠ **It does not license reuse of `D-075`'s correlation coefficients.** The entry's own scope note
+  binds any later citation: they were measured **on the 56 ranking-set rows, at one recipe
+  composition, on this cohort as folded** — **a property of this instrument's output on this cohort,
+  not a constant of the features, and not transferable to the census.**
+- ⚠ **It does not resolve the confound.** **It names it, measures it on the actual cohort, and fixes
+  how the result must be read.** *`D-074` decision 3: name the check, do not build a framework.*
+- ⚠ **It does not claim the observation is novel to the field.** **The literature has not been
+  searched, and *"nobody has noticed this"* is the exact shape `F-047` catalogues.** **What is
+  established is narrower and solid: it is true of THIS pipeline, it is now measured, and the
+  measurement is on the record.**
+- **It does not build, run or schedule `geom_proxy`.**
+
+**Assumptions relied on:** `A-014` — ⚠ **twice, and in opposite directions**: UniProt topology
+annotation is a curated model of the protein, **and** HPA immunofluorescence localisation is an
+assay-plus-interpretation. **Neither instrument is ground truth, which is why corroboration is the
+claim and confirmation is not.**
 
 ### D-074 — A finding against an instrument is not closed until the instrument no longer exhibits it — or carries, in itself, the statement of what it gets wrong
 

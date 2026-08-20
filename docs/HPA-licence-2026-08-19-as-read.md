@@ -44,6 +44,28 @@ CC 3.0 licences are *Unported* or jurisdiction-ported; *International* arrived w
 of re-reading fixes that. `docs/EMAIL-DRAFT-HPA-licence-clarification.md` is the resolution
 instrument.**
 
+> ⚠⚠ **LANDING NOTE — 2026-08-20. ADDED BESIDE THE SENTENCE ABOVE, NOT REPLACING IT.**
+>
+> **That sentence is now FALSE, and it stays visible.** `D-093 amendment 7` records the owner's
+> ruling that the HPA query is **DEFERRED, knowingly**. The email was never sent, and
+> ⚠ **`docs/EMAIL-DRAFT-HPA-licence-clarification.md` has never existed** — an artifact named as an
+> instrument in the present tense. `F-047` member 16's shape, compounded here, because naming it
+> also asserted a resolution path that was never taken.
+>
+> ⚠ **This document is NEVER updated.** It records a page as read on one day, and editing it would
+> destroy the only thing it exists to be. **So the correction sits beside the error rather than
+> over it.**
+>
+> ⚠⚠ **The finding this document supports is UNCHANGED and still stands.** The page names
+> *"Attribution-ShareAlike 3.0 International"*, which is not a licence that exists.
+> **`D-093 amendment 3` is now WRITTEN**, and the licence identity remains **UNRESOLVED** —
+> deferred by ruling, never resolved by inheritance.
+>
+> ⚠ **And a second reading, obtained 2026-08-20, explains the contradiction this document records
+> without dissolving it:** `www.proteinatlas.org/about/licence` states *"Attribution 4.0
+> International"* — **a different licence from the one on this v22 page.** Both readings were
+> correct; they were of **different pages**. **v22 governs, because v22 is what was ingested.**
+
 ---
 
 <<< BEGIN VERBATIM >>>

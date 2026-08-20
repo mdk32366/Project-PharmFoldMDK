@@ -18,6 +18,8 @@
 //
 // ⚠ No ratio is shown. tumour_normal_ratio() raises by design (ruling 4) and nothing here divides.
 
+import HpaAttribution from './HpaAttribution.jsx'
+
 const LEVEL_WORD = {
   High: 'strong', Medium: 'moderate', Low: 'weak', 'Not detected': 'none',
 }
@@ -117,7 +119,35 @@ export default function ClinicalEdges({ block }) {
       )}
 
       <BurdenSlot />
+      {/* ⚠⚠ PER VIEW, not per page: the tumour panel links to /pathology and the normal
+          panel to /tissue. A single block per page does not discharge the precondition. */}
+      <HpaAttribution attribution={block.attribution_tumour} view="pathology" />
+      <HpaAttribution attribution={block.attribution_normal} view="normal_tissue" />
       <p className="clin-source">{block.source}</p>
+
+      {/* ⚠⚠ THE SURFACE QUOTES THE PAGE — owner ruling R1. It does NOT adopt the licence.
+          The first version asserted "CC BY-SA 3.0", taking a side. Amendment 4 removed the
+          assertion and left silence. ⚠ Silence leaves a reader unable to verify anything; an
+          attributed quotation with a resolvable link and a date is verifiable and claims nothing.
+          ⚠⚠ THREE PROPERTIES, EACH ASSERTED SEPARATELY: the attributive clause (reported speech,
+          never adoption), the link (a quotation without one is just a claim in someone else's
+          words), and the date read (the page can change; ours is pinned to a day).
+          ⚠ The quotation is VERBATIM and includes "3.0 International" — a version that does not
+          exist. We do not say so here. Correcting someone else's page on our page is worse than
+          quoting it, and that observation belongs in the log. */}
+      {block.licence_statement && (
+        <figure className="clin-licence">
+          <figcaption className="clin-licence-attrib">
+            {block.licence_statement.attributive}{' '}
+            (<a href={block.licence_statement.url} rel="noopener noreferrer" target="_blank">
+              {block.licence_statement.url}
+            </a>, read {block.licence_statement.date_read}):
+          </figcaption>
+          <blockquote className="clin-licence-quote">
+            &ldquo;{block.licence_statement.quotation}&rdquo;
+          </blockquote>
+        </figure>
+      )}
     </section>
   )
 }

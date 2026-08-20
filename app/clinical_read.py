@@ -39,12 +39,39 @@ from typing import Any, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.hpa_attribution import attribution_block
 from core.clinical_layer import LEVEL_ORDINAL, CATEGORY_LAYERS, layers_of
 from db.models import ClinicalNormalTissue, ClinicalPathology
 
 
 #: The coverage categories this module can report, from the layer's own five.
 assert "ihc_present" in CATEGORY_LAYERS and "ihc_gene_absent" in CATEGORY_LAYERS
+
+
+#: ⚠⚠ THE LICENCE STATEMENT THE SURFACE QUOTES — owner ruling R1, `D-093 amendment 3` item 5.
+#: A module constant so a test can compare it to the PINNED as-read region byte for byte, rather
+#: than a reviewer comparing it by eye.
+HPA_LICENCE_STATEMENT = {
+    # ⚠⚠ REPORTED SPEECH, NEVER ADOPTION. "…states…" — never "this data is licensed under…",
+    # which would adopt one side of a dispute. Adoption is what the ruling refuses.
+    "attributive": "The Human Protein Atlas states, on its Licence & Citation page",
+    # ⚠⚠ VERBATIM, INCLUDING "3.0 International" — a licence version that does not exist. The
+    # surface does NOT say so: correcting someone else's page on our page is worse than quoting it,
+    # and that observation lives in the log where it belongs.
+    # ⚠ The trailing quote is unbalanced in the source itself and is reproduced exactly, because
+    # verbatim means verbatim even where the page is untidy.
+    "quotation": (
+        "The Human Protein Atlas is licensed under the Creative Commons Attribution-ShareAlike "
+        "3.0 International License for all copyrightable parts of our database, specifically "
+        "indicated in the downloadable XML format with 'source=\"HPA\"."
+    ),
+    # ⚠⚠ THE v22 HOST, AND WHICH PAGE IS NOT A DETAIL. Both were fetched on 2026-08-20 and diffed:
+    # v22 says **Attribution-ShareAlike 3.0 International**; www says **Attribution 4.0
+    # International**. They are DIFFERENT LICENCES. v22 governs because v22 is what was ingested,
+    # and it does NOT redirect — so the version really is retrievable from the host name.
+    "url": "https://v22.proteinatlas.org/about/licence",
+    "date_read": "2026-08-20",
+}
 
 
 def _tumour_rows(session, gene_name: str) -> list[dict]:
@@ -126,19 +153,28 @@ def clinical_block(engine: Any, gene_name: Optional[str]) -> dict:
         "gene": gene_name,
         "tumours": tumours,
         "normal_tissues": normals,
-        # ⚠⚠ THE LICENCE IS NOT SETTLED AND THIS STRING MUST NOT PRETEND IT IS. I first shipped
-        # "CC BY-SA 3.0" here, which picks a side in a dispute the log records as OPEN:
-        #   · D-093 amendment 1 (2026-08-17) ruled "HPA is CC BY 4.0 — the BY-SA recollection
-        #     was WRONG";
-        #   · HPA's own page, read verbatim on 2026-08-19, says "Attribution-ShareAlike 3.0
-        #     International" — ⚠ a licence that DOES NOT EXIST (3.0 is Unported or ported;
-        #     International arrived with 4.0);
-        #   · and `D-093 amendment 3 §1` — the entry that would resolve it — is UNWRITTEN.
-        # ⚠ So the surface states what is KNOWN (the source, and that we attribute it) and
-        # declines to assert redistribution terms nobody here can currently name.
+        # ⚠⚠ THE SURFACE QUOTES THE PAGE — owner ruling R1, `D-093 amendment 3` item 5.
+        # The first version asserted `CC BY-SA 3.0`, which adopted one side of a dispute. Amendment 4
+        # removed the assertion and left SILENCE. ⚠ Silence leaves a reader unable to verify anything;
+        # an attributed quotation with a resolvable link and a date read is verifiable and claims
+        # nothing. This is a CHANGE from amendment 4's fix, in the direction of more information.
+        #
+        # ⚠⚠ REPORTED SPEECH, NEVER ADOPTION. "The Human Protein Atlas states…" — never "this data is
+        # licensed under…". Adoption is exactly what the ruling refuses.
+        # ⚠⚠ VERBATIM, INCLUDING "3.0 International" — a licence version that does not exist. The
+        # surface does NOT say so. Correcting someone else's page on our page is worse than quoting
+        # it; that observation lives in the log, where it belongs.
+        # ⚠ THE URL IS THE v22 HOST, determined by fetching BOTH pages on 2026-08-20 and diffing:
+        # v22 says Attribution-ShareAlike 3.0 International, www says Attribution 4.0 International.
+        # They are DIFFERENT LICENCES. v22 governs, because v22 is what was ingested.
+        "licence_statement": dict(HPA_LICENCE_STATEMENT),
+        # ⚠⚠ THE FOUR ELEMENTS, PER VIEW. The licence makes citation a PRECONDITION of
+        # display, so each edge carries its own deep link — the tumour panel to /pathology and
+        # the normal-tissue panel to /tissue. A single block per page does not discharge it.
+        "attribution_tumour": attribution_block(gene_name, "pathology"),
+        "attribution_normal": attribution_block(gene_name, "normal_tissue"),
         "source": ("Human Protein Atlas v22 — pathology.tsv (protein → tumour, IHC) and "
-                   "normal_tissue.tsv (protein → normal tissue). Attributed to HPA; the exact "
-                   "licence version is unresolved and under query with the source."),
+                   "normal_tissue.tsv (protein → normal tissue)."),
         "boundary": ("Immunohistochemistry: how many patient samples stained for this protein. "
                      "An EXPRESSION observation — not causation, not a claim the protein drives "
                      "the disease, and not a clinical indication."),

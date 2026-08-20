@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { bandFor } from '../plddt.js'
+import HpaAttribution from './HpaAttribution.jsx'
 
 // The census surface (D-087). Searchable, sortable, and deliberately UNRANKED.
 //
@@ -174,7 +175,7 @@ export default function CensusTable({ rows, onSelect }) {
         <span className="sr-only">Search by accession, gene, protein name or alias</span>
         <input
           type="search"
-          placeholder="Search accession, gene, protein name or alias (HER2, CD30, TROP2)…"
+          placeholder="Search accession, gene, protein name or alias (CD30, TROP2, PD-L1)…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -183,6 +184,10 @@ export default function CensusTable({ rows, onSelect }) {
       {/* ⚠⚠ THE LENS CONTROL. D-102's condition is "state what it is", and this is where it is
           stated. The control is not a preference — it changes what the Stained % column MEANS, so
           the meaning is printed under it rather than hidden in a tooltip. */}
+      {/* ⚠ The publication, website reference and data credit for the whole staining column.
+          The per-datum LINK is on each cell above; these three are properties of the source. */}
+      <HpaAttribution attribution={declared?.attribution} view="pathology" />
+
       <div className="lens-control">
         <fieldset>
           <legend>How to read &ldquo;stained&rdquo;</legend>
@@ -247,7 +252,20 @@ export default function CensusTable({ rows, onSelect }) {
       <p className="census-count">
         Showing <strong>{visible.length.toLocaleString()}</strong> of{' '}
         {rows.length.toLocaleString()}
-        {query && shown.length === 0 && ' — no protein matches that search'}
+        {/* ⚠⚠ "no protein matches" READS AS "this protein does not exist", and for the census
+            that is usually FALSE. HER2 and HER3 are in the manifest and were never folded — they
+            are rental-tier, above the local ceiling — so the honest answer is "not folded", not
+            "not found". A search that answers absence when the truth is unmeasured manufactures
+            a gap, which is the defect D-101 was written about, one level along. */}
+        {query && shown.length === 0 && (
+          <>
+            {' — nothing in the FOLDED census matches that. '}
+            <strong>That is not the same as &ldquo;no such protein&rdquo;:</strong> 3,467 proteins
+            have a usable extracellular stretch and only 2,690 were folded. The rest sit above the
+            local GPU ceiling and are awaiting rented capacity — <strong>HER2, HER3, EGFR and
+            HER4 are all in that group</strong>, at 621–630 aa.
+          </>
+        )}
       </p>
 
       {capped && (
@@ -349,7 +367,16 @@ export default function CensusTable({ rows, onSelect }) {
                     </span>
                   ) : (
                     <>
-                      <strong>{r.stained_pct}%</strong>
+                      {/* ⚠⚠ THE PER-DATUM LINK. This cell renders an HPA-derived value, so the
+                          citation precondition attaches to the CELL, not to the page. */}
+                      {r.staining?.attribution?.deep_link ? (
+                        <a href={r.staining.attribution.deep_link} rel="noopener noreferrer"
+                           target="_blank" className="stained-link">
+                          <strong>{r.stained_pct}%</strong>
+                        </a>
+                      ) : (
+                        <strong>{r.stained_pct}%</strong>
+                      )}
                       <span className="stained-n"> of {r.stained_n}</span>
                       {r.stained_cancer && (
                         <span className="stained-where"> · {r.stained_cancer}</span>
