@@ -5,8 +5,12 @@
 > integer, and `‹N›` is deliberately left unresolved in the title below so the amendment checker
 > does not count it as a citation.
 >
-> ⚠ **The placement of the unranked (`TA2`) is reported here as a PROPOSAL and has not been built.**
-> §4 of the orders: *placement of the unranked is a decision, not a default.*
+> ⟡ **UPDATED 2026-08-21 after the owner ruled all three open items.** The three questions this draft
+> asked have been answered and are folded into the rulings below; the *"open questions"* section is
+> kept at the foot, **with the answers recorded against it rather than deleted** — a question removed
+> is a question that looks as though it was never asked.
+> ⚠ **`TA` is now BUILT** against these rulings. The one item still owed is the owner's own finding
+> on the pLDDT floor, noted at the foot.
 
 ---
 
@@ -14,7 +18,7 @@
 
 ### `#### D-102 amendment ‹N›` — The default sort is itself a lens, and a page that arrives pre-ordered has chosen one; `/targets` defaults to the scorer rank, and the unranked are partitioned rather than positioned
 
-- **Date:** 2026-08-21 · **Status:** ⚠ **PROPOSED — Planner to rule** · **Author:** Code (draft)
+- **Date:** 2026-08-21 · **Status:** ⟡ **all five placement clauses OWNER-RULED; entry still to be LANDED by the Planner** · **Author:** Code (draft)
 
 **THE TWO SURFACES DISAGREED, AND THE DISAGREEMENT WAS THE FINDING.** `CensusTable.jsx` refuses a
 pLDDT default in its own source — *"a self-reported confidence into a de facto ranking"* — and pins
@@ -51,8 +55,7 @@ way to identify the run is `F-052`'s shape, and this project has spent the week 
 sentence the census uses. ⚠ **The lens is stated where the lens is applied** — nothing is removed,
 and the reader keeps every ordering they had.
 
-**⚠⚠ RULING 3 — THE 26 UNRANKED ROWS ARE PARTITIONED, NOT POSITIONED. This is the clause needing the
-ruling.** **56 of the 82 are scored.** The other 26 **have no position in a scorer ordering at all.**
+**⚠⚠ RULING 3 — THE 26 UNRANKED ROWS ARE PARTITIONED, NOT POSITIONED. ⟡ Owner-ruled 2026-08-21.** **56 of the 82 are scored.** The other 26 **have no position in a scorer ordering at all.**
 
 ⚠ **Measured at v99 against `/api/ranking` ∩ `/api/coverage` ∩ `/api/analyses`, not taken from the
 orders' vocabulary — and one of the four named causes is empty:**
@@ -73,7 +76,7 @@ that is the state `F-044`'s shape hides in.
 unranked, and a sort that sinks them is a ranking of scoreability** — the same defect in a new coat,
 which is precisely what this amendment exists to stop.
 
-**Proposed placement:**
+**Placement — ⟡ all five clauses OWNER-RULED 2026-08-21:**
 1. The **56 ranked rows** render in rank order, each showing its **actual rank integer**.
 2. The **26 unranked** render in a **visually separate group beneath**, under a heading that states
    *these have no scorer rank* — ⚠ **not** as rows 57–82, and with **no position number of any kind**.
@@ -85,10 +88,33 @@ which is precisely what this amendment exists to stop.
 5. ⚠ They are **not hidden** behind a control. 26 of 82 removed from the default view would be a
    silent exclusion, which is worse than a wrong order.
 
-⚠ **What is derived and what is chosen.** Clauses 1–3 follow from the owner's stated reasoning: if
-the unranked have no position, they cannot be given one. **Clauses 4 and 5 are choices** — the
-internal ordering of the group, and its visibility by default — **and those are what the Planner is
-asked to rule on.**
+⚠ **What was derived and what was chosen.** Clauses 1–3 follow from the owner's stated reasoning: if
+the unranked have no position, they cannot be given one. Clauses 4 and 5 were choices, **and the
+owner ruled both:**
+
+- **Clause 4 — accession ascending.** *"The only ordering available that isn't a ranking of something
+  — any quality-adjacent key would smuggle an order back in."*
+- **Clause 5 — visible, not collapsed.** ⚠⚠ *"A collapsed group is a filtered default wearing a
+  disclosure control."*
+
+**⟡ RULING 4 — A ROW WITH TWO CAUSES SHOWS BOTH.** `IGF2R` is `held_out` **and** its fold failed
+(CUDA OOM at 2,491 aa). ⚠ **`held_out` LEADS, because it is a decision, not an event:** the row was
+ruled out before a card was ever involved, and the OOM is what happened afterwards. Both render —
+*"held out; fold subsequently attempted and failed (CUDA OOM)"*. ⚠⚠ **A row with two causes showing
+one is an absence with a cause hiding an absence with a cause.**
+
+**⟡ RULING 5 — THE PRE-REGISTERED FLOOR HOLDS, AND THE PAGE SAYS SO.** `D-060` decision 5 fixed the
+mean pLDDT floor at **50** before the data was seen. `ATP2B2` misses by **0.54** (49.46).
+⚠ **The floor is NOT moved** — moving a threshold after seeing which rows fall outside it is exactly
+what pre-registration prevents. Instead the group **states the floor and renders the nearest excluded
+value**, so a reader can judge the cutoff without the project changing it. ⚠ That is `D-102`'s stated
+lens applied to a threshold.
+
+⚠⚠ **And it earns its own finding — `F-‹next›`, the owner's to write:** *a hard cutoff on a scalar,
+with a row 0.54 short.* **That is `F-043`'s shape on our own instrument this time** — Kathad's cutoff
+sits on the modal value of an ~11-patient estimator; ours excludes a target by half a point of a
+confidence score `D-039` says is **uncalibrated for these proteins**. **Not a proposal to change it.
+A statement of what it costs.**
 
 **WHAT THIS DOES NOT DO.** It does not score the census (`D-079` decision 1 stands: a fold is a
 measurement, a score is an interpretation). It does not make the two populations reachable through
@@ -97,7 +123,9 @@ page arrives in, and what it says about it.**
 
 ---
 
-## ⚠ Open questions for the ruling
+## ⟡ The three open questions, and how the owner ruled them
+
+⚠ **Kept, not deleted — a question removed is a question that looks as though it was never asked.**
 
 **1. A row with two causes needs a precedence, and `IGF2R` is that row.** It is `held_out`
 **and** its fold failed (CUDA OOM at 2,491 aa). Both are true; the group can show only one.
@@ -115,3 +143,19 @@ for something else.** Code is **not** proposing the floor move — `D-060` decis
 it, and moving a pre-registered threshold after seeing the data is the defect that pre-registration
 exists to prevent. **It is flagged because a reader who sorts by rank will see eleven rows outside
 the ordering and one of them missed by half a point**, and the page should probably say so.
+
+---
+
+## ⟡ The answers, recorded against the questions above (owner, 2026-08-21)
+
+| # | ruling |
+| --- | --- |
+| **1** | ⟡ **`held_out` leads — and BOTH render.** *"It's a decision, not an event. Held-out status was ruled before a card was ever involved; the OOM is what happened afterwards."* ⚠⚠ *"A row with two causes showing one is an absence with a cause hiding an absence with a cause."* |
+| **2** | ⟡ **Both stand.** Accession ascending — *"the only ordering available that isn't a ranking of something; any quality-adjacent key would smuggle an order back in."* Visible, not collapsed — ⚠⚠ *"a collapsed group is a filtered default wearing a disclosure control."* |
+| **3** | ⟡ **The floor holds, and the page says so.** ⚠ *"Moving a threshold after seeing which rows fall outside it is exactly what pre-registration prevents."* The group states the pre-registered floor and renders the nearest excluded value, **49.46**, so a reader can judge the cutoff without the project moving it. ⚠⚠ **And it wants its own finding — `F-‹next›`, the OWNER'S to write:** *the pre-registered floor excludes a row by 0.54 on a scale the project has never calibrated.* `F-043`'s shape on our own instrument. **Not a proposal to change it — a statement of what it costs.** |
+
+⚠ **One correction the owner made to their own record, which belongs in the log:**
+`ORDERS-Code-2026-08-19f-ADDENDUM-viewer-defect.md` (`BF1`–`BF4`) **was written, hashed, presented —
+and never landed.** `git log --all --diff-filter=A` returns nothing for that path. ⚠⚠ **The task was
+invisible, not declined**, and it has twice been recorded as an open item held by Code. The addendum
+is the owner's to reissue, and **`BF2`–`BF4` have never been asked.**

@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getCoverage, listAnalyses } from '../api.js'
+import { getCoverage, getRanking, listAnalyses } from '../api.js'
 import { bandFor } from '../plddt.js'
 import { nextSort, sortRows } from '../sortRows.js'
 import { filterRows } from '../searchRows.js'
 
 // The picker over the folded targets (light list, D-034). mean pLDDT carries its band inline, so the
-// list tells the confidence story before a structure is opened. Default sort is pLDDT desc so the most-
-// interpretable folds lead — and the reader sees the ceiling (no target reaches the high-confidence
-// range) at a glance. (No literal max here — that rots as the cohort grows; see D-049/D-050.)
+// list tells the confidence story before a structure is opened, and the reader sees the ceiling (no
+// target reaches the high-confidence range) at a glance. (No literal max here — that rots as the
+// cohort grows; see D-049/D-050.)
+// ⟡ SUPERSEDED 2026-08-21: this paragraph said "Default sort is pLDDT desc so the most-interpretable
+// folds lead." That default is now ruled against — see the block above `DEFAULT_SORT`. The sentence
+// is corrected rather than deleted, because it records what the surface used to claim and why.
 //
 // D-048 §3.2 (UI-depth §2.3): tier is shown per row and filterable, so the two-machine cohort
 // (local int8 vs rental fp16) is legible without opening a JSON payload. Tiers are NOT blended into a
@@ -44,9 +47,31 @@ import { filterRows } from '../searchRows.js'
 //
 // ⚠ Fold confidence has NO sort control of its own: it is a band OF mean pLDDT, so sorting it
 // separately would be a second axis for one quantity. Sort by mean pLDDT instead.
-const DEFAULT_SORT = { key: 'mean_plddt', dir: 'desc' }
+//
+// ── ⚠⚠ THE DEFAULT SORT WAS A DE FACTO RANKING BY A THIRD OF THE REAL ONE (owner ruling 2026-08-21)
+// This list defaulted to mean pLDDT descending while `CensusTable.jsx` explicitly REFUSES that on the
+// census — "a self-reported confidence into a de facto ranking". Same reasoning, opposite behaviour,
+// two surfaces, neither file mentioning the other.
+//
+// ⚠⚠ And it is worse here than on the census, not better. The cohort IS ranked — by the scorer — and
+// `F-051` measures `membrane_proximal_plddt` at 32.2% of the scorer's attribution. So ordering by
+// pLDDT was a ranking BY ROUGHLY A THIRD OF THE REAL RANKING, presented as though it were the order,
+// while the real one existed and was one fetch away. On the census nothing else competes to be the
+// order; here something did.
+//
+// ⚠ `D-102` licenses a reader CHOOSING a lens. It does not license the SYSTEM choosing one and
+// presenting it as the order — a default sort is the one lens the page never labels.
+const DEFAULT_SORT = { key: 'rank', dir: 'asc' }
+
+// ⚠⚠ The sentence the census uses, rendered HERE, where the lens is actually applied (D-102, TA3).
+const PLDDT_LENS_NOTE =
+  'You are sorting by the model’s self-reported confidence in its own structure. It is not the ' +
+  'scorer’s ranking: membrane_proximal_plddt carries 32.2% of the scorer’s attribution (F-051), so ' +
+  'this orders the cohort by roughly a third of the ranking. Sort by Rank for the ranking itself.'
 
 const COLUMNS = [
+  // ⚠ The scorer's ordering, and the default. Unranked rows carry their CAUSE here, never a number.
+  { key: 'rank', label: 'Rank' },
   { key: 'gene', label: 'Gene' },
   { key: 'accession', label: 'Accession' },
   { key: 'tier', label: 'Tier' },
@@ -54,6 +79,50 @@ const COLUMNS = [
   // Not sortable by design (see above); demoted per the confidence-demotion order.
   { key: null, label: 'Fold confidence', className: 'col-secondary' },
 ]
+
+// ⚠⚠ WHY THE UNRANKED ARE PARTITIONED AND NOT SORTED TO THE BOTTOM (owner ruling, TA2).
+// 56 of the 82 are scored. The other 26 have NO POSITION in a scorer ordering — sinking them would
+// rank them 57th through 82nd, and they are not last, they are unranked. **A sort that sinks
+// unranked rows is a ranking of scoreability**, which is the same defect in a new coat.
+//
+// ⚠ The partition belongs to the RANK AXIS, not to the rows. Under any other sort the reader has
+// chosen an axis every row has a value (or a stated absence) on, so all 82 order together under
+// `sortRows`' existing absent-is-a-category rule. Quarantining them permanently would say they are
+// outside every ordering, which is a different and equally false claim.
+// ⚠⚠ THE PRE-REGISTERED FLOOR, NAMED. `D-060` decision 5 fixed it at 50 BEFORE the data was seen.
+// ⚠ It is not moved to admit `ATP2B2` at 49.46. Moving a threshold after seeing which rows fall
+// outside it is precisely what pre-registration exists to prevent. The page states the floor and
+// the nearest excluded value instead, so a reader can judge the cutoff without us changing it.
+export const PLDDT_FLOOR = 50
+
+export function rankCause(row, rankingServed = true) {
+  if (row.rank != null) return null
+  // ⚠⚠ NO RANKING RUN IS NOT A PROPERTY OF THE ROW. If no valid pre-registered run is served, every
+  // row is unranked for ONE shared reason, and none of the per-row causes below apply. An earlier
+  // version fell through to the floor branch here and would have labelled a row at 77.26 pLDDT
+  // "excluded by the pre-registered pLDDT floor of 50" — a false statement about a good fold,
+  // produced by inferring a cause from the absence of a rank.
+  if (!rankingServed) return 'no ranking run is currently served'
+  // ⚠⚠ BOTH CAUSES RENDER (owner ruling). IGF2R is held_out AND its fold failed. A row with two
+  // causes showing one is an absence with a cause hiding an absence with a cause.
+  // ⚠ `held_out` LEADS because it is a DECISION, not an event: the row was ruled out before a card
+  // was ever involved. The OOM is what happened afterwards.
+  if (row.disposition === 'held_out') {
+    return row.fold_status === 'failed'
+      ? 'held out; fold subsequently attempted and failed (CUDA OOM)'
+      : 'held out'
+  }
+  if (row.never_attempted || row.fold_status === 'not_folded') return 'not folded — never attempted'
+  if (row.fold_status === 'failed') return 'fold attempted and failed'
+  // ⚠ TESTED, NOT INFERRED. "Has a pLDDT and is not held out" is not the same claim as "is under the
+  // floor", and only the second one is what `below_floor` means.
+  if (row.mean_plddt != null && row.mean_plddt < PLDDT_FLOOR) {
+    return `excluded by the pre-registered mean pLDDT floor of ${PLDDT_FLOOR}`
+  }
+  // ⚠ The fourth bucket was EMPTY at v99 and this is what must render if it ever fills. `F-044`'s
+  // shape hides in a dash: an absence with no cause must SAY it has no cause.
+  return 'unranked — no cause recorded'
+}
 
 const ARIA = { asc: 'ascending', desc: 'descending' }
 
@@ -65,6 +134,7 @@ export default function TargetList() {
   const [foldStatus, setFoldStatus] = useState({}) // accession -> { fold_status, fail_reason }
   const [coverage, setCoverage] = useState([])     // the 82 manifest rows, for the members with no analysis
   const [query, setQuery] = useState('')
+  const [ranks, setRanks] = useState(null)         // accession -> rank, from the pre-registered run
 
   useEffect(() => {
     listAnalyses().then(setRows).catch((e) => setError(e.message))
@@ -88,6 +158,8 @@ export default function TargetList() {
             map[r.accession] = {
               fold_status: r.fold_status,
               fail_reason: r.fail_reason || r.exclusion_reason,
+              // ⚠ disposition decides which CAUSE leads for an unranked row, so it must travel
+              disposition: r.disposition,
             }
           }
         }
@@ -96,6 +168,28 @@ export default function TargetList() {
         setCoverage(rows_)
       })
       .catch(() => { setFoldStatus({}); setCoverage([]) })
+  }, [])
+
+  // ⚠⚠ THE SCORER'S ORDERING, FROM THE EXISTING SUPPLIER. `/api/ranking` is served by
+  // `_latest_valid_result`, which already implements `valid ∧ run_kind='preregistered'`
+  // (`D-064` dec 3 for valid, `D-065` dec 4 for pre-registered).
+  // ⚠ `F-049`'s trap is REAL and already closed there: `run_kind='preregistered'` ALONE does not
+  // identify the run, because `id=1` carries that value with ZERO scored rows. Re-deriving the
+  // predicate here would be `F-052` again, in the exact place the orders warned about it — so this
+  // consumes the supplier and computes nothing.
+  useEffect(() => {
+    Promise.resolve()
+      .then(() => getRanking())
+      .then((r) => {
+        const map = {}
+        for (const row of r?.rows ?? []) {
+          if (row?.accession && row.rank != null) map[row.accession] = row.rank
+        }
+        setRanks(map)
+      })
+      // ⚠ `{}` not null: the ranking being unreachable means NO row is ranked, which is a knowable
+      // state the surface can state. It must not leave rows in "still loading" forever.
+      .catch(() => setRanks({}))
   }, [])
 
   if (error) return <p className="error">Could not load targets: {error}</p>
@@ -112,16 +206,51 @@ export default function TargetList() {
     .map((c) => ({
       id: null, accession: c.accession, gene: c.gene, label: c.label ?? null,
       mean_plddt: null, tier: null, tier_reason: null, aliases: c.aliases ?? null,
-      never_attempted: true,
+      disposition: c.disposition ?? null, never_attempted: true,
     }))
-  const all = [...rows, ...missing]
+  // ⚠ rank and the coverage facts join onto the row so one sort mechanism sees everything.
+  const rankMap = ranks ?? {}
+  const all = [...rows, ...missing].map((r) => ({
+    ...r,
+    rank: rankMap[r.accession] ?? null,
+    disposition: r.disposition ?? foldStatus[r.accession]?.disposition ?? r.disposition,
+    fold_status: foldStatus[r.accession]?.fold_status
+      ?? (r.never_attempted ? 'not_folded' : r.mean_plddt != null ? 'folded' : undefined),
+  }))
 
   const tiers = [...new Set(rows.map((r) => r.tier).filter(Boolean))].sort()
   const tiered = tierFilter === 'all' ? all : all.filter((r) => r.tier === tierFilter)
   // ⚠ One matcher, shared with the census (`../searchRows.js`) — see `F-052`.
   const filtered = filterRows(tiered, query)
   const active = sort ?? DEFAULT_SORT
-  const sorted = sortRows(filtered, active.key, active.dir)
+
+  // ⚠⚠ IS A RANKING SERVED AT ALL? `/api/ranking` returns `result_status: not_run` with zero rows
+  // when no valid pre-registered run exists (`D-062`). Partitioning then would put all 82 rows in a
+  // group headed "have no scorer rank" — true, useless, and it would imply 82 individual exclusions
+  // where there is one shared cause. So the surface says the ranking is unavailable and falls back
+  // to a STATED order instead of pretending to one.
+  const rankingServed = ranks != null && Object.keys(rankMap).length > 0
+
+  // ⚠⚠ THE PARTITION, AND IT APPLIES TO THE RANK AXIS ONLY. Sorting BY RANK splits the list, because
+  // 26 rows have no position on that axis. Sorting by any other column does not, because every row
+  // has a value or a stated absence there — see the note above `rankCause`.
+  const partitioned = active.key === 'rank' && rankingServed
+  const rankedRows = partitioned ? filtered.filter((r) => r.rank != null) : filtered
+  const unrankedRows = partitioned ? filtered.filter((r) => r.rank == null) : []
+  // ⚠ with no ranking served, `rank` is null on every row and sorting by it would be a no-op with an
+  // implied order. Fall back to accession — stated in the note, not silent.
+  const effectiveKey = active.key === 'rank' && !rankingServed ? 'accession' : active.key
+  const effectiveDir = active.key === 'rank' && !rankingServed ? 'asc' : active.dir
+  const sorted = sortRows(rankedRows, effectiveKey, effectiveDir)
+  // ⚠ Accession ascending, and the arbitrariness is STATED below. It is the only ordering available
+  // that is not a ranking of something — any quality-adjacent key would smuggle an order back in.
+  const unranked = [...unrankedRows].sort((a, b) =>
+    String(a.accession).localeCompare(String(b.accession)))
+
+  // ⚠ the nearest excluded value, so a reader can judge the pre-registered floor without us moving it
+  const nearestBelowFloor = unranked
+    .filter((r) => r.mean_plddt != null && r.disposition !== 'held_out')
+    .reduce((best, r) => (best == null || r.mean_plddt > best ? r.mean_plddt : best), null)
 
   // ⚠⚠ EVERY COUNT STATES ITS KEY. This line said "{rows.length} folded targets" — wrong three ways
   // at once: 80 is not the folded count (79 is), 80 is not the cohort (82 is), and it reported the
@@ -204,6 +333,11 @@ export default function TargetList() {
             HER2 and CD30; a protein absent from the cohort will not appear here even so.</>}
         </p>
       )}
+      {/* ⚠⚠ TA3 / D-102 — THE LENS IS STATED WHERE THE LENS IS APPLIED. pLDDT is still available as
+          a sort the reader chooses; what it may not be is the order the page arrives in unlabelled. */}
+      {active.key === 'mean_plddt' && (
+        <p className="note plddt-lens-note">{PLDDT_LENS_NOTE}</p>
+      )}
       <table>
         <thead>
           <tr>
@@ -236,6 +370,13 @@ export default function TargetList() {
             const absent = r.mean_plddt == null
             return (
               <tr key={r.accession ?? r.id}>
+                {/* ⚠⚠ THE RANK CELL. A ranked row shows its integer. An unranked row shows its
+                    CAUSE — never a number, never a dash, and never a position it does not hold. */}
+                <td className="mono col-rank">
+                  {r.rank != null
+                    ? r.rank
+                    : <span className="rank-cause">{rankCause(r, rankingServed)}</span>}
+                </td>
                 {/* ⚠⚠ A cohort member with no analysis row has no card to open. `/target/null` would
                     be a link that 404s, which is worse than no link — it invites a click and then
                     denies it. The gene renders as plain text and the reason column says why. */}
@@ -268,6 +409,67 @@ export default function TargetList() {
             )
           })}
         </tbody>
+        {/* ⚠⚠ THE UNRANKED GROUP — A PARTITION, NOT POSITIONS 57–82.
+            It is a second `tbody` inside the same table so the columns stay aligned, with a heading
+            row that states what the group IS. These rows are NOT numbered, and nothing here implies
+            an order relative to the ranked rows above.
+            ⚠ VISIBLE, NOT COLLAPSED (owner ruling): a collapsed group is a filtered default wearing
+            a disclosure control, and 26 of 82 hidden by default would be a silent exclusion. */}
+        {partitioned && unranked.length > 0 && (
+          <tbody className="unranked-group">
+            <tr className="unranked-heading">
+              <td colSpan={COLUMNS.length}>
+                <strong>{unranked.length} targets have no scorer rank.</strong>{' '}
+                They are not ranked last — they have no position in this ordering at all, and each
+                row states why.{' '}
+                {nearestBelowFloor != null && (
+                  <>
+                    ⚠ Rows excluded by the pre-registered mean pLDDT floor of <strong>50</strong>{' '}
+                    (<abbr title="pre-registered before the data was seen, in D-060 decision 5">
+                      pre-registered
+                    </abbr>) come closest at <strong>{nearestBelowFloor.toFixed(2)}</strong> — the
+                    floor is not moved to admit it, and the nearest value is shown so you can judge
+                    the cutoff yourself.{' '}
+                  </>
+                )}
+                Listed by accession, which carries no judgement; any other order would be a ranking
+                of something.
+              </td>
+            </tr>
+            {unranked.map((r) => {
+              const band = bandFor(r.mean_plddt)
+              const absent = r.mean_plddt == null
+              return (
+                <tr key={r.accession ?? r.id} className="row-unranked">
+                  <td className="col-rank"><span className="rank-cause">{rankCause(r, rankingServed)}</span></td>
+                  <td>
+                    {r.id != null
+                      ? <Link to={`/target/${r.id}`}>{r.gene}</Link>
+                      : <span className="gene-unlinked" title="no fold was attempted, so there is no structure page">{r.gene}</span>}
+                  </td>
+                  <td className="mono">{r.accession}</td>
+                  <td>
+                    <span className={`tier-tag tier-${r.tier}`} title={r.tier_reason || undefined}>
+                      {r.tier ?? '—'}
+                    </span>
+                  </td>
+                  <td className="mono">{r.mean_plddt != null ? r.mean_plddt.toFixed(2) : '—'}</td>
+                  <td className="col-secondary">
+                    {absent ? (
+                      <span className="absent-reason" title={foldStatus[r.accession]?.fail_reason || undefined}>
+                        {absentLabel(r)}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="dot dot-secondary" style={{ background: band.color }} /> {band.label}
+                      </>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        )}
       </table>
     </div>
   )

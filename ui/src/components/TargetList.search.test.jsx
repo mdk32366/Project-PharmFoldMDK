@@ -16,6 +16,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('../api.js', () => ({
   listAnalyses: vi.fn(),
   getCoverage: vi.fn(),
+  getRanking: vi.fn(),
 }))
 import { listAnalyses, getCoverage } from '../api.js'
 import TargetList from './TargetList.jsx'
