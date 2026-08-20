@@ -81,6 +81,12 @@
         ]
       },
       {
+        "path": "/api/analyses/{analysis_id}/pae",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
         "path": "/api/coverage",
         "methods": [
           "GET"

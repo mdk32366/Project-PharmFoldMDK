@@ -64,6 +64,31 @@ def get_structure(analysis_id: int, engine: Any = Depends(get_engine)) -> FileRe
     return FileResponse(pdb_path, media_type="text/plain", filename="structure.pdb")
 
 
+@read_router.get("/analyses/{analysis_id}/pae")
+def get_pae(analysis_id: int, engine: Any = Depends(get_engine)) -> FileResponse:
+    """Stream the stored PAE matrix. 404 — never 500 — when the id is unknown or carries no PAE.
+
+    ⚠⚠ 2,692 of 2,771 rows have NO PAE and that is `F-042`, not a fault here. A 404 from this route
+    is the ordinary case for a census protein, and the message says which so a caller does not read
+    it as a missing file.
+
+    ⚠ The path is the row's STORED path; no client value reaches the filesystem. Read-only: this
+    route opens a file and returns it, and touches nothing.
+    """
+    pae_path = reads.get_pae_path(engine, analysis_id)
+    if not pae_path:
+        raise HTTPException(
+            status_code=404,
+            detail=("this analysis carries no PAE — 2,692 of 2,771 rows do not (F-042). "
+                    "That is a recorded finding, not a missing file."))
+    if not Path(pae_path).is_file():
+        # ⚠ a stored path that does not resolve is a DIFFERENT failure from no path at all
+        raise HTTPException(status_code=404,
+                            detail="this analysis records a PAE path that does not resolve")
+    return FileResponse(pae_path, media_type="application/json",
+                        filename="pae.json.gz" if pae_path.endswith(".gz") else "pae.json")
+
+
 @read_router.get("/analyses/{analysis_id}/plddt")
 def get_plddt(analysis_id: int, engine: Any = Depends(get_engine)) -> list:
     """The per-residue pLDDT array that colours the viewer (D-034 decision 3). 404 when the id

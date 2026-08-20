@@ -630,6 +630,23 @@ def resolve_census_accession(engine: Any, accession: str) -> tuple[Optional[int]
     return None, "cohort" if any(r.cohort_tranche == COHORT_TRANCHE for r in rows) else "unknown"
 
 
+def get_pae_path(engine: Any, analysis_id: int) -> Optional[str]:
+    """The row's stored ``pae_json_path``, or None.
+
+    ⚠⚠ WHY A ROUTE AND NOT FILESYSTEM ACCESS. The 79 cohort matrices live on the production volume
+    and an analysis question needed them. Reaching in with `fly ssh` would be production filesystem
+    access for a read — the exact shape closed the day before, where a tunnel to production looks
+    like localhost and the WINDOW is the hazard. A route goes through the gate, is testable, and
+    uses the reader role that already exists.
+
+    ⚠ The path is the STORED one. No client value reaches the filesystem — same traversal defence
+    as `get_structure_path`, and the same reason.
+    """
+    with Session(engine) as session:
+        row = session.get(ProteinAnalysis, analysis_id)
+        return row.pae_json_path if row else None
+
+
 def get_census_detail(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]:
     """One census row, with its cancer-association STATUS.
 
