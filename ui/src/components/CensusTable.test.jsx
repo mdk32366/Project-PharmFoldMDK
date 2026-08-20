@@ -134,9 +134,14 @@ describe('CensusDetail', () => {
     render(<CensusDetail detail={{ ...ROWS[0], cancer_associations: {
       status: 'not_covered', hits: [], source: 'Kathad et al. 2024',
       coverage_note: 'the association source covers the 82 cohort targets only' } }} />)
-    expect(screen.getByText(/Not covered by the association source/i)).toBeInTheDocument()
-    expect(screen.getByText(/unknown/i)).toBeInTheDocument()
+    // ⚠⚠ THE INVARIANT, NOT THE SENTENCE. The wording moved when the owner ruled the HPA panels
+    // into this section (2026-08-21); what must never move is that a limit of the SOURCE is not
+    // rendered as a fact about the PROTEIN. Asserting the old phrasing would have pinned copy that
+    // a ruling replaced — the fourth such test found this week.
+    expect(screen.getByText(/covers the 82 ranked targets only/i)).toBeInTheDocument()
+    expect(screen.getByText(/not a statement about this protein/i)).toBeInTheDocument()
     expect(screen.queryByText(/no cancer associations found/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/no association recorded/i)).not.toBeInTheDocument()
   })
 
   it('distinguishes a measured absence from an unexamined one', () => {

@@ -61,7 +61,20 @@ describe('CensusProteinView', () => {
 
   it('says associations are not covered rather than absent', async () => {
     view()
-    expect(await screen.findByText(/Not covered by the association source/i)).toBeInTheDocument()
+    // ⚠ the scope limit is stated, and it is stated as a limit of the SOURCE
+    expect(await screen.findByText(/covers the 82 ranked targets only/i)).toBeInTheDocument()
+    expect(screen.getByText(/not a statement about this protein/i)).toBeInTheDocument()
+  })
+
+  // ⚠⚠ THE OWNER'S RULING: the section a reader reads for cancer associations must be the one that
+  // has data. Before this, "Cancer connection" (full) sat immediately above "Cancer associations"
+  // (empty for every census protein), and the empty heading was the one readers stopped at.
+  it('heads the HPA panel as the cancer-associations section', async () => {
+    view()
+    const heads = (await screen.findAllByRole('heading')).map((h) => h.textContent)
+    expect(heads).toContain('Cancer associations')
+    // ⚠ and there is no SECOND, empty cancer heading beneath it
+    expect(heads.filter((h) => /cancer/i.test(h))).toHaveLength(1)
   })
 
   // ⚠ A page whose plddt.json is missing must still render its identity and reasons.

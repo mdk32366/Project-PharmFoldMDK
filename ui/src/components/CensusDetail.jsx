@@ -112,8 +112,8 @@ function Associations({ assoc }) {
             The owner read this card as saying LAMP1 has no cancer associations. Measured on the
             SAME card at the time: LAMP1 stains in breast 11/11, carcinoid 4/4, cervical 12/12,
             colorectal 12/12, endometrial 11/11 and glioma 11/11 patients — HPA v22 pathology.tsv,
-            which covers 15,313 genes. This block's source covers 113 accessions, all of them in or
-            beside the 82.
+            which covers 15,313 genes. This block's source covers exactly the 82 cohort targets — 337 rows,
+            82 distinct symbols — and nothing else.
             ⚠ So two sections about cancer sat on one card: this one saying "unknown", and a fuller
             one below carrying six tumour panels. Saying "unknown" without naming the panel that is
             NOT unknown leaves a reader to conclude the card looked and found nothing. */}
@@ -237,8 +237,56 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
           the census's own claim, not a fact about the disease. Ordering says what a thing is. */}
       <SurfaceCheck check={detail.surface_check} />
 
-      <ClinicalEdges block={detail.clinical_block} />
-      <Associations assoc={detail.cancer_associations} />
+      {/* ⚠⚠ ONE CANCER SECTION ON A CENSUS CARD (owner ruling, 2026-08-21): promote the HPA panels
+          into the "Cancer associations" section, census-wide.
+          Before this, the card rendered "Cancer connection" — full — immediately above "Cancer
+          associations" — empty for every census protein, because that source is the 82 cohort
+          targets and nothing else (337 rows, 82 distinct symbols). A reader looking for cancer
+          associations found the empty heading first and stopped.
+          ⚠ D-093's never-merge ruling is not broken: the Kathad quasi H-score does not EXIST for a
+          census protein, so nothing is blended. Where it does exist — a cohort card — both sections
+          still render separately, and `TargetView` is unchanged. */}
+      {/* ⚠⚠ THE NULL CASE IS NOT A SILENT ONE. `ClinicalEdges` returns null when there is no
+          clinical block, and routing the scope note through it would have DELETED the fact that the
+          other source does not cover this protein — trading an over-loud absence for a missing one,
+          which is the worse trade. Caught by a fixture with no `clinical_block`. */}
+      {detail.clinical_block ? (
+        <ClinicalEdges
+          block={detail.clinical_block}
+          heading="Cancer associations"
+          scopeNote={<AssociationScopeNote assoc={detail.cancer_associations} />}
+        />
+      ) : (
+        <section className="clin">
+          <h3>Cancer associations</h3>
+          <AssociationScopeNote assoc={detail.cancer_associations} />
+          <p className="clin-absent">
+            <strong>No antibody-atlas record for this protein.</strong> That means{' '}
+            <em>nobody looked</em> — not that they looked and found nothing.
+          </p>
+        </section>
+      )}
+      {/* ⚠ Rendered ONLY when the other source actually covers this protein — 75 census accessions
+          are also in the 82. Then there ARE two measurements and D-093 keeps them apart. */}
+      {detail.cancer_associations?.status === 'covered' && (
+        <Associations assoc={detail.cancer_associations} />
+      )}
     </section>
+  )
+}
+
+// ⚠⚠ THE DEMOTED FACT, KEPT. "This protein is outside the association source" is a fact about a
+// SOURCE, not about the protein — so it stays on the card, as a footnote, and no longer occupies a
+// heading of its own next to a section that has data. Every absence is still a category with a
+// cause; what changed is that the cause is no longer the loudest thing in the box.
+function AssociationScopeNote({ assoc }) {
+  if (!assoc || assoc.status === 'covered') return null
+  return (
+    <p className="note assoc-scope">
+      ⚠ A second source — the cohort paper&rsquo;s expression grid — covers the 82 ranked targets
+      only, and this protein is not among them. That is a limit of <em>that</em> source, not a
+      statement about this protein. What follows is immunohistochemistry from the Human Protein
+      Atlas, which covers the census.
+    </p>
   )
 }
