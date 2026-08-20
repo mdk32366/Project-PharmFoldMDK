@@ -270,6 +270,33 @@ def _capture_environment() -> dict[str, Optional[str]]:
     return env
 
 
+def _pae_matrix(tensor):
+    """PAE as an L x L matrix — ALWAYS, including when L is 1.
+
+    ⚠⚠ `.squeeze()` REMOVES EVERY SIZE-1 DIMENSION, so a one-residue span's `(1, 1, 1)` collapses
+    to a 0-dim scalar and `.tolist()` returns a float. **The census minimum span is 1 aa**, so this
+    silently changed the TYPE of the output for real inputs — a matrix for 2,689 proteins and a
+    bare number for one, with nothing in the signature saying so.
+
+    ⚠ The pLDDT line directly above had the identical defect and was patched IN PLACE
+    (`plddt_raw if isinstance(plddt_raw, list) else [plddt_raw]`) without generalising to its
+    sibling one line below. `F-052`: a convention obeyed by every caller except the newest one —
+    here, by every caller except the one nobody re-read.
+
+    ⚠ Only the BATCH dimension is dropped, and by index rather than by squeeze, so no shape
+    decision depends on how large L happens to be.
+    """
+    t = tensor
+    while getattr(t, "ndim", 0) > 2:      # drop leading batch dims by index, never by size
+        t = t[0]
+    out = t.tolist()
+    if not isinstance(out, list):         # L == 1 collapsed to a scalar upstream
+        return [[out]]
+    if out and not isinstance(out[0], list):
+        return [out]                      # a single row survived as a vector
+    return out
+
+
 def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int] = DEFAULT_CHUNK_SIZE,
          source: str = SLICED_ECD, ecd_start: Optional[int] = None, ecd_end: Optional[int] = None,
          length_cap: Optional[int] = None) -> FoldResult:
@@ -308,7 +335,7 @@ def fold(sequence: str, *, dtype: str = DEFAULT_DTYPE, chunk_size: Optional[int]
     # pLDDT lives in the B-factor column on the 0–1 scale — rescale (S-001).
     plddt_raw = outputs["plddt"].mean(dim=-1).squeeze().tolist()
     plddt = rescale_plddt(plddt_raw if isinstance(plddt_raw, list) else [plddt_raw])
-    pae = outputs["predicted_aligned_error"].squeeze().tolist() if "predicted_aligned_error" in outputs else None
+    pae = _pae_matrix(outputs["predicted_aligned_error"]) if "predicted_aligned_error" in outputs else None
 
     prov.mean_plddt = round(sum(plddt) / len(plddt), 2) if plddt else None
     prov.ca_atom_count = pdb.count(" CA ")   # cheap CA count for the §1a fold-sanity diagnostic

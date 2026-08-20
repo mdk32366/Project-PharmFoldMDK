@@ -38,7 +38,11 @@ is the UI arc's first build — the supplier React consumes: **seven** public `G
 sixth, `associations`, added by D-053). Four
 over the 42 landed local folds (a light `analyses` list, a full `analyses/{id}` record with
 `fold_provenance`, a streamed `analyses/{id}/structure` serving the stored `pdb_path` as
-`text/plain`, and an `analyses/{id}/plddt` array); and **`coverage`** (D-038) — the D-024 coverage
+`text/plain`, an `analyses/{id}/plddt` array, and an `analyses/{id}/pae` stream serving the stored
+`pae_json_path` — ⚠ read-only, and a **404 is the ordinary case**: 2,692 of 2,771 rows carry no PAE
+at all, which is `F-042` recorded rather than a missing file. ⚠⚠ It exists so an analysis question
+about the 79 cohort matrices is answered **through the gate** instead of by reaching into the
+production filesystem, which is the shape `KEEL V8-a` closes); and **`coverage`** (D-038) — the D-024 coverage
 object computed from `core/manifest.py` over **all 82**, joined to `protein_analyses` (and, D-043,
 to `jobs`) for a three-valued `fold_status` — `folded` / `failed` / `not_folded`, so attempted-and-
 failed is shown as distinct from never-attempted — i.e. the honest denominator the fold-derived list
