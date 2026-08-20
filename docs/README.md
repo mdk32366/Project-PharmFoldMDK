@@ -3229,8 +3229,27 @@ section proved that at ~150 words × 2,690 cards.*
 
 **5 — ⚠ The subtype-defining rows, and the claim is about the POPULATION.**
 
-> `Urothelial · 8/12 · ⚠ NECTIN4 defines the enfortumab-vedotin population; this panel does not
-> separate it`
+> `Urothelial · 11/12 · ⚠ an approved ADC targets NECTIN4 (enfortumab vedotin); this panel does not
+> separate the treated population`
+
+> ⟡ **AMENDED 2026-08-21 (owner), and the ORIGINAL IS KEPT because a correction patched away is a
+> correction nobody can check.** This clause was first written as:
+>
+> > `Urothelial · 8/12 · ⚠ NECTIN4 defines the enfortumab-vedotin population; this panel does not
+> > separate it`
+>
+> ⚠⚠ **"DEFINES the population" is not sourced anywhere in this tree, and it is a stronger claim than
+> the one that is.** `data/adc_reference_mapping.csv` sources that an approved ADC **TARGETS**
+> NECTIN4 — *Padcev US label, BLA 761137* — **not that patients are selected by NECTIN4 expression**;
+> enfortumab vedotin is approved for urothelial carcinoma without such selection.
+> ⚠ **Targeting and patient-selection are different claims**, and §4's own citation gate admits only
+> the first.
+>
+> ⚠ **The count moved 8/12 → 11/12 as well**: the illustrative figure did not match the row the
+> surface renders for `NECTIN4` in urothelial cancer, which is **11 of 12**.
+>
+> ⚠⚠ **THE GATE THIS ENTRY CREATED CAUGHT THE ENTRY THAT CREATED IT**, on its own worked example,
+> when the example was built. *That is the check working at the only moment it could have.*
 
 **One sentence: what is pooled, and that a therapy exists for exactly that population.** ⚠ **`D-093`
 amendment 2 ruling 3 permits `therapeutic_precedent` as a LABEL and bars it as a FEATURE; the feature

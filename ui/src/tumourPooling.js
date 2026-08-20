@@ -44,11 +44,15 @@ export const SOURCED_POOLING = {
  * condition is inherited and altered: *"has been developed as an ADC target"* is not evidence the
  * target is good — here it is evidence the pooled category contains a clinically actioned subset.
  *
- * ⚠⚠ AND THE WORDING IS WEAKER THAN THE ENTRY'S EXAMPLE, DELIBERATELY. The entry writes
- * *"NECTIN4 DEFINES the enfortumab-vedotin population"*. What `data/adc_reference_mapping.csv`
- * sources is that an approved ADC TARGETS NECTIN4 (Padcev, BLA 761137) — **not that patients are
- * selected by NECTIN4 expression.** Those are different claims and only the first is in our tree,
- * so only the first is rendered. *Reported to the owner rather than softened silently.*
+ * ⟡ THE ENTRY AND THIS CODE NOW AGREE, AND THE ENTRY IS THE ONE THAT MOVED (owner, 2026-08-21).
+ * `D-093 amendment 10` §5 was first written as *"NECTIN4 DEFINES the enfortumab-vedotin
+ * population"*. ⚠⚠ **That is not sourced in this tree.** `data/adc_reference_mapping.csv` sources
+ * that an approved ADC **TARGETS** NECTIN4 (Padcev, BLA 761137) — not that patients are selected by
+ * NECTIN4 expression, and enfortumab vedotin is approved without such selection.
+ * ⚠ This module rendered only the sourced claim and REPORTED the divergence rather than softening
+ * it silently; §5 was then amended to match, with its original wording preserved in the entry.
+ * ⚠⚠ **So the wording here is not a weakening of the ruling — it IS the ruling.** *Do not "restore"
+ * the stronger sentence; it never had a source.*
  */
 export const SOURCED_ADC_TARGET = {
   'NECTIN4|urothelial cancer': {

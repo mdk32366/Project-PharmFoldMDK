@@ -83,10 +83,12 @@ describe('§5 — the subtype-defining row claims about the POPULATION', () => {
     expect(t).toMatch(/does not separate the treated population/)
   })
 
-  // ⚠⚠ THE WORDING IS WEAKER THAN THE ENTRY'S EXAMPLE, AND THAT IS THE CITATION GATE WORKING.
-  // The entry writes "NECTIN4 DEFINES the enfortumab-vedotin population". What our tree sources is
-  // that an approved ADC TARGETS NECTIN4 — not that patients are selected by its expression.
-  // Those are different claims; only the sourced one renders.
+  // ⟡ THE ENTRY MOVED TO MATCH THIS, not the other way round (owner, 2026-08-21).
+  // §5 was first written as "NECTIN4 DEFINES the enfortumab-vedotin population". That claim is not
+  // sourced in this tree — `adc_reference_mapping.csv` sources that an approved ADC TARGETS NECTIN4,
+  // not that patients are selected by its expression. The surface rendered only the sourced claim,
+  // the divergence was reported, and §5 was amended with its original wording preserved.
+  // ⚠⚠ This assertion is therefore not a concession to a weaker source — it PINS the ruling.
   it('does not claim the target DEFINES the treated population', () => {
     const t = poolingMarker('NECTIN4', 'urothelial cancer').text
     expect(t).not.toMatch(/defines the/i)
