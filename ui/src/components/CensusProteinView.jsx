@@ -19,6 +19,33 @@ import CensusDetail from './CensusDetail.jsx'
 // ⚠ The structure and pLDDT routes are NOT tranche-filtered (`get_structure_path` reads the stored
 // `pdb_path` for any analysis id), so they are reused rather than duplicated. A second pair of
 // routes would be a second source for one artifact with nothing comparing them.
+// ⚠⚠ THE CARD'S COPY AS A PURE FUNCTION, and the reason is a test that could not be written well
+// against the JSX. Scanning source text for "no structure yet" and checking a `cohort_fold` appears
+// nearby passed at a wide window (it reached the banner's guard) and failed at a narrow one (the
+// banner's own phrase sits further from its guard). A character window is the wrong instrument for
+// a branching question. As a function, the rule is just an assertion about return values.
+//
+// ⚠ THREE STATES: a fold exists in the ranked 82 · it was attempted there and failed · neither.
+export function unfoldedCopy(detail) {
+  if (detail.folded !== false) return null
+  if (detail.cohort_fold) {
+    return {
+      bar: 'This protein has not been folded in the census. It IS one of the ranked 82 and was '
+        + 'folded there — but that is a separate measurement under a different span rule, and '
+        + 'nothing on this page is derived from it.',
+      body: 'Nothing below is missing because it failed: no census structure exists, so this page '
+        + 'carries no confidence score, structural profile or staining panel derived from one. The '
+        + 'ranked fold above is a different measurement and is not substituted here.',
+    }
+  }
+  return {
+    bar: 'This protein has not been folded, so nothing has been measured from a structure — and it '
+      + 'has not been assessed as a target either. It is not comparable to the ranked 82.',
+    body: 'Nothing below is missing because it failed: there is no structure yet, so there is no '
+      + 'confidence score, no structural profile and no staining panel to show.',
+  }
+}
+
 export default function CensusProteinView({ id }) {
   const [detail, setDetail] = useState(null)
   const [plddt, setPlddt] = useState(null)
@@ -81,9 +108,8 @@ export default function CensusProteinView({ id }) {
           {/* ⚠ The bar asserted "this protein WAS FOLDED" on every card, including the ones that
               were never folded — a false claim sitting directly above a NOT FOLDED banner. */}
           <strong>Not scored, not ranked.</strong>{' '}
-          {detail.folded === false
-            ? 'This protein has not been folded, so nothing has been measured from a structure — and it has not been assessed as a target either. It is not comparable to the ranked 82.'
-            : 'This protein was folded to find out whether it could be; it has not been assessed as a target, and it is not comparable to the ranked 82.'}
+          {unfoldedCopy(detail)?.bar
+            ?? 'This protein was folded to find out whether it could be; it has not been assessed as a target, and it is not comparable to the ranked 82.'}
         </p>
       </header>
 
@@ -136,9 +162,8 @@ export default function CensusProteinView({ id }) {
           <p>
             Its extracellular stretch is{' '}
             <strong>{detail.span_aa} aa (amino acids)</strong> — long by the standards of what this
-            project could fold locally. Nothing below is missing because it failed: there is no
-            structure yet, so there is no confidence score, no structural profile and no staining
-            panel to show.
+            project could fold locally.{' '}
+            {unfoldedCopy(detail)?.body}
           </p>
           <p className="caveat">
             ⚠ <strong>This is not a judgement about the protein.</strong> It is a statement about

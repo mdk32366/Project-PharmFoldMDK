@@ -2,6 +2,7 @@ import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import CensusTable, { notFoldedTitle } from './CensusTable.jsx'
+import { unfoldedCopy } from './CensusProteinView.jsx'
 
 // ⚠⚠ THE DEFECT, FOUND BY WALKING THE TARGETS SURFACE. The census card said "waiting on rented
 // capacity" for 29 proteins whose fold ALREADY EXISTS among the ranked 82 — same span, same
@@ -78,5 +79,44 @@ describe('the row itself', () => {
     const hrefs = [...container.querySelectorAll('a')].map((a) => a.getAttribute('href'))
     expect(hrefs.some((h) => h && h.includes('/targets/'))).toBe(false)
     expect(hrefs.some((h) => h === '/census/P04626')).toBe(true)
+  })
+})
+
+// ⚠⚠ THE WHOLE CARD, NOT ONE SENTENCE. Fixing the banner and leaving its neighbours saying
+// "nothing has been measured from a structure" put a false sentence one line from the true one —
+// the exact defect the banner fix had just removed. This asserts NO sentence on the card contradicts
+// the cohort fold, by reading the source rather than one rendered string.
+describe('the whole unfolded card is consistent, not just the banner', () => {
+  // ⚠⚠ AGAINST THE FUNCTION, NOT THE SOURCE TEXT. Two earlier versions scanned CensusProteinView
+  // for "no structure yet" and looked for a nearby `cohort_fold`: at a wide window it reached the
+  // BANNER's guard and passed while the paragraph was unguarded — the revert proof stayed green
+  // and would have certified a fix that was not there; at a narrow window it reddened on correct
+  // code. A character window is the wrong instrument for a branching question.
+  const FOLD = { folded: false, span_aa: 630,
+    cohort_fold: { analysis_id: 52, mean_plddt: 73.94, fold_length: 630 } }
+  const NONE = { folded: false, span_aa: 315 }
+
+  it('claims NO structure exists only when none exists anywhere', () => {
+    const c = unfoldedCopy(FOLD)
+    // ⚠ the two sentences that were left contradicting the banner
+    expect(c.bar).not.toMatch(/nothing has been measured from a structure/)
+    expect(c.body).not.toMatch(/there is no structure yet/)
+    expect(c.body).not.toMatch(/there is no confidence score/)
+  })
+
+  it('keeps the original wording when the protein is folded nowhere', () => {
+    const c = unfoldedCopy(NONE)
+    expect(c.bar).toMatch(/nothing has been measured from a structure/)
+    expect(c.body).toMatch(/there is no structure yet/)
+  })
+
+  // ⚠ D-081 — separate measurements, said rather than implied
+  it('states that the ranked fold is not substituted here', () => {
+    expect(unfoldedCopy(FOLD).body).toMatch(/not substituted here/)
+    expect(unfoldedCopy(FOLD).bar).toMatch(/different span rule/)
+  })
+
+  it('returns nothing for a folded protein', () => {
+    expect(unfoldedCopy({ folded: true })).toBeNull()
   })
 })
