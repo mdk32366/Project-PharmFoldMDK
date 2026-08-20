@@ -30,9 +30,14 @@ from db.models import Base, ProteinAnalysis
 TOKEN = "test-secret-token"
 
 # The exact light-list field set (D-034 decision 1 / Orders §1) — no more, no less.
+# ⟡ `aliases` added 2026-08-20 per `#### D-034 amendment 1`: the light/heavy split was ruled on
+# PAYLOAD WEIGHT, not on the number twelve, and a few short synonyms per row are on the light side
+# of that line. Without it `/targets` cannot find `ERBB2` by the name on the drug label, `HER2`.
+# ⚠ This set stays EXACT. It is what stops `sequence` returning by accident.
 LIST_FIELDS = {
     "id", "accession", "label", "gene", "mean_plddt", "disposition", "held_out",
     "tier", "tier_reason", "boundary_method", "fold_length", "full_length",
+    "aliases",
 }
 # Heavy fields that MUST NOT appear in the list payload (the payload-weight ruling).
 HEAVY_FIELDS = {"sequence", "fold_provenance"}

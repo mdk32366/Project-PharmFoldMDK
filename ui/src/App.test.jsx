@@ -31,7 +31,10 @@ describe('App — five-surface nav (D-051)', () => {
 
   it('/targets renders the target list, not the Story', async () => {
     const { container } = renderAt('/targets')
-    await waitFor(() => expect(container.textContent).toMatch(/folded targets/i))
+    // ⚠ was /folded targets/i — the copy this test pinned was the DEFECT: it called all 80 rows
+    // folded when 79 were. The assertion is that the target list rendered, not that a wrong
+    // sentence is still present, so it pins the surface's own words instead.
+    await waitFor(() => expect(container.textContent).toMatch(/cohort targets/i))
     expect(container.textContent).not.toMatch(STORY)
   })
 

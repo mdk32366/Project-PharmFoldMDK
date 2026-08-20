@@ -129,3 +129,48 @@ def test_the_alias_module_neither_scores_nor_ranks():
     }
     assert not any("scorer" in (m or "") for m in imported), imported
     assert not any("structural_profile" in (m or "") for m in imported), imported
+
+
+# ⚠⚠ THE INDEX REACHED ONE SURFACE OF THE TWO. `D-101` built the alias index for the census and
+# wired it there; `/targets` never got it, so the owner searching `HER2` found nothing while `ERBB2`
+# sat in that very list, folded and ranked. **`F-052`'s shape**: a convention that exists, is
+# documented, and is obeyed by every caller except the one nobody revisited.
+def test_the_cohort_payload_carries_aliases_too():
+    src = pathlib.Path("app/reads.py").read_text(encoding="utf-8")
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "list_analyses")
+    code = "\n".join(ast.dump(n) for n in fn.body)
+    assert "aliases_by_accession" in code, (
+        "the cohort list must carry aliases or `/targets` cannot find ERBB2 by the name HER2")
+    assert "'aliases'" in code or '"aliases"' in code
+
+
+def test_an_alias_failure_costs_the_aliases_and_not_the_rows():
+    """⚠⚠ `F-054`: a guard wider than the optional thing it guards deletes data.
+
+    The rows are built and only then decorated, so a missing index degrades the search to
+    gene/accession matching — it does not empty the cohort."""
+    src = pathlib.Path("app/reads.py").read_text(encoding="utf-8")
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "list_analyses")
+
+    def mentions(node, name):
+        return any(isinstance(n, ast.Name) and n.id == name for n in ast.walk(node))
+
+    for t in (n for n in ast.walk(fn) if isinstance(n, ast.Try)):
+        if not mentions(t, "aliases_by_accession"):
+            continue
+        for stmt in t.body:
+            assert "list_projection" not in ast.dump(stmt), (
+                "row construction is inside the alias guard: one failure there empties /targets")
+
+
+# ⚠ Both surfaces must share ONE matcher. Two copies is how they diverged in the first place.
+def test_one_matcher_serves_both_surfaces():
+    shared = pathlib.Path("ui/src/searchRows.js").read_text(encoding="utf-8")
+    assert "export function filterRows" in shared
+    assert "export function normalizeQuery" in shared
+    for surface in ("ui/src/components/CensusTable.jsx", "ui/src/components/TargetList.jsx"):
+        text = pathlib.Path(surface).read_text(encoding="utf-8")
+        assert "from '../searchRows.js'" in text, surface
+        assert "function filterRows" not in text, f"{surface} defines a SECOND matcher"

@@ -129,7 +129,23 @@ def list_analyses(engine: Any) -> list[dict[str, Any]]:
             .where(ProteinAnalysis.cohort_tranche == COHORT_TRANCHE)
             .order_by(ProteinAnalysis.id)
         ).all()
-        return [list_projection(r) for r in rows]
+        out = [list_projection(r) for r in rows]
+
+    # ⚠⚠ ALIASES, so `HER2` reaches `ERBB2` HERE TOO. The alias index (`D-101`) was built for the
+    # census and wired only there, so the owner searching the cohort for the name on the drug label
+    # found nothing — while `ERBB2` sat in this very list, folded and ranked. `F-052`'s shape: the
+    # convention obeyed by every caller except the one nobody revisited.
+    # ⚠ Derived from the pinned UniProt cache, never typed (`scripts/build_protein_aliases.py`).
+    # ⚠⚠ THE ROWS ARE ALREADY BUILT. A failure here costs the aliases and NOTHING ELSE — `F-054` is
+    # the entry for what happens when a guard is wider than the optional thing it guards.
+    try:
+        from core.protein_aliases import aliases_by_accession
+        alias_map = aliases_by_accession()
+    except Exception:                          # noqa: BLE001
+        alias_map = {}                         # ⚠ search degrades to gene/accession/label matching
+    for row in out:
+        row["aliases"] = alias_map.get(row.get("accession")) or None
+    return out
 
 
 def get_analysis(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]:

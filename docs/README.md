@@ -10299,6 +10299,8 @@ service" would trade a defensible graded claim for a wrapper around an external 
     `gene`, `mean_plddt`, `disposition`, `held_out`, `tier`, `tier_reason`, `boundary_method`,
     `fold_length`, `full_length`. **Excludes `sequence` and `fold_provenance`.**
   - **`GET /api/analyses/{id}` — the full record**, including `sequence` and `fold_provenance`.
+  - ⟡ **`aliases` added 2026-08-20 — see `#### D-034 amendment 1` below.** The enumeration above is
+    the ORIGINAL twelve and is left as written; the light list now carries thirteen fields.
 
   **Why split rather than return the row:** `meta.sequence` is the entire folded sequence —
   318 and 361 residues on the two rows inspected, and rental-tier targets run to ~1600. Returning
@@ -10408,6 +10410,34 @@ service" would trade a defensible graded claim for a wrapper around an external 
   - **The rental-tier path (29 targets) is a separate entry**, later this session. The read API
     is tier-agnostic — a rental fold lands in the same table with the same `meta` shape, so
     nothing here needs revisiting when those 29 land.
+
+#### D-034 amendment 1 — The light list gains a thirteenth field, `aliases`, and the payload-weight rule is what decides it
+
+- **Date:** 2026-08-20 · **Status:** accepted · **Author:** Code
+- ⚠ A sub-entry beneath `D-034`, consuming **no integer** (the `D-099 amendment 1` precedent).
+
+**WHAT CHANGED.** `GET /api/analyses` rows now carry `aliases: string[] | null`. Decision 1's
+enumeration of twelve fields stands as written and is **not edited** — it records what shipped in
+2026-07-23, and a decision rewritten to look as though it always said the new thing is the shape
+this project refuses. The amendment is the record that the list is now thirteen.
+
+**⚠ WHY IT IS ALLOWED BY THE RULE THAT CREATED THE SPLIT.** Decision 1 did not draw the line at
+*twelve*; it drew it at **payload weight**, and said so — `sequence` is excluded because it runs to
+~1,600 residues per row and *"a ranking table never renders it."* Aliases are a handful of short
+strings (`ERBB2` carries `HER2`, `NEU`, `CD340`), they are **rendered by the thing that fetches
+them**, and the whole cohort is 82 rows. ⚠ **The test asserted the enumeration; the decision asserted
+a principle.** Where those diverge, the principle governs and the enumeration gets an amendment.
+
+**WHY IT WAS NEEDED.** `D-101` built the alias index and wired it to the census **only**. So `HER2`
+found nothing on `/targets` while `ERBB2` sat in that list, folded and ranked — the owner hit exactly
+that. ⚠ **`F-052`'s shape**: a convention that exists, is documented, and is obeyed by every caller
+except the one nobody revisited.
+
+**⚠ WHAT IT IS NOT.** Not a route between populations. `D-081` bars the cohort and the census from
+being reachable through one another, and an alias is *a way in, not a second identity*: searching
+`CHST11` on `/targets` finds nothing, because it is census-only and it is **not here**. The matcher
+now lives in `ui/src/searchRows.js` and is imported by both surfaces — one matcher, so the two
+cannot drift again.
 
 ---
 

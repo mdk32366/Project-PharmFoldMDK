@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getCoverage, listAnalyses } from '../api.js'
 import { bandFor } from '../plddt.js'
 import { nextSort, sortRows } from '../sortRows.js'
+import { filterRows } from '../searchRows.js'
 
 // The picker over the folded targets (light list, D-034). mean pLDDT carries its band inline, so the
 // list tells the confidence story before a structure is opened. Default sort is pLDDT desc so the most-
@@ -62,6 +63,8 @@ export default function TargetList() {
   const [tierFilter, setTierFilter] = useState('all')
   const [sort, setSort] = useState(null)          // null = the default order
   const [foldStatus, setFoldStatus] = useState({}) // accession -> { fold_status, fail_reason }
+  const [coverage, setCoverage] = useState([])     // the 82 manifest rows, for the members with no analysis
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     listAnalyses().then(setRows).catch((e) => setError(e.message))
@@ -75,22 +78,59 @@ export default function TargetList() {
     Promise.resolve()
       .then(() => getCoverage())
       .then((cov) => {
+        const rows_ = cov?.rows ?? []
         const map = {}
-        for (const r of cov?.rows ?? []) {
-          if (r?.accession) map[r.accession] = { fold_status: r.fold_status, fail_reason: r.fail_reason }
+        for (const r of rows_) {
+          if (r?.accession) {
+            // ⚠ `fail_reason` is the reason an ATTEMPT failed; `exclusion_reason` is the reason
+            // there was never an attempt. Both are causes, and a row must never fall back to a
+            // bare dash when one of them exists.
+            map[r.accession] = {
+              fold_status: r.fold_status,
+              fail_reason: r.fail_reason || r.exclusion_reason,
+            }
+          }
         }
         setFoldStatus(map)
+        // ⚠ the manifest rows themselves, so a cohort member with no analysis row still gets a row
+        setCoverage(rows_)
       })
-      .catch(() => setFoldStatus({}))
+      .catch(() => { setFoldStatus({}); setCoverage([]) })
   }, [])
 
   if (error) return <p className="error">Could not load targets: {error}</p>
   if (!rows) return <p className="loading">Loading targets…</p>
 
+  // ⚠⚠ TWO COHORT MEMBERS HAVE NO ANALYSIS ROW AT ALL, so `listAnalyses()` returns 80 where the
+  // cohort is 82. `FAT2` (4,030 aa) and `MUC16` (14,451 aa) fold on no single card as one sequence,
+  // were therefore never attempted, and were absent from this surface entirely — no row, no count,
+  // no cause. The owner's census ruling settles it: *"just show it in the list, and show the status
+  // as NOT FOLDED."* ⚠ **A rule applied to one shape and not the other is not a rule.**
+  // ⚠ The rows come from coverage, which is already fetched for the reason text — no new endpoint.
+  const missing = coverage
+    .filter((c) => c.fold_status === 'not_folded' && !rows.some((r) => r.accession === c.accession))
+    .map((c) => ({
+      id: null, accession: c.accession, gene: c.gene, label: c.label ?? null,
+      mean_plddt: null, tier: null, tier_reason: null, aliases: c.aliases ?? null,
+      never_attempted: true,
+    }))
+  const all = [...rows, ...missing]
+
   const tiers = [...new Set(rows.map((r) => r.tier).filter(Boolean))].sort()
-  const filtered = tierFilter === 'all' ? rows : rows.filter((r) => r.tier === tierFilter)
+  const tiered = tierFilter === 'all' ? all : all.filter((r) => r.tier === tierFilter)
+  // ⚠ One matcher, shared with the census (`../searchRows.js`) — see `F-052`.
+  const filtered = filterRows(tiered, query)
   const active = sort ?? DEFAULT_SORT
   const sorted = sortRows(filtered, active.key, active.dir)
+
+  // ⚠⚠ EVERY COUNT STATES ITS KEY. This line said "{rows.length} folded targets" — wrong three ways
+  // at once: 80 is not the folded count (79 is), 80 is not the cohort (82 is), and it reported the
+  // UNFILTERED total while the table below showed a filtered subset. `IGF2R` renders its own CUDA
+  // OOM failure one line beneath a header that counted it as folded.
+  const nFolded = all.filter((r) => r.mean_plddt != null).length
+  const nFailed = all.filter((r) => r.mean_plddt == null && !r.never_attempted).length
+  const nNever = missing.length
+  const narrowed = filtered.length !== all.length
 
   const onHeaderClick = (key) => {
     if (!key) return
@@ -109,14 +149,21 @@ export default function TargetList() {
       const why = (st.fail_reason || '').split(/[:.]\s|—/)[0].trim()
       return why ? `fold failed — ${why.slice(0, 70)}` : 'fold failed'
     }
-    if (st?.fold_status === 'not_folded') return 'not folded — never attempted'
+    // ⚠ never-attempted has a CAUSE too, and it was being dropped: `FAT2` and `MUC16` are oversize,
+    // which is why no attempt exists. "Never attempted" alone states the absence without the reason.
+    if (st?.fold_status === 'not_folded') {
+      const why = (st.fail_reason || '').split(/[:.]\s|—/)[0].trim()
+      return why ? `not folded — ${why.slice(0, 70)}` : 'not folded — never attempted'
+    }
     return 'no measurement (reason unavailable)'
   }
 
   return (
     <div className="target-list">
       <p className="lede">
-        {rows.length} folded targets. Start with{' '}
+        The {all.length} cohort targets: <strong>{nFolded} folded</strong>
+        {nFailed > 0 && <>, {nFailed} attempted and failed</>}
+        {nNever > 0 && <>, {nNever} too large to attempt</>}. Start with{' '}
         <Link to="/target/1">NECTIN4 →</Link> (the target of a marketed ADC, enfortumab vedotin).
       </p>
       {/* 1c — the one sentence that inoculates the glance, before any detail panel is opened.
@@ -127,6 +174,17 @@ export default function TargetList() {
         <Link to="/scorer">Scorer</Link>.
       </p>
       <div className="list-controls">
+        {/* ⚠⚠ The search box this surface never had. `ERBB2` is folded and ranked here, and the
+            owner searching `HER2` found nothing — because there was nothing to type into. */}
+        <label htmlFor="target-search">Search</label>
+        <input
+          id="target-search"
+          type="search"
+          className="row-search"
+          value={query}
+          placeholder="gene, accession, or a name like HER2"
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <label htmlFor="tier-filter">Tier</label>
         <select id="tier-filter" value={tierFilter}
                 onChange={(e) => setTierFilter(e.target.value)}>
@@ -134,6 +192,18 @@ export default function TargetList() {
           {tiers.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
+      {/* ⚠⚠ A FILTERED TABLE UNDER AN UNQUALIFIED TOTAL IS THE DEFECT THIS PAGE ALREADY HAD. The
+          lede counts the cohort; this line counts what is actually on screen, and appears only when
+          the two differ. A reader who filters must never have to assume which number they are
+          looking at. */}
+      {narrowed && (
+        <p className="note filter-count">
+          Showing {filtered.length} of {all.length}
+          {query.trim() && <> matching &ldquo;{query.trim()}&rdquo;</>}
+          {filtered.length === 0 && <> — nothing here matches. The alias index covers names like
+            HER2 and CD30; a protein absent from the cohort will not appear here even so.</>}
+        </p>
+      )}
       <table>
         <thead>
           <tr>
@@ -165,8 +235,15 @@ export default function TargetList() {
             const band = bandFor(r.mean_plddt)
             const absent = r.mean_plddt == null
             return (
-              <tr key={r.id}>
-                <td><Link to={`/target/${r.id}`}>{r.gene}</Link></td>
+              <tr key={r.accession ?? r.id}>
+                {/* ⚠⚠ A cohort member with no analysis row has no card to open. `/target/null` would
+                    be a link that 404s, which is worse than no link — it invites a click and then
+                    denies it. The gene renders as plain text and the reason column says why. */}
+                <td>
+                  {r.id != null
+                    ? <Link to={`/target/${r.id}`}>{r.gene}</Link>
+                    : <span className="gene-unlinked" title="no fold was attempted, so there is no structure page">{r.gene}</span>}
+                </td>
                 <td className="mono">{r.accession}</td>
                 <td>
                   <span className={`tier-tag tier-${r.tier}`} title={r.tier_reason || undefined}>
