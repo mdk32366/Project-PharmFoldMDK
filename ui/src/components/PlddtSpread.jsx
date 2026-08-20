@@ -1,4 +1,5 @@
 import { colorFor } from '../plddt.js'
+import { ofCount } from '../plural.js'
 
 // Per-residue pLDDT spread (D-048 §3.4, UI-depth §2.5). The mean hides the spread — NECTIN4 runs
 // 50.1–93.4 on a mean of 77.26. This states min/median/max and the fraction of residues below the
@@ -52,7 +53,7 @@ export default function PlddtSpread({ plddt }) {
         ))}
       </svg>
       <p data-testid="spread-below-divider" className="spread-below">
-        {below} of {n} residues ({belowPct}%) fall below {DIVIDER} — the mean does not show this.
+        {ofCount(below, n, 'residue')} ({belowPct}%) fall below {DIVIDER} — the mean does not show this.
       </p>
     </div>
   )

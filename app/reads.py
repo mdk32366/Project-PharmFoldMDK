@@ -554,6 +554,38 @@ def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
     }
 
 
+def census_summary(engine: Any) -> dict[str, Any]:
+    """The census in four numbers, for the cold-open Story (`D-051` decision 1).
+
+    ⚠⚠ WHY THIS ROUTE EXISTS AND IS NOT `/census` FILTERED CLIENT-SIDE. The census list is
+    **7.1 MB uncompressed, 825 KB gzipped, and takes ~4.8 s** — measured against production. The
+    Story is the most-read screen on the site and `D-051` calls it *"the thirty-second answer"*;
+    making it download 3,467 rows to print two counts would spend five of those seconds on data it
+    never renders. **The weight is the argument, not the tidiness.**
+
+    ⚠ DERIVED FROM THE SAME BUILDER AS THE LIST, deliberately. Counting these separately — a second
+    query with its own `where` — is how two surfaces come to disagree about one population, and this
+    project has an entry for that. `list_census` is the single definition of *what a census row is*;
+    this reduces it and adds nothing.
+
+    ⚠ Every count states its key, in the payload, so the Story cannot print a number whose
+    denominator a reader has to guess.
+    """
+    rows = list_census(engine)
+    folded = [r for r in rows if r.get("folded") is not False and r.get("mean_plddt") is not None]
+    plddts = [r["mean_plddt"] for r in folded]
+    return {
+        "manifest_rows": len(rows),
+        "folded": len(folded),
+        "max_mean_plddt": max(plddts) if plddts else None,
+        "keys": {
+            "manifest_rows": "every census manifest row, folded or not (D-087)",
+            "folded": "census rows carrying a structure and a mean pLDDT",
+            "max_mean_plddt": "the highest mean pLDDT among those folds",
+        },
+    }
+
+
 def list_census(engine: Any) -> list[dict[str, Any]]:
     """Every FOLDED census row. ⚠ `!= COHORT_TRANCHE` — the cohort is served by `list_analyses`."""
     with Session(engine) as session:

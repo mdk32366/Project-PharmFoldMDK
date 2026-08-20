@@ -4,6 +4,7 @@ import { getCoverage, getRanking, listAnalyses } from '../api.js'
 import { bandFor } from '../plddt.js'
 import { nextSort, sortRows } from '../sortRows.js'
 import { filterRows } from '../searchRows.js'
+import { count } from '../plural.js'
 
 // The picker over the folded targets (light list, D-034). mean pLDDT carries its band inline, so the
 // list tells the confidence story before a structure is opened, and the reader sees the ceiling (no
@@ -419,7 +420,7 @@ export default function TargetList() {
           <tbody className="unranked-group">
             <tr className="unranked-heading">
               <td colSpan={COLUMNS.length}>
-                <strong>{unranked.length} targets have no scorer rank.</strong>{' '}
+                <strong>{count(unranked.length, 'target')} {unranked.length === 1 ? 'has' : 'have'} no scorer rank.</strong>{' '}
                 They are not ranked last — they have no position in this ordering at all, and each
                 row states why.{' '}
                 {nearestBelowFloor != null && (

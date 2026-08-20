@@ -6,8 +6,9 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('../api.js', () => ({ listAnalyses: vi.fn(), getCoverage: vi.fn() }))
-import { listAnalyses, getCoverage } from '../api.js'
+vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(), listAnalyses: vi.fn(), getCoverage: vi.fn() }))
+import { listAnalyses, getCoverage, getCensusSummary } from '../api.js'
 import Story from './Story.jsx'
 
 const ANALYSES = [
@@ -32,8 +33,8 @@ describe('Story — derived numbers, never literals (D-051 / Constraint A)', () 
   it('renders counts, range, and non-folded targets from the payload', async () => {
     listAnalyses.mockResolvedValue(ANALYSES); getCoverage.mockResolvedValue(COVERAGE)
     const { container } = renderStory()
-    await waitFor(() => expect(container.textContent).toMatch(/4 targets folded/))
-    expect(container.textContent).toMatch(/3 of them ranked-and-folded of 5/)
+    await waitFor(() => expect(container.textContent).toMatch(/4 of the 5 cohort targets folded/))
+    expect(container.textContent).toMatch(/3 of them ranked-and-folded/)
     expect(container.textContent).toContain('88.00')
     expect(container.textContent).toContain('FAKEIGF')
     expect(container.textContent).toContain('FAKEBIG')
@@ -42,14 +43,14 @@ describe('Story — derived numbers, never literals (D-051 / Constraint A)', () 
   it('does NOT hardcode any live cohort literal', async () => {
     listAnalyses.mockResolvedValue(ANALYSES); getCoverage.mockResolvedValue(COVERAGE)
     const { container } = renderStory()
-    await waitFor(() => expect(container.textContent).toMatch(/4 targets folded/))
+    await waitFor(() => expect(container.textContent).toMatch(/4 of the 5 cohort targets folded/))
     for (const lit of LIVE_LITERALS) expect(container.textContent).not.toContain(lit)
   })
 
   it('names ESMFold and states we ran it', async () => {
     listAnalyses.mockResolvedValue(ANALYSES); getCoverage.mockResolvedValue(COVERAGE)
     const { container } = renderStory()
-    await waitFor(() => expect(container.textContent).toMatch(/4 targets folded/))
+    await waitFor(() => expect(container.textContent).toMatch(/4 of the 5 cohort targets folded/))
     expect(container.textContent).toContain('ESMFold')
     expect(container.textContent.toLowerCase()).toContain('we ran the neural network ourselves')
   })
@@ -69,3 +70,94 @@ describe('Story — derived numbers, never literals (D-051 / Constraint A)', () 
     expect(container.textContent).toContain('See the folded targets')
   })
 })
+
+// ⚠⚠ THE STORY DESCRIBED AN 82-TARGET STUDY AND THE APPLICATION IS NO LONGER ONE.
+// It told a reader this project had folded 79 proteins. It has folded 2,769. That was a faithful
+// account on 2026-07-29; the census landed after. Owner ruling 2026-08-21: the census beat lands,
+// the clinical layer is not excluded, and beat 5 stays qualitative with 32.2% in its right context.
+const CENSUS = { manifest_rows: 3467, folded: 2690, max_mean_plddt: 89.25 }
+
+describe('Story — the census beat (owner ruling 2026-08-21)', () => {
+  const withCensus = async () => {
+    listAnalyses.mockResolvedValue(ANALYSES)
+    getCoverage.mockResolvedValue(COVERAGE)
+    getCensusSummary.mockResolvedValue(CENSUS)
+    const { container } = renderStory()
+    await waitFor(() => expect(container.textContent).toMatch(/everything else/i))
+    return container
+  }
+
+  it('states the census counts, derived and not literal', async () => {
+    const c = await withCensus()
+    expect(c.textContent).toMatch(/3,467/)
+    expect(c.textContent).toMatch(/2,690/)
+  })
+
+  // ⚠⚠ D-079 decision 1, STATED rather than relied upon: a bigger pile of folds must not read as a
+  // bigger shortlist.
+  it('says the census is not scored and not ranked', async () => {
+    const c = await withCensus()
+    expect(c.textContent).toMatch(/not scored and not ranked/i)
+    expect(c.textContent).toMatch(/a fold is a measurement, a score is an interpretation/i)
+  })
+
+  it('links to the census, which the Story never did', async () => {
+    const c = await withCensus()
+    const hrefs = [...c.querySelectorAll('a')].map((a) => a.getAttribute('href'))
+    expect(hrefs).toContain('/census')
+  })
+
+  // ⚠ EVERY COUNT STATES ITS KEY. "79 targets folded" read as the project's total.
+  it('scopes the cohort count to the cohort', async () => {
+    const c = await withCensus()
+    expect(c.textContent).toMatch(/cohort targets folded/)
+  })
+
+  // ⚠⚠ ADDITIVE, NEVER LOAD-BEARING. A census fetch that fails costs the census sentence and
+  // nothing else — the rest of the page is the argument of the project.
+  it('renders the whole story when the census summary is unavailable', async () => {
+    listAnalyses.mockResolvedValue(ANALYSES)
+    getCoverage.mockResolvedValue(COVERAGE)
+    getCensusSummary.mockRejectedValue(new Error('down'))
+    const { container } = renderStory()
+    await waitFor(() => expect(container.textContent).toMatch(/cohort targets folded/))
+    expect(container.textContent).not.toMatch(/everything else/i)
+    expect(container.textContent).toMatch(/ESMFold/)
+    expect(container.textContent).toMatch(/the real question is still open/i)
+  })
+
+  it('survives a supplier that is not a promise at all', async () => {
+    // ⚠ my first version called .catch on the return value and crashed the entire page
+    listAnalyses.mockResolvedValue(ANALYSES)
+    getCoverage.mockResolvedValue(COVERAGE)
+    getCensusSummary.mockReturnValue(undefined)
+    const { container } = renderStory()
+    await waitFor(() => expect(container.textContent).toMatch(/cohort targets folded/))
+  })
+})
+
+describe('Story — where the evidence led (owner ruling: do not exclude the clinical layer)', () => {
+  it('carries the tissue evidence, and both edges of it', async () => {
+    listAnalyses.mockResolvedValue(ANALYSES)
+    getCoverage.mockResolvedValue(COVERAGE)
+    getCensusSummary.mockResolvedValue(CENSUS)
+    const { container } = renderStory()
+    await waitFor(() => expect(container.textContent).toMatch(/Human Protein Atlas/))
+    // ⚠ D-093 decision 5 — the tumour panel alone is the flattering half
+    expect(container.textContent).toMatch(/healthy/i)
+    expect(container.textContent).toMatch(/expression measurement, not a claim/i)
+  })
+
+  // ⚠ Beat 5 stays QUALITATIVE; the figure appears only in its correct context, and F-051's caveat
+  // travels with it — an attribution share is predictor weight, not a causal role.
+  it('gives 32% its context rather than as a bare statistic', async () => {
+    listAnalyses.mockResolvedValue(ANALYSES)
+    getCoverage.mockResolvedValue(COVERAGE)
+    getCensusSummary.mockResolvedValue(CENSUS)
+    const { container } = renderStory()
+    await waitFor(() => expect(container.textContent).toMatch(/32%/))
+    expect(container.textContent).toMatch(/membrane-proximal/i)
+    expect(container.textContent).toMatch(/not a claim that the region causes anything/i)
+  })
+})
+

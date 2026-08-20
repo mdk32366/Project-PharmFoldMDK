@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('./api.js', () => ({
+  getCensusSummary: vi.fn(),
   listAnalyses: vi.fn().mockResolvedValue([]),
   getCoverage: vi.fn().mockResolvedValue({ coverage: { denominator: 0 }, rows: [] }),
   getAnalysis: vi.fn().mockResolvedValue({}),

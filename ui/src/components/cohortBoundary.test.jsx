@@ -15,6 +15,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
 vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(),
   listAnalyses: vi.fn(),
   getCoverage: vi.fn(),
   getRanking: vi.fn(),

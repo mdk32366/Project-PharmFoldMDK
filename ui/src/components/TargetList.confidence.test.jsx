@@ -21,7 +21,8 @@ import { MemoryRouter } from 'react-router-dom'
 
 // getCoverage is mocked too: TargetList now joins /api/coverage client-side for the
 // absent-value reason (no route change). It is additive - the list renders without it.
-vi.mock('../api.js', () => ({ listAnalyses: vi.fn(), getCoverage: vi.fn(), getRanking: vi.fn() }))
+vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(), listAnalyses: vi.fn(), getCoverage: vi.fn(), getRanking: vi.fn() }))
 import { getCoverage, getRanking, listAnalyses } from '../api.js'
 import TargetList from './TargetList.jsx'
 import { BANDS, COHORT_MAX_PLDDT, bandFor } from '../plddt.js'

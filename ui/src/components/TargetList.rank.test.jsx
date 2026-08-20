@@ -15,6 +15,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // scoreability** — the same defect in a new coat.
 
 vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(),
   listAnalyses: vi.fn(), getCoverage: vi.fn(), getRanking: vi.fn(),
 }))
 import { listAnalyses, getCoverage, getRanking } from '../api.js'

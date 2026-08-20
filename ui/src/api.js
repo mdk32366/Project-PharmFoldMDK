@@ -15,6 +15,9 @@ export const getAssociations = () => getJSON('/api/associations')   // D-053
 export const getRanking = () => getJSON('/api/ranking')             // D-062
 export const listCensus = () => getJSON('/api/census')                 // D-087
 export const getCensusDetail = (id) => getJSON(`/api/census/${id}`)      // D-087
+// ⚠ Four numbers, not 3,467 rows. `/api/census` is 7.1 MB uncompressed / 825 KB gzipped / ~4.8 s,
+// and the Story is the cold-open — it must not download a list it never renders (D-051).
+export const getCensusSummary = () => getJSON('/api/census/summary')
 
 
 // 3Dmol.js takes the structure BY URL (D-034 decision 2) so the browser caches it independently
