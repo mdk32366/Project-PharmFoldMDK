@@ -18,7 +18,9 @@ const COLUMNS = [
   { key: 'accession', label: 'Accession', numeric: false },
   { key: 'gene', label: 'Gene', numeric: false },
   { key: 'label', label: 'Protein', numeric: false },
-  { key: 'span_aa', label: 'Span (aa)', numeric: true },
+  // ⚠ 'aa' expanded on FIRST USE. It is standard notation to a structural biologist and
+  // opaque to everyone else, and the owner spent a long while resolving it.
+  { key: 'span_aa', label: 'Span (aa = amino acids)', numeric: true },
   { key: 'topology', label: 'Topology', numeric: false },
   { key: 'mean_plddt', label: 'pLDDT', numeric: true },
   { key: 'tranche', label: 'Tranche', numeric: true },
@@ -43,6 +45,8 @@ const PROFILE_LABEL = {
   refused_out_of_distribution: 'outside fitted range',
   refused_span_below_floor: 'span too short to describe',
   refused_features_incomplete: 'measurements incomplete',
+  // ⚠ no fold exists, so there is nothing to profile — distinct from the three refusals
+  not_folded: 'no structure yet',
 }
 
 // ⚠⚠ THE TWO LENSES (D-102). Named on the surface because naming them IS the owner's ruling:
@@ -148,6 +152,9 @@ export default function CensusTable({ rows, onSelect }) {
   }, [lensed, query, sort, excludeCritical])
 
   const declared = rows.find((r) => r.staining)?.staining
+  // ⚠ counted, not assumed: the table holds two populations and each count states which
+  const folded = rows.filter((r) => r.folded !== false).length
+  const unfolded = rows.length - folded
 
   const toggle = (key) =>
     setSort((s) => ({ key, dir: s.key === key && s.dir === 'asc' ? 'desc' : 'asc' }))
@@ -160,7 +167,12 @@ export default function CensusTable({ rows, onSelect }) {
     <section className="census-table panel">
       <h3>Census — every folded protein</h3>
       <p className="census-scope">
-        <strong>{rows.length.toLocaleString()}</strong> folded proteins.{' '}
+        {/* ⚠⚠ THE COUNT AND ITS KEY. The table now holds BOTH populations, so "N folded proteins"
+            over rows.length would be false the moment the never-folded rows joined. Each half
+            states its own number. */}
+        <strong>{folded.toLocaleString()}</strong> folded, plus{' '}
+        <strong>{unfolded.toLocaleString()}</strong> listed but{' '}
+        <strong>never folded</strong> — shown so a protein you can name is never simply missing.{' '}
         <strong>Not scored, not ranked, not ordered by suitability.</strong> These are structures
         and their measured properties; no judgement of target quality has been applied to any of
         them. Each protein&rsquo;s page carries a <strong>structural profile</strong> — a
@@ -259,11 +271,9 @@ export default function CensusTable({ rows, onSelect }) {
             a gap, which is the defect D-101 was written about, one level along. */}
         {query && shown.length === 0 && (
           <>
-            {' — nothing in the FOLDED census matches that. '}
-            <strong>That is not the same as &ldquo;no such protein&rdquo;:</strong> 3,467 proteins
-            have a usable extracellular stretch and only 2,690 were folded. The rest sit above the
-            local GPU ceiling and are awaiting rented capacity — <strong>HER2, HER3, EGFR and
-            HER4 are all in that group</strong>, at 621–630 aa.
+            {' — nothing here matches that. '}
+            <strong>Every protein in the manifest is listed</strong>, folded or not, so a name that
+            returns nothing is genuinely outside this census rather than merely unfolded.
           </>
         )}
       </p>
@@ -308,12 +318,16 @@ export default function CensusTable({ rows, onSelect }) {
           {visible.map((r) => {
             const band = bandFor(r.mean_plddt)
             return (
-              <tr key={r.id}>
+              <tr key={r.id ?? r.accession} className={r.folded === false ? 'row-unfolded' : undefined}>
                 <td>
                   {/* ⚠ A real Link, not a button: each protein has its own page, so it must be
                       openable in a new tab, shareable, and reachable by the back button. An
-                      onClick handler is none of those things. */}
-                  <Link className="link" to={`/census/${r.id}`} onClick={() => onSelect?.(r)}>
+                      onClick handler is none of those things.
+                      ⚠⚠ A NEVER-FOLDED row links by ACCESSION — it has no analysis id, and the
+                      route resolves accessions since it was fixed. Rendering it unlinked would
+                      make a dead end of the one row a reader most wants to click. */}
+                  <Link className="link" to={`/census/${r.id ?? r.accession}`}
+                        onClick={() => onSelect?.(r)}>
                     {r.accession}
                   </Link>
                 </td>
@@ -321,7 +335,15 @@ export default function CensusTable({ rows, onSelect }) {
                 <td>{r.label ?? <span className="unknown">unknown</span>}</td>
                 <td className="num">{r.span_aa ?? '—'}</td>
                 <td>
-                  {r.topology === 'intermittent' ? (
+                  {/* ⚠⚠ NOT FOLDED, said plainly and in a column the reader is already scanning.
+                      The reason travels with it: "above the ceiling" and "never tested" are
+                      different claims, and one row is neither — nothing records its reason at all,
+                      which is a defect rather than a category. */}
+                  {r.folded === false ? (
+                    <span className="badge badge-unfolded" title={r.not_folded_copy}>
+                      NOT FOLDED
+                    </span>
+                  ) : r.topology === 'intermittent' ? (
                     <span className="badge badge-intermittent" title={`${r.segment_count} extracellular segments; ${r.discarded_aa} aa not folded`}>
                       intermittent ({r.segment_count})
                     </span>
@@ -359,7 +381,9 @@ export default function CensusTable({ rows, onSelect }) {
                     the n rides with it, and under the best-panel lens so does the cancer it came
                     from. A bare "100%" over 4 patients and over 40 are different facts. */}
                 <td className="num stained-cell">
-                  {r.stained_pct == null ? (
+                  {r.folded === false ? (
+                    <span className="unknown">—</span>
+                  ) : r.stained_pct == null ? (
                     <span className="unknown">
                       {r.stained_category === 'not_covered' ? 'not covered'
                         : r.stained_category === 'never_scored' ? 'never scored'

@@ -569,6 +569,18 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
         stain = {}
     for row in out:
         row["staining"] = stain.get(row.get("gene")) if row.get("gene") else None
+        row["folded"] = True
+
+    # ⚠⚠ THE NEVER-FOLDED ROWS JOIN THE LIST — owner ruling, 2026-08-20. Searching `HER2` returned
+    # "no protein matches"; HER2 is in the manifest and was never folded, and a reader should not
+    # have to parse fine print to learn the protein exists. A row with a STATUS beats a paragraph.
+    # ⚠ They carry no fold-derived value at all — no pLDDT, no profile, no staining — and each
+    # absence is a category, never a zero.
+    try:
+        from core.census_unfolded import unfolded_rows
+        out.extend(unfolded_rows())
+    except Exception:                      # noqa: BLE001
+        pass                               # ⚠ a missing manifest degrades to the folded list alone
     return out
 
 
@@ -583,6 +595,39 @@ def census_untranched_count(engine: Any) -> int:
         return session.scalar(
             select(func.count()).select_from(ProteinAnalysis)
             .where(ProteinAnalysis.cohort_tranche.is_(None))) or 0
+
+
+def resolve_census_accession(engine: Any, accession: str) -> tuple[Optional[int], str]:
+    """(analysis_id, outcome) for a UniProt accession typed into the census route.
+
+    ⚠⚠ THREE OUTCOMES, NEVER TWO. A person who pastes an accession into `/census/…` deserves to know
+    WHICH of these happened, because they mean completely different things:
+
+      `census`  — resolved; the id is returned
+      `cohort`  — ⚠ the accession IS one of the 82 ranked targets. It is NOT reachable here and is
+                  NOT redirected: `D-081` measures the two populations under different span
+                  definitions, and making one reachable through the other's route would silently
+                  hand back a row measured by a different rule. The caller is TOLD where it lives.
+      `unknown` — no analysis carries that accession at all
+
+    ⚠ Before this existed the route took `analysis_id: int`, so any accession returned **HTTP 422** —
+    a validation error, which tells a reader their input was malformed rather than that they used
+    the wrong key for the right protein.
+    """
+    acc = (accession or "").strip().upper()
+    if not acc:
+        return None, "unknown"
+    with Session(engine) as session:
+        rows = session.scalars(
+            select(ProteinAnalysis).where(ProteinAnalysis.input_value == acc)
+        ).all()
+    if not rows:
+        return None, "unknown"
+    # ⚠ census first — an accession can exist in both populations, and this route serves one of them
+    for r in rows:
+        if r.cohort_tranche is not None and r.cohort_tranche > COHORT_TRANCHE and r.pdb_path:
+            return r.id, "census"
+    return None, "cohort" if any(r.cohort_tranche == COHORT_TRANCHE for r in rows) else "unknown"
 
 
 def get_census_detail(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]:

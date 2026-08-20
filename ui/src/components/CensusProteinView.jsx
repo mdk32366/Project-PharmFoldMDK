@@ -83,8 +83,31 @@ export default function CensusProteinView({ id }) {
         </p>
       </header>
 
-      <StructureViewer id={id} />
+      {/* ⚠⚠ NEVER FOLDED — NO STRUCTURE, AND THE PAGE SAYS SO INSTEAD OF DRAWING A DEAD FRAME.
+          HER2 reaches this page because it is in the manifest; there is simply no fold to show.
+          An empty viewer would read as a broken widget — the same false signal the census list
+          gave when it answered "no protein matches that search". */}
+      {detail.folded === false ? (
+        <section className="unfolded-card">
+          <h3>NOT FOLDED</h3>
+          <p className="unfolded-why"><strong>{detail.not_folded_copy}.</strong></p>
+          <p>
+            Its extracellular stretch is{' '}
+            <strong>{detail.span_aa} aa (amino acids)</strong> — long by the standards of what this
+            project could fold locally. Nothing below is missing because it failed: there is no
+            structure yet, so there is no confidence score, no structural profile and no staining
+            panel to show.
+          </p>
+          <p className="caveat">
+            ⚠ <strong>This is not a judgement about the protein.</strong> It is a statement about
+            which proteins had a graphics card available, and nothing more.
+          </p>
+        </section>
+      ) : (
+        <StructureViewer id={id} />
+      )}
 
+      {detail.folded !== false && (
       <div className="panels">
         {/* ⚠ NOT the cohort's ceiling. The default note states "cohort max 84.23", which is a
             fact about the 82 — and six census structures already exceed it. ⚠ No census maximum is
@@ -98,6 +121,7 @@ export default function CensusProteinView({ id }) {
         {/* ⚠ Without the cohort's ceiling — see the Confidence note above. */}
         <PlddtExplainer showCohortMax={false} />
       </div>
+      )}
 
       {/* The measured body — status, extracellular topology (F-037), association coverage.
           ⚠ Reused, not reimplemented: the inline panel and this page must not drift into saying
