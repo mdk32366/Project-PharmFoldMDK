@@ -208,7 +208,14 @@ def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> di
     # module serving run 2's scores and the module serving census profiles are different files.
     # ⚠⚠ D-089 ruling 7: no second route. A block on the response this route already serves.
     from app.census_profile_read import census_profile_block
-    record["structural_profile_block"] = census_profile_block(engine, analysis_id)
+    # ⚠⚠ `resolved`, NEVER `analysis_id`. The path param is a `str` so an accession can be used as a
+    # key; `resolved` is the int it resolves to. This line passed the RAW STRING to a supplier whose
+    # signature is `analysis_id: int`, and `session.get(ProteinAnalysis, "A0AVI2")` on Postgres
+    # raises — so EVERY ONE of the 2,690 folded census cards returned HTTP 500 in production.
+    # ⚠⚠ AND THE GATE COULD NOT SEE IT. The suite runs on SQLite, whose type affinity accepts
+    # `"1970"` as an integer primary key and returns `None` for `"A0AVI2"` WITHOUT RAISING. The
+    # tests were green on a database that forgives exactly the mistake production rejects.
+    record["structural_profile_block"] = census_profile_block(engine, resolved)
     # ⚠ D-093 edges 1 and 2 — the human-legible half: which tumours stained, and which
     # normal tissues also stain. Composed at the route from its own supplier.
     from app.clinical_read import clinical_block
