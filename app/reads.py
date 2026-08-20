@@ -578,10 +578,66 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
     # absence is a category, never a zero.
     try:
         from core.census_unfolded import unfolded_rows
-        out.extend(unfolded_rows())
+        unfolded = [dict(r) for r in unfolded_rows()]
+        _attach_cohort_fold(engine, unfolded)
+        out.extend(unfolded)
     except Exception:                      # noqa: BLE001
         pass                               # ⚠ a missing manifest degrades to the folded list alone
     return out
+
+
+def _attach_cohort_fold(engine: Any, rows: list[dict]) -> None:
+    """⚠⚠ THE CARD SAID "WAITING ON RENTED CAPACITY" FOR PROTEINS ALREADY FOLDED.
+
+    Measured 2026-08-20 by walking the Targets surface: **30 of the 777 census rows marked NOT
+    FOLDED also sit in the ranked 82**, and **29 of those are FOLDED there** — at the same span,
+    same `boundary_method`, on rental/fp16. `ERBB2` is the case the owner asked about: the census
+    said it awaited a fold that already existed one click away.
+
+    ⚠ THE STATUS WAS NEVER WRONG. `above_local_ceiling` is true: 630 aa does exceed the local
+    ceiling of 440, and the cohort fold ran on rented hardware. **The COPY was wrong.**
+
+    ⚠⚠ THREE OUTCOMES, NOT TWO — and the thirtieth row is why. `IGF2R` is in the cohort and was
+    NEVER FOLDED THERE EITHER: it was ATTEMPTED on rental and died of CUDA OOM at 2,491 aa. Saying
+    "a fold exists" would be false, and saying "awaiting capacity" would also be false — it was
+    tried and it failed. **An attempt that failed is neither of the other two.**
+
+    ⚠ This attaches a FACT, not a link target. `D-081` measures the two populations under different
+    span definitions and bars making one reachable through the other's route; the census route still
+    refuses a cohort-only accession. What is added here is a statement that the other fold exists,
+    with the span it was measured at, so a reader can judge the comparison rather than be handed it.
+    """
+    accs = [r["accession"] for r in rows if r.get("accession")]
+    if not accs:
+        return
+    with Session(engine) as session:
+        cohort = {
+            r.input_value: r
+            for r in session.scalars(
+                select(ProteinAnalysis)
+                .where(ProteinAnalysis.cohort_tranche == COHORT_TRANCHE)
+                .where(ProteinAnalysis.input_value.in_(accs))
+            ).all()
+        }
+    for row in rows:
+        c = cohort.get(row.get("accession"))
+        if c is None:
+            continue
+        if c.pdb_path:
+            row["cohort_fold"] = {
+                "analysis_id": c.id,
+                "mean_plddt": c.mean_plddt,
+                # ⚠ the span it was folded at, so the reader can see whether it is the same molecule
+                "fold_length": (c.meta or {}).get("span_aa") or (c.meta or {}).get("fold_length"),
+                "census_span_aa": row.get("span_aa"),
+            }
+        else:
+            # ⚠⚠ in the cohort and unfolded THERE too — an attempt, not a queue position
+            row["cohort_attempt_failed"] = {
+                "analysis_id": c.id,
+                "reason": (c.error or "").strip() or None,
+            }
+    return
 
 
 def census_untranched_count(engine: Any) -> int:
