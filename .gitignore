@@ -254,3 +254,5 @@ PharmFoldMDK-snapshot-*.zip
 data/control/d099/*/pae.json
 data/control/d099/*/structure.pdb
 data/control/d099/*/plddt.json
+
+data/control/sb_timing/
