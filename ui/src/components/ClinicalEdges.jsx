@@ -174,11 +174,31 @@ function BurdenSlot() {
   return (
     <div className="clin-burden">
       <h4>How common, how deadly</h4>
+      {/* ⚠⚠ THE CAUSE WAS RESTATED AS THE MEASURED ONE (owner ruling, 2026-08-21). This block used
+          to lead with "no licensed source", which is true of the ONE withdrawn source and is NOT
+          why the others are unattempted. `D-093` amendment 6 measured the actual obstacle, and it
+          is a VOCABULARY problem, not a licensing one — so a reader was being given a reason that
+          would not be fixed by obtaining a licence. */}
       <p className="clin-burden-missing">
-        <strong>Not shown — no licensed source.</strong> How often each cancer occurs, how lethal
-        it is, and how many people survive it are <em>not</em> on this page. The only
-        redistributable source was withdrawn on licensing grounds. SEER, GLOBOCAN/IARC, TCGA/GDC
-        and CPTAC are <strong>unattempted, not failed</strong> — nobody has approached them and
+        <strong>Not shown — the tumour names cannot be matched up.</strong> How often each cancer
+        occurs, how lethal it is, and how many people survive it are <em>not</em> on this page.
+        The obstacle is measured, and it is <strong>vocabulary, not permission</strong>: cancer
+        registries code a tumour on two independent axes — <em>where</em> it is and <em>what</em> it
+        is — and the atlas column used here collapses both into one free-text name, so the two
+        cannot be joined reliably.
+      </p>
+      {/* ⚠⚠ THE EXAMPLE IS ON THIS VERY CARD. `normal_tissue.tsv` lists "skin 1" and "skin 2" as
+          separate entries; the tumour side has the harder version of the same problem. */}
+      <p className="clin-burden-missing note">
+        ⚠ <strong>And a join that looked successful would be the worse outcome.</strong>{' '}
+        <em>Skin cancer</em> would match a registry category literally named{' '}
+        <em>&ldquo;Skin excluding Basal and Squamous&rdquo;</em> — which omits the overwhelming
+        majority of skin cancers. It would return a number, and the number would quietly be about a
+        different population. Three other tumour names fail loudly; this one fails silently.
+      </p>
+      <p className="clin-burden-missing note">
+        Separately, one redistributable source was withdrawn on licensing grounds. The public
+        registries are <strong>unattempted, not failed</strong> — nobody has approached them and
         been refused.
       </p>
     </div>

@@ -78,8 +78,23 @@ describe('ClinicalEdges', () => {
   it('renders the burden slot with its refusal, on a covered protein', () => {
     const t = text(PRESENT)
     expect(t).toMatch(/How common, how deadly/)
-    expect(t).toMatch(/no licensed source/i)
+    // ⚠⚠ WAS /no licensed source/i — THE COPY THE OWNER RULED AGAINST on 2026-08-21, because it
+    // gives a LICENSING reason for what `D-093` amendment 6 measured as a VOCABULARY problem. A
+    // reader was being told the obstacle was permission, which obtaining a licence would not fix.
+    // ⚠ Third test this week found pinning defective copy, after `App.test.jsx` and
+    // `TargetList.sort.test.jsx`. A test asserting the wrong sentence defends it.
+    expect(t).toMatch(/vocabulary, not permission/i)
+    expect(t).toMatch(/two independent axes/i)
     expect(t).toMatch(/unattempted, not failed/i)
+  })
+
+  // ⚠⚠ The silent-join case, which is the reason the section exists at all: a string match on
+  // "skin cancer" SUCCEEDS against a registry category named "Skin excluding Basal and Squamous"
+  // and returns a number about a different population. `F-047`'s class, stated on the surface.
+  it('names the join that would succeed and be wrong', () => {
+    const t = text(PRESENT)
+    expect(t).toMatch(/Skin excluding Basal and Squamous/i)
+    expect(t).toMatch(/fails silently|quietly be about a different population/i)
   })
 
   it('renders the burden slot even when the protein is NOT covered', () => {
