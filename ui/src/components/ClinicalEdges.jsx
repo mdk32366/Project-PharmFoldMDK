@@ -24,8 +24,27 @@ const LEVEL_WORD = {
   High: 'strong', Medium: 'moderate', Low: 'weak', 'Not detected': 'none',
 }
 
-export default function ClinicalEdges({ block }) {
+// ⚠⚠ `heading` AND `scopeNote` EXIST BECAUSE OF AN OWNER RULING (2026-08-21): promote the HPA
+// panels into the "Cancer associations" section, census-wide.
+//
+// The census card carried TWO adjacent cancer headings: this one, full — LAMP1 stains in breast
+// 11/11, cervical 12/12, colorectal 12/12 — and "Cancer associations" immediately beneath it,
+// empty. **The association source is the 82 cohort targets and nothing else** (337 rows, 82 distinct
+// symbols), so for all 3,385 census proteins that box could never fill. A reader looking for cancer
+// associations found the empty one and stopped.
+//
+// ⚠ D-093 KEEPS THE TWO MEASUREMENTS SEPARATE AND THIS DOES NOT MERGE THEM. Kathad's quasi H-score
+// and HPA's patient counts are different measurements from different sources; blending them is
+// what the ruling forbids. On a COHORT card both exist and both still render, separately. On a
+// CENSUS card the Kathad measurement DOES NOT EXIST — there is nothing to keep separate from — so
+// the section a reader reads for cancer associations is the one that has data, and the fact that
+// the other source does not cover this protein is demoted to a footnote rather than a heading.
+//
+// ⚠ Tumours and normal tissues still render TOGETHER: D-093 decision 5 makes the normal-tissue
+// differential co-equal, and a tumour panel alone is the flattering half.
+export default function ClinicalEdges({ block, heading, scopeNote }) {
   if (!block) return null
+  const title = heading ?? 'Cancer connection'
 
   // ⚠ An absent gene is a CATEGORY, not an empty panel: HPA's IHC covers fewer proteins than its
   // RNA does, and 960 of 2,687 folded census genes are absent. Saying "no data" would read as
@@ -33,7 +52,8 @@ export default function ClinicalEdges({ block }) {
   if (block.status === 'ihc_gene_absent' || block.status === 'not_determinable') {
     return (
       <section className="clin">
-        <h3>Cancer connection</h3>
+        <h3>{title}</h3>
+        {scopeNote}
         <p className="clin-absent">
           <strong>Not covered by the antibody atlas.</strong>{' '}
           {block.status === 'not_determinable'
@@ -50,7 +70,8 @@ export default function ClinicalEdges({ block }) {
 
   return (
     <section className="clin">
-      <h3>Cancer connection</h3>
+      <h3>{title}</h3>
+      {scopeNote}
       <p className="clin-boundary">{block.boundary}</p>
 
       <h4>Where it appears in tumours</h4>
