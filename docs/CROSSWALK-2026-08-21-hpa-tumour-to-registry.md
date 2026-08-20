@@ -37,9 +37,20 @@ patients representing 17 major types of cancer"* — that is the RNA/survival la
 immunohistochemistry**, and `F-047`'s standing warning applies: *a filename is not a modality*, and
 neither is a patient count from the neighbouring analysis.
 
-**`WC2` — therefore all twenty rows carry `hpa_composition_undocumented`**, and every verdict below
-that depends on composition is qualified by it. ⚠ **This is a category with a cause, not a gap in
-the work.**
+**`WC2` — therefore most rows carry `hpa_composition_undocumented`**, and every verdict below that
+depends on composition is qualified by it. ⚠ **This is a category with a cause, not a gap in the work.**
+
+> ⟡ **CORRECTED 2026-08-21 by `XB1`, and the correction is mine.** This section originally said
+> **all twenty** are undocumented. **HPA documents three** — on
+> `v22.proteinatlas.org/about/assays+annotation`: *"breast cancer includes both ductal and lobular
+> cancer, lung cancer includes both squamous cell carcinoma and adenocarcinoma and liver cancer
+> includes both hepatocellular and cholangiocellular carcinoma"*.
+> **So 3 documented, 17 undocumented.** ⚠⚠ And **row 8 (`liver cancer`) is better than I graded it**:
+> I called it `mapped_at_stated_granularity` because SEER's category is *Liver and Intrahepatic Bile
+> Duct* and I assumed HPA's was liver alone. **HPA documents cholangiocellular carcinoma — bile duct
+> — inside its own category.** *The granularity gap was mine, not the data's.*
+> ⚠ The row is left graded as sent, with this correction beside it, per the rule that a correction
+> is recorded rather than patched away. See `CC-2026-08-21-SEER-decision-6-and-HPA-skin-read.md` §1.
 
 ---
 
