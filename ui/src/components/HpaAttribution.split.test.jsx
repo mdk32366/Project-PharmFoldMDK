@@ -179,3 +179,37 @@ describe('the census association block cites the branch that has data', () => {
     expect(seg).toMatch(/not the only tumour evidence/i)
   })
 })
+
+// ⚠⚠ TWO LINKS, IDENTICAL TEXT, DIFFERENT DESTINATIONS — reported from the LAMP1 card.
+// The tumour link goes to /pathology and the normal-tissue link to /tissue, and both rendered
+// "View this protein on the Human Protein Atlas (v22)", one after the other. The page showed what
+// looked like the same link twice.
+// ⚠ This is the same defect as the four repeated credit blocks, ONE LEVEL DOWN: the split by case
+// put element 4 beside its datum and then left it describing the PROTEIN rather than the DATUM.
+// **A per-datum element labelled per-protein is not per-datum.**
+describe('each per-datum link names the datum it cites', () => {
+  const labels = (c) => [...c.querySelectorAll('.hpa-attrib-link')].map((a) => a.textContent.trim())
+
+  it('gives the tumour and normal-tissue links different text', () => {
+    const { container } = render(
+      <HpaCreditProvider><ClinicalEdges block={FULL_BLOCK} /></HpaCreditProvider>,
+    )
+    const seen = labels(container)
+    expect(seen).toHaveLength(2)
+    expect(new Set(seen).size).toBe(2)          // ⚠ the assertion the shipped page failed
+    expect(seen.some((t) => /tumour/i.test(t))).toBe(true)
+    expect(seen.some((t) => /normal-tissue/i.test(t))).toBe(true)
+  })
+
+  it('keeps each label attached to the right destination', () => {
+    const { container } = render(
+      <HpaCreditProvider><ClinicalEdges block={FULL_BLOCK} /></HpaCreditProvider>,
+    )
+    for (const a of container.querySelectorAll('.hpa-attrib-link')) {
+      const href = a.getAttribute('href')
+      if (/tumour/i.test(a.textContent)) expect(href).toBe(TUMOUR_LINK)
+      if (/normal-tissue/i.test(a.textContent)) expect(href).toBe(NORMAL_LINK)
+    }
+  })
+})
+

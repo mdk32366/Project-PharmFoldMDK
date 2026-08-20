@@ -91,6 +91,20 @@ export function HpaCreditProvider({ children }) {
 // ⚠⚠ Element 4, rendered BESIDE THE DATUM IT CITES. Mount this only from a block that is actually
 // rendering an HPA value — that is the suppression half of the ruling, and it is the caller's
 // decision because only the caller knows whether it drew anything.
+// ⚠⚠ A PER-DATUM LINK MUST NAME ITS DATUM, OR IT READS AS A DUPLICATE.
+// The tumour and normal-tissue links are DIFFERENT — `/pathology` and `/tissue` — but both rendered
+// the identical sentence "View this protein on the Human Protein Atlas (v22)", one after the other.
+// ⚠ So the page showed what looked like the same link twice, and the reader had no way to tell them
+// apart or to know that clicking one would not reach what the other showed.
+// ⚠⚠ This is the same defect as the four repeated credit blocks, one level down: the split by case
+// moved element 4 next to its datum, and then left it describing the PROTEIN rather than the DATUM.
+// A per-datum element labelled per-protein is not per-datum.
+const LINK_LABEL = {
+  pathology: 'View the tumour staining behind these figures on the Human Protein Atlas (v22)',
+  normal_tissue: 'View the normal-tissue staining behind these figures on the Human Protein Atlas (v22)',
+  protein: 'View the subcellular location for this protein on the Human Protein Atlas (v22)',
+}
+
 export function HpaDeepLink({ attribution, view }) {
   const ctx = useContext(HpaCreditContext)
   const key = useId()
@@ -111,7 +125,7 @@ export function HpaDeepLink({ attribution, view }) {
       {attribution.deep_link ? (
         <a className="hpa-attrib-link" href={attribution.deep_link}
            rel="noopener noreferrer" target="_blank">
-          View this protein on the Human Protein Atlas (v22)
+          {LINK_LABEL[view] ?? 'View this protein on the Human Protein Atlas (v22)'}
         </a>
       ) : (
         <span className="hpa-attrib-nolink">
