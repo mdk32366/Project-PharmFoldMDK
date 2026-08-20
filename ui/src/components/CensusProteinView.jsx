@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getCensusDetail, getPlddt } from '../api.js'
 import StructureViewer from './StructureViewer.jsx'
+import { HpaCreditProvider } from './HpaAttribution.jsx'
 import Confidence from './Confidence.jsx'
 import PlddtExplainer from './PlddtExplainer.jsx'
 import CensusDetail from './CensusDetail.jsx'
@@ -95,6 +96,12 @@ export default function CensusProteinView({ id }) {
   if (error) {
     return (
       <article className="census-protein">
+      {/* ⚠⚠ ONE SOURCE-LEVEL CREDIT PER PAGE. Measured before this change: 79 of 100 census
+          cards rendered FOUR identical attribution blocks, 21 rendered none — there was no
+          middle case, so LAMP1 was the 79% case rather than a one-off. The provider emits the
+          publication, website reference and image/data credit ONCE, and only if some block
+          actually registered a datum. */}
+      <HpaCreditProvider>
         <p className="error">Could not load census protein {id}: {error}</p>
         {/* ⚠ A cohort id 404s here by design — the two populations are measured under different
             span definitions (D-081) and must not be reachable through one another's route. */}
@@ -103,13 +110,20 @@ export default function CensusProteinView({ id }) {
           <Link to="/targets">Targets</Link>.
         </p>
         <p><Link to="/census">← back to the census</Link></p>
-      </article>
+      </HpaCreditProvider>
+    </article>
     )
   }
   if (!detail) return <p className="loading">Loading census protein {id}…</p>
 
   return (
     <article className="census-protein">
+      {/* ⚠⚠ ONE SOURCE-LEVEL CREDIT PER PAGE. Measured before this change: 79 of 100 census
+          cards rendered FOUR identical attribution blocks, 21 rendered none — there was no
+          middle case, so LAMP1 was the 79% case rather than a one-off. The provider emits the
+          publication, website reference and image/data credit ONCE, and only if some block
+          actually registered a datum. */}
+      <HpaCreditProvider>
       <p className="breadcrumb"><Link to="/census">← the wider protein census</Link></p>
 
       <header className="target-header">
@@ -221,6 +235,7 @@ export default function CensusProteinView({ id }) {
           ⚠ Reused, not reimplemented: the inline panel and this page must not drift into saying
           different things about the same protein. */}
       <CensusDetail detail={detail} embedded />
+    </HpaCreditProvider>
     </article>
   )
 }

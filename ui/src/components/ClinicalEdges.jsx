@@ -18,7 +18,7 @@
 //
 // ⚠ No ratio is shown. tumour_normal_ratio() raises by design (ruling 4) and nothing here divides.
 
-import HpaAttribution from './HpaAttribution.jsx'
+import { HpaDeepLink } from './HpaAttribution.jsx'
 
 const LEVEL_WORD = {
   High: 'strong', Medium: 'moderate', Low: 'weak', 'Not detected': 'none',
@@ -121,8 +121,18 @@ export default function ClinicalEdges({ block }) {
       <BurdenSlot />
       {/* ⚠⚠ PER VIEW, not per page: the tumour panel links to /pathology and the normal
           panel to /tissue. A single block per page does not discharge the precondition. */}
-      <HpaAttribution attribution={block.attribution_tumour} view="pathology" />
-      <HpaAttribution attribution={block.attribution_normal} view="normal_tissue" />
+      {/* ⚠⚠ PER VIEW AND PER PRESENCE. The tumour panel links to /pathology and the normal
+          panel to /tissue — DIFFERENT deep links, so these two never collapse into one. Measured:
+          75 of 79 sampled cards carry three distinct deep links across their blocks, which is
+          why the fix is a SPLIT BY CASE and not a de-duplication.
+          ⚠ Each half appears only when its own half rendered rows: `normal_tissues` was empty on
+          39 of 79 sampled cards while still carrying a citation. */}
+      {block.tumours?.length > 0 && (
+        <HpaDeepLink attribution={block.attribution_tumour} view="pathology" />
+      )}
+      {block.normal_tissues?.length > 0 && (
+        <HpaDeepLink attribution={block.attribution_normal} view="normal_tissue" />
+      )}
       <p className="clin-source">{block.source}</p>
 
       {/* ⚠⚠ THE SURFACE QUOTES THE PAGE — owner ruling R1. It does NOT adopt the licence.
