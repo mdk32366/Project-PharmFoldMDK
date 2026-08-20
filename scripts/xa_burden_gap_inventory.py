@@ -40,6 +40,28 @@ FORBIDDEN = ("DELETE", "UPDATE", "INSERT", "TRUNCATE", "DROP", "ALTER", "CREATE"
 REFUSED = ("carcinoid", "skin cancer")
 UNCERTAIN = ("urothelial cancer",)
 
+# ⚠⚠⚠ THE JOIN REACHES THE COHORT ONLY, AND THE FIRST VERSION REPORTED THAT AS A FACT.
+# `metadata ->> 'gene'` is populated on **80 of 80 cohort rows and 0 of 2,691 census rows** — the
+# census keys on ACCESSION (`input_value`), and its gene symbol lives in the census manifest, not in
+# `protein_analyses`. So the first run printed **"census (tranche > 0): 0"**, which is not a
+# measurement — it is the join failing and returning a plausible zero. `F-047`'s class exactly, and
+# `D-093` decision 6 question (3) is the clause that exists for it.
+#
+# ⚠ The join is now EXPLICITLY cohort-scoped (`AND pa.cohort_tranche = 0`) so it cannot be mistaken
+# for a census answer, and the census side is derived from `clinical_pathology`'s own row scope
+# instead: the table is scoped to **census manifest ∪ the 82** (see `db/models.py`), so a gene here
+# that is not a cohort gene is a census-manifest gene.
+# ⚠⚠ THE FOLDED subset of the census is NOT answerable from this database — it needs the manifest's
+# accession↔symbol map — and is reported from the census surface separately rather than guessed.
+#
+# ⚠⚠ THE COLUMN IS `"metadata"`. `meta` is the ORM ATTRIBUTE — `db/models.py:124` is
+# `mapped_column("metadata", ...)` — so raw SQL that copies the Python attribute name fails with
+# `column pa.meta does not exist`. The first run of this script did exactly that.
+#
+# ⚠ AND THE EXPLANATION LIVES HERE, NOT INSIDE THE SQL. A `--` comment carrying a semicolon tripped
+# `_self_check`'s statement-separator rule, which is the guard doing its job: a guard over production
+# SQL should stay blunt, and prose belongs outside the statement it describes. **The fix was to move
+# the comment, never to teach the guard about comments.**
 SQL = {
     # every IHC row in the three tumour types of interest, with the cohort/census side resolved
     "rows": """
@@ -47,7 +69,8 @@ SQL = {
                pa.cohort_tranche, pa.input_value
         FROM clinical_pathology AS cp
         LEFT JOIN protein_analyses AS pa
-          ON pa.meta ->> 'gene' = cp.gene_name
+          ON pa."metadata" ->> 'gene' = cp.gene_name
+         AND pa.cohort_tranche = 0
         WHERE cp.cancer IN ('carcinoid', 'skin cancer', 'urothelial cancer')
         ORDER BY cp.cancer, cp.gene_name
     """,
@@ -94,8 +117,9 @@ def _report(label: str, cancers: tuple[str, ...], rows: list) -> None:
     # ⚠ cohort_tranche 0 is the 82; anything else (or NULL) is not the cohort. A NULL tranche means
     # the gene has no analysis row at all — it carries IHC but was never folded on either surface.
     cohort = {r[0] for r in sel if r[6] == 0}
-    census = {r[0] for r in sel if r[6] is not None and r[6] != 0}
-    unfolded = genes - cohort - census
+    # ⚠ NOT a tranche test — see the note above the SQL. `clinical_pathology` is row-scoped to
+    # census manifest ∪ the 82, so everything here that is not a cohort gene is a census gene.
+    census_manifest = genes - cohort
     high = {r[0] for r in sel if r[2] and r[2] > 0}
     high_cohort = high & cohort
 
@@ -104,9 +128,11 @@ def _report(label: str, cancers: tuple[str, ...], rows: list) -> None:
     print("   tumour types            : %s" % ", ".join(cancers))
     print("   IHC rows                : %d" % len(sel))
     print("   distinct genes          : %d   (key: DISTINCT gene_name in clinical_pathology)" % len(genes))
-    print("   ├─ cohort (tranche 0)   : %d   (key: joined analysis row with cohort_tranche = 0)" % len(cohort))
-    print("   ├─ census (tranche > 0) : %d   (key: joined analysis row with cohort_tranche <> 0)" % len(census))
-    print("   └─ no analysis row      : %d   ⚠ carries IHC, folded on neither surface" % len(unfolded))
+    print("   ├─ cohort               : %d   (key: metadata->>'gene' matches, cohort_tranche = 0)" % len(cohort))
+    print("   └─ census manifest      : %d   (key: in clinical_pathology, which is scoped to" % len(census_manifest))
+    print("                                    census manifest u the 82, and NOT a cohort gene)")
+    print("   ⚠ the FOLDED census subset is not answerable here — it needs the manifest's")
+    print("     accession<->symbol map, and is reported from the census surface, not guessed.")
     print("   ⚠⚠ genes with High > 0  : %d   (key: clinical_pathology.high > 0 in these types)" % len(high))
     print("        of which cohort    : %d" % len(high_cohort))
     if high_cohort:
