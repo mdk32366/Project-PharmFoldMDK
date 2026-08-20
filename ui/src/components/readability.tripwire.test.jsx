@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(),
   listAnalyses: vi.fn().mockResolvedValue([{ id: 1, gene: 'NECTIN4', mean_plddt: 77.26 }]),
   getCoverage: vi.fn().mockResolvedValue({ coverage: { denominator: 1 }, rows: [{ disposition: 'ranked', fold_status: 'folded', gene: 'NECTIN4' }] }),
   getAssociations: vi.fn().mockResolvedValue({ source: 'the source paper', method: 'quasi H-score', cutoff: 150, pair_count: 1, targets_covered: 1, cohort_size: 1, unmatched_symbols: [], associations: { NECTIN4: [{ cancer: 'Lung', qh_score: 200 }] } }),

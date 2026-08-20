@@ -13,7 +13,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-vi.mock('../api.js', () => ({ listAnalyses: vi.fn(), getCoverage: vi.fn(), getRanking: vi.fn() }))
+vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(), listAnalyses: vi.fn(), getCoverage: vi.fn(), getRanking: vi.fn() }))
 import { listAnalyses, getCoverage, getRanking } from '../api.js'
 import TargetList from './TargetList.jsx'
 

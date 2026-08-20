@@ -14,6 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 //    ⚠ The alias index (`D-101`) existed and reached the census only: `F-052`'s exact shape.
 
 vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(),
   listAnalyses: vi.fn(),
   getCoverage: vi.fn(),
   getRanking: vi.fn(),

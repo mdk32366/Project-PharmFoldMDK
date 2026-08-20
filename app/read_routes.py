@@ -152,6 +152,19 @@ def list_census(engine: Any = Depends(get_engine)) -> list[dict]:
     return rows
 
 
+@read_router.get("/census/summary")
+def census_summary(engine: Any = Depends(get_engine)) -> dict:
+    """The census in four numbers, for the cold-open Story.
+
+    ⚠⚠ REGISTERED **BEFORE** `/census/{analysis_id}`, AND THE ORDER IS LOAD-BEARING. FastAPI matches
+    routes in declaration order, and `{analysis_id}` is a `str` since accessions became valid keys —
+    so declared after, `/api/census/summary` would match the DETAIL route, be looked up as the
+    accession `SUMMARY`, and return **404 with a perfectly sensible message about an unknown census
+    protein**. A wrong-but-plausible answer, produced by declaration order.
+    """
+    return reads.census_summary(engine)
+
+
 @read_router.get("/census/{analysis_id}")
 def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> dict:
     """One census protein: status, span topology (F-037), and cancer-association COVERAGE.

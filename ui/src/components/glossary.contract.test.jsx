@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(),
   listAnalyses: vi.fn().mockResolvedValue([{ id: 1, gene: 'NECTIN4', mean_plddt: 77.26 }]),
   getCoverage: vi.fn().mockResolvedValue({
     coverage: { denominator: 1 },

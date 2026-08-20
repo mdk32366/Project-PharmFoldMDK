@@ -2,7 +2,8 @@ import { render, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('../api.js', () => ({ getRanking: vi.fn(), getCoverage: vi.fn() }))
+vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(), getRanking: vi.fn(), getCoverage: vi.fn() }))
 import { getRanking, getCoverage } from '../api.js'
 import ScorerView from './ScorerView.jsx'
 

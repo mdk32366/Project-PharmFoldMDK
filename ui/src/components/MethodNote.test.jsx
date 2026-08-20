@@ -5,7 +5,8 @@ import { render, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('../api.js', () => ({ getCoverage: vi.fn() }))
+vi.mock('../api.js', () => ({
+  getCensusSummary: vi.fn(), getCoverage: vi.fn() }))
 import { getCoverage } from '../api.js'
 import MethodNote from './MethodNote.jsx'
 
