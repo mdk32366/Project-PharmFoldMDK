@@ -76,7 +76,13 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .viewer-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
 .viewer-fallback { padding: 2rem; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); }
 
-.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+/* ⚠ `align-items: start` — without it a grid item stretches to the tallest row. The pLDDT
+   explainer is a COLLAPSED <details>: one line of summary, stretched to match the Confidence
+   panel beside it, rendering as a large empty bordered box. ⚠⚠ It reads as a broken widget —
+   it fooled Code during a live walk, which reported a 3D viewer defect that did not exist.
+   An empty frame is a claim that something failed to load. */
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;
+          align-items: start; }
 @media (max-width: 720px) { .panels { grid-template-columns: 1fr; } }
 
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem; }
@@ -552,3 +558,21 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .hpa-attrib-credit-label { text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.68rem; }
 .stained-link { text-decoration: none; }
 .stained-link:hover { text-decoration: underline; }
+
+/* ⚠ A never-folded row is DIMMER but not hidden and not struck through: it is a real protein with
+   a real span, and the only thing missing is a structure. Struck-through would read as "withdrawn". */
+.row-unfolded { opacity: 0.72; }
+.badge-unfolded {
+  border-color: var(--warn, #b7791f); color: var(--warn, #b7791f);
+  letter-spacing: 0.04em; font-size: 0.72rem;
+}
+
+/* ⚠ The never-folded card. Sized like the viewer it replaces so the page does not jump, and toned
+   as information rather than as an error — the protein is fine; we simply have no structure. */
+.unfolded-card {
+  border: 1px dashed var(--warn, #b7791f); border-radius: 8px;
+  padding: 1.4rem 1.5rem; background: rgba(183, 121, 31, 0.06);
+}
+.unfolded-card h3 { margin: 0 0 0.5rem; letter-spacing: 0.06em; color: var(--warn, #b7791f); }
+.unfolded-card p { margin: 0.4rem 0; line-height: 1.6; }
+.unfolded-why { font-size: 1.02rem; }

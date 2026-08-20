@@ -69,6 +69,10 @@ PROFILE_STATUSES = (
     "refused_out_of_distribution",
     "refused_span_below_floor",
     "refused_features_incomplete",
+    # ⚠⚠ A NEVER-FOLDED protein has no profile because there is no STRUCTURE to profile —
+    # which is a different absence from the three refusals above, all of which describe a fold
+    # that exists. `None` here would be the absent-value defect: it cannot say which.
+    'not_folded',
 )
 
 

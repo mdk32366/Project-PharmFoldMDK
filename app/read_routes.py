@@ -119,18 +119,55 @@ def list_census(engine: Any = Depends(get_engine)) -> list[dict]:
     from app.census_profile_read import census_profile_statuses
     statuses = census_profile_statuses(engine)
     for r in rows:
-        r["profile_status"] = statuses.get(r.get("id"))
+        # ⚠⚠ ONLY FOLDED ROWS TAKE A PROFILE STATUS FROM THE SUPPLIER. A never-folded row already
+        # carries `not_folded`, and `statuses.get(None)` would overwrite that with None — turning a
+        # stated category back into the absent value it was written to replace.
+        if r.get("folded") is not False:
+            r["profile_status"] = statuses.get(r.get("id"))
     return rows
 
 
 @read_router.get("/census/{analysis_id}")
-def get_census_detail(analysis_id: int, engine: Any = Depends(get_engine)) -> dict:
+def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> dict:
     """One census protein: status, span topology (F-037), and cancer-association COVERAGE.
 
     ⚠ A cohort id here is a 404, not a redirect — the two populations are measured under different
     span definitions (D-081) and must not be reachable through one another's route.
+
+    ⚠⚠ AN ACCESSION IS ACCEPTED HERE AND IT USED TO 422. The param was `int`, so `/census/P28908` —
+    the first thing a person tries, because the accession is what the table SHOWS — failed
+    validation. **422 says "your input was malformed." It was not: it was the right protein under
+    the wrong key**, which is a different message and a different fix.
+
+    ⚠ The population boundary is unchanged and is the reason this resolves rather than redirects: a
+    COHORT accession still does not load here. It returns 404 **naming where it lives**, because
+    `D-081` measures the two under different span definitions and silently serving one for the other
+    would hand back a row measured by a rule the caller did not ask for.
     """
-    record = reads.get_census_detail(engine, analysis_id)
+    if analysis_id.isdigit():
+        resolved = int(analysis_id)
+    else:
+        resolved, outcome = reads.resolve_census_accession(engine, analysis_id)
+        if outcome == "cohort":
+            raise HTTPException(
+                status_code=404,
+                detail=("%s is one of the 82 ranked targets, not a census protein. It is measured "
+                        "under a different span definition (D-081) and is served at /targets, not "
+                        "here." % analysis_id.strip().upper()))
+        if resolved is None:
+            # ⚠⚠ A NEVER-FOLDED MANIFEST PROTEIN IS A CARD, NOT A 404. HER2 is in the manifest and
+            # has no analysis row, so `resolve` finds nothing — but the protein exists and the
+            # reader clicked it from the list. A 404 here would recreate, one page along, exactly
+            # the "no such protein" answer the list was fixed to stop giving.
+            from core.census_unfolded import unfolded_rows
+            acc = analysis_id.strip().upper()
+            row = next((r for r in unfolded_rows() if r["accession"] == acc), None)
+            if row is not None:
+                return dict(row)
+            raise HTTPException(
+                status_code=404,
+                detail="no census protein carries the accession %s" % acc)
+    record = reads.get_census_detail(engine, resolved)
     if record is None:
         raise HTTPException(status_code=404, detail="unknown census analysis")
     # ⚠ D-079 amendment 1, ruled by amendment 2. Composed HERE, at the route, from a supplier that

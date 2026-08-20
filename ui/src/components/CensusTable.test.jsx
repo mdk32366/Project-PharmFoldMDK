@@ -44,10 +44,10 @@ describe('CensusTable', () => {
 
   it('sorts on click and reverses on a second click', () => {
     render(<CensusTable rows={ROWS} />)
-    fireEvent.click(screen.getByRole('button', { name: /Span \(aa\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Span \(aa = amino acids\)/ }))
     let cells = screen.getAllByRole('row')[1]
     expect(within(cells).getByRole('link')).toHaveTextContent('A0AVI2') // 75 aa
-    fireEvent.click(screen.getByRole('button', { name: /Span \(aa\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Span \(aa = amino acids\)/ }))
     cells = screen.getAllByRole('row')[1]
     expect(within(cells).getByRole('link')).toHaveTextContent('Q9UHC9') // 272 aa
   })
@@ -77,13 +77,16 @@ describe('CensusTable', () => {
   // The owner searched HER2 and got it. HER2 IS in the manifest; it was never folded, because at
   // 630 aa it sits above the local GPU ceiling. "Not folded" and "not found" are different facts
   // and the surface was reporting the wrong one.
-  it('distinguishes "not in the folded census" from "no such protein"', () => {
+  // ⚠⚠ SUPERSEDED BY A BETTER FIX, and the history is worth keeping. My first answer to the
+  // owner's HER2 search was a paragraph in the empty state explaining that unfolded proteins
+  // exist. The owner's ruling was better: put HER2 IN the list with a status of NOT FOLDED, so
+  // nobody has to read fine print to learn a protein they can name is there. The paragraph
+  // shrank to what it should always have been — a statement about genuine absence.
+  it('says a genuinely absent query is absent from the whole manifest, not just unfolded', () => {
     render(<CensusTable rows={ROWS} />)
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'zzzz' } })
-    expect(screen.getByText(/nothing in the FOLDED census matches/i)).toBeInTheDocument()
-    expect(screen.getByText(/not the same as/i)).toBeInTheDocument()
-    // ⚠ and it names the proteins the owner actually looked for
-    expect(document.body.textContent).toMatch(/HER2, HER3, EGFR and\s+HER4/)
+    expect(screen.getByText(/Every protein in the manifest is listed/i)).toBeInTheDocument()
+    expect(document.body.textContent).toMatch(/folded or not/)
   })
 
   // ⚠ the placeholder must not advertise a protein the surface cannot return

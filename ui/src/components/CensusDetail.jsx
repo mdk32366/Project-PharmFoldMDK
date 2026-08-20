@@ -67,7 +67,7 @@ function Segments({ detail }) {
       <h4>Extracellular topology</h4>
       {contiguous ? (
         <p>
-          <strong>Contiguous.</strong> One extracellular region of {total} aa, and it is what was
+          <strong>Contiguous.</strong> One extracellular region of {total} aa (amino acids), and it is what was
           folded. The structure models the whole extracellular portion.
         </p>
       ) : (
@@ -78,7 +78,7 @@ function Segments({ detail }) {
             rather than one.
           </p>
           <p>
-            Extracellular in total: <strong>{total} aa</strong>. Folded here:{' '}
+            Extracellular in total: <strong>{total} aa (amino acids)</strong>. Folded here:{' '}
             <strong>{span} aa</strong> — the <em>largest single segment</em>.{' '}
             <strong>
               {discarded} aa across the remaining {n - 1}{' '}
@@ -183,7 +183,7 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
       <ul className="status-list">
         <li>Folded — tranche {detail.tranche}</li>
         <li>
-          Span {detail.span_aa} aa (residues {detail.span_start}–{detail.span_end} of{' '}
+          Span {detail.span_aa} aa (amino acids; residues {detail.span_start}–{detail.span_end} of{' '}
           {detail.full_length})
         </li>
         <li>Span definition: <code>{detail.span_definition}</code></li>
