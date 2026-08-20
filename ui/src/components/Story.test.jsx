@@ -161,3 +161,31 @@ describe('Story — where the evidence led (owner ruling: do not exclude the cli
   })
 })
 
+// ⚠⚠ THE STORY'S PROSE CARRIES NO WARNING GLYPHS, and the first census/32% draft broke that.
+// Found by walking `/` after deploy: exactly ONE paragraph of eleven had a `⚠`, the one I had just
+// written. The glyph is the CARD convention — a caveat interrupting a table of numbers — and this
+// page is continuous narrative, where one glyph in eleven paragraphs reads as an error message.
+describe('Story — the narrative carries its caution in sentences, not glyphs', () => {
+  it('renders no warning glyph in any paragraph', async () => {
+    listAnalyses.mockResolvedValue(ANALYSES)
+    getCoverage.mockResolvedValue(COVERAGE)
+    getCensusSummary.mockResolvedValue(CENSUS)
+    const { container } = renderStory()
+    await waitFor(() => expect(container.textContent).toMatch(/32%/))
+    const offenders = [...container.querySelectorAll('.story p')]
+      .map((p, i) => ({ i, text: p.textContent.trim().slice(0, 60) }))
+      .filter((_, i) => /⚠/.test(container.querySelectorAll('.story p')[i].textContent))
+    expect(offenders).toEqual([])
+  })
+
+  // ⚠ and the caution itself must survive removing the glyph — the sentence carries it
+  it('still says the 32% is not a causal claim', async () => {
+    listAnalyses.mockResolvedValue(ANALYSES)
+    getCoverage.mockResolvedValue(COVERAGE)
+    getCensusSummary.mockResolvedValue(CENSUS)
+    const { container } = renderStory()
+    await waitFor(() => expect(container.textContent).toMatch(/32%/))
+    expect(container.textContent).toMatch(/not a claim that the region causes anything/i)
+  })
+})
+

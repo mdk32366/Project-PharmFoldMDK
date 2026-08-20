@@ -144,8 +144,13 @@ export default function Story() {
             for the whole, and repeating that error in the sentence about it would be worse. */}
         Narrower still: of the two confidence features, it is really one — the confidence in the
         membrane-proximal region alone accounts for about <strong>32%</strong> of what the ranking
-        weighs, five times the whole-domain figure. ⚠ That is how much the model <em>leans</em> on
-        it, not a claim that the region causes anything.
+        weighs, five times the whole-domain figure. That is how much the model <em>leans</em> on it,
+        not a claim that the region causes anything.
+        {/* ⚠⚠ NO WARNING GLYPH IN THIS PROSE. The first version carried one here and it was the ONLY
+            paragraph of eleven on this page that did — found by walking `/`, not by a test.
+            ⚠ `⚠` is the CARD convention, where a caveat interrupts a table of numbers. The Story is
+            continuous narrative and earns the same caution with the sentence itself; a glyph in one
+            paragraph of eleven reads as an error message rather than as emphasis. */}
       </p>
 
       {/* ⚠⚠ BEAT 5b — WHERE THE EVIDENCE LED (owner ruling, 2026-08-21: do not exclude the
