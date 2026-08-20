@@ -48,6 +48,19 @@ documents composition for **three** of the twenty, on `https://v22.proteinatlas.
 > carcinoma"*
 
 **So: 3 documented, 17 undocumented — not 20.**
+> ⟡ **RECONCILED 2026-08-21, and the correction runs BACK ON MY OWN CORRECTION.**
+> `P-001 amendment 1` uses `hpa_composition_undocumented` at **20 of 20**, while stating that
+> **three rows are *sourced as pooling***. That is not a contradiction and it is the better reading:
+> HPA says breast *"includes both ductal and lobular"* — it never says that is the COMPLETE contents,
+> nor in what proportion. ⚠⚠ **A partial subtype statement SOURCES a pooling claim without
+> DOCUMENTING a composition.**
+> ⚠ So my correction above — *"HPA documents three"* — **over-corrected.** The original crosswalk
+> line, *all twenty undocumented*, was closer to right than the correction that replaced it.
+> **The settled key: `hpa_composition_undocumented` = 20 of 20; separately, 3 rows carry a partial
+> subtype statement sufficient to source a pooling claim.** Two facts, one token each.
+> ⚠ Both are left standing, in order, because a correction is recorded and not patched away — and
+> this one is a correction of a correction, which is exactly the shape worth being able to read back.
+
 
 ⚠ **And row 8 improves because of it.** I marked `liver cancer` `mapped_at_stated_granularity`
 because SEER's category is *Liver **and Intrahepatic Bile Duct*** and I took HPA's to be liver only.

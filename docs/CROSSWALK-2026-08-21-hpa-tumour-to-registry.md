@@ -49,6 +49,10 @@ depends on composition is qualified by it. ⚠ **This is a category with a cause
 > I called it `mapped_at_stated_granularity` because SEER's category is *Liver and Intrahepatic Bile
 > Duct* and I assumed HPA's was liver alone. **HPA documents cholangiocellular carcinoma — bile duct
 > — inside its own category.** *The granularity gap was mine, not the data's.*
+> ⟡ **AND THAT CORRECTION WAS ITSELF OVER-CORRECTED** — see `P-001 amendment 1` §1 and the
+> reconciliation in `CC-2026-08-21-SEER-decision-6-and-HPA-skin-read.md` §1. **The settled key is
+> `hpa_composition_undocumented` = 20 of 20, with 3 rows carrying a PARTIAL subtype statement that
+> sources a pooling claim.** ⚠ Row 8's liver point stands: HPA names cholangiocellular carcinoma.
 > ⚠ The row is left graded as sent, with this correction beside it, per the rule that a correction
 > is recorded rather than patched away. See `CC-2026-08-21-SEER-decision-6-and-HPA-skin-read.md` §1.
 
