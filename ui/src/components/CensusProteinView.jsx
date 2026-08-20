@@ -61,11 +61,36 @@ export default function CensusProteinView({ id }) {
     getCensusDetail(id)
       .then((d) => { if (!cancelled) setDetail(d) })
       .catch((e) => { if (!cancelled) setError(e.message ?? String(e)) })
-    getPlddt(id)
+    return () => { cancelled = true }
+  }, [id])
+
+  // ⚠⚠ THE ROUTE PARAM IS NOT AN ANALYSIS ID, AND ASSUMING IT WAS BROKE EVERY FOLDED CENSUS CARD
+  // REACHED BY ACCESSION. `/census/{analysis_id}` accepts an accession — that is the whole point of
+  // the widening — so `id` here is `1901` OR `A0AVI2`. `/api/analyses/{id}` declares an `int`, so
+  // `/api/analyses/A0AVI2/structure` returned **422** and the viewer rendered its stand-aside:
+  //   "Structure viewer unavailable (structure -> HTTP 422)."
+  // ⚠ The structure was never missing. `/api/analyses/1901/structure` served 48,318 bytes the whole
+  // time. **The asset that could not be found was named wrongly by the page asking for it.**
+  //
+  // ⚠⚠ SECOND CONSUMER OF ONE MISTAKE. The same widening handed the raw param to
+  // `census_profile_block`, which 500'd all 2,690 folded cards on Postgres. That one was fixed and
+  // this one was not looked for — *a parameter whose type widens has as many defects as it has
+  // consumers, and they do not announce themselves together.*
+  //
+  // The resolved id lives on the payload. It is `null` for a never-folded row, which has no
+  // structure to fetch and must not fetch one.
+  const analysisId = typeof detail?.id === 'number' ? detail.id : null
+
+  useEffect(() => {
+    if (analysisId == null) { setPlddt(null); return undefined }
+    let cancelled = false
+    // ⚠ Only the detail is page-critical. A fold with no `plddt.json` must still render its
+    // identity, its topology and its reasons — the same degradation rule the target page uses.
+    getPlddt(analysisId)
       .then((p) => { if (!cancelled) setPlddt(p) })
       .catch(() => { if (!cancelled) setPlddt(null) })
     return () => { cancelled = true }
-  }, [id])
+  }, [analysisId])
 
   if (error) {
     return (
@@ -171,7 +196,9 @@ export default function CensusProteinView({ id }) {
           </p>
         </section>
       ) : (
-        <StructureViewer id={id} />
+        /* ⚠⚠ `analysisId`, NEVER `id`. See the note above the pLDDT effect: `id` is the route
+           param and may be an accession, which makes the structure URL a 422. */
+        <StructureViewer id={analysisId} />
       )}
 
       {detail.folded !== false && (
