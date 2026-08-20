@@ -11,7 +11,7 @@
 //
 // ⚠ Nothing here is a score, a confidence or a grade. There is no ordering over these categories.
 
-import HpaAttribution from './HpaAttribution.jsx'
+import { HpaDeepLink } from './HpaAttribution.jsx'
 
 const COPY = {
   corroborated_membrane: {
@@ -103,7 +103,13 @@ export default function SurfaceCheck({ check }) {
       {/* ⚠⚠ THIS SURFACE RENDERS HPA VALUES — subcellular locations and HPA's own Reliability (IF)
           from proteinatlas.tsv — and it shipped on 2026-08-20 WITHOUT attribution, after the audit
           that found the gap. F-052: a convention obeyed by every caller except the newest one. */}
-      <HpaAttribution attribution={check.attribution} view="protein" />
+      {/* ⚠ SUPPRESSED WHEN NO HPA VALUE RENDERS. The HPA content here is the subcellular
+          locations and HPA's own IF reliability; when the category is `if_not_attempted` there
+          are neither, and a licence-required citation then cites nothing. Measured: 51 of 79
+          sampled census cards were in exactly that state. */}
+      {(check.main_locations?.length > 0 || check.if_reliability) && (
+        <HpaDeepLink attribution={check.attribution} view="protein" />
+      )}
 
       {check.unreconciled_causes?.length > 0 && (
         <div className="surfchk-causes">

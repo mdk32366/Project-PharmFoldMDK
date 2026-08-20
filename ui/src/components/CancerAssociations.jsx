@@ -7,7 +7,7 @@ import { getAssociations } from '../api.js'
 // Deliberately NOT the pLDDT band palette (orders §2a): a different quantity from a different source
 // must not read as model confidence, so it imports nothing from plddt.js and uses its own classes.
 // Every count here derives from the payload; the paper's 290/16 are the only literals (dec 5).
-import HpaAttribution from './HpaAttribution.jsx'
+import { HpaDeepLink } from './HpaAttribution.jsx'
 
 export default function CancerAssociations({ symbol }) {
   const [data, setData] = useState(null)
@@ -51,8 +51,10 @@ export default function CancerAssociations({ symbol }) {
       </p>
       {/* ⚠⚠ D-100: Kathad's S3 is a VERBATIM EXTRACT of pathology.tsv, 1,640/1,640.
           Citing the paper is not citing HPA. D-053 predates the clinical layer, so this
-          surface rendered HPA data unattributed longer than any other. */}
-      <HpaAttribution attribution={data.attribution} view="pathology" />
+          surface rendered HPA data unattributed longer than any other.
+          ⚠ SUPPRESSED WHEN NO ROW RENDERS. "No association recorded" is not HPA content, so a
+          licence-required citation beside it is attached to nothing. */}
+      {rows.length > 0 && <HpaDeepLink attribution={data.attribution} view="pathology" />}
 
     </section>
   )

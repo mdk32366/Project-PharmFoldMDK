@@ -7,6 +7,7 @@ import Provenance from './Provenance.jsx'
 import CancerAssociations from './CancerAssociations.jsx'
 import ClinicalEdges from './ClinicalEdges.jsx'
 import TargetScorerPanel from './TargetScorerPanel.jsx'
+import { HpaCreditProvider } from './HpaAttribution.jsx'
 
 // The single-target experience (UI Plan v2 §3.2): structure coloured by pLDDT, confidence with its
 // band, provenance that makes the DL claim checkable, and — D-068 — the scorer result that ranked it
@@ -64,8 +65,16 @@ export default function TargetView({ id }) {
           3,364 genes — patient counts, a different measurement from a different
           source. The 82 appear in both, which is exactly why they keep separate
           headings and separate wording. */}
-      <CancerAssociations symbol={detail.gene} />
-      <ClinicalEdges block={detail.clinical_block} />
+      {/* ⚠⚠ THE COHORT CARD HAS THE SAME SHAPE AS THE CENSUS ONE, so it gets the same remedy.
+          These two sections mount up to THREE attribution blocks between them — associations
+          (pathology), clinical tumour (pathology) and clinical normal (normal_tissue) — and before
+          this change each rendered the publication, website reference and image/data credit again.
+          ⚠ The per-datum links differ and are kept; the three source-level elements are emitted once
+          by the provider. */}
+      <HpaCreditProvider>
+        <CancerAssociations symbol={detail.gene} />
+        <ClinicalEdges block={detail.clinical_block} />
+      </HpaCreditProvider>
     </article>
   )
 }

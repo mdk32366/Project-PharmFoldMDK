@@ -2,7 +2,7 @@ import { bandFor } from '../plddt.js'
 import StructuralProfile from './StructuralProfile.jsx'
 import ClinicalEdges from './ClinicalEdges.jsx'
 import SurfaceCheck from './SurfaceCheck.jsx'
-import HpaAttribution from './HpaAttribution.jsx'
+import { HpaDeepLink } from './HpaAttribution.jsx'
 
 // One census protein. Four questions, in the order a reader asks them: what is it, what did we
 // fold, how confident is the model, and what is it associated with.
@@ -108,13 +108,27 @@ function Associations({ assoc }) {
           ⚠ <strong>Not covered by the association source</strong> — so this is{' '}
           <strong>unknown</strong>, not <em>none</em>. {assoc.coverage_note}.
         </p>
+        {/* ⚠⚠ THE SENTENCE THAT WAS MISSING, AND ITS ABSENCE READ AS A CLAIM ABOUT THE PROTEIN.
+            The owner read this card as saying LAMP1 has no cancer associations. Measured on the
+            SAME card at the time: LAMP1 stains in breast 11/11, carcinoid 4/4, cervical 12/12,
+            colorectal 12/12, endometrial 11/11 and glioma 11/11 patients — HPA v22 pathology.tsv,
+            which covers 15,313 genes. This block's source covers 113 accessions, all of them in or
+            beside the 82.
+            ⚠ So two sections about cancer sat on one card: this one saying "unknown", and a fuller
+            one below carrying six tumour panels. Saying "unknown" without naming the panel that is
+            NOT unknown leaves a reader to conclude the card looked and found nothing. */}
+        <p className="caveat">
+          ⚠⚠ <strong>This is not the only tumour evidence on this card.</strong> The tumour and
+          normal-tissue panels below come from a different and much wider source, and they may well
+          carry data for this protein. This section is silent about the source named beneath it —
+          nothing more.
+        </p>
         <p className="source">Source: {assoc.source}</p>
-        {/* ⚠⚠ A FIFTH HPA-RENDERING SURFACE, found by the PC3 guard on its FIRST RUN — not by NC,
-            not by the Planner, and not by my own enumeration, all three of which stopped at the
-            component boundary. This block renders qh_score inline, separately from the
-            `Associations` component beside it, and qh is pathology.tsv through our formula
-            (D-100: S3 is a verbatim extract, 1,640/1,640). */}
-        <HpaAttribution attribution={assoc.attribution} view="pathology" />
+        {/* ⚠⚠ NO ATTRIBUTION HERE, AND THAT IS THE FIX. This branch renders NO HPA VALUE — it is the
+            statement that the source does not cover this protein. Citing HPA beside it attached a
+            licence-required credit to nothing, and it did so on 78 of 79 sampled census cards.
+            ⚠ The precondition is "never display our content without citation", not "cite us
+            wherever the word tumour appears". A citation with no datum is not compliance. */}
       </div>
     )
   }
@@ -141,6 +155,15 @@ function Associations({ assoc }) {
         ))}
       </ul>
       <p className="source">Source: {assoc.source}</p>
+      {/* ⚠⚠ THE CITATION WAS ON THE WRONG BRANCH, AND THIS IS THE ONE THAT NEEDED IT.
+          Before this change `HpaAttribution` appeared ONLY in the `status !== 'covered'` branch —
+          which renders no HPA value at all — and was ABSENT here, where `qh_score` renders.
+          `qh` is pathology.tsv through our formula (`D-100`: S3 is a verbatim extract, 1,640/1,640),
+          so this is HPA content, and HPA words citation as a precondition of display.
+          ⚠ The precondition was satisfied only where there was nothing to satisfy it about.
+          ⚠⚠ The PC3 guard could not see this: it asserts the FILE imports the attribution, and the
+          file did. **A file-level guard cannot see which branch renders the value.** */}
+      <HpaDeepLink attribution={assoc.attribution} view="pathology" />
     </div>
   )
 }

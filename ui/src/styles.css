@@ -555,7 +555,13 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .hpa-attrib-nolink { display: inline-block; margin-bottom: 0.2rem; font-style: italic; }
 .hpa-attrib-cite { margin: 0.1rem 0; }
 .hpa-attrib-credit { margin: 0.1rem 0 0; }
-.hpa-attrib-credit-label { text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.68rem; }
+/* ⚠⚠ NO `text-transform: uppercase`. It rendered the licence-required credit as
+   "IMAGE/DATA CREDIT:", restyling the one element the licence asks for by name. And the test
+   could not see it: `textContent` ignores CSS case transforms, so the assertion on
+   /Image\/data credit:/ passed against an uppercased page. */
+.hpa-attrib-credit-label { letter-spacing: 0.02em; font-size: 0.72rem; }
+.hpa-attrib-page { border-top: 1px solid var(--line, #2a3350); padding-top: 0.5rem; margin-top: 1rem; }
+.hpa-attrib-datum { margin: 0.35rem 0 0; }
 .stained-link { text-decoration: none; }
 .stained-link:hover { text-decoration: underline; }
 
