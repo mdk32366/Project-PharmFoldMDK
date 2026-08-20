@@ -20,6 +20,7 @@
 
 import { HpaDeepLink } from './HpaAttribution.jsx'
 import { ofCount, plural } from '../plural.js'
+import { poolingMarker } from '../tumourPooling.js'
 
 const LEVEL_WORD = {
   High: 'strong', Medium: 'moderate', Low: 'weak', 'Not detected': 'none',
@@ -83,7 +84,12 @@ export default function ClinicalEdges({ block, heading, scopeNote }) {
         </p>
       ) : (
         <ul className="clin-tumours">
-          {tumours.map((t) => (
+          {tumours.map((t) => {
+            // ⚠⚠ D-093 amendment 10 §4/§5 — the marker is a property of the (protein × tumour type)
+            // PAIR, so it is computed HERE, per row, and NOT as a card banner. Returns null for the
+            // 17 of 20 categories nothing is sourced for, and those rows render exactly as before.
+            const pooling = poolingMarker(block.gene, t.cancer)
+            return (
             <li key={t.cancer}>
               <span className="clin-cancer">{t.cancer}</span>
               <span className="clin-count">
@@ -92,8 +98,17 @@ export default function ClinicalEdges({ block, heading, scopeNote }) {
                 <strong>{t.patients_positive}</strong> of <strong>{t.patients_tested}</strong>{' '}
                 {plural(t.patients_tested, 'sample')} stained
               </span>
+              {/* ⚠⚠ SELF-SUFFICIENT. "A flag that requires a click to mean anything is not a
+                  disclosure" — so the sentence says WHAT is pooled, never merely that something is.
+                  ⚠ The source rides with the claim: a row cannot render the caveat without the
+                  citation that licenses it. */}
+              {pooling && (
+                <span className="clin-pooled" title={pooling.sources.join(' · ')}>
+                  {' '}⚠ {pooling.text}
+                </span>
+              )}
             </li>
-          ))}
+          )})}
         </ul>
       )}
 

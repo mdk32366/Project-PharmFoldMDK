@@ -582,3 +582,8 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .unfolded-card h3 { margin: 0 0 0.5rem; letter-spacing: 0.06em; color: var(--warn, #b7791f); }
 .unfolded-card p { margin: 0.4rem 0; line-height: 1.6; }
 .unfolded-why { font-size: 1.02rem; }
+
+/* ⚠⚠ D-093 amendment 10 §4 — the pooling marker sits ON THE ROW, never as a banner. Muted and
+   inline: it qualifies the count beside it rather than competing with it, and it renders on 3 of
+   20 categories, so it must not read as an alarm. */
+.clin-pooled { color: var(--muted); font-size: 0.82rem; font-style: italic; }
