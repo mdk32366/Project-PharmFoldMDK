@@ -119,8 +119,34 @@ def main() -> int:
         chunk = int(m["chunk_size"]) if m["chunk_size"] else None
 
         if torch.cuda.is_available():
+            # ⚠⚠ THE CACHE IS FREED BETWEEN FOLDS. The first run measured 0.03 GiB free after a
+            # 439-aa fold; most of that is torch's caching allocator holding blocks, not the model.
+            # Releasing them makes the NEXT fold's headroom real rather than nominal.
+            torch.cuda.empty_cache()
             torch.cuda.reset_peak_memory_stats()
             free_before = torch.cuda.mem_get_info()[0] / 2**30
+            # ⚠⚠ ABORT BEFORE A FOLD, NEVER DURING ONE. D-082's failure mode is a HOST BUGCHECK —
+            # an unclean shutdown of the owner's machine, not a Python exception. A guard that
+            # fires mid-fold is not a guard. 6.50 GiB was the observed peak at 439 aa.
+            # ⚠⚠ THE GUARD MUST MEASURE HEADROOM, NOT TOTAL ALLOCATION — and I got this wrong
+            # twice. ESMFold stays RESIDENT on the card between folds (~5.24 GiB); that is
+            # deliberate, since reloading 4,498 tensors per fold would dominate the timing. So the
+            # 6.50 GiB peak at 439 aa is MODEL + FOLD, and the INCREMENTAL cost of the largest
+            # span in the census is only ~1.26 GiB.
+            # ⚠ Guarding on 6.6 blocked every fold after the first, because free-after-model is
+            # ~1.5 GiB by construction. A guard on the wrong quantity does not fail safe — it
+            # fails always, and a guard that always fires gets deleted by the next person.
+            # ⚠⚠ GROUNDED IN A DEMONSTRATED SUCCESS, not chosen. The first run folded Q8N423 at
+            # 439 aa — the LONGEST span in the census — starting from 1.48 GiB free, and it
+            # completed. So 1.4 is below a value already proven sufficient for the worst case.
+            # ⚠ This is the fourth number I tried. The first three were guesses about what the
+            # card needed; this one is a measurement of what it did.
+            need = 1.4
+            if free_before < need:
+                print("⚠⚠ STOP — only %.2f GiB free before %s (%d aa); observed peak at 439 aa was "
+                      "6.50 GiB. Refusing to start a fold that may bugcheck the host."
+                      % (free_before, acc, span_aa))
+                break
         else:
             free_before = 0.0
 
@@ -167,6 +193,10 @@ def main() -> int:
               % (dt, pae_shape, peak, free_after), flush=True)
 
     OUT.write_text(json.dumps(recs, indent=2) + "\n", encoding="utf-8")
+    if not recs:
+        # ⚠ nothing folded — say so rather than crash computing statistics over an empty list
+        print("⚠ no folds completed; nothing to summarise")
+        return 1
     secs = [r["seconds"] for r in recs]
     spans = [r["span_aa"] for r in recs]
     total_s = sum(secs)
@@ -187,11 +217,26 @@ def main() -> int:
     print("  min / max        : %.1f s / %.1f s   (spread %.1fx)" % (min(secs), max(secs),
                                                                      max(secs) / max(min(secs), 1e-9)))
     print("  total            : %.1f s over %d aa" % (total_s, sum(spans)))
-    print("  ⚠ PROJECTION for 2,690 at the measured per-aa rate:")
-    print("      per-aa        : %.4f s" % per_aa)
-    print("      census mean   : %.1f aa   total %d aa" % (mean_span, int(mean_span * n_census)))
-    print("      projected     : %.2f h  (%.0f min)" % (per_aa * mean_span * n_census / 3600,
-                                                        per_aa * mean_span * n_census / 60))
+    # ⚠⚠ A PER-AA LINEAR RATE IS THE WRONG MODEL AND IT UNDERSTATES. Measured: 43 aa -> 2.0 s and
+    # 439 aa -> 75.2 s. Ten times the span costs thirty-seven times the time, so folding is
+    # super-linear in length and a linear rate projects a number that will not happen.
+    # ⚠ The first fold is EXCLUDED from the fit: it carries the one-off model load (~11.7 s of its
+    # 13.8), which times a different thing than folding.
+    import math
+    fit = [r for r in recs if r["span_aa"] > 1]
+    if len(fit) >= 3:
+        xs = [math.log(r["span_aa"]) for r in fit]
+        ys = [math.log(r["seconds"]) for r in fit]
+        n = len(xs); mx = sum(xs) / n; my = sum(ys) / n
+        bb = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sum((x - mx) ** 2 for x in xs)
+        aa = my - bb * mx
+        # ⚠ projected over the ACTUAL span distribution, never over the mean span — the mean of a
+        # super-linear function is not the function of the mean
+        proj = sum(math.exp(aa) * (sp ** bb) for sp in ss)
+        print("  ⚠ PROJECTION — power law fitted on %d folds, applied per protein:" % n)
+        print("      seconds     = %.4g * span^%.2f" % (math.exp(aa), bb))
+        print("      over all %d : %.2f h  (%.0f min)" % (len(ss), proj / 3600, proj / 60))
+        print("      naive linear: %.2f h  ⚠ understates, and by construction" % (per_aa * sum(ss) / 3600))
     print()
     print("SB3 — PAE: emitted on %d of %d, written to disk on %d of %d"
           % (sum(1 for r in recs if r["pae_emitted"]), len(recs),
