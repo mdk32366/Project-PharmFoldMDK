@@ -130,6 +130,193 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-059 — ⚠⚠ The fold's incremental VRAM is O(L²), and the band `D-077` calls UNMEASURED was measurable from ten folds already committed — no new fold was needed, and `F-053`'s release hypothesis does not survive the law
+
+- **Date:** 2026-08-22 · **Status:** ⚠ **OPEN.** It closes when the fold path constrains on the
+  measured memory law — or states, in itself, which quantity it constrains on and why not this one.
+- **How known (`D-016`):** **re-analysis of measurements already in the tree. No fold was run for
+  this entry.** `data/control/sb_timing/timings.json` — ten local int8 chunk-64 folds, 2026-08-20
+  02:40–02:43 UTC, driver 610.88, the same run `F-053` reports. Cross-checked against
+  `data/census/ceiling_climb.int8{,.release,.uncapped}.jsonl` — 2026-08-16, `Q8WXD0` truncation
+  series, **a different protein, a different script, a different day.**
+
+---
+
+**1 — THE LAW.**
+
+Subtracting the resident model at `span_aa = 1` from each peak gives the fold's own cost:
+
+| span | peak GiB | incremental GiB |
+|---|---|---|
+| 1 | 5.24 | 0.00 — the resident model |
+| 134 | 5.36 | 0.12 |
+| 218 | 5.55 | 0.31 |
+| 315 | 5.89 | 0.65 |
+| 439 | 6.50 | 1.26 |
+
+**Consecutive fitted exponents: 1.95 · 2.01 · 1.99.**
+
+> **`incremental_GiB = 7.215e-06 · L^1.983`**, against a **5.24 GiB** resident model and **1.43 GiB**
+> of CUDA context / workspace / fragmentation overhead, calibrated from `free_after = 0.03` at 439 aa.
+
+⚠ **The exponent is 2 because the resident tensor is the pair representation.** Chunking at 64 stops
+the trunk materialising its O(L³) triangular attention; what stays is O(L²). **The law is
+mechanistic, not merely fitted** — which is why it is quoted further out than a bare curve fit earns,
+and it is still an extrapolation out there.
+
+**2 — ⚠⚠ IT CROSS-VALIDATES ON AN INDEPENDENT PROTEIN, WHICH IS WHY IT IS AN ENTRY AND NOT A FIT.**
+
+| check | law predicts | independently measured | source |
+|---|---|---|---|
+| peak at 456 aa | 6.59 GiB | **6.60 GiB** | `ceiling_climb.int8.uncapped.jsonl` |
+| max span, local 8 GiB card | 431 aa | **432 aa** | `ceiling_climb.int8.release.jsonl` |
+
+**Two paths to one quantity, compared ON THE NUMBERS: agreement to 0.01 GiB and to one residue.**
+
+**3 — ⚠⚠ `F-053` §5's HYPOTHESIS DOES NOT SURVIVE, AND THE CORRECTION IS RECORDED, NOT PATCHED AWAY.**
+
+`F-053` §5 states, explicitly as a hypothesis and not as a claim: *"some part of the `441–629` band
+may be foldable LOCALLY if the model is released and reloaded around large folds,"* on the ground
+that releasing frees ~5.24 GiB against a ~1.26 GiB incremental.
+
+⚠⚠ **The arithmetic compares two quantities that are never in memory at different times.** **A fold
+requires the weights.** Releasing the model changes what is resident **between** folds, not the peak
+**during** one, and the peak is what OOMs. **Peak(L) = 5.24 + incremental(L)** whether or not
+anything was released beforehand.
+
+**Applying the law to the band the hypothesis is about:**
+
+| L | predicted peak | against ~6.53 GiB usable |
+|---|---|---|
+| 456 aa | 6.59 GiB | measured OK **uncapped only**, at `free = 0` |
+| 500 aa | 6.86 GiB | **does not fit** |
+| 629 aa | 7.80 GiB | **does not fit, by a wide margin** |
+
+**So the `441–629` band is not locally foldable at this recipe, released or not.** ⚠ **`F-053`'s
+hypothesis was correctly labelled as one, and it is the reasoning that fails, not the discipline.**
+
+⚠⚠ **AND `F-053 amendment 1` CALLED THIS, FROM DATA THAT ALREADY EXISTED.** Written 2026-08-20, it refused §5 on exactly the right ground — *"the incremental was measured at 439 aa and its scaling is UNMEASURED… trunk attention is at least O(L²); there is no reason to expect 629 aa to cost 1.26 GiB"* — and separated the time law from the memory one. **The fit above is L^1.983.** ⚠ **The prediction was correct and the measurement was already in the tree when it was made.** *What was missing was not a fold; it was the subtraction.*
+
+⚠ **A precision this entry must not blur.** `ceiling_climb.int8.release.jsonl` applies
+`torch.cuda.empty_cache()` — **it empties the CACHE; it does not unload the MODEL.** Its
+`free_after_release_mib = 1,517` is the proof: **~6.6 GiB stays resident.** So it does **not**
+directly test `F-053`'s unload-and-reload proposal, and reading it as though it did would be
+`F-047`'s shape exactly. **What it does show is corroborating and pointed:** the released arm
+reached `highest_ok = 432` while the **uncapped** arm reached **456**. ⚠⚠ **Releasing did not raise
+the ceiling. Lifting the 0.85 allocator cap did.**
+
+**4 — ⚠ WHAT WAS ORDERED THAT DID NOT NEED TO BE RUN.**
+
+`HANDOFF-Code-rental-phase-1-COMPLETE.md` §4 ordered **one fold at ~500 aa** to obtain *"the FIRST
+DATUM on the memory-versus-length curve,"* adding *"one point does not make a curve and your report
+must say so."* ⚠⚠ **Ten points were already committed, from the run the same document cites twice
+for its 5.24 and 1.26 figures.** **The curve existed; only the subtraction was missing.**
+
+⚠⚠ **And the ordered fold is predicted to OOM at 6.86 GiB against ~6.53** — on the owner's laptop,
+where `D-082`'s failure mode is a host bugcheck and `preflight` is unwired and guards the length
+axis. **A measurement already in hand would have removed the reason to attempt it.**
+
+**5 — ⚠ WHAT THIS DOES NOT ESTABLISH.**
+
+- **Fitted over 134–439 aa; cross-validated at one point, 456 aa.** Every figure beyond that is
+  extrapolation. The 48 GiB card's ~2,528 aa is **5.8× past the fitted range** — **planning, never
+  permission.** ⚠ **Each card class still needs its own `ceiling_climb` before anything is queued.**
+- **int8, `chunk_size = 64`, one card, one driver.** ⚠ **fp16 is unmeasured and roughly doubles the
+  resident model**, which moves the intercept, not necessarily the exponent.
+- ⚠ **It does not license weakening `preflight()`.** `refused_no_measurement` on an unmeasured length
+  remains correct: **a law is not a measurement of the case in front of it.**
+- ⚠ **It says nothing about whether any of these targets is worth folding.** Cost and tractability
+  only — `census_cost.py`'s standing caveat, `D-077` decision 1.
+
+**⚠ Relied on by:** `docs/PRICING-2026-08-22-all-remaining-tranches.md` §2. **Amends nothing** —
+`F-053` §5 is refuted in the open above and left standing where it is written.
+
+---
+
+### F-060 — ⚠⚠ A cost plan split on the constraint that had stopped binding: tranche 5's boundary was never VRAM, and the 141 rows money cannot help are the surface class the platform exists for
+
+- **Date:** 2026-08-22 · **Status:** ⚠ **OPEN.** It closes when the rental plan is split on the
+  trained context rather than on card capacity, or when the residual is named and accepted.
+- **How known (`D-016`):** `census_manifest.v7.csv` (3,467 rows, tranche 5 = 776, spans re-derived
+  here), `facebook/esmfold_v1`'s `max_position_embeddings = 1026`, and
+  `PROPOSAL-claim-tier-filter-and-tranche-5-cost.md` §2 and §3 read **as two dated layers of one
+  document**, which is the point of the entry.
+
+---
+
+**1 — THE PLAN SPLIT ON MEMORY.**
+
+§2 of the proposal (2026-08-16) bands tranche 5 at **441–850 / 851–2,000 / 2,001–4,000 / 4,001+**,
+with verdicts *"plausible on 48 GB," "needs 80 GB class," "beyond single-card estimate."* ⚠ **Every
+boundary is a card-capacity boundary**, resting on an explicitly-flagged estimate — *"~850 aa"* for a
+48 GB card — which the document itself marks *"extrapolations and the project's own instrument
+refuses to make them."*
+
+**2 — THE ESTIMATE WAS 3× PESSIMISTIC, AND THE BOUNDARY MOVED OFF THE TABLE ENTIRELY.**
+
+`F-059`'s measured law puts a 48 GB card at **~2,528 aa**, not ~850. ⚠⚠ **Only 25 of 776 rows exceed
+it.** **Memory stops being the binding constraint for 97% of the tranche the moment the law is
+fitted** — and it was fittable from data committed on 2026-08-20.
+
+**3 — ⚠⚠ WHAT ACTUALLY BINDS, AND THE DOCUMENT ALREADY KNEW.**
+
+§3 of the same proposal — **added 2026-08-16, the same day, after the owner challenged a word** —
+records the real limit: **`max_position_embeddings = 1026`.** Rotary embeddings extrapolate, so
+**nothing refuses a long sequence; it returns a structure and there is no evidence it means
+anything.** §3 states it plainly: *"This is not a hardware question and renting a bigger card does
+not touch it."*
+
+| tranche-5 rows | count |
+|---|---|
+| ≤ 1,026 aa — inside the trained context | **635** |
+| **> 1,026 aa — outside it** | **141** |
+| of those 141, `census_class = surface` | ⚠⚠ **136** |
+
+**4 — ⚠⚠ THE FINDING: §3 CORRECTED THE DOCUMENT'S LANGUAGE AND LEFT ITS BUDGET ALONE.**
+
+§3 retracts *"infeasible"* and *"impossible"* — **a real correction, recorded rather than edited
+away, and right.** ⚠⚠ **But §2's cost table above it was never re-split.** The document therefore
+carries, in one file, **a section that identifies the binding constraint and a section that prices
+the work against a different one** — and the priced section reads as current because nothing in it
+is *wrong*, only **scoped to a constraint that had been superseded four screens below.**
+
+⚠⚠ **The class: when a constraint is relieved, a plan written against it does not announce that it
+has stopped applying.** It keeps returning clean numbers about the wrong axis. **`F-053` named this
+for a guard — length versus memory. This is the same defect one level up, in a budget** — and here
+the superseding fact was not merely available, it was **in the same document, added the same day.**
+⚠ *A correction that fixes the prose and not the arithmetic leaves the arithmetic looking ratified.*
+
+**5 — ⚠ THE CONSEQUENCE, AND IT CUTS BOTH WAYS.**
+
+- **The purchase is smaller and better-defined than the plan implied:** 635 rows, **17–29 GPU-h,
+  $9–23** — memory no longer binding, all inside the trained context.
+- **The expensive tail should not be bought at all.** The 141 cost ~$65–104 and buy structures with
+  **no evidence any of them means anything.** ⚠⚠ **That is an expensive purchase, not a cheap one,
+  because the output is unevaluable.**
+- ⚠⚠ **And for the ten that matter most the remedy is FREE.** FAT1–4, LRP1 / LRP1B / LRP2, USH2A,
+  ADGRV1, PKHD1L1 are stacks of independently-folding domains, **most of them inside 440 aa — inside
+  the LOCAL ceiling.** **Domain assembly is not a workaround for these; §3 already argues it is the
+  correct model.** ⚠ It changes `boundary_method`, so the artifacts are **not comparable to
+  single-pass folds** without saying so (`D-076` Tier 2).
+- **The three mucins stay excluded on the biology** — `D-085`, `D-076` Tier 3. ⚠ *Neither compute nor
+  assembly helps.*
+
+**6 — ⚠ WHAT THIS DOES NOT ESTABLISH.**
+
+- ⚠⚠ **It does not establish that a fold past 1,026 aa is worthless — only that nothing here makes
+  it EVALUABLE.** That is an absence of evidence, named as one, and it is the reason not to spend.
+  **`D-085`'s ruling already forbids reading *excluded* as *unfoldable*, and this entry does not.**
+- **Row counts are from the manifest, not from a live database read.** ⚠ The proxy on 16380 was
+  closed. **Fold state does not enter the split; `tier` and `span_aa` do.**
+- ⚠ **It is not a suitability axis.** Nothing here says any of the 635 is a good ADC target.
+- ⚠ **`D-089` still holds — no census row is scored** — and nothing above changes that.
+
+**⚠ Relied on by:** `docs/PRICING-2026-08-22-all-remaining-tranches.md` §3 and §5. **Cites `F-059`
+for the law and `D-085` / `D-076` for the exclusions; amends neither, and amends no clause of the
+proposal, which is left standing in both its layers.**
+
+---
+
 ### F-056 — ⚠⚠ The test substrate forgives exactly the mistake production rejects: 2,690 census cards were 500 in production while the suite was green
 
 - **Date:** 2026-08-21 · **Status:** ⚠ **OPEN.** It closes when no test's correctness depends on
@@ -815,6 +1002,38 @@ rental ruling should be made in front of rather than behind.**
 
 **Relied on by:** ⚠ the rental ruling · `F-049` · and any future citation of `CEILING_KNOWN_GOOD`,
 **which should carry *"a length, under a resident-model policy"* wherever it appears.**
+
+#### F-053 amendment 1 — ⚠ §5's hypothesis has a hole: `span^1.26` is a TIME law and says nothing about MEMORY
+
+- **Date:** 2026-08-20 · **Status:** `F-053` stays **OPEN.**
+
+**§5 proposed that releasing the resident model frees ~5.24 GiB against a ~1.26 GiB incremental, so
+part of the `441–629` band might fold locally.**
+
+⚠⚠ **THE INCREMENTAL WAS MEASURED AT 439 aa AND ITS SCALING IS UNMEASURED.** **The Planner reasoned
+*5.24 freed versus 1.26 incremental, therefore headroom* — and silently assumed the incremental is
+roughly flat in span.** ⚠ **Trunk attention is at least O(L²); there is no reason to expect 629 aa to
+cost 1.26 GiB, and no measurement either way.** ***`span^1.26` describes TIME. Nothing measured here
+describes memory growth.*** *(Code's catch.)*
+
+⚠ **And reload is not free in a second way:** **the 1-aa fold took 13.9 s against 2.0 s for the
+21-aa fold, so the ~11.7 s load is PER-INVOCATION, not amortised** — **~13% overhead across a handful
+of 75–101 s folds, and the 8.7 h across 2,690.**
+
+**⚠⚠ THE TEST THAT SETTLES IT IS BETTER THAN THE ARGUMENT AND COSTS TWO MINUTES: one fold at ~500 aa
+with the model released.** **It answers the question directly and it is the first datum on the
+memory-versus-length curve §4 says nobody has.**
+
+⚠ **Until it runs, §5 is a question and must not be cited as a reason to spend or not spend.**
+
+**⚠ A separate correction, same run.** **The `F-042` path (c) projection moved 6.95 h → 7.67 h on the
+fixed worker, and that is RUN VARIANCE, NOT THE FIX** — *the squeeze fix changes shape handling for
+one protein and fold time for none.* **Eight of ten folds agree within 5%; the entire +10.4% comes
+from the two longest, 439 aa going 75.2 s → 101.1 s.** ⚠⚠ **Thermal state and card contention. The
+honest figure is ~7–8 h, and if a ruling is sensitive to that spread it needs REPEAT RUNS, not a
+better fit.** **A tighter regression on unstable measurements is precision theatre.**
+
+> **⚠ LANDED 2026-08-22** from `docs/F-052-amendment-2-and-F-053-amendment-1.md`, AUTHORED-SHA256 `e3bc5a03…c7320` **verified on landing over the declared 4,122-byte range**; line endings converted LF→CRLF to match this file, and the pinned source left untouched. ⚠⚠ **Its central claim has since been MEASURED, and it was right:** it said the incremental's scaling was unmeasured and *"trunk attention is at least O(L²)"*. **`F-059` fits L^1.983 from ten folds already committed on 2026-08-20** — the exponent Code predicted, from data that existed when this was written. ⚠ **The two-minute test it recommends is therefore NOT owed**: the curve was already in the tree, and `F-059` §3 shows the ~500 aa fold it proposes is predicted to OOM. ⚠ **The other sub-entry in that same file — the `squeeze()` defect beneath `F-052` — is STILL UNLANDED, and is deliberately NOT cited at amendment level here: naming it would be a forward reference to nothing.** ⚠⚠ *This note first did exactly that, and the citation invariant refused it on the first run — recorded, not patched away, because it is `F-044`’s shape inside a note about an unlanded amendment.*
 
 ---
 

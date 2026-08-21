@@ -28,6 +28,11 @@ docs/ORDERS-Code-ingest-through-the-gate.md -text
 docs/ORDERS-Code-backup-readonly-phase1-F049.md -text
 docs/F-047-amendment-1-paste-ready.md -text
 docs/ORDERS-Code-rekey-rental-and-FD1.md -text
+docs/PRICING-2026-08-22-all-remaining-tranches.md -text
+docs/PREWORK-2026-08-23-the-fold.md -text
+docs/BOOT-Planner-2026-08-22.md -text
+docs/ORDERS-Code-2026-08-23-the-rental-run.md -text
+docs/CLOSEOUT-2026-08-22.md -text
 
 # ── 2026-08-20 — the same defect, on a DATA artifact, caught by the ingest's own guard ──
 #
