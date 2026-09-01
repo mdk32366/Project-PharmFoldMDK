@@ -130,6 +130,138 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-104 — ⚠⚠ `tile_max_aa = 1,026`, routed at 440: the owner's RA1 ruling, and every tile carries it by name
+
+- **Date:** 2026-09-01 · **Status:** accepted · **Ruled by:** the owner. Recorded before the per-tile
+  manifest it licenses (RA2). ⚠ The integer was confirmed against the live log before writing:
+  `docs/ORDERS-Code-2026-08-23-the-rental-run.md` §2 names `D-104` as next free; `### D-104` was
+  absent. ⚠ `F-050` remains RESERVED and is not this entry.
+- **Context:** `D-095 amendment 1` item 7 left `tile_max_aa` as a **spend decision** and unruled.
+  The Planner's proposal (`PREWORK-2026-08-23-the-fold.md` §2.1) is the number that is now ruled.
+  ⚠ **The owner holds the card, the key, and merge.** This entry does not rent, fold, or spend.
+
+**THE RULING.**
+
+| parameter | value | what it is |
+|---|---|---|
+| `tile_max_aa` | **1,026** | the trained context (`F-060`). No card relieves it. |
+| `route_at` | **440** | the local/rental split. Measured local ceiling under the census recipe. |
+| `trained_context` | **1,026** | same integer as `tile_max_aa`, named separately so a later split is visible |
+| route | **L ≤ 440 → `local`** · **441–1,026 → `rental`** · **L > 1,026 → `unroutable`** | a length past 1,026 is **emitted and unroutable**, not folded, not dropped, not cut |
+| `tile_cut_kind` this pass | **`whole_run`** | a TILE is one merged RUN, not a cut of an oversized run |
+| `merge_rule` | **`abutting_or_overlapping`** | `start <= prev_end + 1` — the shipped rule (`D-095 amendment 1` item 4) |
+| `straddle_handling` | **`drop`** | the same construction as `tranche6_runs.py`. ⚠ Two-path against that file fails if this changes. |
+| `gap_tolerance` | **0** | one uncovered residue splits (`D-095 amendment 1` item 5) |
+
+⚠ **Interior cuts stay RD2.** Cutting FAT4 / FAT1 this pass would fail two-path: those proteins'
+`n_runs` and `largest_run` describe the uncut runs. A cut is a different object and a later pass.
+
+⚠ **Owner-held, named so a later session does not take them:** the rental card, the API key, and
+merge authority. This pass writes no production row, no schema, no credential, no fold.
+
+**WHAT A TILE IS, AND WHAT IT IS NOT.** `scripts/tranche6_runs.py` already computes the runs and
+writes only per-protein aggregates. ⚠⚠ **A run is a construction, not an observation**
+(`D-095 amendment 1` item 6) — every parameter travels on the artifact. RA2 emits one row per run
+under this ruling. It does not invent a second tiling.
+
+**TWO KEYS THE ORDERS MUST NOT BE ALLOWED TO COLLAPSE.** `docs/ORDERS-Code-2026-08-23-the-rental-run.md`
+§2 cites *1,532 tiles total; 1,242 of them ≤ 440 aa* from `tranche6_runs.csv`. ⚠ **That file has no
+per-tile length.** The quantity it *can* support, re-derived here from the committed file:
+
+| key | n | how known |
+|---|---|---|
+| proteins with `largest_run ≤ 440` and `n_runs > 0` | **93** | `data/census/tranche6_runs.csv` |
+| `sum(n_runs)` over those 93 | **1,242** | same file, same rows |
+| proteins with `largest_run` in 441–1,026 | **32** · **243** tiles | same |
+| proteins with `largest_run > 1,026` | **6** · **47** tiles | FAT4 3,037 · FAT3 2,291 · FAT1 2,289 · MUC16 1,977 · FAT2 1,674 · CDH23 1,175 |
+| `no_domains` | **10** · **0** tiles | largest_run 0 is a category, not a tile of length 0 |
+| `sum(n_runs)` over all 141 | **1,532** | two-path target for RA2 |
+
+⚠ **1,242 is therefore "every tile of a protein whose largest run is ≤ 440", not "every tile whose
+own length is ≤ 440".** The 32 + 6 proteins still emit their smaller sibling runs. The per-tile
+count, measured on `data/census/tranche6_tiles.csv` after the first RA2 emit (two-path exact against
+`tranche6_runs.csv`):
+
+| key | n | how known |
+|---|---|---|
+| tiles with `length ≤ 440` (`route=local`) | **1,482** | `tranche6_tiles.csv`, `sum(1 for row if int(length) ≤ 440)` |
+| tiles with `length` 441–1,026 (`route=rental`) | **44** | same file |
+| tiles with `length > 1,026` (`route=unroutable`) | **6** | FAT4 3,037 · FAT3 2,291 · FAT1 2,289 · MUC16 1,977 · FAT2 1,674 · CDH23 1,175 — one uncut run each |
+| tile rows | **1,532** | 1,482 + 44 + 6 |
+
+⚠ **1,482 ≠ 1,242. Reported, not rounded, not fixed.** The extra 240 are sibling runs on the 32 + 6
+proteins whose largest run is past 440. Cutting those proteins this pass would fail two-path.
+`PREWORK-2026-08-23-the-fold.md` already said the 1,242 figure was estimated from aggregates and
+would change when the per-tile file landed.
+
+- **Decision:** every tile row records `tile_max_aa=1026`, `route_at=440`, `ruling=D-104`,
+  `trained_context=1026`, and the construction parameters above. Route is a function of `length`
+  under this table. ⚠ No unroutable row is routed.
+- **Deep-learning justification:** ESMFold's `max_position_embeddings = 1,026` is a property of the
+  **network**, not of the card (`F-060`). Tiles past that length have no evidence a structure means
+  anything; routing them to a bigger card would spend money on a modelling vacuum. Tiles that fit
+  the trained context still have to fit a card — that is a memory question (`F-059` / `F-061`), not
+  a second modelling limit.
+- **Consequences:** RA2 may emit the per-tile manifest. RB / RC / RD, the six `run_interior` cuts,
+  the ten `no_domains` rows, folding the 141 as singles, and any spend remain **not this pass**.
+- **Relied on by:** RA2 / RA3 · `F-061` · `scripts/tranche6_tiles.py` · `data/census/tranche6_tiles.csv`
+- **Assumptions relied on:** none new. ⚠ **One refused:** that a Planner estimate of per-tile length
+  can stand in for the per-tile file.
+
+---
+
+### F-061 — ⚠⚠ Recording `F-059` on the tile is not measuring the case in front of it, and `preflight` still refuses an absent measurement
+
+- **Date:** 2026-09-01 · **Status:** ⚠ **OPEN.** It closes when the fold path constrains on a
+  **measured** memory requirement for the case in front of it — or continues to state, in itself,
+  that it does not and why. ⚠ `F-050` remains RESERVED for the guard-direction sweep and is not
+  this entry.
+- **How known (`D-016`):** `F-059` §1 and §5 (the law, and the clause that a law is not a
+  measurement of the case); `core/vram_guard.py:preflight` as written (`requirement_mib is None` →
+  `refused_no_measurement`); `F-049` / `F-053` §4 (`preflight` is written, tested, and consulted by
+  nothing, and it has guarded the length axis); this pass's RA2 artifact, which is cache-only and
+  performs no live CUDA read.
+
+**THE DISTINCTION, AND IT IS THE WHOLE FINDING.**
+
+`F-059` fits `peak_GiB = 5.24 + 7.215e-06 · L^1.983`. That is a **law**. RA3 records it on every
+tile as `f059_peak_gib`. ⚠⚠ **A law is not a measurement of the case in front of it** — `F-059` §5,
+quoted into `docs/ORDERS-Code-2026-08-23-the-rental-run.md` RA3, and not weakened here.
+
+`vram_guard.preflight()` still takes a **measured** `requirement_mib`. `None` is
+`refused_no_measurement`. ⚠ **Passing `f059_peak_gib` (converted or not) as `requirement_mib` would
+be plugging the law in as the measurement**, and the test that pins this must go red if that
+happens. The helper `f059_peak_gib(L)` is therefore a **recorder**, not a second door into
+`preflight`. The `preflight` signature is unchanged.
+
+**WHAT THIS PASS DID NOT DO, STATED ON THE ARTIFACT.**
+
+| fact | where it lives |
+|---|---|
+| the fold loop still does not consult the guard | `preflight_why` on every tile row; RB, not this pass |
+| RA2 emitted the CSV with no live CUDA | same field; cache-only |
+| `requirement_mib` was `None` | `preflight_outcome = refused_no_measurement` |
+| `F-059` was recorded, not consulted | `f059_peak_gib` column, separate from `preflight` |
+
+⚠ **`F-049` established the guard is consulted by nothing.** This pass does not close that. It
+names the residual on the tile so a later fold cannot read the recorded law as a preflight that
+ran.
+
+**WHAT THIS DOES NOT ESTABLISH.**
+
+- ⚠ **Not that any tile fits the local card.** `F-059` predicts; `ceiling_climb` measured 432 aa on
+  one protein, one day, one driver. A different sequence at the same length is not that measurement
+  (`vram_guard.DEFAULT_MARGIN_MIB` exists for this reason).
+- ⚠ **Not a licence to fold.** RB is a later pass. Abort-before-fold remains unbuilt here.
+- ⚠ **Not `F-050`.** The guard-direction sweep stays reserved and unwritten.
+- ⚠ **Not a close of `F-053`.** The fold path still does not constrain on the memory axis. This
+  entry is the record that we stated we did not, and why.
+
+- **Relied on by:** RA3 · `D-104` · `core/vram_guard.py:f059_peak_gib` · `data/census/tranche6_tiles.csv`
+- **Amends nothing.** `F-059` §5 stands. `F-053` stays OPEN.
+
+---
+
 ### F-059 — ⚠⚠ The fold's incremental VRAM is O(L²), and the band `D-077` calls UNMEASURED was measurable from ten folds already committed — no new fold was needed, and `F-053`'s release hypothesis does not survive the law
 
 - **Date:** 2026-08-22 · **Status:** ⚠ **OPEN.** It closes when the fold path constrains on the
