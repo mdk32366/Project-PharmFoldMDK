@@ -165,7 +165,7 @@ F-059 agreement on every OK step was tight (pct_depart ≤ ~0.0014). The law tra
 - Not a rewrite of D-104 / `route_at`.
 - Not permission to rent, resume climb, or fold on this host tonight.
 
-- **Relied on by:** host clear; any future Blackwell RB re-gate; F-062 (card-bound envelopes).
+- **Relied on by:** host clear; Blackwell RB re-gate (`scripts/rb_local_tile_folds.py`: L≤384 filter on the D-104 local population, `MEASURED_SUCCESS_PEAK_MIB=6357`, per-tile climb-exact peak else hard envelope, artifact `data/control/rb_local/rb_local_summary.regate384.csv`); F-062 (card-bound envelopes).
 - **Assumptions refused:** that cap + child + Layer-1 attestation is sufficient to make over-allocation fail as a job rather than as a bugcheck / hard fault on this WDDM laptop.
 - **Amended by:** —
 
