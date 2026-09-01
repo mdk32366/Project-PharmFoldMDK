@@ -130,6 +130,25 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-105 — RB re-gate folds one tile per OS process that exits before the next preflight
+
+- **Date:** 2026-09-01
+- **Status:** accepted
+- **Context:** **F-064** (main `6e3934c7`) is the finding: after a successful Blackwell RB fold, in-process release does not restore free for the next preflight (free 7043→1649 MiB, reserved ~6900; after process exit the GPU was free again). The F-063 envelope re-gate on PR #199 (`fb3826cb`) folded in the **parent** (`WORKER_FOLD_IN_CHILD=1` is only a refuse-to-start switch, not a per-tile spawn). Artifact: `data/control/rb_local/rb_local_summary.regate384.csv` (PR #201). ⚠ **Do not take `F-050`.** This entry is the topology F-064 prescribed; it does not close F-064 — whether process-per-tile restores free is a later measurement (Kaylee `--limit 10` after Trinity review).
+- **Decision:** On the RB re-gate path only:
+  1. **Each tile fold runs in a fresh OS process that exits before the next preflight.** No persistent ESMFold, no `FoldSupervisor` / `ClimbChild` spanning tiles. Cap, fold, peak, and artifact write happen in that child (same reason as `ceiling_climb_child.py`: those numbers are only true in the process that folds).
+  2. **Parent** after each child exit: `gc` + `empty_cache`, then preflight the next tile. If free cannot meet `requirement_mib` → **STOP** (do not skip tiles).
+  3. Keep L≤384 after the 1482-local assert, envelope **6357**, climb exact-L preferred else `hard_envelope_6357`, never f059 as `requirement_mib`, `--limit 10` default, no `--continue-after-rb4` on this gate, D-104 / `route_at` / `tranche6` routing untouched.
+  4. **New summary:** `data/control/rb_local/rb_local_summary.regate384.procpertile.csv`. Do not write `rb_local_summary.regate384.csv` (F-064 / PR #201 early-stop evidence) or `rb_local_summary.csv` (RB4) from this path. Card identity fields stay on the row.
+- **Deep-learning justification:** ESMFold is the load-bearing neural core. The re-gate exists to record **real structures + measured peaks** under a card-bound envelope. A preflight that sees the previous tile's reserved pool is not a measurement of the next molecule — it is residual CUDA state wearing a FIT/REFUSED costume. Reloading 8.4 GB per tile is the cost D-082's **persistent** child was designed to avoid on the worker crank; this path is a **ten-tile gate**, not a tranche, and the alternative is a gate that cannot see free VRAM. Process-per-tile is how the DL output stays attributable to the tile in front of it.
+- **Consequences:** Worker crank (`FoldSupervisor`) and ceiling climb (`ClimbChild`) stay persistent — this is the RB script only. Each of the ten tiles reloads weights; wall clock grows; that is accepted. Kaylee re-runs `--limit 10` only after Trinity review; this PR has **no GPU folds**. Owner holds merge.
+
+- **Relied on by:** RB re-gate process-per-tile implementation (`worker/rb_tile_child.py`, `scripts/rb_local_tile_folds.py`); CPU contract tests in `tests/test_rb_local_tile_folds.py`.
+- **Assumptions refused:** that in-process `empty_cache` + `_MODEL_CACHE.clear` restores the cold-start free the F-063 envelope assumes; that `WORKER_FOLD_IN_CHILD=1` on this script already meant a child per tile.
+- **Amended by:** —
+
+---
+
 ### F-064 — ⚠⚠ After a successful Blackwell RB fold, in-process release does not restore free for the next preflight: free collapsed 7043→1649 MiB while reserved stayed ~6900; after process exit the GPU was free again
 
 - **Date:** 2026-08-31 · **Status:** ⚠ **OPEN.** It closes when successive local tiles on this card either (a) each start from a cold process (or equivalent teardown that restores free before the next preflight), or (b) the residual is named and accepted. ⚠ Process-per-tile is the prescribed next gate; do not lower operational max below 380 on this evidence alone.
@@ -164,9 +183,11 @@ So the rule is not "be careful" — it is:
 - Not permission to `--continue-after-rb4`, climb, or rent.
 - Not that Layer-1 / fold-in-child were unset for the successful tile.
 
-- **Relied on by:** process-per-tile RB re-run; any claim that empty_cache alone serializes folds on this card.
+- **Relied on by:** **D-105** (RB re-gate process-per-tile); process-per-tile RB re-run; any claim that empty_cache alone serializes folds on this card.
 - **Assumptions refused:** that clearing the model cache in-process restores cold-start free between successive RB tiles on this Blackwell laptop.
 - **Amended by:** —
+
+---
 
 ### F-063 — ⚠⚠ Allocator-cap + child + Layer-1 attestation did not prevent a host bugcheck: climb reached highest_ok=384 with free_before collapsed to 1513 MiB, then the host died before 392 was written
 
@@ -203,7 +224,7 @@ F-059 agreement on every OK step was tight (pct_depart ≤ ~0.0014). The law tra
 - Not a rewrite of D-104 / `route_at`.
 - Not permission to rent, resume climb, or fold on this host tonight.
 
-- **Relied on by:** host clear; Blackwell RB re-gate (`scripts/rb_local_tile_folds.py`: L≤384 filter on the D-104 local population, `MEASURED_SUCCESS_PEAK_MIB=6357`, per-tile climb-exact peak else hard envelope, artifact `data/control/rb_local/rb_local_summary.regate384.csv`); F-062 (card-bound envelopes).
+- **Relied on by:** host clear; Blackwell RB re-gate (`scripts/rb_local_tile_folds.py`: L≤384 filter on the D-104 local population, `MEASURED_SUCCESS_PEAK_MIB=6357`, per-tile climb-exact peak else hard envelope, **D-105 process-per-tile**, artifact `data/control/rb_local/rb_local_summary.regate384.procpertile.csv`; `rb_local_summary.regate384.csv` is the PR #201 early-stop evidence and is not overwritten by that path); F-062 (card-bound envelopes).
 - **Assumptions refused:** that cap + child + Layer-1 attestation is sufficient to make over-allocation fail as a job rather than as a bugcheck / hard fault on this WDDM laptop.
 - **Amended by:** —
 
