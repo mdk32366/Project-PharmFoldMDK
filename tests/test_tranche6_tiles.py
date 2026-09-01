@@ -221,10 +221,19 @@ def test_f059_is_recorded_on_the_tile_from_the_law():
 
 
 # ── the runs artifact this pass must not touch ───────────────────────────────
-def test_tranche6_runs_csv_and_script_bytes_are_the_committed_ones():
-    """RA2 must not rewrite the aggregate file it two-paths against."""
+def _sha256_lf(path: pathlib.Path) -> str:
+    """Working-tree SHA is OS-dependent under core.autocrlf. Hash the LF view."""
     import hashlib
-    csv_hash = hashlib.sha256(RUNS.read_bytes()).hexdigest()
-    assert csv_hash == "78f97db3fbef146baf32e9fa893d8c96d8f60b431e1dfd626fb5639b4f72c3af"
-    script_hash = hashlib.sha256(RUNS_SCRIPT.read_bytes()).hexdigest()
-    assert script_hash == "d5377a2cde087bf5926ae6cc145890d84d51b3a5b9fbff26af9f3d7709b79c39"
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def test_tranche6_runs_csv_and_script_bytes_are_the_committed_ones():
+    """RA2 must not rewrite the aggregate file it two-paths against.
+
+    ⚠ Pin the LF content, not the working-tree bytes. On a Windows checkout
+    with CRLF the raw SHA of these files is 1f0a5ca8… / 2921b372… while the
+    git blobs stay 16aee04c… / d7ddb0d5…, identical to origin/main. A
+    working-tree pin is line-ending brittle, not a content check.
+    """
+    assert _sha256_lf(RUNS) == "78f97db3fbef146baf32e9fa893d8c96d8f60b431e1dfd626fb5639b4f72c3af"
+    assert _sha256_lf(RUNS_SCRIPT) == "d5377a2cde087bf5926ae6cc145890d84d51b3a5b9fbff26af9f3d7709b79c39"
