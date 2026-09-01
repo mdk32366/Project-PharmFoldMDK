@@ -54,6 +54,25 @@ HOST_DOWN = "host_down"
 
 PREFLIGHT_OUTCOMES: tuple[str, ...] = (FIT, REFUSED_NO_MEASUREMENT, REFUSED_INSUFFICIENT_HEADROOM)
 
+#: F-059 §1 — the fitted incremental law, against a 5.24 GiB resident model.
+#: ⚠ A LAW, NOT A MEASUREMENT OF THE CASE IN FRONT OF IT (F-061). Do not pass the
+#: return value of `f059_peak_gib` as `preflight(..., requirement_mib=...)`.
+F059_RESIDENT_GIB = 5.24
+F059_INCREMENTAL_COEFF = 7.215e-06
+F059_INCREMENTAL_EXPONENT = 1.983
+
+
+def f059_peak_gib(length: int) -> float:
+    """F-059 peak GiB at length L: `5.24 + 7.215e-06 · L^1.983`.
+
+    ⚠ This records the law. It is not a measured requirement for the fold in
+    front of it, and it must not be converted and passed as `requirement_mib`
+    (F-061). `preflight` still refuses when `requirement_mib` is None.
+    """
+    if length < 0:
+        raise ValueError(f"length must be >= 0, got {length!r}")
+    return F059_RESIDENT_GIB + F059_INCREMENTAL_COEFF * (float(length) ** F059_INCREMENTAL_EXPONENT)
+
 
 class VramGuardRefused(RuntimeError):
     """⚠ The fold was REFUSED before it was attempted. Raised, never warned.

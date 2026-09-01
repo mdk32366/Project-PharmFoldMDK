@@ -11,7 +11,8 @@ import pytest
 
 from core.vram_guard import (
     DEFAULT_MARGIN_MIB, FIT, HOST_DOWN, REFUSED_INSUFFICIENT_HEADROOM, REFUSED_NO_MEASUREMENT,
-    Preflight, apply_allocator_cap, infer_host_down, preflight, sysmem_fallback_state,
+    Preflight, apply_allocator_cap, f059_peak_gib, infer_host_down, preflight,
+    sysmem_fallback_state,
 )
 
 
@@ -67,6 +68,15 @@ def test_a_fold_that_fits_with_margin_is_allowed(monkeypatch):
     monkeypatch.setattr(g, "apply_allocator_cap", lambda f: {"applied": False})
     r = g.preflight(200, "int8", 64, requirement_mib=4000)
     assert r.outcome == FIT and r.may_fold is True
+
+
+def test_f059_peak_gib_is_the_published_law_not_a_requirement():
+    """F-059 §1 / F-061: the helper records the law. It is not preflight's measurement."""
+    assert abs(f059_peak_gib(1) - 5.24) < 1e-4
+    # F-059 table: 439 aa → 6.50 GiB peak
+    assert abs(f059_peak_gib(439) - 6.50) < 0.05
+    import inspect
+    assert "requirement_mib" in inspect.signature(preflight).parameters
 
 
 def test_the_margin_is_applied_and_is_not_zero_by_default():
