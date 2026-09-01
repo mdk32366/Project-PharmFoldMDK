@@ -1,9 +1,9 @@
-"""RB re-gate — pins on the local-tile fold harness (F-063 envelope, L≤384).
+"""RB re-gate — pins on the local-tile fold harness (F-063 envelope, L≤384, D-105 process-per-tile).
 
 ⚠ These tests do NOT fold. They pin the contracts Emma/Trinity need before the GPU run:
 limit default 10, WORKER_FOLD_IN_CHILD refusal, never passing f059 as requirement_mib,
-population 1482 then L≤384, descending length order, envelope 6357, summary path, and
->10% F-059 departure stopping the batch.
+population 1482 then L≤384, descending length order, envelope 6357, procpertile summary
+path, one OS process per tile that exits, and >10% F-059 departure stopping the batch.
 """
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import ast
 import csv
 import inspect
 import json
+import os
 import pathlib
 import sys
 
@@ -135,14 +136,15 @@ def test_envelope_constant_is_6357_not_6665():
     assert "MEASURED_SUCCESS_PEAK_MIB=6665" not in compact
 
 
-def test_summary_path_is_regate384_and_does_not_overwrite_rb4():
-    """New artifact. The RB4 summary stays where it is."""
+def test_summary_path_is_procpertile_and_does_not_overwrite_sacred_csvs():
+    """D-105 artifact. The RB4 summary and the PR #201 early-stop CSV stay where they are."""
     mod = _load_mod()
-    assert mod.SUMMARY.name == "rb_local_summary.regate384.csv"
-    assert mod.SUMMARY.as_posix().endswith("data/control/rb_local/rb_local_summary.regate384.csv")
+    assert mod.SUMMARY.name == "rb_local_summary.regate384.procpertile.csv"
+    assert mod.SUMMARY.as_posix().endswith(
+        "data/control/rb_local/rb_local_summary.regate384.procpertile.csv"
+    )
     src = SCRIPT.read_text(encoding="utf-8")
-    assert "rb_local_summary.regate384.csv" in src
-    # The SUMMARY assignment must not be the old filename.
+    assert "rb_local_summary.regate384.procpertile.csv" in src
     tree = ast.parse(src)
     assigned = None
     for node in ast.walk(tree):
@@ -151,8 +153,13 @@ def test_summary_path_is_regate384_and_does_not_overwrite_rb4():
                 if isinstance(t, ast.Name) and t.id == "SUMMARY":
                     assigned = ast.unparse(node.value)
     assert assigned is not None
+    assert "procpertile" in assigned
     assert "regate384" in assigned
-    assert "rb_local_summary.csv" not in assigned or "regate384" in assigned
+    # The two sacred filenames must not be the SUMMARY assignment.
+    assert "rb_local_summary.csv" not in assigned
+    compact = assigned.replace(" ", "").replace("'", "").replace('"', "")
+    assert "regate384.procpertile.csv" in compact
+    assert "regate384.csv)" not in compact and 'regate384.csv"' not in assigned
 
 
 def test_local_population_is_1482_then_l384_filter_is_1478():
@@ -325,3 +332,150 @@ def test_script_imports_no_db_by_ast():
             if top in {"db", "sqlalchemy"} or mod == "core.enqueue":
                 banned.append(mod)
     assert not banned
+
+
+# ── D-105 process-per-tile (CPU; stub child, no CUDA) ─────────────────────────
+
+def _stub_one_shot_child(payload, res_q):
+    """Module-level so spawn can pickle it. Records THIS process's pid and exits."""
+    res_q.put({
+        "ok": True,
+        "stub_pid": os.getpid(),
+        "peak_vram": {"max_allocated_mib": 1, "max_reserved_mib": 1},
+        "wall_s": 0.01,
+        "seq_head": (payload.get("sequence") or "")[:8],
+    })
+
+
+def _stub_one_shot_child_raises(payload, res_q):
+    res_q.put({
+        "ok": False,
+        "error_type": "FoldError",
+        "error": "FoldError: CUDA out of memory",
+        "stub_pid": os.getpid(),
+        "peak_vram": {"max_allocated_mib": 2, "max_reserved_mib": 3},
+        "wall_s": 0.02,
+    })
+
+
+def test_each_tile_fold_is_a_new_os_process_that_exits():
+    """⚠ THE CONTRACT. Two dispatches → two PIDs; each child is dead before return.
+
+    A persistent FoldSupervisor / ClimbChild reused across tiles would return the
+    same stub_pid twice. Prove it bites by swapping in a long-lived child.
+    """
+    from worker.rb_tile_child import fold_tile_in_fresh_process
+
+    payload = {
+        "sequence": "M",
+        "dtype": "int8",
+        "chunk_size": 64,
+        "source": "sliced_ecd",
+        "ecd_start": 1,
+        "ecd_end": 1,
+        "out_dir": "",
+        "memory_fraction": 0.85,
+    }
+    a = fold_tile_in_fresh_process(payload, target=_stub_one_shot_child, timeout_s=30)
+    b = fold_tile_in_fresh_process(payload, target=_stub_one_shot_child, timeout_s=30)
+    assert a["child_pid"] is not None and b["child_pid"] is not None
+    assert a["child_pid"] != b["child_pid"], (
+        "same child_pid across tiles — a persistent worker spanned the batch"
+    )
+    assert a["stub_pid"] != b["stub_pid"], (
+        "same stub_pid across tiles — the fold ran in one long-lived child"
+    )
+    assert a["child_alive"] is False
+    assert b["child_alive"] is False
+    assert a["child_exitcode"] == 0
+    assert b["child_exitcode"] == 0
+    assert a["ok"] is True and b["ok"] is True
+
+
+def test_one_shot_child_has_no_request_loop():
+    """The child folds once and returns. A `while True` is FoldSupervisor, not D-105."""
+    from worker.rb_tile_child import one_shot_child_main
+
+    tree = ast.parse(inspect.getsource(one_shot_child_main))
+    whiles = [n for n in ast.walk(tree) if isinstance(n, ast.While)]
+    assert not whiles, (
+        "one_shot_child_main contains a while-loop; process-per-tile requires the process to exit"
+    )
+
+
+def test_fold_tile_in_fresh_process_constructs_and_joins_a_process():
+    """Structural: a Process is spawned and joined. Goes red if rewritten as in-process fold()."""
+    from worker.rb_tile_child import fold_tile_in_fresh_process, one_shot_child_main
+
+    src = inspect.getsource(fold_tile_in_fresh_process)
+    assert "Process(" in src
+    assert ".join(" in src or "proc.join" in src
+    assert "one_shot_child_main" in src
+    assert inspect.isfunction(one_shot_child_main)
+
+
+def test_rb_script_dispatches_via_fresh_process_not_persistent_worker():
+    """Parent loop: reclaim → preflight → fold_tile_in_fresh_process. No FoldSupervisor."""
+    src = SCRIPT.read_text(encoding="utf-8")
+    assert "fold_tile_in_fresh_process" in src
+    assert "parent_reclaim_after_child" in src
+    assert "FoldSupervisor" not in src
+    assert "ClimbChild" not in src
+    assert "release_resident_model" not in src
+    tree = ast.parse(src)
+    main_fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "main")
+    for_loop = next(n for n in ast.walk(main_fn) if isinstance(n, ast.For))
+    calls: list[tuple[int, int, str]] = []
+    for n in ast.walk(for_loop):
+        if isinstance(n, ast.Call):
+            func = n.func
+            if isinstance(func, ast.Name):
+                name = func.id
+            elif isinstance(func, ast.Attribute):
+                name = func.attr
+            else:
+                continue
+            calls.append((n.lineno, n.col_offset, name))
+    calls.sort()
+    names = [c[2] for c in calls]
+    assert "parent_reclaim_after_child" in names
+    assert "preflight" in names
+    assert "fold_tile_in_fresh_process" in names
+    assert names.index("parent_reclaim_after_child") < names.index("preflight")
+    assert names.index("preflight") < names.index("fold_tile_in_fresh_process")
+    # Parent must not call runner.fold in this loop.
+    assert "fold" not in names
+
+
+def test_parent_does_not_import_runner_fold():
+    """The parent never holds ESMFold. fold lives in the one-shot child."""
+    tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and (node.module or "") == "worker.runner":
+            names = [a.name for a in node.names]
+            assert "fold" not in names, f"parent imports fold from worker.runner: {names}"
+
+
+def test_parent_reclaim_runs_gc(monkeypatch):
+    """After child exit the parent gc's before the next preflight. Not F-050."""
+    mod = _load_mod()
+    called: list[str] = []
+    monkeypatch.setattr(mod.gc, "collect", lambda: called.append("gc") or 0)
+    mod.parent_reclaim_after_child()
+    assert called == ["gc"]
+
+
+def test_raising_stub_child_is_a_fold_error_not_a_reused_process():
+    """A fold that raises in the child still exits; the next tile gets a new pid."""
+    from worker.rb_tile_child import fold_tile_in_fresh_process
+
+    payload = {
+        "sequence": "M", "dtype": "int8", "chunk_size": 64, "source": "sliced_ecd",
+        "ecd_start": 1, "ecd_end": 1, "out_dir": "", "memory_fraction": 0.85,
+    }
+    err = fold_tile_in_fresh_process(payload, target=_stub_one_shot_child_raises, timeout_s=30)
+    ok = fold_tile_in_fresh_process(payload, target=_stub_one_shot_child, timeout_s=30)
+    assert err["ok"] is False
+    assert err["error_type"] == "FoldError"
+    assert err["child_alive"] is False
+    assert ok["stub_pid"] != err["stub_pid"]

@@ -12,8 +12,10 @@ F-063 last OK `peak_alloc` 6357 MiB at 384 aa — not the F-059 law, and not S-0
 6665 MiB (F-062: that envelope is card-bound and produced FIT-then-OOM on Blackwell).
 
 ⚠ D-082 layer 3: `WORKER_FOLD_IN_CHILD=1` must be set in the environment or this script
-refuses to start. Peak VRAM is read in-process via `reset_peak` /
-`max_memory_allocated` (nvidia-smi alone is not the instrument).
+refuses to start. ⚠ D-105: that switch is not a persistent worker. **Each tile fold
+runs in a fresh OS process that exits before the next preflight.** Peak VRAM is read
+**in the child** via `reset_peak` / `max_memory_allocated` (nvidia-smi alone is not
+the instrument). The parent then `gc` + `empty_cache` and preflights the next tile.
 
 ⚠ Filter is `route=local` AND `length≤384`. D-104 / `route_at=440` / `tranche6_tiles`
 routing is untouched. Population assert is still 1482 local tiles; the re-gate then
@@ -28,8 +30,8 @@ not skip.
     WORKER_FOLD_IN_CHILD=1 python scripts/rb_local_tile_folds.py
     WORKER_FOLD_IN_CHILD=1 python scripts/rb_local_tile_folds.py --limit 10
 
-Artifact: `data/control/rb_local/rb_local_summary.regate384.csv`
-(does NOT overwrite `rb_local_summary.csv`).
+Artifact: `data/control/rb_local/rb_local_summary.regate384.procpertile.csv`
+(does NOT overwrite `rb_local_summary.regate384.csv` or `rb_local_summary.csv`).
 """
 from __future__ import annotations
 
@@ -52,8 +54,8 @@ TILES = REPO / "data" / "census" / "tranche6_tiles.csv"
 CACHE = REPO / "data" / "census" / "spancache"
 CLIMB_JSONL = REPO / "data" / "census" / "ceiling_climb.blackwell.int8.20260831.jsonl"
 ARTIFACT_DIR = REPO / "data" / "control" / "rb_local"
-#: NEW path — do not overwrite the RB4 summary (`rb_local_summary.csv`).
-SUMMARY = ARTIFACT_DIR / "rb_local_summary.regate384.csv"
+#: D-105 path — do not overwrite the RB4 summary or the PR #201 early-stop CSV.
+SUMMARY = ARTIFACT_DIR / "rb_local_summary.regate384.procpertile.csv"
 
 #: F-063 last OK peak_alloc on Blackwell (L=384, int8/chunk 64). NOT F-059. NOT S-005 6665.
 MEASURED_SUCCESS_PEAK_MIB = 6357
@@ -193,15 +195,14 @@ def capture_card_identity() -> dict[str, Any]:
     return identity
 
 
-def release_resident_model() -> None:
-    """Restore device free toward the cold-start envelope F-063 measured under.
+def parent_reclaim_after_child() -> None:
+    """Parent-side reclaim AFTER the tile child has exited (D-105).
 
-    Without this, preflight(requirement_mib=6357) refuses every fold after the first:
-    ESMFold residency leaves ~1.5 GiB free (SB timings). The guard is unchanged
-    (not F-050); only the measurement context the 6357 MiB gate assumes is restored.
+    The child process exiting drops that process's ESMFold + CUDA context. This
+    then runs `gc` + `empty_cache` in the parent before the next preflight.
+    ⚠ Does not load or clear `worker.runner._MODEL_CACHE` — the parent never
+    held the weights. Not F-050.
     """
-    import worker.runner as wr  # noqa: PLC0415
-    wr._MODEL_CACHE.clear()
     gc.collect()
     try:
         import torch  # noqa: PLC0415
@@ -258,13 +259,13 @@ def main(argv: Optional[list[str]] = None) -> int:
     if not torch.cuda.is_available():
         raise SystemExit("⚠ STOP — CUDA unavailable. RB local folds require the laptop GPU.")
 
-    from core.vram_guard import (  # noqa: PLC0415 — after DB guard
-        FIT, apply_allocator_cap, peak_vram, preflight, reset_peak,
-    )
-    from worker.runner import fold, write_artifacts  # noqa: PLC0415
+    from core.vram_guard import FIT, preflight  # noqa: PLC0415 — after DB guard
+    from worker.fold_supervisor import FoldChildDied  # noqa: PLC0415
+    from worker.rb_tile_child import fold_tile_in_fresh_process  # noqa: PLC0415
 
     # ⚠⚠ Never pass f059 as requirement_mib. Pin the call site in tests.
-    cap = apply_allocator_cap(ALLOCATOR_FRACTION)
+    # ⚠ D-105: the 0.85 cap is applied IN EACH TILE CHILD (per-process). Applying it
+    # here would not cap the folder.
     print(
         f"subjects        : {len(batch)} of {len(tiles)} L≤{LOCAL_REGATE_MAX_LENGTH} "
         f"(from {LOCAL_POPULATION} route=local; D-104 route_at untouched)"
@@ -275,7 +276,11 @@ def main(argv: Optional[list[str]] = None) -> int:
         f"gate            : F-063 MEASURED_SUCCESS_PEAK_MIB={MEASURED_SUCCESS_PEAK_MIB} MiB "
         f"(last OK peak_alloc); exact-L climb peak preferred; margin_mib=0"
     )
-    print(f"allocator_cap   : {cap}")
+    print(
+        f"allocator_cap   : fraction={ALLOCATOR_FRACTION} applied in each tile child "
+        f"(D-105 process-per-tile; parent does not hold ESMFold)"
+    )
+    print("process         : one OS process per tile; child exits before next preflight")
     print(f"artifact        : {SUMMARY}")
     print(
         f"card            : gpu_name={card['gpu_name']} "
@@ -306,7 +311,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             )
 
         if i > 1:
-            release_resident_model()
+            parent_reclaim_after_child()
 
         pf = preflight(
             length, RECIPE_DTYPE, RECIPE_CHUNK,
@@ -366,46 +371,62 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(f"          -> STOP before fold: {pf.outcome}: {pf.detail}", flush=True)
             break
 
-        reset_peak()
+        out = ARTIFACT_DIR / f"{acc}_t{tile_index}"
+        payload = {
+            "sequence": seq,
+            "dtype": RECIPE_DTYPE,
+            "chunk_size": RECIPE_CHUNK,
+            "source": "sliced_ecd",
+            "ecd_start": start,
+            "ecd_end": end,
+            "out_dir": str(out),
+            "memory_fraction": ALLOCATOR_FRACTION,
+        }
         t0 = time.time()
         try:
-            result = fold(
-                seq, dtype=RECIPE_DTYPE, chunk_size=RECIPE_CHUNK,
-                source="sliced_ecd", ecd_start=start, ecd_end=end,
-            )
-        except Exception as e:  # noqa: BLE001
+            rec = fold_tile_in_fresh_process(payload)
+        except FoldChildDied as e:
             stop_reason = f"fold_error:{type(e).__name__}"
-            peak = peak_vram()
-            alloc = peak.get("max_allocated_mib")
-            reserved = peak.get("max_reserved_mib")
-            depart = pct_depart(alloc if isinstance(alloc, (int, float)) else None, f059)
             base["stop_reason"] = stop_reason
             base["wall_s"] = round(time.time() - t0, 2)
+            rows.append(base)
+            exit_code = 1
+            print(
+                f"          -> STOP on fold error: FoldChildDied: {e}",
+                flush=True,
+            )
+            break
+
+        peak = rec.get("peak_vram") or {}
+        alloc = peak.get("max_allocated_mib")
+        reserved = peak.get("max_reserved_mib")
+        wall = rec.get("wall_s")
+        if wall == "" or wall is None:
+            wall = round(time.time() - t0, 2)
+        depart = pct_depart(alloc if isinstance(alloc, (int, float)) else None, f059)
+
+        if not rec.get("ok"):
+            err_type = rec.get("error_type") or "FoldError"
+            stop_reason = f"fold_error:{err_type}"
+            base["stop_reason"] = stop_reason
+            base["wall_s"] = wall
             base["peak_allocated_mib"] = alloc if alloc is not None else ""
             base["peak_reserved_mib"] = reserved if reserved is not None else ""
             base["pct_depart_f059"] = round(depart, 6) if depart is not None else ""
             rows.append(base)
             exit_code = 1
             print(
-                f"          -> STOP on fold error: {type(e).__name__}: {e} "
+                f"          -> STOP on fold error: {err_type}: {rec.get('error')} "
                 f"(peak_alloc={alloc} MiB reserved={reserved} MiB)",
                 flush=True,
             )
             break
-        wall = time.time() - t0
-        peak = peak_vram()
-        alloc = peak.get("max_allocated_mib")
-        reserved = peak.get("max_reserved_mib")
-        depart = pct_depart(alloc if isinstance(alloc, (int, float)) else None, f059)
-
-        out = ARTIFACT_DIR / f"{acc}_t{tile_index}"
-        write_artifacts(result, out)
 
         base.update({
             "peak_allocated_mib": alloc if alloc is not None else "",
             "peak_reserved_mib": reserved if reserved is not None else "",
             "pct_depart_f059": round(depart, 6) if depart is not None else "",
-            "wall_s": round(wall, 2),
+            "wall_s": wall,
             "folded": "yes",
             "folded_at": datetime.now(timezone.utc).isoformat(),
         })

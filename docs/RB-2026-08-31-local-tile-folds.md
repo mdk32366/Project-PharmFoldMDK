@@ -84,7 +84,9 @@ D-104 / `route_at=440` is untouched. Filter only: `route=local` AND `length≤38
 | hard envelope | **`MEASURED_SUCCESS_PEAK_MIB=6357`** (F-063 last OK `peak_alloc`) |
 | per-tile `requirement_mib` | climb jsonl `peak_vram.max_allocated_mib` at exact OK length (`climb_exact_L`), else 6357 (`hard_envelope_6357`) |
 | `f059` as `requirement_mib` | **forbidden** (`F-061`) |
-| summary | `data/control/rb_local/rb_local_summary.regate384.csv` (does **not** overwrite `rb_local_summary.csv`) |
+| summary (D-105) | `data/control/rb_local/rb_local_summary.regate384.procpertile.csv` |
+| do **not** overwrite | `rb_local_summary.regate384.csv` (PR #201 early-stop evidence) or `rb_local_summary.csv` (RB4) |
+| process | **one OS process per tile that exits** before the next parent preflight (D-105). Parent then `gc` + `empty_cache`, then preflight. STOP if free cannot meet requirement — do not skip. |
 
 Kaylee, on MDKDevLaptop only:
 
@@ -93,3 +95,4 @@ WORKER_FOLD_IN_CHILD=1 python scripts/rb_local_tile_folds.py --limit 10
 ```
 
 Do not pass `--continue-after-rb4`. No climb. No rent. Do not take `F-050`.
+Kaylee re-runs `--limit 10` only after Trinity review of the process-per-tile PR. No GPU folds in that PR.
