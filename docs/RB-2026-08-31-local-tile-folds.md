@@ -71,3 +71,25 @@ This collides with two already-recorded facts and does not take `F-050`:
 - `F-059` / rental orders cite a **measured local ceiling of 432 aa** under the census recipe.
 
 `f059` was not passed as `requirement_mib`. No rental, no spend, no DB write.
+
+## Re-gate (F-063 envelope, L≤384)
+
+The script now gates on this card's last OK climb peak, not S-005's 6665 MiB.
+D-104 / `route_at=440` is untouched. Filter only: `route=local` AND `length≤384`.
+
+| fact | value |
+|---|---|
+| local population (assert) | **1482** (`tranche6_tiles.csv`, D-104) |
+| re-gate filter | **L≤384** → **1478** tiles |
+| hard envelope | **`MEASURED_SUCCESS_PEAK_MIB=6357`** (F-063 last OK `peak_alloc`) |
+| per-tile `requirement_mib` | climb jsonl `peak_vram.max_allocated_mib` at exact OK length (`climb_exact_L`), else 6357 (`hard_envelope_6357`) |
+| `f059` as `requirement_mib` | **forbidden** (`F-061`) |
+| summary | `data/control/rb_local/rb_local_summary.regate384.csv` (does **not** overwrite `rb_local_summary.csv`) |
+
+Kaylee, on MDKDevLaptop only:
+
+```text
+WORKER_FOLD_IN_CHILD=1 python scripts/rb_local_tile_folds.py --limit 10
+```
+
+Do not pass `--continue-after-rb4`. No climb. No rent. Do not take `F-050`.
