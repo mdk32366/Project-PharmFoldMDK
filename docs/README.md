@@ -130,6 +130,31 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### F-062 — ⚠⚠ Measured-success envelopes are card-bound: S-005’s 6665 MiB does not license a Blackwell FIT, and F-059 within 10% does not certify headroom
+
+- **Date:** 2026-08-31 · **Status:** ⚠ **OPEN.** It closes when local RB gates on a measured success recorded on the **same card / recipe / allocator fraction** that will fold — or when the residual is named and accepted.
+- ⚠ **Do not take `F-050`.** The guard-direction sweep stays RESERVED and unwritten.
+- **How known (`D-016`):** RB4 stop on the laptop GPU. Card: NVIDIA RTX PRO 2000 Blackwell, 8151 MiB total, driver 610.88, WDDM. First tile under longest-first order: **Q96QU1 PCDH15** `tile_index=1`, span 278–717, **L=440**. `preflight` **FIT** under `requirement_mib=6665` / `margin_mib=0` (the S-005 measured-success envelope from Trinity’s RB spec) with `free_before=7043` MiB. Fold raised **CUDA OOM** at ~12.9 s; `peak_allocated_mib=6559`, `peak_reserved_mib=6774`. `f059_peak_gib=6.499514`; `pct_depart_f059=0.0145` (1.45%). Batch **stopped** (non-zero); did not skip to the next tile. Artifact: `data/control/rb_local/rb_local_summary.csv` on main via PR #195 (`88d59bb6`).
+
+**THE SUBSTANCE.**
+
+1. ⚠⚠ **S-005’s 6665 MiB is not a measurement of this card.** S-005 (2026-07-19) recorded 440 aa clean at int8/chunk 64 with peak 6665 MiB on an earlier stack/day. Using that number as `requirement_mib` on Blackwell produced **FIT then OOM** — the failure mode the guard exists to prevent, transferred across hardware.
+2. ⚠ **F-059 within 10% does not certify headroom.** Departure was 1.45%, under RB4’s law-check stop. The fold still OOMed. The law predicts demand; it does not certify free headroom after the caching allocator’s reserved pool, a 0.85 cap, or a different GPU.
+3. ⚠ **D-104 `route_at=440` vs F-059’s local ceiling ~431–432 is live, not paper.** Local route includes L=440; F-059’s fitted local ceiling is ~431–432 aa. The first tile in longest-first local order is exactly that collision.
+
+**WHAT IT DOES NOT ESTABLISH.**
+
+- Not a refutation of F-059’s coefficients (one OOM, different card).
+- Not permission to pass `f059_peak_gib` as `requirement_mib` (F-061 stands).
+- Not an open of rental / RC / RD.
+- Not a rewrite of the D-104 table — a `route_at` amendment is a **separate owner ruling**.
+
+- **Relied on by:** Blackwell `ceiling_climb` (Matt ruled C then A); RB re-gate after climb (L≤ `highest_ok_length`, new `MEASURED_SUCCESS_PEAK_MIB` on this card).
+- **Assumptions relied on:** none new. ⚠ **One refused:** that a measured peak on one card licenses `preflight` FIT on another.
+- **Amended by:** —
+
+---
+
 ### D-104 — ⚠⚠ `tile_max_aa = 1,026`, routed at 440: the owner's RA1 ruling, and every tile carries it by name
 
 - **Date:** 2026-09-01 · **Status:** accepted · **Ruled by:** the owner. Recorded before the per-tile
