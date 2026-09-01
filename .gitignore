@@ -256,3 +256,8 @@ data/control/d099/*/structure.pdb
 data/control/d099/*/plddt.json
 
 data/control/sb_timing/
+
+# RB local tile folds: PAE/structure regenerable; summary CSV is committed.
+data/control/rb_local/*/pae.json
+data/control/rb_local/*/structure.pdb
+data/control/rb_local/*/plddt.json
