@@ -210,6 +210,43 @@ would change when the per-tile file landed.
 
 ---
 
+### F-062 — ⚠⚠ Measured-success envelopes are card-bound: S-005's 6665 MiB does not license a Blackwell FIT, and F-059 within 10% does not certify headroom
+
+- **Date:** 2026-08-31 · **Status:** ⚠ **OPEN.** Closes when local RB gates on a measured
+  success recorded on the same card / recipe / allocator fraction that will fold, or the
+  residual is named and accepted. ⚠ `F-050` remains RESERVED for the guard-direction sweep
+  and is not this entry.
+- **How known (`D-016`):** RB4 stop on **NVIDIA RTX PRO 2000 Blackwell** (8151 MiB, driver
+  610.88, WDDM). First tile `Q96QU1` PCDH15 `tile_index=1` L=440. `preflight` **FIT** under
+  `requirement_mib=6665` (S-005 envelope) with `free_before=7043`. Fold CUDA OOM ~12.9s;
+  `peak_alloc=6559`, `peak_reserved=6774`. `pct_depart_f059=0.0145`. Batch **stopped**, did
+  not skip. PR #195 / summary CSV.
+
+**THE SUBSTANCE.**
+
+1. ⚠⚠ **S-005 (440 aa clean, peak 6665 MiB) was another stack / day.** Using it as
+   `requirement_mib` on Blackwell produced **FIT-then-OOM** — the failure the guard exists
+   to prevent, transferred across hardware. A measured-success envelope is **card-bound**.
+2. ⚠ **F-059 departure 1.45% < the 10% stop rule; OOM still.** The law predicts demand; it
+   does not certify headroom after the allocator reserved pool or a different GPU.
+3. ⚠ **D-104 `route_at=440` vs F-059's local ceiling ~431–432 is live, not paper.** The
+   longest-first local tile is exactly that collision.
+
+**WHAT THIS DOES NOT ESTABLISH.**
+
+- ⚠ **Not a refutation of F-059's coefficients.** Departure was small; the OOM is about
+  headroom on this card, not about the law's shape.
+- ⚠ **Not permission to pass `f059_peak_gib` as `requirement_mib`.** F-061 stands.
+- ⚠ **Not that rental / RC is open.** No spend.
+- ⚠ **Not `F-050`.** The guard-direction sweep stays reserved.
+- ⚠ **Not an amendment of D-104.** `route_at` stays; a later operational local max is a
+  separate owner ruling if recommended after `ceiling_climb` on this card.
+
+- **Relied on by:** Blackwell `ceiling_climb` · RB re-gate after climb
+- **Leaves alone:** `D-104` table · `F-050` · `F-059` coefficients · `F-061`
+
+---
+
 ### F-061 — ⚠⚠ Recording `F-059` on the tile is not measuring the case in front of it, and `preflight` still refuses an absent measurement
 
 - **Date:** 2026-09-01 · **Status:** ⚠ **OPEN.** It closes when the fold path constrains on a

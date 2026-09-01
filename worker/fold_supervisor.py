@@ -59,10 +59,15 @@ class FoldChildDied(RuntimeError):
 
 @dataclass
 class ChildResult:
-    """What the child sends back. ⚠ Exactly one of `payload` / `error` is set."""
+    """What the child sends back. ⚠ Exactly one of `payload` / `error` is set.
+
+    `peak_vram` may accompany either: the child's CUDA context holds the peaks, and an
+    OOM still has a peak worth recording (F-062 ceiling_climb).
+    """
     payload: Optional[dict[str, Any]] = None
     error: Optional[str] = None
     error_type: Optional[str] = None
+    peak_vram: Optional[dict[str, Any]] = None
 
     def __post_init__(self) -> None:
         if (self.payload is None) == (self.error is None):
@@ -74,25 +79,62 @@ def _child_main(req_q, res_q) -> None:  # pragma: no cover — runs only in the 
     loads CUDA and only one process ever holds the weights."""
     from worker.runner import fold as _fold
 
+    cap_applied = False
     while True:
         req = req_q.get()
         if req is None:                       # ⚠ the only clean shutdown path
             return
+        peak = None
         try:
+            # ⚠ Cap + peak belong HERE when the parent folds through FoldSupervisor.
+            # set_per_process_memory_fraction is per-process; a parent-side cap does not bind
+            # the child. Peak stats likewise live on the child's CUDA context (F-062 climb).
+            frac = req.get("memory_fraction")
+            if frac is not None and not cap_applied:
+                from core.vram_guard import apply_allocator_cap
+                apply_allocator_cap(float(frac))
+                cap_applied = True
+            from core.vram_guard import peak_vram, reset_peak, cuda_memory
+            reset_peak()
+            free_before = cuda_memory()
             r = _fold(req["sequence"], dtype=req["dtype"], chunk_size=req["chunk_size"],
                       source=req["source"], ecd_start=req.get("ecd_start"),
                       ecd_end=req.get("ecd_end"))
+            peak = peak_vram()
+            empty_cache_s = None
+            free_after_release = None
+            if req.get("empty_cache"):
+                import time as _time
+                import torch
+                _t = _time.time()
+                torch.cuda.empty_cache()
+                empty_cache_s = round(_time.time() - _t, 3)
+                m2 = cuda_memory()
+                free_after_release = m2[0] if m2 else None
             prov = r.provenance
-            res_q.put(ChildResult(payload={
-                "pdb": r.pdb, "plddt": list(r.plddt), "pae": r.pae,
-                # ⚠ The provenance travels as a dict: a dataclass pickled across a spawn boundary
-                # binds the child's class definition, and a schema change would then fail at
-                # UNPICKLE time in the parent — far from the change that caused it.
-                "provenance": prov.__dict__ if prov is not None else None,
-            }))
+            res_q.put(ChildResult(
+                payload={
+                    "pdb": r.pdb, "plddt": list(r.plddt), "pae": r.pae,
+                    # ⚠ The provenance travels as a dict: a dataclass pickled across a spawn boundary
+                    # binds the child's class definition, and a schema change would then fail at
+                    # UNPICKLE time in the parent — far from the change that caused it.
+                    "provenance": prov.__dict__ if prov is not None else None,
+                    "free_before_mib": free_before[0] if free_before else None,
+                    "empty_cache_s": empty_cache_s,
+                    "free_after_release_mib": free_after_release,
+                },
+                peak_vram=peak,
+            ))
         except BaseException as e:            # noqa: BLE001 — the child must never die on a fold
+            try:
+                from core.vram_guard import peak_vram as _peak
+                peak = _peak()
+            except Exception:  # noqa: BLE001
+                peak = None
             res_q.put(ChildResult(error=f"{type(e).__name__}: {e}"[:600],
-                                  error_type=type(e).__name__))
+                                  error_type=type(e).__name__,
+                                  peak_vram=peak))
+
 
 
 class FoldSupervisor:
@@ -126,16 +168,22 @@ class FoldSupervisor:
             self._proc = None
 
     def fold(self, sequence: str, *, dtype: str, chunk_size: Optional[int], source: str,
-             ecd_start: Optional[int] = None, ecd_end: Optional[int] = None) -> dict[str, Any]:
+             ecd_start: Optional[int] = None, ecd_end: Optional[int] = None,
+             memory_fraction: Optional[float] = None,
+             empty_cache: bool = False) -> dict[str, Any]:
         """One fold, in the child. Returns the payload dict, or raises.
 
         ⚠ **`FoldChildDied` when the process is gone; the original exception type by name when the
         fold merely raised.** The caller can tell a driver reset from a bad sequence, which is the
         entire reason this layer exists.
+
+        Optional `memory_fraction` / `empty_cache` are applied **in the child** (F-062 climb): a
+        parent-side allocator cap does not bind a spawned process.
         """
         self.start()
         self._req.put({"sequence": sequence, "dtype": dtype, "chunk_size": chunk_size,
-                       "source": source, "ecd_start": ecd_start, "ecd_end": ecd_end})
+                       "source": source, "ecd_start": ecd_start, "ecd_end": ecd_end,
+                       "memory_fraction": memory_fraction, "empty_cache": bool(empty_cache)})
         try:
             res: ChildResult = self._res.get(timeout=self._timeout_s)
         except Exception:                     # noqa: BLE001 — Empty, or the queue died with the child
@@ -150,5 +198,10 @@ class FoldSupervisor:
                 f"{'' if alive else f' with exitcode {code}'} — the fold produced no result. "
                 f"⚠ This is a fact about the PROCESS, not about the sequence.")
         if res.error is not None:
-            raise RuntimeError(f"{res.error}")     # the fold ran and raised — a normal job failure
-        return res.payload
+            err = RuntimeError(f"{res.error}")     # the fold ran and raised — a normal job failure
+            err.peak_vram = res.peak_vram  # type: ignore[attr-defined]
+            raise err
+        payload = dict(res.payload or {})
+        if res.peak_vram is not None:
+            payload["peak_vram"] = res.peak_vram
+        return payload
