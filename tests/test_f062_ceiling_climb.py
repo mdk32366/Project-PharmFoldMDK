@@ -5,7 +5,7 @@ the climb on MDKDevLaptop. A test that imported torch.cuda and folded would not
 run at all, so the assertions here are the contracts the GPU run depends on:
 
 - F-062 is a real `### ` header (the D-062 defect was a cited number with no entry)
-- RESERVED next-free is F-063; F-050 stays reserved
+- RESERVED next-free is F-064; F-050 stays reserved
 - ceiling_climb refuses without --layer1-attested, before any climb
 - --fold-in-child / WORKER_FOLD_IN_CHILD wiring is present (D-082 layer 3)
 """
@@ -64,16 +64,27 @@ def test_f050_was_not_taken():
     assert "guard-direction sweep" in reserved
 
 
-def test_reserved_next_free_is_f063_and_f050_still_reserved():
+def test_reserved_next_free_is_f064_and_f050_still_reserved():
     reserved = RESERVED.read_text(encoding="utf-8")
-    assert "Next free `F-` integer: `F-063`" in reserved, (
-        "the next-free pointer must move in the SAME commit that spends F-062"
+    assert "Next free `F-` integer: `F-064`" in reserved, (
+        "the next-free pointer must move in the SAME commit that spends F-063"
     )
     assert "Next free `F-` integer: `F-062`" not in reserved
     assert "| **F-050** |" in reserved
     # F-062 is written, not reserved
     assert re.search(r"^\| \*\*F-062\*\*", reserved, re.M) is None
 
+
+
+def test_f063_entry_present_in_findings_log():
+    """F-063 spent the integer; header and key measured facts must appear."""
+    log = LOG.read_text(encoding="utf-8")
+    assert re.search(r"^### F-063 ", log, re.M), "F-063 header missing from docs/README.md"
+    m = re.search(r"^### F-063 .*?(?=\n### |\Z)", log, re.M | re.S)
+    assert m, "could not isolate F-063 entry"
+    entry = m.group(0)
+    assert "**384 aa**" in entry or "highest_ok=384" in entry
+    assert "1513" in entry
 
 def test_refuses_to_climb_without_layer1_attested():
     """⚠ REQUIRED. Missing attestation is a non-zero refuse, not a warning and climb."""
