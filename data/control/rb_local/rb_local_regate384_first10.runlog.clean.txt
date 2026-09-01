@@ -1,0 +1,25 @@
+﻿=== RB re-gate384 first-ten (cleaned UTF-8 transcript) ===
+start: 2026-08-31 19:44:46 PT
+cmd: WORKER_FOLD_IN_CHILD=1 .venv\Scripts\python.exe scripts/rb_local_tile_folds.py --limit 10
+cwd: C:\Projects\Project-PharmFoldMDK
+branch: cursor/rb-regate384-local-folds-6193 @ 3f1c1d3
+
+Banner (from live run):
+subjects        : 10 of 1478 L<=384 (from 1482 route=local; D-104 route_at untouched)
+order           : descending (length, census_accession, tile_index)
+recipe          : int8 / chunk 64
+gate            : F-063 MEASURED_SUCCESS_PEAK_MIB=6357 MiB
+artifact        : data\control\rb_local\rb_local_summary.regate384.csv
+card            : gpu_name=NVIDIA RTX PRO 2000 Blackwell Generation Laptop GPU driver=610.88 vram_total_mib=8150
+WORKER_FOLD_IN_CHILD=1
+ingest          : NONE
+
+[1/10] O75445 USH2A tile=17 len=380 req=6357 (hard_envelope_6357) f059=6.1818 GiB preflight=fits ...
+        -> folded peak_alloc=6336 MiB reserved=6900 MiB wall=64.8s pct_depart_f059=0.0009
+[2/10] O75445 USH2A tile=18 len=374 req=6357 (hard_envelope_6357) f059=6.1525 GiB preflight=refused_insufficient_headroom ...
+        -> STOP before fold: refused_insufficient_headroom: needs 6357 MiB + 0 MiB margin = 6357 MiB, but only 1649 MiB is free
+
+folded 1/10; stop_reason=preflight_refused_insufficient_headroom
+exit_code=1 end: 2026-08-31 19:45:57 PT
+
+Note: PowerShell 1>> produced UTF-16 on the raw runlog; this cleaned file is the readable transcript. Canonical numbers are in rb_local_summary.regate384.csv.
