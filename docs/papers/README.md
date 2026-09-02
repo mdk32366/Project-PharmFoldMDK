@@ -41,8 +41,12 @@ So these stayed put deliberately — this table points, it does not relocate:
 ### `surfaces/`
 
 - [`PROPOSAL-2026-09-02-scholarly-paper.md`](surfaces/PROPOSAL-2026-09-02-scholarly-paper.md) —
-  the non-specialist case for the paper. **Draft; the claim is not selected.** Derives from
-  **D-015 §1** · **F-004** · **F-009** · **D-075** · **PAPERS-v2.md** P-001.
+  the non-specialist case for the paper. **Revision 2, 2026-09-02. Draft; the branch is not
+  selected.** Derives from **D-015 §1** · **D-100** · **F-043** (⚠ OPEN, withdrawn figures) ·
+  **F-004** · **F-005** · **F-017** · **F-009** · **F-051** (⚠ OPEN) · **D-075** ·
+  [`../PAPERS-v2.md`](../PAPERS-v2.md) P-001.
+  ⚠ Carries a **D-074 obligation**: it cites the expression ranking, so §2.1 must carry the
+  statement of what the comparator gets wrong. **Not optional; not cuttable for length.**
 
 ### `litreview/` · `sources/`
 
@@ -53,21 +57,41 @@ not started.
 
 ## ⚠ Open — carried from the proposal's §7, and NOT discharged
 
-The 2026-09-02 proposal states its own definition of done. **One item is checked; the rest are open**
-and stay open here so they are not lost by living only inside the document they bind:
+The proposal states its own definition of done. It is restated here so it is not lost by living only
+inside the document it binds. **Revision 2 discharged two items and added two.**
 
-- [x] **Every cited entry resolves in the log.** Checked 2026-09-02 while landing D-108: D-015,
-      F-004, F-009, D-075 as `###` headings in `../README.md`; P-001, P-002 as `##` headings in
-      `../PAPERS-v2.md` (P-003 resolves under a `⟡` prefix). ⚠ **This is the citation invariant
-      only** — that the pointers resolve, not that what they point at still says what the proposal
-      says it says.
-- [ ] **Cross-check against `../README.md` and `../PAPERS-v2.md` before showing anyone outside the
-      project.** ⚠ The document was drafted from a snapshot, and a summary drafted from a snapshot
-      can assert a stale state.
-- [ ] **§6.1 revised once D-075 rules** — branch named; the both-branches framing removed, or
-      retained as history with the outcome stated. ⚠ **Revised, not appended to.**
+- [x] **§6.1 revised after Run A** (F-017). ⚠ **Revised again when Run B resolves or is formally
+      abandoned** — Run B is *blocked*, not pending.
+- [x] **§2.1 carries the F-043 D-074 statement**, with the withdrawn flip-rate figures excluded by
+      name.
+- [ ] **Cross-check against [`../README.md`](../README.md) and [`../PAPERS-v2.md`](../PAPERS-v2.md).**
+      ⚠ **Partially discharged at revision 2 — against a DIRTY snapshot.** Re-check against a
+      commit. This is the item that caught revision 1; it stays open.
 - [ ] **§2 gains the per-target filter trace**, or keeps its explicit *not established* marker.
-      Which specific filter dropped which specific target is **not** traced; the four absences are.
+- [ ] **The near-cutoff check on the four false negatives** — pre-registered, not yet run.
 - [ ] **The §6.2 over-claim guard respected in every derived artefact** (deck, abstract, email).
-      *The expression method has documented blind spots* is established. *This project's scorer
-      fills them* is **not**, and does not become established by being restated somewhere new.
+      *The expression method has documented blind spots* is established, and §2.1 now measures one.
+      *This project's scorer fills them* is **not**, and does not become established by being
+      restated somewhere new.
+- [ ] **Every cited entry resolves.** Re-run at revision 2 (2026-09-02): D-015, D-074, D-075, D-100,
+      F-004, F-005, F-009, F-017, F-043, F-044, F-051 all resolve as `###` headings in
+      [`../README.md`](../README.md); P-001 as a `##` heading in
+      [`../PAPERS-v2.md`](../PAPERS-v2.md). ⚠⚠ **Left open deliberately.** Per **F-044**, the
+      citation invariant proves a reference *resolves* — **never that it resolves to the right
+      thing.** Checking it is not the same as checking the claim.
+
+---
+
+## ⚠ Why the checklist above stays open
+
+Revision 1 of the proposal asserted that the deciding run was outstanding and held both branches at
+equal weight. **F-017 had been in the log since 2026-08-06.** The assertion was made from stale
+context and it was wrong; it landed under D-108 carrying the error, and revision 2 records it as a
+Planner finding in its §8 rather than absorbing it.
+
+**D-108 left this checklist open rather than marking it discharged, and that is what made the error
+visible on the next grounding.** So the rule this folder runs on:
+
+⚠ **Never assert absence from a stale snapshot** (KEEL V9). *Not in the log* is a claim about the
+log as it is **now**, and it requires re-grounding — not recall. A checklist marked done is a
+snapshot; a checklist left open is an instruction to look again.
