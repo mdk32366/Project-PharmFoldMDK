@@ -51,7 +51,7 @@ def test_an_untagged_job_is_claimable_by_NOBODY():
     untagged rental job taken by the local worker."""
     q = UnlockedFakeJobQueue()
     q.enqueue(1, tier=None)
-    for t in ("local", "rental", "anything"):
+    for t in ("local", "rental", "msa", "anything"):
         assert q.claim("w", tier=t) is None
 
 

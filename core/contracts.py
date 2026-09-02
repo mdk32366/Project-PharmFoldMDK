@@ -28,10 +28,20 @@ from dataclasses import dataclass
 # 44 GiB card. No rentable card closes that gap; chunking is the only mitigation, so rental now
 # chunks like local. This table is the authority; a job's stored `dtype`/`chunk_size` is a
 # non-authoritative enqueue-time hint (D-047).
+#
+# ⚠ D-107 amendment 1: this table is ESMFold. `msa` is a claimable `jobs.tier` (see
+# `KNOWN_TIERS`) and is deliberately NOT a key here. Adding `msa` with a stub dtype/chunk_size
+# would make `build_fold_spec` return an ESMFold `FoldSpec` for a path that is not ESMFold.
 TIER_RECIPE: dict[str, dict] = {
     "local":  {"dtype": "int8", "chunk_size": 64},   # int8 / chunk-64 (S-003, worker default)
     "rental": {"dtype": "fp16", "chunk_size": 64},   # D-011 → D-042 (chunk was None)
 }
+
+# Claimable values of `jobs.tier` (F-035). A SUPERSET of `TIER_RECIPE`: `msa` can be
+# enqueued and claimed, but has no ESMFold recipe (D-107 amendment 1). Unknown strings
+# still fail loud. NULL remains a separate category — claimable by nobody, not a member
+# of this set.
+KNOWN_TIERS: frozenset[str] = frozenset({"local", "rental", "msa"})
 
 
 @dataclass(frozen=True)

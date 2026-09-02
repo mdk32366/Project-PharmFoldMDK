@@ -34,7 +34,7 @@ from typing import Callable, Iterable
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from core.contracts import TIER_RECIPE
+from core.contracts import KNOWN_TIERS, TIER_RECIPE
 from core.fold_reconcile import check_sliced_length
 from core.manifest import ManifestRow, build_manifest
 from core.queue import COMPLETE, PENDING
@@ -127,6 +127,33 @@ def _fold_input(row: ManifestRow, full_sequence: str) -> tuple[str, str]:
     return full_sequence, WHOLE
 
 
+def _inference_settings_for(tier: str, *, source: str,
+                            ecd_start: int | None, ecd_end: int | None) -> dict:
+    """Enqueue-time `inference_settings`. ESMFold recipe hint only when `tier` is in `TIER_RECIPE`.
+
+    ⚠ D-107 amendment 1: `msa` is a known claimable tier and is NOT an ESMFold recipe.
+    Looking it up in `TIER_RECIPE` would invent fp16/chunk-64 for a path that is not ESMFold.
+    Unknown strings fail loud so they are not silently dropped.
+    """
+    if tier not in KNOWN_TIERS:
+        raise ValueError(
+            f"unknown tier {tier!r}; known tiers are {sorted(KNOWN_TIERS)} (D-107). "
+            f"ESMFold recipes: {sorted(TIER_RECIPE)}."
+        )
+    settings: dict = {
+        "source": source,
+        "ecd_start": ecd_start,
+        "ecd_end": ecd_end,
+    }
+    if tier in TIER_RECIPE:
+        recipe = TIER_RECIPE[tier]
+        settings["model_id"] = MODEL_ID
+        settings["model_revision"] = MODEL_REVISION
+        settings["dtype"] = recipe["dtype"]
+        settings["chunk_size"] = recipe["chunk_size"]
+    return settings
+
+
 def enqueue_cohort(
     session: Session,
     rows: Iterable[ManifestRow],
@@ -202,7 +229,6 @@ def enqueue_cohort(
         session.add(analysis)
         session.flush()   # need analysis.id for the job FK
 
-        recipe = TIER_RECIPE[row.tier]
         session.add(JobRecord(
             analysis_id=analysis.id,
             status="pending",
@@ -210,15 +236,9 @@ def enqueue_cohort(
             # Left off, the job is claimable by NOBODY — which is the safe failure, but a silent
             # one, so `pending_jobs_with_no_tier` counts it.
             tier=row.tier,
-            inference_settings={
-                "model_id": MODEL_ID,
-                "model_revision": MODEL_REVISION,
-                "dtype": recipe["dtype"],
-                "chunk_size": recipe["chunk_size"],
-                "source": source,
-                "ecd_start": row.ecd_start,
-                "ecd_end": row.ecd_end,
-            },
+            inference_settings=_inference_settings_for(
+                row.tier, source=source, ecd_start=row.ecd_start, ecd_end=row.ecd_end,
+            ),
         ))
         created += 1
 
@@ -248,9 +268,10 @@ def requeue_jobs(session: Session, accessions: Iterable[str]) -> RequeueSummary:
     about *automatic* history). A **``complete``** job is left untouched: requeue never destroys a
     good fold. An accession with **no job** is reported, not dropped. Idempotent.
 
-    D-047: a non-complete job whose analysis ``meta`` has no resolvable ``tier`` raises here —
-    a requeue that could not resolve a fold recipe fails loud at the operator action, not
-    silently at fold-time on a claimed (paid) job."""
+    D-047 / D-107: a non-complete job whose analysis ``meta`` has a tier outside
+    ``KNOWN_TIERS`` raises here — unknown/NULL fail loud at the operator action, not
+    silently at fold-time on a claimed (paid) job. ``msa`` is a known tier and may be
+    requeued; ``build_fold_spec`` still refuses it until slice C."""
     requeued = skipped = 0
     not_found: list[str] = []
     for accession in accessions:
@@ -267,17 +288,17 @@ def requeue_jobs(session: Session, accessions: Iterable[str]) -> RequeueSummary:
             if job.status == COMPLETE:
                 skipped += 1
                 continue
-            # D-047: fail loud HERE on a job whose tier cannot resolve a fold recipe, rather
-            # than letting it fail silently at fold-time. Since D-047 resolves the recipe at
-            # `build_fold_spec`, a tier-less job would otherwise be reset to `pending`, claimed,
-            # and only then raise mid-fold on a paid card — with the failure detached from the
-            # requeue that surfaced it. No mutation happens before this check, so a raise leaves
-            # the transaction unwritten (the caller's Session rolls back).
+            # D-047: fail loud HERE on a job whose tier is unknown, rather than letting it
+            # fail silently at fold-time. D-107 amendment 1: `msa` is a KNOWN claimable tier
+            # with no ESMFold recipe — requeue is allowed; `build_fold_spec` still raises
+            # until slice C. NULL / unknown still refuse. No mutation happens before this
+            # check, so a raise leaves the transaction unwritten (the caller's Session rolls back).
             tier = (meta or {}).get("tier")
-            if tier not in TIER_RECIPE:
+            if tier not in KNOWN_TIERS:
                 raise ValueError(
                     f"{accession}: job {job.id} has no resolvable tier (tier={tier!r}); "
-                    f"refusing to requeue a job whose fold recipe cannot be resolved (D-047)."
+                    f"refusing to requeue a job whose fold recipe cannot be resolved "
+                    f"(D-047 / D-107). Known tiers: {sorted(KNOWN_TIERS)}."
                 )
             job.status = PENDING
             job.claimed_at = None

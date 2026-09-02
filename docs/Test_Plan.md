@@ -245,4 +245,20 @@ Acceptance tests for the About page (`/about`, `AdcContext.jsx`). Implemented in
 
 ---
 
+## Addendum 2026-09-02 — D-107 amendment 1 msa-tier plumbing
+
+Acceptance tests for slice B (queue plumbing). Implemented in
+`tests/test_msa_tier_plumbing.py` against `UnlockedFakeJobQueue` / SQLite. Each AT
+must be able to go red. No live Postgres integration job. About copy is slice A;
+MSA worker image is slice C.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1074** | Seed pending rental + pending msa; `claim(..., tier='rental')` returns the rental job only | `test_rental_claim_returns_the_rental_job_only_when_msa_is_also_pending` |
+| **T-1075** | Same seed; `claim(..., tier='msa')` returns the msa job only | `test_msa_claim_returns_the_msa_job_only_when_rental_is_also_pending` |
+| **T-1076** | `build_fold_spec` for an msa job raises (does not return an ESMFold FoldSpec) | `test_build_fold_spec_for_an_msa_job_raises_not_an_esmfold_foldspec` |
+| **T-1077** | local/rental `TIER_RECIPE` unchanged; `msa` is not a key | `test_local_and_rental_tier_recipe_unchanged` |
+
+---
+
 **End of Test Plan**

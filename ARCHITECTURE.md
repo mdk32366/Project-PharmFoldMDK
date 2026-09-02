@@ -468,7 +468,13 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
   jobs on the next claim, instead of a requeue faithfully replaying a stale recipe. The
   reproducibility record is `fold_provenance` (D-045), which captures what each fold *actually*
   ran. `TIER_RECIPE` lives in `core/contracts.py` (the serving-safe leaf, beside `FoldSpec`) so the
-  serving tier resolves it without importing `worker/` (DEP-001). Reached through the `JobQueue`
+  serving tier resolves it without importing `worker/` (DEP-001). **D-107 amendment 1:** `jobs.tier`
+  may be `msa` — a claimable partition, still filtered by `tier = :tier` (F-035). `TIER_RECIPE`
+  remains ESMFold-only (`local` int8/64, `rental` fp16/64); `msa` is **not** a key, so
+  `build_fold_spec` fails loud rather than returning an ESMFold `FoldSpec`. The known-tier set
+  used at enqueue/validation (`KNOWN_TIERS`) includes `msa` so that string is not treated as
+  unknown and dropped. NULL-tier remains unclaimable (the 48 hold is not this change). The MSA
+  worker (MMseqs2/OpenFold) is slice C, not this change. Reached through the `JobQueue`
   **seam** (`core/queue.py`):
   claimed via `SELECT … FOR UPDATE SKIP LOCKED` (the one Postgres-only, unproven-in-CI
   operation), while `complete`/`fail`/`reap_stale` are portable and tested for real on SQLite.

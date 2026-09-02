@@ -58,8 +58,10 @@ def build_fold_spec(queue: Any, engine: Any, worker_id: str,
     (The 2026-07-24 rerun proved why: five jobs enqueued before D-042's rental
     ``chunk_size`` ``None``→``64`` were requeued and faithfully replayed the frozen
     ``chunk_size=None``, so they re-OOM'd unchunked.) A job whose ``tier`` cannot resolve a
-    recipe fails **loud here**, never folds at a silent default. ``model_revision`` (the pinned
-    weights) and ``source``/``ecd_start``/``ecd_end`` (the target's slicing identity) remain
+    recipe fails **loud here**, never folds at a silent default. **D-107 amendment 1:**
+    ``msa`` is a known claimable tier and is not an ESMFold recipe — it fails here with the
+    same ``ValueError`` shape as an unknown tier, rather than resolving ``TIER_RECIPE`` into
+    an ESMFold ``FoldSpec``. ``model_revision`` (the pinned weights) and ``source``/``ecd_start``/``ecd_end`` (the target's slicing identity) remain
     authoritative from ``inference_settings`` — they are not a compute knob D-042 revises."""
     # ⚠ The tier reaches the SQL predicate; it is never checked after the claim.
     job: Optional[Job] = queue.claim(worker_id, tier=tier)
@@ -69,13 +71,22 @@ def build_fold_spec(queue: Any, engine: Any, worker_id: str,
         meta = conn.execute(
             select(ProteinAnalysis.meta).where(ProteinAnalysis.id == job.analysis_id)
         ).scalar_one()
-    tier = (meta or {}).get("tier")
-    if tier not in TIER_RECIPE:
+    meta_tier = (meta or {}).get("tier")
+    # ⚠ D-107 amendment 1: `msa` is a known claimable tier and is NOT an ESMFold recipe.
+    # Fail loud here — same shape as D-047 unknown-tier — rather than resolving
+    # TIER_RECIPE["rental"] (or any stub) and handing the worker an ESMFold FoldSpec.
+    if job.tier == "msa" or meta_tier == "msa":
         raise ValueError(
-            f"job {job.id}: analysis meta has no resolvable tier (tier={tier!r}); cannot "
-            f"resolve a fold recipe (D-047). Known tiers: {sorted(TIER_RECIPE)}."
+            f"job {job.id}: msa fold recipe is not implemented (D-107); cannot "
+            f"resolve an ESMFold fold recipe (D-047). Known ESMFold recipe tiers: "
+            f"{sorted(TIER_RECIPE)}."
         )
-    recipe = TIER_RECIPE[tier]
+    if meta_tier not in TIER_RECIPE:
+        raise ValueError(
+            f"job {job.id}: analysis meta has no resolvable tier (tier={meta_tier!r}); cannot "
+            f"resolve a fold recipe (D-047). Known ESMFold recipe tiers: {sorted(TIER_RECIPE)}."
+        )
+    recipe = TIER_RECIPE[meta_tier]
     s = job.inference_settings
     return FoldSpec(
         job_id=job.id,

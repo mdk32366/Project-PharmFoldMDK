@@ -250,7 +250,7 @@ class ManifestRow:
     span: int | None            # largest ECD span LENGTH (sliced_ecd), else None
     ecd_start: int | None       # 1-based bounds of the folded span (sliced_ecd), else None
     ecd_end: int | None         # inherited: the LARGEST span, per D-024/D-026 (ii)
-    tier: str                   # local | rental
+    tier: str                   # local | rental | msa (msa is claimable, not an ESMFold recipe — D-107)
     tier_reason: str | None     # required whenever tier == "rental"
     held_out: bool              # boundary-method incomparable (D-021 §1a)
     excluded: bool
