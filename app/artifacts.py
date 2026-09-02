@@ -123,23 +123,30 @@ def _update_analysis(engine: Any, analysis_id: int, *, pdb_path: str,
                      provenance: dict) -> None:
     """Project provenance onto the post-fold columns and merge the full record into
     ``meta["fold_provenance"]`` (D-031 (b)), in ONE transaction. Reads current meta so
-    the pre-fold keys D-026 wrote (gene, sequence, tier, ECD bounds, …) are preserved."""
+    the pre-fold keys D-026 wrote (gene, sequence, tier, ECD bounds, …) are preserved.
+
+    D-106: when ``pae_json_path`` is None, omit it from the UPDATE. A D-035 upload
+    with no PAE file must not NULL a path D-036 already harvested; a first-time fold
+    with no PAE still leaves the column NULL because nothing writes it.
+    """
     with engine.begin() as conn:
         current = conn.execute(
             select(ProteinAnalysis.meta).where(ProteinAnalysis.id == analysis_id)
         ).scalar_one()
         merged = dict(current or {})
         merged["fold_provenance"] = provenance
+        values: dict[str, Any] = dict(
+            pdb_path=pdb_path,
+            mean_plddt=mean_plddt,
+            structure_source=STRUCTURE_SOURCE,
+            meta=merged,
+        )
+        if pae_json_path is not None:             # D-106: omit the SET when absent
+            values["pae_json_path"] = pae_json_path
         conn.execute(
             update(ProteinAnalysis)
             .where(ProteinAnalysis.id == analysis_id)
-            .values(
-                pdb_path=pdb_path,
-                mean_plddt=mean_plddt,
-                pae_json_path=pae_json_path,
-                structure_source=STRUCTURE_SOURCE,
-                meta=merged,
-            )
+            .values(**values)
         )
 
 
@@ -159,7 +166,8 @@ def persist_fold(
 ) -> dict[str, str]:
     """Persist one fold: Volume files first, then the analysis row, compensating on
     DB failure. Idempotent — a retried upload re-writes the same paths and re-stamps
-    the same row (D-031 §2). Raises ``AnalysisNotFound`` if the job has no analysis."""
+    the same row (D-031 §2). Raises ``AnalysisNotFound`` if the job has no analysis.
+    A missing PAE file does not write ``pae_json_path`` (D-106)."""
     analysis_id = _analysis_id_for(engine, job_id)
     if analysis_id is None:
         raise AnalysisNotFound(f"no analysis for job {job_id}")
@@ -171,7 +179,7 @@ def persist_fold(
             engine, analysis_id,
             pdb_path=paths["pdb"],
             mean_plddt=provenance.get("mean_plddt"),
-            pae_json_path=paths.get("pae"),        # None when the fold emitted no PAE
+            pae_json_path=paths.get("pae"),        # None → omit the SET (D-106)
             provenance=provenance,
         )
     except Exception:

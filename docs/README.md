@@ -130,6 +130,20 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-106 — `persist_fold` omits `pae_json_path` when the upload has no PAE
+
+- **Date:** 2026-09-02
+- **Status:** accepted
+- **Context:** D-035 part 2 stripped PAE from `/jobs/{id}/artifacts`; D-036 lands it later via `persist_pae`. `persist_fold` → `_update_analysis` nevertheless always `SET pae_json_path = paths.get("pae")`. When `pae_gz` is None that value is None, so a re-fold COMPLETE of a row whose PAE was already harvested **NULLs the column**. Provenance: `app/artifacts.py` `_update_analysis` `.values(pae_json_path=pae_json_path)` and `persist_fold`'s `pae_json_path=paths.get("pae")`; `/artifacts` reads `pae` as `Optional[UploadFile] = File(None)` (`app/routes.py`). The harvested files live on the Fly volume; they are not re-uploadable from a gone RunPod.
+- **Decision:** When `pae_gz` is None, **do not write** `pae_json_path` (NULL stays NULL; a harvested path stays). When `pae_gz` is present, set the column as today. `pdb_path` / `mean_plddt` / the rest of `persist_fold` are unchanged. Claim / reap / enqueue / census hold rows are not this entry.
+- **Deep-learning justification:** PAE is the folding head's residue-pair confidence. A re-fold that posts structure without PAE (D-035) must not erase a harvested matrix that cannot be recovered without a paid re-fold. The neural artifact stays attributable; the transport does not pretend absence.
+- **Consequences:** `_update_analysis` omits `pae_json_path` from the UPDATE when the path is None. First-time folds with no PAE still leave the column NULL. Tests in `tests/test_transport_boundary.py` pin all three: preserve harvested, still set when present, first-time None stays NULL.
+- **Relied on by:** a re-fold COMPLETE of rows that already have `pae_json_path` from D-036.
+- **Assumptions refused:** that "no PAE in this upload" means "this row has no PAE"; that D-031 (b)'s "NULL when the fold emitted no PAE" licensed wiping a path written by a later transfer.
+- **Amended by:** —
+
+---
+
 ### D-105 — RB re-gate folds one tile per OS process that exits before the next preflight
 
 - **Date:** 2026-09-01
