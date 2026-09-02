@@ -130,6 +130,20 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-108 — the paper phase gets a folder; the claim register does not move
+
+- **Date:** 2026-09-02
+- **Status:** accepted
+- **Context:** The paper phase is next, and `docs/` is 257 flat files with one subdirectory (`keel/`). The material that phase generates — a PRISMA-grade lit review, opened primary sources, derived reading surfaces for non-specialist readers — has no home, and the first such surface has now been drafted (a non-specialist summary of P-001 which states in its own header that where it and a log entry differ, **the log entry governs**). Provenance for the constraint that follows: `grep -rn "PAPERS-v2"` over `docs/` returns 25 occurrences across 13 files, ten of which write the explicit path `docs/PAPERS-v2.md`; `RESERVED.md` line 82 records **forward-only — existing citations are NOT rewritten**, and `META-ORDER-2026-08-05-second-paste-into-Code.md` line 41 repeats it for `PAPERS-v2.md` by name.
+- **Decision:** Create `docs/papers/` as the home for paper-phase work: `README.md` (the index and the placement rule), `surfaces/` (derived reading surfaces — non-authoritative, each naming the entries it derives from), `litreview/` (the systematic review: protocol, search log, screening), `sources/` (one file per opened primary source, with its provenance). The 2026-09-02 proposal lands at `docs/papers/surfaces/PROPOSAL-2026-09-02-scholarly-paper.md`. ⚠ **Nothing existing moves.** `docs/PAPERS-v2.md` stays the claim register at its cited path; `PREWORK-2026-08-paper-phase.md`, `P-001-amendment-2-underpowered.md` and `P-001-amendment-N-pooled-comparator.md` stay where they are. **The index points; it does not relocate.** The `P-NNN` namespace is unchanged — a new paper still registers *inside* `PAPERS-v2.md`, not as a standalone file. **This entry does not select a P-001 branch and does not merge the two pending paste-ready P-001 amendments.**
+- **Deep-learning justification:** Neutral to the DL core — no weights, no inference, no data path, no change to the fold recipe. The relevance is custodial: the paper phase is where the ESMFold work gets *claimed*, and D-075's two pre-committed branches only bind while the register holding them stays a single addressable authority. ⚠ **A second home for claims is exactly how D-062 happened.** This entry gives derived surfaces a folder precisely so that they cannot become that second home — `surfaces/` is downstream of the register by construction, never a peer of it.
+- **Consequences:** `docs/papers/` plus three subdirectories, each carrying a `README.md` so git tracks it. `ARCHITECTURE.md` is unchanged: no system shape, data flow, dependency or deployment change. The proposal's own §7 definition-of-done is carried into `docs/papers/README.md` as an **open** checklist rather than marked discharged — the document was drafted from a snapshot and its §6.1 still holds both branches. **One §7 item was checked while landing it:** every entry the document cites resolves — D-015, F-004, F-009 and D-075 as `###` headings in this log, P-001 and P-002 as `##` headings in `PAPERS-v2.md` (P-003 resolves too, under a `⟡` prefix). That is the **citation invariant** satisfied; it is **not** the cross-check against current state, which stays open.
+- **Relied on by:** the lit review when it starts; any deck, abstract or email derived from the proposal — the §6.2 over-claim guard travels with them.
+- **Assumptions refused:** that the proposal document is authoritative (it is derived, and says so first); that giving the phase a folder relocates the claim register; that tidiness outranks a cited path; that this entry rules on D-075 or on the pending P-001 amendments.
+- **Amended by:** —
+
+---
+
 ### D-107 — future msa tier named; About surfaces it as not-built
 
 - **Date:** 2026-09-02
