@@ -130,6 +130,20 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-107 — future msa tier named; About surfaces it as not-built
+
+- **Date:** 2026-09-02
+- **Status:** accepted
+- **Context:** The fold we run is ESMFold. A second recipe — MSA search, then an AF2-class model — is the named next path, and it is not in the tree. Without a surface that says so, a reader can take the current cheap pass as the whole story, or take AlphaFold 3 as silently in scope. This entry names the path; it does not ship it.
+- **Decision:** The future msa tier is named: MSA search, then an AF2-class model, on the same queue, same artifacts, same UI, with ESMFold remaining the cheap first pass. `/about` (the existing ADC explainer) surfaces that path at the bottom as **not-built**. Existing ADC copy is unchanged. AlphaFold 3 is out of scope until we can name a license and a compute path that still means we ran it. **The 48 hold is not this entry. The 246 reap is not this entry.** No worker, queue, recipe table, or Fly change.
+- **Deep-learning justification:** The neural work we run is ESMFold. Naming a second recipe as not-built keeps that claim honest: the artifacts on the site come from the model we actually folded, not from a path we have only described. An AF2-class follow-on would still be us running a folding network on our queue; AlphaFold 3 stays out until a license and a compute path preserve that same "we ran it" claim. This entry adds no weights and no inference.
+- **Consequences:** `AdcContext.jsx` gains the not-built section. Component tests pin the existing ADC copy, the new copy, and the absence of product-edition strings. `ARCHITECTURE.md` is unchanged: no recipe, queue, worker, or data-flow change. The 48 hold and the 246 reap remain whoever owns those operations; this entry is not authority for either.
+- **Relied on by:** the `/about` not-built section; any later msa-tier recipe work that needs a named destination that is not yet built.
+- **Assumptions refused:** that naming the path is shipping it; that AlphaFold 3 is in scope; that this entry authorises the 48 hold or the 246 reap.
+- **Amended by:** —
+
+---
+
 ### D-106 — `persist_fold` omits `pae_json_path` when the upload has no PAE
 
 - **Date:** 2026-09-02

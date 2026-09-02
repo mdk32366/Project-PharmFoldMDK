@@ -42,3 +42,38 @@ describe('AdcContext — cohort stats derived from /api/analyses, not hardcoded 
     expect(container.textContent).not.toMatch(/45% fall below 60/)
   })
 })
+
+// D-107 — /about names the future msa path as not-built. These three ATs are self-contained and
+// must go red if the section is missing, if the existing ADC copy was replaced, or if a forbidden
+// product-edition string appears on the page. Negative assertions below are the only place those
+// strings are allowed to appear in this change.
+const ADC_COPY = 'antibody\u2013drug conjugate' // en-dash, as AdcContext.jsx renders it
+const WHATS_NEXT = 'What\u2019s next (not built)' // curly apostrophe, as the heading renders it
+
+describe('AdcContext — What’s next (not built) (D-107)', () => {
+  beforeEach(() => {
+    listAnalyses.mockResolvedValue(FIXTURE)
+  })
+
+  it('T-1071: /about still contains the existing ADC copy (antibody–drug conjugate)', () => {
+    const { container } = renderAdc()
+    expect(container.textContent).toContain(ADC_COPY)
+  })
+
+  it('T-1072: /about contains “What’s next (not built)” and “MSA” and “ESMFold stays”', () => {
+    const { container } = renderAdc()
+    const text = container.textContent
+    expect(text).toContain(WHATS_NEXT)
+    expect(text).toContain('MSA')
+    expect(text).toContain('ESMFold stays')
+  })
+
+  it('T-1073: /about does not contain forbidden product-edition strings', () => {
+    const { container } = renderAdc()
+    const text = container.textContent
+    // Negative assertions: these three strings must be absent from the rendered page.
+    expect(text).not.toContain('v2')
+    expect(text).not.toContain('version 2')
+    expect(text).not.toContain('PharmFold 2')
+  })
+})
