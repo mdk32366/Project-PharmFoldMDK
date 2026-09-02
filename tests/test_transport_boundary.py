@@ -113,6 +113,47 @@ def test_failed_db_write_removes_written_files(engine, tmp_path):
     assert (pdb_path, mean_plddt, pae_path) == (None, None, None)
 
 
+# ── D-106: PAE-absent persist_fold must not wipe a harvested pae_json_path ─────
+# The three proofs: (1) a harvested path survives pae_gz=None AND pdb_path still
+# updates; (2) pae_gz present still sets the column; (3) first-time no-PAE stays NULL.
+# (1) is the wipe; (2) and (3) bound the patch so it cannot "never write PAE".
+
+def _kw_no_pae():
+    return dict(pdb="ATOM\n", plddt=[80.0] * 4, pae_gz=None, provenance=PROV)
+
+
+def test_persist_fold_without_pae_preserves_existing_pae_json_path(engine, tmp_path):
+    """Harvested PAE (D-036) must survive a D-035 no-PAE re-upload; pdb_path still lands."""
+    analysis_id, job_id = _seed(engine)
+    harvested = "/data/42/pae.json.gz"
+    with Session(engine) as s:
+        s.get(ProteinAnalysis, analysis_id).pae_json_path = harvested
+        s.commit()
+
+    persist_fold(engine, str(tmp_path), job_id, **_kw_no_pae())
+
+    pdb_path, _, pae_path, _ = _cols(engine, analysis_id)
+    assert pdb_path is not None and pdb_path.endswith("structure.pdb")
+    assert pae_path == harvested                 # must not become NULL
+
+
+def test_persist_fold_with_pae_still_sets_pae_json_path(engine, tmp_path):
+    """The patch is omit-when-absent, not never-write: a PAE-bearing upload still stamps."""
+    analysis_id, job_id = _seed(engine)
+    persist_fold(engine, str(tmp_path), job_id, **_kw())
+    _, _, pae_path, _ = _cols(engine, analysis_id)
+    assert pae_path is not None and pae_path.endswith("pae.json.gz")
+
+
+def test_persist_fold_first_time_without_pae_leaves_pae_json_path_null(engine, tmp_path):
+    """A first fold that emitted no PAE still leaves the column NULL (D-031 (b) honesty)."""
+    analysis_id, job_id = _seed(engine)
+    persist_fold(engine, str(tmp_path), job_id, **_kw_no_pae())
+    pdb_path, _, pae_path, _ = _cols(engine, analysis_id)
+    assert pdb_path is not None and pdb_path.endswith("structure.pdb")
+    assert pae_path is None
+
+
 # ── persist_pae — the D-036 out-of-band transfer, same compensated boundary ────
 
 def _pae_gz():
