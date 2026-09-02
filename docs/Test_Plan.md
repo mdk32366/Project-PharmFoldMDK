@@ -232,4 +232,17 @@ builds the consumer's object before any write.**
 
 ---
 
+## Addendum 2026-09-02 — D-107 `/about` not-built msa path
+
+Acceptance tests for the About page (`/about`, `AdcContext.jsx`). Implemented in
+`ui/src/components/AdcContext.test.jsx`. Each AT must be able to go red.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1071** | `/about` still contains `antibody–drug conjugate` (existing ADC copy; en-dash as rendered) | `T-1071: /about still contains the existing ADC copy (antibody–drug conjugate)` |
+| **T-1072** | `/about` contains `What’s next (not built)` and `MSA` and `ESMFold stays` | `T-1072: /about contains “What’s next (not built)” and “MSA” and “ESMFold stays”` |
+| **T-1073** | `/about` does not contain the three forbidden product-edition strings (negative assertions in the test only) | `T-1073: /about does not contain forbidden product-edition strings` |
+
+---
+
 **End of Test Plan**

@@ -149,6 +149,16 @@ export default function AdcContext() {
         being excited about; the target selection is where the difficulty actually lives; and a system
         honest about which is which is the more persuasive artefact, not the more timid one.
       </p>
+
+      {/* D-107: future msa tier, named and marked not-built. ESMFold remains the cheap first pass
+          we actually run. AlphaFold 3 is out of scope until a license and a compute path still mean
+          we ran it. The 48 hold and the 246 reap are not this entry. */}
+      <h3>What&rsquo;s next (not built)</h3>
+      <p>
+        A second fold recipe beside ESMFold — MSA search, then an AF2-class model. Same queue, same
+        artifacts, same UI. ESMFold stays the cheap first pass. AlphaFold 3 is out of scope until we
+        can name a license and a compute path that still means we ran it.
+      </p>
     </div>
   )
 }
