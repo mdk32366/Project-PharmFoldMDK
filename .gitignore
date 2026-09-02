@@ -261,3 +261,7 @@ data/control/sb_timing/
 data/control/rb_local/*/pae.json
 data/control/rb_local/*/structure.pdb
 data/control/rb_local/*/plddt.json
+
+# T5 local fold archive (Matt GO 2026-09-02). Never commit PDBs/PAE.
+data/artifacts/
+
