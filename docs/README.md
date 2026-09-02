@@ -140,7 +140,27 @@ So the rule is not "be careful" — it is:
 - **Consequences:** `AdcContext.jsx` gains the not-built section. Component tests pin the existing ADC copy, the new copy, and the absence of product-edition strings. `ARCHITECTURE.md` is unchanged: no recipe, queue, worker, or data-flow change. The 48 hold and the 246 reap remain whoever owns those operations; this entry is not authority for either.
 - **Relied on by:** the `/about` not-built section; any later msa-tier recipe work that needs a named destination that is not yet built.
 - **Assumptions refused:** that naming the path is shipping it; that AlphaFold 3 is in scope; that this entry authorises the 48 hold or the 246 reap.
-- **Amended by:** —
+- **Amended by:** D-107 amendment 1 — the parent’s “no queue change” clause. About copy stays slice A. Worker stays slice C.
+
+#### D-107 amendment 1 — `msa` is a claimable `jobs.tier`; `TIER_RECIPE` stays ESMFold-only
+
+- **Date:** 2026-09-02
+- **Status:** accepted
+- ⚠ **A sub-entry, not a new integer.** It amends `D-107` in place beneath it, so **D-108 is not invented.**
+
+**WHAT THE PARENT SAID THAT THIS AMENDS.** The parent named the future msa path and said *"No worker, queue, recipe table, or Fly change."* Slice A (About copy, `/about`) remains that: **this PR does not edit the About page.** **Queue plumbing is now in scope.** Worker (MMseqs2/OpenFold) remains slice C, not this PR. `TIER_RECIPE` still does not gain an `msa` key — that table is ESMFold.
+
+- **Context:** A rental worker that can claim an `msa` job (or the reverse) mixes two fold networks on one card. `jobs.tier` already filters `tier = :tier` (F-035 / D-090). The missing piece is that `msa` is a real tier *string* the filter can match, while fold-time recipe resolve must not invent an ESMFold `FoldSpec` for it.
+- **Decision:** Plumbing only.
+  1. `msa` is a real value of `jobs.tier`. Claim SQL stays `tier = :tier` (F-035). NULL-tier is still claimed by nobody — **the 48 hold is not this entry.**
+  2. ⚠ **Do not add `msa` to `TIER_RECIPE`.** That table is ESMFold (`local` int8/chunk-64, `rental` fp16/chunk-64). An msa job must not resolve to fp16/chunk-64.
+  3. `build_fold_spec` for `analysis.meta.tier == 'msa'` or claimed `job.tier == 'msa'` **fails loud**, same shape as D-047 unknown-tier (`ValueError`). The msa fold recipe is slice C, not implemented.
+  4. The known-tier list used at enqueue/validation includes `msa`, so that string is not treated as unknown and silently dropped. Enqueue of msa is allowed by the code path; **this PR does not run it against prod.**
+  5. `reap_stale` is unchanged. **The 246 reap is not this entry.** No MSA/ColabFold/AF2 worker image. No `worker.main` change to fold MSA. No Fly deploy. No version numbers.
+- **Deep-learning justification:** The neural work we run is ESMFold, and `TIER_RECIPE` is that network’s dtype/chunk table. Plumbing `msa` as a claim partition without giving it an ESMFold recipe keeps the two networks from sharing a FoldSpec: a rental worker cannot fold an msa job as fp16/chunk-64, and an msa claim cannot be served an ESMFold spec. The MSA/AF2-class path is a different network; this entry adds no weights and no inference. Slice C is where that network would run.
+- **Consequences:** `core.contracts.KNOWN_TIERS` is `{local, rental, msa}`. `TIER_RECIPE` is unchanged. `enqueue_cohort` stamps an ESMFold recipe hint only for keys in `TIER_RECIPE`; an `msa` row is tagged `jobs.tier='msa'` without dtype/chunk_size. `requeue_jobs` accepts `msa` as a known tier and still refuses unknown/NULL. Tests in `tests/test_msa_tier_plumbing.py` pin the four ATs. `ARCHITECTURE.md` records the split: claimable tier vs ESMFold recipe table.
+- **Relied on by:** a future MSA worker (slice C) that will declare `tier=msa` and consume a non-ESMFold spec; until then, `build_fold_spec` is the loud refuse.
+- **Assumptions refused:** that naming `msa` in `TIER_RECIPE` with a stub recipe is plumbing; that a known tier must have an ESMFold dtype; that this entry authorises the 48 hold, the 246 reap, an MSA worker image, or About-page edits.
 
 ---
 

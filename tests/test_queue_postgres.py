@@ -209,7 +209,7 @@ def test_an_untagged_row_is_claimed_by_nobody_in_real_sql(pg_engine):
     `OR tier IS NULL` to be helpful, this reds and F-035 is back."""
     q = PostgresJobQueue(pg_engine)
     _enqueue(pg_engine, 1, tier=None)
-    for t in ("local", "rental"):
+    for t in ("local", "rental", "msa"):
         assert q.claim("w1", tier=t) is None
 
 

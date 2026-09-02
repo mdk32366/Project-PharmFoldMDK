@@ -61,10 +61,12 @@ class JobRecord(Base):
 
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    # ⚠ F-035: the tier a worker must MATCH to claim this job. Nullable with no server_default —
-    # a default of 'local' would make every untagged job silently claimable by the local worker,
-    # which is the defect this column closes. A null is a category: *declares no tier*, claimable
-    # by nobody, and counted by `pending_jobs_with_no_tier` so it cannot hide.
+    # ⚠ F-035 / D-107: the tier a worker must MATCH to claim this job. Values: local | rental |
+    # msa | NULL. Nullable with no server_default — a default of 'local' would make every untagged
+    # job silently claimable by the local worker, which is the defect this column closes. A null
+    # is a category: *declares no tier*, claimable by nobody, and counted by
+    # `pending_jobs_with_no_tier` so it cannot hide. `msa` is claimable; it is NOT a TIER_RECIPE
+    # key (that table is ESMFold).
     tier: Mapped[str | None] = mapped_column(String(20), index=True)
     worker_id: Mapped[str | None] = mapped_column(String(64))
     claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
