@@ -101,10 +101,27 @@ export default function CensusView() {
           running order, not a ranking</strong> — the position of a protein here says nothing
           whatever about it as a target.
         </p>
+        {/* ⚠⚠ D-094 amendment 1 dec 2. PLANNED and IN ARTIFACT are different populations and are
+            rendered as two values. ⚠ A bare 776 is forbidden — it asserts 776 structures exist,
+            when 728 are folded and 48 are HELD. The hold's cause is named, never implied. */}
         <ul>
           {CENSUS.tranches.map((t) => (
             <li key={t.tranche}>
-              <strong>Batch {t.tranche}</strong> — {t.span} — {t.rows.toLocaleString()} proteins
+              <strong>Batch {t.tranche}</strong> — {t.span} —{' '}
+              {t.rows.toLocaleString()} planned, {t.inArtifact.toLocaleString()} in{' '}
+              {CENSUS.profile.artifact}
+              {t.tranche === 5 && (
+                <>
+                  {' '}— ⚠ <strong>{t.complete.toLocaleString()} folded, {t.held} held</strong>:{' '}
+                  {t.heldCause}, measured against production {t.heldMeasuredOn}. The folds are
+                  complete; they are not in the artifact above, which has not been re-parsed.
+                </>
+              )}
+              {t.absent?.length > 0 && (
+                <>
+                  {' '}— ⚠ absent from the artifact: {t.absent.join(', ')}
+                </>
+              )}
             </li>
           ))}
         </ul>
@@ -122,7 +139,8 @@ export default function CensusView() {
         <p>
           Every folded protein was measured on the same six structural features as the 82, and the
           pre-registered model was applied to each. <strong>{CENSUS.profile.profiled.toLocaleString()}</strong>{' '}
-          of the <strong>{CENSUS.profile.folded.toLocaleString()}</strong> folded proteins carry a
+          of the <strong>{CENSUS.profile.folded.toLocaleString()}</strong> folded proteins — measured{' '}
+            {CENSUS.profile.measuredOn} from {CENSUS.profile.artifact} — carry a
           structural profile. <strong>{CENSUS.profile.refused.toLocaleString()}</strong> are refused,
           each with a named cause.
         </p>
