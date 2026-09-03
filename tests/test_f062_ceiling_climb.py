@@ -5,7 +5,8 @@ the climb on MDKDevLaptop. A test that imported torch.cuda and folded would not
 run at all, so the assertions here are the contracts the GPU run depends on:
 
 - F-062 is a real `### ` header (the D-062 defect was a cited number with no entry)
-- RESERVED next-free is F-065; F-050 stays reserved
+- the RESERVED next-free `F-` pointer names no spent heading and exceeds every one;
+  F-050 stays reserved
 - ceiling_climb refuses without --layer1-attested, before any climb
 - --fold-in-child / WORKER_FOLD_IN_CHILD wiring is present (D-082 layer 3)
 """
@@ -66,9 +67,13 @@ def test_f050_was_not_taken():
 
 def test_reserved_next_free_is_f065_and_f050_still_reserved():
     reserved = RESERVED.read_text(encoding="utf-8")
-    assert "Next free `F-` integer: `F-065`" in reserved, (
-        "the next-free pointer must move in the SAME commit that spends F-064"
-    )
+    # ⚠⚠ F-062 amendment 1. This asserted the LITERAL `F-065`, so it passed only while nothing
+    # happened and went red the moment 314df71 spent F-065/F-066 and moved the pointer IN THE SAME
+    # COMMIT — the discipline the failure message itself demands. It encoded a rule about MOVEMENT
+    # as a fixed VALUE. ⚠ The message was always right; only the check was wrong.
+    # ⚠ Bumping the literal to F-067 was REFUSED on the record: it re-arms the identical trap for
+    # whoever spends F-067 next, and converts a guard into a maintenance obligation.
+    check_next_free_pointer(LOG.read_text(encoding="utf-8"), reserved)
     assert "Next free `F-` integer: `F-062`" not in reserved
     assert "| **F-050** |" in reserved
     # F-062 is written, not reserved
