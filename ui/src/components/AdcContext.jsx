@@ -9,6 +9,36 @@ import Term from './Term.jsx'
 // ADC framing / onboarding (UI Plan v2 §7): keep the metaphor (it is mechanism, not decoration),
 // bound the outcome claims, and let the honest limits sharpen the purpose rather than soften it.
 // The through-line: conviction about the mechanism, precision about the limits.
+// ⚠⚠ D-094 amendment 1 dec 3 — /about names the paper QUESTIONS, never a result.
+// Copy is OWNER-SUPPLIED and transcribed VERBATIM from ABOUT-COPY-owner-supplied-2026-09-03.md §2.
+// ⚠ Not written here, not reworded, not shortened. If a line will not fit a layout, it is reported,
+// not trimmed.
+//
+// ⚠ ONE source list, each item carrying its own status — two hard-coded paragraphs would fail F7,
+// and should. The standing line belongs to the SECTION, renders once, and renders BEFORE the list.
+// ⚠ NO NUMBER, NO AUTHOR, NO JOURNAL: D-100 reproduced the comparator's arithmetic exactly and this
+// copy makes no claim it is wrong. ⚠ It says "asks whether", never "shows that" — F-017 fired the
+// weaker row and Run B is blocked, not pending.
+const PAPER_QUESTIONS = [
+  {
+    id: 'P-001',
+    status: 'not submitted',
+    lead: 'Does the shape of a protein tell you something about its suitability as an ADC target that its abundance does not?',
+    body:
+      'Almost every published screen ranks candidates by how much more of a protein sits on tumour cells than on healthy ones. ' +
+      'This project asks whether a second, independent axis — derived from predicted structure — reorders that list. ' +
+      'The hard part is not building the axis. It is showing that the axis is not secretly measuring which proteins have been studied the most.',
+  },
+  {
+    id: 'P-004',
+    status: 'not submitted',
+    lead: 'What can an expression-threshold screen actually support?',
+    body:
+      'A widely used way of picking targets does its arithmetic correctly and still may carry less weight than readers give it. ' +
+      'This question is independent of the first: it is true, or not, whether or not the shape axis works.',
+  },
+]
+
 export default function AdcContext() {
   // D-050: the cohort statistics below are DERIVED from the live cohort, never hardcoded — a literal
   // count rots silently as the cohort grows (this copy once read "42 … 34.78 to 81.40 … 45%", stale
@@ -149,6 +179,21 @@ export default function AdcContext() {
         being excited about; the target selection is where the difficulty actually lives; and a system
         honest about which is which is the more persuasive artefact, not the more timid one.
       </p>
+
+      {/* ⚠ D-094 amendment 1 dec 3. Placed after "Why this project exists", before "What's next".
+          ⚠ The standing line is NOT a footnote and is NOT trimmed to fit a layout. */}
+      <h3>The questions this project is trying to answer</h3>
+      <p className="note">
+        The register in the repository governs. This page is derived from it and is not a source of
+        truth. Nothing below has been submitted for publication and nothing has been peer-reviewed.
+      </p>
+      <ul>
+        {PAPER_QUESTIONS.map((q) => (
+          <li key={q.id}>
+            <strong>{q.lead}</strong> {q.body} <em>({q.status})</em>
+          </li>
+        ))}
+      </ul>
 
       {/* D-107: future msa tier, named and marked not-built. ESMFold remains the cheap first pass
           we actually run. AlphaFold 3 is out of scope until a license and a compute path still mean

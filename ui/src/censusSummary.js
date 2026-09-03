@@ -36,6 +36,9 @@ export const CENSUS = {
   // or the bar moves, these move in the same commit or they are wrong.
   profile: {
     measuredOn: '2026-08-19',
+    // ⚠ D-094 amendment 1 dec 1: the figure is correct ABOUT ITS ARTIFACT, and the surface
+    // must say which artifact. Rendered adjacent to the count, never only in this comment.
+    artifact: 'census_features.v1.jsonl',
     folded: 2690,
     withFeatures: 2632,
     profiled: 1397,
@@ -66,12 +69,27 @@ export const CENSUS = {
   ],
 
   // ⚠ Tranches are EXECUTION BATCHES (D-083). Not a ranking, not a priority, not a quality signal.
+  // ⚠⚠ D-094 amendment 1 dec 2. `rows` is what the MANIFEST PLANS; `inArtifact` is what
+  // census_features.v1.jsonl actually contains. They are different populations and the page must
+  // never render one as though it were the other. ⚠ A bare 776 is forbidden: it asserts that 776
+  // structures exist, when 728 are folded and 48 are HELD.
   tranches: [
-    { tranche: 1, span: '1–50 aa', rows: 1307 },
-    { tranche: 2, span: '51–150 aa', rows: 535 },
-    { tranche: 3, span: '151–300 aa', rows: 517 },
-    { tranche: 4, span: '301–440 aa', rows: 332 },
-    { tranche: 5, span: 'over 440 aa — rented GPU', rows: 776 },
+    { tranche: 1, span: '1–50 aa', rows: 1307, inArtifact: 1307 },
+    { tranche: 2, span: '51–150 aa', rows: 535, inArtifact: 535 },
+    // ⚠ 517 planned, 516 present. The one absence is named and its cause is NOT stated here —
+    // P55073's disposition is contested and unruled, and naming a cause would be deciding it.
+    { tranche: 3, span: '151–300 aa', rows: 517, inArtifact: 516, absent: ['P55073'] },
+    { tranche: 4, span: '301–440 aa', rows: 332, inArtifact: 332 },
+    {
+      tranche: 5,
+      span: 'over 440 aa — rented GPU',
+      rows: 776,
+      inArtifact: 0,
+      complete: 728,
+      held: 48,
+      heldCause: 'held by D-090’s claim filter under D-109 — the 48 carry no tier',
+      heldMeasuredOn: '2026-09-02',
+    },
   ],
 
   // ⚠ Absences, each with a CAUSE. Never a zero, never a bare null.
