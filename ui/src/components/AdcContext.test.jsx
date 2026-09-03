@@ -99,9 +99,18 @@ describe('D-094 amendment 1 — the paper questions on /about', () => {
     expect(t.match(/nothing has been peer-reviewed/g) || []).toHaveLength(1)
   })
 
-  it('F8: renders no result figure — no median, no effect size, no n-of-m', () => {
-    // ⚠⚠ ABSENCE GUARD. This passes before the copy exists and therefore proves nothing yet.
+  it('F8: the paper section RENDERS, and carries no result figure', () => {
+    // ⚠⚠ REVISED. The first version asserted absence only, so it passed against a page with no
+    // paper section at all — it could not tell "no numbers" from "no section", and it went green
+    // before the copy existed. ⚠ A guard that cannot distinguish those two states is a decoration.
+    //
+    // Presence and absence are now asserted TOGETHER, in one test:
+    //   · remove the section  → the first expect fails
+    //   · add a result figure → one of the loop's expects fails
+    // ⚠ Shown to bite before this was committed: a temporary `0.6607` in the copy failed it AT the
+    // assertion, and reverting the copy returned it to green. The revert was never committed.
     const t = renderAdc().container.textContent
+    expect(t).toContain('The questions this project is trying to answer')
     for (const forbidden of ['0.6607', '0.6786', '8 of 12', '9 of 12', '0.49', '0.62']) {
       expect(t).not.toContain(forbidden)
     }
