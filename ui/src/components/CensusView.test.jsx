@@ -228,3 +228,53 @@ describe('CensusView — what we found, and how to read it', () => {
     expect(x).toMatch(/not a list of candidates/)
   })
 })
+
+// ⚠⚠ D-094 amendment 1 — a surface states the provenance of its figures, or it supplies a premise
+// it cannot support. These five are written RED against the pre-amendment component.
+//
+// ⚠ Each fails AT ITS ASSERTION, not on an import or a render crash: `CensusView` already renders
+// standalone in every describe above, so a failure here is a missing string and nothing else.
+// An error-red is not a failure-red, and these are failure-reds.
+describe('D-094 amendment 1 — census figures carry their provenance', () => {
+  const text = () => render(<CensusView />).container.textContent
+
+  it('F1: every rendered profile figure carries its measuredOn date AND its source artifact', () => {
+    const t = text()
+    // the figure is already on the page — that part is not the defect
+    expect(t).toContain(CENSUS.profile.folded.toLocaleString())
+    // ⚠ the date exists at censusSummary.js:38 as a SOURCE LITERAL and is not rendered
+    expect(t).toContain(CENSUS.profile.measuredOn)
+    // ⚠ nor does the page name the artifact the figure is about
+    expect(t).toMatch(/census_features\.v1\.jsonl/)
+  })
+
+  it('F2: each tranche row renders planned and in-artifact as two distinct values', () => {
+    const t = text()
+    // tranche 3 is the discriminating row: 517 planned in the manifest, 516 in the artifact
+    expect(t).toContain('517')
+    expect(t).toContain('516')
+  })
+
+  it('F2b: tranche 5 renders 728 complete and 48 held, with a non-empty cause', () => {
+    const t = text()
+    expect(t).toContain('728')
+    expect(t).toContain('48')
+    // the hold's cause must be named, not implied
+    expect(t).toMatch(/D-090|claim filter/)
+  })
+
+  it('U4: a reader cannot read a census figure as current — the date sits WITH the figure', () => {
+    // ⚠ adjacency, not mere presence: a date elsewhere on the page does not qualify this count.
+    const t = text().replace(/\s+/g, ' ')
+    const folded = CENSUS.profile.folded.toLocaleString()
+    const near = new RegExp(
+      `${folded}[^.]{0,160}${CENSUS.profile.measuredOn}|${CENSUS.profile.measuredOn}[^.]{0,160}${folded}`,
+    )
+    expect(t).toMatch(near)
+  })
+
+  it('U7: a reader cannot conclude 776 tranche-5 structures exist', () => {
+    // ⚠ 776 is 728 folded plus 48 HELD. Rendered bare beside "proteins" it asserts 776 structures.
+    expect(text()).not.toMatch(/776\s*proteins/)
+  })
+})
