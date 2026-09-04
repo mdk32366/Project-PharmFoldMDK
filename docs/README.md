@@ -20,8 +20,12 @@
 >   updated in the same PR as any architectural change, and before any PR is filed).
 > - [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) — RunPod hold-48 rental runbook
 >   (D-113, D-114; RTX PRO 6000 Blackwell). Not a rewrite of the A6000 guide.
->   Pane C transcription surface: **Pane C — web terminal cheat sheet (copy-paste)**. **D-114:** ≈$50
->   account envelope; top-up before Wave 0 / emit; Step 0 balance glance (do not vacation on E).
+>   Pane C transcription: **Pane C — web terminal cheat sheet (copy-paste)** — **general cold start
+>   on a clean card** (rent → setup → worker → empty-queue prove → retrieve → Terminate), not a
+>   re-test after a named D-NNN. Scar citations (D-112 / D-113 / D-114 / D-115) stay in the
+>   why/non-negotiables. **Pane A** prints `WORKER_AUTH_TOKEN` from the laptop `.env` (`fly secrets
+>   list` names only). **D-114:** ≈$50 account envelope; top-up before Wave 0 / emit; Step 0
+>   balance glance (do not vacation on E).
 > - [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) — measured
 >   budget / tier waves from the IGF2R pilot (D-113). **D-114** amends the cash envelope
 >   only; measured forecasts stand.
@@ -182,7 +186,7 @@ Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward pa
 
 #### Consequences
 
-- [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) cheat sheet + Step 2 carry the AST `ImportFrom` snippet. Do not restore the raw substring check. Do not substitute a comment-strip-then-grep.
+- [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) cheat sheet + Step 2 carry the AST `ImportFrom` snippet. Do not restore the raw substring check. Do not substitute a comment-strip-then-grep. Operator-facing paste does not require hunting this entry's number — the snippet is the check.
 - Worker code, money pins, envelope, enqueue GO: untouched.
 
 #### Assumptions refused
@@ -230,8 +234,8 @@ Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward pa
 
 - [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) and [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) carry the envelope; measured §3/§4 forecasts are not rewritten. GUIDE Step 0 is the balance glance (before rent, before each wave, during long waves). Do not vacation on E.
 - Operators top up **before** Wave 0. Wave 0 spends against the topped-up account, not against the $14.17 snapshot.
-- Kill switches, wave caps, clean-card re-test, and Matt GO before emit are unchanged.
-- Wave 0 Pane C transcription (clone → pip trio → env → nvidia-smi logger → nohup) lives in the GUIDE section **Pane C — web terminal cheat sheet (copy-paste)**. Pins unchanged (D-112 import, cu128 trio, D-114 envelope). ⚠ **D-115:** the D-112 paste assert is AST `ImportFrom` — a raw `"from core.hold48" not in text` false-alarms on the D-112 inline comment.
+- Kill switches, wave caps, clean-card cold start, and Matt GO before emit are unchanged.
+- Wave 0 Pane C transcription (clone → pip trio → env → nvidia-smi logger → nohup → empty-queue prove → retrieve → Terminate) lives in the GUIDE section **Pane C — web terminal cheat sheet (copy-paste)**. Operator-facing copy is a **general cold start on a clean card**, not a re-test after a named D-NNN. Pins unchanged (D-112 import, cu128 trio, D-114 envelope). ⚠ **D-115:** the D-112 paste assert is AST `ImportFrom` — a raw `"from core.hold48" not in text` false-alarms on the D-112 inline comment. Pane A prints `WORKER_AUTH_TOKEN` from the laptop `.env` (`fly secrets list` names only).
 
 #### Assumptions refused
 
@@ -254,7 +258,7 @@ Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward pa
 - **Ruled by:** the IGF2R pilot scars (jobs **3589** / **3590**) + D-111 / D-112 / issue **#210**
 - **Relates:** `D-111` · `D-112` · `D-047` · `D-044` · `D-042` · `D-036` · `D-018` · `D-011` · issue **#210** · PR **#213** (`733c41f`) · PR **#212** (`1d48d1d`) · **D-114** (account envelope ≈ $50; docs only)
 - **Does not amend:** D-111 geometry (1656 / 128 / 1528), D-112's import site, or `worker/requirements.txt` (SQLAlchemy stays off the GPU tier)
-- **Amended by:** `D-114` (account envelope ≈ $50; top-up before Wave 0 / emit; `$14.17` at Terminate is historical and does not authorize C2; measured forecasts stand; RunPod balance glance is mandatory — do not vacation on E) · `D-115` (GUIDE D-112 paste assert is AST `ImportFrom`; docs only — does not amend this entry's geometry, card, or forecasts)
+- **Amended by:** `D-114` (account envelope ≈ $50; top-up before Wave 0 / emit; `$14.17` at Terminate is historical and does not authorize C2; measured forecasts stand; RunPod balance glance is mandatory — do not vacation on E) · `D-115` (GUIDE D-112 paste assert is AST `ImportFrom`; docs only — does not amend this entry's geometry, card, or forecasts) · GUIDE operator-facing Wave 0 copy (2026-09-04, Matt): general clean-card cold start (rent → setup → worker → empty-queue prove → retrieve → Terminate), not a re-test after this entry; Pane A prints `WORKER_AUTH_TOKEN` from the laptop `.env` (`fly secrets list` names only) — **no new D-NNN**
 
 #### Context
 
@@ -286,8 +290,8 @@ The remaining hold-48 tiles are ESMFold forward passes at the T5 recipe (`fp16` 
 
 #### Consequences
 
-- Operators follow `GUIDE-renting-hold48.md`, not the A6000 enqueue path. Pane C transcription for Wave 0 is that file's **Pane C — web terminal cheat sheet (copy-paste)**; Steps 2–6 remain the scar rationale. Pins unchanged (D-112 import, cu128 trio).
-- The other 44 stay unemitted until a clean-card cold-start re-test of that runbook succeeds.
+- Operators follow `GUIDE-renting-hold48.md`, not the A6000 enqueue path. Operator-facing Pane C / Wave 0 is a **general cold start on a clean card** (rent → setup → worker → empty-queue prove → retrieve → Terminate), not a "re-test after this entry." Scar citations stay in the why/non-negotiables (D-112 / D-115 AST pin, D-114 envelope). Pane A prints `WORKER_AUTH_TOKEN` from the laptop `.env` — `fly secrets list` names only.
+- The other 44 stay unemitted until a clean-card cold start of that runbook succeeds.
 - Peak VRAM is a **named unknown (UNKNOWN)**. Do not invent a GiB. It closes only when the next cold run's `nvidia-smi` CSV exists (runbook Step 5).
 - Parent job **3356** stays `jobs.tier` NULL; local stitch only so far. **Trinity accepted the stitch proof** (2,131,551 null cells, 0 literal zeros).
 - Fold-only remaining forecast at $2.19/hr is **$21.16** (104 tiles); C2 alone is **$17.97**. Measured remaining **$14.17** does not cover C2. Setup scars stay out of that forecast. ⚠ **D-114:** `$14.17` at Terminate is historical; Matt tops up before Wave 0 / emit; account ceiling ≈ **$50**. Do not rewrite these forecasts to fit that ceiling.
