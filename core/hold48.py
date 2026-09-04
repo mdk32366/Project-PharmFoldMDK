@@ -19,7 +19,7 @@ from typing import Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from core.contracts import TIER_RECIPE
+from core.contracts import MIN_OVERLAP_AA, STRIDE_AA, TIER_RECIPE, TILE_WINDOW_AA
 from db.models import JobRecord, ProteinAnalysis
 
 # Same pins as `worker.runner` (D-018). Duplicated so `app/artifacts.py` can
@@ -33,10 +33,9 @@ _ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_V7 = _ROOT / "data" / "census" / "census_manifest.v7.csv"
 UNIPROT_CACHE = _ROOT / "data" / "census" / "spancache"
 
-# BUILD GO geometry (issue #210 / D-111). ⚠ Not D-109 ruling 2's 1,026.
-TILE_WINDOW_AA = 1656
-MIN_OVERLAP_AA = 128
-STRIDE_AA = TILE_WINDOW_AA - MIN_OVERLAP_AA  # 1528
+# BUILD GO geometry (issue #210 / D-111) lives in core.contracts (D-112) so
+# worker/main.py can refuse L>1656 without importing this module (sqlalchemy).
+# ⚠ Not D-109 ruling 2's 1,026. Re-exported; not redefined.
 DOMAIN_SNAP_AA = 64
 
 # Named by the GO. The category is the molecule, not the length (D-109 ruling 3).

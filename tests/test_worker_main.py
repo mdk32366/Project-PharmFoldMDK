@@ -12,6 +12,11 @@ the DEP-001 relocation (re-export), so this entry point does not depend on #48's
 
 from __future__ import annotations
 
+import ast
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 
 from worker.http_client import HttpQueueClient
@@ -91,6 +96,95 @@ def test_fold_from_spec_rejects_model_revision_mismatch():
 
     with pytest.raises(FoldError):
         fold_from_spec(_spec(model_revision="deadbeef"), fold_fn=fake_fold)
+
+
+def test_fold_from_spec_refuses_a_sequence_over_1656():
+    """D-111 cap, D-112 import site: L>1656 is still FoldError. 1656 itself folds."""
+    from worker.main import TILE_WINDOW_AA
+    assert TILE_WINDOW_AA == 1656
+
+    def must_not_fold(*a, **k):
+        raise AssertionError("must NOT fold a sequence over the T5 window")
+
+    with pytest.raises(FoldError, match="1656"):
+        fold_from_spec(_spec(sequence="A" * 1657, ecd_start=1, ecd_end=1657),
+                       fold_fn=must_not_fold)
+
+    assert fold_from_spec(
+        _spec(sequence="A" * 1656, ecd_start=1, ecd_end=1656),
+        fold_fn=lambda *a, **k: "folded",
+    ) == "folded"
+
+
+def test_worker_main_source_never_imports_hold48():
+    """D-112: TILE_WINDOW_AA comes from core.contracts. Any hold48 import pulls sqlalchemy."""
+    src = Path(__file__).resolve().parent.parent / "worker" / "main.py"
+    tree = ast.parse(src.read_text(encoding="utf-8"))
+    from_contracts = False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                assert "hold48" not in alias.name, f"worker/main.py imports {alias.name}"
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            assert "hold48" not in node.module, f"worker/main.py imports {node.module}"
+            if node.module == "core.contracts" and any(
+                a.name == "TILE_WINDOW_AA" for a in node.names
+            ):
+                from_contracts = True
+    assert from_contracts, "worker/main.py must import TILE_WINDOW_AA from core.contracts"
+
+
+def test_hold48_does_not_redefine_tile_window():
+    """Single source: hold48 imports TILE_WINDOW_AA; it does not assign 1656 itself."""
+    src = Path(__file__).resolve().parent.parent / "core" / "hold48.py"
+    tree = ast.parse(src.read_text(encoding="utf-8"))
+    imported = False
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == "core.contracts":
+            names = {a.name for a in node.names}
+            if "TILE_WINDOW_AA" in names:
+                imported = True
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "TILE_WINDOW_AA":
+                    raise AssertionError(
+                        "core/hold48.py assigns TILE_WINDOW_AA — D-112: import it from contracts"
+                    )
+    assert imported, "core/hold48.py must import TILE_WINDOW_AA from core.contracts"
+
+
+def test_importing_worker_main_does_not_require_sqlalchemy():
+    """Rental-pod failure mode: python -m worker.main must load with sqlalchemy unimportable.
+
+    A subprocess starts with a blocked sqlalchemy finder, then imports worker.main.
+    core.hold48 must not appear in sys.modules — that module is the sqlalchemy edge.
+    """
+    repo = Path(__file__).resolve().parent.parent
+    script = r"""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path('.').resolve()))
+
+class _BlockSqlalchemy:
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == 'sqlalchemy' or (fullname and fullname.startswith('sqlalchemy.')):
+            raise ModuleNotFoundError('sqlalchemy blocked for D-112 worker import-graph test')
+        return None
+
+sys.meta_path.insert(0, _BlockSqlalchemy())
+import worker.main
+assert worker.main.TILE_WINDOW_AA == 1656
+assert 'core.hold48' not in sys.modules, sorted(m for m in sys.modules if 'hold48' in m)
+assert 'sqlalchemy' not in sys.modules
+"""
+    proc = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr + proc.stdout
 
 
 # ── client construction carries the bearer token (D-031 §4) ───────────────────

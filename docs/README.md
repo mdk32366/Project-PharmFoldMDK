@@ -130,6 +130,51 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-112 — TILE_WINDOW_AA lives in `core.contracts`; the GPU worker must not import `core.hold48`
+
+- **Date:** 2026-09-04
+- **Status:** accepted
+- **Ruled by:** Trinity (Architect) + Emma — the rental-pod `ModuleNotFoundError: sqlalchemy` after D-111 (#212). Matt hot-fixed the live pod; this entry is the durable shape. ⚠ **SQLAlchemy is not a GPU-tier dependency.** `worker/requirements.txt` is unchanged.
+- **Amends:** `D-111`'s fold-path wiring only — *where* `fold_from_spec` reads the 1656 cap. Geometry, population, stitch, mucins, and the cap itself are unchanged.
+- **Relates:** `D-111` · `D-018` · `DEP-001` · issue **#210** (D-111 follow-up, not a new GO)
+
+#### Context
+
+D-111 (#212, `1d48d1d`) added `from core.hold48 import TILE_WINDOW_AA` at **module import time** in `worker/main.py` (line 29 on that commit). `core/hold48.py` imports sqlalchemy at the top (`from sqlalchemy import select` / `from sqlalchemy.orm import Session`, lines 19–20 on that commit) because the planner writes `jobs` / `protein_analyses`.
+
+`worker/requirements.txt` does **not** pin SQLAlchemy — it is the GPU-tier pin list (D-018: torch / transformers / bitsandbytes / accelerate / httpx). SQLAlchemy==2.0.51 lives in the **root** `requirements.txt` (Fly serving tier, D-013). ⚠ How known: read both files on 2026-09-04 against `1d48d1d`; grep of `worker/requirements.txt` for `SQLAlchemy` is empty.
+
+On the rental pod, `python -m worker.main` therefore raised `ModuleNotFoundError: sqlalchemy` before any fold. The mechanism is the import graph, not a missing GPU library. Matt installed SQLAlchemy on the pod as a hot-fix; that is not the repository fix.
+
+Trinity + Emma reject pinning SQLAlchemy on the GPU tier. The serving-tier ORM is not a fold-runner dependency. Adding it would have made the accidental `hold48` import *succeed* and pulled the planner/ORM into the process that loads ESMFold.
+
+#### Decision
+
+1. **`TILE_WINDOW_AA = 1656` lives in `core/contracts.py`**, beside `TIER_RECIPE`. Same file also holds the D-111 overlap/stride integers (`MIN_OVERLAP_AA = 128`, `STRIDE_AA = 1528`) so hold48 does not keep a second copy of the window. `core/contracts.py` is the stdlib serving-safe leaf (DEP-001) and is therefore also the GPU-worker-safe leaf: importing it drags neither `worker/` nor sqlalchemy.
+2. **`worker/main.py` imports `TILE_WINDOW_AA` from `core.contracts` only.** Never from `core.hold48`, not at module top, not lazily inside `fold_from_spec`. The L≤1656 guard stays; only its import site moves.
+3. **`core/hold48.py` imports `TILE_WINDOW_AA` (and overlap/stride) from `core.contracts`.** No `TILE_WINDOW_AA = 1656` literal remains in hold48. Re-export is allowed so existing `from core.hold48 import TILE_WINDOW_AA` callers (`app/artifacts.py`, tests) keep working — same object, not a second constant.
+4. **`worker/requirements.txt` is not the fix and does not change.**
+
+#### Deep-learning justification
+
+Neutral to the network. The 1656 cap is still the T5 ESMFold window D-111 named; every forward pass the worker will run is still `L≤1656`. This entry only keeps the process that *loads those weights* from importing the serving-tier ORM in order to read an integer.
+
+#### Consequences
+
+- `ARCHITECTURE.md` names `core/contracts.py` as the home of the window.
+- A test must be able to go red if `worker/main.py` imports `core.hold48` again, or if `import worker.main` requires sqlalchemy. Provenance for the second: a subprocess that blocks `sqlalchemy` on `sys.meta_path` and then imports `worker.main`.
+- ⚠ **No enqueue. No Fly change. No GPU rent. Pilot queue jobs 3356/3589/3590 untouched.**
+
+#### Assumptions refused
+
+- That the rental-pod missing module is fixed by adding the serving ORM to the GPU pin list.
+- That a lazy `hold48` import inside `fold_from_spec` would be acceptable — any import of that module pulls sqlalchemy.
+- That this entry raises, relocates, or re-derives the 1656 cap. **It moves the integer's home. The integer is D-111's.**
+
+- **Amended by:** —
+
+---
+
 ### D-111 — BUILD GO: hold-48 tiles at the T5 window (1656 / 128 / 1528), mucins `out_of_class`, no GPU this wave
 
 - **Date:** 2026-09-04
@@ -179,7 +224,7 @@ The neural work this wave prepares is ESMFold at the **same T5 recipe** already 
 - That a parent may be claimed as one sequence because metadata still says `tier=rental`.
 - That this GO could take `D-110`. ⚠ **`D-094` amendment 1 already cited `D-110` for a different subject** (PAE and coverage-payload provenance). Spending it here would have been `F-065` / `F-044` — a well-formed reference resolving to the wrong live entry.
 
-- **Amended by:** —
+- **Amended by:** `D-112` (the 1656 cap's import site: `core.contracts`, not `core.hold48`, so the GPU worker does not import sqlalchemy)
 
 ---
 
