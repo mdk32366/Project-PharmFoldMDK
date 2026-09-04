@@ -533,6 +533,57 @@ The trained context is the constraint the tranche-5 remainder turns on. Ruling 2
 
 ---
 
+### F-067 — the pointer rule is enforced in one namespace of four, and went stale twice in one day in the one it does not guard
+
+- **Date:** 2026-09-04
+- **Status:** ⚠ **PROPOSED — owner ruling required.** Recommended: **OPEN.**
+- **Found by:** Code, measuring `origin/main` at `733c41f` while placing the session handoff documents. ⚠ **Not ordered. Reported under *"report what you find, not what was asked for."***
+- **Context — measured 2026-09-04 at `origin/main` = `733c41f`. ⚠ Every figure below is as of that ref; see *State at landing* for what moved after it:**
+
+      git show origin/main:docs/RESERVED.md | grep -o 'Next free `D-` integer: `D-[0-9]*`'
+      → Next free `D-` integer: `D-110`
+
+      git grep -c '^### D-110\|^### D-111\|^### D-112' origin/main -- docs/README.md
+      → all three exist; highest spent is D-112
+
+  ⚠⚠ **Both clauses of the invariant are violated at once:** the pointer **names a spent heading**, and it **sits below the highest spent**. **Measured per commit:**
+
+  | commit | spent | touched `docs/RESERVED.md` |
+  |---|---|---|
+  | `1d48d1d` (#212) | **`D-110` and `D-111`** | ⚠ **0 times** |
+  | `733c41f` (#213) | **`D-112`** | ⚠ **0 times** |
+
+  ⚠ **`fe2ca69` corrected this same pointer hours earlier**, under `F-062 amendment 1`. **Three integers were spent afterwards without it moving.**
+
+- **The defect, stated narrowly:** ⚠⚠ **It is not that a pointer went stale. It is that the rule has enforcement in exactly one of the namespaces it governs, and the failure occurred in an unguarded one.** Measured across `docs/README.md`:
+
+  | namespace | written entries | next-free pointer | guarded by a test | invariant |
+  |---|---|---|---|---|
+  | `F-` | 57 | `F-067` | ✅ **yes** | ✅ **HOLDS** |
+  | `D-` | 109 | `D-110` | ❌ **no** | ⚠⚠ **VIOLATED** |
+  | `S-` | 5 (`S-001`…`S-005`) | ❌ **none exists** | ❌ no | ⚠ **untracked** |
+  | `DEP-` | 6 (`DEP-001`…`DEP-006`) | ❌ **none exists** | ❌ no | ⚠ **untracked** |
+  | `A-` | 1 (`A-017`, in `docs/Test_Plan.md`) | ❌ **none exists** | ❌ no | ⚠ **untracked** |
+  | `P-` | in `docs/PAPERS-v2.md` | ❌ **none exists** | ❌ no | ⚠ **untracked** |
+
+      git grep 'Next free' -- tests/    →  2 hits, BOTH `F-`
+
+- **Why it matters:** ⚠⚠ **The guard is GREEN right now — 16 tests pass — while the rule it exists to protect is broken.** That is not a gap in coverage a reader can see; it is a **passing check that certifies the wrong namespace.** ⚠ **`F-047`'s shape — the wrong-but-plausible answer — inside the instrument built to prevent it.** ⚠ **And `D-074`: an instrument that states a rule it does not exhibit.**
+  ⚠ **The cost is concrete and already paid twice:** a pointer that names a spent integer hands the next writer a number that collides, which is `F-039`'s class, and it is caught only by a human noticing.
+- **⚠ How the scope came to be wrong, measured and not inferred:** the guard was written under an order that said **`F-` only**, because at that moment `main`'s `D-` pointer was already stale and extending the check **would have turned `main` red**. ⚠⚠ **So the remedy's scope was set by the state of the bug rather than by the rule — and nothing re-scoped it when the blocker cleared.** ⚠ **The instruction was correct in the moment. The residue is that the narrower scope outlived its reason.**
+- **What is NOT claimed:** ⚠ **Not that `#212` or `#213` did anything wrong** — a red gate attributable to a commit is not a defective commit (`D-013`), and intent is not measurable from the tree. ⚠ **Not that the `F-` guard is defective** — it is correct and it passes. ⚠ **Not that `S-`, `DEP-`, `A-` or `P-` are currently WRONG** — they are **unmeasurable**, which is a different and quieter problem: with no pointer there is nothing to be stale. ⚠ **Not that this is `F-050`'s sweep** — ⚠ **`F-050` is RESERVED and UNWRITTEN, named here as the reservation it is and NOT taken.**
+- **⚠ What would falsify this, stated so it can be checked rather than believed:**
+  1. **If `docs/RESERVED.md` on `main` reads a `D-` pointer greater than every written `### D-` heading and equal to none of them, clause one of this entry is false.** One command settles it.
+  2. **If `git grep 'Next free' -- tests/` returns a hit naming `D-`, the "one namespace of four" claim is false.**
+  3. ⚠ **If `S-`, `DEP-`, `A-` or `P-` are tracked by a register Code did not read, the table above is wrong.** ⚠ **Code searched `docs/RESERVED.md` only; a register elsewhere would not have been seen.**
+- **Closes when:** the invariant is **enforced by a check for every namespace that carries written entries**, and that check has been **shown to fail at its assertion** against a fixture where a pointer names a spent integer. ⚠ **`D-074`'s clause 1.** ⚠ **A test that has never failed has not been shown to bite**, and ⚠ **an error-red is not a failure-red.** ⚠ **Alternatively it closes on clause 2 — the instrument carrying in itself the statement of what it does not guard** — but ⚠ **that is the weaker close and it is the owner's to choose.**
+- **Deep-learning justification:** Neutral to the DL core — no weights, no inference, no data path, no change to the fold recipe. ⚠ **The relevance is evidentiary.** Every claim this project makes about the folding network is addressed by an integer — `D-109` holds the 48, `F-066` holds an attribution, `D-111` rules the tile window. ⚠ **A pointer that hands out a spent integer makes two entries share one address**, and a reader who follows a citation then arrives at the wrong ruling about what the network did. **The namespace is the citation layer for every measurement in this project.**
+- **Relates:** `F-062 amendment 1` (the same rule, one namespace, remedied) · `F-047` (the wrong-but-plausible answer — ⚠ **a green guard over a broken rule**) · `D-074` (an instrument that states a rule it does not exhibit) · `F-044` (a reference silently acquiring the wrong target — the pointer family) · `F-039` (a second copy that can drift) · `D-013` (a red gate is attributable to a commit, which is not the same as a defective commit) · ⚠ `F-050` **RESERVED and UNWRITTEN — named, not taken.**
+- ⚠⚠ **State at landing, and it is evidence rather than housekeeping.** Between the measurement above and this entry landing, **`D-113`, `D-114` and `D-115` were spent — three more integers, the pointer still reading `D-110`.** ⚠ **The defect recurred three times against the entry that describes it, while it waited to be written.** ⚠ **`DEP-`, `P-` and `S-` were registered in the same pull request as this entry** (`DEP-007` / `P-006` / `S-006`, the owner's ruling), so the table above records the state when found, not the state now. **`D-` remains VIOLATED and is deferred by the owner until the current fold completes.**
+- **Amended by:** —
+
+---
+
 ### F-066 — The IGF2R failure recorded as a card ceiling was a fold of the full chain, 227 residues longer than the ECD span the pipeline slices; and the attempt counter recorded zero attempts
 
 - **Date:** 2026-09-02 · **Status:** ⚠ **OPEN.** It closes when the record states what job 57 actually attempted, **or** when the attribution is corrected wherever it is carried.
