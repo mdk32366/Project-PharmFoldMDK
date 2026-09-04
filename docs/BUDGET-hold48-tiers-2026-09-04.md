@@ -128,7 +128,8 @@ ceil((L-1656)/1528)+1`).
 ⚠ Domain-snap **does not change n_tiles** (function of `span_aa` only). It **does** change
 last-tile / snapped-edge lengths by up to 64 aa. Length-weighted hours below use **unsnapped**
 lengths. Label: **predicted, unsnapped mix, fold-only**. Live mix will differ the way IGF2R
-1656/736 became 1608/797.
+1656/736 became 1608/797. See **§2b** for the 2026-09-04 live-snap C1 census
+(**n=38** vs unsnapped C1 **n=11**).
 
 Remaining unsnapped length mix:
 
@@ -141,6 +142,56 @@ Remaining unsnapped length mix:
 | **All remaining** | **104** | **60** | **136,871** |
 
 Min / mean / max remaining L: **177 / 1316.1 / 1656**.
+
+---
+
+## 2b. Live-snap census note — C1 (Trinity 2026-09-04)
+
+⚠ **Live queue census, not a rewrite of §3 `t(L)` or §4 `$`.** How known: Trinity
+2026-09-04 lock against the live snapped C1 emit. Domain-snap already warned in §2
+(D-113): it moves last-tile / snapped-edge lengths; **`n_tiles` is a function of
+`span_aa` only**. This note records the snapped C1 pending set after the C1 emit
+(`length_min=1201`, `length_max=1655` — D-111 amendment 1). **Not an emit GO.**
+Peak VRAM stays **UNKNOWN**. No money refit.
+
+**Live C1 n=38** (jobs 3592, 3594, 3596, 3597, 3608, 3613, 3614, 3616, 3618, 3620,
+3628 and **3646–3672** inclusive). Live L range **1223–1655**. Live L=1656 in this
+set: **0**.
+
+| Live L band | n | Note |
+|---|---|---|
+| 1201–1527 | 10 | |
+| 1528–1655 | 28 | exactly 1655: **1** — job **3670** `Q9NZR2` idx1 L=1655 |
+| other | 0 | |
+
+**Split vs the unsnapped §2/§4 C1 band (1201–1655 n=11):**
+
+- **11 native unsnapped C1** — already ≤1655 unsnapped. Matches BUDGET §2/§4 band
+  1201–1655 n=11.
+- **27 domain-snap ex-1656** — snapped into C1. These are all **11 revived** + **16**
+  of the new.
+
+**NEW vs REVIVED:**
+
+- **NEW 27** — jobs **3646–3672** (created this C1 emit).
+- **REVIVED 11** — jobs 3592, 3594, 3596, 3597, 3608, 3613, 3614, 3616, 3618, 3620,
+  3628. Pre-C Wave A emit-all then NULL-tier L>800 debt. Shape C / D-111 amendment 1
+  forbids creating those siblings then NULL-tiering; this 11 is leftover debt, not a
+  new path.
+
+**C2 count drop (not a money input).** Unsnapped C2 is **60** full windows (§2/§4).
+Those already in live C1 are the **27** snap-shortened ex-1656. C2 remaining
+unsnapped **60 will drop by those already in C1**. ⚠ Do **not** rewrite C2 fold-only
+**$17.97** or all-remaining **$21.16**. Do **not** invent a new live remaining-C2 `n`
+as a money input — further snap on unemitted tiles is **unmeasured**.
+
+§4 tables stay **predicted, unsnapped mix, fold-only**: A 17 / B 16 / C1 11 / C2 60;
+C1 fold-only **$2.02**; C2 **$17.97**; all-remaining **$21.16**; rate **$2.19/hr**.
+§5 C1 cap (**$14** / **6 h** / kill switches as written) is still the envelope. Live
+n=38 does **not** raise the cap.
+
+This amend is the C1 live census vs unsnapped n=11. It does **not** claim Wave A/B
+drain counts.
 
 ---
 
@@ -250,6 +301,8 @@ of fold-only. Caps are **stop-and-call**, not a promise the invoice will match. 
 | **B** | 801–1200 (16) | 1 | $1.03 | **$11** | **5 h** | Any tile wall **> 10 min**, or mean of first 3 **> 1.5×** `t(L)` |
 | **C1** | 1201–1655 (11) | 1 | $2.02 | **$14** | **6 h** | Any tile wall **> 15 min**, or first tile **> 1.5×** `t(L)` |
 | **C2** | L = 1656 (60) | 1 | $17.97 | **$33** | **15 h** | After **3** full-window tiles: mean wall **> 1.5 × 492 s (12.3 min)**; **or** any single tile **> 20 min**; **or** OOM on a card that already folded L=1608 |
+
+⚠ **Live-snap C1 (2026-09-04):** live queue **n=38** (11 native + 27 snap-ex-1656; §2b). The **$14 / 6 h / kill switches in the C1 row stand**. Live n=38 does **not** raise the cap. Cap is stop-and-call, not a promise the invoice matches live n.
 
 **Do not start Wave A until Wave 0 exits clean** (process rule in the runbook).
 **Do not start C2 until A/B/C1 have updated the model** — three more (L, t) points make n>2
