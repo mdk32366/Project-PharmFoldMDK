@@ -156,6 +156,13 @@ def assert_claimable(payload: dict[str, Any]) -> FoldSpec:
         raise SystemExit(f"⚠ {payload['accession']}: meta['tier']={tier!r} resolves no recipe "
                          f"(D-047). Known: {sorted(TIER_RECIPE)}")
     recipe = TIER_RECIPE[tier]
+    from core.hold48 import is_tile_job, refuse_oneshot_rental  # noqa: PLC0415
+    refuse_oneshot_rental(
+        payload["accession"],
+        is_tile=is_tile_job(s, meta),
+        jobs_tier=payload["tier"],
+        sequence_length=len(meta.get("sequence") or ""),
+    )
     try:
         return FoldSpec(job_id=0, sequence=meta["sequence"], model_revision=s["model_revision"],
                         dtype=recipe["dtype"], chunk_size=recipe["chunk_size"],

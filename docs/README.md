@@ -130,9 +130,75 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-111 — BUILD GO: hold-48 tiles at the T5 window (1656 / 128 / 1528), mucins `out_of_class`, no GPU this wave
+
+- **Date:** 2026-09-04
+- **Status:** accepted — **this is the build GO.** Code + fixture-proof tests. ⚠ **No rented GPU. No prod enqueue. No Fly change. No climb. The 1656 cap is not raised.**
+- **Ruled by:** the owner, BUILD GO 2026-09-04 (Matt via Emma), tracker issue **#210**. Kaylee implements; Trinity reviews then merges.
+- **Amends:** `D-109` ruling 2's tile *geometry* for this wave only. ⚠ `D-109` ruling 4 said no step runs without a separate build GO; this entry **is** that GO. The GO names window **1656**, overlap **128**, stride **1528**, and the IGF2R pilot as **exactly 2 tiles**. That is what this wave builds.
+- **Does not amend:** `D-109` ruling 1 (repository namespace) · ruling 3 (mucins held on nature) · ruling 6 (P11717's record is the pending row) · ruling 7 (stitched structures are not ranking-set eligible). `D-107` (msa/OpenFold) is **not this wave**. `D-104` (trained context 1,026) is **not withdrawn** — it is not this wave's tile window.
+- **Relates:** `D-109` · `D-110` (the integer this GO did not take) · `D-090` · `D-047` · `D-026` · `D-031` · `D-104` · `F-065` · issue **#210**
+
+#### Context
+
+Issue **#210** is live. External numbering `D-0027` is **not** a project decision number (`D-109` ruling 1 / `F-065`); its substance is adopted here under `D-111`. The colliding `### D-027` is the scorer's six-feature set and is untouched.
+
+`D-109` (2026-09-02) recorded the hold-48 as spec-only and superseded #210's 1,656-window geometry with the trained-context window 1,026. ⚠ **A spec-only entry cannot outrank a later owner GO that names different numbers.** The GO's success criteria are the ones that can go red this wave: IGF2R → 2 tiles, tile L≤1656, mucin/parent one-shot claim fails, off-block PAE is null not zeros.
+
+#### Decision
+
+1. **Population, discovered not invented.** The hold-48 is `data/census/census_manifest.v7.csv` rows with `tranche=5` and `span_aa > 1656` — **48 rows**, matching `D-109`'s pending remainder. The 3 mucins are named: MUC16 `Q8WXI7`, MUC12 `Q9UKN1`, MUC17 `Q685J3`. The other **45** are tiled. ⚠ How known: a count against that CSV (48 / 45 / 3), not a hand list.
+2. **Geometry (this GO):** `tile_window_aa = 1656`, `min_overlap_aa = 128`, `stride = 1528`. `n_tiles(L) = 1 if L≤1656 else ceil((L−1656)/1528)+1`. Placement is fixed-stride, last tile clamped to `L`. Edges snap to UniProt domain ends within **±64** when domain data is available; a snap that would exceed 1656 or open a coverage gap is refused and the unsnapped edge stands. ⚠ **106 tile jobs** on the live 45 at this geometry (closed form and constructive walk agree).
+3. **Planner** emits tile rows `{accession, start, end, parent_job_id, tile_index, n_tiles}`. Each tile is its own `protein_analyses` + `jobs` row so persist cannot overwrite a sibling (`pdb_path` lives on the analysis). Tile `jobs.tier = 'rental'` (claimable, T5 recipe). **Parent `jobs.tier` stays NULL** until stitch succeeds — the `D-090` hold, unchanged. ⚠ This wave's planner **writes only in tests / an explicit local session**. It does not enqueue to Fly prod.
+4. **Fold path:** a claimed tile is the existing ESMFold path (`build_fold_spec` → `fold_from_spec` → `runner.fold`). Sequence is the tile subsequence, `L≤1656`, recipe `TIER_RECIPE['rental']` = fp16 / chunk 64, resolved at fold-time (`D-047`). ⚠ `fold_from_spec` **refuses** `len(sequence) > 1656` — that is the cap, not a climb. ⚠ **No real fold is run in this PR.** Fixtures stand in for tile PDBs and PAEs.
+5. **Stitch:** overlap residues take the covering tile with **higher per-residue pLDDT** (tie → earlier tile). ⚠ **No invented gap coordinates** — a residue covered by no tile is an error. Stitched PAE is **block-diagonal**: a pair that co-resided in one tile's forward pass keeps that tile's PAE; a pair that never did is **`null`, never `0`**. Per-tile PAE is kept. pLDDT on overlap follows the same winner as the coordinates.
+6. **Ceiling writer:** the 3 mucins go to status `out_of_class`. **Zero PDB, zero PAE files.** The reason is the molecule (`D-109` ruling 3), not the length.
+7. **Guards (must be able to fail):** enqueue or claim of a mucin as `tier=rental` one-shot **raises**. Claim of a hold-48 parent as one-sequence `tier=rental` **raises** until the stitch path has succeeded. Mucins are never tiled.
+
+#### Pilot
+
+IGF2R `P11717`, ECD span **L = 2264** (pending record; job 57 is the historical full-chain OOM — `D-109` ruling 6 / `F-066`). Under this geometry: **exactly 2 tiles**, `(1, 1656)` and `(1529, 2264)`, overlap 128. ⚠ Three tiles was `D-109` ruling 2's 1,026-window pilot; this GO's pilot is two.
+
+#### Deep-learning justification
+
+The neural work this wave prepares is ESMFold at the **same T5 recipe** already used for the 728 committed folds. Every forward pass this planner emits is `L≤1656`, so a later rented-card run does not ask the network for a longer context than T5 already ran. Stitched PAE leaves unmeasured pairs **empty** rather than writing zeros the pair-confidence head never produced. Mucins are refused as ESMFold inputs because a stitched PTS/VNTR product would be a well-formed network output about a conformation the molecule does not have (`F-047`).
+
+#### Consequences
+
+- `ARCHITECTURE.md` gains the hold-48 tiling path. No migration: tile identity lives in `jobs.inference_settings` / `protein_analyses.metadata`; `out_of_class` is a `jobs.status` string the existing `VARCHAR(20)` already permits. Claim SQL still matches `pending` + `tier`, so `out_of_class` and NULL-tier parents stay unclaimable.
+- ⚠ **Still needs a rented GPU, later, under a separate rent GO:** the actual 1656-aa tile folds. Fly has no GPU. The laptop ceiling remains L≤384. This PR is code + fixture proofs only.
+- ⚠ A stitched structure is still **not** ranking-set eligible (`D-109` ruling 7). This entry does not move F-004's denominators.
+- The 728 completed T5 artifacts are not touched. `structure.pdb` / `pae.json.gz` are not committed.
+
+#### Assumptions refused
+
+- That implementing the GO implements a `D-0027` log entry — the repository number is `D-111`.
+- That this GO raises the 1656 cap. **It uses the cap T5 already had.**
+- That this GO climbs, runs MSA/OpenFold, rents a card, or writes Fly prod.
+- That `D-109` ruling 2 is deleted. **It is amended for this wave's geometry; the trained-context concern remains named.**
+- That a parent may be claimed as one sequence because metadata still says `tier=rental`.
+- That this GO could take `D-110`. ⚠ **`D-094` amendment 1 already cited `D-110` for a different subject** (PAE and coverage-payload provenance). Spending it here would have been `F-065` / `F-044` — a well-formed reference resolving to the wrong live entry.
+
+- **Amended by:** —
+
+---
+
+### D-110 — PAE figure provenance and coverage-payload provenance on the census surface (deferred)
+
+- **Date:** 2026-09-03 (cited) · **Status:** accepted as a **named hole**. ⚠ **Not built. Not the hold-48 GO.**
+- **Context:** `D-094` amendment 1 (2026-09-03) recorded a fourth known unremedied premise and named **deferred `D-110` items** that extend the same provenance principle to **PAE** and to the **coverage payload**. The integer was cited before it was written. ⚠ This entry exists so that citation resolves to the *right subject* (`F-044` / `F-065`): a reader must not land on hold-48 tiling.
+- **Decision:** This integer is spent on that deferred surface work and **nothing else**. ⚠ **No code in this PR implements it.** `F-042` (PAE) remains not remedied here. The hold-48 BUILD GO is `D-111`.
+- **Deep-learning justification:** Neutral until built — the figures it would provenance are network outputs (PAE) or statements about what the network has and has not produced (coverage). The entry's job today is custodial: keep that work from colliding with a different GO.
+- **Consequences:** `D-094` amendment 1's "Relied on by" now resolves. `D-111` is the next integer for the 2026-09-04 BUILD GO.
+- **Assumptions refused:** that a cited-but-unwritten integer was free to spend on an unrelated GO.
+- **Relates:** `D-094` amendment 1 · `F-042` · `D-111`
+- **Amended by:** —
+
+---
+
 ### D-109 — The T5 hold-48 is ruled in the repository log, retiled at the trained context, the mucins are held on their nature, and three cohort-82 targets are inside the hold
 
-- **Date:** 2026-09-02 · **Status:** accepted — **spec only. No build, no enqueue, no rental, no fold.**
+- **Date:** 2026-09-02 · **Status:** accepted — **spec only at writing.** ⚠ **Amended by `D-111` (BUILD GO 2026-09-04):** this wave implements issue #210's 1656/128/1528 geometry, not ruling 2's 1,026 window. Ruling 2 is not deleted.
 - **Ruled by:** the owner, in session 2026-09-02, on four points: (1) the repository `D-NNN` namespace governs; (2) the tile window returns to the trained context; (3) the three mucins are held on their **nature**; (4) **P11717's record is the pending row.**
 - **Supersedes:** the tile geometry of the external spec at issue **#210** (1,656 / 128 / 1,528). ⚠ The rest of #210 is **adopted**: the 45/3 split, the stitch rule, block-diagonal PAE with null off-block, pilot-first, and must-be-able-to-fail success criteria.
 - **Relates:** `D-104` · `F-060` · `D-095`+am1 · `D-098` · `D-090` · `D-064` dec 3 · `D-047` · `F-042` · `D-106` · `D-107` · `D-108` · `F-012` (commensurability; ⚠ `F-015` is RESERVED and unwritten — see ruling 7) · `F-065` · `F-066` · `F-004` and `PAPERS-v2.md` P-001 (ruling 7).
@@ -248,7 +314,7 @@ The trained context is the constraint the tranche-5 remainder turns on. Ruling 2
 - That `F-015` has measured anything. **It is a reservation for an undesigned GPU run.**
 - That this entry authorises a build, a rental, an interior cut, a schema change, or the five oversized-run proteins' disposition.
 
-- **Amended by:** —
+- **Amended by:** `D-111` (BUILD GO — 1656-window tiling this wave; ruling 2's geometry is not this wave's)
 
 ---
 
