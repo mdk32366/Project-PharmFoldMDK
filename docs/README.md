@@ -137,6 +137,64 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-115 — D-112 checkout assert is AST `ImportFrom`, not a file substring
+
+- **Date:** 2026-09-04
+- **Status:** accepted as **operational procedure hotfix** — Trinity reviews this PR; **do not merge** until that review. ⚠ **Not a GO to emit.** ⚠ **No jobs enqueued. No Fly change. No SQLAlchemy / worker / code change.** D-112's import site and D-113/D-114 money pins **stand**.
+- **Amends:** `D-112` **docs only** — the GUIDE's paste-ready checkout assert. Does **not** amend where `TILE_WINDOW_AA` lives, the worker import, or `worker/requirements.txt`.
+- **Ruled by:** the false abort on Matt's cold pod at `da4b45f` (#217 cheat sheet) against current `worker/main.py`; Trinity bar: **import statements only** (AST preferred).
+- **Relates:** `D-111` · `D-112` · `D-113` · `D-114` · issue **#210** · PR **#213** (`733c41f`) · PR **#217** (`da4b45f`)
+- **Does not amend:** D-111 geometry, D-112 import site, D-113 forecasts, D-114 ≈$50 envelope / `$2.19/hr` / `$14.17` / Peak VRAM UNKNOWN
+
+#### Context
+
+PR **#217** (`da4b45f`) added a Pane C cheat-sheet assert:
+
+```python
+assert "from core.hold48" not in text, "D-111 checkout — abort"
+```
+
+`worker/main.py` line 29 on that commit (and current `main`) is:
+
+```python
+from core.contracts import TILE_WINDOW_AA  # D-111 cap; D-112: never from core.hold48
+```
+
+The **comment** contains the substring `from core.hold48`. The file's only real import of the cap is `from core.contracts`. The check is **true as stated** (the substring is in the file) and **wrong in what it implied** (this is D-111; abort). Matt's cold pod at `da4b45f` aborted incorrectly. Method-note / D-016: a substring over the whole file is not an import graph.
+
+⚠ Stripping comments and then searching the leftover text is still a **substring** check. Trinity's bar: inspect **import statements only** — AST `ImportFrom` preferred (line-start `from core.hold48` is the weaker alternative). Comments are not imports.
+
+#### Decision
+
+1. **GUIDE paste asserts (cheat sheet AND Step 2) parse `worker/main.py` with `ast` and walk `ImportFrom` nodes.** Abort if any node's `module == "core.hold48"`. Require an `ImportFrom` of `TILE_WINDOW_AA` from `core.contracts`. Do not grep file text for the substring.
+2. **Do not change `worker/main.py`.** The inline comment is the D-112 pin, not a bug. Deleting it to make a naive substring check pass would hide the scar the comment names.
+3. **Docs-only.** Money pins, envelope, enqueue gates unchanged.
+
+#### Deep-learning justification
+
+Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward passes at the T5 recipe (`fp16` / chunk 64, D-047 / D-111). A false abort on a clean card is paid idle time before any forward pass; a real D-111 import is still the sqlalchemy miss that burns the card on `ModuleNotFoundError`. The check must distinguish those.
+
+#### Provenance (D-016)
+
+- `worker/main.py` line 29 on `da4b45f` / current `main`: `from core.contracts import TILE_WINDOW_AA  # D-111 cap; D-112: never from core.hold48` (read the file; the line is unchanged since D-112 / `733c41f`).
+- GUIDE at `da4b45f`: two copies of `assert "from core.hold48" not in text` — cheat sheet and Step 2.
+- Abort: Matt's cold pod at that pin — the substring is in the comment; `import worker.main` would have succeeded without sqlalchemy (D-112). This entry does not re-run the pod.
+
+#### Consequences
+
+- [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) cheat sheet + Step 2 carry the AST `ImportFrom` snippet. Do not restore the raw substring check. Do not substitute a comment-strip-then-grep.
+- Worker code, money pins, envelope, enqueue GO: untouched.
+
+#### Assumptions refused
+
+- That deleting the D-112 comment is the fix.
+- That stripping comments then grepping leftover text is an import check.
+- That this entry is an enqueue GO, a worker change, or a rewrite of D-113/D-114 dollars.
+
+- **Amended by:** —
+
+---
+
 ### D-114 — Hold-48 rental account envelope ≈ $50; top up before Wave 0 / emit (amends D-113 docs)
 
 - **Date:** 2026-09-04
@@ -173,7 +231,7 @@ Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward pa
 - [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) and [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) carry the envelope; measured §3/§4 forecasts are not rewritten. GUIDE Step 0 is the balance glance (before rent, before each wave, during long waves). Do not vacation on E.
 - Operators top up **before** Wave 0. Wave 0 spends against the topped-up account, not against the $14.17 snapshot.
 - Kill switches, wave caps, clean-card re-test, and Matt GO before emit are unchanged.
-- Wave 0 Pane C transcription (clone → pip trio → env → nvidia-smi logger → nohup) lives in the GUIDE section **Pane C — web terminal cheat sheet (copy-paste)**. Pins unchanged (D-112 import, cu128 trio, D-114 envelope).
+- Wave 0 Pane C transcription (clone → pip trio → env → nvidia-smi logger → nohup) lives in the GUIDE section **Pane C — web terminal cheat sheet (copy-paste)**. Pins unchanged (D-112 import, cu128 trio, D-114 envelope). ⚠ **D-115:** the D-112 paste assert is AST `ImportFrom` — a raw `"from core.hold48" not in text` false-alarms on the D-112 inline comment.
 
 #### Assumptions refused
 
@@ -196,7 +254,7 @@ Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward pa
 - **Ruled by:** the IGF2R pilot scars (jobs **3589** / **3590**) + D-111 / D-112 / issue **#210**
 - **Relates:** `D-111` · `D-112` · `D-047` · `D-044` · `D-042` · `D-036` · `D-018` · `D-011` · issue **#210** · PR **#213** (`733c41f`) · PR **#212** (`1d48d1d`) · **D-114** (account envelope ≈ $50; docs only)
 - **Does not amend:** D-111 geometry (1656 / 128 / 1528), D-112's import site, or `worker/requirements.txt` (SQLAlchemy stays off the GPU tier)
-- **Amended by:** `D-114` (account envelope ≈ $50; top-up before Wave 0 / emit; `$14.17` at Terminate is historical and does not authorize C2; measured forecasts stand; RunPod balance glance is mandatory — do not vacation on E)
+- **Amended by:** `D-114` (account envelope ≈ $50; top-up before Wave 0 / emit; `$14.17` at Terminate is historical and does not authorize C2; measured forecasts stand; RunPod balance glance is mandatory — do not vacation on E) · `D-115` (GUIDE D-112 paste assert is AST `ImportFrom`; docs only — does not amend this entry's geometry, card, or forecasts)
 
 #### Context
 
@@ -277,7 +335,7 @@ Neutral to the network. The 1656 cap is still the T5 ESMFold window D-111 named;
 - That a lazy `hold48` import inside `fold_from_spec` would be acceptable — any import of that module pulls sqlalchemy.
 - That this entry raises, relocates, or re-derives the 1656 cap. **It moves the integer's home. The integer is D-111's.**
 
-- **Amended by:** —
+- **Amended by:** `D-115` (GUIDE paste-ready checkout assert is AST `ImportFrom` — the D-112 inline comment contains the substring `from core.hold48`; docs only, import site unchanged)
 
 ---
 
