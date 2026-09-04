@@ -717,6 +717,32 @@ Stitch is **local** (`core.hold48_stitch.write_stitched`). It is not a Fly route
 set parent `jobs.tier`. Parent **3356** stays NULL until a later GO writes the stitched
 artifacts — **local stitch only so far** (IGF2R pilot).
 
+⚠ **Do not decide "stitch-ready" with a loose SQL of the form "any child with
+`pdb_path` + `pae_json_path`."** Wave A (`length_max=800`, D-111 amendment 1) leaves a
+long parent with `n_tiles_rows=1` (parent **2817** class; wave1 FAIL **17**). That query
+is true as stated and wrong in what it implied — one complete last-tile is not a cover.
+`D-111` UncoveredResidue refuses a residue no tile covers; do not invent coordinates.
+
+Call the same planner emit used, with the **same** `domain_ends` / `cache_dir` snap:
+
+```python
+from core.hold48 import stitch_readiness
+
+# session / parent_job / parent_analysis as in the emit sketch (Step 7 / IGF2R).
+# ⚠ Pass the same domain_ends / cache_dir used at emit_tile_jobs. A mismatched snap
+# invents a different expected set.
+ready = stitch_readiness(s, parent_job, parent_a)  # or domain_ends=..., cache_dir=...
+print(ready.ready, ready.expected_n, ready.present_complete_n, ready.uncovered_n)
+print([(m.tile_index, m.start, m.end) for m in ready.missing])
+assert ready.ready, "not stitch-ready — missing expected tiles or uncovered span"
+# only then: write_stitched(...)
+```
+
+Ready iff `missing` is empty **and** expected tiles cover the span **and** `expected_n > 0`.
+A mucin / no tiles is **not ready** (empty expected is not a pass). A complete PDB
+without PAE is not ready. Wave-band emit is not a readiness filter — the gate re-plans
+the full `plan_tiles` cover.
+
 Do **not** `git add` `*.pdb` / `pae.json` / `pae.json.gz`. Those are binaries; they stay on
 disk outside the repo.
 

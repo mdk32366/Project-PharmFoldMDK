@@ -143,6 +143,61 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-116 — `stitch_readiness` is the stitch gate: expected tiles from `plan_tiles`, not "any child with pdb+pae"
+
+- **Date:** 2026-09-04
+- **Status:** accepted as **the stitch-ready gate** — Trinity reviews this PR; **do not merge** until that review. ⚠ **Not a GO to stitch. Not a GO to emit.** ⚠ **No jobs enqueued. No Fly change. No GPU. `hold48_stitch.py` / Kabsch / C2 emit / worker are untouched.**
+- **Ruled by:** Trinity (Architect) BUILD GO 2026-09-04 — wave1 false-ready class; Kaylee implements; Trinity reviews then merges.
+- **Cite:** `D-111` UncoveredResidue refuse · wave1 FAIL **17** · parent **2817** (`n_tiles_rows=1` on a long span) · Architect ruling 2026-09-04 · `D-111` amendment 1 (Wave A `length_max=800`) · BUDGET-hold48 Wave A n=17
+- **Relates:** `D-111` · `D-111` amendment 1 · `D-113` · issue **#210**
+- **Does not amend:** D-111 geometry (1656 / 128 / 1528), mucins `out_of_class`, parent `jobs.tier` NULL, the 1656 cap, D-112's import site, D-113's n=2 model / `$` / hours, stitch *algorithm* (`hold48_stitch.py`), C2 emit, Fly, worker
+- ⚠ **Does not spend `F-067`.** That integer is in flight on open PR **#222**. The wave1 false-ready class is recorded here as this decision's context, not as a new `F-` heading.
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110` while `D-110`…`D-115` are written). Owner deferred that repair (PR #222) until the current fold completes. This entry spends `D-116`; the pointer stays the owner's.
+
+#### Context
+
+Wave A (`emit_tile_jobs(..., length_max=800)`, D-111 amendment 1) writes **only** the short last-tile of a long parent. BUDGET-hold48 Wave A is **n=17** such last-tiles. After that wave a parent has `n_tiles_rows=1` on a span that `plan_tiles` still splits into 2–4 windows. Parent **2817** is the named production exemplar of that class.
+
+A loose SQL of the form "any child of this parent with `pdb_path` and `pae_json_path`" is **true as stated and wrong in what it implied** (D-016 / method-note): one complete Wave A tile is not a stitchable cover. Stitching then would hit `D-111`'s `UncoveredResidue` refuse — a residue covered by no tile is an error, not invented coordinates — or, worse, would invent a cover. **wave1 FAIL 17** is that class: seventeen parents that look ready to a row-existence check and are not ready to the planner.
+
+`D-111` named the refuse and the planner. It did not name a countable gate ops must call *before* `write_stitched`. This entry is that gate.
+
+#### Decision
+
+1. **`core.hold48.stitch_readiness(session, parent_job, parent_analysis, *, domain_ends=None, cache_dir=...) -> StitchReadiness`.** Lives in `core/hold48.py` next to `emit_tile_jobs`. ⚠ Not in `hold48_stitch.py` — this is a readiness *count*, not a stitch algorithm change.
+2. **Re-plan expected tiles with the same `plan_tiles` path emit uses.** Build the `Hold48Row` from the parent analysis the same way (`span_aa` / `fold_length` / sequence length; `ecd_start`/`span_start`; `ecd_end`/`span_end`; `is_mucin` from the named set). Pass `domain_ends` / `cache_dir` through. ⚠ **Emit-time snap must match** — a caller that omits the snap emit used can invent a different expected set. Documented on the function. No new fields.
+3. **Match a child per expected `TileSpec`** by `parent_job_id` + (`tile_index` **or** `(tile_start, tile_end)` window), reading those idents from `jobs.inference_settings` (same keys emit writes). The child must be `status='complete'` **and** `pdb_path` present **and** `pae_json_path` present. ⚠ A complete PDB without PAE is not ready (`D-106`: an absent PAE path is a category, not a stitch input).
+4. **Ready iff** `missing` is empty **and** the expected tiles cover `1..span_aa` (`uncovered_n == 0`) **and** `expected_n > 0`. An empty plan (mucin / no tiles) is **not ready**, `expected_n=0`, `missing=[]`. That is not a pass.
+5. **Return countable, do not raise for unreadiness.** `ready: bool`, `expected_n`, `present_complete_n`, `missing: list[TileSpec]`, `uncovered_n` (residues in `1..span_aa` not in any *expected* window — cheap). The stitch path still raises `UncoveredResidue` if someone calls it anyway; this gate is how ops refuse *before* that.
+6. **Ops call this instead of loose SQL.** GUIDE Step 11 points at `stitch_readiness`. Wave-band emit (`length_min` / `length_max`) is **not** a readiness filter — readiness is the full `plan_tiles` cover.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass at the T5 recipe (`fp16` / chunk 64, D-047 / D-111). A stitch that runs on a Wave A last-tile alone would either invent coordinates the network never produced (`D-111` UncoveredResidue) or emit a well-formed PDB/PAE about a span that did not share a forward pass. The gate is how those remaining passes stay the inputs to stitch. Neutral to the weights; load-bearing for whether a stitched artifact is a network output.
+
+#### Provenance (D-016)
+
+- Wave A n=17: [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) §2 remaining mix, band `L ≤ 800`, n=17. D-111 amendment 1 operationalizes that band as `length_max=800`.
+- Parent **2817** / `n_tiles_rows=1` on a long span / wave1 FAIL 17: Architect ruling 2026-09-04 (BUILD GO to Kaylee). Not re-queried against Fly in this PR (this PR does not touch Fly).
+- `plan_tiles` / emit idents: `core/hold48.py` `TileSpec` + `emit_tile_jobs` write `parent_job_id`, `tile_index`, `tile_start`, `tile_end` on `jobs.inference_settings` and the child analysis `meta`. No new columns.
+- `UncoveredResidue`: `D-111` decision 5 + `core.hold48.UncoveredResidue` / `hold48_stitch.winning_tile`.
+
+#### Consequences
+
+- `tests/test_hold48_stitch_readiness.py` must be able to go red without the gate: (1) long parent, one complete tile → `ready=False`, missing includes the rest; (2) full cover complete+PAE → `ready=True`; (3) full cover, one tile missing PAE → `ready=False`; (4) mucin / no tiles → not ready, empty expected. Test plan **T-1078**–**T-1081**.
+- `ARCHITECTURE.md` records the gate on the hold-48 path. GUIDE Step 11 names the call. Root `README.md` stays the greeting.
+- ⚠ Still not a stitch GO. Parent `jobs.tier` stays NULL. No `write_stitched` change.
+
+#### Assumptions refused
+
+- That "any tiles with pdb+pae" is stitch-ready.
+- That Wave A completeness is parent completeness.
+- That this gate may live in `hold48_stitch.py` or change Kabsch / overlap / off-block PAE.
+- That a mucin with zero expected tiles is ready (empty missing).
+- That a new `F-067` is free to spend while PR #222 is open on that integer.
+
+---
+
 ### D-115 — D-112 checkout assert is AST `ImportFrom`, not a file substring
 
 - **Date:** 2026-09-04
@@ -352,7 +407,7 @@ Neutral to the network. The 1656 cap is still the T5 ESMFold window D-111 named;
 - **Ruled by:** the owner, BUILD GO 2026-09-04 (Matt via Emma), tracker issue **#210**. Kaylee implements; Trinity reviews then merges.
 - **Amends:** `D-109` ruling 2's tile *geometry* for this wave only. ⚠ `D-109` ruling 4 said no step runs without a separate build GO; this entry **is** that GO. The GO names window **1656**, overlap **128**, stride **1528**, and the IGF2R pilot as **exactly 2 tiles**. That is what this wave builds.
 - **Does not amend:** `D-109` ruling 1 (repository namespace) · ruling 3 (mucins held on nature) · ruling 6 (P11717's record is the pending row) · ruling 7 (stitched structures are not ranking-set eligible). `D-107` (msa/OpenFold) is **not this wave**. `D-104` (trained context 1,026) is **not withdrawn** — it is not this wave's tile window.
-- **Relates:** `D-109` · `D-110` (the integer this GO did not take) · `D-090` · `D-047` · `D-026` · `D-031` · `D-104` · `F-065` · issue **#210** · **D-113** (rental runbook + IGF2R-pilot budget; not a geometry change)
+- **Relates:** `D-109` · `D-110` (the integer this GO did not take) · `D-090` · `D-047` · `D-026` · `D-031` · `D-104` · `F-065` · issue **#210** · **D-113** (rental runbook + IGF2R-pilot budget; not a geometry change) · **D-116** (stitch-ready gate: expected `plan_tiles`, not "any child with pdb+pae")
 
 #### Context
 
