@@ -113,9 +113,9 @@ top up; do not Deploy, do not emit.
 
 | Pane | Where | What | Rule |
 |---|---|---|---|
-| **A — LOCAL** | laptop | print `WORKER_AUTH_TOKEN` from `.env`, `fly logs`, DB tunnel, emit/stitch | home base; **emit happens here**, never on the pod. Fly cannot print the token |
+| **A — LOCAL** | laptop | print `WORKER_AUTH_TOKEN` from `.env`, `fly logs -a pharmfoldmdk`, DB tunnel, emit/stitch | home base; **emit happens here**, never on the pod. Fly cannot print the token. Watch: Fly claim stream (cheat sheet / Step 8) |
 | **B — TUNNEL** | laptop | MPG proxy / `DATABASE_URL` | open it, leave it; closing it drops the DB |
-| **C — POD** | RunPod web terminal | clone, pip, worker, PAE retrieve | opened last; **Terminate** (not Stop) when PAE is off the box |
+| **C — POD** | RunPod web terminal | clone, pip, worker, `tail -f /workspace/worker.log`, PAE retrieve | opened last; **Terminate** (not Stop) when PAE is off the box. Watch: worker log only — a new tab does **not** inherit exports |
 
 Env vars do **not** cross panes. Pane C exports live only in Pane C. A second web-terminal tab
 is a new shell — re-export or the worker starts without `WORKER_ARTIFACT_DIR` and rental PAE
@@ -159,6 +159,7 @@ D-112 / D-113 / D-114 / D-115 — this section does not rewrite them and does **
 hunting those ids to know what to type.
 
 Flow: **rent clean card → setup → worker → empty-queue prove → retrieve → Terminate.**
+During a live fold wave, keep the **Watch** paste (Pane A `fly logs` + Pane C `tail -f`) up.
 
 **Never** `pip install -r worker/requirements.txt` first. **Never** pip-install sqlalchemy.
 **Never** invent a `WORKER_AUTH_TOKEN`. Token = laptop `.env`, **single-quoted**.
@@ -272,10 +273,32 @@ nohup python -m worker.main > /workspace/worker.log 2>&1 &
 sleep 8 && tail -n 40 /workspace/worker.log
 ```
 
+### Watch — live fold wave (copy-paste; keep both panes up)
+
+**Pane A (laptop)** — Fly claim stream:
+
+```powershell
+fly logs -a pharmfoldmdk
+```
+
+Want repeating `claim → 200` then `artifacts` / `complete`. Persistent `claim → 204` = empty rental queue (or `WORKER_TIER` wrong). `401` = token. Do not redeploy Fly to "fix" a worker problem.
+
+**Pane C (pod web terminal)** — worker log. After the `nohup` above. **A new tab does not inherit exports — do not start a second worker; only tail.**
+
+```bash
+tail -f /workspace/worker.log
+```
+
+Snapshot (same one-liner as after `nohup` / Step 6):
+
+```bash
+tail -n 40 /workspace/worker.log
+```
+
 ### Tab 1 — empty-queue prove, then retrieve, then Terminate
 
-Cold start: do **not** emit from Pane A. Persistent `claim → 204` on Fly logs is success
-(empty queue).
+Cold start: do **not** emit from Pane A. Same Pane A command as **Watch**. Persistent
+`claim → 204` on Fly logs is success (empty queue).
 
 When done — even if `$WORKER_ARTIFACT_DIR` is empty, confirm the script's report — then
 Terminate. Re-export the env block if this tab was closed.
@@ -504,9 +527,9 @@ If you see **`AUTH REJECTED`**: token wrong or truncated — stop, re-print on P
 single-quoted, re-check length. If you see **`ModuleNotFoundError: sqlalchemy`**: you are on
 `1d48d1d` — go back to Step 2. If you see **`ModuleNotFoundError: transformers`**: Step 3 scar (a).
 
-You can now leave Pane C. The worker survives the tab closing. **Re-open later by**
-`tail -f /workspace/worker.log` — a new tab does **not** inherit exports; don't start a second
-worker in that tab.
+You can now leave Pane C. The worker survives the tab closing. **Re-open later** with the
+Pane C Watch command (cheat sheet / Step 8): `tail -f /workspace/worker.log`. A new tab
+does **not** inherit exports; don't start a second worker in that tab — only tail.
 
 ---
 
@@ -597,15 +620,34 @@ with Session(engine) as s:
 
 ---
 
-## Step 8 — Watch (Pane A)
+## Step 8 — Watch (Pane A + Pane C)
+
+Keep both streams up during a live fold wave. Same commands as the cheat sheet **Watch**
+section — they are here so they are not only in that sheet and not only narrative.
+
+**Pane A (laptop)** — Fly claim stream:
 
 ```powershell
 fly logs -a pharmfoldmdk
 ```
 
-Want a repeating **`claim → 200`**, **`artifacts → 204`**, **`complete → 204`**. Persistent
-`claim → 204` means no `pending` rental tiles (empty queue, or `WORKER_TIER` not `rental`).
-A `401` is the token. Do not redeploy Fly to "fix" a worker problem.
+Want repeating `claim → 200` then `artifacts` / `complete`. Persistent `claim → 204` = empty
+rental queue (or `WORKER_TIER` not `rental`). `401` = token. Do not redeploy Fly to "fix" a
+worker problem.
+
+**Pane C (pod web terminal)** — worker log. After
+`nohup python -m worker.main > /workspace/worker.log 2>&1 &`. **A new tab does not inherit
+exports — do not start a second worker; only tail.**
+
+```bash
+tail -f /workspace/worker.log
+```
+
+Snapshot (same as Step 6 after `nohup`):
+
+```bash
+tail -n 40 /workspace/worker.log
+```
 
 **During a long wave (especially C2):** glance the RunPod account balance again (Step 0).
 A kill switch stops the wave; an empty tank mid-wave stops the card. Same rule: do not
