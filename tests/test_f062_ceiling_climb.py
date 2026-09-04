@@ -246,14 +246,20 @@ def test_pointer_one_past_the_highest_spent_heading_is_accepted():
     assert check_next_free_pointer(_LOG_TO_066, "Next free `F-` integer: `F-067`") == 67
 
 
-def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
-    """⚠ FIXTURE 4: the tree itself. Pointer F-067, highest spent F-066.
+def test_the_real_repo_files_satisfy_the_invariant():
+    """⚠ FIXTURE 4: the tree itself, through the SAME pure function the fixtures proved.
 
-    ⚠ This is the only case that touches disk, and it does so through the SAME pure function, so
-    the tree is checked by the code the fixtures proved rather than by a second implementation.
+    ⚠⚠ THIS TEST PINNED VALUES UNTIL 2026-09-04 — `pointer == 67`, `highest == 66`
+    — inside the guard whose whole subject is that pinning a VALUE where the rule is an
+    INVARIANT is the defect. It went red on the first commit that legitimately spent F-067 and
+    moved the pointer to F-068: the exact failure F-062 amendment 1 records, committed by the
+    author of the remedy, and caught by the remedy.
+
+    ⚠ Recorded rather than quietly rewritten. The correct assertion is the RELATIONSHIP,
+    which survives every land: the pointer names no spent heading and exceeds every one.
     """
-    pointer = check_next_free_pointer(
-        LOG.read_text(encoding="utf-8"), RESERVED.read_text(encoding="utf-8")
-    )
-    assert pointer == 67
-    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 66
+    log = LOG.read_text(encoding="utf-8")
+    pointer = check_next_free_pointer(log, RESERVED.read_text(encoding="utf-8"))
+    spent = spent_headings(log)
+    assert pointer not in spent
+    assert pointer > max(spent)
