@@ -12,11 +12,25 @@ uses that pin.
 **RunPod balance remaining after Terminate: $14.17.** That is a **measured remaining-balance
 reading**, not a forecast, not a budget cap invented here, and not "what the 44 will cost."
 
-**Peak VRAM: UNKNOWN** (not in provenance). A fitted L=1608 fold is not a GiB number. The
-runbook captures `nvidia-smi` during a fold ([`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md)
-Step 5).
-
 This document does not enqueue jobs and does not touch Fly.
+
+---
+
+## Named unknown — Peak VRAM
+
+**Peak VRAM is UNKNOWN.** That is the name of the quantity. It is not a gap to fill from
+context.
+
+- **Not in provenance.** The IGF2R pilot recorded claim→complete wall, mean_plddt, and
+  artifact sizes. It did **not** record `nvidia-smi` `memory.used` (or any other peak) against
+  job 3589 or 3590.
+- **Do not invent a number.** Not a GiB, not a % of the card, not "it fitted so headroom is
+  fine," not F-059's law applied to L=1608, not the card's advertised capacity as a peak.
+  A successful L=1608 fold is **not** a VRAM measurement.
+- **Closes only by capture on the next cold run.** [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md)
+  Step 5: start `nvidia-smi --query-gpu=… -l 10` **before** the first fold on the clean card,
+  leave it running, copy the CSV off the box with PAE. Until that file exists, this cell stays
+  **UNKNOWN**.
 
 ---
 
@@ -47,12 +61,13 @@ Rate: **$2.19/hr**.
 Fold-only GPU-h: `(452.4 + 59.9) / 3600 = 0.1423 h` (stated **0.142 GPU-h**).
 Fold-only IGF2R cost: `0.142 GPU-h × $2.19/hr ≈` **$0.31**.
 
-**Peak VRAM: UNKNOWN.** Not in provenance. Call it unknown until Step 5 of the runbook
-produces `nvidia-smi` `memory.used` against a job id.
+**Peak VRAM: UNKNOWN.** Named unknown — not in provenance. Do not invent a GiB. Closes only
+when the next cold run's `nvidia-smi` log exists (runbook Step 5). A fitted L=1608 fold is
+not that log.
 
-**Stitch (laptop, `hold48_stitch.write_stitched`): PASS.** Off-block PAE is **null, not 0** —
-**2,131,551** null cells, **0** literal zeros. Parent job **3356** still `jobs.tier` NULL.
-Local stitch only; no prod write of the parent in this wave.
+**Stitch (laptop, `hold48_stitch.write_stitched`): PASS — Trinity accepted.** Off-block PAE
+is **null, not 0** — **2,131,551** null cells, **0** literal zeros. Parent job **3356** still
+`jobs.tier` NULL. Local stitch only; no prod write of the parent in this wave.
 
 Domain-snap vs unsnapped planner: IGF2R `span_aa=2264` unsnapped windows are **1656 + 736**
 (`tests/test_hold48_tiles.py`). The live tiles were **1608 + 797**. Snap moved an internal
@@ -207,7 +222,7 @@ of fold-only. Caps are **stop-and-call**, not a promise the invoice will match. 
 
 | Wave | What | Concurrency | Fold-only (pred.) | $ cap (incl. setup @ $2.19/hr) | Hours cap | Kill switch (any one fires → stop the wave, Terminate after PAE retrieve) |
 |---|---|---|---|---|---|---|
-| **0** | Cold-start **re-test of the runbook** on a **clean** card. **No emit.** Empty-queue `claim→204` is success | 1 | $0 | **$7** | **3 h** | Any pip/ABI/import scar that is not cured by following the runbook as written. Do not hot-fix and then emit |
+| **0** | Cold-start **re-test of the runbook** on a **clean** card. **No emit.** Empty-queue `claim→204` is success. **Start the Step 5 `nvidia-smi` logger anyway** so the first later fold is captured | 1 | $0 | **$7** | **3 h** | Any pip/ABI/import scar that is not cured by following the runbook as written. Do not hot-fix and then emit |
 | **A** | Remaining L ≤ 800 (17 last-tiles) | 1 | $0.13 | **$9** | **4 h** | Any tile wall **> 180 s** (3 min), or first tile **> 3×** `t(L)` |
 | **B** | 801–1200 (16) | 1 | $1.03 | **$11** | **5 h** | Any tile wall **> 10 min**, or mean of first 3 **> 1.5×** `t(L)` |
 | **C1** | 1201–1655 (11) | 1 | $2.02 | **$14** | **6 h** | Any tile wall **> 15 min**, or first tile **> 1.5×** `t(L)` |
@@ -226,7 +241,7 @@ kill switch fires cheap.
 
 | Unknown | Why it moves the bill | What would close it |
 |---|---|---|
-| **Peak VRAM** | Could OOM the 60 × L=1656 tiles even though L=1608 fitted. **UNKNOWN — not in provenance.** | `nvidia-smi` during a fold (runbook Step 5); record `memory.used` vs job id |
+| **Peak VRAM** | **NAMED UNKNOWN.** Not in provenance. Do not invent a GiB. L=1608 fitted is not a peak. | Next cold run: runbook Step 5 `nvidia-smi` logger **before** the first fold; CSV off the box with PAE |
 | **Setup-scar wall-clock split** | This pilot's invoice is fold-only $0.31 **plus** scars; the split was not logged | Wave 0 on a clean card following the runbook as written — that wall **is** cold-start, and is named as such |
 | **Cold-start overhead (next pod)** | Weight download + first `fold()` load can dwarf a Wave A tile | Wall from `python -m worker.main` start to first `complete → 204` on a clean card |
 | **Domain-snap length mix** | Last-tile L shifts ±64 aa; n_tiles does not | Compare `emit_tile_jobs` lengths to the unsnapped table before folding a wave |
@@ -241,7 +256,7 @@ disagrees is a new measurement, not a license to keep $2.00 in the tables.
 ## 7. What this document is not
 
 - Not a GO to emit the 44.
-- Not a VRAM ceiling (unknown).
+- Not a VRAM number. Peak VRAM is a **named unknown** — do not invent one.
 - Not a claim that stitched multi-tile structures are commensurable with single-pass folds
   (D-109 ruling 7 / `F-015` reserved).
 - Not an invoice. **$14.17 remaining** is a balance reading after Terminate.

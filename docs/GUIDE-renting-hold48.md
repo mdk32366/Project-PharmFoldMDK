@@ -17,7 +17,8 @@ binaries.**
 **Money pin (Matt/Trinity, this pilot):** card **$2.19/hr** (not $2.00). Fold-only IGF2R
 **$0.31** (0.142 GPU-h × $2.19). Setup scars priced separately — not in the other-44
 length-weighted forecast. RunPod balance remaining after Terminate: **$14.17** (measured,
-not a forecast). Peak VRAM **UNKNOWN**.
+not a forecast). **Peak VRAM is a named unknown: UNKNOWN** — do not invent a number. Step 5
+(`nvidia-smi` logger) is required on the next cold run.
 
 ---
 
@@ -229,11 +230,16 @@ the next claim, recoverable only by a paid re-fold.
 
 ---
 
-## Step 5 — Prove the card and start a VRAM log (Pane C)
+## Step 5 — Prove the card and start a VRAM log (Pane C) ⚠ required on the next cold run
 
-Peak VRAM for these tiles is **UNKNOWN** (not in the IGF2R-pilot provenance — D-113). Capture it
-**during** a fold, not before. A successful L=1608 fold is **not** a GiB number. Without this
-log, Wave C2 (60 × L=1656) has no VRAM kill switch, only a wall-time one:
+**Peak VRAM is a named unknown (D-113 budget).** It is **UNKNOWN**. Do not invent a GiB from
+"L=1608 fitted" or from the card's advertised capacity.
+
+This step is **not optional on the next cold-start pod.** Start the logger **before**
+`python -m worker.main`, even if Wave 0 emits nothing: an empty queue will not produce a
+peak, but the logger must already be running when the first later fold starts. Copy the CSV
+off the box with PAE (Step 9). Until that file exists, Wave C2 has no VRAM kill switch, only
+a wall-time one.
 
 ```bash
 nvidia-smi   # must name an RTX PRO 6000 Blackwell class card
@@ -243,8 +249,9 @@ nvidia-smi --query-gpu=timestamp,name,memory.used,memory.total,utilization.gpu \
   --format=csv -l 10 | tee /workspace/nvidia-smi-hold48.csv
 ```
 
-Record `memory.used` peak against the job id that was in-flight. Until that number exists,
-treat every L≈1656 tile as able to OOM.
+Record `memory.used` peak against the job id that was in-flight. That recorded peak is the
+only way this unknown stops being unknown. Until then: treat every L≈1656 tile as able to
+OOM.
 
 ---
 
@@ -474,7 +481,7 @@ on every later stitch.
 | `claim → 204` forever | no pending rental tiles, or `WORKER_TIER` unset (defaults `local`) | export `WORKER_TIER=rental`; do not `--requeue P11717` |
 | Worker gone after tab close | not detached | Step 6 `nohup`; do not run `python -m worker.main` in the foreground |
 | Unsure whether to Terminate | | **Don't.** Step 9 must exit 0. An extra hour is **$2.19**; lost PAE is a paid re-fold |
-| Fold OOM | ceiling, still unnamed (peak VRAM unknown) | D-042: job `failed`, batch continues — **a result**. Record `nvidia-smi`. Do not raise the 1656 cap |
+| Fold OOM | ceiling is a named unknown (peak VRAM UNKNOWN) | D-042: job `failed`, batch continues — **a result**. Record `nvidia-smi`. Do not invent a GiB. Do not raise the 1656 cap |
 
 ---
 
@@ -484,7 +491,8 @@ See [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) for
 Short version: tile0 L=1608 wall **452.4 s**, tile1 L=797 wall **59.9 s**, recipe fp16 / chunk 64,
 torch `2.11.0+cu128`, transformers `5.14.1`, card = RTX PRO 6000 Blackwell Workstation Edition
 at **$2.19/hr**. Fold-only IGF2R **$0.31**. Stitch off-block PAE null (2,131,551 null cells,
-0 literal zeros) — PASS. Parent 3356 still NULL-tier. Peak VRAM still **UNKNOWN**.
+0 literal zeros) — PASS, **Trinity accepted**. Parent 3356 still NULL-tier. Peak VRAM is a
+**named unknown: UNKNOWN** (do not invent a GiB; Step 5 on the next cold run).
 
 ---
 
