@@ -1,6 +1,6 @@
 # Hold-48 budget and tier waves — 2026-09-04 (measured)
 
-**Decision:** `D-113`. **Cite:** D-111 · D-112 · issue **#210**.
+**Decision:** `D-113`, amended by `D-114`. **Cite:** D-111 · D-112 · D-113 · vault **D-0036** (amended; external, not repo D-036) · issue **#210**.
 **Companion runbook:** [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md).
 
 ⚠ **Measured, not vibes.** Every dollar figure below is either (a) arithmetic on a named
@@ -11,8 +11,22 @@ uses that pin.
 
 **RunPod balance remaining after Terminate: $14.17.** That is a **measured remaining-balance
 reading**, not a forecast, not a budget cap invented here, and not "what the 44 will cost."
+⚠ **D-114:** `$14.17` is **historical**. It does **not** authorize C2. Matt **tops up before**
+Wave 0 / other-44 emit. Account ceiling ≈ **$50** for completing the rental (fold-only +
+Wave 0 cold-start + expected scars) — **not** a new prediction of tile hours. D-113
+forecasts **stand** (C2 fold-only **$17.97**; all-remaining **$21.16**; rate **$2.19/hr**;
+Peak VRAM **UNKNOWN** until runbook Step 5).
 
-This document does not enqueue jobs and does not touch Fly.
+**"Too cheap to meter"** = **no extra metering theater** (no new dashboards, per-second
+invoice parsers, or fake precision) beyond the D-113 wave caps / kill switches in §5
+**plus** the mandatory RunPod **balance glance** (GUIDE Step 0). ⚠ It does **NOT**
+authorize skipping balance monitoring. Glance **before rent**, **before each wave**
+(0 / A / B / C1 / C2), and **during long waves**. Do not start the family vacation with
+the gas tank on E.
+
+This document does not enqueue jobs and does not touch Fly. Still not an enqueue GO.
+Gates unchanged: **3356 persist** → cold GUIDE **Step 5 `nvidia-smi`** → **Matt GO** before
+emit.
 
 ---
 
@@ -205,9 +219,18 @@ spend).
 | A+B+C1 fold-only | **3.18** | 44 tiles; fits inside $14.17 with headroom **if** Wave 0 is cheap |
 | C2 fold-only | **17.97** | 60 × L=1656; **does not fit** on $14.17 even with **zero** cold-start |
 
-⚠ **$14.17 is not a forecast of C2.** It is cash on the account. C2 at this model needs a
-top-up **or** a cheaper card **or** a kill after the first three L=1656 tiles update `t(L)`.
-Wave 0 (clean-card re-test) spends against the same $14.17 and is **not** in the $21.16.
+⚠ **$14.17 is not a forecast of C2.** It is cash that **was** on the account at Terminate.
+C2 fold-only at this model is **$17.97** and **does not fit** on $14.17 even with **zero**
+cold-start. Do **not** soften that comparison.
+
+**D-114 (amends the cash rule, not the model):** Matt **tops up before** Wave 0 / other-44
+emit. `$14.17` remaining at Terminate is **historical**; it does **not** authorize C2.
+Account ceiling ≈ **$50** covers completing the rental (fold-only remaining + Wave 0
+cold-start + expected scars). Wave 0 spends against the **topped-up** account, not against
+the $14.17 snapshot. Wave 0 is still **not** in the $21.16 fold-only forecast.
+
+The n=2 power law, §4 hours, and §4 `$` columns are **unchanged**. ≈$50 is not a license
+to refit `t(L)`.
 
 ---
 
@@ -231,6 +254,11 @@ of fold-only. Caps are **stop-and-call**, not a promise the invoice will match. 
 **Do not start Wave A until Wave 0 exits clean** (process rule in the runbook).
 **Do not start C2 until A/B/C1 have updated the model** — three more (L, t) points make n>2
 — **and** until the account covers C2 fold-only plus Wave 0, which **$14.17 does not**.
+**D-114:** that cover is the ≈**$50** envelope; Matt tops up **before** Wave 0 / emit, not
+after C2 has already started on the Terminate snapshot. §5 caps and kill switches **stand**.
+**Plus** the GUIDE Step 0 balance glance (before rent, before each wave, during long waves).
+"Too cheap to meter" = do not add dashboards / invoice parsers on top of that; it does
+**not** skip the glance.
 
 Suggested emit order inside a wave: **shortest remaining tile in that band first**, so a
 kill switch fires cheap.
@@ -260,7 +288,11 @@ disagrees is a new measurement, not a license to keep $2.00 in the tables.
 - Not a claim that stitched multi-tile structures are commensurable with single-pass folds
   (D-109 ruling 7 / `F-015` reserved).
 - Not an invoice. **$14.17 remaining** is a balance reading after Terminate.
+  **D-114:** that reading is **historical**; it does **not** authorize C2.
 - Not a projection of setup scars onto the other 44.
+- **D-114:** not a new `t(L)`. Account ceiling ≈ **$50** is cash to finish the rental
+  (fold-only + Wave 0 + expected scars). Not a GO. Not a rewrite of §3/§4. Not extra
+  metering theater. **Not** a license to skip the RunPod balance glance (GUIDE Step 0).
 
 Provenance for the 106 / 104 counts: the Python reduction in D-113 (census v7, empty
 `domain_ends`, geometry from `core.contracts`). Provenance for the two walls and artifact
