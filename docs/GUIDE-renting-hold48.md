@@ -134,10 +134,108 @@ envelope; not the Terminate snapshot of $14.17 treated as a C2 license. Initiali
 
 ---
 
+## Pane C — web terminal cheat sheet (copy-paste)
+
+Cold dry-run / **Wave 0** on a **clean card**, after Step 1 Deploy → **Web Terminal**.
+Transcribe **top to bottom**. Why-not, scar tables, and money pins stay in Steps 2–6 / D-113 /
+D-114 — this section does not rewrite them.
+
+**Never** `pip install -r worker/requirements.txt` first. **Never** pip-install sqlalchemy
+(D-112). **Never** invent a `WORKER_AUTH_TOKEN`. Token = laptop `.env`, **single-quoted**.
+
+### Tab 1 — clone through card check
+
+```bash
+cd /workspace
+git clone https://github.com/mdk32366/Project-PharmFoldMDK.git
+cd Project-PharmFoldMDK
+git fetch origin main
+git checkout origin/main
+git log --oneline -1
+# STOP if this SHA is 1d48d1d (D-111). Minimum: D-112 / PR #213 (733c41f).
+# Later main tips after D-114 are fine if they still contain D-112.
+
+python - <<'PY'
+from pathlib import Path
+text = Path("worker/main.py").read_text(encoding="utf-8")
+assert "from core.hold48" not in text, "worker.main imports hold48 — this is D-111, not D-112"
+assert "from core.contracts import TILE_WINDOW_AA" in text
+print("ok: worker.main imports TILE_WINDOW_AA from core.contracts only")
+PY
+
+pip install \
+  torch==2.11.0+cu128 \
+  torchvision==0.26.0+cu128 \
+  torchaudio==2.11.0+cu128 \
+  --index-url https://download.pytorch.org/whl/cu128
+
+pip install \
+  transformers==5.14.1 \
+  bitsandbytes==0.49.2 \
+  accelerate==1.14.0 \
+  httpx==0.28.1
+
+python - <<'PY'
+import torch, torchvision, torchaudio, transformers
+print("torch", torch.__version__)
+print("torchvision", torchvision.__version__)
+print("torchaudio", torchaudio.__version__)
+print("transformers", transformers.__version__)
+assert torch.__version__.startswith("2.11.0") and "+cu128" in torch.__version__
+assert torchvision.__version__.startswith("0.26.0")
+assert torchaudio.__version__.startswith("2.11.0")
+assert transformers.__version__ == "5.14.1"
+# D-112 live: worker.main must import with sqlalchemy absent
+import sys
+sys.modules.pop("sqlalchemy", None)
+import worker.main  # noqa: F401
+print("ok: worker.main imported; device", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "NO CUDA")
+PY
+
+export WORKER_AUTH_TOKEN='<paste from laptop .env — Fly secrets list does NOT reveal values>'
+export TRANSPORT_URL=https://pharmfoldmdk.fly.dev
+export WORKER_ARTIFACT_DIR=/workspace/rental_artifacts
+export WORKER_ID=rental-hold48-blackwell
+export WORKER_TIER=rental
+export WORKER_FOLD_IN_CHILD=1
+# optional — cheap insurance vs allocator fragmentation (D-042); untested as a fix, not a requirement:
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+mkdir -p "$WORKER_ARTIFACT_DIR"
+
+echo "token length = ${#WORKER_AUTH_TOKEN}  (must equal the laptop .env secret; 64 in the 2026-07-24 correction, not 69)"
+
+nvidia-smi   # must name an RTX PRO 6000 Blackwell class card
+```
+
+### Tab 2 — VRAM CSV logger (Step 5; required on this cold run)
+
+A second web-terminal tab is a new shell. **Do not re-export here** — this is just `nvidia-smi`
+(D-036: a second tab that starts a worker without `WORKER_ARTIFACT_DIR` loses PAE).
+
+```bash
+nvidia-smi --query-gpu=timestamp,name,memory.used,memory.total,utilization.gpu \
+  --format=csv -l 10 | tee /workspace/nvidia-smi-hold48.csv
+```
+
+### Tab 1 — detached worker
+
+```bash
+cd /workspace/Project-PharmFoldMDK
+nohup python -m worker.main > /workspace/worker.log 2>&1 &
+sleep 8 && tail -n 40 /workspace/worker.log
+```
+
+Wave 0 cold dry-run: do **not** emit from Pane A. Empty `claim → 204` is success. `retrieve_rental_pae` before Terminate.
+
+---
+
 ## Step 2 — Git pin (Pane C)
 
-Start from **current `main` tip after D-112 / PR #213**. At writing that is `733c41f`. Later
-`main` tips are fine **if they still contain D-112**. ⚠ **`1d48d1d` is D-111.** That commit's
+**Transcribe from the cheat sheet above.** This step is the D-112 scar.
+
+Start from **current `main` tip after D-112 / PR #213**. At writing D-113 that is `733c41f`. Later
+`main` tips (D-113, **D-114**, …) are fine **if they still contain D-112**. ⚠ **`1d48d1d` is D-111.** That commit's
 `worker/main.py` does `from core.hold48 import TILE_WINDOW_AA`. `core.hold48` imports
 sqlalchemy at module top. The GPU image does not have sqlalchemy →
 `ModuleNotFoundError: sqlalchemy` on `python -m worker.main`. D-112 moved the integer to
@@ -165,6 +263,8 @@ PY
 ---
 
 ## Step 3 — Pip (Pane C) ⚠ order is load-bearing
+
+**Transcribe from the cheat sheet above.** This step is the cu128-trio / `-r` scar.
 
 The official template's torch is **not** automatically our pin. Align the CUDA trio from the
 **same** PyTorch index **first**, then the non-torch worker pins.
@@ -227,6 +327,8 @@ Recipe at fold-time is `TIER_RECIPE['rental']` = **fp16 / chunk 64** (D-047). Do
 
 ## Step 4 — Environment (Pane C)
 
+**Transcribe from the cheat sheet above.** Token = laptop `.env`, **single-quoted**.
+
 Paste the token inside **SINGLE quotes**. Double quotes + a `$` or history expansion truncated
 it to 12 characters on 2026-07-23 and burned ~70 minutes of silent 401s. D-042 made a 401 fatal
 in ~5 s; the length check is still the thing that catches the paste **before** the worker
@@ -266,6 +368,8 @@ the next claim, recoverable only by a paid re-fold.
 
 ## Step 5 — Prove the card and start a VRAM log (Pane C) ⚠ required on the next cold run
 
+**Transcribe from the cheat sheet above** (tab 1 `nvidia-smi`, then tab 2 logger).
+
 **Peak VRAM is a named unknown (D-113 budget).** It is **UNKNOWN**. Do not invent a GiB from
 "L=1608 fitted" or from the card's advertised capacity.
 
@@ -290,6 +394,8 @@ OOM.
 ---
 
 ## Step 6 — Start the worker DETACHED (Pane C)
+
+**Transcribe from the cheat sheet above.** `nohup` is not optional.
 
 A dropped **browser tab** kills a foreground shell and the worker with it (D-042: ~1 hr billed,
 zero folds). `nohup` is not optional.
