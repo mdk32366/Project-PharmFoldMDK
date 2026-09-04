@@ -1,7 +1,7 @@
 # Renting hold-48 — RTX PRO 6000 Blackwell runbook
 
 **For:** the owner, folding D-111 tiles on a rented Blackwell card. **Decision:** `D-113`, amended by `D-114`.
-**Cite:** D-111 · D-112 · D-113 · vault **D-0036** (amended; external, not repo D-036) · issue **#210** · PR **#213**.
+**Cite:** D-111 · D-112 · D-113 · D-114 · D-115 · vault **D-0036** (amended; external, not repo D-036) · issue **#210** · PR **#213**.
 
 **This is not a rewrite of** [`GUIDE-renting-the-a6000.md`](GUIDE-renting-the-a6000.md). That
 guide is the 2026-07 A6000 / `--bucket rental` path. Hold-48 emit, the D-112 import pin, the
@@ -22,30 +22,40 @@ Matt **tops up before** Wave 0 / other-44 emit. Account ceiling ≈ **$50** for 
 the rental (fold-only + Wave 0 cold-start + expected scars) — **not** a new prediction of
 tile hours. D-113 forecasts **stand** (C2 fold-only **$17.97**; all-remaining **$21.16**;
 rate **$2.19/hr**; Peak VRAM **UNKNOWN** until Step 5). **Peak VRAM is a named unknown:
-UNKNOWN** — do not invent a number. Step 5 (`nvidia-smi` logger) is required on the next
-cold run. Still not an enqueue GO. Gates unchanged: **3356 persist** → cold **Step 5
+UNKNOWN** — do not invent a number. Step 5 (`nvidia-smi` logger) is required on every
+cold start. Still not an enqueue GO. Gates unchanged: **3356 persist** → cold **Step 5
 `nvidia-smi`** → **Matt GO** before emit.
 
 ---
 
 ## Process rule (read before any click)
 
+**Cold start on a clean card.** Do not emit from a pod that already burned hours on
+pip/ABI/import scars. A clean card is the test that the runbook, not the hot-fixes, is
+what works. You do **not** need to be mid a named decision to run this — type the
+commands below; scar ids live in the why/non-negotiables, not in the paste.
+
 ```
-IGF2R pilot (jobs 3589 / 3590) already folded
+Step 0 — glance RunPod balance (top up if the tank is on E)
         ↓
-evaluate (BUDGET-hold48-tiers-2026-09-04.md)
+rent a CLEAN card          (Terminate any scarred pod first — not Stop)
         ↓
-Terminate the scarred pod  (not Stop)
+setup                      (clone origin/main, cu128 trio, env, nvidia-smi logger)
         ↓
-Matt tops up (D-114 ≈$50 envelope) + balance glance
+start worker               (nohup)
         ↓
-cold-start re-test THIS runbook on a clean card
+empty-queue prove          (claim → 204; do not emit)
         ↓
-only then emit the other 44 proteins  (Matt GO; balance glance before each wave)
+retrieve_rental_pae        (must exit 0)  + copy nvidia-smi CSV
+        ↓
+Terminate
+        ↓
+only then emit             (Matt GO; balance glance before each wave)
 ```
 
-Do not emit the remaining 44 from a pod that already burned hours on pip/ABI/import scars.
-A clean card is the test that the runbook, not the hot-fixes, is what works.
+Historical (why, not what to type): IGF2R tiles **3589** / **3590** already folded on a
+scarred pod. That invoice is Terminate-history. Wave 0 is this general cold start, not a
+"re-test after D-NNN."
 
 ---
 
@@ -83,12 +93,19 @@ top up; do not Deploy, do not emit.
    import `core.hold48`.
 4. **`retrieve_rental_pae` must exit 0 before Terminate.** Stop ≠ Terminate. Stop keeps
    billing the disk; Terminate destroys PAE on the container disk (D-011 / D-036).
-5. **`fly secrets list` does not reveal `WORKER_AUTH_TOKEN`.** Paste from the laptop `.env`,
-   **single-quoted**. Length check = **the actual secret length** (**64** in the 2026-07-24
-   correction — `CLOSEOUT-2026-07-24-rerun.md` — **not 69**). Confirm with
-   `echo ${#WORKER_AUTH_TOKEN}` against `wc -c` on the `.env` value, not against Fly.
+5. **`fly secrets list` does not reveal `WORKER_AUTH_TOKEN`.** Fly lists **names only**.
+   Print the value on the **laptop** (Pane A PowerShell in Step 4 / the cheat sheet), paste
+   on Pane C **single-quoted**. Length check = **the actual secret length** (**64** in the
+   2026-07-24 correction — `CLOSEOUT-2026-07-24-rerun.md` — **not 69**). Confirm with
+   `echo ${#WORKER_AUTH_TOKEN}` against the laptop print's length, not against Fly.
+   Last resort: `fly ssh console -a pharmfoldmdk -C "printenv WORKER_AUTH_TOKEN"` — do
+   **not** invent a `fly secrets` reveal.
 6. **Glance the RunPod account balance** before rent, before each wave, and during long
    waves (Step 0). Do not vacation on E. "Too cheap to meter" does **not** skip this.
+   (D-114 envelope ≈ $50; `$14.17` at Terminate is historical.)
+7. **The git pin is the AST `ImportFrom` assert (D-115), not a file substring and not a
+   decision id to hunt.** Abort only on a real `from core.hold48 …`. `1d48d1d` is the crash
+   SHA. A `"from core.hold48" not in text` check false-alarms on the D-112 comment.
 
 ---
 
@@ -96,7 +113,7 @@ top up; do not Deploy, do not emit.
 
 | Pane | Where | What | Rule |
 |---|---|---|---|
-| **A — LOCAL** | laptop | git pin, `fly logs`, DB tunnel, emit/stitch | home base; **emit happens here**, never on the pod |
+| **A — LOCAL** | laptop | print `WORKER_AUTH_TOKEN` from `.env`, `fly logs`, DB tunnel, emit/stitch | home base; **emit happens here**, never on the pod. Fly cannot print the token |
 | **B — TUNNEL** | laptop | MPG proxy / `DATABASE_URL` | open it, leave it; closing it drops the DB |
 | **C — POD** | RunPod web terminal | clone, pip, worker, PAE retrieve | opened last; **Terminate** (not Stop) when PAE is off the box |
 
@@ -136,12 +153,34 @@ envelope; not the Terminate snapshot of $14.17 treated as a C2 license. Initiali
 
 ## Pane C — web terminal cheat sheet (copy-paste)
 
-Cold dry-run / **Wave 0** on a **clean card**, after Step 1 Deploy → **Web Terminal**.
-Transcribe **top to bottom**. Why-not, scar tables, and money pins stay in Steps 2–6 / D-113 /
-D-114 — this section does not rewrite them.
+**Cold start on a clean card**, after Step 1 Deploy → **Web Terminal**.
+Transcribe **top to bottom**. Why-not, scar tables, and money pins stay in Steps 2–6 and in
+D-112 / D-113 / D-114 / D-115 — this section does not rewrite them and does **not** require
+hunting those ids to know what to type.
 
-**Never** `pip install -r worker/requirements.txt` first. **Never** pip-install sqlalchemy
-(D-112). **Never** invent a `WORKER_AUTH_TOKEN`. Token = laptop `.env`, **single-quoted**.
+Flow: **rent clean card → setup → worker → empty-queue prove → retrieve → Terminate.**
+
+**Never** `pip install -r worker/requirements.txt` first. **Never** pip-install sqlalchemy.
+**Never** invent a `WORKER_AUTH_TOKEN`. Token = laptop `.env`, **single-quoted**.
+
+### Pane A — print WORKER_AUTH_TOKEN (laptop, before the Pane C export)
+
+`fly secrets list` names secrets only; it **cannot print values**. Run this in PowerShell at
+the repo root, then paste the printed line into Pane C.
+
+```powershell
+cd C:\Projects\Project-PharmFoldMDK
+(Get-Content .env | Where-Object { $_ -match '^WORKER_AUTH_TOKEN=' }) -replace '^WORKER_AUTH_TOKEN=','' -replace '^["'']|["'']$',''
+```
+
+Then Pane C: `export WORKER_AUTH_TOKEN='…'` **single-quoted**. `echo ${#WORKER_AUTH_TOKEN}`
+must match the laptop length (**64** in the 2026-07-24 correction, **not 69**).
+
+Last resort (does **not** invent a `fly secrets` reveal):
+
+```powershell
+fly ssh console -a pharmfoldmdk -C "printenv WORKER_AUTH_TOKEN"
+```
 
 ### Tab 1 — clone through card check
 
@@ -152,9 +191,9 @@ cd Project-PharmFoldMDK
 git fetch origin main
 git checkout origin/main
 git log --oneline -1
-# STOP if this SHA is 1d48d1d (D-111). Minimum: D-112 / PR #213 (733c41f).
-# Later main tips after D-114 are fine if they still contain D-112.
-# D-115: AST ImportFrom only — do not grep file text (D-112 comment contains the substring).
+# STOP if this SHA is 1d48d1d — that checkout imports hold48 (sqlalchemy) and will crash.
+# origin/main is the pin. The AST block below is the check — do not hunt a decision id.
+# Walk ImportFrom nodes only. Do not grep file text (a comment contains the substring).
 
 python - <<'PY'
 import ast
@@ -167,7 +206,7 @@ assert any(
     and any(a.name == "TILE_WINDOW_AA" for a in n.names)
     for n in imps
 ), "missing TILE_WINDOW_AA from core.contracts — abort"
-print("ok: D-112 worker import shape")
+print("ok: worker imports TILE_WINDOW_AA from core.contracts only")
 PY
 
 pip install \
@@ -199,7 +238,7 @@ import worker.main  # noqa: F401
 print("ok: worker.main imported; device", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "NO CUDA")
 PY
 
-export WORKER_AUTH_TOKEN='<paste from laptop .env — Fly secrets list does NOT reveal values>'
+export WORKER_AUTH_TOKEN='<paste the Pane A print — single-quoted>'
 export TRANSPORT_URL=https://pharmfoldmdk.fly.dev
 export WORKER_ARTIFACT_DIR=/workspace/rental_artifacts
 export WORKER_ID=rental-hold48-blackwell
@@ -210,12 +249,12 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 mkdir -p "$WORKER_ARTIFACT_DIR"
 
-echo "token length = ${#WORKER_AUTH_TOKEN}  (must equal the laptop .env secret; 64 in the 2026-07-24 correction, not 69)"
+echo "token length = ${#WORKER_AUTH_TOKEN}  (must equal the Pane A print; 64 in the 2026-07-24 correction, not 69)"
 
 nvidia-smi   # must name an RTX PRO 6000 Blackwell class card
 ```
 
-### Tab 2 — VRAM CSV logger (Step 5; required on this cold run)
+### Tab 2 — VRAM CSV logger (Step 5; required on every cold start)
 
 A second web-terminal tab is a new shell. **Do not re-export here** — this is just `nvidia-smi`
 (D-036: a second tab that starts a worker without `WORKER_ARTIFACT_DIR` loses PAE).
@@ -233,20 +272,37 @@ nohup python -m worker.main > /workspace/worker.log 2>&1 &
 sleep 8 && tail -n 40 /workspace/worker.log
 ```
 
-Wave 0 cold dry-run: do **not** emit from Pane A. Empty `claim → 204` is success. `retrieve_rental_pae` before Terminate.
+### Tab 1 — empty-queue prove, then retrieve, then Terminate
+
+Cold start: do **not** emit from Pane A. Persistent `claim → 204` on Fly logs is success
+(empty queue).
+
+When done — even if `$WORKER_ARTIFACT_DIR` is empty, confirm the script's report — then
+Terminate. Re-export the env block if this tab was closed.
+
+```bash
+cd /workspace/Project-PharmFoldMDK
+python -m scripts.retrieve_rental_pae
+#   → "transferred N/N; failed: []" and "safe to terminate."   (exit 0) → good
+#   → "⚠ INCOMPLETE ... do NOT terminate"                        (exit 1) → re-run (idempotent)
+# Copy /workspace/nvidia-smi-hold48.csv off the box too.
+```
+
+Then RunPod console → **Terminate** (trash), not Stop.
 
 ---
 
 ## Step 2 — Git pin (Pane C)
 
-**Transcribe from the cheat sheet above.** This step is the D-112 scar.
+**Transcribe from the cheat sheet above.** Checkout `origin/main`. The AST assert is the pin
+— you do not hunt a decision id to know what to type.
 
-Start from **current `main` tip after D-112 / PR #213**. At writing D-113 that is `733c41f`. Later
-`main` tips (D-113, **D-114**, …) are fine **if they still contain D-112**. ⚠ **`1d48d1d` is D-111.** That commit's
-`worker/main.py` does `from core.hold48 import TILE_WINDOW_AA`. `core.hold48` imports
-sqlalchemy at module top. The GPU image does not have sqlalchemy →
-`ModuleNotFoundError: sqlalchemy` on `python -m worker.main`. D-112 moved the integer to
-`core.contracts`; the worker imports it **from there only**.
+**Why (D-112 / D-115):** `1d48d1d` is the D-111 worker. That commit's `worker/main.py` does
+`from core.hold48 import TILE_WINDOW_AA`. `core.hold48` imports sqlalchemy at module top. The
+GPU image does not have sqlalchemy → `ModuleNotFoundError: sqlalchemy` on
+`python -m worker.main`. D-112 moved the integer to `core.contracts`; the worker imports it
+**from there only**. Minimum live pin was PR **#213** (`733c41f`); later `main` tips are fine
+if the AST assert prints ok.
 
 ⚠ **D-115 / #217 scar:** a raw `"from core.hold48" not in text` **false-alarms** on current
 `main`. Line 29 is `from core.contracts import TILE_WINDOW_AA  # D-111 cap; D-112: never from core.hold48`
@@ -259,9 +315,9 @@ cd Project-PharmFoldMDK
 git fetch origin main
 git checkout origin/main
 git log --oneline -1
-# STOP if this SHA is 1d48d1d (D-111) or any parent of 733c41f.
-# Minimum: D-112 / PR #213 (733c41f) or a later main tip that still has D-112.
-# D-115: AST ImportFrom only — do not grep file text (D-112 comment contains the substring).
+# STOP if this SHA is 1d48d1d — that checkout imports hold48 (sqlalchemy) and will crash.
+# origin/main is the pin. The AST block below is the check — do not hunt a decision id.
+# Walk ImportFrom nodes only. Do not grep file text (a comment contains the substring).
 
 python - <<'PY'
 import ast
@@ -274,7 +330,7 @@ assert any(
     and any(a.name == "TILE_WINDOW_AA" for a in n.names)
     for n in imps
 ), "missing TILE_WINDOW_AA from core.contracts — abort"
-print("ok: D-112 worker import shape")
+print("ok: worker imports TILE_WINDOW_AA from core.contracts only")
 PY
 ```
 
@@ -345,7 +401,17 @@ Recipe at fold-time is `TIER_RECIPE['rental']` = **fp16 / chunk 64** (D-047). Do
 
 ## Step 4 — Environment (Pane C)
 
-**Transcribe from the cheat sheet above.** Token = laptop `.env`, **single-quoted**.
+**Transcribe from the cheat sheet above.** Token = **Pane A print**, pasted **single-quoted**.
+
+`fly secrets list` names secrets only; it **cannot print values**. On the laptop (Pane A),
+PowerShell at the repo root:
+
+```powershell
+cd C:\Projects\Project-PharmFoldMDK
+(Get-Content .env | Where-Object { $_ -match '^WORKER_AUTH_TOKEN=' }) -replace '^WORKER_AUTH_TOKEN=','' -replace '^["'']|["'']$',''
+```
+
+That command **displays** the value for copy. Then Pane C:
 
 Paste the token inside **SINGLE quotes**. Double quotes + a `$` or history expansion truncated
 it to 12 characters on 2026-07-23 and burned ~70 minutes of silent 401s. D-042 made a 401 fatal
@@ -353,7 +419,7 @@ in ~5 s; the length check is still the thing that catches the paste **before** t
 starts.
 
 ```bash
-export WORKER_AUTH_TOKEN='<paste from laptop .env — Fly secrets list does NOT reveal values>'
+export WORKER_AUTH_TOKEN='<paste the Pane A print — single-quoted>'
 export TRANSPORT_URL=https://pharmfoldmdk.fly.dev
 export WORKER_ARTIFACT_DIR=/workspace/rental_artifacts
 export WORKER_ID=rental-hold48-blackwell
@@ -364,10 +430,14 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 mkdir -p "$WORKER_ARTIFACT_DIR"
 
-echo "token length = ${#WORKER_AUTH_TOKEN}  (must equal the laptop .env secret; 64 in the 2026-07-24 correction, not 69)"
-# Compare to the laptop: python -c "import os; from pathlib import Path; ..."
-# or:  grep ^WORKER_AUTH_TOKEN= .env | cut -d= -f2- | tr -d \"\' | wc -c
+echo "token length = ${#WORKER_AUTH_TOKEN}  (must equal the Pane A print; 64 in the 2026-07-24 correction, not 69)"
 # Do not proceed until Pane C length == Pane A length.
+```
+
+Last resort (does **not** invent a `fly secrets` reveal):
+
+```powershell
+fly ssh console -a pharmfoldmdk -C "printenv WORKER_AUTH_TOKEN"
 ```
 
 ⚠ **`WORKER_TIER` defaults to `local`.** A rental worker that forgets this export claims
@@ -384,15 +454,15 @@ the next claim, recoverable only by a paid re-fold.
 
 ---
 
-## Step 5 — Prove the card and start a VRAM log (Pane C) ⚠ required on the next cold run
+## Step 5 — Prove the card and start a VRAM log (Pane C) ⚠ required on every cold start
 
 **Transcribe from the cheat sheet above** (tab 1 `nvidia-smi`, then tab 2 logger).
 
 **Peak VRAM is a named unknown (D-113 budget).** It is **UNKNOWN**. Do not invent a GiB from
 "L=1608 fitted" or from the card's advertised capacity.
 
-This step is **not optional on the next cold-start pod.** Start the logger **before**
-`python -m worker.main`, even if Wave 0 emits nothing: an empty queue will not produce a
+This step is **not optional on a cold-start pod.** Start the logger **before**
+`python -m worker.main`, even if the cold start emits nothing: an empty queue will not produce a
 peak, but the logger must already be running when the first later fold starts. Copy the CSV
 off the box with PAE (Step 9). Until that file exists, Wave C2 has no VRAM kill switch, only
 a wall-time one.
@@ -430,9 +500,9 @@ Healthy startup prints (ASCII):
 - `[worker] tier=rental - claims ONLY jobs of this tier (F-035)`
 - then quiet until a claim (it logs on activity)
 
-If you see **`AUTH REJECTED`**: token wrong or truncated — stop, re-export single-quoted, re-check
-length. If you see **`ModuleNotFoundError: sqlalchemy`**: you are on D-111 (`1d48d1d`) — go back
-to Step 2. If you see **`ModuleNotFoundError: transformers`**: Step 3 scar (a).
+If you see **`AUTH REJECTED`**: token wrong or truncated — stop, re-print on Pane A, re-export
+single-quoted, re-check length. If you see **`ModuleNotFoundError: sqlalchemy`**: you are on
+`1d48d1d` — go back to Step 2. If you see **`ModuleNotFoundError: transformers`**: Step 3 scar (a).
 
 You can now leave Pane C. The worker survives the tab closing. **Re-open later by**
 `tail -f /workspace/worker.log` — a new tab does **not** inherit exports; don't start a second
@@ -442,10 +512,11 @@ worker in that tab.
 
 ## Step 7 — Emit (Pane A only) ⚠ library, IGF2R-pilot shape, not the CLI
 
-**Cold-start re-test:** do **not** emit. The IGF2R tiles (jobs **3589** / **3590**) already
-exist. An empty queue (`claim → 204`) on a clean card is a successful **runbook** test: clone,
-pip, import, env, worker start. Terminate after that (Step 9 still runs: retrieve is a no-op
-if `$WORKER_ARTIFACT_DIR` is empty — confirm the script's report, then Terminate).
+**Cold start:** do **not** emit. An empty queue (`claim → 204`) on a clean card is a
+successful **runbook** test: clone, pip, import, env, worker start. Then retrieve (Step 9)
+and Terminate. Retrieve is a no-op if `$WORKER_ARTIFACT_DIR` is empty — confirm the
+script's report, then Terminate. Historical: IGF2R tiles (jobs **3589** / **3590**) already
+exist; do not re-emit them.
 
 **IGF2R pilot emit (already done; do not repeat):** `core.hold48.emit_tile_jobs(session, parent_job, parent_analysis)`
 against parent **job 3356** / tranche-5 analysis. Parent `jobs.tier` stays NULL. Children are
@@ -489,7 +560,7 @@ with Session(engine) as s:
 
 Then restart the worker (Step 6).
 
-**After a successful cold-start re-test**, emit the other 44 the same way: one parent per
+**After a successful cold start**, emit the other 44 the same way: one parent per
 `emit_tile_jobs` call, never a bucket enqueue, never a mucin (`Q8WXI7` / `Q9UKN1` / `Q685J3`
 → `[]` / `out_of_class`). Follow the budget doc's waves and kill switches. **Glance the
 RunPod balance before each wave (0 / A / B / C1 / C2)** — Step 0; do not vacation on E.
@@ -640,7 +711,7 @@ on every later stitch.
 | `ModuleNotFoundError: transformers` | scar (a) | install the four non-torch pins |
 | torchvision `nms` / ABI | scar (b) | reinstall cu128 trio from the PyTorch index |
 | torchaudio `c10_cuda_check` | scar (c) | match torchaudio to torch `2.11.0+cu128` |
-| `AUTH REJECTED` | truncated/wrong token | single quotes; length = laptop `.env` (64, not 69) |
+| `AUTH REJECTED` | truncated/wrong token | Pane A PowerShell print; Pane C single quotes; length = laptop print (64, not 69). Fly cannot reveal the value |
 | `claim → 204` forever | no pending rental tiles, or `WORKER_TIER` unset (defaults `local`) | export `WORKER_TIER=rental`; do not `--requeue P11717` |
 | Worker gone after tab close | not detached | Step 6 `nohup`; do not run `python -m worker.main` in the foreground |
 | Unsure whether to Terminate | | **Don't.** Step 9 must exit 0. An extra hour is **$2.19**; lost PAE is a paid re-fold |
@@ -656,7 +727,7 @@ Short version: tile0 L=1608 wall **452.4 s**, tile1 L=797 wall **59.9 s**, recip
 torch `2.11.0+cu128`, transformers `5.14.1`, card = RTX PRO 6000 Blackwell Workstation Edition
 at **$2.19/hr**. Fold-only IGF2R **$0.31**. Stitch off-block PAE null (2,131,551 null cells,
 0 literal zeros) — PASS, **Trinity accepted**. Parent 3356 still NULL-tier. Peak VRAM is a
-**named unknown: UNKNOWN** (do not invent a GiB; Step 5 on the next cold run).
+**named unknown: UNKNOWN** (do not invent a GiB; Step 5 on every cold start).
 
 ---
 
