@@ -6,7 +6,9 @@ tiled. Geometry is the BUILD GO window: 1656 / overlap 128 / stride 1528.
 
 ⚠ This module does not talk to Fly, does not rent a GPU, and does not raise the
 1656 cap. `emit_tile_jobs` writes only the Session it is given (tests / an
-explicit local caller). Parent `jobs.tier` stays NULL.
+explicit local caller). Optional ``length_min`` / ``length_max`` select a wave
+band (BUDGET-hold48 Wave A = ``length_max=800``; D-111 amendment 1). Parent
+``jobs.tier`` stays NULL.
 """
 from __future__ import annotations
 
@@ -329,6 +331,46 @@ def plan_all_tileable(
     return out
 
 
+def _spec_in_length_band(
+    spec: TileSpec,
+    *,
+    length_min: Optional[int],
+    length_max: Optional[int],
+) -> bool:
+    """Inclusive band. A ``None`` bound is unbounded on that side."""
+    if length_min is not None and spec.length < length_min:
+        return False
+    if length_max is not None and spec.length > length_max:
+        return False
+    return True
+
+
+def _emitted_tile_idents(session: Session, parent_job_id: int) -> tuple[set[int], set[tuple[int, int]]]:
+    """``tile_index`` values and ``(tile_start, tile_end)`` windows already written."""
+    indices: set[int] = set()
+    windows: set[tuple[int, int]] = set()
+
+    def _note(idx, start, end) -> None:
+        if idx is not None:
+            indices.add(int(idx))
+        if start is not None and end is not None:
+            windows.add((int(start), int(end)))
+
+    for job in session.execute(select(JobRecord)).scalars():
+        settings = job.inference_settings or {}
+        if settings.get("parent_job_id") != parent_job_id:
+            continue
+        _note(settings.get("tile_index"), settings.get("tile_start"), settings.get("tile_end"))
+    for analysis in session.execute(select(ProteinAnalysis)).scalars():
+        meta = analysis.meta or {}
+        if meta.get("parent_job_id") != parent_job_id:
+            continue
+        if meta.get("hold48_kind") != HOLD48_KIND_TILE:
+            continue
+        _note(meta.get("tile_index"), meta.get("tile_start"), meta.get("tile_end"))
+    return indices, windows
+
+
 def emit_tile_jobs(
     session: Session,
     parent_job: JobRecord,
@@ -336,12 +378,21 @@ def emit_tile_jobs(
     *,
     domain_ends: Optional[Sequence[int]] = None,
     cache_dir: Path = UNIPROT_CACHE,
+    length_min: Optional[int] = None,
+    length_max: Optional[int] = None,
 ) -> list[TileSpec]:
     """Write tile analysis+job rows for one parent. Parent ``tier`` is not touched.
 
     ⚠ Mucins emit nothing. ⚠ Does not claim the parent. ⚠ ``jobs.tier`` on
     children is ``rental`` so a later rented-card worker can claim them; this
     function does not call ``claim``.
+
+    ``length_min`` / ``length_max`` (D-111 amendment 1) select an inclusive
+    length band. Both ``None`` → all planned tiles (IGF2R 2-tile path).
+    Wave A: ``length_max=800``. Wave B: ``length_min=801, length_max=1200``.
+    C1: 1201–1655. C2: 1656–1656. Out-of-band siblings are not created (not
+    NULL-tiered). Existing children with the same ``parent_job_id`` +
+    ``tile_index`` / window are skipped.
     """
     accession = parent_analysis.input_value
     if is_mucin(accession):
@@ -359,12 +410,17 @@ def emit_tile_jobs(
         span_end=span_end,
         is_mucin=False,
     )
-    specs = plan_tiles(
+    planned = plan_tiles(
         row,
         parent_job_id=parent_job.id,
         domain_ends=domain_ends,
         cache_dir=cache_dir,
     )
+    specs = [
+        spec
+        for spec in planned
+        if _spec_in_length_band(spec, length_min=length_min, length_max=length_max)
+    ]
     parent_ecd_start = meta.get("ecd_start")
     source = meta.get("source") or meta.get("boundary_method") or SLICED_ECD
 
@@ -373,7 +429,11 @@ def emit_tile_jobs(
     parent_analysis.meta = merged_parent
     # ⚠ THE HOLD. Do not set parent_job.tier.
 
+    emitted_indices, emitted_windows = _emitted_tile_idents(session, parent_job.id)
+
     for spec in specs:
+        if spec.tile_index in emitted_indices or (spec.start, spec.end) in emitted_windows:
+            continue
         tile_seq = sequence[spec.start - 1: spec.end]
         if spec.length != len(tile_seq):
             raise UncoveredResidue(
@@ -435,6 +495,8 @@ def emit_tile_jobs(
                 },
             )
         )
+        emitted_indices.add(spec.tile_index)
+        emitted_windows.add((spec.start, spec.end))
     session.flush()
     return specs
 

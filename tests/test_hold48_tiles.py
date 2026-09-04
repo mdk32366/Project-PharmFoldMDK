@@ -322,6 +322,129 @@ def test_emit_for_a_mucin_writes_nothing():
         s.commit()
         assert specs == []
         assert s.execute(select(JobRecord)).scalars().all().__len__() == 1
+        specs_a = emit_tile_jobs(
+            s, s.get(JobRecord, parent_id), s.get(ProteinAnalysis, analysis_id),
+            length_max=800,
+        )
+        s.commit()
+        assert specs_a == []
+        assert s.execute(select(JobRecord)).scalars().all().__len__() == 1
+
+
+def _rental_children(session, parent_id):
+    return [
+        j for j in session.execute(select(JobRecord)).scalars().all()
+        if (j.inference_settings or {}).get("parent_job_id") == parent_id
+    ]
+
+
+def _child_lengths(session, parent_id):
+    lengths = []
+    for job in _rental_children(session, parent_id):
+        analysis = session.get(ProteinAnalysis, job.analysis_id)
+        lengths.append(len(analysis.meta["sequence"]))
+    return lengths
+
+
+def test_emit_wave_a_writes_only_the_short_last_tile():
+    """Wave A: length_max=800. Long first tile is not created (not NULL-tiered)."""
+    eng = _engine()
+    analysis_id, parent_id = _seed_parent(
+        eng, accession=IGF2R_ACCESSION, sequence="A" * IGF2R_SPAN_AA, jobs_tier=None,
+    )
+    with Session(eng) as s:
+        parent_job = s.get(JobRecord, parent_id)
+        parent_a = s.get(ProteinAnalysis, analysis_id)
+        specs = emit_tile_jobs(s, parent_job, parent_a, length_max=800)
+        s.commit()
+        parent_job = s.get(JobRecord, parent_id)
+        assert parent_job.tier is None
+        assert parent_job.status == "pending"
+        assert len(specs) == 1
+        assert specs[0].length == 736
+        assert specs[0].length <= 800
+        children = _rental_children(s, parent_id)
+        assert len(children) == 1
+        child = children[0]
+        assert child.tier == "rental"
+        assert child.status == "pending"
+        assert is_tile_job(child.inference_settings)
+        lengths = _child_lengths(s, parent_id)
+        assert lengths == [736]
+        assert all(L <= 800 for L in lengths)
+        assert all(L <= TILE_WINDOW_AA for L in lengths)
+        analyses = s.execute(select(ProteinAnalysis)).scalars().all()
+        child_analyses = [a for a in analyses if a.id != analysis_id]
+        assert len(child_analyses) == 1
+        assert len(child_analyses[0].meta["sequence"]) == 736
+        jobs = list(s.execute(select(JobRecord)).scalars().all())
+        assert len(jobs) == 2  # parent + short child; no L=1656 sibling row
+
+
+def test_emit_unfiltered_still_writes_all_tiles():
+    """Both length_min/length_max None: IGF2R 2-tile path is unchanged."""
+    eng = _engine()
+    analysis_id, parent_id = _seed_parent(
+        eng, accession=IGF2R_ACCESSION, sequence="A" * IGF2R_SPAN_AA, jobs_tier=None,
+    )
+    with Session(eng) as s:
+        specs = emit_tile_jobs(
+            s, s.get(JobRecord, parent_id), s.get(ProteinAnalysis, analysis_id),
+        )
+        s.commit()
+        assert s.get(JobRecord, parent_id).tier is None
+        assert len(specs) == 2
+        assert sorted(_child_lengths(s, parent_id)) == [736, 1656]
+        children = _rental_children(s, parent_id)
+        assert len(children) == 2
+        assert all(c.tier == "rental" and c.status == "pending" for c in children)
+
+
+def test_emit_wave_b_adds_mid_band_without_duplicating_wave_a():
+    """Wave B after Wave A adds 801–1200 tiles and does not duplicate A children."""
+    eng = _engine()
+    igf_a_id, igf_parent_id = _seed_parent(
+        eng, accession=IGF2R_ACCESSION, sequence="A" * IGF2R_SPAN_AA, jobs_tier=None,
+    )
+    # 2-tile parent whose last tile is in Wave B (801–1200): L=2500 → 1656 + 972.
+    mid_span = 2500
+    mid_a_id, mid_parent_id = _seed_parent(
+        eng, accession="P00000", sequence="A" * mid_span, jobs_tier=None,
+    )
+    with Session(eng) as s:
+        igf_job = s.get(JobRecord, igf_parent_id)
+        igf_a = s.get(ProteinAnalysis, igf_a_id)
+        mid_job = s.get(JobRecord, mid_parent_id)
+        mid_a = s.get(ProteinAnalysis, mid_a_id)
+
+        emit_tile_jobs(s, igf_job, igf_a, length_max=800)
+        emit_tile_jobs(s, mid_job, mid_a, length_max=800)
+        s.flush()
+        assert s.get(JobRecord, igf_parent_id).tier is None
+        assert s.get(JobRecord, mid_parent_id).tier is None
+        assert _child_lengths(s, igf_parent_id) == [736]
+        assert _child_lengths(s, mid_parent_id) == []
+
+        emit_tile_jobs(s, igf_job, igf_a, length_min=801, length_max=1200)
+        b_specs = emit_tile_jobs(s, mid_job, mid_a, length_min=801, length_max=1200)
+        s.flush()
+        assert _child_lengths(s, igf_parent_id) == [736]  # B does not duplicate A
+        assert len(b_specs) == 1
+        assert b_specs[0].length == 972
+        assert _child_lengths(s, mid_parent_id) == [972]
+        assert all(L <= TILE_WINDOW_AA for L in _child_lengths(s, mid_parent_id))
+        children_mid = _rental_children(s, mid_parent_id)
+        assert len(children_mid) == 1
+        assert children_mid[0].tier == "rental"
+        assert children_mid[0].status == "pending"
+
+        emit_tile_jobs(s, igf_job, igf_a, length_max=800)
+        emit_tile_jobs(s, mid_job, mid_a, length_min=801, length_max=1200)
+        s.commit()
+        assert _child_lengths(s, igf_parent_id) == [736]
+        assert _child_lengths(s, mid_parent_id) == [972]
+        assert s.get(JobRecord, igf_parent_id).tier is None
+        assert s.get(JobRecord, mid_parent_id).tier is None
 
 
 # ── fold-path wiring (no GPU) ─────────────────────────────────────────────────

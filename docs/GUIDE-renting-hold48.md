@@ -589,6 +589,11 @@ Then restart the worker (Step 6).
 RunPod balance before each wave (0 / A / B / C1 / C2)** — Step 0; do not vacation on E.
 There is no `python -m core.hold48` CLI on purpose.
 
+**Wave A emit** passes `length_max=800` (L≤800 last-tile band; D-111 amendment 1 /
+issue **#210** / BUDGET-hold48 Wave A). Later bands pass their own pair: Wave B
+`length_min=801, length_max=1200`; C1 1201–1655; C2 1656–1656. Both omitted = all
+planned tiles (IGF2R path). Out-of-band siblings are not created.
+
 Sketch for one remaining parent (do not run in this session):
 
 ```python
@@ -613,7 +618,7 @@ with Session(engine) as s:
         select(JobRecord).where(JobRecord.analysis_id == parent_a.id)
     ).scalar_one()
     assert parent_job.tier is None, parent_job.tier  # D-111 hold
-    specs = emit_tile_jobs(s, parent_job, parent_a)
+    specs = emit_tile_jobs(s, parent_job, parent_a, length_max=800)  # Wave A
     s.commit()
     print(ACCESSION, [(sp.tile_index, sp.start, sp.end, sp.length) for sp in specs])
 ```
