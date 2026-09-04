@@ -5,7 +5,8 @@ the climb on MDKDevLaptop. A test that imported torch.cuda and folded would not
 run at all, so the assertions here are the contracts the GPU run depends on:
 
 - F-062 is a real `### ` header (the D-062 defect was a cited number with no entry)
-- RESERVED next-free is F-065; F-050 stays reserved
+- the RESERVED next-free `F-` pointer names no spent heading and exceeds every one;
+  F-050 stays reserved
 - ceiling_climb refuses without --layer1-attested, before any climb
 - --fold-in-child / WORKER_FOLD_IN_CHILD wiring is present (D-082 layer 3)
 """
@@ -66,9 +67,13 @@ def test_f050_was_not_taken():
 
 def test_reserved_next_free_is_f065_and_f050_still_reserved():
     reserved = RESERVED.read_text(encoding="utf-8")
-    assert "Next free `F-` integer: `F-065`" in reserved, (
-        "the next-free pointer must move in the SAME commit that spends F-064"
-    )
+    # ⚠⚠ F-062 amendment 1. This asserted the LITERAL `F-065`, so it passed only while nothing
+    # happened and went red the moment 314df71 spent F-065/F-066 and moved the pointer IN THE SAME
+    # COMMIT — the discipline the failure message itself demands. It encoded a rule about MOVEMENT
+    # as a fixed VALUE. ⚠ The message was always right; only the check was wrong.
+    # ⚠ Bumping the literal to F-067 was REFUSED on the record: it re-arms the identical trap for
+    # whoever spends F-067 next, and converts a guard into a maintenance obligation.
+    check_next_free_pointer(LOG.read_text(encoding="utf-8"), reserved)
     assert "Next free `F-` integer: `F-062`" not in reserved
     assert "| **F-050** |" in reserved
     # F-062 is written, not reserved
@@ -197,3 +202,58 @@ def test_script_imports_no_db_by_ast():
             if top in {"db", "sqlalchemy"} or mod == "core.enqueue":
                 banned.append(mod)
     assert not banned
+
+
+# ⚠⚠ F-062 amendment 1 — the pointer invariant, proven against FIXTURES rather than the tree.
+#
+# The guard below used to read docs/README.md and docs/RESERVED.md off disk and compare the pointer
+# to a LITERAL. It could not be made red without editing the repository, and it pinned a value where
+# the rule is about movement. These four cases feed the pure helper two strings, so each state can
+# be stated exactly and the bad ones can be SHOWN to fail.
+#
+# ⚠ None of these is a pure absence guard: each asserts the PRESENCE of a specific outcome —
+# a raise with a named clause, or a returned pointer value.
+from _f062_pointer_invariant import MESSAGE, check_next_free_pointer, spent_headings  # noqa: E402
+
+_LOG_TO_066 = "### F-064 a\n### F-065 b\n### F-066 c\n"
+
+
+def test_pointer_naming_a_spent_heading_is_rejected():
+    """⚠ FIXTURE 1: the pointer names an integer that IS a written entry."""
+    with pytest.raises(AssertionError) as exc:
+        check_next_free_pointer(_LOG_TO_066, "Next free `F-` integer: `F-066`")
+    assert "already a written entry" in str(exc.value)
+    assert MESSAGE.split(" — ")[0].format(spent="066") in str(exc.value)
+
+
+def test_pointer_below_the_highest_spent_heading_is_rejected():
+    """⚠ FIXTURE 2: the pointer is UNSPENT but still lower than the highest spent heading.
+
+    ⚠ The gap matters. A first draft used a pointer that was itself spent, which tripped clause one
+    and never exercised clause two — the two clauses are separate defects and a fixture that cannot
+    tell them apart proves only one. This log deliberately omits F-065 so the pointer is free, and
+    the ordering clause is the only thing that can reject it.
+    """
+    log_with_gap = "### F-064 a" + chr(10) + "### F-066 c" + chr(10)
+    with pytest.raises(AssertionError) as exc:
+        check_next_free_pointer(log_with_gap, "Next free `F-` integer: `F-065`")
+    assert "at or below the highest spent" in str(exc.value)
+    assert "already a written entry" not in str(exc.value)
+
+
+def test_pointer_one_past_the_highest_spent_heading_is_accepted():
+    """FIXTURE 3: one past the highest spent — the only correct state."""
+    assert check_next_free_pointer(_LOG_TO_066, "Next free `F-` integer: `F-067`") == 67
+
+
+def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
+    """⚠ FIXTURE 4: the tree itself. Pointer F-067, highest spent F-066.
+
+    ⚠ This is the only case that touches disk, and it does so through the SAME pure function, so
+    the tree is checked by the code the fixtures proved rather than by a second implementation.
+    """
+    pointer = check_next_free_pointer(
+        LOG.read_text(encoding="utf-8"), RESERVED.read_text(encoding="utf-8")
+    )
+    assert pointer == 67
+    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 66

@@ -53,7 +53,27 @@ def census_artifacts() -> list[str]:
     return found
 
 
+def force_utf8_output() -> None:
+    """⚠ The console is cp1252 on Windows, and every line this script prints carries a ⚠.
+
+    Without this, the *reporting* dies on the character while the archive it is reporting on is
+    already written — the script exits 1 with a UnicodeEncodeError and a caller that checks the
+    status code concludes the snapshot failed when it did not.
+
+    ⚠⚠ **The sharper case is the refusal path.** `main` prints the `.env` refusal to stderr, and
+    that message also carries ⚠. On a real leak the operator would get a traceback about a character
+    instead of the sentence naming the production database password. It still fails closed — nothing
+    is written and the status is nonzero — but **a safety message that cannot be printed is not a
+    safety message.** Both streams are reconfigured, not just stdout.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        # Guard: a redirected stream need not be a TextIOWrapper.
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> int:
+    force_utf8_output()
     names = sorted(set(tracked_files()) | set(census_artifacts()))
     names = [n for n in names if not any(n.startswith(d) for d in EXCLUDE_DIRS)]
 
