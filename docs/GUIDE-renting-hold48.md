@@ -593,6 +593,9 @@ There is no `python -m core.hold48` CLI on purpose.
 issue **#210** / BUDGET-hold48 Wave A). Later bands pass their own pair: Wave B
 `length_min=801, length_max=1200`; C1 1201–1655; C2 1656–1656. Both omitted = all
 planned tiles (IGF2R path). Out-of-band siblings are not created.
+⚠ **Live-snap C1 (2026-09-04):** live C1 **n=38** is snap-pulled vs unsnapped **n=11**.
+Do **not** treat BUDGET §4 n=11 as the live pending count (D-113 live-snap note;
+D-111 amendment 1).
 
 Sketch for one remaining parent (do not run in this session):
 
