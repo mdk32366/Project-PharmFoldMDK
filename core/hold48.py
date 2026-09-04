@@ -9,6 +9,12 @@ tiled. Geometry is the BUILD GO window: 1656 / overlap 128 / stride 1528.
 explicit local caller). Optional ``length_min`` / ``length_max`` select a wave
 band (BUDGET-hold48 Wave A = ``length_max=800``; D-111 amendment 1). Parent
 ``jobs.tier`` stays NULL.
+
+``stitch_readiness`` (D-116) is the stitch-ready gate: re-plan with the same
+``plan_tiles`` path as emit, then require every expected tile complete + PDB +
+PAE. A loose "any child with pdb+pae" SQL is the wave1 false-ready class
+(parent 2817; n_tiles_rows=1 on a long span). ⚠ ``domain_ends`` / ``cache_dir``
+must match emit-time snap.
 """
 from __future__ import annotations
 
@@ -88,6 +94,22 @@ class TileSpec:
     @property
     def length(self) -> int:
         return self.end - self.start + 1
+
+
+@dataclass(frozen=True)
+class StitchReadiness:
+    """Countable stitch-ready verdict (D-116). Not a stitch; not a raise.
+
+    ``missing`` holds expected ``TileSpec``s with no complete+PDB+PAE child.
+    ``uncovered_n`` is residues in ``1..span_aa`` not covered by *expected*
+    windows (the plan), not by present children.
+    """
+
+    ready: bool
+    expected_n: int
+    present_complete_n: int
+    missing: tuple[TileSpec, ...]
+    uncovered_n: int
 
 
 def n_tiles(length: int) -> int:
@@ -345,6 +367,27 @@ def _spec_in_length_band(
     return True
 
 
+def _row_from_parent_analysis(parent_analysis: ProteinAnalysis) -> Hold48Row:
+    """The ``Hold48Row`` emit and stitch_readiness both pass to ``plan_tiles``.
+
+    Fields are the ones emit already reads — no invented columns. Mucin-ness is
+    the named accession set, not a length.
+    """
+    accession = parent_analysis.input_value
+    meta = parent_analysis.meta or {}
+    sequence = meta.get("sequence") or ""
+    span_aa = int(meta.get("span_aa") or meta.get("fold_length") or len(sequence))
+    span_start = int(meta.get("ecd_start") or meta.get("span_start") or 1)
+    span_end = int(meta.get("ecd_end") or meta.get("span_end") or span_aa)
+    return Hold48Row(
+        accession=accession,
+        span_aa=span_aa,
+        span_start=span_start,
+        span_end=span_end,
+        is_mucin=is_mucin(accession),
+    )
+
+
 def _emitted_tile_idents(session: Session, parent_job_id: int) -> tuple[set[int], set[tuple[int, int]]]:
     """``tile_index`` values and ``(tile_start, tile_end)`` windows already written."""
     indices: set[int] = set()
@@ -400,16 +443,7 @@ def emit_tile_jobs(
 
     meta = dict(parent_analysis.meta or {})
     sequence = meta["sequence"]
-    span_aa = int(meta.get("span_aa") or meta.get("fold_length") or len(sequence))
-    span_start = int(meta.get("ecd_start") or meta.get("span_start") or 1)
-    span_end = int(meta.get("ecd_end") or meta.get("span_end") or span_aa)
-    row = Hold48Row(
-        accession=accession,
-        span_aa=span_aa,
-        span_start=span_start,
-        span_end=span_end,
-        is_mucin=False,
-    )
+    row = _row_from_parent_analysis(parent_analysis)
     planned = plan_tiles(
         row,
         parent_job_id=parent_job.id,
@@ -499,6 +533,132 @@ def emit_tile_jobs(
         emitted_windows.add((spec.start, spec.end))
     session.flush()
     return specs
+
+
+def _artifact_present(path: Optional[str]) -> bool:
+    """A stored path is present only when it is a non-empty string."""
+    return bool(path) and bool(str(path).strip())
+
+
+def _child_tile_idents(job: JobRecord, analysis: Optional[ProteinAnalysis]) -> tuple:
+    """``tile_index`` and ``(tile_start, tile_end)`` from settings, else analysis meta.
+
+    Same keys ``emit_tile_jobs`` writes. No invented fields.
+    """
+    settings = job.inference_settings or {}
+    meta = (analysis.meta or {}) if analysis is not None else {}
+    idx = settings.get("tile_index")
+    if idx is None:
+        idx = meta.get("tile_index")
+    start = settings.get("tile_start")
+    if start is None:
+        start = meta.get("tile_start")
+    end = settings.get("tile_end")
+    if end is None:
+        end = meta.get("tile_end")
+    return idx, start, end
+
+
+def _spec_matches_child(spec: TileSpec, job: JobRecord, analysis: Optional[ProteinAnalysis]) -> bool:
+    """Same parent + (tile_index or window). Windows are 1-based inclusive."""
+    settings = job.inference_settings or {}
+    if settings.get("parent_job_id") != spec.parent_job_id:
+        return False
+    idx, start, end = _child_tile_idents(job, analysis)
+    if idx is not None and int(idx) == spec.tile_index:
+        return True
+    if start is not None and end is not None:
+        return (int(start), int(end)) == (spec.start, spec.end)
+    return False
+
+
+def _child_is_complete_fold(job: JobRecord, analysis: Optional[ProteinAnalysis]) -> bool:
+    """complete + PDB present + PAE present. An absent PAE path is not ready (D-106)."""
+    if job.status != "complete":
+        return False
+    if analysis is None:
+        return False
+    return _artifact_present(analysis.pdb_path) and _artifact_present(analysis.pae_json_path)
+
+
+def _uncovered_n(span_aa: int, specs: Sequence[TileSpec]) -> int:
+    """Residues in ``1..span_aa`` not covered by any expected window. Cheap."""
+    if span_aa < 1:
+        return 0
+    covered: set[int] = set()
+    for spec in specs:
+        covered.update(range(spec.start, spec.end + 1))
+    return sum(1 for i in range(1, span_aa + 1) if i not in covered)
+
+
+def stitch_readiness(
+    session: Session,
+    parent_job: JobRecord,
+    parent_analysis: ProteinAnalysis,
+    *,
+    domain_ends: Optional[Sequence[int]] = None,
+    cache_dir: Path = UNIPROT_CACHE,
+) -> StitchReadiness:
+    """Countable stitch-ready gate (D-116). Does not stitch. Does not raise for unreadiness.
+
+    Re-plans expected tiles with the **same** ``plan_tiles`` path ``emit_tile_jobs``
+    uses. ⚠ **Emit-time snap must match:** pass the same ``domain_ends`` /
+    ``cache_dir`` used at emit. A mismatched snap can invent a different expected
+    set (D-111 UncoveredResidue).
+
+    A child matches an expected ``TileSpec`` when it carries the same
+    ``parent_job_id`` and the same ``tile_index`` **or** ``(tile_start, tile_end)``
+    window (keys emit writes on ``jobs.inference_settings``). It counts as present
+    only when ``status='complete'`` **and** ``pdb_path`` is present **and**
+    ``pae_json_path`` is present.
+
+    Ready iff ``missing`` is empty **and** expected tiles cover ``1..span_aa``
+    **and** ``expected_n > 0``. Mucin / no tiles → not ready, empty expected.
+    Wave-band emit is not a readiness filter — this re-plans the full cover.
+
+    Ops: call this instead of a loose "any child with pdb+pae" SQL. That SQL is
+    the wave1 false-ready class (parent 2817: ``n_tiles_rows=1`` on a long span;
+    wave1 FAIL 17).
+    """
+    row = _row_from_parent_analysis(parent_analysis)
+    if row.is_mucin:
+        expected: list[TileSpec] = []
+    else:
+        expected = plan_tiles(
+            row,
+            parent_job_id=parent_job.id,
+            domain_ends=domain_ends,
+            cache_dir=cache_dir,
+        )
+
+    jobs = list(session.execute(select(JobRecord)).scalars())
+    analyses = {a.id: a for a in session.execute(select(ProteinAnalysis)).scalars()}
+
+    missing: list[TileSpec] = []
+    present_n = 0
+    for spec in expected:
+        found = False
+        for job in jobs:
+            analysis = analyses.get(job.analysis_id)
+            if not _spec_matches_child(spec, job, analysis):
+                continue
+            if _child_is_complete_fold(job, analysis):
+                found = True
+                break
+        if found:
+            present_n += 1
+        else:
+            missing.append(spec)
+
+    uncovered = _uncovered_n(row.span_aa, expected)
+    ready = (not missing) and uncovered == 0 and len(expected) > 0
+    return StitchReadiness(
+        ready=ready,
+        expected_n=len(expected),
+        present_complete_n=present_n,
+        missing=tuple(missing),
+        uncovered_n=uncovered,
+    )
 
 
 def apply_mucin_ceiling(
