@@ -1,7 +1,7 @@
 # Renting hold-48 — RTX PRO 6000 Blackwell runbook
 
-**For:** the owner, folding D-111 tiles on a rented Blackwell card. **Decision:** `D-113`.
-**Cite:** D-111 · D-112 · issue **#210** · PR **#213**.
+**For:** the owner, folding D-111 tiles on a rented Blackwell card. **Decision:** `D-113`, amended by `D-114`.
+**Cite:** D-111 · D-112 · D-113 · vault **D-0036** (amended; external, not repo D-036) · issue **#210** · PR **#213**.
 
 **This is not a rewrite of** [`GUIDE-renting-the-a6000.md`](GUIDE-renting-the-a6000.md). That
 guide is the 2026-07 A6000 / `--bucket rental` path. Hold-48 emit, the D-112 import pin, the
@@ -17,8 +17,14 @@ binaries.**
 **Money pin (Matt/Trinity, this pilot):** card **$2.19/hr** (not $2.00). Fold-only IGF2R
 **$0.31** (0.142 GPU-h × $2.19). Setup scars priced separately — not in the other-44
 length-weighted forecast. RunPod balance remaining after Terminate: **$14.17** (measured,
-not a forecast). **Peak VRAM is a named unknown: UNKNOWN** — do not invent a number. Step 5
-(`nvidia-smi` logger) is required on the next cold run.
+not a forecast). ⚠ **D-114:** `$14.17` is **historical**. It does **not** authorize C2.
+Matt **tops up before** Wave 0 / other-44 emit. Account ceiling ≈ **$50** for completing
+the rental (fold-only + Wave 0 cold-start + expected scars) — **not** a new prediction of
+tile hours. D-113 forecasts **stand** (C2 fold-only **$17.97**; all-remaining **$21.16**;
+rate **$2.19/hr**; Peak VRAM **UNKNOWN** until Step 5). **Peak VRAM is a named unknown:
+UNKNOWN** — do not invent a number. Step 5 (`nvidia-smi` logger) is required on the next
+cold run. Still not an enqueue GO. Gates unchanged: **3356 persist** → cold **Step 5
+`nvidia-smi`** → **Matt GO** before emit.
 
 ---
 
@@ -31,13 +37,35 @@ evaluate (BUDGET-hold48-tiers-2026-09-04.md)
         ↓
 Terminate the scarred pod  (not Stop)
         ↓
+Matt tops up (D-114 ≈$50 envelope) + balance glance
+        ↓
 cold-start re-test THIS runbook on a clean card
         ↓
-only then emit the other 44 proteins
+only then emit the other 44 proteins  (Matt GO; balance glance before each wave)
 ```
 
 Do not emit the remaining 44 from a pod that already burned hours on pip/ABI/import scars.
 A clean card is the test that the runbook, not the hot-fixes, is what works.
+
+---
+
+## ⚠ Step 0 — RunPod balance glance (mandatory, D-114)
+
+**Do not start the family vacation with the gas tank on E.**
+
+Check the RunPod **account balance** as a procedure step, not as optional hygiene:
+
+1. **Before renting / deploying a pod** (before Step 1 Deploy).
+2. **Before each wave** — Wave **0**, **A**, **B**, **C1**, **C2**.
+3. **During long waves** (C2 is the money: 15 h cap, 60 full windows).
+
+This is a **glance** at the console balance. It is **not** a new dashboard, not a
+per-second invoice parser, and not fake precision. **"Too cheap to meter"** means **no
+extra metering theater** beyond D-113 wave caps / kill switches **plus this glance**.
+It does **NOT** authorize skipping the balance check.
+
+`$14.17` at Terminate does not cover C2. If the glance shows the tank on E, **stop** —
+top up; do not Deploy, do not emit.
 
 ---
 
@@ -59,6 +87,8 @@ A clean card is the test that the runbook, not the hot-fixes, is what works.
    **single-quoted**. Length check = **the actual secret length** (**64** in the 2026-07-24
    correction — `CLOSEOUT-2026-07-24-rerun.md` — **not 69**). Confirm with
    `echo ${#WORKER_AUTH_TOKEN}` against `wc -c` on the `.env` value, not against Fly.
+6. **Glance the RunPod account balance** before rent, before each wave, and during long
+   waves (Step 0). Do not vacation on E. "Too cheap to meter" does **not** skip this.
 
 ---
 
@@ -82,7 +112,9 @@ exists only in memory (D-036).
 Workstation Edition**). **This pilot's card rate is $2.19/hr** (Matt/Trinity pin — **not $2.00**).
 Dollar figures in [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) use
 that pin. RunPod balance remaining after Terminate of the scarred pod: **$14.17** (measured,
-not a forecast).
+not a forecast). ⚠ **D-114:** `$14.17` is historical; it does **not** authorize C2. Matt
+tops up **before** Wave 0 / emit. Account ceiling ≈ **$50**. **Balance glance (Step 0)
+before Deploy** — do not start the family vacation with the gas tank on E.
 
 **Image:** official RunPod **PyTorch CUDA** template (`runpod/pytorch:…-cuda…`). Do not start
 from bare Ubuntu.
@@ -96,7 +128,9 @@ from bare Ubuntu.
   key-paste with no gain for this job.
 
 **Summary check before Deploy:** Blackwell-class card, on-demand, no network volume, ≥50 GB
-container disk. Initialization is 30 s–several minutes. Connect → **Web Terminal**.
+container disk. **RunPod balance glanced (Step 0)** — enough for Wave 0 inside the ≈$50
+envelope; not the Terminate snapshot of $14.17 treated as a C2 license. Initialization is
+30 s–several minutes. Connect → **Web Terminal**.
 
 ---
 
@@ -333,8 +367,9 @@ Then restart the worker (Step 6).
 
 **After a successful cold-start re-test**, emit the other 44 the same way: one parent per
 `emit_tile_jobs` call, never a bucket enqueue, never a mucin (`Q8WXI7` / `Q9UKN1` / `Q685J3`
-→ `[]` / `out_of_class`). Follow the budget doc's waves and kill switches. There is no
-`python -m core.hold48` CLI on purpose.
+→ `[]` / `out_of_class`). Follow the budget doc's waves and kill switches. **Glance the
+RunPod balance before each wave (0 / A / B / C1 / C2)** — Step 0; do not vacation on E.
+There is no `python -m core.hold48` CLI on purpose.
 
 Sketch for one remaining parent (do not run in this session):
 
@@ -376,6 +411,10 @@ fly logs -a pharmfoldmdk
 Want a repeating **`claim → 200`**, **`artifacts → 204`**, **`complete → 204`**. Persistent
 `claim → 204` means no `pending` rental tiles (empty queue, or `WORKER_TIER` not `rental`).
 A `401` is the token. Do not redeploy Fly to "fix" a worker problem.
+
+**During a long wave (especially C2):** glance the RunPod account balance again (Step 0).
+A kill switch stops the wave; an empty tank mid-wave stops the card. Same rule: do not
+vacation on E.
 
 Progress is in the DB (tunnel up in Pane B), keyed on **tile job ids**, not accession:
 
@@ -481,6 +520,7 @@ on every later stitch.
 | `claim → 204` forever | no pending rental tiles, or `WORKER_TIER` unset (defaults `local`) | export `WORKER_TIER=rental`; do not `--requeue P11717` |
 | Worker gone after tab close | not detached | Step 6 `nohup`; do not run `python -m worker.main` in the foreground |
 | Unsure whether to Terminate | | **Don't.** Step 9 must exit 0. An extra hour is **$2.19**; lost PAE is a paid re-fold |
+| RunPod balance on E (or unknown) | skipped Step 0 glance | **Stop.** Do not Deploy / do not emit. Top up into the ≈$50 envelope. "Too cheap to meter" does **not** skip this |
 | Fold OOM | ceiling is a named unknown (peak VRAM UNKNOWN) | D-042: job `failed`, batch continues — **a result**. Record `nvidia-smi`. Do not invent a GiB. Do not raise the 1656 cap |
 
 ---

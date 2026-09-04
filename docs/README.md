@@ -19,9 +19,11 @@
 > - [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — the current-state architecture (must be
 >   updated in the same PR as any architectural change, and before any PR is filed).
 > - [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) — RunPod hold-48 rental runbook
->   (D-113; RTX PRO 6000 Blackwell). Not a rewrite of the A6000 guide.
+>   (D-113; RTX PRO 6000 Blackwell). Not a rewrite of the A6000 guide. **D-114:** ≈$50
+>   account envelope; top-up before Wave 0 / emit; Step 0 balance glance (do not vacation on E).
 > - [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) — measured
->   budget / tier waves from the IGF2R pilot (D-113).
+>   budget / tier waves from the IGF2R pilot (D-113). **D-114** amends the cash envelope
+>   only; measured forecasts stand.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -134,13 +136,65 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-114 — Hold-48 rental account envelope ≈ $50; top up before Wave 0 / emit (amends D-113 docs)
+
+- **Date:** 2026-09-04
+- **Status:** accepted as **operational cash envelope** — Trinity reviews this PR; **do not merge** until that review. ⚠ **Not a GO to emit.** ⚠ **No jobs enqueued. No Fly change. No SQLAlchemy / worker / code change.** D-113 measured forecasts **stand**.
+- **Amends:** `D-113` **docs only** — the account-ceiling / top-up rule. Does **not** amend the n=2 length→wall model, the wave `$`/`hours` caps, kill switches, card rate, Peak VRAM UNKNOWN, D-111 geometry, or D-112's import site.
+- **Ruled by:** vault **D-0036** (**amended**; external numbering, **not** a project decision — `D-109` ruling 1 / `F-065`; colliding repo `### D-036` is the PAE transfer route and is **untouched**) + repo **D-113** (PR **#214**, merged `953a173`)
+- **Relates:** `D-113` · `D-111` · `D-112` · `D-036` (PAE retrieve — **different subject**) · issue **#210** · PR **#214**
+- **Does not amend:** D-113's C2 fold-only **$17.97**, all-remaining **$21.16**, rate **$2.19/hr**, or Peak VRAM **UNKNOWN** until runbook Step 5
+
+#### Context
+
+D-113 measured a Terminate-balance of **$14.17** and a fold-only remaining forecast of **$21.16** (C2 alone **$17.97**). That comparison already said **$14.17 does not cover C2**. Vault **D-0036** (amended) names the missing piece: an **account ceiling** for *completing* the hold-48 rental, plus a **mandatory balance glance**, not a rewrite of tile-hour arithmetic. Without it, a reader can treat the Terminate snapshot as the working budget, invent extra metering theater to make $50 look like a new `t(L)`, **or** read "too cheap to meter" as skip-the-tank-check.
+
+#### Decision
+
+1. **Account ceiling ≈ $50** for completing hold-48 rental: fold-only remaining + Wave 0 cold-start + expected scars. It is **not** a new prediction of tile hours. D-113's n=2 power law and §4 tables are **unchanged**.
+2. **Matt tops up before Wave 0 / other-44 emit.** `$14.17` remaining at Terminate is **historical**. It does **not** authorize C2. Do not soften C2 vs $14.17.
+3. **"Too cheap to meter"** means **no extra metering theater** (no new dashboards, per-second invoice parsers, or fake precision) beyond existing D-113 wave caps / kill switches **plus** the balance glance in (4). The D-113 `$`/`hours` caps and kill switches **stand**. ⚠ It does **NOT** authorize skipping RunPod balance monitoring.
+4. **RunPod balance check is a mandatory GUIDE procedure step** (Step 0): **before rent / Deploy**, **before each wave** (Wave 0 / A / B / C1 / C2), and **during long waves**. Metaphor: **do not start the family vacation with the gas tank on E.** This is a console glance, not a new instrument.
+5. **Still not an enqueue GO.** Gates unchanged: **3356 persist** → cold GUIDE **Step 5 `nvidia-smi`** → **Matt GO** before emit.
+
+#### Deep-learning justification
+
+Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward passes at the T5 recipe (`fp16` / chunk 64, D-047 / D-111). Cash that cannot finish C2 is how those passes get cut off mid-wave; an envelope that covers fold-only + Wave 0 + scars is how they actually complete. Refusing extra metering keeps the **measured** tile-hour model (n=2, D-113) from being replaced by invoice theater.
+
+#### Provenance (D-016)
+
+- Vault **D-0036** (**amended**): external canon (Obsidian / vault numbering). Substance adopted here under repository **D-114**. ⚠ Not `### D-036` (PAE transfer route). The amendment is the mandatory balance glance — "too cheap to meter" does not skip it.
+- Repo **D-113** / PR **#214** (`953a173` on `main`): C2 fold-only **$17.97**; all-remaining **$21.16**; rate **$2.19/hr**; Peak VRAM **UNKNOWN**; `$14.17` remaining after Terminate (measured remaining-balance reading, this session).
+- ≈ **$50** is an **account ceiling named here**, not an invoice line and not a refit of `t(L)`.
+
+#### Consequences
+
+- [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) and [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) carry the envelope; measured §3/§4 forecasts are not rewritten. GUIDE Step 0 is the balance glance (before rent, before each wave, during long waves). Do not vacation on E.
+- Operators top up **before** Wave 0. Wave 0 spends against the topped-up account, not against the $14.17 snapshot.
+- Kill switches, wave caps, clean-card re-test, and Matt GO before emit are unchanged.
+
+#### Assumptions refused
+
+- Rewriting the n=2 model to fit $50.
+- Softening C2 vs $14.17.
+- That `$14.17` remaining at Terminate authorizes C2.
+- That ≈$50 is a new prediction of tile hours.
+- New dashboards, per-second invoice parsers, or fake precision ("too cheap to meter" is the refusal of that theater).
+- ⚠ **That "too cheap to meter" authorizes skipping the RunPod balance glance.** It does not. Don't vacation on E.
+- That this entry is an enqueue GO, a SQLAlchemy change, a worker change, or a job emit.
+
+- **Amended by:** —
+
+---
+
 ### D-113 — Hold-48 rental is a new RunPod runbook + measured budget, not a rewrite of the A6000 guide
 
 - **Date:** 2026-09-04
 - **Status:** accepted as **operational procedure** — Trinity reviews this PR; **do not merge** until that review. ⚠ **Not a GO to emit the remaining 44 proteins.** ⚠ **No jobs enqueued in this PR. No Fly change. No PDB/PAE binaries committed.**
 - **Ruled by:** the IGF2R pilot scars (jobs **3589** / **3590**) + D-111 / D-112 / issue **#210**
-- **Relates:** `D-111` · `D-112` · `D-047` · `D-044` · `D-042` · `D-036` · `D-018` · `D-011` · issue **#210** · PR **#213** (`733c41f`) · PR **#212** (`1d48d1d`)
+- **Relates:** `D-111` · `D-112` · `D-047` · `D-044` · `D-042` · `D-036` · `D-018` · `D-011` · issue **#210** · PR **#213** (`733c41f`) · PR **#212** (`1d48d1d`) · **D-114** (account envelope ≈ $50; docs only)
 - **Does not amend:** D-111 geometry (1656 / 128 / 1528), D-112's import site, or `worker/requirements.txt` (SQLAlchemy stays off the GPU tier)
+- **Amended by:** `D-114` (account envelope ≈ $50; top-up before Wave 0 / emit; `$14.17` at Terminate is historical and does not authorize C2; measured forecasts stand; RunPod balance glance is mandatory — do not vacation on E)
 
 #### Context
 
@@ -176,7 +230,7 @@ The remaining hold-48 tiles are ESMFold forward passes at the T5 recipe (`fp16` 
 - The other 44 stay unemitted until a clean-card cold-start re-test of that runbook succeeds.
 - Peak VRAM is a **named unknown (UNKNOWN)**. Do not invent a GiB. It closes only when the next cold run's `nvidia-smi` CSV exists (runbook Step 5).
 - Parent job **3356** stays `jobs.tier` NULL; local stitch only so far. **Trinity accepted the stitch proof** (2,131,551 null cells, 0 literal zeros).
-- Fold-only remaining forecast at $2.19/hr is **$21.16** (104 tiles); C2 alone is **$17.97**. Measured remaining **$14.17** does not cover C2. Setup scars stay out of that forecast.
+- Fold-only remaining forecast at $2.19/hr is **$21.16** (104 tiles); C2 alone is **$17.97**. Measured remaining **$14.17** does not cover C2. Setup scars stay out of that forecast. ⚠ **D-114:** `$14.17` at Terminate is historical; Matt tops up before Wave 0 / emit; account ceiling ≈ **$50**. Do not rewrite these forecasts to fit that ceiling.
 
 ---
 
