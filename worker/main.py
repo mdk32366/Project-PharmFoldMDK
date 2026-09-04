@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from core.hold48 import TILE_WINDOW_AA
 from core.queue import DEFAULT_TIER
 from worker.http_client import HttpQueueClient
 from worker.orchestrator import FoldError, FoldSpec, run_worker
@@ -99,6 +100,11 @@ def fold_from_spec(spec: FoldSpec, fold_fn: Callable[..., Any] = fold, *,
         raise FoldError(
             f"job pins model_revision {spec.model_revision!r} but this runner is "
             f"{MODEL_REVISION!r} — refusing to fold a different model than the manifest reviewed")
+    if len(spec.sequence) > TILE_WINDOW_AA:
+        raise FoldError(
+            f"job {spec.job_id}: sequence length {len(spec.sequence)} exceeds "
+            f"{TILE_WINDOW_AA} — D-111 does not raise the 1656 cap; tiles only"
+        )
     result = fold_fn(
         spec.sequence,
         dtype=spec.dtype,

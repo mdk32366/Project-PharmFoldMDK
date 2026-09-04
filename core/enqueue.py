@@ -184,6 +184,15 @@ def enqueue_cohort(
             excluded += 1
             continue
 
+        # ⚠ D-111: a mucin must not reach a claimable rental job even if a caller
+        # cleared the cohort exclusion. Tiles are a different function.
+        from core.hold48 import is_mucin, refuse_oneshot_rental  # noqa: PLC0415
+        if is_mucin(row.accession):
+            refuse_oneshot_rental(
+                row.accession, is_tile=False, jobs_tier=row.tier,
+                sequence_length=row.span,
+            )
+
         already = session.execute(
             select(ProteinAnalysis).where(
                 ProteinAnalysis.ranking_run_id == run.id,

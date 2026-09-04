@@ -32,6 +32,12 @@ from typing import Any, Callable, Optional
 from sqlalchemy import select, update
 
 from core.contracts import TIER_RECIPE, FoldSpec
+from core.hold48 import (
+    TILE_WINDOW_AA,
+    OneShotRentalForbidden,
+    is_tile_job,
+    refuse_oneshot_rental,
+)
 from core.queue import DEFAULT_TIER
 from core.queue import Job
 from db.models import JobRecord, ProteinAnalysis
@@ -68,9 +74,20 @@ def build_fold_spec(queue: Any, engine: Any, worker_id: str,
     if job is None:
         return None
     with engine.connect() as conn:
-        meta = conn.execute(
-            select(ProteinAnalysis.meta).where(ProteinAnalysis.id == job.analysis_id)
-        ).scalar_one()
+        row = conn.execute(
+            select(ProteinAnalysis.meta, ProteinAnalysis.input_value)
+            .where(ProteinAnalysis.id == job.analysis_id)
+        ).one()
+        meta, accession = row[0], row[1]
+    # ⚠ D-111: a mucin, or a hold-48 parent as one sequence, must not become an
+    # ESMFold FoldSpec just because someone set jobs.tier='rental'. The queue
+    # filter cannot see accession; this is the claim-time guard that can go red.
+    refuse_oneshot_rental(
+        accession,
+        is_tile=is_tile_job(job.inference_settings, meta),
+        jobs_tier=job.tier,
+        sequence_length=len((meta or {}).get("sequence") or ""),
+    )
     meta_tier = (meta or {}).get("tier")
     # ⚠ D-107 amendment 1: `msa` is a known claimable tier and is NOT an ESMFold recipe.
     # Fail loud here — same shape as D-047 unknown-tier — rather than resolving
@@ -88,9 +105,15 @@ def build_fold_spec(queue: Any, engine: Any, worker_id: str,
         )
     recipe = TIER_RECIPE[meta_tier]
     s = job.inference_settings
+    sequence = meta["sequence"]
+    if len(sequence) > TILE_WINDOW_AA:
+        raise OneShotRentalForbidden(
+            f"job {job.id}: sequence length {len(sequence)} exceeds {TILE_WINDOW_AA} "
+            f"(D-111: do not raise the 1656 cap)"
+        )
     return FoldSpec(
         job_id=job.id,
-        sequence=meta["sequence"],
+        sequence=sequence,
         model_revision=s["model_revision"],
         dtype=recipe["dtype"],           # D-047: current recipe, not the frozen hint
         chunk_size=recipe["chunk_size"],  # D-047: current recipe, not the frozen hint
