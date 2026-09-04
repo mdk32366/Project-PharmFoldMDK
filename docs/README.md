@@ -260,7 +260,7 @@ Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward pa
 - **Ruled by:** the IGF2R pilot scars (jobs **3589** / **3590**) + D-111 / D-112 / issue **#210**
 - **Relates:** `D-111` · `D-112` · `D-047` · `D-044` · `D-042` · `D-036` · `D-018` · `D-011` · issue **#210** · PR **#213** (`733c41f`) · PR **#212** (`1d48d1d`) · **D-114** (account envelope ≈ $50; docs only)
 - **Does not amend:** D-111 geometry (1656 / 128 / 1528), D-112's import site, or `worker/requirements.txt` (SQLAlchemy stays off the GPU tier)
-- **Amended by:** `D-114` (account envelope ≈ $50; top-up before Wave 0 / emit; `$14.17` at Terminate is historical and does not authorize C2; measured forecasts stand; RunPod balance glance is mandatory — do not vacation on E) · `D-115` (GUIDE D-112 paste assert is AST `ImportFrom`; docs only — does not amend this entry's geometry, card, or forecasts) · GUIDE operator-facing Wave 0 copy (2026-09-04, Matt): general clean-card cold start (rent → setup → worker → empty-queue prove → retrieve → Terminate), not a re-test after this entry; Pane A prints `WORKER_AUTH_TOKEN` from the laptop `.env` (`fly secrets list` names only) — **no new D-NNN** · GUIDE Watch paste (2026-09-04, Matt): cheat sheet **Watch** + Step 8 carry Pane A `fly logs -a pharmfoldmdk` and Pane C `tail -f /workspace/worker.log` — **no new D-NNN**
+- **Amended by:** `D-114` (account envelope ≈ $50; top-up before Wave 0 / emit; `$14.17` at Terminate is historical and does not authorize C2; measured forecasts stand; RunPod balance glance is mandatory — do not vacation on E) · `D-115` (GUIDE D-112 paste assert is AST `ImportFrom`; docs only — does not amend this entry's geometry, card, or forecasts) · GUIDE operator-facing Wave 0 copy (2026-09-04, Matt): general clean-card cold start (rent → setup → worker → empty-queue prove → retrieve → Terminate), not a re-test after this entry; Pane A prints `WORKER_AUTH_TOKEN` from the laptop `.env` (`fly secrets list` names only) — **no new D-NNN** · GUIDE Watch paste (2026-09-04, Matt): cheat sheet **Watch** + Step 8 carry Pane A `fly logs -a pharmfoldmdk` and Pane C `tail -f /workspace/worker.log` — **no new D-NNN** · **D-111 amendment 1** (`emit_tile_jobs` `length_min`/`length_max` — Wave A operationalize; does **not** amend this entry's n=2 model / `$` / hours)
 
 #### Context
 
@@ -394,7 +394,30 @@ The neural work this wave prepares is ESMFold at the **same T5 recipe** already 
 - That a parent may be claimed as one sequence because metadata still says `tier=rental`.
 - That this GO could take `D-110`. ⚠ **`D-094` amendment 1 already cited `D-110` for a different subject** (PAE and coverage-payload provenance). Spending it here would have been `F-065` / `F-044` — a well-formed reference resolving to the wrong live entry.
 
-- **Amended by:** `D-112` (the 1656 cap's import site: `core.contracts`, not `core.hold48`, so the GPU worker does not import sqlalchemy)
+- **Amended by:** `D-112` (the 1656 cap's import site: `core.contracts`, not `core.hold48`, so the GPU worker does not import sqlalchemy) · **D-111 amendment 1** (`emit_tile_jobs` `length_min`/`length_max` wave-band filter; long siblings are not emitted, not NULL-tiered)
+
+#### D-111 amendment 1 — `emit_tile_jobs` takes `length_min` / `length_max` so Wave A can enqueue only L≤800
+
+- **Date:** 2026-09-04
+- **Status:** accepted as **operational emit filter** — Trinity reviews this PR; **do not merge** until that review. ⚠ **Not a GO to emit.** ⚠ **No jobs enqueued. No Fly change. No SQLAlchemy / worker / `requirements.txt` change.** D-111 geometry, D-112 import site, and D-113/D-114 money pins **stand**.
+- ⚠ **A sub-entry, not a new integer.** Wave A as L≤800 last-tiles is already named in [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) §4/§5 (D-113). This does **not** invent D-116.
+- **Cite:** `D-111` · issue **#210** · BUDGET-hold48 Wave A (L≤800 last-tile band)
+- **Does not amend:** D-111 geometry (1656 / 128 / 1528), mucins `out_of_class`, parent `jobs.tier` NULL, the 1656 cap, D-113's n=2 length→wall model / `$` / hours caps, D-112's import site, or `worker/requirements.txt`
+
+**WHAT THE PARENT SAID THAT THIS AMENDS.** Decision 3: the planner writes tile `protein_analyses` + `jobs` rows for one parent. It did not name a length band, so a Wave A emit of a 2-tile parent would also create the L=1656 sibling. Wave A is **only** the L≤800 last-tiles.
+
+- **Context:** Durable shape C for hold-48 waves. Wave A must enqueue **only** specs with L≤800. Creating the long sibling and NULL-tiering it after the fact would leave a rental row that a claim could take. The long tile is simply not emitted.
+- **Decision:**
+  1. `emit_tile_jobs(..., *, length_min: Optional[int] = None, length_max: Optional[int] = None)`. **Not** `max_length` alone.
+  2. Both `None` → current behavior (all planned tiles). IGF2R 2-tile path is unchanged.
+  3. Inclusive band. Wave **A:** `length_max=800` (`length_min` unset). Wave **B:** `length_min=801`, `length_max=1200`. **C1:** 1201–1655. **C2:** 1656–1656.
+  4. Write child analysis+job rows **only** for in-band specs. Do **not** create out-of-band siblings. Do **not** NULL-tier them after the fact.
+  5. **Idempotent skip:** if a child with the same `parent_job_id` + tile window / `tile_index` is already present, skip it. A later Wave B call may add mid-band tiles without duplicating Wave A children.
+  6. Parent `jobs.tier` stays NULL. Mucins still emit `[]`. Every emitted tile still L≤1656. No `python -m core.hold48` CLI. No `--bucket` enqueue. No Fly.
+- **Deep-learning justification:** The remaining hold-48 tiles are still ESMFold forward passes at the T5 recipe (`fp16` / chunk 64, D-047 / D-111). Wave A is the short last-tiles (BUDGET n=17, L≤800) so the paid card runs those passes first; a filter that never creates the L=1656 sibling is how those passes are the only claimable rental rows. Neutral to the weights; load-bearing for which sequences the network is asked to fold this wave.
+- **Provenance (D-016):** BUDGET-hold48 §4/§5 Wave A = remaining L≤800, n=17, fold-only **$0.13** (unsnapped; n=2 power law). Issue **#210** BUILD GO / D-111 `emit_tile_jobs`. This amendment does not re-fit `t(L)`.
+- **Consequences:** `core/hold48.py` `emit_tile_jobs` gains the two kwargs. Tests in `tests/test_hold48_tiles.py` must be able to go red: Wave A-only (shorts only; 0 children with L>800) and Wave B-add (later call adds mid-band without duplicating A). GUIDE emit sketch shows `length_max=800` for Wave A. `ARCHITECTURE.md` records the optional band. Budget n=2 model is not rewritten.
+- **Assumptions refused:** that Wave A should create long siblings and NULL-tier them; that a new `D-116` is required to name a band D-113 already named; that this entry is an enqueue GO, a CLI, or a rewrite of `t(L)`.
 
 ---
 
