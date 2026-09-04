@@ -154,13 +154,20 @@ git checkout origin/main
 git log --oneline -1
 # STOP if this SHA is 1d48d1d (D-111). Minimum: D-112 / PR #213 (733c41f).
 # Later main tips after D-114 are fine if they still contain D-112.
+# D-115: AST ImportFrom only — do not grep file text (D-112 comment contains the substring).
 
 python - <<'PY'
+import ast
 from pathlib import Path
-text = Path("worker/main.py").read_text(encoding="utf-8")
-assert "from core.hold48" not in text, "worker.main imports hold48 — this is D-111, not D-112"
-assert "from core.contracts import TILE_WINDOW_AA" in text
-print("ok: worker.main imports TILE_WINDOW_AA from core.contracts only")
+tree = ast.parse(Path("worker/main.py").read_text(encoding="utf-8"))
+imps = [n for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)]
+assert not any(n.module == "core.hold48" for n in imps), "real hold48 import — abort"
+assert any(
+    n.module == "core.contracts"
+    and any(a.name == "TILE_WINDOW_AA" for a in n.names)
+    for n in imps
+), "missing TILE_WINDOW_AA from core.contracts — abort"
+print("ok: D-112 worker import shape")
 PY
 
 pip install \
@@ -241,6 +248,10 @@ sqlalchemy at module top. The GPU image does not have sqlalchemy →
 `ModuleNotFoundError: sqlalchemy` on `python -m worker.main`. D-112 moved the integer to
 `core.contracts`; the worker imports it **from there only**.
 
+⚠ **D-115 / #217 scar:** a raw `"from core.hold48" not in text` **false-alarms** on current
+`main`. Line 29 is `from core.contracts import TILE_WINDOW_AA  # D-111 cap; D-112: never from core.hold48`
+— the substring lives in the **comment**. The paste check below is AST `ImportFrom` only.
+
 ```bash
 cd /workspace
 git clone https://github.com/mdk32366/Project-PharmFoldMDK.git
@@ -250,13 +261,20 @@ git checkout origin/main
 git log --oneline -1
 # STOP if this SHA is 1d48d1d (D-111) or any parent of 733c41f.
 # Minimum: D-112 / PR #213 (733c41f) or a later main tip that still has D-112.
+# D-115: AST ImportFrom only — do not grep file text (D-112 comment contains the substring).
 
 python - <<'PY'
+import ast
 from pathlib import Path
-text = Path("worker/main.py").read_text(encoding="utf-8")
-assert "from core.hold48" not in text, "worker.main imports hold48 — this is D-111, not D-112"
-assert "from core.contracts import TILE_WINDOW_AA" in text
-print("ok: worker.main imports TILE_WINDOW_AA from core.contracts only")
+tree = ast.parse(Path("worker/main.py").read_text(encoding="utf-8"))
+imps = [n for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)]
+assert not any(n.module == "core.hold48" for n in imps), "real hold48 import — abort"
+assert any(
+    n.module == "core.contracts"
+    and any(a.name == "TILE_WINDOW_AA" for a in n.names)
+    for n in imps
+), "missing TILE_WINDOW_AA from core.contracts — abort"
+print("ok: D-112 worker import shape")
 PY
 ```
 
