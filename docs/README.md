@@ -19,7 +19,8 @@
 > - [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — the current-state architecture (must be
 >   updated in the same PR as any architectural change, and before any PR is filed).
 > - [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) — RunPod hold-48 rental runbook
->   (D-113; RTX PRO 6000 Blackwell). Not a rewrite of the A6000 guide. **D-114:** ≈$50
+>   (D-113, D-114; RTX PRO 6000 Blackwell). Not a rewrite of the A6000 guide.
+>   Pane C transcription surface: **Pane C — web terminal cheat sheet (copy-paste)**. **D-114:** ≈$50
 >   account envelope; top-up before Wave 0 / emit; Step 0 balance glance (do not vacation on E).
 > - [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) — measured
 >   budget / tier waves from the IGF2R pilot (D-113). **D-114** amends the cash envelope
@@ -172,6 +173,7 @@ Neutral to the weights. The remaining hold-48 tiles are still ESMFold forward pa
 - [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) and [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) carry the envelope; measured §3/§4 forecasts are not rewritten. GUIDE Step 0 is the balance glance (before rent, before each wave, during long waves). Do not vacation on E.
 - Operators top up **before** Wave 0. Wave 0 spends against the topped-up account, not against the $14.17 snapshot.
 - Kill switches, wave caps, clean-card re-test, and Matt GO before emit are unchanged.
+- Wave 0 Pane C transcription (clone → pip trio → env → nvidia-smi logger → nohup) lives in the GUIDE section **Pane C — web terminal cheat sheet (copy-paste)**. Pins unchanged (D-112 import, cu128 trio, D-114 envelope).
 
 #### Assumptions refused
 
@@ -226,7 +228,7 @@ The remaining hold-48 tiles are ESMFold forward passes at the T5 recipe (`fp16` 
 
 #### Consequences
 
-- Operators follow `GUIDE-renting-hold48.md`, not the A6000 enqueue path.
+- Operators follow `GUIDE-renting-hold48.md`, not the A6000 enqueue path. Pane C transcription for Wave 0 is that file's **Pane C — web terminal cheat sheet (copy-paste)**; Steps 2–6 remain the scar rationale. Pins unchanged (D-112 import, cu128 trio).
 - The other 44 stay unemitted until a clean-card cold-start re-test of that runbook succeeds.
 - Peak VRAM is a **named unknown (UNKNOWN)**. Do not invent a GiB. It closes only when the next cold run's `nvidia-smi` CSV exists (runbook Step 5).
 - Parent job **3356** stays `jobs.tier` NULL; local stitch only so far. **Trinity accepted the stitch proof** (2,131,551 null cells, 0 literal zeros).
