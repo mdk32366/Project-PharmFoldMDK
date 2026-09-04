@@ -18,6 +18,10 @@
 > Companion documents:
 > - [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — the current-state architecture (must be
 >   updated in the same PR as any architectural change, and before any PR is filed).
+> - [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) — RunPod hold-48 rental runbook
+>   (D-113; RTX PRO 6000 Blackwell). Not a rewrite of the A6000 guide.
+> - [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) — measured
+>   budget / tier waves from the IGF2R pilot (D-113).
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -130,13 +134,59 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-113 — Hold-48 rental is a new RunPod runbook + measured budget, not a rewrite of the A6000 guide
+
+- **Date:** 2026-09-04
+- **Status:** accepted as **operational procedure** — Trinity reviews this PR; **do not merge** until that review. ⚠ **Not a GO to emit the remaining 44 proteins.** ⚠ **No jobs enqueued in this PR. No Fly change. No PDB/PAE binaries committed.**
+- **Ruled by:** the IGF2R pilot scars (jobs **3589** / **3590**) + D-111 / D-112 / issue **#210**
+- **Relates:** `D-111` · `D-112` · `D-047` · `D-044` · `D-042` · `D-036` · `D-018` · `D-011` · issue **#210** · PR **#213** (`733c41f`) · PR **#212** (`1d48d1d`)
+- **Does not amend:** D-111 geometry (1656 / 128 / 1528), D-112's import site, or `worker/requirements.txt` (SQLAlchemy stays off the GPU tier)
+
+#### Context
+
+The A6000 walkthrough (`GUIDE-renting-the-a6000.md`) and the five-target rerun (`RUNBOOK-rerun-5-targets.md`) are the wrong document for hold-48. They enqueue `--bucket rental`, requeue by **accession**, pin a token length of **69** (later corrected to **64** and never updated in those files), and `pip install -r worker/requirements.txt` against plain PyPI. The IGF2R pilot on an **RTX PRO 6000 Blackwell** hit a different scar set: D-111's worker imported `core.hold48` (sqlalchemy) until D-112 / PR #213; torchvision/torchaudio ABI if not from the cu128 index; `transformers` missing if the worker pins are skipped; accession `--requeue P11717` would touch historical **job 57** and the NULL-tier parent **3356**.
+
+A rewritten A6000 guide would mix two card classes and two emit paths. **New files.** Pointers only from the old guide and this log.
+
+#### Decision
+
+1. **`docs/GUIDE-renting-hold48.md`** is the hold-48 rental runbook. Card = RTX PRO 6000 Blackwell class; **this pilot's card rate is $2.19/hr** (Matt/Trinity pin — not $2.00). Official RunPod PyTorch CUDA template; container disk ≥50 GB; **no network volume**; Secure Cloud; SSH optional/off. Git pin = **current `main` tip after D-112 / PR #213** (`733c41f` at writing). ⚠ **`1d48d1d` is D-111** — that worker imports `TILE_WINDOW_AA` from `core.hold48` and dies with `ModuleNotFoundError: sqlalchemy`. The worker imports the cap from `core.contracts` only (D-112).
+2. **Pip order is load-bearing.** Align `torch`+`torchvision`+`torchaudio` from `https://download.pytorch.org/whl/cu128` **first** (same index), **then** the non-torch worker pins. Exact: `torch==2.11.0+cu128`, `torchvision==0.26.0+cu128`, `torchaudio==2.11.0+cu128`, `transformers==5.14.1`, `bitsandbytes==0.49.2`, `accelerate==1.14.0`, `httpx==0.28.1`. ⚠ Full `-r worker/requirements.txt` on a fresh venv hits plain PyPI for `+cu128` torch and fails (`CLOSEOUT-2026-07-24-rerun.md`). ⚠ **Do not add SQLAlchemy to `worker/requirements.txt`** (D-112).
+3. **Emit is `core.hold48.emit_tile_jobs` for one parent, never `python -m core.enqueue --bucket rental`.** Never accession `--requeue P11717` (D-109 ruling 6: failed historical job **57** + parent **3356** `jobs.tier` NULL, D-047). Requeue a failed **tile** by **job id** only. **Stop the worker before any pending reset** (D-047 race: 5 s poll).
+4. **Process rule:** after the IGF2R pilot → evaluate (this budget) → **Terminate** the scarred pod (not Stop) → **cold-start re-test this runbook on a clean card** → only then emit the other 44. `retrieve_rental_pae` must exit 0 before Terminate. Stitch on the laptop via `hold48_stitch.write_stitched`; off-block PAE is **null, not 0**. **Trinity accepted the stitch proof.**
+5. **`docs/BUDGET-hold48-tiers-2026-09-04.md`** is the measured budget. Two claim→complete walls (n=2, thin). Card rate **$2.19/hr** (Matt/Trinity pin). Fold-only IGF2R = 0.142 GPU-h × $2.19 ≈ **$0.31**. Setup scars (pip thrash, torchvision/torchaudio ABI, SQLAlchemy hot-fix, idle time) are **priced separately** and are **not** in the length-weighted other-44 forecast. RunPod balance remaining after Terminate: **$14.17** (measured, not a forecast). ⚠ **Peak VRAM is a named unknown — UNKNOWN, not in provenance, do not invent a number.** The runbook requires `nvidia-smi` capture on the **next cold run** (Step 5), before the first fold. **Stitch proof accepted by Trinity** (off-block PAE null: 2,131,551 null cells, 0 literal zeros).
+
+#### Deep-learning justification
+
+The remaining hold-48 tiles are ESMFold forward passes at the T5 recipe (`fp16` / chunk 64, D-047 / D-111). A mismatched torch/vision/audio stack, a sqlalchemy import on the GPU process, or a requeue of the 2,491-aa historical IGF2R job would spend paid hours on a fold that is not the network we pinned. The runbook is how those passes actually run; the budget is how we refuse to run them on a scarred pod. Neutral to architecture of the weights; load-bearing for whether the weights run.
+
+#### Provenance (D-016)
+
+- Git pin: `git log origin/main -1` = `733c41f` *D-112: TILE_WINDOW_AA lives in core.contracts; worker must not import hold48 (#213)*. Parent of that commit is `1d48d1d` (D-111, #212).
+- Tile count **106** total / **104** remaining: `plan_tiles(..., domain_ends=())` over `data/census/census_manifest.v7.csv` tranche=5 `span_aa > 1656`, excluding mucins `Q8WXI7`/`Q9UKN1`/`Q685J3`, minus IGF2R's 2 tiles. ⚠ Domain-snap (cache gitignored) moves edges ±64 aa; **n_tiles is a function of span_aa only**, so 104 remaining is robust and last-tile lengths are not.
+- Pilot walls / artifacts / stitch nulls: IGF2R pilot claim→complete (jobs 3589 tile0 L=1608, 3590 tile1 L=797) as recorded in the budget doc — not re-derived from Fly in this PR (this PR does not touch Fly).
+- Card rate **$2.19/hr**: Matt/Trinity pin for this pilot (not $2.00). Fold-only $0.31 = 0.142 GPU-h × $2.19.
+- RunPod balance remaining **$14.17**: measured after Terminate of the scarred pod — a remaining-balance reading, not a forecast.
+- Token length **64**: `CLOSEOUT-2026-07-24-rerun.md` §4 (the runbook's 69 check false-alarmed). `fly secrets list` does not reveal values; paste from the laptop `.env`.
+- `+cu128` pip failure: same closeout §4.
+
+#### Consequences
+
+- Operators follow `GUIDE-renting-hold48.md`, not the A6000 enqueue path.
+- The other 44 stay unemitted until a clean-card cold-start re-test of that runbook succeeds.
+- Peak VRAM is a **named unknown (UNKNOWN)**. Do not invent a GiB. It closes only when the next cold run's `nvidia-smi` CSV exists (runbook Step 5).
+- Parent job **3356** stays `jobs.tier` NULL; local stitch only so far. **Trinity accepted the stitch proof** (2,131,551 null cells, 0 literal zeros).
+- Fold-only remaining forecast at $2.19/hr is **$21.16** (104 tiles); C2 alone is **$17.97**. Measured remaining **$14.17** does not cover C2. Setup scars stay out of that forecast.
+
+---
+
 ### D-112 — TILE_WINDOW_AA lives in `core.contracts`; the GPU worker must not import `core.hold48`
 
 - **Date:** 2026-09-04
 - **Status:** accepted
 - **Ruled by:** Trinity (Architect) + Emma — the rental-pod `ModuleNotFoundError: sqlalchemy` after D-111 (#212). Matt hot-fixed the live pod; this entry is the durable shape. ⚠ **SQLAlchemy is not a GPU-tier dependency.** `worker/requirements.txt` is unchanged.
 - **Amends:** `D-111`'s fold-path wiring only — *where* `fold_from_spec` reads the 1656 cap. Geometry, population, stitch, mucins, and the cap itself are unchanged.
-- **Relates:** `D-111` · `D-018` · `DEP-001` · issue **#210** (D-111 follow-up, not a new GO)
+- **Relates:** `D-111` · `D-018` · `DEP-001` · issue **#210** (D-111 follow-up, not a new GO) · **D-113** (the hold-48 rental runbook that pins this commit as the minimum git checkout)
 
 #### Context
 
@@ -182,7 +232,7 @@ Neutral to the network. The 1656 cap is still the T5 ESMFold window D-111 named;
 - **Ruled by:** the owner, BUILD GO 2026-09-04 (Matt via Emma), tracker issue **#210**. Kaylee implements; Trinity reviews then merges.
 - **Amends:** `D-109` ruling 2's tile *geometry* for this wave only. ⚠ `D-109` ruling 4 said no step runs without a separate build GO; this entry **is** that GO. The GO names window **1656**, overlap **128**, stride **1528**, and the IGF2R pilot as **exactly 2 tiles**. That is what this wave builds.
 - **Does not amend:** `D-109` ruling 1 (repository namespace) · ruling 3 (mucins held on nature) · ruling 6 (P11717's record is the pending row) · ruling 7 (stitched structures are not ranking-set eligible). `D-107` (msa/OpenFold) is **not this wave**. `D-104` (trained context 1,026) is **not withdrawn** — it is not this wave's tile window.
-- **Relates:** `D-109` · `D-110` (the integer this GO did not take) · `D-090` · `D-047` · `D-026` · `D-031` · `D-104` · `F-065` · issue **#210**
+- **Relates:** `D-109` · `D-110` (the integer this GO did not take) · `D-090` · `D-047` · `D-026` · `D-031` · `D-104` · `F-065` · issue **#210** · **D-113** (rental runbook + IGF2R-pilot budget; not a geometry change)
 
 #### Context
 

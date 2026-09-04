@@ -3,6 +3,13 @@
 **For:** the owner, first time using RunPod. **Companion to:** `ORDERS-rental-fold.md`, which
 says *what* to do; this says *how*, click by click.
 
+⚠ **Hold-48 / T5 remainder is a different job.** Do not use this guide to fold D-111 tiles.
+The hold-48 card, git pin (D-112), cu128 torch trio, `emit_tile_jobs` (never
+`--bucket rental`), and accession-requeue hazards live in
+[`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) and
+[`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) (D-113). This file
+stays the 2026-07 A6000 / cohort-rental walkthrough.
+
 **Before you start, the reassuring version of what this is:** you are renting one Linux machine
 with a big GPU, by the second, opening a terminal in your browser, running the same worker you
 already run at home, and then deleting the machine. There is no Kubernetes, no Docker to write,
