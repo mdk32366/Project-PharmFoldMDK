@@ -8,6 +8,9 @@ the Fly image just to import one dataclass, against DEP-001. So it lives here, i
 by `app/` without dragging the worker's CUDA world into the serving image.
 `worker.orchestrator` re-exports it, so every existing
 `from worker.orchestrator import FoldSpec` keeps working and the loop's tests are unchanged.
+
+D-112: `TILE_WINDOW_AA` (the D-111 T5 cap, 1656) lives here too, with overlap/stride, so
+`worker/main.py` can refuse a too-long sequence without importing `core.hold48`.
 """
 
 from __future__ import annotations
@@ -42,6 +45,14 @@ TIER_RECIPE: dict[str, dict] = {
 # still fail loud. NULL remains a separate category — claimable by nobody, not a member
 # of this set.
 KNOWN_TIERS: frozenset[str] = frozenset({"local", "rental", "msa"})
+
+# D-111 T5 tile geometry (issue #210 BUILD GO). ⚠ Not D-109 ruling 2's 1,026.
+# Lives HERE, not in `core/hold48.py`, so `worker/main.py` can refuse L>1656
+# without importing the planner — hold48 imports sqlalchemy, and the GPU worker
+# must not (D-112). Stdlib only; same leaf as TIER_RECIPE (DEP-001).
+TILE_WINDOW_AA = 1656
+MIN_OVERLAP_AA = 128
+STRIDE_AA = TILE_WINDOW_AA - MIN_OVERLAP_AA  # 1528
 
 
 @dataclass(frozen=True)

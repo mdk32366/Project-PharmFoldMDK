@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from core.hold48 import TILE_WINDOW_AA
+from core.contracts import TILE_WINDOW_AA  # D-111 cap; D-112: never from core.hold48
 from core.queue import DEFAULT_TIER
 from worker.http_client import HttpQueueClient
 from worker.orchestrator import FoldError, FoldSpec, run_worker
