@@ -132,6 +132,18 @@ def test_d125_b_heading_exists_in_the_living_log():
     assert "Seams are not scientifically solved" in LOG
 
 
+def test_trinity_locked_bar_cites_d125a_and_spec_section_six():
+    """Trinity bar LOCKED: cite D-125-A 26a40a8 + Spec §6; served path is assembler."""
+    assert "26a40a8" in LOG
+    assert "Spec §6" in LOG
+    assert "LOCKED" in LOG
+    assert "served path = assembler" in LOG
+    assert "do not pretend Kabsch is live-served" in LOG
+    assert "26a40a8" in INDEX
+    assert "Spec §6" in INDEX
+    assert "UI dual-path honesty only" in INDEX
+
+
 def test_missing_sibling_tree_is_honest_empty_no_invented_rmsd(tmp_path):
     block = read_kabsch_dual_path(
         tmp_path, parent_analysis_id=2817, parent_job_id=2817

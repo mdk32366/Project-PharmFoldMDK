@@ -20,6 +20,10 @@
 - **D-124 A+B already shipped** on `main` (`57f429d` / #236).
 - ⚠ **Seams are not scientifically solved.** Kabsch is a rigid transform
   of already-emitted ESMFold tiles, not a jointly placed holoprotein.
+- Trinity Architect bar **LOCKED** 2026-09-05: UI dual-path honesty
+  only; name Kabsch vs assembler; served path = assembler until ops
+  restitch; no invented RMSD; no F-004 / no live restitch of 27 / no
+  rent; cite D-125-A `26a40a8` + Spec §6; draft, do not merge.
 - Trinity amend (A tip `c4db39a` / #237): B is UI only. Persist+UI
   language was stripped from B when A took the sibling tree.
 

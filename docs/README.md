@@ -193,16 +193,21 @@ So the rule is not "be careful" — it is:
   ⚠ **Not ADC-C.** Prefer leave `/adcs` alone.
   ⚠ **No rent / GPU / RunPod.**
   ⚠ **Seams are not scientifically solved.** Never claim they are.
-- **Ruled by:** Trinity Architect amend on D-125-A (`c4db39a` / #237):
-  D-125-B is **UI dual-path honesty only**. Emma BUILD GO 2026-09-05:
-  (1) honest labels where both assembler and Kabsch-path artifacts exist
-  — populations must not collide via provenance / persist stems;
-  (2) Method addendum: what Kabsch does / does not (8th-grade clear; no
-  medical advice; never claim seams solved); (3) show seam RMSD / max Cα
-  jump **if computed** in A's provenance/seams artifacts; honest empty
-  when missing. Follow existing Method / Phase UI patterns (D-121 /
-  D-120). Prefer in-repo Spec + this pin if a later note conflicts.
-- **Cite:** D-125 Spec §6 · D-125-A sibling tree (`26a40a8` / #237) ·
+- **Ruled by:** Trinity Architect bar **LOCKED** 2026-09-05 for D-125-B:
+  UI dual-path honesty only; name Kabsch vs assembler clearly;
+  **served path = assembler** until an ops restitch lands
+  (do not pretend Kabsch is live-served); no invented seam / RMSD numbers —
+  only show if computed/present in A's artifacts; honest empty
+  otherwise; no F-004; no live restitch of the 27; no rent in this PR;
+  cite D-125-A `26a40a8` + Spec §6; draft PR, do not merge. Parent:
+  Trinity Architect amend on D-125-A (`c4db39a` / #237) — B is UI only.
+  Emma BUILD GO 2026-09-05 + Emma pin reinforce: dual-path honesty +
+  Method addendum + provenance labeling. Follow existing Method /
+  Phase UI patterns (D-121 / D-120). Prefer in-repo Spec + this pin if
+  a later note conflicts.
+- **Cite:** D-125 Spec §6
+  ([`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) §6) · D-125-A
+  sibling tree (`26a40a8` / #237) ·
   D-121 Method hold-48 explainer · D-120 Phase 2 `assembly_review` ·
   D-118 assembler-not-Kabsch honesty · D-117 PLAN · D-111 `winning_tile`
   · D-109 ruling 7 · D-016 · IGF2R seam **~88.76 Å** (join-jump
