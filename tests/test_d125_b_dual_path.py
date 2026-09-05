@@ -237,3 +237,26 @@ def test_empty_block_stems_never_equal_assembler_stitched():
     empty = empty_kabsch_block(parent_id=2817)
     assert empty["persist_stem"] != ASSEMBLER_PERSIST_STEM
     assert empty["persist_stem"].startswith("kabsch/")
+
+
+def test_b_does_not_invoke_a_restitch_of_the_twenty_seven():
+    """Emma pin: UI-only. B must not call the A writer or the restitch CLI."""
+    reader = (ROOT / "app" / "kabsch_path_read.py").read_text(encoding="utf-8")
+    reads = (ROOT / "app" / "reads.py").read_text(encoding="utf-8")
+    routes = (ROOT / "app" / "read_routes.py").read_text(encoding="utf-8")
+    ui_review = (ROOT / "ui" / "src" / "components" / "AssemblyReview.jsx").read_text(
+        encoding="utf-8"
+    )
+    for text, label in (
+        (reader, "kabsch_path_read"),
+        (reads, "reads"),
+        (routes, "read_routes"),
+        (ui_review, "AssemblyReview"),
+    ):
+        assert "write_kabsch_restitch(" not in text, label
+        assert "scripts.kabsch_restitch" not in text, label
+        assert "python -m scripts.kabsch_restitch" not in text, label
+    assert "seams solved" not in reader.lower()
+    assert "WAVE1_WAVE2_STITCHED_PARENT_IDS" not in (
+        ROOT / "core" / "scorer.py"
+    ).read_text(encoding="utf-8")
