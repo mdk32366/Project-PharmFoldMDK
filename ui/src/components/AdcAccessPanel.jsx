@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
 import { getAdcAccess } from '../api.js'
-import { fieldValue, isEnvelope, looksLikeUrl } from '../adcCatalog.js'
+import { isEnvelope, looksLikeUrl } from '../adcCatalog.js'
 import ProvenanceField from './ProvenanceField.jsx'
 
 // D-124 / ADC-C-B — Access / RTT panel. The only source is GET /api/adcs/access.
-// Honest empty / missing / failed states. Does not invent NCT ids, eligibility,
-// or a treatment recommendation.
+// Sourced fields go through ProvenanceField (Trinity C-B bar 5). Honest empty /
+// missing / failed states. Does not invent NCT ids, eligibility, or a treatment
+// recommendation.
 
-const LINK_FIELDS = [
+const ENVELOPE_FIELDS = [
+  ['Disclaimer', 'disclaimer'],
+  ['Scope', 'scope'],
+  ['Completeness', 'completeness'],
+  ['As of', 'as_of'],
   ['ClinicalTrials.gov', 'clinical_trials_registry'],
   ['FDA expanded access', 'expanded_access_fda'],
   ['FDA Right to Try page', 'right_to_try_fda'],
-]
-
-const TEXT_FIELDS = [
   ['Right-to-Try statute', 'right_to_try_statute'],
   ['Public law', 'right_to_try_public_law'],
 ]
@@ -29,63 +31,32 @@ function MissingField({ label }) {
   )
 }
 
-function LinkOrMissing({ label, field }) {
-  if (!isEnvelope(field)) return <MissingField label={label} />
-  const value = field.value
-  return (
-    <div className="prov-field">
-      <dt>{label}</dt>
-      <dd>
-        {looksLikeUrl(value) ? (
-          <a href={value} rel="noreferrer">{value}</a>
-        ) : (
-          <span className="prov-value">{String(value)}</span>
-        )}
-        <span className="prov-meta">
-          source: {field.source}
-          {' · '}
-          as of {field.as_of}
-          {' · '}
-          {field.confidence}
-        </span>
-      </dd>
-    </div>
-  )
+function envelopeValue(value) {
+  if (looksLikeUrl(value)) {
+    return <a href={value} rel="noreferrer">{value}</a>
+  }
+  return <span className="prov-value">{String(value)}</span>
 }
 
-function NctList({ field }) {
-  if (!isEnvelope(field)) {
-    return <MissingField label="Named NCT identifiers from the pipeline file" />
+function nctValue(value) {
+  const ids = Array.isArray(value) ? value.filter(Boolean) : []
+  if (ids.length === 0) {
+    return (
+      <span className="absent-reason">
+        This payload names no NCT identifiers. That is an absence in
+        this file, not a claim that no trials exist.
+      </span>
+    )
   }
-  const ids = Array.isArray(field.value) ? field.value.filter(Boolean) : []
   return (
-    <div className="prov-field">
-      <dt>Named NCT identifiers from the pipeline file</dt>
-      <dd>
-        {ids.length === 0 ? (
-          <span className="absent-reason">
-            This payload names no NCT identifiers. That is an absence in
-            this file, not a claim that no trials exist.
-          </span>
-        ) : (
-          <ul className="adc-nct-list">
-            {ids.map((id) => (
-              <li key={id}>
-                <code>{id}</code>
-                {' — identifier already cited in the mapping, not an enrollment recommendation'}
-              </li>
-            ))}
-          </ul>
-        )}
-        <span className="prov-meta">
-          source: {field.source}
-          {' · '}
-          as of {field.as_of}
-          {' · '}
-          {field.confidence}
-        </span>
-      </dd>
-    </div>
+    <ul className="adc-nct-list">
+      {ids.map((id) => (
+        <li key={id}>
+          <code>{id}</code>
+          {' — identifier already cited in the mapping, not an enrollment recommendation'}
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -122,38 +93,35 @@ export default function AdcAccessPanel() {
     )
   }
 
-  const disclaimer = fieldValue(payload.disclaimer)
-  const completeness = fieldValue(payload.completeness)
-  const scope = fieldValue(payload.scope)
-  const asOf = fieldValue(payload.as_of)
-
   return (
     <section className="adc-access-panel" aria-labelledby="adc-access-heading">
       <h3 id="adc-access-heading">Access and Right-to-Try (informational)</h3>
-      {disclaimer ? (
-        <p className="adc-access-disclaimer">{disclaimer}</p>
-      ) : (
-        <p className="absent-reason">
-          Disclaimer is missing from this payload. This panel still does
-          not determine eligibility or recommend a treatment.
-        </p>
-      )}
       <p className="adc-access-floor">
-        {scope ? <>Scope: <code>{scope}</code>. </> : null}
-        {completeness ? <>Completeness: <code>{completeness}</code>. </> : null}
-        {asOf ? <>As of {asOf}.</> : null}
-        {' '}A pin of this file, not a census of trials or Right-to-Try uses.
+        A pin of this file, not a census of trials or Right-to-Try uses.
+        Not medical advice. Not legal advice. Not a treatment recommendation.
       </p>
       <dl className="baseball-stats">
-        {LINK_FIELDS.map(([label, key]) => (
-          <LinkOrMissing key={key} label={label} field={payload[key]} />
-        ))}
-        {TEXT_FIELDS.map(([label, key]) => (
+        {ENVELOPE_FIELDS.map(([label, key]) => (
           isEnvelope(payload[key])
-            ? <ProvenanceField key={key} label={label} field={payload[key]} />
+            ? (
+              <ProvenanceField
+                key={key}
+                label={label}
+                field={payload[key]}
+                renderValue={envelopeValue}
+              />
+            )
             : <MissingField key={key} label={label} />
         ))}
-        <NctList field={payload.named_nct_ids_from_pipeline} />
+        {isEnvelope(payload.named_nct_ids_from_pipeline) ? (
+          <ProvenanceField
+            label="Named NCT identifiers from the pipeline file"
+            field={payload.named_nct_ids_from_pipeline}
+            renderValue={nctValue}
+          />
+        ) : (
+          <MissingField label="Named NCT identifiers from the pipeline file" />
+        )}
       </dl>
     </section>
   )

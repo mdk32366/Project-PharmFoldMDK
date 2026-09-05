@@ -194,8 +194,10 @@ So the rule is not "be careful" — it is:
   closed phase vocab only; row count is a dated floor; approved
   `/api/adcs` + `/api/adcs/{id}` unchanged. Emma BUILD GO 2026-09-05 —
   ADC-C-B UI: Approved | Pipeline toggle on `/adcs`; Pipeline consumes the
-  three A routes; phase filter is the Architect closed set; Access panel
-  renders `/api/adcs/access` with honest empty / missing states.
+  three A routes; phase filter is Pipeline-view only and the Architect
+  closed set; Access panel renders `/api/adcs/access` with the required
+  disclaimer; sourced fields use `ProvenanceField` (Trinity C-B bar 5);
+  honest empty / missing states.
 - **Cite:** D-119 (approved catalog + envelope discipline; pipeline/RTT was the
   named ADC-C exclusion) · D-122 (Approved-shelf consumer of v1; B adds a
   Pipeline shelf beside it, it does not rewrite the v1 contract) · D-029
@@ -281,18 +283,23 @@ field.
    A pipeline catalog. Investigational rows never appear as Approved rows;
    approved v1 rows never appear as Pipeline rows. `adcs.v1.json` stays
    byte-untouched.
-10. **Phase filter is the Architect closed set, nothing else.** Pipeline
-    view filter tokens are exactly `Phase 1` | `Phase 1/2` | `Phase 2` |
-    `Phase 3` | `BLA/NDA submitted` | `Other`, plus an `All phases`
-    default. A filter that matches zero rows is an honest empty — "no row
-    in this file matches," not "there are no such agents."
-11. **Access panel renders the A payload; it does not invent trials.**
+10. **Phase filter is Pipeline-view only, Architect closed set.** Tokens
+    are exactly `Phase 1` | `Phase 1/2` | `Phase 2` | `Phase 3` |
+    `BLA/NDA submitted` | `Other`, plus an `All phases` default. The
+    Approved shelf has no phase control (Trinity C-B bar 2). A filter
+    that matches zero rows is an honest empty — "no row in this file
+    matches," not "there are no such agents."
+11. **Access panel renders the A payload through ProvenanceField.**
     `GET /api/adcs/access` is the only source. The required disclaimer
     (NOT medical advice / NOT legal advice / NOT a treatment
-    recommendation) is visible. NCT identifiers appear only when the
-    payload names them. A missing field, empty list, or failed fetch is
-    an empty / missing state — never a guessed eligibility, enrollment,
-    or Right-to-Try determination.
+    recommendation) is a sourced envelope, not chrome copy.
+    Trinity C-B bar 5: sourced fields use `ProvenanceField` (value +
+    source + as_of + confidence), same pattern as ADC-B baseball cards.
+    Index tables still flatten for sort keys only (D-122). NCT
+    identifiers appear only when the payload names them. A missing
+    field, empty list, or failed fetch is an empty / missing state —
+    never a guessed eligibility, enrollment, or Right-to-Try
+    determination.
 12. **Pipeline baseball card at `/adcs/pipeline/:id`.** Declared **before**
     `/adcs/:id` so the literal `pipeline` is not captured as an approved
     id. Consumes `GET /api/adcs/pipeline/{id}`. Unknown id is not a
@@ -372,8 +379,9 @@ clinical-development language.
   consumes `/api/adcs` and does not list pipeline ids as approved rows;
   Pipeline shelf consumes `/api/adcs/pipeline`; phase filter is the
   closed vocab and can empty the table honestly; Access panel consumes
-  `/api/adcs/access` and surfaces the disclaimer; missing / failed access
-  is an empty state, not invented NCT / eligibility copy; pipeline card
+  `/api/adcs/access` and surfaces the disclaimer as a ProvenanceField
+  envelope; missing / failed access is an empty state, not invented NCT /
+  eligibility copy; Approved has no phase filter; pipeline card
   consumes `/api/adcs/pipeline/{id}` and 404s without a guess; React
   `App.jsx` keeps D-122's `/adcs` + `/adcs/:id` and adds
   `/adcs/pipeline/:id` before `:id`.

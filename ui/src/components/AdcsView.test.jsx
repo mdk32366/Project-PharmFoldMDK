@@ -153,6 +153,14 @@ describe('AdcsView — D-122 index', () => {
     expect(screen.queryByRole('link', { name: /Lumoxiti/i })).toBeNull()
   })
 
+  it('has no phase filter on the Approved shelf', async () => {
+    renderIndex()
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    expect(screen.queryByRole('combobox', { name: /phase/i })).toBeNull()
+    expect(screen.getByRole('tab', { name: 'Approved' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Pipeline' })).toHaveAttribute('aria-selected', 'false')
+  })
+
   it('refuses invented science keys and does not mix pipeline rows into Approved', async () => {
     const { container } = renderIndex()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())

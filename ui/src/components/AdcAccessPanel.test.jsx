@@ -48,6 +48,25 @@ describe('AdcAccessPanel — D-124', () => {
     expect(container.textContent.toLowerCase()).not.toMatch(/\benroll now\b|\byou are eligible\b/)
   })
 
+  it('sourced fields render ProvenanceField envelopes, including the disclaimer', async () => {
+    getAdcAccess.mockResolvedValue(ACCESS)
+    const { container } = render(<AdcAccessPanel />)
+    await waitFor(() => expect(container.textContent).toMatch(/Disclaimer/))
+    expect(container.textContent).toMatch(/source: fixture/)
+    expect(container.textContent).toMatch(/as of 2026-09-05/)
+    expect(container.textContent).toMatch(/reviewed/)
+    expect(container.textContent).toMatch(/official/)
+    expect(container.textContent).toMatch(/derived/)
+    const disclaimerDt = [...container.querySelectorAll('dt')]
+      .find((el) => el.textContent === 'Disclaimer')
+    expect(disclaimerDt).toBeTruthy()
+    const disclaimerDd = disclaimerDt.nextElementSibling
+    expect(disclaimerDd.textContent).toMatch(/NOT medical advice/)
+    expect(disclaimerDd.textContent).toMatch(/source:/)
+    expect(disclaimerDd.textContent).toMatch(/as of/)
+    expect(disclaimerDd.textContent).toMatch(/reviewed/)
+  })
+
   it('failed access fetch is an honest miss, not invented NCT copy', async () => {
     getAdcAccess.mockRejectedValue(new Error('/api/adcs/access -> HTTP 500'))
     const { container } = render(<AdcAccessPanel />)
