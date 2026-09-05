@@ -223,6 +223,20 @@ def test_accepted_seam_transforms_and_feeds_winning_tile(tmp_path):
     # A non-Cα atom was transformed too (CB present on residue 1 from tile A).
     cbs = [atom for atom in parse_pdb(Path(result.stitched["pdb"]).read_text()) if atom.name == "CB"]
     assert cbs, "all-atom transform must keep CB; Kabsch must not drop to Cα-only"
+    # D-111: off-block PAE is null, never 0 — via write_kabsch_restitch (feeds write_stitched).
+    pae_path = result.out_dir / "stitched_pae.json"
+    assert pae_path.is_file()
+    pae = json.loads(pae_path.read_text(encoding="utf-8"))
+    assert len(pae) == 12
+    # Residue 1 (tile A only) vs residue 12 (tile B only) never shared a forward pass.
+    assert pae[0][11] is None
+    assert pae[11][0] is None
+    assert pae[0][11] != 0
+    assert pae[0][11] != 0.0
+    dumped = json.dumps(pae)
+    assert "null" in dumped
+    parsed = json.loads(dumped)
+    assert parsed[0][11] is None
 
 
 def test_kabsch_recovers_known_rotation():

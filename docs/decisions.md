@@ -16,8 +16,10 @@
 - **D-125 ships the Kabsch restitch Spec** (already on `main`,
   `fbe8978` / #234). [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md).
   This A PR implements that Spec; where they differ, the log governs.
-- **D-125-B is NOT this PR.** Persist+UI dual-path honesty is a later
-  Emma GO.
+- **D-125-B is NOT this PR.** B is **UI dual-path honesty only**.
+  A already writes the sibling `kabsch/{parent_job_id}/` tree
+  (`provenance.json`, `seams.jsonl`, transformed tiles on accept,
+  then existing `write_stitched` names).
 - **D-124 A+B already shipped** on `main` (`57f429d` / #236). The wait
   that gated A is discharged.
 - ⚠ **Seams are not scientifically solved.** Kabsch is a rigid transform
@@ -33,7 +35,7 @@ Spec: [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md).
 | --- | --- | --- |
 | **D-125-A** | Kabsch core BUILD (overlap Cα → transform → `winning_tile`) | **Yes — this PR.** |
 | **D-125 Spec** | Kabsch restitch Spec (docs only) | Already shipped on `main` (#234 / `fbe8978`). |
-| **D-125-B** | Kabsch persist + UI dual-path honesty | **No.** After A. |
+| **D-125-B** | UI dual-path honesty only (A already writes `kabsch/{parent}/`) | **No.** After A. |
 | **D-124** | ADC-C-B `/adcs` Pipeline + Access UI BUILD GO (A already on `main`) | Already shipped on `main` (#236 / `57f429d`). |
 | **D-123** | Nectin Doc → `/about` AdcContext BUILD GO | Already shipped on `main` (#231 / `2ffd4f8`). |
 | **D-122** | ADC-B `/adcs` + `/adcs/:id` UI BUILD GO | Already shipped on `main` (#232 / `86f8a10`). |
