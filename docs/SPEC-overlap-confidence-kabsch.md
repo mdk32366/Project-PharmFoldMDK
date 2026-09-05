@@ -5,7 +5,9 @@
 > differ, THE LOG GOVERNS.** Confirm the `### D-126` header exists before
 > citing.
 >
-> **Date:** 2026-09-05 · **Status:** Spec (algorithm authority). **D-126-A**
+> **Date:** 2026-09-05 · **Status:** Spec (algorithm authority).
+> **Amended:** D-126 amendment 1 (2026-09-05) — Trinity red-team pins.
+> Same D-id. Confirm `#### D-126 amendment 1` exists. **D-126-A**
 > (core BUILD) and **D-126-B** (UI triple-path honesty) are **later** Emma
 > GOs. This PR does **not** implement them.
 > ⚠ **Not a restitch run of the 27.** ⚠ **Not F-004 ingest.**
@@ -40,7 +42,23 @@ points, then the same refuse table, then the same assembler.
 A later D-126-A BUILD must **not replace** `winning_tile` with a
 confidence invent, and must **not** treat a named parent as excluded
 from the algorithm. The Spec is still a **pre-stitch rigid transform**
-of a tile's frame:
+of a tile's frame.
+
+**Fit-set order (fixed, not optional-in-time):** (a) pLDDT floor 50
+first if \(n \ge 3\) remains; (b) weighted Kabsch; (c) trim loop.
+“Optional” on the floor means only the *drop* is skipped when it
+would leave \(n < 3\). It does **not** mean a later A BUILD may run
+the floor after trim.
+
+**Pinned constants (amendment 1).** Weight floor \(\varepsilon\) =
+**1e-3**. Weighted RMSD on the current fit set:
+
+\[\mathrm{weighted\ RMSD}
+= \sqrt{\sum_i w_i \,\lVert R p_i + t - q_i\rVert^2 / \sum_i w_i}\]
+
+Gate for accept / refuse is that final **weighted** RMSD on the fit
+set **`≤ 10.0 Å`** (refuse if \(\gt 10.0\) Å). Full-overlap
+unweighted RMSD does **not** move the gate.
 
 1. Take two adjacent tiles that already passed `stitch_readiness`
    (D-116). Chosen tile ids stay the D-118 preference (lower ids
@@ -50,33 +68,49 @@ of a tile's frame:
    `tile_end`). Planned geometry is still overlap **128** aa at the
    D-111 stride; a live window may differ after domain-snap — use what
    is stored. No other atom is used to *fit*.
-3. Weight each overlap pair
+3. **(a) pLDDT floor 50 first:** drop pairs with
+   \(\min(\mathrm{pLDDT}) < 50\) **if** that leaves \(n \ge 3\);
+   else keep the full overlap set. This step always runs at this
+   position. The floor is a fit-set filter, not a second refuse
+   threshold and not a named-exclusion of a parent.
+4. **(b) weighted Kabsch:** weight each remaining overlap pair
    \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\),
-   clamped \(\ge \varepsilon\) (a small positive floor so a later A
-   BUILD cannot drop a point with a silent zero weight). Fit =
+   clamped \(\ge \varepsilon\) with **\(\varepsilon = 1e-3\)** (so a
+   later A BUILD cannot drop a point with a silent zero weight). Fit =
    **weighted Kabsch** on those Cα (weighted centroids → weighted
    covariance \(H\) → SVD → rotation \(R\) with \(\det R = +1\)
-   correction → translation \(t\)).
-4. **Trim loop:** while \(n_{\mathrm{eff}} \ge 3\) and weighted RMSD
-   \(\gt 10.0\) Å, drop the highest-residual **10%** of points
+   correction → translation \(t\)). Weighted RMSD uses the pinned
+   formula above on the current fit set.
+5. **(c) trim loop:** while \(n_{\mathrm{eff}} \ge 3\) and weighted
+   RMSD \(\gt 10.0\) Å, drop the highest-residual **10%** of points
    (minimum 1), refit. Cap **5** rounds. Trim changes the fit set. It
    does **not** move the 10.0 Å gate.
-5. **Optional pLDDT floor:** drop pairs with
-   \(\min(\mathrm{pLDDT}) < 50\) **if** that leaves \(n \ge 3\);
-   else keep the full (post-trim) set. The floor is a fit-set filter,
-   not a second refuse threshold and not a named-exclusion of a parent.
 6. Apply the refuse table in §2 to the **final** weighted fit. Fail
    closed. Record. Do not invent a pose. If the seam is accepted: apply
-   \(R, t\) to **all atoms** of the moving tile. The N-terminal /
+   \(R, t\) to **all atoms** of the moving tile. **Post-transform
+   disclosure (anti trim-to-pass lie):** after applying \(R, t\), each
+   seam record MUST include `rmsd_full_overlap_angstrom` (unweighted
+   RMSD on **all** overlap Cα, not only the trimmed fit set) and
+   `max_ca_jump_angstrom` (max \(|\mathrm{Cα}_{ref} -
+   \mathrm{Cα}_{moved}|\) on full overlap). Those metrics are recorded
+   always when a transform is attempted or accepted; on
+   refuse-before-transform they may be null. They do **not** move the
+   gate. A must write them; UI / B later shows them. The N-terminal /
    earlier tile stays the reference frame; later tiles chain onto the
-   last *accepted* frame. Feed the (possibly transformed) `TileFold`
-   list into the **existing** `winning_tile` / `stitch_pdb` /
-   `stitch_plddt` / `stitch_pae` / `write_stitched`. Winner selection
-   stays per-residue pLDDT. Off-block PAE stays **null, never 0**
-   (D-111). No atom is invented for a gap (`UncoveredResidue` still
-   raises).
+   last *accepted* frame. **All-or-nothing parent:** if any seam
+   refuses, parent outcome = refused; clear / do not leave partial
+   `tileN_transformed.pdb` or D-126-path `stitched.pdb` (same
+   fail-closed spirit as D-125 `_clear_success_artifacts`). Seam rows
+   still recorded. Feed the (possibly transformed) `TileFold` list into
+   the **existing** `winning_tile` / `stitch_pdb` / `stitch_plddt` /
+   `stitch_pae` / `write_stitched` **only if every seam accepted**.
+   Winner selection stays per-residue pLDDT. Off-block PAE stays
+   **null, never 0** (D-111). No atom is invented for a gap
+   (`UncoveredResidue` still raises).
 7. **Out of v1:** soft blend on refused seams; domain invent; MD / AF
    GPU refine. Those are later GOs. This Spec does not authorise them.
+   Recovering **0-of-5** of the primary five does **not** license
+   those inventions.
 
 Overlap-confidence Kabsch does not jointly place domains. It does not
 fill PAE. It does not make the chain one ESMFold forward pass. It does
@@ -96,14 +130,19 @@ threshold Spec-as-fix.
 
 | Condition | Threshold | Effect |
 |---|---|---|
-| Overlap **effective** Cα after weight / trim / floor | **`< 3`** | **Refuse align** (`overlap_ca_lt_3`). Weighted Kabsch still needs three corresponding points. |
+| Overlap **effective** Cα after floor / weight / trim | **`< 3`** | **Refuse align** (`overlap_ca_lt_3`). Weighted Kabsch still needs three corresponding points. |
 | Final weighted RMSD on the fit set | **`> 10.0 Å`** | **Refuse that seam** (`rmsd_gt_10`). Record the RMSD. Do not invent a “fixed” pose. |
 | Covariance of the (weighted) Cα sets | **singular / degenerate** (rank `< 2`, collinear or coincident points) | **Refuse align** (`singular_covariance`). |
 
 Fail closed means: no `tileN_transformed.pdb`, no D-126-path
 `stitched.pdb` for that parent, no silent fallback that looks like
-success. The **assembler** path already on disk (D-118 / D-120) is
-unchanged. The **D-125** sibling tree `kabsch/{parent_id}/` is
+success. **All-or-nothing parent refuse:** if **any** seam refuses,
+parent outcome = refused. Clear / do not leave a partial
+`tileN_transformed.pdb` or D-126-path `stitched.pdb` from an earlier
+accepted seam of that same parent (same fail-closed spirit as D-125
+`_clear_success_artifacts` in `core/hold48_kabsch.py`). Seam rows are
+still recorded. The **assembler** path already on disk (D-118 / D-120)
+is unchanged. The **D-125** sibling tree `kabsch/{parent_id}/` is
 unchanged. A refuse is a **recorded outcome**, not a gap filled with
 guessed coordinates, and not a named-exclusion of that parent from the
 CLI.
@@ -141,6 +180,11 @@ these five as a fix.
   comparable to D-125 (production dual-path **22** Kabsch / **5**
   assembler). The 22 are not excluded from the algorithm; they are not
   the primary evaluation set.
+- **0-of-5 recovered is an allowed outcome.** Recovering zero of the
+  primary five is a valid experimental result. Do not loosen the
+  10.0 Å gate or invent a blend to force passes. A later A BUILD that
+  recovers none of 2939 / 3272 / 3368 / 3394 / 3432 has still run the
+  Spec; that zero is a finding, not a licence to change the algorithm.
 - IGF2R parent **3356** is a **different accession story** (cohort OOM
   vs census tiles) and is **not** one of the 27 (D-120). Out.
 - These 27 stay **outside F-004** (D-109 ruling 7). Neither assembler,
@@ -197,16 +241,28 @@ do not `git add` `*.pdb` / PAE binaries):
 reconstructible (D-016):
 
 - `parent_job_id`, chosen tile job ids, windows
-- per seam: `n_ca`, `n_ca_eff`, `rmsd_angstrom` (null if refused before
-  RMSD), `trim_rounds`, `refuse_reason` ∈ {`null`, `overlap_ca_lt_3`,
+- per seam: `n_ca`, `n_ca_eff`, `rmsd_angstrom` (final weighted RMSD
+  on the fit set; null if refused before RMSD),
+  `rmsd_full_overlap_angstrom` (unweighted RMSD on **all** overlap
+  Cα, not only the trimmed fit set), `max_ca_jump_angstrom` (max
+  \(|\mathrm{Cα}_{ref} - \mathrm{Cα}_{moved}|\) on full overlap),
+  `trim_rounds`, `refuse_reason` ∈ {`null`, `overlap_ca_lt_3`,
   `rmsd_gt_10`, `singular_covariance`}
 - `algorithm`: `overlap_confidence_kabsch_then_winning_tile`
 - `decision`: `D-126`
 - accepted seams only: rotation \(R\) (3×3) and translation \(t\) (Å)
 
+`rmsd_full_overlap_angstrom` and `max_ca_jump_angstrom` are recorded
+always when a transform is attempted or accepted. On
+refuse-before-transform they may be null. They do **not** move the
+10.0 Å gate. A must write them; UI / B later shows them.
+
 A refuse still writes the seam record. It does **not** write a
-transformed PDB. No invented coordinates. Assembler + D-125
-`kabsch/{id}/` stay on disk and stay callable.
+transformed PDB. **All-or-nothing:** if any seam refuses, clear /
+do not leave partial `tileN_transformed.pdb` or D-126-path
+`stitched.pdb` (same spirit as D-125 `_clear_success_artifacts`).
+No invented coordinates. Assembler + D-125 `kabsch/{id}/` stay on
+disk and stay callable.
 
 ---
 
@@ -221,8 +277,11 @@ When (and only when) D-126-path artifacts are on disk:
 - The review card names **three** paths. Assembler remains the default
   **served** PDB until a Matt GO names a swap.
 - Each D-126 seam shows `n_ca`, `n_ca_eff`, weighted RMSD (if
-  computed), `trim_rounds`, and `refuse_reason`. Those are
-  measurements, not a verdict that the holoprotein is aligned.
+  computed), `rmsd_full_overlap_angstrom`, `max_ca_jump_angstrom`,
+  `trim_rounds`, and `refuse_reason`. Those are measurements, not a
+  verdict that the holoprotein is aligned. A wrote the full-overlap
+  fields; B does not invent them. On refuse-before-transform they
+  may be null (honest empty).
 - A refused seam stays fail-closed — no “fixed” badge, no silent
   assembler or D-125 Kabsch PDB presented as a D-126 success.
 - Forbidden language (same park as D-117 §5 / D-125 §6): “aligned,”
@@ -240,7 +299,7 @@ is not a solved seam.
 
 | Id | What | This PR? | Gate |
 |---|---|---|---|
-| **D-126 Spec** | This file + `### D-126` + ship index + PLAN one-liner + hermetic docs pin tests | **Yes — this PR.** | Trinity review. Docs only. |
+| **D-126 Spec** | This file + `### D-126` + `#### D-126 amendment 1` + ship index + PLAN one-liner + hermetic docs pin tests | **Yes — this PR.** | Trinity review. Docs only. |
 | **D-126-A** | Core: weighted + trimmed overlap Cα Kabsch + §2 refuse + transform tile + call existing `winning_tile`. No UI. Sibling §5 `confidence_kabsch/` tree. CLI re-runs all 27; primary eval is the five. | **No.** Later Emma GO. | After this Spec. No rent in A. |
 | **D-126-B** | UI triple-path honesty (§6). Reads A's sibling tree. No persist rewrite. Default served = assembler until Matt swap GO. | **No.** Later Emma GO. | After A. |
 
@@ -261,7 +320,8 @@ named-exclusion.
   3432 is the primary evaluation inventory, not an algorithm that skips
   them. CLI still runs the 27.
 - **No invented coordinates.** Fail closed. No transformed PDB on
-  refuse. No invented gap atoms.
+  refuse. No invented gap atoms. All-or-nothing parent: no partial
+  `tileN_transformed.pdb` / D-126 `stitched.pdb` when any seam refuses.
 - **No PAE zeros.** Off-block PAE stays null, never 0.
 - **No F-004.** The 27 stay outside `/scorer` (D-109 ruling 7).
 - **No rent in A.** D-126-A is CPU-side stdlib, same as D-125-A. No
@@ -270,6 +330,15 @@ named-exclusion.
 - **Keep assembler + D-125 Kabsch callable.** Production dual-path
   (22 Kabsch / 5 assembler) stays until D-126 code + ops. Do not
   overwrite `stitched.pdb` or `kabsch/{id}/`.
+- **No trim-to-pass lie.** Full-overlap `rmsd_full_overlap_angstrom`
+  and `max_ca_jump_angstrom` are required whenever a transform is
+  attempted or accepted.
+- **No silent regression on the 22.** A D-125 PASS → D-126 REFUSE
+  drop is a **named finding** in the ops report, not silent success.
+- **0-of-5 recovered is allowed.** Do not loosen the gate or invent
+  a blend to force passes.
+- **ε = 1e-3.** Weight floor is pinned. Floor-then-Kabsch-then-trim
+  order is pinned.
 
 ---
 
@@ -284,3 +353,32 @@ named-exclusion.
 - Not ADC-C (D-124). Not Method (D-121). Not ranking ingest.
 - Not a repair of the `D-` next-free pointer.
 - Not soft-blend / domain-invent / MD / AF GPU refine (out of v1).
+- Not a licence to treat 0-of-5 recovered as a failure that moves
+  the gate.
+- Not a CI assert against live ops (the confusion vs D-125 is a
+  required **report** field, not a gate test).
+
+---
+
+## 10. Ops success report (required fields; not a CI assert)
+
+When a later D-126-A (or ops) run covers the 27, the **ops success
+report** MUST include a confusion vs D-125. This is documentation of
+required report fields. It is **not** a CI assert against live ops
+and not a restitch measurement in this Spec PR.
+
+Required fields:
+
+| Field | Meaning |
+|---|---|
+| `n_d125_pass_d126_pass` | D-125 PASS parents that D-126 also accepts |
+| `n_d125_pass_d126_refuse` | D-125 PASS parents that D-126 REFUSE |
+| `n_d125_refuse_d126_pass` | recovered of the primary five |
+| `n_d125_refuse_d126_refuse` | primary five that still refuse |
+| `recovered_of_primary_five` | 0..5; **0 is an allowed outcome** |
+
+A non-zero `n_d125_pass_d126_refuse` is a **named finding**, not
+silent success. Do not bury a drop on the 22 inside an overall
+accept count. Recovering **0-of-5** of the primary five is a valid
+experimental result; do not loosen the 10.0 Å gate or invent a blend
+to force passes.

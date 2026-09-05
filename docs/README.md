@@ -47,8 +47,9 @@
 >   paths when A's sibling tree is on disk. ⚠ **Not F-004 ingest.**
 > - [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md) —
 >   overlap-confidence Kabsch (trimmed + pLDDT-weighted) → existing
->   `winning_tile`. Docs Spec only (**D-126**). Does not overwrite
->   assembler or D-125 `kabsch/{id}/`. ⚠ **10.0 Å gate stays.**
+>   `winning_tile`. Docs Spec only (**D-126**), including **amendment 1**
+>   (Trinity red-team pins; same D-id). Does not overwrite assembler or
+>   D-125 `kabsch/{id}/`. ⚠ **10.0 Å gate stays.**
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**) plus a
 >   D-125-B addendum (what Kabsch does / does not). Additive MethodNote
@@ -205,6 +206,9 @@ So the rule is not "be careful" — it is:
   ⚠ **The 10.0 Å refuse gate STAYS.** Trim / weight change the fit set,
   not the gate. Writing this Spec is not a threshold-as-fix and not a
   named-exclusion-as-fix.
+  ⚠ **Amended by D-126 amendment 1** (Trinity red-team pins; same
+  D-id; this later PR). Where parent and amendment 1 differ,
+  amendment 1 governs.
 - **Ruled by:** Trinity Architect binding 2026-09-05 — Spec =
   overlap-confidence Kabsch on overlap Cα → existing `winning_tile`;
   refuse v1 defaults stay at **10.0 Å** so later A tests can go red;
@@ -262,39 +266,60 @@ placed the chain.
    `winning_tile` / `write_stitched` path. Same adjacency /
    `stitch_readiness` / prefer-lower-dups **3673/3674/3675** as D-125.
    Off-block PAE stays null, never 0. No invented gap coordinates.
+   **Amendment 1 fit-set order (fixed, not optional-in-time):**
+   (a) pLDDT floor 50 first if \(n \ge 3\) remains; (b) weighted
+   Kabsch; (c) trim loop. Weight floor **ε = 1e-3**. Weighted RMSD =
+   \(\sqrt{\sum_i w_i \,\lVert R p_i + t - q_i\rVert^2 / \sum_i w_i}\)
+   on the current fit set.
 2. **Refuse v1 defaults (10.0 Å STAYS):** overlap effective Cα after
-   weight / trim / floor **`< 3`** → `overlap_ca_lt_3`; final weighted
-   RMSD **`> 10.0 Å`** → `rmsd_gt_10`; singular / rank `< 2` →
-   `singular_covariance`. Fail closed. Assembler + D-125
-   `kabsch/{id}/` are not overwritten by a refuse.
+   floor / weight / trim **`< 3`** → `overlap_ca_lt_3`; final weighted
+   RMSD on the fit set **`> 10.0 Å`** → `rmsd_gt_10` (accept iff
+   **`≤ 10.0 Å`**); singular / rank `< 2` → `singular_covariance`.
+   **All-or-nothing parent:** if any seam refuses, parent outcome =
+   refused; clear / do not leave partial `tileN_transformed.pdb` or
+   D-126-path `stitched.pdb` (same fail-closed spirit as D-125
+   `_clear_success_artifacts`). Seam rows still recorded. Assembler +
+   D-125 `kabsch/{id}/` are not overwritten by a refuse.
 3. **Primary inventory is the five REFUSE, not a new census.** Parent
    job ids **2939** `Q7Z408`, **3272** `Q6V0I7`, **3368** `Q5SZK8`,
    **3394** `Q8TDW7`, **3432** `Q8IZF6`. CLI must also re-run all **27**
    for comparable counts. IGF2R **3356** is out. Outside F-004. ⚠ **Not
-   re-queried on Fly.** Do not invent science.
+   re-queried on Fly.** Do not invent science. **0-of-5 recovered is
+   an allowed outcome** — do not loosen the gate or invent a blend to
+   force passes.
 4. **PLAN pointer.** D-117 / [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md)
    §5 Kabsch park → **D-125**; this Spec is the overlap-confidence
    follow-on. The plan does not become a BUILD GO.
 5. **Artifact dirs are a third sibling tree, never an overwrite.**
    D-126-A (later) writes `<ops out_dir>/confidence_kabsch/{parent_job_id}/`
    (`provenance.json`, `seams.jsonl` with `n_ca`, `n_ca_eff`,
-   `rmsd_angstrom`, `trim_rounds`, `refuse_reason`,
+   `rmsd_angstrom`, `rmsd_full_overlap_angstrom`,
+   `max_ca_jump_angstrom`, `trim_rounds`, `refuse_reason`,
    `algorithm=overlap_confidence_kabsch_then_winning_tile`,
-   `decision=D-126`). Do not overwrite assembler `stitched.pdb` or
-   D-125 `kabsch/{id}/`.
+   `decision=D-126`). Full-overlap metrics are recorded whenever a
+   transform is attempted or accepted; on refuse-before-transform they
+   may be null. Do not overwrite assembler `stitched.pdb` or D-125
+   `kabsch/{id}/`.
 6. **UI triple-path honesty is specified, not built.** Assembler
    remains the default served PDB until a Matt swap GO. D-126-B (later)
-   must *name* three paths — disclose `n_ca` / `n_ca_eff` / RMSD /
-   `trim_rounds` / `refuse_reason`. Forbidden: “aligned,”
-   “superimposed,” “seams solved,” “full-length AF-quality.” No
-   invented RMSD. No F-004 ingest. This Spec PR does not touch UI.
+   must *name* three paths — disclose `n_ca` / `n_ca_eff` / weighted
+   RMSD / `rmsd_full_overlap_angstrom` / `max_ca_jump_angstrom` /
+   `trim_rounds` / `refuse_reason`. A must write the full-overlap
+   fields; B later shows them. Forbidden: “aligned,” “superimposed,”
+   “seams solved,” “full-length AF-quality.” No invented RMSD. No
+   F-004 ingest. This Spec PR does not touch UI.
 7. **PR split.** This PR is Spec only. **D-126-A** (core weighted +
    trimmed Kabsch + refuse + feed `winning_tile`; no UI; no rent) and
    **D-126-B** (triple-path UI) are later Emma GOs.
 8. **Hard stops.** No threshold Spec-as-fix. No named-exclusion-as-fix.
    No invented coordinates. No PAE zeros. No F-004. No rent in A.
    Never seams solved. Keep assembler + D-125 Kabsch callable. No
-   stitch code and no `hold48_kabsch.py` edit in this PR.
+   stitch code and no `hold48_kabsch.py` edit in this PR. No
+   trim-to-pass lie (full-overlap metrics required). No silent
+   regression on the 22. No forced recovery of the five.
+9. **Ops success report (later A; not a CI assert).** Must include
+   confusion vs D-125, including the count of D-125 PASS parents that
+   D-126 REFUSE. A drop is a **named finding**, not silent success.
 
 #### Deep-learning justification
 
@@ -342,17 +367,22 @@ network's passes.
 #### Consequences
 
 - Tests that must be able to go red **in this Spec PR:** `### D-126 —`
-  exists in this log;
+  exists in this log; `#### D-126 amendment 1 —` exists;
   [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md)
   exists and names the algorithm
   (`overlap_confidence_kabsch_then_winning_tile`), the 10.0 Å refuse
   gate, and the five ids; `decisions.md` distinguishes Spec vs future
   A/B BUILD; hard stops are written; this PR is **not** D-126-A / D-126-B;
   `core/hold48_kabsch.py` is not edited; assembler + D-125 Kabsch stay
-  callable; no “seams solved” claim in the Spec.
+  callable; no “seams solved” claim in the Spec. Amendment 1 pins:
+  `rmsd_full_overlap_angstrom` + `max_ca_jump_angstrom`; **ε = 1e-3**
+  and the weighted RMSD formula; floor-then-Kabsch-then-trim;
+  all-or-nothing parent refuse; ops confusion vs D-125; 0-of-5 allowed.
 - Tests that must be able to go red **in a later A BUILD (not this PR):**
   weighted fit; trim loop; refuse table (10.0 Å stays); no overwrite of
-  assembler or D-125 `kabsch/` tree. Test plan **T-1102**–**T-1105**.
+  assembler or D-125 `kabsch/` tree; write the full-overlap fields;
+  all-or-nothing clear. Test plan **T-1102**–**T-1105**, **T-1107**–
+  **T-1112**.
 - `ARCHITECTURE.md` records that the D-126 Spec exists and that D-125
   Kabsch + assembler remain the production dual-path.
 - D-126-A/B, F-004 ingest, remaining tileable / mucins, and rental
@@ -372,6 +402,125 @@ network's passes.
 - That the 27 may enter `/scorer` (D-109 ruling 7).
 - That this PR may implement stitch code, UI, or a restitch run.
 - That this PR may rent a GPU or repair the `D-` next-free pointer.
+- **Amended by:** D-126 amendment 1 (Trinity red-team pins: full-overlap
+  RMSD + max Cα jump; ε = 1e-3; floor-then-Kabsch-then-trim;
+  all-or-nothing parent refuse; no-regress confusion vs D-125 on the
+  22; 0-of-5 recovered is allowed)
+
+#### D-126 amendment 1 — Trinity red-team pins (full-overlap RMSD, ε, all-or-nothing, no-regress)
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the D-126 Spec amendment** (same D-id; not
+  a new `D-NNN`). Trinity red-team pins after Spec #239 / `d59be6b`.
+  Architect: Trinity. Builder coordinator: Kaylee.
+  ⚠ **A sub-entry, not a new integer.** ⚠ **Docs Spec only.**
+  ⚠ **Not D-126-A.** ⚠ **Not D-126-B.** ⚠ **No stitch code.**
+  ⚠ **No `hold48_*.py` edit.** ⚠ **The 10.0 Å gate STAYS.**
+  ⚠ **Seams are not scientifically solved.**
+- **Ruled by:** Trinity red-team required pins 2026-09-05 (this
+  session) after D-126 Spec merged on `main` (`d59be6b` / #239).
+  Implementing agent does not merge. Architect merges after CI green.
+- **Cite:** parent `### D-126` · Spec
+  [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md)
+  · D-125 `_clear_success_artifacts` in `core/hold48_kabsch.py`
+  (`26a40a8` / #237) · D-125-B honest-empty `max_ca_jump_angstrom`
+  (`aa8d3f1` / #238) · ship index [`decisions.md`](decisions.md)
+- **Relates:** `D-126` · `D-125` · `D-125-A` · `D-125-B`
+- **Does not amend:** D-111 geometry · D-116 gate · D-125
+  `hold48_kabsch.py` · D-118 census identity · D-120 `assembly_review`
+  · D-121 Method copy · D-122 `/adcs` · D-123 `/about` · D-124 ADC-C ·
+  F-004 / ranking set · the `D-` next-free pointer
+- ⚠ **Does not invent D-127.** Same D-id.
+
+**WHAT THE PARENT SAID THAT THIS AMENDS.** Parent Decision 1 listed
+weight → weighted Kabsch → trim → “optional” pLDDT floor (worded as
+post-trim) and left ε as “a small positive floor.” Parent Decision 5
+named `rmsd_angstrom` but not a full-overlap disclosure. Parent
+Decision 2 said fail-closed but did not pin all-or-nothing parent
+refuse, the ops confusion vs D-125 on the 22, or that 0-of-5 recovered
+is allowed. Those silences would let a later A BUILD trim-to-pass
+without saying so, move the floor after trim, drop a point with a
+silent zero weight, leave a partial `stitched.pdb`, treat a drop on
+the 22 as quiet success, or loosen the gate to force a recovery.
+
+- **Context:** Spec #239 shipped the overlap-confidence algorithm so a
+  later Emma BUILD can fail against it. Trinity red-team then required
+  six pins before A is licensed. This amendment writes those pins into
+  the same D-126 entry and the Spec file. It does not implement stitch
+  code.
+- **Decision:**
+  1. **Post-transform disclosure (anti trim-to-pass lie).** After
+     applying \(R, t\) to the moving tile, each seam record MUST
+     include `rmsd_full_overlap_angstrom` (unweighted RMSD on **all**
+     overlap Cα, not only the trimmed fit set) and
+     `max_ca_jump_angstrom` (max \(|\mathrm{Cα}_{ref} - \mathrm{Cα}_{moved}|\)
+     on full overlap). Gate for accept / refuse remains final
+     **weighted** RMSD on the fit set **`≤ 10.0 Å`**. Full-overlap
+     metrics are recorded always when a transform is attempted or
+     accepted; on refuse-before-transform they may be null. UI / B
+     later shows them; A must write them.
+  2. **Pin ε and the weighted RMSD formula.** ε = **1e-3** (weight
+     floor). Weighted RMSD =
+     \(\sqrt{\sum_i w_i \,\lVert R p_i + t - q_i\rVert^2 / \sum_i w_i}\)
+     on the current fit set. Both live in Spec §1 and in hermetic
+     pin tests.
+  3. **Floor vs trim order (fixed).** (a) pLDDT floor 50 first if
+     \(n \ge 3\) remains; (b) weighted Kabsch; (c) trim loop. “Optional”
+     means only the drop itself is skipped when it would leave
+     \(n < 3\), not that a later A BUILD may run the floor after trim.
+  4. **All-or-nothing parent refuse.** If any seam refuses, parent
+     outcome = refused. Clear / do not leave partial
+     `tileN_transformed.pdb` / D-126-path `stitched.pdb` (same
+     fail-closed spirit as D-125 `_clear_success_artifacts`). Seam
+     rows still recorded.
+  5. **No-regression on the 22.** Ops success report MUST include
+     confusion vs D-125: count of D-125 PASS parents that D-126
+     REFUSE (`n_d125_pass_d126_refuse`). A drop is a **named
+     finding**, not silent success. Not a CI assert against live
+     ops — document the required report fields.
+  6. **0-of-5 recovered is an allowed outcome.** Recovering zero of
+     the primary five is a valid experimental result. Do not loosen
+     the gate or invent a blend to force passes.
+- **Deep-learning justification:** Every hold-48 tile is an ESMFold
+  forward pass. Overlap-confidence Kabsch is still a rigid transform
+  of those already-emitted coordinates. A later BUILD that hid
+  full-overlap jump behind a trimmed RMSD, zeroed a weight, moved the
+  floor after trim, left a partial parent PDB, silently dropped a
+  D-125 PASS, or loosened 10.0 Å to force a recovery of the five
+  would attribute to ESMFold a superimposed holoprotein — or a repair
+  — the model never produced. The six pins keep that later restitch
+  an honest assembly of the network's passes. Neutral to the weights;
+  load-bearing for whether the disclosure is still a measurement.
+- **Provenance (D-016):**
+  - **Parent Spec on `main`:** `d59be6b` / #239
+    (`git rev-parse origin/main` after `git fetch origin main`,
+    2026-09-05).
+  - **Six pins:** Trinity red-team required pins, task brief
+    2026-09-05 (this session). ⚠ **Not a restitch measurement.**
+  - **`_clear_success_artifacts`:** `core/hold48_kabsch.py` lines
+    527–534 at `26a40a8` / #237 (unlink `stitched.pdb` /
+    `stitched_plddt.json` / `stitched_pae.json` and
+    `tile*_transformed.pdb` on refuse). This PR does not edit that
+    file.
+  - **`max_ca_jump_angstrom` already a B-side field:** D-125-B
+    `aa8d3f1` / #238 renders it only if A wrote it. D-126-A (later)
+    must write the D-126-path analogue; this PR does not.
+- **Consequences:** Hermetic docs pins in
+  `tests/test_d126_confidence_kabsch_spec.py` must be able to go red
+  for all six items. Test plan **T-1107**–**T-1112**. Spec §1 / §2 /
+  §3 / §5 / §8 / §10 carry the pins. `decisions.md` names amendment
+  1. `ARCHITECTURE.md` records that the Spec was amended (same D-id)
+  and that production dual-path is unchanged. No `hold48_*.py` edit.
+- **Assumptions refused:**
+  - That a trimmed-fit RMSD may stand in for full-overlap disclosure.
+  - That ε may stay an unpinned “small positive floor.”
+  - That “optional” pLDDT floor may run after trim.
+  - That a parent may keep a partial D-126 `stitched.pdb` when one
+    seam refuses.
+  - That a drop on the 22 may be silent success.
+  - That 0-of-5 recovered licenses raising the gate or inventing a
+    blend.
+  - That this amendment is a new `D-NNN` or a stitch-code BUILD.
 
 ---
 

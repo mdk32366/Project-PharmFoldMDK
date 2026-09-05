@@ -4,6 +4,10 @@ Docs-only GO: the living-log heading exists, the Spec file exists, the
 algorithm name and 10.0 Å refuse gate are pinned, the primary five are
 named, hard stops are written, this PR is not D-126-A/B, and
 ``hold48_kabsch.py`` is not edited.
+
+Amendment 1 (same D-id) additionally pins: full-overlap RMSD + max Cα
+jump; ε = 1e-3 and the weighted RMSD formula; floor-then-Kabsch-then-trim;
+all-or-nothing parent refuse; ops confusion vs D-125; 0-of-5 allowed.
 """
 from __future__ import annotations
 
@@ -47,8 +51,16 @@ def test_d126_heading_exists_in_the_living_log():
         LOG,
         re.M,
     ), "D-126 must be a real ### entry, not a citation of one"
+    assert re.search(
+        r"^#### D-126 amendment 1 — Trinity red-team pins",
+        LOG,
+        re.M,
+    ), "amendment 1 must be a real #### sub-entry under D-126, not a new D-NNN"
     assert re.search(r"^### D-125 — Kabsch restitch Spec", LOG, re.M)
     assert re.search(r"^### D-125-B — UI dual-path honesty", LOG, re.M)
+    assert not re.search(r"^### D-127", LOG, re.M), (
+        "this amend is the same D-id; do not invent a ### D-127 heading"
+    )
 
 
 def test_spec_file_exists_and_names_algorithm():
@@ -134,3 +146,99 @@ def test_this_spec_pr_does_not_edit_hold48_kabsch_or_the_assembler():
     assert "D-126" not in KABSCH
     assert "def fit_overlap_kabsch" in KABSCH
     assert hashlib.sha256(KABSCH_PATH.read_bytes()).hexdigest() == D125_KABSCH_SHA256
+
+
+def test_post_transform_full_overlap_disclosure():
+    """Anti trim-to-pass lie: full-overlap unweighted RMSD + max Cα jump."""
+    assert "rmsd_full_overlap_angstrom" in SPEC
+    assert "max_ca_jump_angstrom" in SPEC
+    assert "rmsd_full_overlap_angstrom" in LOG
+    assert "max_ca_jump_angstrom" in LOG
+    flat = _flat(SPEC).lower()
+    assert "unweighted" in flat
+    assert "all overlap" in flat or "all** overlap" in SPEC.lower() or "**all** overlap" in SPEC
+    assert "not only the trimmed fit set" in flat
+    assert "refuse-before-transform" in flat
+    assert "may be null" in flat
+    assert "a must write them" in flat
+    assert "b later shows them" in flat or "ui / b later shows them" in flat
+    # Gate stays weighted-on-fit-set, not full-overlap.
+    assert "weighted" in flat and "fit set" in flat
+    assert "≤ 10.0" in SPEC or "`≤ 10.0 Å`" in SPEC
+
+
+def test_epsilon_and_weighted_rmsd_formula():
+    """ε = 1e-3; weighted RMSD = sqrt(Σ w_i ||R p_i + t − q_i||² / Σ w_i)."""
+    sec1 = SPEC.split("## 2.")[0]
+    assert "1e-3" in sec1
+    assert "1e-3" in LOG
+    assert "R p_i + t" in sec1
+    assert "q_i" in sec1
+    assert "w_i" in sec1
+    # Formula is a weighted root-mean-square on the current fit set.
+    assert "sqrt" in sec1.lower() or r"\sqrt" in sec1
+    assert "fit set" in _flat(sec1).lower()
+    assert "weight floor" in _flat(sec1).lower() or r"\varepsilon" in sec1
+
+
+def test_floor_then_weighted_kabsch_then_trim_order():
+    """(a) pLDDT floor 50 first if n≥3 remains; (b) weighted Kabsch; (c) trim loop."""
+    sec1 = SPEC.split("## 2.")[0]
+    a = sec1.find("(a) pLDDT floor")
+    b = sec1.find("(b) weighted Kabsch")
+    c = sec1.find("(c) trim loop")
+    assert a != -1 and b != -1 and c != -1, "Spec §1 must label (a)/(b)/(c) in that wording"
+    assert a < b < c
+    assert "50" in sec1[a:b]
+    assert "n \\ge 3" in sec1 or r"n \ge 3" in sec1 or "n ≥ 3" in sec1
+    assert "fixed, not optional-in-time" in sec1
+    assert "post-trim" not in sec1.lower()
+    assert "(a) pLDDT floor 50 first" in LOG
+    assert "(b) weighted Kabsch" in LOG
+    assert "(c) trim loop" in LOG
+
+
+def test_all_or_nothing_parent_refuse():
+    """If any seam refuses, parent is refused; no partial D-126 success artifacts."""
+    flat = _flat(SPEC).lower()
+    log_flat = _flat(LOG).lower()
+    assert "all-or-nothing" in flat
+    assert "all-or-nothing" in log_flat
+    assert "if any seam refuses" in flat
+    assert "parent outcome" in flat and "refused" in flat
+    assert "_clear_success_artifacts" in SPEC
+    assert "_clear_success_artifacts" in LOG
+    assert "tileN_transformed.pdb" in SPEC or "tile{n}_transformed.pdb" in SPEC
+    assert "stitched.pdb" in SPEC
+    assert "partial" in flat
+    assert "seam rows still recorded" in flat or "seam rows are still recorded" in flat
+
+
+def test_no_regress_ops_report_fields():
+    """Ops report must name D-125 PASS → D-126 REFUSE; not a CI assert on live ops."""
+    assert "n_d125_pass_d126_refuse" in SPEC
+    assert "n_d125_pass_d126_pass" in SPEC
+    assert "n_d125_refuse_d126_pass" in SPEC
+    assert "n_d125_refuse_d126_refuse" in SPEC
+    assert "recovered_of_primary_five" in SPEC
+    assert "n_d125_pass_d126_refuse" in LOG
+    flat = _flat(SPEC).lower()
+    assert "named finding" in flat
+    assert "not silent success" in flat or "not silent success" in _flat(LOG).lower()
+    assert "not a ci assert" in flat
+    assert "confusion vs d-125" in flat
+    assert "## 10." in SPEC
+
+
+def test_zero_of_five_recovered_is_allowed():
+    """Recovering zero of the primary five is a valid experimental result."""
+    flat = _flat(SPEC).lower()
+    log_flat = _flat(LOG).lower()
+    assert "0-of-5" in SPEC or "0-of-5" in LOG
+    assert "allowed outcome" in flat
+    assert "allowed outcome" in log_flat
+    assert "valid experimental result" in flat
+    assert "do not loosen" in flat
+    assert "blend" in flat
+    assert "force passes" in flat
+    assert "recovered_of_primary_five" in SPEC
