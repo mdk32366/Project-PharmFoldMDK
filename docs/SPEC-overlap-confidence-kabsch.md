@@ -1,4 +1,4 @@
-# SPEC — Overlap-confidence Kabsch (D-126)
+# SPEC — Overlap-confidence Kabsch (trimmed + pLDDT-weighted) (D-126)
 
 > **COMMITTED to `docs/` as the overlap-confidence restitch Spec. CITED BY
 > the log, not restated as authority — where this file and `docs/README.md`
