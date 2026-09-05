@@ -5,22 +5,28 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-126 Spec (overlap-confidence Kabsch docs)
+## Active ship — D-126-A (overlap-confidence Kabsch core)
 
-- **D-126 ships the overlap-confidence Kabsch Spec** (docs only) —
-  [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md):
+- **D-126-A ships the overlap-confidence Kabsch core BUILD** — sibling
+  module [`core/hold48_confidence_kabsch.py`](../core/hold48_confidence_kabsch.py)
+  + CLI [`scripts/confidence_kabsch_restitch.py`](../scripts/confidence_kabsch_restitch.py):
   pLDDT-weighted + residual-trimmed Kabsch on overlap Cα → transform
   tile → existing `winning_tile` stitch. Refuse v1 defaults stay
   (`n_ca_eff < 3`, weighted RMSD `> 10.0 Å`, singular/degenerate
-  covariance). Primary inventory is the five D-125 REFUSE parents;
-  CLI still re-runs the 27. Seams are **not** scientifically solved.
-- **D-126-A / D-126-B are NOT this PR.** Those are later code BUILDs
-  (A = core weighted + trimmed Kabsch + refuse + feed assembler, no UI,
-  no rent; B = UI triple-path honesty). Default served = assembler
-  until a Matt swap GO.
+  covariance). Sibling tree `confidence_kabsch/{parent_id}/`. Primary
+  inventory is the five D-125 REFUSE parents; CLI still re-runs the 27.
+  Seams are **not** scientifically solved. No rent in A.
+- **D-126-B is NOT this PR.** UI triple-path honesty is a later Emma
+  GO. Default served = assembler until a Matt swap GO.
+- **D-126 ships the overlap-confidence Kabsch Spec** (already on `main`,
+  `d59be6b` / #239 + amendment 1 `b32f9db` / #240) —
+  [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md).
+- **D-126-A / D-126-B are NOT this PR** is discharged for **A only**
+  (this PR is the A BUILD). B remains later.
 - **D-125 ships the Kabsch restitch Spec** (already on `main`,
   `fbe8978` / #234). [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md).
 - **D-125-A already shipped** on `main` (`26a40a8` / #237).
+  `core/hold48_kabsch.py` is **not edited** in this PR.
 - **D-125-B ships** **UI dual-path honesty only** (already on `main`,
   `aa8d3f1` / #238): name assembler and Kabsch-path artifacts as two
   populations; A already writes the sibling `kabsch/{parent_job_id}/`
@@ -30,18 +36,20 @@
 - ⚠ **Seams are not scientifically solved.** Weighted Kabsch is a
   rigid transform of already-emitted ESMFold tiles, not a jointly
   placed holoprotein. Production dual-path (22 D-125 Kabsch / 5
-  assembler) stays until D-126 code + ops.
+  assembler) stays until a later ops restitch. Assembler + D-125
+  Kabsch stay callable.
 - ⚠ **10.0 Å gate STAYS.** Trim / weight change the fit set, not the
   gate. No threshold Spec-as-fix. No named-exclusion-as-fix.
-- **D-126 amendment 1** (this PR, same D-id): pins
+- **D-126 amendment 1** (already on `main`, same D-id): pins
   `rmsd_full_overlap_angstrom` + `max_ca_jump_angstrom`; ε = **1e-3**
   and the weighted RMSD formula; floor-then-Kabsch-then-trim;
   all-or-nothing parent refuse (`_clear_success_artifacts` spirit);
   ops confusion vs D-125 (`n_d125_pass_d126_refuse` is a **named
-  finding**); **0-of-5** recovered is allowed. Not D-126-A/B. No
-  stitch code.
+  finding**); **0-of-5** recovered is allowed. A binds those pins in
+  code.
 
-Full entries: [`README.md` § D-126](README.md#d-126--overlap-confidence-kabsch-spec-trimmed--plddt-weighted-fit-then-existing-winning_tile-docs-only),
+Full entries: [`README.md` § D-126-A](README.md#d-126-a--overlap-confidence-kabsch-core-trimmed--plddt-weighted-fit-then-existing-winning_tile),
+[`README.md` § D-126](README.md#d-126--overlap-confidence-kabsch-spec-trimmed--plddt-weighted-fit-then-existing-winning_tile-docs-only),
 [`README.md` § D-125-B](README.md#d-125-b--ui-dual-path-honesty-name-assembler-and-kabsch-path-artifacts-without-colliding-them),
 [`README.md` § D-125](README.md#d-125--kabsch-restitch-spec-overlap-cα-align-then-existing-winning_tile-stitch-d-125-a-core-build).
 Spec: [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md).
@@ -50,8 +58,8 @@ Spec: [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md).
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-126 Spec** | Overlap-confidence Kabsch Spec (docs only) | **Yes — this PR.** |
-| **D-126-A** | Core BUILD (weighted + trimmed overlap Cα → `winning_tile`) | **No.** Later Emma GO. No rent in A. |
+| **D-126 Spec** | Overlap-confidence Kabsch Spec (docs only) | Already shipped on `main` (#239 / `d59be6b` + #240 / `b32f9db`). |
+| **D-126-A** | Core BUILD (weighted + trimmed overlap Cα → `winning_tile`) | **Yes — this PR.** No rent in A. |
 | **D-126-B** | UI triple-path honesty (reads `confidence_kabsch/`) | **No.** After A. |
 | **D-125-B** | UI dual-path honesty only (A already writes `kabsch/{parent}/`) | Already shipped on `main` (#238 / `aa8d3f1`). |
 | **D-125-A** | Kabsch core BUILD (overlap Cα → transform → `winning_tile`) | Already shipped on `main` (#237 / `26a40a8`). |

@@ -1,9 +1,9 @@
 """D-126 — Overlap-confidence Kabsch Spec. These must be able to go red.
 
-Docs-only GO: the living-log heading exists, the Spec file exists, the
+Spec GO: the living-log heading exists, the Spec file exists, the
 algorithm name and 10.0 Å refuse gate are pinned, the primary five are
-named, hard stops are written, this PR is not D-126-A/B, and
-``hold48_kabsch.py`` is not edited.
+named, hard stops are written, D-126-B is not this PR, and
+``hold48_kabsch.py`` is not edited (D-126-A is a sibling module).
 
 Amendment 1 (same D-id) additionally pins: full-overlap RMSD + max Cα
 jump; ε = 1e-3 and the weighted RMSD formula; floor-then-Kabsch-then-trim;
@@ -35,8 +35,9 @@ PRIMARY_FIVE = (
     (3432, "Q8IZF6"),
 )
 
-# D-125-A module on main (`26a40a8`, unchanged at D-125-B `aa8d3f1`).
-# A later D-126-A BUILD updates this pin when it adds a sibling module.
+# D-125-A module on main (`26a40a8`, unchanged at D-125-B `aa8d3f1`
+# and through D-126 Spec + A). D-126-A is a sibling module — this pin
+# must stay. If it moves, hold48_kabsch.py was edited.
 D125_KABSCH_SHA256 = "4c7bb45d04507e2a67ba3600b35d6130d62843ca3bc99c15d3568d5cb105ff6e"
 
 
@@ -58,6 +59,11 @@ def test_d126_heading_exists_in_the_living_log():
     ), "amendment 1 must be a real #### sub-entry under D-126, not a new D-NNN"
     assert re.search(r"^### D-125 — Kabsch restitch Spec", LOG, re.M)
     assert re.search(r"^### D-125-B — UI dual-path honesty", LOG, re.M)
+    assert re.search(
+        r"^### D-126-A — Overlap-confidence Kabsch core",
+        LOG,
+        re.M,
+    ), "D-126-A must be a real ### entry, not a citation of one"
     assert not re.search(r"^### D-127", LOG, re.M), (
         "this amend is the same D-id; do not invent a ### D-127 heading"
     )
@@ -111,19 +117,20 @@ def test_hard_stops_and_not_ab():
     assert "no rent in a" in flat
     assert "never seams solved" in flat or "seams are not scientifically solved" in flat
     assert "keep assembler" in flat and "d-125" in flat
-    assert "not d-126-a" in flat or "**not d-126-a**" in flat
     assert "not d-126-b" in flat or "**not d-126-b**" in flat
     assert "docs spec only" in log_flat or "docs only" in log_flat
-    assert "not d-126-a" in log_flat
     assert "not d-126-b" in log_flat
+    # Spec file remains algorithm authority; A is a sibling module, not a
+    # replacement of hold48_kabsch.py / winning_tile.
+    assert "hold48_confidence_kabsch.py" in SPEC or "sibling" in flat
 
 
-def test_ship_index_distinguishes_spec_from_future_ab_build():
+def test_ship_index_distinguishes_spec_from_ab_build():
     assert "D-126 ships the overlap-confidence Kabsch Spec" in INDEX
-    assert "D-126-A / D-126-B are NOT this PR" in INDEX
+    assert "D-126-A ships the overlap-confidence Kabsch core BUILD" in INDEX
     assert "Yes — this PR." in INDEX
-    assert re.search(r"D-126 Spec.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
-    assert re.search(r"D-126-A.*\*\*No\.\*\*", _flat(INDEX))
+    assert re.search(r"D-126 Spec.*Already shipped on `main`", _flat(INDEX))
+    assert re.search(r"D-126-A.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
     assert re.search(r"D-126-B.*\*\*No\.\*\*", _flat(INDEX))
     assert "confidence_kabsch" in INDEX or "overlap-confidence" in INDEX.lower()
 
@@ -138,7 +145,7 @@ def test_plan_and_architecture_point_at_d126():
 
 
 def test_this_spec_pr_does_not_edit_hold48_kabsch_or_the_assembler():
-    """Hard stop: no stitch-code bleed. A later A BUILD inverts the D-126 pins only."""
+    """Hard stop: D-126-A is a sibling module. hold48_kabsch.py bytes stay pinned."""
     assert "def winning_tile" in STITCH
     assert "def kabsch" not in STITCH
     assert "overlap_confidence_kabsch" not in KABSCH
@@ -146,6 +153,13 @@ def test_this_spec_pr_does_not_edit_hold48_kabsch_or_the_assembler():
     assert "D-126" not in KABSCH
     assert "def fit_overlap_kabsch" in KABSCH
     assert hashlib.sha256(KABSCH_PATH.read_bytes()).hexdigest() == D125_KABSCH_SHA256
+    sibling = ROOT / "core" / "hold48_confidence_kabsch.py"
+    assert sibling.is_file()
+    sib = sibling.read_text(encoding="utf-8")
+    assert "overlap_confidence_kabsch_then_winning_tile" in sib
+    assert "def write_confidence_kabsch_restitch" in sib
+    assert "import numpy" not in sib
+    assert "from numpy" not in sib
 
 
 def test_post_transform_full_overlap_disclosure():
