@@ -8,7 +8,6 @@ real ``### D-121`` living-log heading. This PR must not ADD ``/adcs``
 from __future__ import annotations
 
 import re
-import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -19,8 +18,10 @@ NOTE = (ROOT / "ui" / "src" / "components" / "MethodNote.jsx").read_text(
 LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
 APP = (ROOT / "ui" / "src" / "App.jsx").read_text(encoding="utf-8")
 
-# D-122 merge on main. Diff/pin: this PR rebases onto it and must not ADD /adcs.
-D122_MAIN = "86f8a10"
+# D-122 / #232 shipped this exact route set on main (86f8a10). This PR must
+# not ADD a third /adcs path and must not delete the two that already exist.
+# Pin is the path list, not `git diff 86f8a10` — shallow CI has no that SHA.
+D122_ADCS_PATHS = ["/adcs", "/adcs/:id"]
 
 
 def _flat(text: str) -> str:
@@ -74,38 +75,19 @@ def test_this_pr_must_not_add_adcs():
     """THIS PR does not ADD /adcs. D-122 already shipped them on main.
 
     Do not assert that main lacks /adcs. Do not regress D-122 routes.
-    The check is a diff/pin against ``86f8a10``.
+    The pin is the exact D-122 path set (86f8a10 / #232). A third path
+    goes red. Deleting either shipped path goes red. Shallow CI cannot
+    ``git diff 86f8a10``.
     """
-    # D-122 routes must still exist (regression if this PR deletes them).
-    assert 'path="/adcs"' in APP
-    assert 'path="/adcs/:id"' in APP
+    paths = re.findall(r'path="(/adcs[^"]*)"', APP)
+    assert paths == D122_ADCS_PATHS, paths
+    assert '<NavLink to="/adcs">ADCs</NavLink>' in APP
+    assert 'path="/adcs" element={<AdcsView />}' in APP
+    assert 'path="/adcs/:id" element={<AdcCardRoute />}' in APP
     assert "AdcsView" in APP
     assert "AdcCard" in APP
 
-    # This PR's Method surfaces do not introduce an /adcs route.
+    # D-121 Method surfaces do not introduce a route.
     assert "AdcsView" not in NOTE
     assert 'to="/adcs"' not in NOTE
     assert 'path="/adcs"' not in NOTE
-
-    # Diff/pin vs D-122 main: no added App.jsx /adcs lines; no new ADC-B files.
-    app_diff = subprocess.check_output(
-        ["git", "diff", D122_MAIN, "--", "ui/src/App.jsx"],
-        cwd=ROOT,
-        text=True,
-    )
-    added = [
-        ln for ln in app_diff.splitlines()
-        if ln.startswith("+") and not ln.startswith("+++")
-    ]
-    assert not any('path="/adcs"' in ln or "AdcsView" in ln or "AdcCard" in ln for ln in added), (
-        "this PR must not ADD /adcs on top of D-122"
-    )
-
-    new_files = subprocess.check_output(
-        ["git", "diff", "--name-only", "--diff-filter=A", D122_MAIN],
-        cwd=ROOT,
-        text=True,
-    )
-    assert "AdcsView" not in new_files
-    assert "AdcCard" not in new_files
-    assert "adcCatalog" not in new_files
