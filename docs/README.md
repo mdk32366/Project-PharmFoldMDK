@@ -31,11 +31,15 @@
 >   Kabsch GO.** Phase 1 P0 honesty is **D-118**. Phase 2 review UI is **D-120**.
 >   **D-121** is the follow-on 8th-grade Method explainer (`method-hold48-tiles.md` +
 >   `/method` addendum). The stitcher is a pLDDT assembler; seams are not scientifically
->   solved. **D-125** is the Kabsch restitch **Spec** (docs-only;
->   [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)) — not a BUILD.
+>   solved. **D-125** is the Kabsch restitch Spec
+>   ([`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)). **D-125-A** (this
+>   PR) is the core BUILD: overlap Cα Kabsch → transform tile → existing
+>   `winning_tile`. ⚠ **Not D-125-B.** ⚠ **Not a restitch run of the 27.**
+>   ⚠ **Seams are not scientifically solved.**
 > - [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) — Kabsch on overlap Cα →
->   transform tile → existing `winning_tile` stitch (**D-125** Spec). Refuse
->   defaults named. ⚠ **Not D-125-A/B code. Not a restitch run.**
+>   transform tile → existing `winning_tile` stitch. D-125-A implements
+>   that Spec; it does not replace the assembler. ⚠ **Not D-125-B. Not
+>   F-004 ingest.**
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**). Additive
 >   MethodNote section on `/method`. ⚠ **Assembler ≠ Kabsch today. #229 stays merged.**
@@ -43,9 +47,11 @@
 >   **D-124 ships** ADC-C: **A** (pipeline catalog + access/RTT payload +
 >   thin read API) already on `main` (`b71bade` / #235); **B** is the
 >   `/adcs` consumer (Approved | Pipeline shelves, phase filter, Access
->   panel). **D-125 ships** the Kabsch restitch Spec (docs only; already
->   on `main`, `fbe8978` / #234). **D-125-A/B** code BUILD is later and
->   waits until **D-124 A+B** (ADC-C) is on `main`. **D-121 ships** the
+>   panel). **D-125 ships** the Kabsch restitch Spec (already on `main`,
+>   `fbe8978` / #234) **and D-125-A** (this PR: core Kabsch + refuse +
+>   feed `winning_tile`; no UI). **D-125-B** (persist+UI dual-path) is
+>   later. D-124 A+B is on `main` (`57f429d` / #236) — the wait that
+>   gated A is discharged. **D-121 ships** the
 >   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
 >   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
@@ -408,23 +414,29 @@ clinical-development language.
 
 ---
 
-### D-125 — Kabsch restitch Spec: overlap-Cα align, then existing winning_tile stitch (docs-only)
+### D-125 — Kabsch restitch Spec: overlap-Cα align, then existing winning_tile stitch (D-125-A core BUILD)
 
 - **Date:** 2026-09-05
 - **Status:** accepted as **the Kabsch restitch SPEC GO** (Trinity Architect
-  ship id **D-125**, Emma GO). Docs only.
-  ⚠ **Not D-125-A or D-125-B** (those code BUILDs wait until **D-124 A+B**
-  — ADC-C — is on `main`). ⚠ **Not a stitch implementation.** ⚠ **Does not
-  edit `core/hold48_stitch.py`.** ⚠ **Not a restitch run.** ⚠ **Not F-004
-  ingest.** ⚠ **Not ADC-C** (pipeline / access / `/adcs` UI stay out —
-  parallel lane). ⚠ **Does not write `### D-124`.** That integer is ADC-C.
+  ship id **D-125**, Emma GO; docs on `main` at `fbe8978` / #234) **and
+  the D-125-A core BUILD** (this PR; Emma GO 2026-09-05 after D-124 A+B
+  landed on `main` at `57f429d` / #236). Architect: Trinity. Builder
+  coordinator: Kaylee.
+  ⚠ **Not D-125-B** (persist + UI dual-path honesty — later Emma GO).
+  ⚠ **Does not replace `winning_tile`.** Kabsch is a pre-stitch rigid
+  transform; the assembler stays callable.
+  ⚠ **Not a restitch run of the 27.** The CLI is inventory-limited and
+  hermetic-testable; it does not re-query Fly and does not fold.
+  ⚠ **Not F-004 ingest.** ⚠ **Not ADC-C.** ⚠ **No rent / GPU / RunPod.**
   ⚠ **Seams are not scientifically solved.**
-- **Ruled by:** Trinity Architect binding 2026-09-05 — Architect Trinity
-  Spec = Kabsch (**D-125**); refuse v1 defaults named so later tests can
-  go red; 27-id inventory is the existing census, not a Fly re-query;
-  PLAN pointer to D-117; artifact dirs documented only; UI dual-path
-  honesty (disclose, do not claim solved). Parallel-safe with ADC-C
-  (D-124).
+- **Ruled by:** Trinity Architect binding 2026-09-05 — Spec = Kabsch on
+  overlap Cα → existing `winning_tile`; refuse v1 defaults named so
+  tests can go red; 27-id inventory is the existing census, not a Fly
+  re-query. Emma BUILD GO D-125-A 2026-09-05: implement that Spec as a
+  **new path** (`core/hold48_kabsch.py` + `scripts/kabsch_restitch.py`)
+  that feeds `winning_tile` / `write_stitched`. Do not invent a second
+  assembler. Sibling `kabsch/{parent_job_id}/` tree with provenance;
+  never silently overwrite assembler PDBs.
 - **Cite:** D-117 PLAN / Kabsch park · D-118 assembler-not-Kabsch honesty
   · D-120 Phase 2 review of the 27 · D-121 Method (assembler ≠ Kabsch
   *today*) · D-111 `winning_tile` / overlap-pLDDT stitch · D-116
@@ -435,8 +447,8 @@ clinical-development language.
   [`decisions.md`](decisions.md) · Spec
   [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)
 - **Relates:** `D-121` · `D-120` · `D-118` · `D-117` · `D-116` · `D-111`
-  · `D-109` ruling 7 · `D-124` (ADC-C — reserved; this entry does not
-  spend it)
+  · `D-109` ruling 7 · `D-124` (ADC-C — already on `main`; this entry
+  does not spend that integer)
 - **Does not amend:** D-111 geometry · D-116 gate · today's stitch
   algorithm · D-118 census identity · D-120 `assembly_review` · D-121
   Method copy · D-122 `/adcs` · D-123 `/about` · F-004 / ranking set ·
@@ -450,9 +462,9 @@ clinical-development language.
 D-117 parked Kabsch / restitch until a named GO. D-118 / D-120 / D-121
 then shipped honesty: the stitcher is a pLDDT **assembler**, not a
 Kabsch superimposer; the 27 assembled parents are auditable; Method
-says assembler ≠ Kabsch *today*. The park is still true of the **code**.
-What was missing is the Spec that a later Emma BUILD can fail against
-without inventing a holoprotein.
+says assembler ≠ Kabsch *today*. The Spec (#234) named the algorithm
+a later Emma BUILD could fail against without inventing a holoprotein.
+D-124 A+B is now on `main` (`57f429d`). D-125-A is that code BUILD.
 
 Kabsch is a rigid fit of corresponding points. The corresponding points
 this project already has are the **overlap Cα** of two ESMFold tiles.
@@ -462,9 +474,9 @@ and would pretend the network jointly placed the chain. Feeding a
 transformed tile *into* the existing assembler keeps the two jobs
 distinct.
 
-ADC-C (D-124) is a parallel Trinity lane (pipeline / Right-to-Try). This
-Spec must not bleed into that tree. D-125-A/B **code** waits until
-D-124 A+B is on `main` so the two BUILDs do not interleave.
+ADC-C (D-124) is a parallel Trinity lane (pipeline / Right-to-Try) and
+is already on `main`. This A BUILD must not bleed into that tree or
+into D-125-B UI.
 
 #### Decision
 
@@ -489,22 +501,28 @@ D-124 A+B is on `main` so the two BUILDs do not interleave.
    **17**. IGF2R **3356** is not in the 27. ⚠ **Not re-queried on Fly.**
 4. **PLAN pointer.** D-117 / [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md)
    §5 Kabsch park → **D-125**. The plan does not become a BUILD GO.
-5. **Artifact dirs are documented, not created.** A later A/B BUILD
-   writes a sibling `kabsch/{parent_job_id}/` tree
+5. **Artifact dirs are a sibling tree, never an overwrite.** D-125-A
+   writes `<ops out_dir>/kabsch/{parent_job_id}/`
    (`provenance.json`, `seams.jsonl`, `tileN_transformed.pdb` only on
    accept, then existing `write_stitched` names). Do not `git add`
-   PDBs. Do not overwrite today's `stitched.pdb` until a later GO names
-   the swap.
+   PDBs. Do not overwrite today's assembler `stitched.pdb` until a
+   later GO names the swap. A refuse still writes the seam record and
+   does **not** write a transformed PDB or a Kabsch-path `stitched.pdb`.
 6. **UI dual-path honesty is specified, not built.** Assembler path
-   remains the default. A future Kabsch path must be *named as a second
-   path* — disclose `n_ca`, RMSD, `refuse_reason`. Forbidden: “aligned,”
-   “superimposed,” “seams solved,” “full-length AF-quality.” No
-   alignment-box CTA. No F-004 ingest.
-7. **PR split.** This PR is Spec only. **D-125-A** (core Kabsch + refuse
-   + feed `winning_tile`; no UI) and **D-125-B** (persist + dual-path
-   UI) are later Emma GOs and **wait until D-124 A+B is on `main`.**
-8. **Hard stops stay parked.** No stitch code. No UI. No restitch run.
-   No rent / GPU / RunPod. No ADC-C bleed.
+   remains the default served PDB. D-125-B (later) must *name* Kabsch
+   as a second path — disclose `n_ca`, RMSD, `refuse_reason`. Forbidden:
+   “aligned,” “superimposed,” “seams solved,” “full-length AF-quality.”
+   No alignment-box CTA. No F-004 ingest. This A PR does not touch UI.
+7. **PR split.** Spec already on `main` (`fbe8978` / #234). **D-125-A**
+   (this PR): core Kabsch + refuse + transform + feed `winning_tile`;
+   hermetic tests; CLI limited to the 27 inventory ids; no UI.
+   **D-125-B** remains a later Emma GO (persist+UI). The D-124 A+B wait
+   is discharged (`57f429d` / #236).
+8. **Hard stops.** No rent / GPU / RunPod. No F-004 ingest. No D-125-B
+   UI. No claim that seams are solved. No second assembler. No live
+   Fly re-query of the 27. `core/hold48_stitch.py` `winning_tile` /
+   `write_stitched` stay the stitch path — Kabsch lives in
+   `core/hold48_kabsch.py` (stdlib; no numpy — `core/` ships without it).
 
 #### Deep-learning justification
 
@@ -525,44 +543,53 @@ network's passes.
   / `app/reads.py` `WAVE1_WAVE2_STITCHED_PARENT_IDS`. Architect binding
   2026-09-05 (this session) restates the same sorted list. ⚠ **Not
   re-queried against Fly.**
-- **Assembler, not Kabsch today:** `core/hold48_stitch.py` `winning_tile`
-  (higher per-residue pLDDT; tie → earlier tile). D-121 Method copy
-  already says so.
+- **Assembler stays the stitch path:** `core/hold48_stitch.py`
+  `winning_tile` (higher per-residue pLDDT; tie → earlier tile). D-125-A
+  feeds it from `core/hold48_kabsch.py`. D-121 Method copy still says
+  the served path is assembler ≠ Kabsch.
 - **IGF2R seam ~88.76 Å:** owner analysis cited in D-117 / D-118 / D-120
   / D-121. A join-jump disclosure, **not** a Kabsch RMSD. ⚠ **Not
   re-measured in this PR.**
 - **Refuse defaults `< 3` / `> 10.0 Å` / singular covariance:** Trinity
   Architect binding 2026-09-05 (this session). Not fitted on the 27.
-- **D-124 (ADC-C):** parallel later GO; reserved in
-  [`RESERVED.md`](RESERVED.md) so a citation here is not a D-062 hole.
-  This entry does not spend that integer.
+- **D-124 (ADC-C):** shipped on `main` (`57f429d` / #236). The wait
+  that gated D-125-A is discharged. This entry does not spend `D-124`.
+- **D-125-A tip this PR starts from:** `origin/main` `57f429d`
+  (`git rev-parse origin/main` after `git fetch origin main`,
+  2026-09-05).
 
 #### Consequences
 
-- Tests that must be able to go red **in this Spec PR:** `### D-125 —`
-  exists in this log; [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)
-  names the algorithm (Kabsch on overlap Cα → existing `winning_tile`),
-  the three refuse defaults, and the 27 ids; `decisions.md` distinguishes
-  Spec vs future A/B BUILD; `core/hold48_stitch.py` still has no Kabsch
-  implementation; no “seams solved” claim in the Spec.
-- Tests that must be able to go red **in a later A BUILD (not this PR):**
-  `n_ca < 3` refuses align; RMSD `> 10.0 Å` refuses that seam and records
-  the value; singular/degenerate covariance refuses; accepted path still
-  calls `winning_tile`; refuse does not invent coordinates.
-- `ARCHITECTURE.md` records D-125 as a Spec, not a stitch-path change.
-- D-125-A/B, ADC-C (D-124), F-004 ingest, remaining tileable / mucins,
-  and rental remain later GOs.
+- Tests that must be able to go red **(Spec, already on `main`):**
+  `### D-125 —` exists in this log;
+  [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) names the
+  algorithm, the three refuse defaults, and the 27 ids; no “seams
+  solved” claim in the Spec.
+- Tests that must be able to go red **(D-125-A, this PR):** `n_ca < 3`
+  refuses align; RMSD `> 10.0 Å` refuses that seam and records the
+  value; singular/degenerate covariance refuses; accepted path still
+  calls `winning_tile` / `write_stitched`; refuse does not invent
+  coordinates and does not write `stitched.pdb` / `tileN_transformed.pdb`;
+  CLI refuses a parent id outside the 27; Kabsch output is under
+  `kabsch/{parent_job_id}/` and does not overwrite an assembler dir;
+  `hold48_stitch.py` still has no `def kabsch` (new path, not a
+  replacement). Test plan **T-1088**–**T-1094**.
+- `ARCHITECTURE.md` records D-125-A as a flagged pre-stitch path that
+  feeds the existing assembler. Served census PDBs stay assembler.
+- D-125-B, F-004 ingest, remaining tileable / mucins, and rental
+  remain later GOs.
 
 #### Assumptions refused
 
-- That writing a Kabsch Spec licenses calling seams solved or the chain
-  one forward pass.
+- That writing a Kabsch Spec or shipping A licenses calling seams
+  solved or the chain one forward pass.
 - That Kabsch may replace `winning_tile` (it feeds it).
 - That the 27 may enter `/scorer` (D-109 ruling 7).
-- That this PR may implement stitch code, UI, or a restitch run.
+- That this PR may ship D-125-B UI or a live restitch run.
 - That this PR may edit ADC-C / pipeline / `/adcs`.
-- That D-125-A/B may start before D-124 A+B is on `main`.
-- That this PR may write `### D-124` or repair the `D-` next-free pointer.
+- That this PR may overwrite assembler `stitched.pdb`.
+- That this PR may query Fly for the 27 or rent a GPU.
+- That this PR may repair the `D-` next-free pointer.
 
 ---
 

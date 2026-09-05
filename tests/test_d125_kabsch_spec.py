@@ -1,8 +1,9 @@
-"""D-125 — Kabsch restitch Spec. These must be able to go red.
+"""D-125 — Kabsch restitch Spec + D-125-A core BUILD pins.
 
-Docs-only GO: the living-log heading exists, the Spec names the algorithm
-and the three refuse defaults, the 27-id inventory matches the existing
-census set, and ``hold48_stitch.py`` still has no Kabsch implementation.
+The heading exists, the Spec names the algorithm and refuse defaults, the
+27-id inventory matches the existing census set, and ``hold48_stitch.py``
+still has no Kabsch implementation (A is a new path that *feeds*
+``winning_tile``).
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ SPEC = (ROOT / "docs" / "SPEC-kabsch-restitch.md").read_text(encoding="utf-8")
 INDEX = (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8")
 PLAN = (ROOT / "docs" / "PLAN-ui-post-wave2-endstate.md").read_text(encoding="utf-8")
 STITCH = (ROOT / "core" / "hold48_stitch.py").read_text(encoding="utf-8")
+KABSCH = (ROOT / "core" / "hold48_kabsch.py").read_text(encoding="utf-8")
 
 # Same 27 ids as D-117 / D-120 / WAVE1_WAVE2_STITCHED_PARENT_IDS — not a Fly query.
 PARENT_IDS = (
@@ -38,12 +40,11 @@ def test_d125_heading_exists_in_the_living_log():
     assert "### D-121 — Method hold-48 8th-grade explainer" in LOG
     assert "### D-120 — Phase 2 review UI" in LOG
     assert "### D-118 — Phase 1 P0 honesty" in LOG
-    # D-125 Spec reserved D-124; ADC-C-A (this PR) spends it. Both headings must exist.
     assert re.search(
         r"^### D-124 — ADC-C-A:",
         LOG,
         re.M,
-    ), "D-124 is ADC-C-A's integer — the Spec did not spend it; this PR does"
+    ), "D-124 is ADC-C; D-125 does not spend it"
 
 
 def test_spec_names_algorithm_and_does_not_replace_the_assembler():
@@ -57,7 +58,7 @@ def test_spec_names_algorithm_and_does_not_replace_the_assembler():
 
 
 def test_refuse_v1_defaults_are_named():
-    """Named so a later A BUILD can go red. Not a measurement of the 27."""
+    """Named so A tests can go red. Not a measurement of the 27."""
     assert "< 3" in SPEC or "`< 3`" in SPEC
     assert "10.0" in SPEC
     assert "singular" in SPEC.lower() and "degenerate" in SPEC.lower()
@@ -65,27 +66,38 @@ def test_refuse_v1_defaults_are_named():
 
 
 def test_twenty_seven_ids_match_existing_inventory():
+    from core.hold48_kabsch import KABSCH_RESTITCH_PARENT_IDS
+    from app.reads import WAVE1_WAVE2_STITCHED_PARENT_IDS
+
     assert len(PARENT_IDS) == 27
     assert 3356 not in PARENT_IDS
+    assert KABSCH_RESTITCH_PARENT_IDS == frozenset(PARENT_IDS)
+    assert KABSCH_RESTITCH_PARENT_IDS == WAVE1_WAVE2_STITCHED_PARENT_IDS
     for pid in PARENT_IDS:
         assert str(pid) in SPEC, pid
         assert str(pid) in LOG, pid
 
 
-def test_ship_index_distinguishes_spec_from_future_ab_build():
+def test_ship_index_names_a_as_this_pr_and_b_as_later():
     assert "D-125 ships the Kabsch restitch Spec" in INDEX
-    assert "D-125-A / D-125-B are NOT this PR" in INDEX
-    assert "wait until D-124 A+B" in INDEX
+    assert "D-125-A ships" in INDEX or "D-125-A** | Kabsch core BUILD" in INDEX
     assert "Yes — this PR." in INDEX
-    assert re.search(r"D-125-A.*\*\*No\.\*\*", _flat(INDEX))
+    assert re.search(r"D-125-A.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
+    assert re.search(r"D-125-B.*\*\*No\.\*\*", _flat(INDEX))
+    assert "Not D-125-B" in INDEX or "D-125-B is NOT this PR" in INDEX
 
 
 def test_plan_kabsch_park_points_at_d125():
     assert "Kabsch park → **D-125**" in PLAN
 
 
-def test_this_spec_pr_does_not_implement_kabsch_in_the_stitcher():
-    """Hard stop: no stitch-code bleed. A later A BUILD inverts this pin."""
+def test_assembler_is_not_replaced_kabsch_is_a_new_path():
+    """A BUILD inverts the 'no Kabsch yet' pin by adding a sibling module."""
+    assert "def winning_tile" in STITCH
     assert "def kabsch" not in STITCH
     assert "Kabsch" not in STITCH
-    assert "def winning_tile" in STITCH
+    assert "def fit_overlap_kabsch" in KABSCH
+    assert "write_stitched" in KABSCH
+    assert "winning_tile" in KABSCH
+    assert "import numpy" not in KABSCH
+    assert "from numpy" not in KABSCH

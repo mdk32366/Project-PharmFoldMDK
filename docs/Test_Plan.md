@@ -299,5 +299,28 @@ APIs + fixtures — does not invent pipeline JSON rows.
 
 ---
 
+## Addendum 2026-09-05 — D-125-A Kabsch restitch core
+
+Acceptance tests for the Kabsch pre-stitch path. Implemented in
+`tests/test_d125_kabsch.py` + updates to `tests/test_d125_kabsch_spec.py`.
+Each AT must be able to go red **without** a live Fly query, GPU, or
+restitch run. Fixtures stand in for tile PDBs. Cite: D-125 Spec
+`docs/SPEC-kabsch-restitch.md` · D-111 `winning_tile` · refuse v1
+defaults (`n_ca < 3`, RMSD `> 10.0 Å`, singular/degenerate covariance).
+⚠ Kabsch feeds the existing assembler; it does not replace it. ⚠ Seams
+are not scientifically solved.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1088** | Overlap Cα count `< 3` refuses align; `rmsd_angstrom` is null; no transformed PDB / no Kabsch `stitched.pdb` | `test_overlap_ca_lt_3_refuses_align` |
+| **T-1089** | Kabsch RMSD `> 10.0 Å` refuses that seam and records the RMSD; no invented pose | `test_rmsd_gt_10_refuses_seam_and_records_rmsd` |
+| **T-1090** | Singular / degenerate covariance (rank `< 2`) refuses align | `test_singular_covariance_refuses_align` |
+| **T-1091** | Accepted seam transforms the moving tile and still calls `winning_tile` / `write_stitched` | `test_accepted_seam_transforms_and_feeds_winning_tile` |
+| **T-1092** | Assembler `write_stitched` stays callable on untransformed tiles (A/B compare path) | `test_assembler_path_stays_callable_without_kabsch` |
+| **T-1093** | CLI / writer refuse a parent id outside the 27-id inventory (not a Fly re-query) | `test_cli_refuses_parent_id_outside_inventory` |
+| **T-1094** | Kabsch artifacts land under `kabsch/{parent_job_id}/` and do not overwrite an assembler `stitched.pdb` | `test_kabsch_dir_does_not_overwrite_assembler_pdbs` |
+
+---
+
 **End of Test Plan**
 

@@ -5,42 +5,36 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-124 (ADC-C-B UI)
+## Active ship — D-125-A (Kabsch core)
 
-- **D-124 ships ADC-C-B** (the `/adcs` consumer of the A contracts).
-  Approved shelf stays D-122 / `GET /api/adcs`. Pipeline shelf consumes
-  `GET /api/adcs/pipeline`, `GET /api/adcs/pipeline/{id}`,
-  `GET /api/adcs/access`. Phase filter is the Architect closed set.
-  Access panel renders the A payload's disclaimer and named NCT ids;
-  it does not invent trials or eligibility.
-- **ADC-C-A already shipped** on `main` (`b71bade` / #235). Files:
-  [`data/adcs/adcs.pipeline.v1.json`](../data/adcs/adcs.pipeline.v1.json) and
-  [`data/adcs/access.v1.json`](../data/adcs/access.v1.json). This PR does
-  **not** rewrite those bytes or `adcs.v1.json`.
-- **D-125 ships the Kabsch restitch Spec** (docs only) — already on `main`
-  (`fbe8978` / #234). [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md).
-- **D-125-A / D-125-B are NOT this PR.** Those are later code BUILDs
-  (A = core Kabsch + refuse + feed assembler, no UI; B = persist + UI
-  dual-path honesty). They **wait until D-124 A+B is on `main`.**
-- **D-122 is ADC-B**, already on `main` (`86f8a10` / #232). Approved
-  `/adcs` + `/adcs/:id` stay. B adds `/adcs/pipeline/:id` before `:id`.
-- **D-121 is Method hold-48**, already on `main` (`ff51867` / #233).
-- **D-123 is the Nectin Doc → `/about` follow-on**, already on `main`
-  (`2ffd4f8` / #231). This PR does not touch AdcContext.
+- **D-125-A ships** the Kabsch restitch **core BUILD**: overlap Cα Kabsch
+  → refuse v1 defaults → transform the moving tile → feed the existing
+  `winning_tile` / `write_stitched` assembler. No UI. New path
+  (`core/hold48_kabsch.py` + `scripts/kabsch_restitch.py`); the assembler
+  stays callable. Sibling `kabsch/{parent_job_id}/` artifacts with
+  provenance. CLI limited to the 27 inventory ids — not a Fly re-query.
+- **D-125 ships the Kabsch restitch Spec** (already on `main`,
+  `fbe8978` / #234). [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md).
+  This A PR implements that Spec; where they differ, the log governs.
+- **D-125-B is NOT this PR.** Persist+UI dual-path honesty is a later
+  Emma GO.
+- **D-124 A+B already shipped** on `main` (`57f429d` / #236). The wait
+  that gated A is discharged.
+- ⚠ **Seams are not scientifically solved.** Kabsch is a rigid transform
+  of already-emitted ESMFold tiles, not a jointly placed holoprotein.
 
-Full entries: [`README.md` § D-124](README.md#d-124--adc-c-a-pipeline-catalog--accessrtt-payload-are-dated-json-contracts-adc-c-b-is-the-adcs-consumer),
-[`README.md` § D-125](README.md#d-125--kabsch-restitch-spec-overlap-cα-align-then-existing-winning_tile-stitch-docs-only).
-Parent approved catalog: [`README.md` § D-119](README.md#d-119--adc-a-fda-approved-catalog-is-a-dated-json-contract-not-a-ui-and-not-a-science-invention).
+Full entries: [`README.md` § D-125](README.md#d-125--kabsch-restitch-spec-overlap-cα-align-then-existing-winning_tile-stitch-d-125-a-core-build),
+[`README.md` § D-124](README.md#d-124--adc-c-a-pipeline-catalog--accessrtt-payload-are-dated-json-contracts-adc-c-b-is-the-adcs-consumer).
 Spec: [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md).
 
 ## Nearby ids (do not conflate)
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-124** | ADC-C-B `/adcs` Pipeline + Access UI BUILD GO (A already on `main`) | **Yes — this PR.** |
+| **D-125-A** | Kabsch core BUILD (overlap Cα → transform → `winning_tile`) | **Yes — this PR.** |
 | **D-125 Spec** | Kabsch restitch Spec (docs only) | Already shipped on `main` (#234 / `fbe8978`). |
-| **D-125-A** | Kabsch core BUILD (overlap Cα → transform → `winning_tile`) | **No.** Later Emma GO. Waits on D-124 A+B. |
 | **D-125-B** | Kabsch persist + UI dual-path honesty | **No.** After A. |
+| **D-124** | ADC-C-B `/adcs` Pipeline + Access UI BUILD GO (A already on `main`) | Already shipped on `main` (#236 / `57f429d`). |
 | **D-123** | Nectin Doc → `/about` AdcContext BUILD GO | Already shipped on `main` (#231 / `2ffd4f8`). |
 | **D-122** | ADC-B `/adcs` + `/adcs/:id` UI BUILD GO | Already shipped on `main` (#232 / `86f8a10`). |
 | **D-121** | Method hold-48 8th-grade explainer BUILD GO | Already shipped on `main` (#233 / `ff51867`). |

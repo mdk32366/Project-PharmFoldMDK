@@ -4,12 +4,12 @@
 > as authority — where this file and `docs/README.md` differ, THE LOG
 > GOVERNS.** Confirm the `### D-125` header exists before citing.
 >
-> **Date:** 2026-09-05 · **Status:** Spec / docs-only. ⚠ **Not a BUILD.**
-> ⚠ **Not D-125-A or D-125-B.** Those code GOs wait until **D-124 A+B**
-> (ADC-C) is on `main`. ⚠ **Not a restitch run.** ⚠ **Not F-004 ingest.**
-> ⚠ **Seams are not scientifically solved.** This file names an algorithm
-> and the refuse thresholds a later BUILD must be able to fail. It does
-> not ship `core/hold48_stitch.py` Kabsch, UI, or new artifacts.
+> **Date:** 2026-09-05 · **Status:** Spec (algorithm authority). **D-125-A**
+> (core BUILD) implements this file. ⚠ **Not D-125-B.** ⚠ **Not a restitch
+> run of the 27.** ⚠ **Not F-004 ingest.** ⚠ **Seams are not scientifically
+> solved.** Where this file and `docs/README.md` differ, THE LOG GOVERNS.
+> A-ship note: Kabsch lives in `core/hold48_kabsch.py` and feeds existing
+> `winning_tile` / `write_stitched`. The assembler is not replaced.
 
 **Parents:** [`D-117`](PLAN-ui-post-wave2-endstate.md) (PLAN / Kabsch park) ·
 [`D-118`](README.md) (assembler-not-Kabsch honesty) · [`D-120`](README.md)
@@ -61,8 +61,9 @@ in a different rigid frame.
 
 ## 2. Refuse (v1 defaults — named so tests can go red)
 
-These thresholds are **v1 defaults** for a later D-125-A test file. They
-are not a claim that any parent was measured against them in this PR.
+These thresholds are **v1 defaults**. D-125-A tests must be able to go
+red against them. They are not a claim that any parent was measured
+against them in this PR.
 
 | Condition | Threshold | Effect |
 |---|---|---|
@@ -109,12 +110,13 @@ closed-out parent count.
 
 Parent PLAN: [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md)
 (**D-117**). §5 was the Kabsch park. This Spec is the `D-NNN` that park
-pointed at. It does **not** pre-authorise D-125-A/B code, a restitch run,
-or rental.
+pointed at. D-125-A is the Emma GO that implements §1–§3 and §5 as
+code. It does **not** pre-authorise D-125-B UI, a live restitch run of
+the 27, or rental.
 
 ---
 
-## 5. Artifact dirs + provenance (document only — not created here)
+## 5. Artifact dirs + provenance (D-125-A writes the sibling tree)
 
 Assembler `write_stitched` already writes, beside an ops `out_dir`:
 `stitched.pdb`, `stitched_plddt.json`, `stitched_pae.json`, `tileN.pdb`,
@@ -122,7 +124,7 @@ Assembler `write_stitched` already writes, beside an ops `out_dir`:
 served path. **Do not overwrite them in a Kabsch BUILD until a later GO
 names the swap.**
 
-A later A/B BUILD writes a **sibling tree**, outside the git repo (GUIDE:
+D-125-A writes a **sibling tree**, outside the git repo (GUIDE:
 do not `git add` `*.pdb` / PAE binaries):
 
 ```
@@ -176,12 +178,13 @@ Until B ships, the UI must not imply a Kabsch path exists.
 
 | Id | What | This PR? | Gate |
 |---|---|---|---|
-| **D-125 Spec** | This file + `### D-125` + ship index + PLAN one-liner | **Yes — docs only** | Trinity review. Do not merge from the implementing agent. |
-| **D-125-A** | Core: overlap Cα Kabsch + §2 refuse + transform tile + call existing `winning_tile` stitch. No UI. | **No** | Waits until **D-124 A+B** (ADC-C) is on `main`. Emma GO. |
-| **D-125-B** | Persist §5 sibling tree + UI dual-path honesty (§6). | **No** | After A. Emma GO. |
+| **D-125 Spec** | This file + `### D-125` + ship index + PLAN one-liner | Already on `main` (`fbe8978` / #234) | Trinity reviewed. |
+| **D-125-A** | Core: overlap Cα Kabsch + §2 refuse + transform tile + call existing `winning_tile` stitch. No UI. Sibling §5 tree. CLI limited to the 27. | **Yes — this PR** | Emma GO after D-124 A+B on `main` (`57f429d`). Draft; do not merge from the implementing agent. |
+| **D-125-B** | UI dual-path honesty (§6). | **No** | After A. Emma GO. |
 
-**Out of this Spec PR:** any `.py` stitch change, any UI, any restitch
-run, F-004 ingest, ADC-C / pipeline / `/adcs` bleed, rent / GPU / RunPod.
+**Out of this A PR:** D-125-B UI, a live restitch run of the 27, F-004
+ingest, ADC-C / pipeline / `/adcs` bleed, rent / GPU / RunPod, replacing
+`winning_tile`, claiming seams solved.
 
 ---
 
