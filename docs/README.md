@@ -34,13 +34,21 @@
 >   solved. **D-125** is the Kabsch restitch Spec
 >   ([`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)). **D-125-A** already
 >   shipped the core BUILD on `main` (`26a40a8` / #237): overlap Cα Kabsch →
->   transform tile → existing `winning_tile`. **D-125-B** (this PR) is **UI
->   dual-path honesty only**. ⚠ **Not a restitch run of the 27.**
+>   transform tile → existing `winning_tile`. **D-125-B** already shipped
+>   UI dual-path honesty on `main` (`aa8d3f1` / #238). **D-126** is the
+>   overlap-confidence Kabsch Spec
+>   ([`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md))
+>   — docs only; A/B later. Production dual-path (D-125 Kabsch + assembler)
+>   stays. ⚠ **Not a restitch run of the 27.**
 >   ⚠ **Seams are not scientifically solved.**
 > - [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) — Kabsch on overlap Cα →
 >   transform tile → existing `winning_tile` stitch. D-125-A implements
 >   that Spec; it does not replace the assembler. D-125-B names both
 >   paths when A's sibling tree is on disk. ⚠ **Not F-004 ingest.**
+> - [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md) —
+>   overlap-confidence Kabsch (trimmed + pLDDT-weighted) → existing
+>   `winning_tile`. Docs Spec only (**D-126**). Does not overwrite
+>   assembler or D-125 `kabsch/{id}/`. ⚠ **10.0 Å gate stays.**
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**) plus a
 >   D-125-B addendum (what Kabsch does / does not). Additive MethodNote
@@ -51,9 +59,10 @@
 >   `main` (`57f429d` / #236). **D-125 ships** the Kabsch restitch Spec
 >   (already on `main`, `fbe8978` / #234) **and D-125-A** (already on
 >   `main`, `26a40a8` / #237: core Kabsch + refuse + feed `winning_tile`;
->   sibling `kabsch/{parent}/` tree). **D-125-B** (this PR) is **UI
->   dual-path honesty only** — A already writes the sibling tree; B does
->   not re-implement persist. **D-121 ships** the
+>   sibling `kabsch/{parent}/` tree). **D-125-B** already shipped UI
+>   dual-path honesty on `main` (`aa8d3f1` / #238). **D-126 ships** the
+>   overlap-confidence Kabsch Spec (this PR; docs only). D-126-A / D-126-B
+>   are later. **D-121 ships** the
 >   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
 >   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
@@ -176,6 +185,195 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-126 — Overlap-confidence Kabsch Spec: trimmed + pLDDT-weighted fit, then existing winning_tile (docs only)
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the overlap-confidence Kabsch SPEC GO** (Trinity
+  Architect ship id **D-126**, Emma GO; this PR). Architect: Trinity.
+  Builder coordinator: Kaylee.
+  ⚠ **Docs Spec only.** ⚠ **Not D-126-A** (core BUILD — later Emma GO).
+  ⚠ **Not D-126-B** (UI triple-path honesty — later Emma GO).
+  ⚠ **Does not replace `winning_tile`.** Weighted / trimmed Kabsch is a
+  pre-stitch rigid transform; the assembler stays callable.
+  ⚠ **Does not overwrite D-125** `core/hold48_kabsch.py` or
+  `kabsch/{id}/`. Production dual-path (**22** Kabsch / **5** assembler)
+  stays until D-126 code + ops.
+  ⚠ **Not a restitch run of the 27.** ⚠ **Not F-004 ingest.**
+  ⚠ **Not ADC-C.** ⚠ **No rent / GPU / RunPod.**
+  ⚠ **Seams are not scientifically solved.**
+  ⚠ **The 10.0 Å refuse gate STAYS.** Trim / weight change the fit set,
+  not the gate. Writing this Spec is not a threshold-as-fix and not a
+  named-exclusion-as-fix.
+- **Ruled by:** Trinity Architect binding 2026-09-05 — Spec =
+  overlap-confidence Kabsch on overlap Cα → existing `winning_tile`;
+  refuse v1 defaults stay at **10.0 Å** so later A tests can go red;
+  primary inventory is the five D-125 REFUSE parents; CLI still re-runs
+  all 27. Emma GO this session: docs Spec only; implementing agent
+  does not merge. Parents: D-125 Spec + D-125-A `26a40a8` / #237 +
+  D-125-B `aa8d3f1` / #238 + D-117 / D-118 / D-120 / D-121.
+- **Cite:** D-125 Spec
+  ([`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)) · D-125-A
+  `26a40a8` / #237 · D-125-B `aa8d3f1` / #238 · D-117 PLAN / Kabsch
+  park · D-118 assembler-not-Kabsch honesty · D-120 Phase 2 review of
+  the 27 · D-121 Method (assembler ≠ Kabsch *today*) · D-111
+  `winning_tile` / overlap-pLDDT stitch · D-116 `stitch_readiness` ·
+  D-109 ruling 7 (not ranking-eligible) · D-016 · primary five REFUSE
+  **2939** `Q7Z408`, **3272** `Q6V0I7`, **3368** `Q5SZK8`, **3394**
+  `Q8TDW7`, **3432** `Q8IZF6` (ops unweighted RMSDs **11.45–29.54 Å**;
+  Emma summary / Kaylee seams; not re-measured here) · IGF2R **3356**
+  out · ship index [`decisions.md`](decisions.md) · Spec
+  [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md)
+- **Relates:** `D-125` · `D-125-A` · `D-125-B` · `D-121` · `D-120` ·
+  `D-118` · `D-117` · `D-116` · `D-111` · `D-109` ruling 7
+- **Does not amend:** D-111 geometry · D-116 gate · today's stitch
+  algorithm · D-125 `hold48_kabsch.py` · D-118 census identity · D-120
+  `assembly_review` · D-121 Method copy · D-122 `/adcs` · D-123
+  `/about` · D-124 ADC-C · F-004 / ranking set · the `D-` next-free
+  pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
+  `D-110` while later numbers are written). This entry spends `D-126`;
+  the pointer stays the owner's.
+
+#### Context
+
+D-125 named unweighted Kabsch on overlap Cα → existing `winning_tile`.
+D-125-A implemented that path (`26a40a8`). D-125-B named both paths
+(`aa8d3f1`). Ops then measured five seams above the 10.0 Å gate (Emma
+summary / Kaylee seams; range 11.45–29.54 Å). Production is a dual-path
+of **22** D-125 Kabsch accepts and **5** assembler-only refuses. The
+park is still true of **D-126 code**. What was missing is the Spec a
+later Emma BUILD can fail against without raising the gate, skipping
+the five by name, or inventing a holoprotein.
+
+Weighting by \(\min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)\) and trimming
+high-residual overlap Cα change the **fit set**. They do not change
+the refuse **gate**. Replacing the assembler, overwriting D-125
+`kabsch/{id}/`, or treating a Spec as a scientific fix would hide
+which tile won each residue and would pretend the network jointly
+placed the chain.
+
+#### Decision
+
+1. **Spec lives in
+   [`docs/SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md).**
+   Algorithm: overlap-confidence Kabsch (pLDDT-weighted + residual
+   trim) on overlap Cα → transform the moving tile → feed the existing
+   `winning_tile` / `write_stitched` path. Same adjacency /
+   `stitch_readiness` / prefer-lower-dups **3673/3674/3675** as D-125.
+   Off-block PAE stays null, never 0. No invented gap coordinates.
+2. **Refuse v1 defaults (10.0 Å STAYS):** overlap effective Cα after
+   weight / trim / floor **`< 3`** → `overlap_ca_lt_3`; final weighted
+   RMSD **`> 10.0 Å`** → `rmsd_gt_10`; singular / rank `< 2` →
+   `singular_covariance`. Fail closed. Assembler + D-125
+   `kabsch/{id}/` are not overwritten by a refuse.
+3. **Primary inventory is the five REFUSE, not a new census.** Parent
+   job ids **2939** `Q7Z408`, **3272** `Q6V0I7`, **3368** `Q5SZK8`,
+   **3394** `Q8TDW7`, **3432** `Q8IZF6`. CLI must also re-run all **27**
+   for comparable counts. IGF2R **3356** is out. Outside F-004. ⚠ **Not
+   re-queried on Fly.** Do not invent science.
+4. **PLAN pointer.** D-117 / [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md)
+   §5 Kabsch park → **D-125**; this Spec is the overlap-confidence
+   follow-on. The plan does not become a BUILD GO.
+5. **Artifact dirs are a third sibling tree, never an overwrite.**
+   D-126-A (later) writes `<ops out_dir>/confidence_kabsch/{parent_job_id}/`
+   (`provenance.json`, `seams.jsonl` with `n_ca`, `n_ca_eff`,
+   `rmsd_angstrom`, `trim_rounds`, `refuse_reason`,
+   `algorithm=overlap_confidence_kabsch_then_winning_tile`,
+   `decision=D-126`). Do not overwrite assembler `stitched.pdb` or
+   D-125 `kabsch/{id}/`.
+6. **UI triple-path honesty is specified, not built.** Assembler
+   remains the default served PDB until a Matt swap GO. D-126-B (later)
+   must *name* three paths — disclose `n_ca` / `n_ca_eff` / RMSD /
+   `trim_rounds` / `refuse_reason`. Forbidden: “aligned,”
+   “superimposed,” “seams solved,” “full-length AF-quality.” No
+   invented RMSD. No F-004 ingest. This Spec PR does not touch UI.
+7. **PR split.** This PR is Spec only. **D-126-A** (core weighted +
+   trimmed Kabsch + refuse + feed `winning_tile`; no UI; no rent) and
+   **D-126-B** (triple-path UI) are later Emma GOs.
+8. **Hard stops.** No threshold Spec-as-fix. No named-exclusion-as-fix.
+   No invented coordinates. No PAE zeros. No F-004. No rent in A.
+   Never seams solved. Keep assembler + D-125 Kabsch callable. No
+   stitch code and no `hold48_kabsch.py` edit in this PR.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 /
+D-111). D-125 Kabsch is already a rigid transform of those
+already-emitted coordinates. Overlap-confidence Kabsch still is: it
+reweights and trims the **same** overlap Cα using the network's own
+pLDDT, then applies one rigid \(R, t\). It is not a new network and
+not a jointly placed holoprotein. A Spec that raised the 10.0 Å gate,
+skipped the five by name, replaced `winning_tile`, or called a refused
+seam “solved” would attribute to ESMFold a superimposed structure the
+model never produced — or a repair nobody measured. Fail-closed
+thresholds (`n_eff < 3`, weighted RMSD `> 10.0 Å`, degenerate
+covariance) exist so a later BUILD cannot invent a pose when the
+overlap is too thin, too far, or collinear. Neutral to the weights;
+load-bearing for whether a later restitch is still an assembly of the
+network's passes.
+
+#### Provenance (D-016)
+
+- **Primary five REFUSE + accessions:** task brief 2026-09-05 (this
+  session) naming Emma summary / Kaylee seams. Ids **2939 / 3272 /
+  3368 / 3394 / 3432**; accessions **Q7Z408 / Q6V0I7 / Q5SZK8 /
+  Q8TDW7 / Q8IZF6**. Ops unweighted RMSD range **11.45–29.54 Å** from
+  that same Emma / Kaylee summary. ⚠ **Not re-measured in this PR.**
+  ⚠ **Not a per-parent headline.**
+- **Production dual-path 22 Kabsch / 5 assembler:** same Emma / Kaylee
+  ops summary. Implied by 27 − 5 refuse. ⚠ **Not re-counted against
+  Fly or the sibling tree in this PR.**
+- **27 parent ids:** D-117 / D-118 / D-120 / D-125 /
+  `app/reads.py` `WAVE1_WAVE2_STITCHED_PARENT_IDS`. ⚠ **Not re-queried
+  against Fly.**
+- **Assembler + D-125 Kabsch stay callable:** `core/hold48_stitch.py`
+  `winning_tile`; `core/hold48_kabsch.py` (`26a40a8` / #237). This PR
+  does not edit either file.
+- **IGF2R 3356 out / seam ~88.76 Å:** D-117 / D-118 / D-120 / D-125.
+  A join-jump disclosure, **not** a Kabsch RMSD. ⚠ **Not re-measured.**
+- **Refuse defaults `< 3` / `> 10.0 Å` / singular covariance:** D-125
+  Spec + Trinity binding 2026-09-05 (this session): the gate **stays**.
+  Trim / weight are fit-set changes, not a new threshold.
+- **D-126 tip this PR starts from:** `origin/main` `aa8d3f1`
+  (`git rev-parse origin/main` after `git fetch origin main`,
+  2026-09-05).
+
+#### Consequences
+
+- Tests that must be able to go red **in this Spec PR:** `### D-126 —`
+  exists in this log;
+  [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md)
+  exists and names the algorithm
+  (`overlap_confidence_kabsch_then_winning_tile`), the 10.0 Å refuse
+  gate, and the five ids; `decisions.md` distinguishes Spec vs future
+  A/B BUILD; hard stops are written; this PR is **not** D-126-A / D-126-B;
+  `core/hold48_kabsch.py` is not edited; assembler + D-125 Kabsch stay
+  callable; no “seams solved” claim in the Spec.
+- Tests that must be able to go red **in a later A BUILD (not this PR):**
+  weighted fit; trim loop; refuse table (10.0 Å stays); no overwrite of
+  assembler or D-125 `kabsch/` tree. Test plan **T-1102**–**T-1105**.
+- `ARCHITECTURE.md` records that the D-126 Spec exists and that D-125
+  Kabsch + assembler remain the production dual-path.
+- D-126-A/B, F-004 ingest, remaining tileable / mucins, and rental
+  remain later GOs.
+
+#### Assumptions refused
+
+- That writing this Spec licenses calling seams solved or the chain
+  one forward pass.
+- That the 10.0 Å gate may move because five parents refused (no
+  threshold Spec-as-fix).
+- That naming the five is an algorithm that skips them (no
+  named-exclusion-as-fix).
+- That weighted Kabsch may replace `winning_tile` (it feeds it).
+- That this PR may edit `core/hold48_kabsch.py` or overwrite
+  `kabsch/{id}/` / assembler `stitched.pdb`.
+- That the 27 may enter `/scorer` (D-109 ruling 7).
+- That this PR may implement stitch code, UI, or a restitch run.
+- That this PR may rent a GPU or repair the `D-` next-free pointer.
+
+---
 
 ### D-125-B — UI dual-path honesty: name assembler and Kabsch-path artifacts without colliding them
 
