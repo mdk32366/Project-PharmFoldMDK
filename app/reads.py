@@ -34,9 +34,23 @@ from typing import Any, Optional
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
 
+from core.hold48 import HOLD48_KIND_PARENT, HOLD48_KIND_TILE, is_mucin
 from core.manifest import ManifestRow, build_manifest, coverage
 from core.queue import FAILED
 from db.models import JobRecord, ProteinAnalysis, RankingResult, RankingRun, TargetScore
+
+# ⚠ D-118 / D-117 owner closeout. Spare tile *jobs* must never surface as a second protein.
+# Production numbering is not guaranteed to make job id == analysis id, so both are checked
+# wherever an id is in hand. Prefer the lower ids already chosen in ops.
+HOLD48_SPARE_TILE_IDS = frozenset({3693, 3695, 3696})
+HOLD48_PREFERRED_TILE_IDS = frozenset({3673, 3674, 3675})
+
+STRUCTURE_KIND_LABEL = {
+    "single-pass": "single-pass",
+    "assembled": "assembled (provisional)",
+    "tiles_only": "tiles only",
+    "mucin": "mucin — not folded",
+}
 
 # The paper's published Group B count (Kathad et al. 2024, D-040 / F-003). A SOURCE CONSTANT served
 # by the API so the surface derives it rather than typing it (D-062 Constraint-A). It never changes;
@@ -164,12 +178,31 @@ def get_structure_path(engine: Any, analysis_id: int) -> Optional[str]:
 
 
 def get_plddt_path(engine: Any, analysis_id: int) -> Optional[str]:
-    """The per-residue ``plddt.json`` beside the stored structure, derived from the absolute
-    ``pdb_path`` (never from client input). ``None`` when there is no structure to sit beside."""
+    """The per-residue pLDDT array beside the stored structure, derived from the absolute
+    ``pdb_path`` (never from client input). ``None`` when there is no structure to sit beside.
+
+    ⚠ D-118: ``write_stitched`` writes ``stitched_plddt.json`` next to ``stitched.pdb``.
+    Looking only for ``plddt.json`` 404s an assembled parent and the viewer degrades.
+    The path is still a sibling of the stored PDB — no client value reaches the filesystem.
+    """
     pdb_path = get_structure_path(engine, analysis_id)
     if not pdb_path:
         return None
-    return str(Path(pdb_path).parent / "plddt.json")
+    parent = Path(pdb_path).parent
+    name = Path(pdb_path).name
+    stitched = parent / "stitched_plddt.json"
+    classic = parent / "plddt.json"
+    if name == "stitched.pdb":
+        if stitched.is_file():
+            return str(stitched)
+        if classic.is_file():
+            return str(classic)
+        return str(stitched)
+    if classic.is_file():
+        return str(classic)
+    if stitched.is_file():
+        return str(stitched)
+    return str(classic)
 
 
 # ── coverage (D-038): the manifest is the source of 82, the DB is the fold join ─
@@ -508,6 +541,120 @@ def _surface_payload(accession: str, gene: str | None) -> dict[str, Any] | None:
         return None
 
 
+def _hold48_kind(row: ProteinAnalysis) -> Optional[str]:
+    return (row.meta or {}).get("hold48_kind")
+
+
+def is_census_tile_row(row: ProteinAnalysis) -> bool:
+    """A tile is a window, not a protein (D-118)."""
+    m = row.meta or {}
+    if m.get("hold48_kind") == HOLD48_KIND_TILE:
+        return True
+    return m.get("parent_job_id") is not None and m.get("tile_start") is not None
+
+
+def is_census_parent_row(row: ProteinAnalysis) -> bool:
+    return _hold48_kind(row) == HOLD48_KIND_PARENT
+
+
+def _is_spare_tile(row: ProteinAnalysis) -> bool:
+    if row.id in HOLD48_SPARE_TILE_IDS:
+        return True
+    return (row.meta or {}).get("parent_job_id") in HOLD48_SPARE_TILE_IDS
+
+
+def choose_census_representative(
+    group: list[ProteinAnalysis],
+) -> Optional[tuple[ProteinAnalysis, str]]:
+    """One analysis per accession. Never a tile as the protein. Prefer assembled parent.
+
+    Spare tile ids 3693/3695/3696 never win. When a tile is the only complete cover
+    (tiles-only parent), the *parent* row is returned, not the tile.
+    """
+    if not group:
+        return None
+    tiles = [r for r in group if is_census_tile_row(r)]
+    parents = [r for r in group if is_census_parent_row(r)]
+    usable_tiles = [r for r in tiles if r.pdb_path and not _is_spare_tile(r)]
+    if not usable_tiles:
+        # last resort: a spare may be the only complete cover — still return the PARENT
+        usable_tiles = [r for r in tiles if r.pdb_path]
+    assembled = [r for r in parents if r.pdb_path]
+    if assembled:
+        return min(assembled, key=lambda r: r.id), "assembled"
+    if parents and usable_tiles:
+        return min(parents, key=lambda r: r.id), "tiles_only"
+    mucin_rows = [
+        r for r in group
+        if (_hold48_kind(r) == "mucin" or is_mucin(r.input_value)) and not is_census_tile_row(r)
+    ]
+    non_tile_folded = [r for r in group if r.pdb_path and not is_census_tile_row(r)]
+    if mucin_rows and not non_tile_folded:
+        return min(mucin_rows, key=lambda r: r.id), "mucin"
+    ordinary = [r for r in non_tile_folded if not is_census_parent_row(r)]
+    if ordinary:
+        return min(ordinary, key=lambda r: r.id), "single-pass"
+    if non_tile_folded:
+        row = min(non_tile_folded, key=lambda r: r.id)
+        return row, "assembled" if is_census_parent_row(row) else "single-pass"
+    return None
+
+
+def apply_structure_kind(proj: dict[str, Any], row: ProteinAnalysis, kind: str) -> dict[str, Any]:
+    """Stamp the D-118 identity fields. Tiles-only / mucin are not folded proteins."""
+    proj["hold48_kind"] = _hold48_kind(row)
+    proj["structure_kind"] = kind
+    proj["structure_kind_label"] = STRUCTURE_KIND_LABEL[kind]
+    if kind == "assembled":
+        proj["folded"] = True
+        proj["assembler_note"] = (
+            "assembled by pLDDT overlap, not superimposed; seam not solved"
+        )
+    elif kind == "single-pass":
+        proj["folded"] = True
+    elif kind == "tiles_only":
+        proj["folded"] = False
+        proj["mean_plddt"] = None
+        proj["not_folded_reason"] = "tiles_only"
+        proj["not_folded_copy"] = (
+            "tiles exist for this protein; they have not been assembled into a parent "
+            "structure. A tile window is not the ectodomain"
+        )
+        proj["profile_status"] = "not_folded"
+    elif kind == "mucin":
+        proj["folded"] = False
+        proj["mean_plddt"] = None
+        proj["not_folded_reason"] = "mucin_out_of_class"
+        proj["not_folded_copy"] = (
+            "mucin — out of class; never ESMFold (D-111). Not waiting on rented capacity"
+        )
+        proj["profile_status"] = "not_folded"
+    return proj
+
+
+def canonical_census_analysis_id(engine: Any, analysis_id: int) -> Optional[int]:
+    """Map a census analysis id to the protein representative (D-118).
+
+    A missing id is returned unchanged so the caller 404s as unknown.
+    A tile with no parent returns ``None`` — never serve the tile as the protein.
+    """
+    with Session(engine) as session:
+        row = session.get(ProteinAnalysis, analysis_id)
+        if row is None or row.cohort_tranche == COHORT_TRANCHE:
+            return analysis_id
+        if not is_census_tile_row(row):
+            return analysis_id
+        siblings = session.scalars(
+            select(ProteinAnalysis)
+            .where(ProteinAnalysis.input_value == row.input_value)
+            .where(ProteinAnalysis.cohort_tranche > COHORT_TRANCHE)
+        ).all()
+    picked = choose_census_representative(list(siblings))
+    if picked is None or is_census_tile_row(picked[0]):
+        return None
+    return picked[0].id
+
+
 def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
     """One census row for the list. ⚠ Carries NO score and no rank — D-079 decision 1."""
     ctx = _census_context()
@@ -547,6 +694,7 @@ def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
         "discarded_aa": int(seg["discarded_aa"]) if seg.get("discarded_aa") else None,
         "segments": seg.get("segments") or None,
         "span_definition": meta.get("span_definition"),
+        "hold48_kind": meta.get("hold48_kind"),
         # ⚠⚠ NOT a score and never sortable as one. Stated on every row so no consumer has to
         # remember the bar.
         "scored": False,
@@ -579,15 +727,20 @@ def census_summary(engine: Any) -> dict[str, Any]:
         "folded": len(folded),
         "max_mean_plddt": max(plddts) if plddts else None,
         "keys": {
-            "manifest_rows": "every census manifest row, folded or not (D-087)",
-            "folded": "census rows carrying a structure and a mean pLDDT",
-            "max_mean_plddt": "the highest mean pLDDT among those folds",
+            "manifest_rows": "every census protein row after D-118 identity (one per accession), folded or not (D-087)",
+            "folded": ("census proteins with a parent or single-pass structure and a mean pLDDT "
+                       "(tile windows are not proteins; D-118)"),
+            "max_mean_plddt": "the highest mean pLDDT among those parent/single-pass folds",
         },
     }
 
 
 def list_census(engine: Any) -> list[dict[str, Any]]:
-    """Every FOLDED census row. ⚠ `!= COHORT_TRANCHE` — the cohort is served by `list_analyses`."""
+    """Every census *protein* — one row per accession (D-118).
+
+    ⚠ A tile is a window, not a protein. ``pdb_path`` on a ``hold48_kind=tile`` row must not
+    mint a second census protein with the parent accession.
+    """
     with Session(engine) as session:
         rows = session.scalars(
             select(ProteinAnalysis)
@@ -597,10 +750,21 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
             # three-valued logic. An untagged row must not vanish; `census_untranched_count` exists
             # so it is COUNTED rather than quietly dropped.
             .where(ProteinAnalysis.cohort_tranche > COHORT_TRANCHE)
-            .where(ProteinAnalysis.pdb_path.isnot(None))
             .order_by(ProteinAnalysis.input_value)          # ⚠ accession, a neutral default
         ).all()
-    out = [census_projection(r) for r in rows]
+    by_acc: dict[str, list[ProteinAnalysis]] = {}
+    for r in rows:
+        by_acc.setdefault(r.input_value, []).append(r)
+    out: list[dict[str, Any]] = []
+    represented: set[str] = set()
+    for acc, group in by_acc.items():
+        picked = choose_census_representative(group)
+        if picked is None:
+            continue
+        row, kind = picked
+        proj = apply_structure_kind(census_projection(row), row, kind)
+        out.append(proj)
+        represented.add(acc)
 
     # ⚠⚠ THE STAINING LENSES (D-102). Attached here rather than in `census_projection` because it
     # needs the database and the projection is a pure shape over one row.
@@ -617,7 +781,6 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
         stain = {}
     for row in out:
         row["staining"] = stain.get(row.get("gene")) if row.get("gene") else None
-        row["folded"] = True
 
     # ⚠⚠ THE NEVER-FOLDED ROWS JOIN THE LIST — owner ruling, 2026-08-20. Searching `HER2` returned
     # "no protein matches"; HER2 is in the manifest and was never folded, and a reader should not
@@ -631,9 +794,12 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
     # ⚠ A degradation that removes 777 rows is not a degradation, it is the original defect
     # restored by an exception handler. The list survives without the enrichment; it must never
     # survive without the rows.
+    # ⚠ D-118: skip accessions already represented (assembled / tiles-only / mucin-in-DB).
+    # The v1 features artifact has zero tranche-5 lines, so the 48 hold parents would otherwise
+    # appear as NOT FOLDED *and* as a folded/tiled row.
     try:
         from core.census_unfolded import unfolded_rows
-        unfolded = [dict(r) for r in unfolded_rows()]
+        unfolded = [dict(r) for r in unfolded_rows() if r.get("accession") not in represented]
     except Exception:                      # noqa: BLE001
         unfolded = []                      # ⚠ only a missing MANIFEST can empty this
     out.extend(unfolded)
@@ -642,6 +808,7 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
             _attach_cohort_fold(engine, unfolded)
         except Exception:                  # noqa: BLE001
             pass                           # ⚠ enrichment is optional; the rows are not
+    out.sort(key=lambda r: r.get("accession") or "")
     return out
 
 
@@ -748,9 +915,14 @@ def resolve_census_accession(engine: Any, accession: str) -> tuple[Optional[int]
     if not rows:
         return None, "unknown"
     # ⚠ census first — an accession can exist in both populations, and this route serves one of them
-    for r in rows:
-        if r.cohort_tranche is not None and r.cohort_tranche > COHORT_TRANCHE and r.pdb_path:
-            return r.id, "census"
+    # ⚠ D-118: prefer the parent / assembled representative, never an arbitrary tile.
+    census = [
+        r for r in rows
+        if r.cohort_tranche is not None and r.cohort_tranche > COHORT_TRANCHE
+    ]
+    picked = choose_census_representative(census)
+    if picked is not None and not is_census_tile_row(picked[0]):
+        return picked[0].id, "census"
     return None, "cohort" if any(r.cohort_tranche == COHORT_TRANCHE for r in rows) else "unknown"
 
 
@@ -783,7 +955,21 @@ def get_census_detail(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]
         row = session.get(ProteinAnalysis, analysis_id)
         if row is None or row.cohort_tranche == COHORT_TRANCHE:
             return None
-        out = census_projection(row)
+        # ⚠ D-118: a tile id is not a protein. The route remaps first; if we still have a
+        # tile here, refuse rather than render a 1,656-aa window as the ectodomain.
+        if is_census_tile_row(row):
+            return None
+        siblings = session.scalars(
+            select(ProteinAnalysis)
+            .where(ProteinAnalysis.input_value == row.input_value)
+            .where(ProteinAnalysis.cohort_tranche > COHORT_TRANCHE)
+        ).all()
+        picked = choose_census_representative(list(siblings))
+        kind = picked[1] if picked and picked[0].id == row.id else (
+            "assembled" if is_census_parent_row(row) and row.pdb_path
+            else "single-pass" if row.pdb_path else "tiles_only"
+        )
+        out = apply_structure_kind(census_projection(row), row, kind)
         out["sequence"] = (row.meta or {}).get("sequence")
         out["fold_provenance"] = (row.meta or {}).get("fold_provenance")
         out["structure_source"] = row.structure_source

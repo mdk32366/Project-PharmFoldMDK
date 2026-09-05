@@ -23,18 +23,25 @@ import functools
 import json
 import pathlib
 
+from core.hold48 import MUCIN_ACCESSIONS
+
 MANIFEST = pathlib.Path("data/census/census_manifest.v7.csv")
 FEATURES = pathlib.Path("data/census/census_features.v1.jsonl")
 LABELS = pathlib.Path("data/census/census_labels.csv")
 
 #: ⚠ Plain English, because the surface is read by people who do not know what a tier is.
 REASON_COPY = {
+    # ⚠ D-118: rental for the hold-48 remainder closed 2026-09-05 PT (pod Terminated).
+    # "waiting on rented capacity" is a live-queue claim and is forbidden here.
     "above_local_ceiling": ("not folded — its extracellular stretch is longer than the local "
-                            "graphics card can fold, so it is waiting on rented capacity"),
+                            "graphics card can fold. Rental for the hold-48 remainder closed "
+                            "2026-09-05 (pod Terminated); this is not waiting on rented capacity"),
     "ceiling_unmeasured": ("not folded — it sits in a size band nobody has tested yet, so it is "
                            "not known to be too large, only untried"),
     "reason_unrecorded": ("not folded — and ⚠ nothing records why. It was assigned to the local "
                           "tier and should have folded"),
+    "mucin_out_of_class": ("mucin — out of class; never ESMFold (D-111). "
+                           "Not waiting on rented capacity"),
 }
 
 
@@ -82,7 +89,8 @@ def unfolded_rows() -> list[dict]:
             if acc in folded:
                 continue
             lab = labels.get(acc, {})
-            cause = _reason(r.get("tier_reason", ""))
+            cause = ("mucin_out_of_class" if acc in MUCIN_ACCESSIONS
+                     else _reason(r.get("tier_reason", "")))
             out.append({
                 # ⚠ NO `id`: there is no analysis row, so there is nothing to link to. The surface
                 # renders these unlinked rather than inventing a route that would 404.
@@ -97,6 +105,9 @@ def unfolded_rows() -> list[dict]:
                 "folded": False,
                 "not_folded_reason": cause,
                 "not_folded_copy": REASON_COPY[cause],
+                "structure_kind": "mucin" if cause == "mucin_out_of_class" else None,
+                "structure_kind_label": (
+                    "mucin — not folded" if cause == "mucin_out_of_class" else None),
                 # ⚠ Everything measured FROM a fold is absent, and absent as a category — never 0,
                 # never "unknown". There is no structure, so there is no confidence and no profile.
                 "mean_plddt": None,

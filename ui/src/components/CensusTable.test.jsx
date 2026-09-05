@@ -31,8 +31,8 @@ describe('CensusTable', () => {
   it('links each accession to its own page, not an onClick handler', () => {
     render(<CensusTable rows={ROWS} />)
     // ⚠ href, not a click handler: openable in a new tab, shareable, back-button reachable.
-    expect(screen.getByRole('link', { name: 'Q9UHC9' })).toHaveAttribute('href', '/census/1')
-    expect(screen.getByRole('link', { name: 'A0AVI2' })).toHaveAttribute('href', '/census/2')
+    expect(screen.getByRole('link', { name: 'Q9UHC9' })).toHaveAttribute('href', '/census/Q9UHC9')
+    expect(screen.getByRole('link', { name: 'A0AVI2' })).toHaveAttribute('href', '/census/A0AVI2')
   })
 
   it('searches accession, gene and protein name', () => {

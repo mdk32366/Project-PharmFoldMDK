@@ -333,6 +333,8 @@ A later Kabsch GO is its own `D-NNN`. This plan does not pre-authorise it.
 
 **Goal:** a reviewer cannot mistake a tile for a protein or a closed rental for an open one.
 
+⚠ **D-118 is the BUILD GO for this phase's P0 items only.** Kabsch stays parked.
+
 1. Read-API projection: `hold48_kind`, parent/tile/assembled/mucin; `list_census` **one row per accession**.
 2. `resolve_census_accession` prefers parent, never an arbitrary tile.
 3. `census_summary` uses the same projection.

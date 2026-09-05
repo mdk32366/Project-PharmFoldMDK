@@ -1,15 +1,39 @@
 # Renting hold-48 — RTX PRO 6000 Blackwell runbook
 
-**For:** the owner, folding D-111 tiles on a rented Blackwell card. **Decision:** `D-113`, amended by `D-114`.
-**Cite:** D-111 · D-112 · D-113 · D-114 · D-115 · vault **D-0036** (amended; external, not repo D-036) · issue **#210** · PR **#213**.
+> ## ⚠ CLOSED — do not Deploy a card
+>
+> **Hold-48 rental E2E closed 2026-09-05 PT.** The pod is **Terminated**. **Do not Deploy.
+> Do not emit. Do not rent a clean card.** This file is no longer the live operator path.
+> Phase 1 UI honesty is **D-118** / [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md).
+> Kabsch / restitch remains **PARKED**.
+>
+> **Review (owner-verified 2026-09-05 PT; not re-queried on Fly here):** Wave2 stitch
+> 17/17 PASS (batch). **27 unique** stitched parents = Wave1 PASS **10** + Wave2 PASS **17**.
+> First parent **2817** `Q9P273` tiles=`[3673,3630]`. Prefer lower dup ids **3673/3674/3675**;
+> spares **3693/3695/3696** unused. Assembler-only (pLDDT overlap, not Kabsch); IGF2R seam
+> ≈ 88.76 Å is a measured caveat, not solved. `stitch_readiness` before any re-stitch.
+> RunPod remaining ~$10.25 (owner figure; re-glance before any new rent).
+>
+> Everything below the next heading is **historical** and must not be followed unless Matt
+> re-opens rental.
+
+**Decision:** `D-113`, amended by `D-114`; closeout / honesty **D-117** / **D-118**.
+**Cite:** D-111 · D-112 · D-113 · D-114 · D-115 · D-116 · D-117 · D-118 · vault **D-0036**
+(amended; external, not repo D-036) · issue **#210** · PR **#213**.
 
 **This is not a rewrite of** [`GUIDE-renting-the-a6000.md`](GUIDE-renting-the-a6000.md). That
-guide is the 2026-07 A6000 / `--bucket rental` path. Hold-48 emit, the D-112 import pin, the
-cu128 torch trio, and accession-requeue hazards are different scars. Use this file.
+guide is the 2026-07 A6000 / `--bucket rental` path.
 
 **Companion:** [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) (measured
-IGF2R-pilot walls, length→wall model, tier waves). [`RUNBOOK-rerun-5-targets.md`](RUNBOOK-rerun-5-targets.md)
-is the 5-target accession-requeue sequence — **do not follow its `--requeue P11717` line.**
+IGF2R-pilot walls — historical forecast). [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md)
+is the post-Wave2 UI plan.
+
+---
+
+## Historical — do not run unless Matt re-opens rental
+
+The Deploy / emit / Watch paste below produced the 2026-09-05 closeout. It is **not** the
+live path. A later session that needs to rent again waits on a new Matt GO.
 
 **This PR / this session does not enqueue jobs, does not touch Fly, and does not commit PDB/PAE
 binaries.**

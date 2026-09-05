@@ -328,10 +328,18 @@ export default function CensusTable({ rows, onSelect }) {
                       ⚠⚠ A NEVER-FOLDED row links by ACCESSION — it has no analysis id, and the
                       route resolves accessions since it was fixed. Rendering it unlinked would
                       make a dead end of the one row a reader most wants to click. */}
-                  <Link className="link" to={`/census/${r.id ?? r.accession}`}
+                  <Link className="link" to={`/census/${r.accession ?? r.id}`}
                         onClick={() => onSelect?.(r)}>
                     {r.accession}
                   </Link>
+                  {r.structure_kind_label && (
+                    <span
+                      className={`badge badge-kind badge-kind-${r.structure_kind || 'unknown'}`}
+                      title={r.assembler_note || undefined}
+                    >
+                      {r.structure_kind_label}
+                    </span>
+                  )}
                 </td>
                 <td>{r.gene ?? <span className="unknown">unknown</span>}</td>
                 <td>{r.label ?? <span className="unknown">unknown</span>}</td>

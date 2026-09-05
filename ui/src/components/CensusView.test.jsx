@@ -255,12 +255,16 @@ describe('D-094 amendment 1 — census figures carry their provenance', () => {
     expect(t).toContain('516')
   })
 
-  it('F2b: tranche 5 renders 728 complete and 48 held, with a non-empty cause', () => {
+  it('F2b: tranche 5 names the 2026-09-05 closeout, not 48 held', () => {
     const t = text()
     expect(t).toContain('728')
-    expect(t).toContain('48')
-    // the hold's cause must be named, not implied
-    expect(t).toMatch(/D-090|claim filter/)
+    expect(t).toMatch(/27 unique stitched parents/)
+    expect(t).toMatch(/Wave1 PASS 10/)
+    expect(t).toMatch(/Wave2 PASS 17/)
+    expect(t).toMatch(/pod Terminated/)
+    expect(t).toMatch(/2026-09-05/)
+    expect(t).not.toMatch(/48 held/)
+    expect(t).not.toMatch(/waiting on rented capacity/)
   })
 
   it('U4: a reader cannot read a census figure as current — the date sits WITH the figure', () => {
