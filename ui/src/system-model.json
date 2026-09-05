@@ -93,6 +93,18 @@
         ]
       },
       {
+        "path": "/api/adcs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/adcs/{adc_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
         "path": "/api/associations",
         "methods": [
           "GET"

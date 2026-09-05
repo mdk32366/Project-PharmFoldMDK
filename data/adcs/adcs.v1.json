@@ -1,0 +1,995 @@
+{
+  "catalog_id": {
+    "value": "adcs.v1",
+    "source": "D-119: this file is the v1 FDA-approved ADC catalog",
+    "as_of": "2026-09-05",
+    "confidence": "derived"
+  },
+  "schema_version": {
+    "value": "1",
+    "source": "D-119: schema version of data/adcs/adcs.v1.json",
+    "as_of": "2026-09-05",
+    "confidence": "derived"
+  },
+  "scope": {
+    "value": "fda_approved_only",
+    "source": "D-119 decision 1: currently marketed FDA-approved ADCs; pipeline/RTT = ADC-C",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "completeness": {
+    "value": "floor_not_census",
+    "source": "D-119 decision 6 / D-029: incompleteness is dated and detectable, not silently complete. Row count is a pin of this file on the reconciliation date, not a scientific constant.",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "approvals_reconciled_as_of": {
+    "value": "2026-09-05",
+    "source": "openFDA Drugs@FDA brand-name search for the 15 v1 brands + LUMOXITI (404), this session",
+    "as_of": "2026-09-05",
+    "confidence": "official"
+  },
+  "antigen_mapping_reviewed_as_of": {
+    "value": "2026-09-05",
+    "source": "D-119 human antigen/accession pass (in-repo files 2026-07-27 / 2026-08-01; IL3RA UniProt 2026-09-05)",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "emma_watch": {
+    "value": "documented_hook_not_built",
+    "source": "D-119 decision 6: weekly Drugs@FDA watch is Emma's ops lane. See data/adcs/README.md. Not a CI check (D-029: a live FDA query must not redden the gate).",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "named_exclusions": {
+    "value": [
+      {
+        "id": "lumoxiti",
+        "reason": "openFDA brand_name LUMOXITI returned 404 on 2026-09-05; withdrawn PE38 immunotoxin; not a v1 row"
+      },
+      {
+        "id": "pipeline_and_right_to_try",
+        "reason": "ADC-C; out of ADC-A scope"
+      },
+      {
+        "id": "ifinatamab-deruxtecan",
+        "reason": "not approved; data/adc_reference_mapping.csv records BLA Priority Review PDUFA 2026-10-10"
+      }
+    ],
+    "source": "D-119 named exclusions; Lumoxiti from openFDA 404 2026-09-05; ifinatamab from adc_reference_mapping.csv",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "adcs": [
+    {
+      "id": {
+        "value": "gemtuzumab-ozogamicin",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'GEMTUZUMAB OZOGAMICIN'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "gemtuzumab ozogamicin",
+        "source": "derived: Drugs@FDA active ingredient 'GEMTUZUMAB OZOGAMICIN'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "GEMTUZUMAB OZOGAMICIN",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"MYLOTARG\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "MYLOTARG",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"MYLOTARG\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761060",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"MYLOTARG\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2017-09-01",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"MYLOTARG\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2017-09-01)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"MYLOTARG\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "WYETH PHARMS INC",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"MYLOTARG\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "CD33",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — gemtuzumab ozogamicin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P20138",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — gemtuzumab ozogamicin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "brentuximab-vedotin",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'BRENTUXIMAB VEDOTIN'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "brentuximab vedotin",
+        "source": "derived: Drugs@FDA active ingredient 'BRENTUXIMAB VEDOTIN'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "BRENTUXIMAB VEDOTIN",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "ADCETRIS",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA125388",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2011-08-19",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2011-08-19)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "SEATTLE GENETICS",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "TNFRSF8",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — brentuximab vedotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P28908",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — brentuximab vedotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "ado-trastuzumab-emtansine",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'ADO-TRASTUZUMAB EMTANSINE'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "ado-trastuzumab emtansine",
+        "source": "derived: Drugs@FDA active ingredient 'ADO-TRASTUZUMAB EMTANSINE'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "ADO-TRASTUZUMAB EMTANSINE",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"KADCYLA\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "KADCYLA",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"KADCYLA\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA125427",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"KADCYLA\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2013-02-22",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"KADCYLA\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2013-02-22)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"KADCYLA\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "GENENTECH",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"KADCYLA\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "ERBB2",
+        "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — ado-trastuzumab emtansine row",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P04626",
+        "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — ado-trastuzumab emtansine row",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "inotuzumab-ozogamicin",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'INOTUZUMAB OZOGAMICIN'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "inotuzumab ozogamicin",
+        "source": "derived: Drugs@FDA active ingredient 'INOTUZUMAB OZOGAMICIN'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "INOTUZUMAB OZOGAMICIN",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BESPONSA\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "BESPONSA",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BESPONSA\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761040",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BESPONSA\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2017-08-17",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BESPONSA\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2017-08-17)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BESPONSA\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "WYETH PHARMS INC",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BESPONSA\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "CD22",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — inotuzumab ozogamicin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P20273",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — inotuzumab ozogamicin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "polatuzumab-vedotin",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'POLATUZUMAB VEDOTIN-PIIQ'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "polatuzumab vedotin",
+        "source": "derived: Drugs@FDA active ingredient 'POLATUZUMAB VEDOTIN-PIIQ'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "POLATUZUMAB VEDOTIN-PIIQ",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"POLIVY\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "POLIVY",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"POLIVY\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761121",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"POLIVY\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2019-06-10",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"POLIVY\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2019-06-10)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"POLIVY\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "GENENTECH",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"POLIVY\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "CD79B",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — polatuzumab vedotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P40259",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — polatuzumab vedotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "enfortumab-vedotin",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'ENFORTUMAB VEDOTIN-EJFV'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "enfortumab vedotin",
+        "source": "derived: Drugs@FDA active ingredient 'ENFORTUMAB VEDOTIN-EJFV'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "ENFORTUMAB VEDOTIN-EJFV",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"PADCEV\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "PADCEV",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"PADCEV\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761137",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"PADCEV\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2019-12-18",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"PADCEV\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2019-12-18)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"PADCEV\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "ASTELLAS",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"PADCEV\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "NECTIN4",
+        "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — enfortumab vedotin row",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "Q96NY8",
+        "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — enfortumab vedotin row",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "fam-trastuzumab-deruxtecan",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'FAM-TRASTUZUMAB DERUXTECAN-NXKI'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "fam-trastuzumab deruxtecan",
+        "source": "derived: Drugs@FDA active ingredient 'FAM-TRASTUZUMAB DERUXTECAN-NXKI'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "FAM-TRASTUZUMAB DERUXTECAN-NXKI",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ENHERTU\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "ENHERTU",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ENHERTU\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761139",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ENHERTU\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2019-12-20",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ENHERTU\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2019-12-20)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ENHERTU\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "DAIICHI SANKYO",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ENHERTU\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "ERBB2",
+        "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — trastuzumab deruxtecan row",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P04626",
+        "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — trastuzumab deruxtecan row",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "sacituzumab-govitecan",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'SACITUZUMAB GOVITECAN-HZIY'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "sacituzumab govitecan",
+        "source": "derived: Drugs@FDA active ingredient 'SACITUZUMAB GOVITECAN-HZIY'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "SACITUZUMAB GOVITECAN-HZIY",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TRODELVY\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "TRODELVY",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TRODELVY\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761115",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TRODELVY\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2020-04-22",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TRODELVY\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2020-04-22)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TRODELVY\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "IMMUNOMEDICS INC",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TRODELVY\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "TACSTD2",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — sacituzumab govitecan row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P09758",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — sacituzumab govitecan row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "belantamab-mafodotin",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'BELANTAMAB MAFODOTIN-BLMF'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "belantamab mafodotin",
+        "source": "derived: Drugs@FDA active ingredient 'BELANTAMAB MAFODOTIN-BLMF'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "BELANTAMAB MAFODOTIN-BLMF",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BLENREP\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "BLENREP",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BLENREP\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761440",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BLENREP\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2025-10-23",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BLENREP\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2025-10-23)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BLENREP\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "GLAXOSMITHKLINE LLC",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"BLENREP\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "TNFRSF17",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — belantamab mafodotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "Q02223",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — belantamab mafodotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "loncastuximab-tesirine",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'LONCASTUXIMAB TESIRINE-LPYL'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "loncastuximab tesirine",
+        "source": "derived: Drugs@FDA active ingredient 'LONCASTUXIMAB TESIRINE-LPYL'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "LONCASTUXIMAB TESIRINE-LPYL",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ZYNLONTA\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "ZYNLONTA",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ZYNLONTA\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761196",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ZYNLONTA\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2021-04-23",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ZYNLONTA\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2021-04-23)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ZYNLONTA\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "ADC Therapeutics SA",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ZYNLONTA\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "CD19",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — loncastuximab tesirine row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P15391",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — loncastuximab tesirine row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "tisotumab-vedotin",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'TISOTUMAB VEDOTIN-TFTV'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "tisotumab vedotin",
+        "source": "derived: Drugs@FDA active ingredient 'TISOTUMAB VEDOTIN-TFTV'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "TISOTUMAB VEDOTIN-TFTV",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TIVDAK\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "TIVDAK",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TIVDAK\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761208",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TIVDAK\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2021-09-20",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TIVDAK\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2021-09-20)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TIVDAK\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "SEAGEN",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"TIVDAK\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "F3",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — tisotumab vedotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P13726",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — tisotumab vedotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "mirvetuximab-soravtansine",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'MIRVETUXIMAB SORAVTANSINE-GYNX'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "mirvetuximab soravtansine",
+        "source": "derived: Drugs@FDA active ingredient 'MIRVETUXIMAB SORAVTANSINE-GYNX'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "MIRVETUXIMAB SORAVTANSINE-GYNX",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ELAHERE\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "ELAHERE",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ELAHERE\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761310",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ELAHERE\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2022-11-14",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ELAHERE\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2022-11-14)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ELAHERE\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "IMMUNOGEN INC",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"ELAHERE\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "FOLR1",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — mirvetuximab soravtansine row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P15328",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — mirvetuximab soravtansine row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "datopotamab-deruxtecan",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'DATOPOTAMAB DERUXTECAN-DLNK'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "datopotamab deruxtecan",
+        "source": "derived: Drugs@FDA active ingredient 'DATOPOTAMAB DERUXTECAN-DLNK'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "DATOPOTAMAB DERUXTECAN-DLNK",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "DATROWAY",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761394",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2025-01-17",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2025-01-17)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "DAIICHI SANKYO INC",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "TACSTD2",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — TACSTD2 accession from the sacituzumab govitecan row (same gene); antigen Trop-2 named on the FDA 2025-01-17 Datroway approval notification. Reviewed assignment, not a Drugs@FDA field (D-029 seam).",
+        "as_of": "2026-09-05",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P09758",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — TACSTD2 accession from the sacituzumab govitecan row (same gene); antigen Trop-2 named on the FDA 2025-01-17 Datroway approval notification. Reviewed assignment, not a Drugs@FDA field (D-029 seam).",
+        "as_of": "2026-09-05",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "telisotuzumab-vedotin",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'TELISOTUZUMAB VEDOTIN-TLLV'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "telisotuzumab vedotin",
+        "source": "derived: Drugs@FDA active ingredient 'TELISOTUZUMAB VEDOTIN-TLLV'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "TELISOTUZUMAB VEDOTIN-TLLV",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"EMRELIS\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "EMRELIS",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"EMRELIS\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761384",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"EMRELIS\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2025-05-14",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"EMRELIS\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2025-05-14)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"EMRELIS\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "ABBVIE INC",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"EMRELIS\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "MET",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — telisotuzumab vedotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P08581",
+        "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — telisotuzumab vedotin row",
+        "as_of": "2026-08-01",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "pivekimab-sunirine",
+        "source": "derived: lowercase hyphenated INN stem of Drugs@FDA active ingredient 'PIVEKIMAB SUNIRINE-PVZY'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "inn": {
+        "value": "pivekimab sunirine",
+        "source": "derived: Drugs@FDA active ingredient 'PIVEKIMAB SUNIRINE-PVZY'; FDA 4-letter proper-name suffix stripped when present",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "active_ingredient": {
+        "value": "PIVEKIMAB SUNIRINE-PVZY",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DECNUPAZ\" retrieved 2026-09-05; results[0].products[0].active_ingredients[0].name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "brand_name": {
+        "value": "DECNUPAZ",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DECNUPAZ\" retrieved 2026-09-05; results[0].products[0].brand_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "application_number": {
+        "value": "BLA761460",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DECNUPAZ\" retrieved 2026-09-05; results[0].application_number",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "current_application_approval_date": {
+        "value": "2026-05-27",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DECNUPAZ\" retrieved 2026-09-05; results[0].submissions[ORIG+AP].submission_status_date (YYYYMMDD → 2026-05-27)",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "marketing_status": {
+        "value": "Prescription",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DECNUPAZ\" retrieved 2026-09-05; results[0].products[0].marketing_status",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "sponsor": {
+        "value": "ABBVIE INC",
+        "source": "openFDA Drugs@FDA GET https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"DECNUPAZ\" retrieved 2026-09-05; results[0].sponsor_name",
+        "as_of": "2026-09-05",
+        "confidence": "official"
+      },
+      "antigen": {
+        "value": "IL3RA",
+        "source": "UniProt REST gene_exact:IL3RA AND organism_id:9606 AND reviewed:true retrieved 2026-09-05; primaryAccession=P26951; gene_primary=IL3RA. Antigen CD123/IL3RA is a reviewed assignment (D-029: Drugs@FDA has no antigen field).",
+        "as_of": "2026-09-05",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P26951",
+        "source": "UniProt REST gene_exact:IL3RA AND organism_id:9606 AND reviewed:true retrieved 2026-09-05; primaryAccession=P26951; gene_primary=IL3RA. Antigen CD123/IL3RA is a reviewed assignment (D-029: Drugs@FDA has no antigen field).",
+        "as_of": "2026-09-05",
+        "confidence": "reviewed"
+      }
+    }
+  ]
+}

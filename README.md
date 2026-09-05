@@ -73,6 +73,7 @@ python -m jupyter nbconvert --to notebook --execute --inplace \
 | `core/` | The pure logic: feature extractor, scorer, routing manifest, queue |
 | `worker/` | The GPU tier: the ESMFold fold-runner and job-pull loop (never deployed) |
 | `app/` | The Fly serving tier (FastAPI): the read API and worker routes |
+| `data/adcs/` | ADC-A v1 FDA-approved catalog (`adcs.v1.json`, D-119). Weekly Drugs@FDA watch is Emma's ops lane — see that folder's README; not built in the serving app. |
 | `db/` | ORM models + Alembic migrations |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | The living source-of-truth architecture |
 | [`docs/README.md`](docs/README.md) | The design-decision log (every decision, newest first) |

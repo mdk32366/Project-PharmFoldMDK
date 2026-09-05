@@ -14,6 +14,8 @@ these handlers.
 | `GET /api/analyses/{id}` | full record incl. `sequence` + `fold_provenance` |
 | `GET /api/analyses/{id}/structure` | the stored PDB file, `text/plain`, streamed |
 | `GET /api/analyses/{id}/plddt` | the per-residue pLDDT array |
+| `GET /api/adcs` | D-119 FDA-approved catalog (file-derived) |
+| `GET /api/adcs/{adc_id}` | one catalog row, or 404 |
 """
 
 from __future__ import annotations
@@ -27,6 +29,7 @@ from fastapi.responses import FileResponse
 
 from app import reads
 from app.deps import get_engine
+from core.adc_catalog import get_adc, list_adcs
 from core.cancer_associations import load_associations
 
 read_router = APIRouter(prefix="/api")
@@ -115,6 +118,25 @@ def get_coverage(engine: Any = Depends(get_engine)) -> dict:
     committed manifest, not the 42 folded rows) plus the per-target drill-down with `fold_status`
     joined from the DB. No credential (D-034 posture)."""
     return reads.coverage_payload(engine)
+
+
+@read_router.get("/adcs")
+def get_adcs() -> dict:
+    """D-119 / ADC-A: the FDA-approved catalog. File-derived, no engine, no credential.
+
+    ADC-B UI is a later GO. This route exists so that UI can consume a dated contract
+    instead of inventing a review-paper count (D-029 / D-016).
+    """
+    return list_adcs()
+
+
+@read_router.get("/adcs/{adc_id}")
+def get_adc_row(adc_id: str) -> dict:
+    """One v1 ADC by derived id. 404 — never 200 with a guess — when the id is unknown."""
+    row = get_adc(adc_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="unknown ADC")
+    return row
 
 
 @read_router.get("/associations")

@@ -5,26 +5,23 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-118
+## Active ship — D-119 (ADC-A)
 
-- **D-118 ships Phase 1 P0 honesty** (one census protein per accession; parent/assembled
-  resolve; no tile-inflated `census_summary`; closed-rental / no "48 held" copy;
-  GUIDE CLOSED; assembler / seam-not-solved on any stitched 3D; `stitched_plddt.json`
-  sibling; unused spare tiles 3693/3695/3696 never a second protein).
-- **Parent PLAN is D-117** — [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md).
-  D-117 is the evaluation stance and the three-phase map. It is **not** an
-  implementation GO and **not** a Kabsch GO.
-- **Do not rename D-118 mid-flight.** Trinity 2026-09-05: keep D-118 as the
-  implement/ship decision id; cite D-117 as the parent PLAN.
-
-Full entries: [`README.md` § D-118](README.md#d-118--phase-1-p0-honesty--one-census-protein-per-accession-post-wave2)
-and [`README.md` § D-117](README.md#d-117--post-wave2-ui-endstate-plan--evaluation-stance-not-a-kabsch-go).
+- **D-119 ships ADC-A**: FDA-approved catalog JSON (`data/adcs/adcs.v1.json`)
+  plus thin `GET /api/adcs` and `GET /api/adcs/{id}`. Every field is
+  `{value, source, as_of, confidence}`. No ADC-B UI. No pipeline / RTT
+  (ADC-C). No Emma watcher (hook only). No Kabsch. No F-004. No AdcContext.
+- **Parent Spec** is the Trinity Architect ADC-A binding (2026-09-05), after
+  D-118 P0 merge. Full entry: [`README.md` § D-119](README.md#d-119--adc-a-fda-approved-catalog-is-a-dated-json-contract-not-a-ui-and-not-a-science-invention).
 
 ## Nearby ids (do not conflate)
 
 | Id | Role | Ships? |
 | --- | --- | --- |
+| **D-119** | ADC-A catalog + thin read API BUILD GO | **Yes — this PR.** |
+| **D-118** | Phase 1 P0 honesty BUILD GO | Already shipped on `main` (#227). |
 | **D-117** | Parent PLAN / evaluation stance | No. Plan only. |
-| **D-118** | Phase 1 P0 honesty BUILD GO | **Yes — this PR.** |
-| D-115 / D-116 | Wave2 hold-48 ship / stitch + tile-window contract | Already shipped on `main`. |
-| Kabsch / restitch | PARKED (D-117 §Phase 2) | No. Not this PR. |
+| ADC-B | `/adcs` + `/adcs/:id` UI | No. Later GO. |
+| ADC-C | Pipeline + Right-to-Try | No. Later GO. |
+| Phase 2 / D-117 P1 | Wave2 review UI | Parallel PR train. Do not mix. |
+| Kabsch / restitch | PARKED (D-117) | No. Not this PR. |
