@@ -31,6 +31,9 @@
 > - [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) — measured
 >   budget / tier waves from the IGF2R pilot (D-113). **D-114** amends the cash envelope
 >   only; measured forecasts stand.
+> - [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md) — post-Wave2 UI
+>   evaluation and phased honesty plan (**D-117**). ⚠ **Plan only. Not an implementation GO.
+>   Not a Kabsch GO.** The stitcher is a pLDDT assembler; seams are not scientifically solved.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -142,6 +145,120 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-117 — After Wave2 stitch, the UI still speaks a pre-tile language: inventory first, no Kabsch, no implementation GO
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the post-Wave2 UI evaluation** — a planning artifact, not a build.
+  ⚠ **Not an implementation GO.** ⚠ **Not a Kabsch / restitch GO.** ⚠ **No UI code in this PR.**
+  ⚠ **No Fly change. No GPU. No enqueue. `hold48_stitch.py` untouched.**
+- **Ruled by:** owner task 2026-09-05 PT — evaluate every UI surface against the verified
+  hold-48 rental closeout; write a durable plan Matt can act on.
+- **Cite:** owner-verified ops closeout 2026-09-05 PT (this session's brief — **not re-queried
+  against Fly here**) · Wave2 stitch COMPLETE `ready_n=17` `attempted=17` `PASS=17` `FAIL=0` ·
+  first parent **2817** `Q9P273` `mean_plddt=61.07` tiles=`[3673,3630]` · prefer lower dup
+  tile ids **3673/3674/3675** (spares **3693/3695/3696** unused) · C2 L=1656 n=36
+  `has_pae=36` `lack_pae=0` · PAE on Fly Volume `pharmfoldmdk` · pod Terminated · RunPod
+  remaining **~$10.25** · `stitch_readiness` live (#224 / **D-116**) · Wave1 `PASS 10 / FAIL 17`
+  (false-ready incomplete cover) · IGF2R seam **~88.76 Å** · Kabsch/restitch Spec **PARKED**
+  until Matt GO · assembler-only path via Fly
+- **Relates:** `D-111` · `D-113` · `D-114` · `D-116` · `D-087` · `D-089` · `D-094` amendment 1 ·
+  `D-109` ruling 7 (stitched ≠ ranking-eligible) · `D-110` (PAE figure provenance — still
+  deferred) · `F-042` · `F-012` / reserved `F-015`
+- **Does not amend:** D-111 geometry · D-116 gate · stitch algorithm · Kabsch · C2 emit ·
+  worker · ranking set membership · D-079 unscored-census bar · D-081 two-span rule
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110` while
+  `D-110`…`D-116` are written). Owner deferred that repair (PR #222 / D-116). This entry
+  spends `D-117`; the pointer stays the owner's.
+
+#### Context
+
+Hold-48 rental E2E closed (owner-verified 2026-09-05 PT): Waves A/B/C1/C2 tiles complete,
+PAE retrieved, Wave2 stitch 17/17 PASS on the D-116 gate. The public React app and the
+operator guides still describe the world **before** that closeout — "48 held", "waiting on
+rented capacity", IGF2R as a CUDA-OOM singleton with no structure, stitch as a laptop-only
+pilot, rental as live.
+
+Worse than stale copy: the census read path has **no `hold48_kind` filter**.
+`list_census` selects every `protein_analyses` row with `cohort_tranche > 0` and a
+`pdb_path`. `emit_tile_jobs` writes each tile as its own analysis, same accession, same
+tranche, `hold48_kind=tile`, `span_aa` = tile length. Those rows will render as extra
+"folded proteins." `resolve_census_accession` returns the **first** such row with a
+`pdb_path` — a 1,656-aa fragment can open as the protein. `unfolded_rows()` still keys off
+`census_features.v1.jsonl` (zero tranche-5 lines), so a parent can also stay listed as
+NOT FOLDED. ⚠ Measured from the tree (`app/reads.py`, `core/hold48.py`,
+`core/census_unfolded.py`, `ui/src/censusSummary.js`) — not from a live Fly query.
+
+The stitcher (`core/hold48_stitch.py`) is a **pLDDT assembler**: overlap by per-residue
+pLDDT; off-block PAE is **null, never 0**. It is **not** a Kabsch superimposer. The IGF2R
+pilot seam (~88.76 Å) is a measured finding. A viewer that colours a stitched PDB by pLDDT
+and says nothing will supply the premise that the chain is one forward pass.
+
+#### Decision
+
+1. **The evaluation lives in
+   [`docs/PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md).** That file is
+   the inventory + phased plan. This entry rules the *stance*; the plan carries the
+   surface-by-surface work.
+2. **No implementation in the PR that lands this entry.** Honesty copy, badges, filters,
+   tile-vs-parent projection, and a stitch disclosure are a **later Matt GO**, each with
+   its own entry when built. A drive-by UI edit here would be code preceding the plan.
+3. **The stitcher stays labelled an assembler until a Kabsch GO.** No surface may imply
+   seams are scientifically solved, that a stitched PDB is commensurable with a single-pass
+   fold (`D-109` ruling 7), or that block-diagonal null PAE means domains were jointly
+   placed. Kabsch/restitch remains PARKED.
+4. **P0 is misleading-or-dangerous copy and identity**, not missing features. Highest:
+   tile rows leaking into `/census` as proteins; accession resolve picking a tile; frozen
+   "48 held" / "waiting on rented capacity"; a 3Dmol view of assembled coordinates with no
+   assembler/seam disclosure; GUIDE Step 11 still speaking as if stitch were not done.
+5. **There is no job-queue, stitch-review, or rental-ops screen in the React app.** Those
+   are documented absences, not implied dashboards. Operator UI today is
+   [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) + CLI (`stitch_readiness`,
+   `retrieve_rental_pae`, `emit_tile_jobs`) + FastAPI `/docs`. Building those screens is
+   P2 unless Matt needs them to review Wave2.
+6. **D-110 stays deferred.** A PAE heatmap is P2 and, if built, must provenance
+   block-diagonal nulls. It is not a substitute for the P0 identity/honesty work.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 / D-111). The Wave2
+artifact is an **assembly of those passes**, not a new network output and not a
+superimposed holoprotein. A surface that presents a tile as a protein, or a stitched chain
+as a single-pass ectodomain, attributes to the network a structure it did not produce.
+The plan is how those remaining passes stay distinguishable from the assembly. Neutral to
+the weights; load-bearing for whether a reader can tell what the network actually ran.
+
+#### Provenance (D-016)
+
+- **Ops numbers** (Wave2 17/17, parent 2817 / Q9P273, tiles 3673/3630, C2 n=36 PAE 36/36,
+  pod Terminated, ~$10.25 RunPod, seam ~88.76 Å, Kabsch PARKED): owner-verified closeout
+  in the 2026-09-05 PT task brief. ⚠ **Not re-queried against Fly or RunPod in this PR.**
+  A later session that needs to treat them as live must name a query or log line.
+- **Code-side inventory** (no job UI; PAE route unused by React; `list_census` has no
+  `hold48_kind` filter; `resolve_census_accession` first-`pdb_path` wins;
+  `unfolded_rows` keys the v1 features artifact; `censusSummary.js` tranche 5
+  `held: 48` dated 2026-09-02; TargetList IGF2R CUDA-OOM literal; GUIDE Step 11 "local
+  stitch only so far"): read from the tree on this branch. File paths named in the plan.
+- **Wave1 false-ready class:** `D-116` + #224, not re-measured here.
+
+#### Consequences
+
+- `ARCHITECTURE.md` records the 2026-09-05 end state on the hold-48 row and points at
+  this entry + the plan. Root `README.md` stays the greeting.
+- Implementation PRs that follow this plan must write their own `D-NNN` **before** the
+  UI lands, and must not treat this entry as a Kabsch or ranking-eligibility GO.
+- Tests for a later GO: a census list fixture with one parent + two complete tiles must
+  be able to go red if the list counts three proteins.
+
+#### Assumptions refused
+
+- That "Wave2 complete" licenses the UI to call a stitched PDB a solved holoprotein.
+- That Kabsch is implied by showing a stitched chain.
+- That a missing job-queue screen is a defect this plan must fill.
+- That `D-110` is unblocked by PAE now existing on the Volume.
+- That this PR may repair the `D-` next-free pointer.
+
+---
 
 ### D-116 — `stitch_readiness` is the stitch gate: expected tiles from `plan_tiles`, not "any child with pdb+pae"
 
