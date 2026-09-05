@@ -6,7 +6,7 @@ is Emma's ops lane (``data/adcs/README.md``) — never this module and never the
 gate (D-029: a live FDA call must not redden CI).
 
 This is **not** ``core.adc_reference``. That file is the scorer's Group B/C
-instrument. This catalog is the approved-drug roster ADC-B will consume.
+instrument. This catalog is the approved-drug roster ADC-B (D-122) consumes.
 """
 
 from __future__ import annotations

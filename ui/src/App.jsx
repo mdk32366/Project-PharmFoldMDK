@@ -8,6 +8,8 @@ import CoverageView from './components/CoverageView.jsx'
 import ScorerView from './components/ScorerView.jsx'
 import MethodNote from './components/MethodNote.jsx'
 import AdcContext from './components/AdcContext.jsx'
+import AdcsView from './components/AdcsView.jsx'
+import AdcCard from './components/AdcCard.jsx'
 
 function TargetRoute() {
   const { id } = useParams()
@@ -19,10 +21,16 @@ function CensusProteinRoute() {
   return <CensusProteinView id={id} />
 }
 
+function AdcCardRoute() {
+  const { id } = useParams()
+  return <AdcCard id={id} />
+}
+
 // PR B: shell + single-target view. PR C closed steps 2–5: coverage view (the honest denominator),
 // method note, and ADC context. D-062 landed step 6 — the Scorer surface (the centrepiece),
 // rendering the pre-registered result (F-004) from /api/ranking. No longer forward-looking: it
 // shipped, was never mocked, and is a real route in the nav below.
+// D-122 landed ADC-B — `/adcs` + `/adcs/:id` consume the D-119 catalog. Nav: ADCs.
 export default function App() {
   return (
     <div className="app">
@@ -35,6 +43,7 @@ export default function App() {
           <NavLink to="/census">Census</NavLink>
           <NavLink to="/scorer">Scorer</NavLink>
           <NavLink to="/method">Method</NavLink>
+          <NavLink to="/adcs">ADCs</NavLink>
           <NavLink to="/about">About ADCs</NavLink>
         </nav>
       </header>
@@ -48,6 +57,8 @@ export default function App() {
           <Route path="/census/:id" element={<CensusProteinRoute />} />
           <Route path="/scorer" element={<ScorerView />} />
           <Route path="/method" element={<MethodNote />} />
+          <Route path="/adcs" element={<AdcsView />} />
+          <Route path="/adcs/:id" element={<AdcCardRoute />} />
           <Route path="/about" element={<AdcContext />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

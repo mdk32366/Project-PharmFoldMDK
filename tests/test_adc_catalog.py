@@ -173,10 +173,17 @@ def test_withdrawn_status_is_rejected(tmp_path):
         load_catalog(_write(tmp_path / "c.json", _minimal_catalog([row])))
 
 
-def test_react_app_has_no_adcs_route():
-    """ADC-B UI is out of this PR. A /adcs page here is a Spec miss."""
+def test_d122_entry_exists_in_the_living_log():
+    """The check is the heading, not a citation of it (D-062 / method-note item 7)."""
+    log = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "### D-122 —" in log
+
+
+def test_react_app_has_adcs_routes():
+    """D-122 / ADC-B: the catalog UI is in App.jsx. Inverts the D-119 absence pin."""
     app = (ROOT / "ui" / "src" / "App.jsx").read_text(encoding="utf-8")
-    assert 'path="/adcs"' not in app
-    assert 'path="/adcs/' not in app
-    assert "AdcsView" not in app
-    assert "AdcList" not in app
+    assert 'path="/adcs"' in app
+    assert 'path="/adcs/:id"' in app
+    assert "AdcsView" in app
+    assert "AdcCard" in app
+    assert ">ADCs<" in app

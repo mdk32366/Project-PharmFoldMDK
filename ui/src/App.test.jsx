@@ -12,10 +12,18 @@ vi.mock('./api.js', () => ({
   getCoverage: vi.fn().mockResolvedValue({ coverage: { denominator: 0 }, rows: [] }),
   getAnalysis: vi.fn().mockResolvedValue({}),
   getPlddt: vi.fn().mockResolvedValue([]),
+  listAdcs: vi.fn().mockResolvedValue({ adcs: [] }),
+  getAdc: vi.fn().mockResolvedValue({}),
   structureUrl: (id) => `/api/analyses/${id}/structure`,
 }))
 vi.mock('./components/TargetView.jsx', () => ({
   default: ({ id }) => <div>STUB target view for {String(id)}</div>,
+}))
+vi.mock('./components/AdcsView.jsx', () => ({
+  default: () => <div>STUB adcs index</div>,
+}))
+vi.mock('./components/AdcCard.jsx', () => ({
+  default: ({ id }) => <div>STUB adc card for {String(id)}</div>,
 }))
 
 import App from './App.jsx'
@@ -52,6 +60,20 @@ describe('App — five-surface nav (D-051)', () => {
     for (const name of ['Story', 'Targets', 'Coverage', 'Method', 'About ADCs']) {
       expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
     }
+    // Exact — a substring "ADCs" would also match "About ADCs".
+    expect(within(nav).getByRole('link', { name: /^ADCs$/ })).toBeInTheDocument()
     await screen.findByText(/We folded a cohort of ADC targets/)  // let Story's fetch settle (act)
+  })
+
+  it('/adcs routes to the ADC-B index (D-122)', async () => {
+    renderAt('/adcs')
+    await waitFor(() => expect(screen.getByText(/STUB adcs index/)).toBeInTheDocument())
+    expect(screen.queryByText(STORY)).toBeNull()
+  })
+
+  it('/adcs/:id routes to the baseball card (D-122)', async () => {
+    renderAt('/adcs/enfortumab-vedotin')
+    await waitFor(() => expect(screen.getByText(/STUB adc card for enfortumab-vedotin/)).toBeInTheDocument())
+    expect(screen.queryByText(STORY)).toBeNull()
   })
 })

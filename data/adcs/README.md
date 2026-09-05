@@ -3,8 +3,8 @@
 Checked-in roster of **FDA-approved** antibody-drug conjugates. Schema:
 `adcs.v1.json`. Every field is `{value, source, as_of, confidence}`.
 
-This is **data only**. ADC-B (`/adcs` pages) is a later GO. Pipeline and
-Right-to-Try products are **ADC-C** — out of this file.
+ADC-B (`/adcs` pages, **D-122**) consumes this file via `GET /api/adcs`.
+Pipeline and Right-to-Try products are **ADC-C** — out of this file.
 
 The scorer's Group B/C file (`data/adc_reference_mapping.csv`, D-029 / D-040)
 is a **different object**. Do not merge them.
