@@ -35,13 +35,13 @@ REASON_COPY = {
     # "waiting on rented capacity" is a live-queue claim and is forbidden here.
     "above_local_ceiling": ("not folded — its extracellular stretch is longer than the local "
                             "graphics card can fold. Rental for the hold-48 remainder closed "
-                            "2026-09-05 (pod Terminated); this is not waiting on rented capacity"),
+                            "2026-09-05 (pod Terminated); this is not a live rental queue"),
     "ceiling_unmeasured": ("not folded — it sits in a size band nobody has tested yet, so it is "
                            "not known to be too large, only untried"),
     "reason_unrecorded": ("not folded — and ⚠ nothing records why. It was assigned to the local "
                           "tier and should have folded"),
     "mucin_out_of_class": ("mucin — out of class; never ESMFold (D-111). "
-                           "Not waiting on rented capacity"),
+                           "Rental is closed (pod Terminated)"),
 }
 
 

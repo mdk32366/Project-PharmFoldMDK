@@ -39,7 +39,7 @@ export function unfoldedCopy(detail) {
   }
   if (detail.structure_kind === 'mucin') {
     return {
-      bar: 'Mucin — out of class; never ESMFold. Not waiting on rented capacity.',
+      bar: 'Mucin — out of class; never ESMFold. Rental is closed (pod Terminated).',
       body: 'Hold-48 rental closed 2026-09-05 (pod Terminated). Mucins write zero PDB/PAE '
         + 'by ruling (D-111), not because a card is still running.',
     }

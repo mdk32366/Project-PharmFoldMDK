@@ -626,7 +626,7 @@ def apply_structure_kind(proj: dict[str, Any], row: ProteinAnalysis, kind: str) 
         proj["mean_plddt"] = None
         proj["not_folded_reason"] = "mucin_out_of_class"
         proj["not_folded_copy"] = (
-            "mucin — out of class; never ESMFold (D-111). Not waiting on rented capacity"
+            "mucin — out of class; never ESMFold (D-111). Rental is closed (pod Terminated)"
         )
         proj["profile_status"] = "not_folded"
     return proj
