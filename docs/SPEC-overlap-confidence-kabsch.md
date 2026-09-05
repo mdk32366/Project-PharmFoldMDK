@@ -9,9 +9,10 @@
 > **Amended:** D-126 amendment 1 (2026-09-05) — Trinity red-team pins.
 > Same D-id. Confirm `#### D-126 amendment 1` exists. **D-126-A**
 > (core BUILD) is implemented as a sibling module
-> (`core/hold48_confidence_kabsch.py`) — this later PR. **D-126-B**
-> (UI triple-path honesty) remains a later Emma GO. This file stays
-> algorithm authority; it is **not** the UI BUILD.
+> (`core/hold48_confidence_kabsch.py`) — already on `main`
+> (`aa8aa02` / #241). **D-126-B** (UI triple-path honesty) is the
+> later Emma GO that **reads** that tree (this later PR). This file
+> stays algorithm authority; it is **not** the UI BUILD.
 > ⚠ **Not a restitch run of the 27.** ⚠ **Not F-004 ingest.**
 > ⚠ **Seams are not scientifically solved.**
 > ⚠ **The 10.0 Å refuse gate STAYS.** Trim / weight change the fit set,
@@ -271,7 +272,7 @@ disk and stay callable.
 
 ---
 
-## 6. UI triple-path honesty (D-126-B — later)
+## 6. UI triple-path honesty (D-126-B)
 
 D-118 / D-120 / D-121 already disclose the **assembler** path.
 D-125-B already names a **second** path when `kabsch/{parent}/` is on
@@ -305,8 +306,8 @@ is not a solved seam.
 | Id | What | This PR? | Gate |
 |---|---|---|---|
 | **D-126 Spec** | This file + `### D-126` + `#### D-126 amendment 1` + ship index + PLAN one-liner + hermetic docs pin tests | Already on `main` (`d59be6b` / #239 + amendment 1 `b32f9db` / #240). | Trinity reviewed. Docs only. |
-| **D-126-A** | Core: weighted + trimmed overlap Cα Kabsch + §2 refuse + transform tile + call existing `winning_tile`. No UI. Sibling §5 `confidence_kabsch/` tree. CLI re-runs all 27; primary eval is the five. | **Yes — this PR.** | After the Spec. No rent in A. |
-| **D-126-B** | UI triple-path honesty (§6). Reads A's sibling tree. No persist rewrite. Default served = assembler until Matt swap GO. | **No.** Later Emma GO. | After A. |
+| **D-126-A** | Core: weighted + trimmed overlap Cα Kabsch + §2 refuse + transform tile + call existing `winning_tile`. No UI. Sibling §5 `confidence_kabsch/` tree. CLI re-runs all 27; primary eval is the five. | Already on `main` (`aa8aa02` / #241). | After the Spec. No rent in A. |
+| **D-126-B** | UI triple-path honesty (§6). Reads A's sibling tree. No persist rewrite. Default served = assembler until Matt swap GO. | **Yes — this PR.** | After A. |
 
 **Out of the A PR:** any edit to `hold48_kabsch.py`, any UI, a live
 restitch run of the 27, F-004 ingest, ADC-C / pipeline / `/adcs`
@@ -348,8 +349,9 @@ assembler or D-125 `kabsch/`, claiming seams solved, raising the
 
 ## 9. What this file is not
 
-- Not D-126-B (UI). This file is still the Spec, not the UI BUILD.
-  D-126-A code lives in `core/hold48_confidence_kabsch.py`.
+- **Not D-126-B** (UI). This file is still the Spec, not the UI BUILD.
+  D-126-A code lives in `core/hold48_confidence_kabsch.py`. D-126-B
+  reads that tree; it does not rewrite this algorithm.
 - Not a licence to call seams solved or the chain one forward pass.
 - Not a replacement of `winning_tile` by weighted Kabsch.
 - Not an overwrite of D-125 `core/hold48_kabsch.py` or `kabsch/{id}/`.

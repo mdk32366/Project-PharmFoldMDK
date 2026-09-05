@@ -171,6 +171,43 @@ describe('Provenance — three-valued strength (D-071)', () => {
       expect(box.textContent).toMatch(/default served PDB/)
       expect(box.textContent).toMatch(/assembler until a later ops restitch/)
       expect(box.textContent).not.toMatch(/seams solved|Kabsch aligned|we ran Kabsch/)
+      expect(box.textContent).not.toMatch(/three paths/)
+      expect(box.textContent).not.toMatch(/confidence_kabsch/)
+    })
+
+    it('names the third persist stem only when the D-126 tree is present', () => {
+      const review = {
+        hold48_kind: 'parent',
+        parent_job_id: 2817,
+        chosen_tile_ids: [3673, 3630],
+        readiness: {
+          source: 'sibling_snapshot', expected_n: 2,
+          present_complete_n: 2, uncovered_n: 0,
+        },
+        dual_path: {
+          assembler: { persist_stem: 'stitched', default_served: true },
+          kabsch: {
+            present: true,
+            persist_stem: 'kabsch/2817',
+            empty_reason: null,
+          },
+        },
+        triple_path: {
+          assembler: { persist_stem: 'stitched', default_served: true },
+          kabsch: { present: true, persist_stem: 'kabsch/2817' },
+          confidence_kabsch: {
+            present: true,
+            persist_stem: 'confidence_kabsch/2817',
+          },
+        },
+      }
+      render(<Provenance detail={STATE1} assemblyReview={review} />)
+      const box = screen.getByTestId('dual-path-provenance')
+      expect(box.textContent).toMatch(/three paths/)
+      expect(box.textContent).toMatch(/confidence_kabsch\/2817/)
+      expect(box.textContent).toMatch(/default served PDB/)
+      expect(box.textContent).toMatch(/assembler until a later ops restitch/)
+      expect(box.textContent).not.toMatch(/seams solved|Kabsch aligned|we ran Kabsch/)
     })
   })
 

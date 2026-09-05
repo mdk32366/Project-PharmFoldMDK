@@ -90,6 +90,9 @@ describe('AssemblyReview', () => {
     expect(t).toMatch(/not on disk for this parent/)
     expect(t).toMatch(/kabsch\/2817/)
     expect(t).not.toMatch(/Kabsch \/ restitch remains PARKED/)
+    expect(t).not.toMatch(/Three paths/)
+    expect(t).not.toMatch(/confidence_kabsch/)
+    expect(t).not.toMatch(/n_Cα_eff|Trim rounds|Weighted RMSD/)
   })
 
   it('names both paths and shows RMSD when Kabsch-path artifacts exist; jump stays empty if missing', () => {
@@ -127,6 +130,105 @@ describe('AssemblyReview', () => {
     expect(getByTestId('kabsch-seams').textContent).toMatch(/1\.25 Å/)
     expect(getByTestId('kabsch-seams').textContent).toMatch(/not computed on this path/)
     expect(t).not.toMatch(/seams solved|Kabsch aligned|fixed badge|full-length AF-quality/)
+    expect(t).not.toMatch(/Three paths/)
+  })
+
+  it('names three paths and shows D-126 seam fields when confidence_kabsch artifacts exist', () => {
+    const review = {
+      ...REVIEW,
+      seam_note: 'An overlap-confidence Kabsch sibling tree is named below as a third path.',
+      triple_path: {
+        assembler: REVIEW.dual_path.assembler,
+        kabsch: {
+          present: true,
+          label: 'Kabsch-path (sibling tree) — overlap-Cα rigid transform, then the same winner-tile assembler. Not the default served PDB. Seams are not scientifically solved',
+          persist_stem: 'kabsch/2817',
+          accepted: true,
+          empty_reason: null,
+          seams: [{
+            moving_tile_index: 2,
+            reference_tile_index: 1,
+            overlap_start: 1529,
+            overlap_end: 1656,
+            n_ca: 128,
+            rmsd_angstrom: 1.25,
+            max_ca_jump_angstrom: null,
+            refuse_reason: null,
+          }],
+        },
+        confidence_kabsch: {
+          present: true,
+          label: 'Overlap-confidence Kabsch-path (sibling tree) — weighted + trimmed overlap-Cα rigid transform, then the same winner-tile assembler. Not the default served PDB. Seams are not scientifically solved',
+          persist_stem: 'confidence_kabsch/2817',
+          accepted: true,
+          empty_reason: null,
+          seams: [{
+            moving_tile_index: 2,
+            reference_tile_index: 1,
+            overlap_start: 1529,
+            overlap_end: 1656,
+            n_ca: 128,
+            n_ca_eff: 96,
+            rmsd_angstrom: 3.40,
+            rmsd_full_overlap_angstrom: 8.10,
+            max_ca_jump_angstrom: 4.20,
+            trim_rounds: 2,
+            refuse_reason: null,
+          }],
+        },
+      },
+    }
+    const { container, getByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const t = container.textContent
+    expect(t).toMatch(/Three paths/)
+    expect(t).toMatch(/stitched/)
+    expect(t).toMatch(/kabsch\/2817/)
+    expect(t).toMatch(/confidence_kabsch\/2817/)
+    expect(t).toMatch(/default served/)
+    const seams = getByTestId('d126-seams').textContent
+    expect(seams).toMatch(/3\.40 Å/)
+    expect(seams).toMatch(/8\.10 Å/)
+    expect(seams).toMatch(/4\.20 Å/)
+    expect(seams).toMatch(/96/)
+    expect(seams).toMatch(/2/)
+    expect(t).not.toMatch(/seams solved|Kabsch aligned|fixed badge|full-length AF-quality/)
+  })
+
+  it('refused D-126 seam stays fail-closed and does not wear a fixed badge', () => {
+    const review = {
+      ...REVIEW,
+      triple_path: {
+        assembler: REVIEW.dual_path.assembler,
+        kabsch: REVIEW.dual_path.kabsch,
+        confidence_kabsch: {
+          present: true,
+          label: 'Overlap-confidence Kabsch-path (sibling tree). Not the default served PDB. Seams are not scientifically solved',
+          persist_stem: 'confidence_kabsch/2817',
+          accepted: false,
+          seams: [{
+            moving_tile_index: 2,
+            reference_tile_index: 1,
+            n_ca: 128,
+            n_ca_eff: 40,
+            rmsd_angstrom: 12.4,
+            rmsd_full_overlap_angstrom: null,
+            max_ca_jump_angstrom: null,
+            trim_rounds: 5,
+            refuse_reason: 'rmsd_gt_10',
+          }],
+        },
+      },
+    }
+    const { container, getByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const t = container.textContent
+    expect(getByTestId('d126-accepted').textContent).toMatch(/refused/)
+    expect(t).toMatch(/rmsd_gt_10/)
+    expect(t).not.toMatch(/fixed badge/)
+    expect(t).not.toMatch(/seams solved|Kabsch aligned|full-length AF-quality/)
   })
 
   it('renders nothing without a review block', () => {

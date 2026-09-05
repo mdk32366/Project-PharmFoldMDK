@@ -127,11 +127,11 @@ def test_hard_stops_and_not_ab():
 
 def test_ship_index_distinguishes_spec_from_ab_build():
     assert "D-126 ships the overlap-confidence Kabsch Spec" in INDEX
-    assert "D-126-A ships the overlap-confidence Kabsch core BUILD" in INDEX
+    assert "D-126-A already shipped" in INDEX
     assert "Yes — this PR." in INDEX
     assert re.search(r"D-126 Spec.*Already shipped on `main`", _flat(INDEX))
-    assert re.search(r"D-126-A.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
-    assert re.search(r"D-126-B.*\*\*No\.\*\*", _flat(INDEX))
+    assert re.search(r"D-126-A.*Already shipped on `main`", _flat(INDEX))
+    assert re.search(r"D-126-B.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
     assert "confidence_kabsch" in INDEX or "overlap-confidence" in INDEX.lower()
 
 

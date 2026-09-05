@@ -31,7 +31,7 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
-from app.kabsch_path_read import dual_path_payload, seam_note_for
+from app.confidence_kabsch_path_read import seam_note_for_triple, triple_path_payload
 
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
@@ -821,10 +821,11 @@ def assembly_review(
     *,
     artifact_root: Optional[Path | str] = None,
 ) -> dict[str, Any]:
-    """Review payload for an assembled parent (D-120 / PLAN §3.6 / D-125-B).
+    """Review payload for an assembled parent (D-120 / PLAN §3.6 / D-125-B / D-126-B).
 
-    Ops numbers, not a restitch GO. Kabsch-path metrics are *read* from A's
-    sibling tree when present — never invented, never persisted here.
+    Ops numbers, not a restitch GO. Kabsch-path and D-126-path metrics are
+    *read* from A's sibling trees when present — never invented, never
+    persisted here. Default served PDB stays assembler.
     """
     tiles = [r for r in siblings if is_census_tile_row(r)]
     roles = assign_tile_roles(tiles)
@@ -891,13 +892,17 @@ def assembly_review(
         ])
     parent_has_pae = bool(parent.pae_json_path)
     parent_job_id = job_by_analysis.get(parent.id)
-    dual_path = dual_path_payload(
+    triple_path = triple_path_payload(
         artifact_root,
         parent_analysis_id=parent.id,
         parent_job_id=parent_job_id,
         assembler_pdb_path=parent.pdb_path,
         meta=parent.meta,
     )
+    dual_path = {
+        "assembler": triple_path["assembler"],
+        "kabsch": triple_path["kabsch"],
+    }
     return {
         "parent_analysis_id": parent.id,
         "parent_job_id": parent_job_id,
@@ -939,8 +944,11 @@ def assembly_review(
         "assembler_note": (
             "assembled by pLDDT overlap, not superimposed; seam not solved"
         ),
-        "seam_note": seam_note_for(dual_path["kabsch"]),
+        "seam_note": seam_note_for_triple(
+            triple_path["kabsch"], triple_path["confidence_kabsch"]
+        ),
         "dual_path": dual_path,
+        "triple_path": triple_path,
     }
 
 

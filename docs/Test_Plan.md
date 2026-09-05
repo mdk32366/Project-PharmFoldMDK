@@ -397,5 +397,30 @@ docs-only): `test_accepted_trim_still_discloses_full_overlap_rmsd_and_max_jump`
 
 ---
 
+## Addendum 2026-09-05 — D-126-B UI triple-path honesty
+
+Acceptance tests for the overlap-confidence review / Method addendum.
+Implemented in `tests/test_d126_b_triple_path.py`,
+`tests/test_method_hold48_explainer.py`,
+`ui/src/components/AssemblyReview.test.jsx`, and
+`ui/src/components/MethodNote.test.jsx`. Each AT must be able to go red
+**without** a live Fly query, GPU, or restitch run. Fixtures stand in for
+A's `confidence_kabsch/{parent}/` tree. ⚠ B reads; it does not persist.
+⚠ Seams are not scientifically solved. ⚠ Default served PDB is assembler.
+Cite: D-001 naming (`### D-126-B —` heading exists); D-126 Spec §6;
+D-126-A `aa8aa02` / #241.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1113** | `### D-126-B —` exists in the living log (D-001 naming) | `test_d126_b_heading_exists_in_the_living_log` |
+| **T-1114** | Missing `confidence_kabsch/` tree → do not imply a D-126 path; no invented RMSD / `n_ca_eff` / trim counts | `test_missing_confidence_tree_does_not_imply_d126_path_or_invent_metrics` |
+| **T-1115** | Present tree names three paths; persist stems `stitched` vs `kabsch/{parent}` vs `confidence_kabsch/{parent}` do not collide; default served = assembler | `test_present_tree_names_three_paths_and_stems_do_not_collide` |
+| **T-1116** | D-126 seam fields render from A's JSON (`n_ca`, `n_ca_eff`, weighted RMSD, full-overlap RMSD, max Cα jump, `trim_rounds`, `refuse_reason`); honest null when missing | `test_d126_seam_fields_are_honest_empty_unless_a_wrote_them` |
+| **T-1117** | Refused seam stays fail-closed — no "fixed" badge; assembler / D-125 PDB is not a D-126 success | `test_refused_seam_is_fail_closed_and_not_presented_as_d126_success` |
+| **T-1118** | Method addendum names what D-126 does / does not vs assembler vs D-125; forbids seams-solved language | `test_d126_b_method_addendum_names_does_and_does_not` |
+| **T-1119** | Review card + MethodNote UI can go red for triple-path honesty | `names three paths and shows D-126 seam fields when confidence_kabsch artifacts exist` · `adds a D-126-B weighted/trimmed Kabsch does / does-not addendum without claiming seams solved` |
+
+---
+
 **End of Test Plan**
 

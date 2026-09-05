@@ -39,10 +39,13 @@
 >   overlap-confidence Kabsch Spec
 >   ([`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md))
 >   (docs on `main` at `d59be6b` / #239 + amendment 1 `b32f9db` / #240).
->   **D-126-A** is the core BUILD (this PR): trimmed + pLDDT-weighted
->   Kabsch → existing `winning_tile`; sibling `confidence_kabsch/` tree.
->   D-126-B (UI) is later. Production dual-path (D-125 Kabsch + assembler)
->   stays callable. ⚠ **Not a restitch run of the 27.**
+>   **D-126-A** already shipped the core BUILD on `main` (`aa8aa02` /
+>   #241): trimmed + pLDDT-weighted Kabsch → existing `winning_tile`;
+>   sibling `confidence_kabsch/` tree. **D-126-B** is the UI triple-path
+>   honesty BUILD (this PR): read A's sibling tree; name assembler /
+>   D-125 `kabsch/` / D-126 `confidence_kabsch/` when present; default
+>   served PDB stays assembler. Production dual-path (D-125 Kabsch +
+>   assembler) stays callable. ⚠ **Not a restitch run of the 27.**
 >   ⚠ **Seams are not scientifically solved.**
 > - [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) — Kabsch on overlap Cα →
 >   transform tile → existing `winning_tile` stitch. D-125-A implements
@@ -56,8 +59,10 @@
 >   `hold48_kabsch.py`. ⚠ **10.0 Å gate stays.**
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**) plus a
->   D-125-B addendum (what Kabsch does / does not). Additive MethodNote
->   sections on `/method`. ⚠ **Assembler remains the default served PDB. #229 stays merged.**
+>   D-125-B addendum (what Kabsch does / does not) and a D-126-B addendum
+>   (what weighted / trimmed Kabsch does / does not vs assembler vs
+>   D-125). Additive MethodNote sections on `/method`. ⚠ **Assembler
+>   remains the default served PDB. #229 stays merged.**
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
 >   **D-124 ships** ADC-C: **A** (pipeline catalog + access/RTT payload +
 >   thin read API) already on `main` (`b71bade` / #235); **B** already on
@@ -67,8 +72,9 @@
 >   sibling `kabsch/{parent}/` tree). **D-125-B** already shipped UI
 >   dual-path honesty on `main` (`aa8d3f1` / #238). **D-126 ships** the
 >   overlap-confidence Kabsch Spec (already on `main`, `d59be6b` / #239
->   + amendment 1 `b32f9db` / #240). **D-126-A ships** the core BUILD
->   (this PR). D-126-B is later. **D-121 ships** the
+>   + amendment 1 `b32f9db` / #240). **D-126-A** already shipped the
+>   core BUILD on `main` (`aa8aa02` / #241). **D-126-B ships** UI
+>   triple-path honesty (this PR). **D-121 ships** the
 >   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
 >   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
@@ -191,6 +197,205 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-126-B — UI triple-path honesty: name assembler, D-125 Kabsch-path, and D-126 confidence-Kabsch artifacts without colliding them
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the D-126-B UI triple-path honesty BUILD GO** (Emma
+  GO 2026-09-05 after D-126-A landed on `main` at `aa8aa02` / #241).
+  Architect: Trinity. Builder coordinator: Kaylee.
+  ⚠ **UI only.** A already writes `confidence_kabsch/{parent_job_id}/`
+  (`provenance.json`, `seams.jsonl`, transformed tiles on accept, then
+  existing `write_stitched` names). This PR **reads** that sibling tree.
+  It does **not** re-implement persist.
+  ⚠ **Does not replace `winning_tile`.** Assembler remains the default
+  served PDB until a later Matt GO names a swap. Do not auto-serve
+  D-125 or D-126 as the primary download.
+  ⚠ **Does not overwrite** assembler `stitched.pdb`, D-125
+  `kabsch/{id}/`, or A's `confidence_kabsch/` tree.
+  ⚠ **Does not edit** `core/hold48_kabsch.py` or
+  `core/hold48_confidence_kabsch.py` (algorithm stays A's).
+  ⚠ **Not a restitch run of the 27.** ⚠ **Not F-004 ingest.**
+  ⚠ **Not ADC-C.** Prefer leave `/adcs` alone.
+  ⚠ **No rent / GPU / RunPod.**
+  ⚠ **Seams are not scientifically solved.** Never claim they are.
+- **Ruled by:** Trinity Architect bar **LOCKED** 2026-09-05 for D-126-B:
+  UI triple-path honesty only; name assembler vs D-125 `kabsch/` vs
+  D-126 `confidence_kabsch/` clearly when A's tree is on disk;
+  **served path = assembler** until a Matt swap GO
+  (do not pretend D-125 or D-126 is live-served); no invented seam /
+  RMSD / trim numbers — only show if computed/present in A's artifacts;
+  honest empty otherwise; when the `confidence_kabsch/` tree is
+  missing, do **not** imply a D-126 path exists; no F-004; no live
+  restitch of the 27; no rent in this PR; cite D-126-A `aa8aa02` +
+  Spec §6; draft PR, do not merge. Parent: D-126-A (`aa8aa02` / #241)
+  — B is UI only. Emma BUILD GO 2026-09-05 + Emma pin reinforce:
+  triple-path honesty + Method addendum + provenance labeling. Follow
+  existing Method / Phase / D-125-B UI patterns (D-121 / D-120 /
+  D-125-B). Prefer in-repo Spec + this pin if a later note conflicts.
+- **Cite:** D-126 Spec §6
+  ([`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md)
+  §6) · D-126-A sibling tree (`aa8aa02` / #241) · D-125-B dual-path
+  pattern (`aa8d3f1` / #238) · D-121 Method hold-48 explainer · D-120
+  Phase 2 `assembly_review` · D-118 assembler-not-Kabsch honesty ·
+  D-117 PLAN · D-111 `winning_tile` · D-109 ruling 7 · D-016 · D-001
+  (living-doc naming: `### D-NNN` entries live in this file) · IGF2R
+  seam **~88.76 Å** (join-jump disclosure, not a Kabsch RMSD; not
+  re-measured here) · ship index [`decisions.md`](decisions.md)
+- **Relates:** `D-126` · `D-126-A` · `D-125` · `D-125-A` · `D-125-B` ·
+  `D-121` · `D-120` · `D-118` · `D-117` · `D-111` · `D-109` ruling 7 ·
+  `D-001`
+- **Does not amend:** D-111 geometry · D-116 gate · today's stitch
+  algorithm · D-118 census identity · D-120 readiness / chosen-vs-spare
+  table · D-122 `/adcs` · D-123 `/about` · D-124 ADC-C · F-004 / ranking
+  set · the `D-` next-free pointer · A's writer
+  (`core/hold48_confidence_kabsch.py` /
+  `scripts/confidence_kabsch_restitch.py`) · D-125 writer
+  (`core/hold48_kabsch.py` / `scripts/kabsch_restitch.py`)
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer.** This entry
+  spends `D-126-B`; the pointer stays the owner's. ⚠ **Does not invent
+  D-127.**
+
+#### Context
+
+D-118 / D-120 / D-121 shipped assembler honesty: winner-tile pLDDT, not
+Kabsch; seam not solved; IGF2R ≈ 88.76 Å is a caveat. D-125-A wrote a
+second sibling tree; D-125-B named it without colliding persist stems.
+D-126-A then wrote a **third** sibling tree (`confidence_kabsch/`) so a
+later UI could name weighted / trimmed Kabsch without overwriting the
+served assembler PDB or the D-125 `kabsch/` tree. Until B, the review
+card still named at most two paths — which would become a lie the
+moment A's D-126 files exist, and a different lie if B invented RMSD /
+trim counts for a parent that has no third tree, or presented a
+refused seam as a "fixed" D-126 success.
+
+Trinity's A-ship locked B as UI only. A already writes
+`confidence_kabsch/{parent}/`. B's only job is honesty: three labels
+when that tree is on disk, two when it is not, and numbers only when A
+computed them.
+
+#### Decision
+
+1. **Read A's sibling tree. Do not write it.** Look under
+   `{ARTIFACT_ROOT}/confidence_kabsch/{parent_job_id}/` (and, if needed,
+   beside an assembler `stitched.pdb` parent) for `provenance.json` /
+   `seams.jsonl`. No new persist path. No copy into the assembler dir
+   or into `kabsch/`. No swap of the default served PDB.
+2. **Three paths, three persist stems — when (and only when) the
+   D-126 tree is on disk.** Assembler downloads and provenance keep the
+   D-120 stem `stitched`. D-125 Kabsch-path files keep `kabsch/{parent}`.
+   D-126-path files are named with the stem prefix `confidence_kabsch` /
+   persist stem `confidence_kabsch/{parent_job_id}`. A D-126-path
+   `stitched.pdb` must never be presented as the assembler
+   `stitched.pdb`, and never as a D-125 Kabsch-path success. The three
+   populations must not collide. The review card names **three** paths.
+3. **Default served PDB remains assembler** until a Matt GO names a
+   swap. Do not auto-serve D-125 or D-126 as the primary download.
+4. **Each D-126 seam shows A's measurements only:** `n_ca`, `n_ca_eff`,
+   weighted RMSD (`rmsd_angstrom` if computed),
+   `rmsd_full_overlap_angstrom`, `max_ca_jump_angstrom`, `trim_rounds`,
+   and `refuse_reason`. Honest empty / null when refuse-before-transform
+   or missing — **never invent numbers**. Those are measurements, not a
+   verdict that the holoprotein is lined up.
+5. **A refused seam stays fail-closed.** No "fixed" badge. Never present
+   assembler or D-125 Kabsch PDB as a D-126 success.
+6. **When the `confidence_kabsch/` tree is missing:** the UI must not
+   imply a D-126 path exists and must not invent RMSD / trim counts.
+   That absence is not a solved seam. D-125-B dual-path honesty stays
+   for assembler vs `kabsch/` (honest empty when *that* tree is missing).
+7. **Method addendum (additive, 8th-grade).** `/method` and
+   [`method-hold48-tiles.md`](method-hold48-tiles.md) gain a D-126-B
+   section: weighted / trimmed Kabsch still rotates and slides an
+   already-folded tile on overlap Cα (down-weighting shaky residues,
+   optionally dropping the worst-fitting 10%), then the same assembler
+   still picks the winner tile. It does **not** replace the assembler,
+   overwrite D-125 `kabsch/`, make the chain one ESMFold pass, fill
+   PAE, solve seams, or enter F-004. No medical advice. D-121's tiles /
+   glue / assembler section and the D-125-B addendum stay; #229 stays
+   merged.
+8. **Forbidden language (Spec §6 / D-117 §5 / D-125 §6 park):**
+   "aligned," "superimposed" as a success claim, "seams solved,"
+   "full-length AF-quality," a "fixed" badge, "we ran Kabsch" as a
+   claim about the 27, "Kabsch aligned." No alignment-box CTA. No
+   F-004 ingest.
+9. **Hard stops.** No F-004 ingest. No ADC-C bleed. No rent / GPU.
+   No ops restitch of the 27. No persist rewrite. Never claim seams
+   solved. Draft PR; do not merge.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass. D-125 Kabsch is a rigid
+transform of those already-emitted coordinates. D-126 weighted /
+trimmed Kabsch still is: it reweights the **same** overlap Cα using
+the network's own pLDDT, then applies one rigid \(R, t\). A UI that
+served a D-126-path PDB under the assembler stem, that printed a
+weighted RMSD / trim count the sibling tree does not contain, or that
+badged a refuse as "fixed," would attribute to ESMFold a superimposed
+holoprotein the model never produced — or a measurement nobody made.
+Triple-path labels keep the network's assembler output, the unweighted
+rigid transform, and the weighted / trimmed rigid transform as three
+named objects. Neutral to the weights; load-bearing for whether the
+served structure is still the network's assembled passes.
+
+#### Provenance (D-016)
+
+- **A already writes the sibling tree:** `core/hold48_confidence_kabsch.py`
+  `write_confidence_kabsch_restitch` →
+  `confidence_kabsch/{parent_job_id}/provenance.json` + `seams.jsonl`
+  (`aa8aa02` / #241). This PR does not add a second writer.
+- **D-125-B dual-path pattern this PR extends:** `app/kabsch_path_read.py`
+  + `tests/test_d125_b_dual_path.py` + AssemblyReview / MethodNote
+  (`aa8d3f1` / #238).
+- **Assembler remains default served PDB:** `GET /api/analyses/{id}/structure`
+  still streams the stored `pdb_path` (D-034 / D-118 / D-120 / D-125-B).
+  Not re-pointed here.
+- **27 parent ids:** same closed-out set as
+  `WAVE1_WAVE2_STITCHED_PARENT_IDS`. ⚠ **Not re-queried on Fly.**
+- **IGF2R seam ~88.76 Å:** owner analysis cited in D-117 / D-118 /
+  D-120 / D-121. A join-jump disclosure, **not** a Kabsch RMSD. ⚠ **Not
+  re-measured in this PR.**
+- **D-126-B tip this PR starts from:** `origin/main` `aa8aa02`
+  (`git rev-parse origin/main` after `git fetch origin main`,
+  2026-09-05).
+
+#### Consequences
+
+- Tests that must be able to go red: `### D-126-B —` exists in this log
+  (D-001 naming: the check is the heading, not a citation of one);
+  missing `confidence_kabsch/` tree → do not imply a D-126 path and
+  invent no RMSD / `n_ca_eff` / trim counts; present tree → three
+  paths named and persist stems do not collide (`stitched` vs
+  `kabsch/{parent}` vs `confidence_kabsch/{parent}`); default served =
+  assembler; D-126 seam fields render from A's JSON when present
+  (`n_ca`, `n_ca_eff`, weighted RMSD, `rmsd_full_overlap_angstrom`,
+  `max_ca_jump_angstrom`, `trim_rounds`, `refuse_reason`); refused
+  seam has no "fixed" badge; Method addendum names what D-126 does
+  and does not vs assembler vs D-125, and does not claim seams
+  solved; forbidden language stays parked; assembler download stem
+  stays `stitched`. Test plan **T-1113**–**T-1119**.
+- `ARCHITECTURE.md` records D-126-B as the census / Method consumer of
+  A's `confidence_kabsch/` tree. Served census PDBs stay assembler.
+- A live restitch of the 27, F-004 ingest, remaining tileable / mucins,
+  and rental remain later GOs. A Matt swap GO is later.
+
+#### Assumptions refused
+
+- That B may re-implement persist or overwrite assembler `stitched.pdb`,
+  D-125 `kabsch/{id}/`, or A's `confidence_kabsch/` tree.
+- That missing D-126-path files may be filled with invented RMSD /
+  trim counts or the IGF2R 88.76 Å figure as if it were this parent's
+  weighted Kabsch RMSD.
+- That naming a D-126-path tree licenses calling seams solved or the
+  chain one forward pass.
+- That a refused D-126 seam may wear a "fixed" badge, or that
+  assembler / D-125 PDBs may be presented as a D-126 success.
+- That the 27 may enter `/scorer` (D-109 ruling 7).
+- That this PR may edit ADC-C / pipeline / `/adcs` except a shared
+  component that already existed (prefer leave alone).
+- That this PR may rent a GPU, fold, restitch the 27, or query Fly.
+- That this PR may edit `hold48_kabsch.py` or
+  `hold48_confidence_kabsch.py`.
+- That this PR may repair the `D-` next-free pointer.
 
 ### D-126-A — Overlap-confidence Kabsch core: trimmed + pLDDT-weighted fit, then existing winning_tile
 

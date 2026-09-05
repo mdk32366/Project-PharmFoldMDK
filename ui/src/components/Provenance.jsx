@@ -165,14 +165,19 @@ export default function Provenance({ detail, assemblyReview }) {
             </div>
           </dl>
           <p className="note">
-            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved (D-120 / D-125-B).
+            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved (D-120 / D-125-B / D-126-B).
           </p>
         </div>
       )}
 
       {assemblyReview?.dual_path && (
         <div role="group" aria-label="Dual-path persist stems" className="prov-group prov-dual-path" data-testid="dual-path-provenance">
-          <h4>Persist stems — two paths, not one population</h4>
+          <h4>
+            Persist stems —{' '}
+            {assemblyReview.triple_path?.confidence_kabsch?.present
+              ? 'three paths, not one population'
+              : 'two paths, not one population'}
+          </h4>
           <dl>
             <div>
               <dt>Assembler persist stem</dt>
@@ -190,6 +195,15 @@ export default function Provenance({ detail, assemblyReview }) {
                   : ' — not on disk for this parent'}
               </dd>
             </div>
+            {assemblyReview.triple_path?.confidence_kabsch?.present ? (
+              <div data-testid="d126-persist-stem">
+                <dt>Overlap-confidence persist stem</dt>
+                <dd>
+                  <code>{assemblyReview.triple_path.confidence_kabsch.persist_stem || 'confidence_kabsch/{parent}'}</code>
+                  {' — sibling tree on disk; not the served path'}
+                </dd>
+              </div>
+            ) : null}
             <div>
               <dt>Served path</dt>
               <dd>assembler until a later ops restitch GO names a swap</dd>
@@ -198,8 +212,11 @@ export default function Provenance({ detail, assemblyReview }) {
           <p className="note">
             Kabsch-path files, when present, keep the stem prefix{' '}
             <code>kabsch</code> so they cannot be read as assembler{' '}
-            <code>stitched</code>. Missing RMSD / max Cα jump stay empty.
-            Seams are not scientifically solved.
+            <code>stitched</code>.
+            {assemblyReview.triple_path?.confidence_kabsch?.present
+              ? ' Overlap-confidence files keep the stem prefix confidence_kabsch so they cannot be read as assembler stitched or as a D-125 success. Missing RMSD / trim counts stay empty.'
+              : ' Missing RMSD / max Cα jump stay empty.'}
+            {' '}Seams are not scientifically solved.
           </p>
         </div>
       )}

@@ -5,7 +5,7 @@
 **Audience:** Matt (operator / owner). Reviewer and worker roles are named per surface.
 
 > **Stance.** The stitcher is a **pLDDT assembler**, not a Kabsch superimposer. Known IGF2R
-> seam ≈ **88.76 Å**. Kabsch park → **D-125** (Spec + A + B on `main`). Overlap-confidence Kabsch Spec is **D-126** (docs on `main`; D-126-A is the core BUILD; D-126-B later). No surface may
+> seam ≈ **88.76 Å**. Kabsch park → **D-125** (Spec + A + B on `main`). Overlap-confidence Kabsch Spec is **D-126** (docs on `main`; D-126-A is the core BUILD; D-126-B is UI triple-path honesty). No surface may
 > imply seams are scientifically solved. This document inventories what exists and what
 > it now lies about. It does not ship UI.
 
@@ -33,7 +33,7 @@ needs them live must name a query or log line.
 | Stitcher | pLDDT assembler, not Kabsch | `core/hold48_stitch.py` |
 | IGF2R seam | ~88.76 Å | owner analysis |
 | Kabsch / restitch | Spec is **D-125**; **D-125-A** is the core BUILD (feeds `winning_tile`); **D-125-B** is UI dual-path honesty | [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) |
-| Overlap-confidence Kabsch | Spec is **D-126** (docs on `main`). **D-126-A** is the core BUILD (`confidence_kabsch/`; does not overwrite assembler or D-125 `kabsch/`). D-126-B later. 10.0 Å gate stays | [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md) |
+| Overlap-confidence Kabsch | Spec is **D-126** (docs on `main`). **D-126-A** is the core BUILD (`confidence_kabsch/`; does not overwrite assembler or D-125 `kabsch/`). **D-126-B** is UI triple-path honesty. 10.0 Å gate stays | [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md) |
 | Assembler path | via Fly | owner closeout |
 
 **Code-side inventory** is from the tree on the branch that added this file
@@ -317,7 +317,7 @@ Until Matt GO on a restitch spec:
 | Dup-tile choice (lower id) | Implied scientific preference beyond "first complete cover" |
 | Mucin `out_of_class` | A fake assembled mucin |
 
-Kabsch park → **D-125** (Spec on `main`; confirm `### D-125` exists). D-125-A is the core BUILD (on `main`, `26a40a8` / #237). **D-125-B** is the UI dual-path honesty BUILD (confirm `### D-125-B` exists). Overlap-confidence follow-on Spec is **D-126** (confirm `### D-126` exists; [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md)). **D-126-A** is the core BUILD (confirm `### D-126-A` exists). D-126-B later. This plan is still not itself a BUILD GO.
+Kabsch park → **D-125** (Spec on `main`; confirm `### D-125` exists). D-125-A is the core BUILD (on `main`, `26a40a8` / #237). **D-125-B** is the UI dual-path honesty BUILD (confirm `### D-125-B` exists). Overlap-confidence follow-on Spec is **D-126** (confirm `### D-126` exists; [`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md)). **D-126-A** is the core BUILD (confirm `### D-126-A` exists). **D-126-B** is the UI triple-path honesty BUILD (confirm `### D-126-B` exists). This plan is still not itself a BUILD GO.
 
 ---
 
