@@ -289,13 +289,14 @@ export default function MethodNote() {
           </li>
           <li>
             <strong>It lost ground the earlier paths had held.</strong>{' '}
-            <strong>5</strong> parents that D-125 accepted now refuse.{' '}
-            <strong>7</strong> parents that D-126 accepted now refuse.
-            And <code>n_d126_refuse_d127_pass</code> ={' '}
-            <strong>0</strong> — piecewise did not rescue a single
-            parent D-126 had already refused. That is a{' '}
-            <strong>named finding</strong>, not a footnote under an
-            accept count.
+            <code>n_d125_pass_d127_refuse</code> = <strong>5</strong> —
+            five parents D-125 accepted now refuse.{' '}
+            <code>n_d126_pass_d127_refuse</code> = <strong>7</strong> —
+            seven parents D-126 accepted now refuse. And{' '}
+            <code>n_d126_refuse_d127_pass</code> = <strong>0</strong> —
+            piecewise did not rescue a single parent D-126 had already
+            refused. That is a <strong>named finding</strong>, not a
+            footnote under an accept count.
           </li>
           <li>
             <strong>Where the refuses came from.</strong>{' '}
@@ -311,6 +312,22 @@ export default function MethodNote() {
         <p>
           <strong>So: D-126 remains the best experimental path among
           the stitch algorithms we have tried so far.</strong> Plainly.
+          And the comparison is a number, not an opinion:{' '}
+          <strong>D-126 OPS recovered 2 of its primary 5</strong> —
+          parents <strong>3368</strong> and <strong>3394</strong> —
+          against D-127&apos;s <strong>0 of 3</strong>. (Both figures
+          are ops results as recorded and handed to this page;{' '}
+          <strong>not re-measured here</strong>.)
+        </p>
+        <p>
+          Worse than &quot;no gain&quot;:{' '}
+          <strong>both parents D-126 recovered are back in D-127&apos;s
+          refuse list</strong> — <strong>3368</strong> under{' '}
+          <code>linker_jump_gt_10</code> and <strong>3394</strong>{' '}
+          under <code>rmsd_gt_10</code>, as the histogram above shows.
+          Piecewise gave back the ground the previous path had won.
+        </p>
+        <p>
           D-127 was a reasonable hypothesis — fit each domain in its own
           frame instead of forcing one frame on the whole tile — and the
           run says it did not pay off.

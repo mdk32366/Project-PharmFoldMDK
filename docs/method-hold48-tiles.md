@@ -203,11 +203,13 @@ Seventeen accepted is not the headline, and here is why.
   `linker_jump_gt_10`, **3272** refused `rmsd_gt_10`, and **3432**
   refused `no_domain_pieces`. Those three were the whole reason the
   multi-rigid family was proposed.
-- **It lost ground the earlier paths had held.** **5** parents that
-  D-125 accepted now refuse. **7** parents that D-126 accepted now
-  refuse. And `n_d126_refuse_d127_pass` = **0** — piecewise did not
-  rescue a single parent that D-126 had already refused. That is a
-  **named finding**, not a footnote under an accept count.
+- **It lost ground the earlier paths had held.**
+  `n_d125_pass_d127_refuse` = **5** — five parents D-125 accepted now
+  refuse. `n_d126_pass_d127_refuse` = **7** — seven parents D-126
+  accepted now refuse. And `n_d126_refuse_d127_pass` = **0** —
+  piecewise did not rescue a single parent that D-126 had already
+  refused. That is a **named finding**, not a footnote under an accept
+  count.
 - **Where the refuses came from.** `linker_jump_gt_10` **×7** (2938,
   2939, 3179, 3190, 3321, 3368, 3566); `rmsd_gt_10` **×2** (3272,
   3394); `no_domain_pieces` **×1** (3432). Most failures are at the
@@ -215,9 +217,20 @@ Seventeen accepted is not the headline, and here is why.
   cutting one rigid body into several creates new joins.
 
 **So: D-126 remains the best experimental path among the stitch
-algorithms we have tried so far.** Plainly. D-127 was a reasonable
-hypothesis — fit each domain in its own frame instead of forcing one
-frame on the whole tile — and the run says it did not pay off.
+algorithms we have tried so far.** Plainly. And the comparison is a
+number, not an opinion: **D-126 OPS recovered 2 of its primary 5** —
+parents **3368** and **3394** — against D-127's **0 of 3**. (Those two
+figures are ops results as recorded and handed to this write-up; ⚠ **not
+re-measured here**.)
+
+Worse than "no gain": **both parents D-126 recovered are back in
+D-127's refuse list** — **3368** under `linker_jump_gt_10` and
+**3394** under `rmsd_gt_10`, as the histogram above shows. Piecewise
+gave back the ground the previous path had won.
+
+D-127 was a reasonable hypothesis — fit each domain in its own frame
+instead of forcing one frame on the whole tile — and the run says it did
+not pay off.
 
 Recovering zero of the three was **pre-registered as an allowed
 outcome** before the run (Spec §3). It is a result, not a failure of

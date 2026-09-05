@@ -426,16 +426,31 @@ in this log.
 3. **Refuse histogram (10 parents).** `linker_jump_gt_10` **×7**
    (2938, 2939, 3179, 3190, 3321, 3368, 3566); `rmsd_gt_10` **×2**
    (3272, 3394); `no_domain_pieces` **×1** (3432).
-4. **Named regress — not buried in an accept count (Spec §11).** **5**
-   parents that D-125 passed now refuse. **7** parents that D-126 passed
-   now refuse. `n_d126_refuse_d127_pass` = **0** — piecewise recovered
-   nothing D-126 had already refused.
+4. **Named regress — not buried in an accept count (Spec §11).**
+   `n_d125_pass_d127_refuse` = **5**. `n_d126_pass_d127_refuse` = **7**.
+   `n_d126_refuse_d127_pass` = **0** — piecewise recovered nothing D-126
+   had already refused. The exact confusion keys are named so a reader
+   can line them up against Spec §11 rather than against prose.
 5. **D-126 remains the best experimental path among the stitch
-   algorithms tried so far.** Said plainly, on the Method surface, in
-   those terms. Multi-rigid was a reasonable hypothesis about *which
-   rigid body is fitted to which domain*; on this evidence it did not
-   pay off, and the honest statement of that is the deliverable — not a
-   softened one.
+   algorithms tried so far**, and the comparison is quantified rather
+   than asserted: **D-126 OPS recovered 2 of its primary 5** — parents
+   **3368** and **3394** (as recorded; Matt GO via Emma 2026-09-05;
+   ⚠ **not re-measured here**). Against that, D-127 recovered **0 of
+   3**. Said plainly, on the Method surface, in those terms.
+   Multi-rigid was a reasonable hypothesis about *which rigid body is
+   fitted to which domain*; on this evidence it did not pay off, and
+   the honest statement of that is the deliverable — not a softened
+   one.
+
+   ⚠ **The sharpest form of the finding, and it is a read of two
+   recorded lists rather than a new number:** the two parents D-126
+   recovered are **both** in D-127's refuse histogram — **3368** under
+   `linker_jump_gt_10` and **3394** under `rmsd_gt_10`. So piecewise
+   did not merely fail to add ground; it **gave back both parents the
+   previous path had won.** Stating the D-126 2-of-5 beside D-127's
+   0-of-3 is what makes that legible; omitting it would leave “D-126 is
+   better” as an unquantified opinion on a surface whose whole purpose
+   is that claims name how they are known (D-016).
 6. **Default served path stays assembler. Never auto-flip.** No result
    in this run moves the served PDB, and a *better* result would not
    have either: that swap is a Matt GO, not an inference from a pass
@@ -527,6 +542,15 @@ assembled passes.
   same GO, stated in those terms, and consistent with the figures it
   carries (`n_d126_refuse_d127_pass` = 0, and 7 D-126 passes lost). ⚠ A
   comparison across ops runs, **not** a re-measurement here.
+- **D-126 OPS recovered 2 of its primary 5 — parents 3368 and 3394:**
+  Trinity merge-gate amend via Emma, 2026-09-05, handed to this PR as
+  recorded. ⚠ **Not run, not queried, and not re-measured in this PR.**
+  Consistent with what is already on record: D-127 Spec §3 names 3368
+  (`Q5SZK8`) and 3394 (`Q8TDW7`) as D-126's *other two* of the primary
+  five, i.e. exactly the two outside D-127's primary three — and both
+  appear in the D-127 refuse histogram above. Checking that two
+  recorded lists agree is not a measurement and does not upgrade the
+  provenance.
 
 #### Consequences
 
@@ -549,10 +573,12 @@ assembled passes.
   (anti-gut); forbidden language stays parked; **and (amendment 1) the
   D-127 OPS result is on the Method surface as recorded** — PASS 17 /
   REFUSE 10 / FAIL 0, `recovered_of_primary_three` = 0 with each
-  primary-three reason, the refuse histogram, the 5-vs-D-125 and
-  7-vs-D-126 named regress, `n_d126_refuse_d127_pass` = 0, D-126 named
-  plainly as the best experimental path so far, served path stays
-  assembler, and no gate moved. Test plan **T-1134**–**T-1142**.
+  primary-three reason, the refuse histogram, the named regress under
+  its exact keys (`n_d125_pass_d127_refuse` = 5,
+  `n_d126_pass_d127_refuse` = 7, `n_d126_refuse_d127_pass` = 0), **D-126
+  OPS recovered 2 of 5 (parents 3368 / 3394)** beside D-127's 0 of 3,
+  D-126 named plainly as the best experimental path so far, served path
+  stays assembler, and no gate moved. Test plan **T-1134**–**T-1143**.
 - `ARCHITECTURE.md` records D-127-B as the census / Method consumer of
   A's `piecewise_kabsch/` tree. Served census PDBs stay assembler.
 - With this PR the Spec §7 Method obligation is **discharged**; the ship

@@ -193,6 +193,18 @@ describe('MethodNote — D-121 hold-48 8th-grade explainer (additive, not a gut)
     expect(t).toMatch(/D-126 remains the best experimental path/)
     expect(t).toMatch(/so far/)
     expect(t).toMatch(/did not pay off/)
+    // Trinity amend: the claim carries its number, as recorded.
+    expect(t).toMatch(/D-126 OPS recovered 2 of its primary 5/)
+    expect(t).toMatch(/3368/)
+    expect(t).toMatch(/3394/)
+    expect(t).toMatch(/0 of 3/)
+    expect(t).toMatch(/not re-measured here/)
+    // And that D-127 gave both of them back.
+    expect(t).toMatch(/gave back/)
+    expect(t).toMatch(/refuse list/)
+    // Exact Spec §11 confusion keys, by name.
+    expect(t).toMatch(/n_d125_pass_d127_refuse/)
+    expect(t).toMatch(/n_d126_pass_d127_refuse/)
     expect(t).toMatch(/allowed outcome/)
     expect(t).toMatch(/No threshold moved/)
     expect(t).toMatch(/default served structure is still the assembler/)

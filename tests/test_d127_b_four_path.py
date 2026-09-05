@@ -760,6 +760,13 @@ def test_method_discloses_the_d127_ops_run_and_its_named_regress():
                 assert str(pid) in flat, f"{label}: {reason} {pid}"
 
 
+# Trinity merge-gate amend (via Emma, 2026-09-05): the D-126-best claim
+# must be quantified, not asserted. D-126 OPS recovered 2 of its primary
+# 5 — parents 3368 and 3394 — as recorded.
+D126_RECOVERED_PARENTS = (3368, 3394)
+D126_RECOVERED_OF_PRIMARY_FIVE = 2
+
+
 def test_method_says_plainly_that_d126_remains_the_best_path_so_far():
     """Matt GO: say it plainly. A hedge here is the softening the GO forbids."""
     for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
@@ -768,6 +775,93 @@ def test_method_says_plainly_that_d126_remains_the_best_path_so_far():
         assert "so far" in lowered, label
         # The negative result is stated, not implied.
         assert "did not pay off" in lowered, label
+
+
+def test_method_quantifies_the_d126_comparison_with_recovered_2_of_5():
+    """Trinity amend: "D-126 is better" must carry its number on BOTH surfaces.
+
+    Goes red if the 2-of-5 disclosure, either parent id, or the
+    side-by-side against D-127's 0-of-3 is dropped or softened.
+    """
+    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+        flat = _flat(text)
+        lowered = flat.lower()
+        # The claim is quantified, in those words.
+        assert "d-126 ops recovered 2 of its primary 5" in lowered, label
+        assert str(D126_RECOVERED_OF_PRIMARY_FIVE) in flat, label
+        idx_recovered = lowered.find("d-126 ops recovered 2 of its primary 5")
+        assert idx_recovered != -1, label
+        # ⚠ Both recovered parents must be named AS THE RECOVERED ONES.
+        # A bare `str(pid) in flat` is satisfied by the refuse histogram
+        # further down the same page, so it would not notice 3394 being
+        # dropped from this sentence — checked by mutation, and it did not.
+        claim = lowered[idx_recovered : idx_recovered + 300]
+        for pid in D126_RECOVERED_PARENTS:
+            assert str(pid) in claim, (
+                f"{label}: {pid} must be named in the 2-of-5 sentence itself, "
+                "not merely somewhere on the page"
+            )
+        # Set beside D-127's own recovery so the comparison is legible.
+        assert "0 of 3" in claim, label
+        # As-recorded, never posed as our measurement.
+        assert "not re-measured here" in lowered, label
+        # It must sit with the best-path claim, not orphaned elsewhere.
+        idx_best = lowered.find("d-126 remains the best experimental path")
+        assert idx_best != -1, label
+        assert abs(idx_recovered - idx_best) < 400, (
+            f"{label}: the 2-of-5 figure must sit beside the best-path sentence"
+        )
+
+
+def test_method_names_that_d127_gave_back_both_parents_d126_recovered():
+    """Both D-126-recovered parents appear in D-127's refuse histogram.
+
+    A read of two recorded lists, not a new number — and the sharpest
+    form of the finding, so it must not be quietly dropped.
+    """
+    for pid, reason in ((3368, "linker_jump_gt_10"), (3394, "rmsd_gt_10")):
+        assert pid in OPS_REFUSE_HISTOGRAM[reason][1], pid
+    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+        lowered = _flat(text).lower()
+        assert "gave back" in lowered, label
+        idx = lowered.find("refuse list")
+        assert idx != -1, label
+        # ⚠ Window looks FORWARD from "refuse list" only. A backward window
+        # was satisfied by the 2-of-5 sentence just above, so dropping a
+        # parent from this passage went unnoticed — caught by mutation.
+        passage = lowered[idx : idx + 300]
+        for pid, reason in ((3368, "linker_jump_gt_10"), (3394, "rmsd_gt_10")):
+            assert str(pid) in passage, f"{label}: {pid} in the give-back passage"
+            assert reason in passage, f"{label}: {reason} in the give-back passage"
+            # Named as that parent's reason: the id precedes its reason.
+            assert passage.index(str(pid)) < passage.index(reason), (
+                f"{label}: {pid} must be paired with {reason}"
+            )
+
+
+def test_method_shows_the_exact_confusion_keys():
+    """Spec §11 keys by name, so a reader lines them up against the Spec."""
+    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+        flat = _flat(text)
+        assert "n_d125_pass_d127_refuse" in flat, label
+        assert "n_d126_pass_d127_refuse" in flat, label
+        assert "n_d126_refuse_d127_pass" in flat, label
+    # And the living log carries the same keys with their values.
+    log_flat = _flat(LOG)
+    assert "`n_d125_pass_d127_refuse` = **5**" in log_flat
+    assert "`n_d126_pass_d127_refuse` = **7**" in log_flat
+    assert "`n_d126_refuse_d127_pass` = **0**" in log_flat
+
+
+def test_living_log_records_the_d126_recovered_2_of_5_amend():
+    log_flat = _flat(LOG)
+    lowered = log_flat.lower()
+    assert "d-126 ops recovered 2 of its primary 5" in lowered
+    for pid in D126_RECOVERED_PARENTS:
+        assert str(pid) in log_flat, pid
+    assert "not re-measured here" in lowered or "not re-measured in this pr" in lowered
+    # Provenance names the amend as handed over, not measured.
+    assert "trinity merge-gate amend" in lowered
 
 
 def test_method_refuses_to_loosen_a_gate_or_flip_the_served_path():
