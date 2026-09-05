@@ -165,7 +165,8 @@ export default function Provenance({ detail, assemblyReview }) {
             </div>
           </dl>
           <p className="note">
-            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved (D-120 / D-125-B / D-126-B).
+            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved
+            (D-120 / D-125-B / D-126-B / D-127-B).
           </p>
         </div>
       )}
@@ -174,9 +175,11 @@ export default function Provenance({ detail, assemblyReview }) {
         <div role="group" aria-label="Dual-path persist stems" className="prov-group prov-dual-path" data-testid="dual-path-provenance">
           <h4>
             Persist stems —{' '}
-            {assemblyReview.triple_path?.confidence_kabsch?.present
-              ? 'three paths, not one population'
-              : 'two paths, not one population'}
+            {assemblyReview.four_path?.piecewise_kabsch?.present
+              ? 'four paths, not one population'
+              : assemblyReview.triple_path?.confidence_kabsch?.present
+                ? 'three paths, not one population'
+                : 'two paths, not one population'}
           </h4>
           <dl>
             <div>
@@ -204,6 +207,15 @@ export default function Provenance({ detail, assemblyReview }) {
                 </dd>
               </div>
             ) : null}
+            {assemblyReview.four_path?.piecewise_kabsch?.present ? (
+              <div data-testid="d127-persist-stem">
+                <dt>Piecewise / domain-aware persist stem</dt>
+                <dd>
+                  <code>{assemblyReview.four_path.piecewise_kabsch.persist_stem || 'piecewise_kabsch/{parent}'}</code>
+                  {' — sibling tree on disk; not the served path'}
+                </dd>
+              </div>
+            ) : null}
             <div>
               <dt>Served path</dt>
               <dd>assembler until a later ops restitch GO names a swap</dd>
@@ -216,6 +228,9 @@ export default function Provenance({ detail, assemblyReview }) {
             {assemblyReview.triple_path?.confidence_kabsch?.present
               ? ' Overlap-confidence files keep the stem prefix confidence_kabsch so they cannot be read as assembler stitched or as a D-125 success. Missing RMSD / trim counts stay empty.'
               : ' Missing RMSD / max Cα jump stay empty.'}
+            {assemblyReview.four_path?.piecewise_kabsch?.present
+              ? ' Piecewise / domain-aware files keep the stem prefix piecewise_kabsch so they cannot be read as assembler stitched or as a D-125 / D-126 success. Missing per-piece RMSD, full-overlap RMSD, and linker counts stay empty.'
+              : ''}
             {' '}Seams are not scientifically solved.
           </p>
         </div>
