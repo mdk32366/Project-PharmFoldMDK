@@ -7,7 +7,10 @@
 > file, the PR is incomplete. See [`docs/README.md`](docs/README.md) for the
 > chronological log of individual design decisions. [`docs/decisions.md`](docs/decisions.md)
 > is a thin **ship index** (which id ships which work) — not a second living log.
-> **D-120 ships** Phase 2 review UI; parent honesty GO is **D-118**; parent PLAN is
+> **D-123 ships** the Nectin-4/ADC Doc follow-on on `/about` (AdcContext only;
+> verbatim extract of `docs/pharmfold-adc-nectin4-paper.md` Part 2). **D-122 ships**
+> ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232). **D-120 ships**
+> Phase 2 review UI; parent honesty GO is **D-118**; parent PLAN is
 > **D-117**. **D-119 ships** ADC-A (FDA-approved catalog + thin read API).
 
 **Project**: PharmFoldMDK — an Antibody-Drug Conjugate (ADC) target exploration platform.
@@ -169,7 +172,16 @@ comparator, not a census** — leaving a reader to assume the ranking speaks to 
 space, when it re-orders a fixed list. `AdcContext.jsx` gains the paragraph (the primary home: it
 already derives its cohort stats live, D-050/D-051) and `ScorerView.jsx` §A's cascade line gains a
 one-line qualifier that **links to About rather than restating it**, so the framing has a single source
-and cannot drift between two surfaces. The four example targets — CD30, CD33, CEACAM5, Trop-2, each the
+and cannot drift between two surfaces. **D-123 then adds the owner Nectin-4/ADC Doc
+follow-on on the same `/about` route only** — no second About page; does not
+edit D-122's `/adcs` UI (already on `main` at `86f8a10` / #232). A new
+section ("Two tracks (Nectin-4 / ADC framing)") sits after the NECTIN4 worked-example
+/ comparator notes and before the D-094 paper questions. Science copy is a **verbatim
+extract** of `docs/pharmfold-adc-nectin4-paper.md` Part 2 via `ui/src/aboutPaper.js`
+(Track A red-without-wet-bind; Track B ranking; "EV is not a universal V-key").
+Chrome says **asks whether**, never **shows that**. ABOUT-COPY / `PAPER_QUESTIONS`
+are untouched. Part 1 is not dumped; Wave2 is not dumped; F-004 is not expanded.
+The four example targets — CD30, CD33, CEACAM5, Trop-2, each the
 antigen of an approved or late-phase ADC — are **derived, not inscribed**: they live in
 `ui/src/heldoutExamples.js` and `heldoutExamples.test.js` asserts every `gene_symbol` + accession
 appears in `data/heldout_positives.csv`, whose accessions came from UniProt. ⚠ **The over-claim guard is
@@ -915,8 +927,9 @@ never install a CUDA stack.
 1. **Every PR that changes architecture updates this file in the same PR.** No exceptions.
 2. **Every design decision is written into [`docs/README.md`](docs/README.md) *before*
    the work it describes is finished** — the decision log leads the code, not the reverse.
-   [`docs/decisions.md`](docs/decisions.md) indexes which id **ships** (D-120 ships
-   Phase 2 review; D-119 ships ADC-A; D-118 ships P0 honesty; D-117 is the
-   parent PLAN). Do not claim Phase 2 as D-119.
+   [`docs/decisions.md`](docs/decisions.md) indexes which id **ships** (D-123 ships
+   the Nectin Doc → AdcContext follow-on; D-122 ships ADC-B `/adcs`; D-120 ships
+   Phase 2 review; D-119 ships ADC-A; D-118 ships P0 honesty; D-117 is the parent
+   PLAN). Do not claim Phase 2 as D-119.
 3. When a decision in the log changes the system's shape, fold the outcome into the
    relevant section here so this document never drifts from reality.

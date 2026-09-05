@@ -133,6 +133,10 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .prose li { margin: 0.3rem 0; }
 .adc-parts { list-style: none; padding-left: 0; }
 .adc-parts li { padding: 0.4rem 0.7rem; border-left: 3px solid var(--line); margin: 0.35rem 0; }
+/* D-123: Track A / Track B stay visible as two framed blocks, not a buried paragraph. */
+.two-tracks .track { padding: 0.55rem 0.8rem; border-left: 3px solid var(--line); margin: 0.7rem 0; background: var(--panel); }
+.two-tracks .track p { margin: 0; }
+.two-tracks h4 { margin-top: 1.1rem; }
 .prose code { background: var(--panel); padding: 0 0.3rem; border-radius: 3px; }
 
 /* coverage line */
