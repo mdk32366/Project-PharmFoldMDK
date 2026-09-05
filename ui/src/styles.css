@@ -626,3 +626,34 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   background: #1a2236;
 }
 .scorer-assembly-note { margin: 0.4rem 0 1rem; }
+
+/* D-122 / ADC-B — catalog index + baseball card */
+.adcs-index .lede { color: var(--muted); }
+.adcs-floor { margin: 0.8rem 0; }
+.adcs-exclusions { color: var(--muted); font-size: 0.9rem; }
+.adcs-exclusions ul { padding-left: 1.1rem; }
+.adcs-index table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+.adcs-index th, .adcs-index td {
+  text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.adcs-index th { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
+.adcs-inn, .adcs-acc { color: var(--muted); font-size: 0.82rem; margin-top: 0.15rem; }
+
+.baseball-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+}
+.adc-card-nav { margin: 0 0 0.8rem; font-size: 0.9rem; }
+.baseball-kind { margin: 0; color: var(--muted); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.baseball-head h2 { margin: 0.15rem 0 0; font-size: 2rem; letter-spacing: 0.02em; }
+.baseball-sub { margin: 0.15rem 0 0; color: var(--muted); }
+.baseball-card h3 { margin: 1.2rem 0 0.5rem; font-size: 0.95rem; color: var(--muted); }
+.baseball-stats { display: grid; grid-template-columns: 12rem 1fr; gap: 0.45rem 0.9rem; margin: 0; }
+.prov-field { display: contents; }
+.prov-field dt { color: var(--muted); font-size: 0.85rem; }
+.prov-field dd { margin: 0; }
+.prov-value { display: block; }
+.prov-meta { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; word-break: break-word; }

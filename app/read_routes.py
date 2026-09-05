@@ -137,8 +137,8 @@ def get_coverage(engine: Any = Depends(get_engine)) -> dict:
 def get_adcs() -> dict:
     """D-119 / ADC-A: the FDA-approved catalog. File-derived, no engine, no credential.
 
-    ADC-B UI is a later GO. This route exists so that UI can consume a dated contract
-    instead of inventing a review-paper count (D-029 / D-016).
+    D-122 / ADC-B consumes this dated contract instead of inventing a review-paper
+    count (D-029 / D-016).
     """
     return list_adcs()
 

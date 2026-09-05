@@ -31,11 +31,13 @@
 >   Kabsch GO.** Phase 1 P0 honesty is **D-118**. Phase 2 review UI is **D-120**. The
 >   stitcher is a pLDDT assembler; seams are not scientifically solved.
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
->   **D-120 ships** Phase 2 review UI; parent PLAN is **D-117**; parent honesty GO is
->   **D-118**. **D-119 ships** ADC-A (FDA-approved catalog + thin read API). Not a
->   second living log — authoritative `### D-NNN` entries stay in this file.
+>   **D-122 ships** ADC-B (`/adcs` UI). **D-119 ships** ADC-A (the dated catalog +
+>   thin read API this UI consumes). **D-120 ships** Phase 2 review UI; parent PLAN
+>   is **D-117**; parent honesty GO is **D-118**. Not a second living log —
+>   authoritative `### D-NNN` entries stay in this file.
 > - [`../data/adcs/README.md`](../data/adcs/README.md) — ADC-A v1 catalog hook
->   (**D-119**). Weekly Drugs@FDA watch is Emma's ops lane; not built here.
+>   (**D-119**). ADC-B pages consume it (**D-122**). Weekly Drugs@FDA watch is
+>   Emma's ops lane; not built here.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -147,6 +149,149 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-122 — ADC-B: `/adcs` index + `/adcs/:id` baseball cards consume the D-119 catalog
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the ADC-B BUILD GO** (Trinity Architect ship id **D-122**,
+  after D-119 / ADC-A on `main` at `b4f0b02` / #228 and D-120 Phase 2 at `04023a8`
+  / #229). UI only. Parent data is **D-119**.
+  ⚠ **Not ADC-C** (pipeline / Right-to-Try). ⚠ **Not Method / Doc / ABOUT-COPY.**
+  ⚠ **Not Nectin-4 AdcContext `/about`** (separate PR). ⚠ **Not D-121** (Method
+  hold-48 — a different later GO; this entry does not spend that integer).
+  ⚠ **Not a Kabsch / restitch GO.** ⚠ **Not F-004 / ranking ingest.**
+  ⚠ **Does not rewrite `data/adcs/adcs.v1.json` or invent a field D-119 refused.**
+- **Ruled by:** Trinity Architect binding 2026-09-05 — ADC-B ship id is **D-122**;
+  parent data is **D-119**; scope is `/adcs` index + `/adcs/:id` baseball cards on
+  the D-119 API; nav **ADCs**; no invented numbers.
+- **Cite:** D-119 (the dated FDA-approved catalog + `GET /api/adcs` +
+  `GET /api/adcs/{id}`) · D-029 (openFDA = approval; mapping = antigen; two
+  freshness dates) · D-016 (every claim names how it is known) · D-034
+  (unauthenticated `/api` reads) · D-033 (React UI) · D-046 (vitest harness) ·
+  owner Spec: ADC-A / ADC-B / ADC-C phased cut
+- **Relates:** `D-119` · `D-029` · `D-040` (scorer mapping stays a different
+  object) · `D-051` (nav is a behaviour change; routes already in
+  `system-model.json`) · ship index [`decisions.md`](decisions.md)
+- **Does not amend:** D-119 catalog schema · `core.adc_catalog` field set ·
+  Group B/C · F-004 · D-120 Phase 2 review · Kabsch · ranking set · ABOUT-COPY /
+  AdcContext · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110`
+  while later numbers are written). This entry spends `D-122`; the pointer stays
+  the owner's. ⚠ **Does not write `### D-121`.** That integer is the Method
+  hold-48 later GO named in the ADC-B brief as out of scope.
+
+#### Context
+
+D-119 shipped the dated contract ADC-B was supposed to consume: fifteen
+currently-marketed FDA-approved rows in `data/adcs/adcs.v1.json`, every field
+`{value, source, as_of, confidence}`, served by two public GET routes. The React
+app still had **no** `/adcs` page — D-119 decision 7 and
+`test_react_app_has_no_adcs_route` pinned that absence as a Spec miss *for
+ADC-A*. ADC-B is the later GO that flips it.
+
+The catalog Spec asked for a sortable index on **name / cancer type / protein**
+and a baseball-card detail. D-119 decision 8 is load-bearing here: v1 carries
+identity + approval + reviewed target. It does **not** carry indication,
+cancer type, DAR, efficacy, or chemistry. Drugs@FDA has no antigen field
+(D-029); it also does not give this project a reviewed indication field in v1.
+Joining HPA's 20 cancer types (D-053 / D-093) onto a drug card would confuse
+**staining** with **FDA indication** — the supplier-survey Spec already named
+that as two paths to one quantity, never compared.
+
+So the Spec's three sort axes are on the page, and the missing one is an
+**honest absence**, not a guessed urothelial / breast / myeloma string.
+
+#### Decision
+
+1. **Two React routes consume the existing D-119 API, nothing else.**
+   `/adcs` fetches `GET /api/adcs`. `/adcs/:id` fetches `GET /api/adcs/{id}`.
+   Unknown `{id}` is a 404 / "unknown ADC" — never a guessed row. File-derived;
+   no new engine route; `system-model.json` already lists both paths (D-119 /
+   D-051). Nav entry is **ADCs** (not "About ADCs" — that page stays the
+   mechanism briefing and is not rewritten).
+2. **Sortable index on the Spec's three axes.** Columns: **Name** (official
+   `brand_name`, INN as secondary), **Cancer type**, **Protein** (reviewed
+   `antigen` + `uniprot_accession`). Default sort is **name ascending** — a
+   reader-chosen order, not a ranking (same stance as D-087 / D-102: the page
+   must not arrive having chosen a quality axis). Click cycles
+   asc → desc → default via `sortRows` (absent values are a trailing category,
+   never `?? 0`).
+3. **Cancer type is not in catalog v1 — render the absence, do not invent.**
+   Every row's cancer-type cell is the same named absence: *"not in catalog v1
+   — indication is not an ADC-A field (D-119)."* Sorting by that column is a
+   same-category sort. **Do not** join `/api/associations` or type PADCEV →
+   urothelial from memory. A later GO that adds a reviewed indication envelope
+   can fill the column; this one must not.
+4. **Baseball-card detail renders every envelope, all four keys.** Brand is the
+   title; INN the subtitle; identity / target / approval sit as stat lines.
+   Each field shows `value`, `source`, `as_of`, and `confidence`
+   (`official` / `reviewed` / `derived`). A bare string is not data. The
+   cancer-type absence travels on the card too, so the index and the card
+   cannot disagree.
+5. **No invented numbers.** Row count is `adcs.length` from the payload, glossed
+   as a pin of **this file on the reconciliation date**, not "there are N
+   approved ADCs." Completeness / the two freshness dates / named exclusions
+   are header fields from the same payload. DAR / IC50 / ORR / PFS / OS /
+   payload / linker do not appear. Pipeline / Right-to-Try / Lumoxiti /
+   ifinatamab are **not rows** (they stay named exclusions when the header
+   carries them).
+6. **FDA-approved v1 only.** The page states the file's `scope` value
+   (`fda_approved_only`). It does not grow a pipeline shelf. ADC-C remains a
+   later GO.
+7. **Hard stops stay parked.** No Kabsch language. No F-004 ingest. No Method
+   hold-48 (D-121). No AdcContext / ABOUT-COPY / Nectin-4 `/about` rewrite.
+   `core.adc_catalog` and `data/adcs/adcs.v1.json` are not rewritten.
+
+#### Deep-learning justification
+
+This surface does not run a network. The graded core remains ESMFold (D-003)
+and the scorer (D-041 / F-004). ADC-B is how a reader can **name** the dated
+approved-drug set those folds are about without typing a review-paper count
+D-029 already rejected. An unsourced "15 approved ADCs" on a structure surface,
+or a guessed indication on a baseball card, would attribute clinical validation
+the model never measured. Neutral to the weights; load-bearing for whether
+"approved ADC" stays a checkable claim (D-016) once it is on a page.
+
+#### Provenance (D-016)
+
+- **Parent data:** D-119 / `b4f0b02` / #228 — `data/adcs/adcs.v1.json`,
+  `core/adc_catalog.py`, `GET /api/adcs`, `GET /api/adcs/{adc_id}`. This PR
+  does not re-query openFDA.
+- **Row identities and envelopes:** the committed file. Tests derive brand /
+  antigen / BLA from the fixture payload, never from a typed constant that
+  could rot against the file.
+- **Cancer-type absence:** D-119 decision 8 (v1 field set) + D-093
+  supplier-survey warning (HPA taxonomy ≠ ADC indication). Not a live FDA
+  label-section read.
+- **Ship id:** Trinity binding 2026-09-05 (this session): ADC-B is **D-122**.
+  D-119 is the data parent. D-120 is Phase 2. D-121 is Method hold-48, out of
+  scope.
+
+#### Consequences
+
+- Tests that must be able to go red: `/adcs` and `/adcs/:id` exist in
+  `App.jsx`; nav exposes **ADCs**; index renders rows from `GET /api/adcs` and
+  sorts by name / protein; cancer-type cells are the named v1 absence (no
+  invented indication string); baseball card renders `value` + `source` +
+  `as_of` + `confidence` for a real D-119 row (PADCEV / `enfortumab-vedotin`);
+  unknown id is not a 200-with-a-guess; payload row count is what the page
+  states; denylist on DAR/IC50/ORR/PFS/OS and on pipeline/RTT-as-rows;
+  `### D-122 —` exists in this log; D-119's "no `/adcs` route" test is
+  inverted, not left defending the old absence.
+- `ARCHITECTURE.md` records the ADC-B pages as consumers of the D-119 routes.
+- ADC-C, Method hold-48 (D-121), Nectin-4 AdcContext, Kabsch, and F-004 ingest
+  remain later GOs.
+
+#### Assumptions refused
+
+- That a review-paper indication (or HPA cancer type) may fill the cancer-type
+  column.
+- That a count of rows is a scientific constant.
+- That this page may invent DAR / efficacy / chemistry D-119 refused.
+- That `/about` AdcContext should render the catalog.
+- That ADC-B may reuse D-119, D-120, or D-121 as its ship id.
+
+---
 
 ### D-120 — Phase 2 review UI: assembled-parent `/census/:id` is auditable without SQL
 
