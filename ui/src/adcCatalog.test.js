@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
   CANCER_TYPE_ABSENT_COPY,
+  PHASE_VOCAB,
+  filterPipelineByPhase,
   flattenAdc,
   flattenCatalog,
+  flattenPipeline,
+  flattenPipelineRow,
   headerValue,
   isEnvelope,
+  looksLikeUrl,
 } from './adcCatalog.js'
 
 const env = (value, extras = {}) => ({
@@ -48,5 +53,48 @@ describe('adcCatalog flatten (D-122)', () => {
     expect(flattenCatalog(catalog)).toHaveLength(2)
     expect(headerValue(catalog, 'scope')).toBe('fda_approved_only')
     expect(flattenCatalog({})).toHaveLength(0)
+  })
+})
+
+describe('adcCatalog pipeline flatten (D-124)', () => {
+  const ifina = {
+    id: env('ifinatamab-deruxtecan', { confidence: 'derived' }),
+    name: env('ifinatamab deruxtecan', { confidence: 'reviewed' }),
+    antigen: env('CD276', { confidence: 'reviewed' }),
+    uniprot_accession: env('Q5ZPR3', { confidence: 'reviewed' }),
+    development_stage: env('clinical', { confidence: 'reviewed' }),
+    phase: env('BLA/NDA submitted', { confidence: 'reviewed' }),
+    source_citation: env('PDUFA 2026-10-10', { confidence: 'reviewed' }),
+  }
+  const phase1 = {
+    ...ifina,
+    id: env('ly3076226', { confidence: 'derived' }),
+    name: env('LY3076226', { confidence: 'reviewed' }),
+    phase: env('Phase 1', { confidence: 'reviewed' }),
+  }
+
+  it('unwraps pipeline envelopes and keeps the closed phase token', () => {
+    const flat = flattenPipelineRow(ifina)
+    expect(flat.id).toBe('ifinatamab-deruxtecan')
+    expect(flat.name).toBe('ifinatamab deruxtecan')
+    expect(flat.protein).toBe('CD276')
+    expect(flat.phase).toBe('BLA/NDA submitted')
+    expect(PHASE_VOCAB).toEqual([
+      'Phase 1', 'Phase 1/2', 'Phase 2', 'Phase 3', 'BLA/NDA submitted', 'Other',
+    ])
+  })
+
+  it('filters by phase and treats all as the unfiltered set', () => {
+    const rows = flattenPipeline({ pipeline: [ifina, phase1] })
+    expect(filterPipelineByPhase(rows, 'all')).toHaveLength(2)
+    expect(filterPipelineByPhase(rows, 'Phase 1').map((r) => r.id)).toEqual(['ly3076226'])
+    expect(filterPipelineByPhase(rows, 'Phase 3')).toEqual([])
+    expect(flattenPipeline({})).toHaveLength(0)
+  })
+
+  it('does not treat a bare string as an access URL', () => {
+    expect(looksLikeUrl('https://clinicaltrials.gov/')).toBe(true)
+    expect(looksLikeUrl('21 U.S.C. § 360bbb-0a')).toBe(false)
+    expect(looksLikeUrl(null)).toBe(false)
   })
 })

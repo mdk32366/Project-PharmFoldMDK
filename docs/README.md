@@ -40,20 +40,23 @@
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**). Additive
 >   MethodNote section on `/method`. ⚠ **Assembler ≠ Kabsch today. #229 stays merged.**
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
->   **D-124 ships** ADC-C-A (pipeline catalog + access/RTT payload + thin read API).
->   **D-125 ships** the Kabsch restitch Spec (docs only; already on `main`,
->   `fbe8978` / #234). **D-125-A/B** code BUILD is later and waits until
->   **D-124 A+B** (ADC-C) is on `main`. **D-121 ships** the Method hold-48
->   8th-grade explainer. **D-123 ships** the Nectin-4/ADC Doc follow-on on
->   `/about` (already on `main`, `2ffd4f8` / #231). **D-122 ships** ADC-B
->   (`/adcs` UI) on `main` (`86f8a10` / #232). **D-119 ships** ADC-A.
->   **D-120 ships** Phase 2 review UI; parent PLAN is **D-117**; parent
->   honesty GO is **D-118**. Not a second living log — authoritative
->   `### D-NNN` entries stay in this file.
+>   **D-124 ships** ADC-C: **A** (pipeline catalog + access/RTT payload +
+>   thin read API) already on `main` (`b71bade` / #235); **B** is the
+>   `/adcs` consumer (Approved | Pipeline shelves, phase filter, Access
+>   panel). **D-125 ships** the Kabsch restitch Spec (docs only; already
+>   on `main`, `fbe8978` / #234). **D-125-A/B** code BUILD is later and
+>   waits until **D-124 A+B** (ADC-C) is on `main`. **D-121 ships** the
+>   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
+>   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
+>   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
+>   **D-119 ships** ADC-A. **D-120 ships** Phase 2 review UI; parent PLAN
+>   is **D-117**; parent honesty GO is **D-118**. Not a second living log
+>   — authoritative `### D-NNN` entries stay in this file.
 > - [`../data/adcs/README.md`](../data/adcs/README.md) — ADC-A v1 catalog hook
 >   (**D-119**). ADC-B pages consume it (**D-122**). **D-124 / ADC-C-A** adds
 >   sibling files `adcs.pipeline.v1.json` + `access.v1.json` — not merged into
->   `adcs.v1.json`. Weekly Drugs@FDA watch is Emma's ops lane; not built here.
+>   `adcs.v1.json`. **D-124 / ADC-C-B** consumes those siblings on `/adcs`.
+>   Weekly Drugs@FDA watch is Emma's ops lane; not built here.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -166,35 +169,48 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
-### D-124 — ADC-C-A: pipeline catalog + access/RTT payload are dated JSON contracts, not a UI and not advice
+### D-124 — ADC-C-A: pipeline catalog + access/RTT payload are dated JSON contracts; ADC-C-B is the /adcs consumer
 
 - **Date:** 2026-09-05
-- **Status:** accepted as **the ADC-C-A BUILD GO** (Emma BUILD GO; Trinity
-  Architect binding bar 2026-09-05). Data + thin read API only.
-  ⚠ **Not ADC-C-B** (no `/adcs` React changes, no AdcContext / Method rewrite).
-  ⚠ **Not ADC-A / ADC-B.** D-119 `adcs.v1.json` and D-122 `/adcs` pages stay.
-  ⚠ **Does not edit or merge into `data/adcs/adcs.v1.json`.**
-  ⚠ **Not a Kabsch / restitch GO.** ⚠ **Not F-004 / ranking ingest.**
+- **Status:** accepted. **ADC-C-A shipped** on `main` (`b71bade` / #235) —
+  data + thin read API. **ADC-C-B is this PR** — the `/adcs` consumer of
+  those contracts (Approved | Pipeline shelves, closed-vocab phase filter,
+  Access panel). Same integer: the check is this `### D-124` heading, not
+  a citation of it (D-062 / method-note item 7).
+  ⚠ **Not a rewrite of A.** Pipeline / access JSON bytes and the three
+  GET routes stay. ⚠ **Does not edit or merge into `data/adcs/adcs.v1.json`.**
+  ⚠ **Not ADC-A / ADC-B catalog invention.** D-119 stays the approved
+  roster; D-122 Approved shelf stays its consumer.
+  ⚠ **Does not rewrite AdcContext / Method.** ⚠ **Not a Kabsch / restitch GO.**
+  ⚠ **Not F-004 / ranking ingest.** ⚠ **Not rental.**
   ⚠ **Does not invent efficacy, DAR, indications, response rates, or chemistry.**
+  ⚠ **Does not invent pipeline rows or trial / access claims.**
   ⚠ **Does not speak as medical or legal advice.**
-- **Ruled by:** Trinity Architect binding 2026-09-05 — ADC-C-A GO, data + API:
-  `data/adcs/adcs.pipeline.v1.json` (scope `pipeline_investigational`) +
-  `data/adcs/access.v1.json` + `GET /api/adcs/pipeline` +
-  `GET /api/adcs/pipeline/{id}` + `GET /api/adcs/access`; every field
-  `{value, source, as_of, confidence}`; closed phase vocab only; row count is
-  a dated floor; approved `/api/adcs` + `/api/adcs/{id}` unchanged.
+- **Ruled by:** Trinity Architect binding 2026-09-05 — ADC-C-A GO, data + API
+  (already on `main`): `data/adcs/adcs.pipeline.v1.json` (scope
+  `pipeline_investigational`) + `data/adcs/access.v1.json` +
+  `GET /api/adcs/pipeline` + `GET /api/adcs/pipeline/{id}` +
+  `GET /api/adcs/access`; every field `{value, source, as_of, confidence}`;
+  closed phase vocab only; row count is a dated floor; approved
+  `/api/adcs` + `/api/adcs/{id}` unchanged. Emma BUILD GO 2026-09-05 —
+  ADC-C-B UI: Approved | Pipeline toggle on `/adcs`; Pipeline consumes the
+  three A routes; phase filter is Pipeline-view only and the Architect
+  closed set; Access panel renders `/api/adcs/access` with the required
+  disclaimer; sourced fields use `ProvenanceField` (Trinity C-B bar 5);
+  honest empty / missing states.
 - **Cite:** D-119 (approved catalog + envelope discipline; pipeline/RTT was the
-  named ADC-C exclusion) · D-122 (UI consumer of v1; this PR does not rewrite
-  it) · D-029 (mapping = antigen; two freshness dates; gate stays hermetic) ·
-  D-016 (every claim names how it is known) · D-040 (Group B/C stay the scorer
+  named ADC-C exclusion) · D-122 (Approved-shelf consumer of v1; B adds a
+  Pipeline shelf beside it, it does not rewrite the v1 contract) · D-029
+  (mapping = antigen; two freshness dates; gate stays hermetic) · D-016
+  (every claim names how it is known) · D-040 (Group B/C stay the scorer
   file; this pipeline file is a **different object**) · D-034 (unauthenticated
-  `/api` reads) · D-051 (new routes fire the architecture contract) · owner
-  Spec: ADC-A / ADC-B / ADC-C phased cut
+  `/api` reads) · D-051 (A routes already fire the architecture contract) ·
+  owner Spec: ADC-A / ADC-B / ADC-C phased cut · Emma BUILD GO ADC-C-B
 - **Relates:** `D-119` · `D-122` · `D-029` · `D-040` · `D-034` · `D-051` ·
   ship index [`decisions.md`](decisions.md)
-- **Does not amend:** D-119 catalog schema · `adcs.v1.json` bytes · D-122
-  `/adcs` React routes · Group B labels · F-004 · D-118 census identity ·
-  Kabsch · ranking set · the `D-` next-free pointer
+- **Does not amend:** D-119 catalog schema · `adcs.v1.json` bytes · A pipeline
+  / access JSON bytes · Group B labels · F-004 · D-118 census identity ·
+  Kabsch · ranking set · AdcContext / Method · the `D-` next-free pointer
 - ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110`
   while later numbers are written). This entry spends `D-124`; the pointer stays
   the owner's.
@@ -249,18 +265,45 @@ field.
    disclaimer: this is **NOT medical advice, NOT legal advice, and NOT a
    treatment recommendation**. NCT identifiers appear only when the mapping
    citation already named them. Eligibility is not determined here.
-7. **Thin read API, no UI.** `GET /api/adcs/pipeline` returns the pipeline
+7. **Thin read API (A).** `GET /api/adcs/pipeline` returns the pipeline
    catalog. `GET /api/adcs/pipeline/{id}` returns one row or 404.
    `GET /api/adcs/access` returns the access payload. Declared **before**
    `GET /api/adcs/{adc_id}` so `pipeline` / `access` are not captured as
    approved ids (D-120 `census/summary` lesson). Approved
    `GET /api/adcs` and `GET /api/adcs/{id}` stay the v1 contract.
-   Unauthenticated (D-034). File-derived, no engine. **No** React `/adcs`
-   edit. **No** AdcContext / Method rewrite. ADC-C-B is a later GO.
+   Unauthenticated (D-034). File-derived, no engine. A shipped with **no**
+   React `/adcs` edit; B is the later GO that consumes these three routes.
 8. **Separate from the scorer mapping.** `core.adc_catalog` pipeline/access
    loaders do not import `core.adc_reference`. Group B/C classification is
    unchanged. A pipeline id that is already a v1 approved row is rejected
    at load (no silent merge).
+9. **ADC-C-B — two shelves on `/adcs`, not a merge.** `/adcs` keeps the
+   D-122 Approved shelf on `GET /api/adcs` / `GET /api/adcs/{id}`. A
+   **Approved | Pipeline** tablist (URL `?shelf=pipeline`) switches to the
+   A pipeline catalog. Investigational rows never appear as Approved rows;
+   approved v1 rows never appear as Pipeline rows. `adcs.v1.json` stays
+   byte-untouched.
+10. **Phase filter is Pipeline-view only, Architect closed set.** Tokens
+    are exactly `Phase 1` | `Phase 1/2` | `Phase 2` | `Phase 3` |
+    `BLA/NDA submitted` | `Other`, plus an `All phases` default. The
+    Approved shelf has no phase control (Trinity C-B bar 2). A filter
+    that matches zero rows is an honest empty — "no row in this file
+    matches," not "there are no such agents."
+11. **Access panel renders the A payload through ProvenanceField.**
+    `GET /api/adcs/access` is the only source. The required disclaimer
+    (NOT medical advice / NOT legal advice / NOT a treatment
+    recommendation) is a sourced envelope, not chrome copy.
+    Trinity C-B bar 5: sourced fields use `ProvenanceField` (value +
+    source + as_of + confidence), same pattern as ADC-B baseball cards.
+    Index tables still flatten for sort keys only (D-122). NCT
+    identifiers appear only when the payload names them. A missing
+    field, empty list, or failed fetch is an empty / missing state —
+    never a guessed eligibility, enrollment, or Right-to-Try
+    determination.
+12. **Pipeline baseball card at `/adcs/pipeline/:id`.** Declared **before**
+    `/adcs/:id` so the literal `pipeline` is not captured as an approved
+    id. Consumes `GET /api/adcs/pipeline/{id}`. Unknown id is not a
+    guessed row. ⚠ **Not** a new nav item. ⚠ **Not** AdcContext / Method.
 
 #### Pipeline inclusion (how each row is known)
 
@@ -288,11 +331,13 @@ that "there are N pipeline ADCs."
 
 These files do not run a network. The graded core remains ESMFold (D-003)
 and the scorer (D-041 / F-004). ADC-C-A is the **dated investigational-drug
-set** those folds are *about* when a later page names a pipeline agent —
+set** those folds are *about* when a page names a pipeline agent —
 so "pipeline ADC" stays a checkable claim (D-016) rather than atmosphere,
 and so an unsourced efficacy number cannot be attributed to a model that
-never measured one. Neutral to the weights; load-bearing for the seam
-between structure output and clinical-development language.
+never measured one. ADC-C-B is the **surface that refuses to type that
+atmosphere**: it can only render envelopes the A APIs return. Neutral to
+the weights; load-bearing for the seam between structure output and
+clinical-development language.
 
 #### Provenance (D-016)
 
@@ -321,19 +366,28 @@ between structure output and clinical-development language.
 
 #### Consequences
 
-- Tests that must be able to go red: envelope on every pipeline/access
-  field; `scope` is `pipeline_investigational` and is not
-  `fda_approved_only`; approved v1 ids do not appear as pipeline rows;
-  unknown pipeline `{id}` 404s; denylist on DAR/IC50/ORR/PFS/OS/indication
-  keys; phase outside the closed vocab is rejected; `development_stage`
-  `approved` is rejected; access disclaimer names NOT medical / NOT legal /
-  NOT a treatment recommendation; `### D-124 —` exists in this log;
-  architecture-contract set-equality includes the three new routes; React
-  `App.jsx` still has only D-122's `/adcs` + `/adcs/:id`.
-- `ARCHITECTURE.md` gains the pipeline + access files and three public GET
-  routes. `system-model.json` must list them in the same PR (D-051).
-- ADC-C-B (UI) is a later GO. Emma's Drugs@FDA watcher remains ops, not
-  this PR.
+- Tests that must be able to go red **(A, already on `main`):** envelope
+  on every pipeline/access field; `scope` is `pipeline_investigational`
+  and is not `fda_approved_only`; approved v1 ids do not appear as
+  pipeline rows; unknown pipeline `{id}` 404s; denylist on
+  DAR/IC50/ORR/PFS/OS/indication keys; phase outside the closed vocab is
+  rejected; `development_stage` `approved` is rejected; access disclaimer
+  names NOT medical / NOT legal / NOT a treatment recommendation;
+  `### D-124 —` exists in this log; architecture-contract set-equality
+  includes the three A routes.
+- Tests that must be able to go red **(B, this PR):** Approved shelf still
+  consumes `/api/adcs` and does not list pipeline ids as approved rows;
+  Pipeline shelf consumes `/api/adcs/pipeline`; phase filter is the
+  closed vocab and can empty the table honestly; Access panel consumes
+  `/api/adcs/access` and surfaces the disclaimer as a ProvenanceField
+  envelope; missing / failed access is an empty state, not invented NCT /
+  eligibility copy; Approved has no phase filter; pipeline card
+  consumes `/api/adcs/pipeline/{id}` and 404s without a guess; React
+  `App.jsx` keeps D-122's `/adcs` + `/adcs/:id` and adds
+  `/adcs/pipeline/:id` before `:id`.
+- `ARCHITECTURE.md` records B as the `/adcs` consumer of the A files /
+  routes (A already listed the GET routes in #235).
+- Emma's Drugs@FDA watcher remains ops, not this PR.
 
 #### Assumptions refused
 
@@ -343,9 +397,14 @@ between structure output and clinical-development language.
   outside the Architect pin.
 - That this payload may recommend a trial, determine Right-to-Try
   eligibility, or speak as medical/legal advice.
-- That ADC-C-A may ship `/adcs` React changes (that is ADC-C-B).
+- That ADC-C-A may ship `/adcs` React changes (that was ADC-C-B; B is
+  this PR and still does not invent rows or advice).
+- That B may merge pipeline rows into `adcs.v1.json` or the Approved table.
+- That B may type a review-paper pipeline count, invent an NCT, or
+  determine Right-to-Try / trial eligibility.
 - That this PR may run Kabsch, restitch, or ingest F-004.
-- That this PR may repair the `D-` next-free pointer.
+- That this PR may rewrite AdcContext / Method or repair the `D-`
+  next-free pointer.
 
 ---
 

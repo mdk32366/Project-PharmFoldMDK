@@ -14,6 +14,9 @@ vi.mock('./api.js', () => ({
   getPlddt: vi.fn().mockResolvedValue([]),
   listAdcs: vi.fn().mockResolvedValue({ adcs: [] }),
   getAdc: vi.fn().mockResolvedValue({}),
+  listPipelineAdcs: vi.fn().mockResolvedValue({ pipeline: [] }),
+  getPipelineAdc: vi.fn().mockResolvedValue({}),
+  getAdcAccess: vi.fn().mockResolvedValue({}),
   structureUrl: (id) => `/api/analyses/${id}/structure`,
 }))
 vi.mock('./components/TargetView.jsx', () => ({
@@ -24,6 +27,9 @@ vi.mock('./components/AdcsView.jsx', () => ({
 }))
 vi.mock('./components/AdcCard.jsx', () => ({
   default: ({ id }) => <div>STUB adc card for {String(id)}</div>,
+}))
+vi.mock('./components/AdcPipelineCard.jsx', () => ({
+  default: ({ id }) => <div>STUB pipeline card for {String(id)}</div>,
 }))
 
 import App from './App.jsx'
@@ -74,6 +80,13 @@ describe('App — five-surface nav (D-051)', () => {
   it('/adcs/:id routes to the baseball card (D-122)', async () => {
     renderAt('/adcs/enfortumab-vedotin')
     await waitFor(() => expect(screen.getByText(/STUB adc card for enfortumab-vedotin/)).toBeInTheDocument())
+    expect(screen.queryByText(STORY)).toBeNull()
+  })
+
+  it('/adcs/pipeline/:id routes to the pipeline card (D-124)', async () => {
+    renderAt('/adcs/pipeline/ifinatamab-deruxtecan')
+    await waitFor(() => expect(screen.getByText(/STUB pipeline card for ifinatamab-deruxtecan/)).toBeInTheDocument())
+    expect(screen.queryByText(/STUB adc card/)).toBeNull()
     expect(screen.queryByText(STORY)).toBeNull()
   })
 })
