@@ -27,6 +27,7 @@ needs them live must name a query or log line.
 | `stitch_readiness` | live (#224 / D-116) | log + tree |
 | Wave1 stitch | PASS 10 / FAIL 17 (false-ready incomplete cover) | D-116 / owner |
 | Wave2 stitch | COMPLETE; `ready_n=17` attempted=17 PASS=17 FAIL=0 | owner closeout |
+| Unique stitched parents (UI / end-state inventory) | **27 unique** = Wave1 PASS **10** + Wave2 PASS **17** | Architect review #225; do not use Wave2-only 17 as the closed-out parent count |
 | First parent | job **2817** `Q9P273` mean_plddt=61.07 tiles=`[3673,3630]` | owner closeout |
 | Dup-tile preference | use **3673/3674/3675**; spares **3693/3695/3696** unused | owner closeout |
 | Stitcher | pLDDT assembler, not Kabsch | `core/hold48_stitch.py` |
@@ -75,8 +76,9 @@ Speak these as **categories**, not as a solved science story:
 1. **Tiles exist** as first-class analyses (`hold48_kind=tile`, own `pdb_path` + `pae_json_path`).
 2. **Parents** stay `jobs.tier` NULL until stitch policy says otherwise (D-111 / `stitch_succeeded`
    does **not** set `tier='rental'`).
-3. **Wave2 parents** that passed `stitch_readiness` have an **assembled** PDB/PAE/pLDDT
-   (pLDDT-overlap assembler). That is not a single forward pass.
+3. **27 unique stitched parents** have an **assembled** PDB/PAE/pLDDT (pLDDT-overlap
+   assembler) = Wave1 PASS **10** + Wave2 PASS **17**. Wave2's own batch result remains
+   17/17 PASS. That is not a single forward pass.
 4. **Dup tiles:** prefer the **lower** job ids; name the unused spares. Do not show both as
    two proteins.
 5. **PAE is present** on hold-48 tiles (C2 36/36) and on assembled parents. `F-042`
@@ -102,7 +104,7 @@ Each surface: purpose · who · assumptions · gaps/lies · UX · priority · Ka
 | **Purpose / who** | Cold-open for a grader / reviewer: where the deep learning is. |
 | **Assumes today** | Cohort fold counts from `/api/analyses` + `/api/coverage`. Census beat from `/api/census/summary` (live). Failed/excluded named. No tiles, no stitch, no PAE. |
 | **Gaps / lies** | `census_summary` counts every census row with `pdb_path` + mean pLDDT. **Tiles inflate `folded`.** D-094 am1 already recorded Story-live vs `/census`-frozen; Wave2 makes the live number *wrong in a new way* (tile rows), not just newer. IGF2R can still appear in the "attempted and did not complete" clause (cohort coverage) while census tiles exist. |
-| **UX** | Keep Story qualitative on stitch. If the census sentence stays, it must **exclude tiles** or say "N parent structures + M tile windows." Do not announce "we assembled 17 holoproteins." Name the assembler only if a later GO adds a one-line beat with the seam caveat. |
+| **UX** | Keep Story qualitative on stitch. If the census sentence stays, it must **exclude tiles** or say "N parent structures + M tile windows." Do not announce "we assembled 17 holoproteins" — the closed-out unique inventory is **27 unique** stitched parents (Wave1 PASS **10** + Wave2 PASS **17**). Name the assembler only if a later GO adds a one-line beat with the seam caveat. |
 | **Priority** | **P0** if `census_summary` starts counting tiles as proteins (denominator lie on the most-read screen). Else **P1** (known live-vs-frozen hole). |
 | **Kabsch** | If a stitch sentence is added: **"assembled by pLDDT overlap, not superimposed."** No "full-length structure solved." |
 
@@ -146,7 +148,7 @@ Each surface: purpose · who · assumptions · gaps/lies · UX · priority · Ka
 | **Purpose / who** | Reviewer: unscored population (D-079 / D-087). Frozen literals + live table. |
 | **Assumes today** | Tranche 5: **728 folded, 48 held** (`heldCause` D-090/D-109, measured **2026-09-02**). `REASON_COPY.above_local_ceiling` = *"waiting on rented capacity."* Table: accession / gene / span / topology / pLDDT / tranche / profile / stained. No tile / PAE / stitch columns. Default sort accession. Cap 200. |
 | **Gaps / lies** | **P0 identity.** `list_census` has no `hold48_kind` filter → each complete tile is a folded row with the **parent accession** and **tile `span_aa`**. `unfolded_rows()` still emits the 48 parents (v1 features artifact has **zero** tranche-5 lines) → same accession can be NOT FOLDED **and** one or more tile rows. React key `r.id ?? r.accession` hides a collision only when ids exist; two tile ids = two rows that look like two proteins. Frozen **"48 held"** is false after Wave2. Profile / staining attach by gene and would **duplicate** across tile rows. |
-| **UX** | **Phase 1 (P0):** project **one row per accession**. Parent if `pdb_path` (assembled); else "tiled, not assembled"; else NOT FOLDED with a **closed-rental** reason (not "waiting on rented capacity"). Badge: `single-pass` / `assembled (provisional)` / `tiles only` / `mucin — not folded`. Filter: those four + "has PAE" / "no PAE (F-042 class)." Do **not** default-sort by pLDDT. Tranche-5 literals: `planned 776` vs `in artifact 0` stay; replace `48 held` with owner-dated **tiles complete / Wave2 assembled n=17 / mucins 3 / remainder named** — or stop rendering the 2026-09-02 hold sentence until re-measured. |
+| **UX** | **Phase 1 (P0):** project **one row per accession**. Parent if `pdb_path` (assembled); else "tiled, not assembled"; else NOT FOLDED with a **closed-rental** reason (not "waiting on rented capacity"). Badge: `single-pass` / `assembled (provisional)` / `tiles only` / `mucin — not folded`. Filter: those four + "has PAE" / "no PAE (F-042 class)." Do **not** default-sort by pLDDT. Tranche-5 literals: `planned 776` vs `in artifact 0` stay; replace `48 held` with owner-dated **tiles complete / 27 unique stitched parents (Wave1 PASS 10 + Wave2 PASS 17) / mucins 3 / remainder named** — or stop rendering the 2026-09-02 hold sentence until re-measured. |
 | **Priority** | **P0** |
 | **Kabsch** | Assembled badge = **provisional assembler**. Tooltip: "overlap by pLDDT; not superimposed; seam not solved." |
 
@@ -167,8 +169,8 @@ Each surface: purpose · who · assumptions · gaps/lies · UX · priority · Ka
 |---|---|
 | **Purpose / who** | Reviewer: F-004 at reduced scope. |
 | **Assumes today** | Frozen pre-registered run. Census not scored. |
-| **Gaps / lies** | Ranking set must **not** grow by 17 assemblies. Silence is correct **until** someone adds those rows. |
-| **UX** | One method-note line if assembled PDBs become visible elsewhere: *"Wave2 assemblies are not in this ranking (D-109)."* No new columns. |
+| **Gaps / lies** | Ranking set must **not** grow by the **27 unique** stitched parents (Wave1 PASS **10** + Wave2 PASS **17**). Silence is correct **until** someone adds those rows. |
+| **UX** | One method-note line if assembled PDBs become visible elsewhere: *"The 27 unique stitched parents (Wave1 PASS 10 + Wave2 PASS 17) are not in this ranking (D-109)."* No new columns. |
 | **Priority** | **P1** (one sentence when census shows assemblies). Else P2. |
 | **Kabsch** | Do not imply assemblies are now rankable. |
 
@@ -229,8 +231,8 @@ UI is a GO — Phase 2 can join `stitch_readiness` server-side or keep it CLI-on
 |---|---|
 | **Who** | Matt (operator). Worker follows paste blocks. |
 | **Assumes today** | Rental **live**: clean-card cold start, emit GO, Step 0 balance, C2 15 h, Step 11 **local** stitch, parent 3356 still NULL, IGF2R tiles 3589/3590, "not a stitch GO," `$14.17` historical, ~$50 envelope. |
-| **Gaps / lies** | After closeout this reads as **open procedure**. Step 11 does not mention Wave2 17/17, parent 2817, dup-id preference, or Fly assembler. Kill-switch table still "when unsure, don't Terminate" as if a pod exists. |
-| **UX** | **Banner at top (P0):** rental E2E **CLOSED** 2026-09-05 PT; pod Terminated; do not Deploy; do not emit. Move the live runbook under **"Historical — do not run unless Matt re-opens rental."** New "Review" section: Wave2 17/17; prefer 3673/3674/3675; `stitch_readiness` before any re-stitch; assembler-only; Kabsch parked; UI plan = this file. Money line: ~$10.25 remaining (owner figure; re-glance before any new rent). |
+| **Gaps / lies** | After closeout this reads as **open procedure**. Step 11 does not mention Wave2 17/17, the **27 unique** stitched parents (Wave1 PASS 10 + Wave2 PASS 17), parent 2817, dup-id preference, or Fly assembler. Kill-switch table still "when unsure, don't Terminate" as if a pod exists. |
+| **UX** | **Banner at top (P0):** rental E2E **CLOSED** 2026-09-05 PT; pod Terminated; do not Deploy; do not emit. Move the live runbook under **"Historical — do not run unless Matt re-opens rental."** New "Review" section: Wave2 17/17 PASS (batch); **27 unique** stitched parents = Wave1 PASS **10** + Wave2 PASS **17**; prefer 3673/3674/3675; `stitch_readiness` before any re-stitch; assembler-only; Kabsch parked; UI plan = this file. Money line: ~$10.25 remaining (owner figure; re-glance before any new rent). |
 | **Priority** | **P0** |
 | **Kabsch** | Step 11 must say **assembler only**; Kabsch parked; no "fix the 88.76 Å seam" procedure. |
 
@@ -310,7 +312,7 @@ Until Matt GO on a restitch spec:
 | Winner-tile pLDDT as chain confidence | Treating it as one forward pass |
 | Block-diagonal PAE with null off-block | Colouring null as 0 (that was the D-111 refuse) |
 | IGF2R ~88.76 Å seam | A "fix seam" button or silent Kabsch |
-| D-109: not ranking-eligible | Adding 17 rows to `/scorer` |
+| D-109: not ranking-eligible | Adding the **27 unique** stitched parents (Wave1 PASS **10** + Wave2 PASS **17**) to `/scorer` |
 | Dup-tile choice (lower id) | Implied scientific preference beyond "first complete cover" |
 | Mucin `out_of_class` | A fake assembled mucin |
 

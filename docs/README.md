@@ -156,12 +156,14 @@ So the rule is not "be careful" — it is:
   hold-48 rental closeout; write a durable plan Matt can act on.
 - **Cite:** owner-verified ops closeout 2026-09-05 PT (this session's brief — **not re-queried
   against Fly here**) · Wave2 stitch COMPLETE `ready_n=17` `attempted=17` `PASS=17` `FAIL=0` ·
-  first parent **2817** `Q9P273` `mean_plddt=61.07` tiles=`[3673,3630]` · prefer lower dup
-  tile ids **3673/3674/3675** (spares **3693/3695/3696** unused) · C2 L=1656 n=36
-  `has_pae=36` `lack_pae=0` · PAE on Fly Volume `pharmfoldmdk` · pod Terminated · RunPod
-  remaining **~$10.25** · `stitch_readiness` live (#224 / **D-116**) · Wave1 `PASS 10 / FAIL 17`
-  (false-ready incomplete cover) · IGF2R seam **~88.76 Å** · Kabsch/restitch Spec **PARKED**
-  until Matt GO · assembler-only path via Fly
+  **27 unique** stitched parents = Wave1 PASS **10** + Wave2 PASS **17** (UI / end-state
+  inventory; Wave2 17/17 remains the Wave2 batch) · first parent **2817** `Q9P273`
+  `mean_plddt=61.07` tiles=`[3673,3630]` · prefer lower dup tile ids **3673/3674/3675**
+  (spares **3693/3695/3696** unused) · C2 L=1656 n=36 `has_pae=36` `lack_pae=0` · PAE on
+  Fly Volume `pharmfoldmdk` · pod Terminated · RunPod remaining **~$10.25** ·
+  `stitch_readiness` live (#224 / **D-116**) · Wave1 `PASS 10 / FAIL 17` (false-ready
+  incomplete cover) · IGF2R seam **~88.76 Å** · Kabsch/restitch Spec **PARKED** until
+  Matt GO · assembler-only path via Fly
 - **Relates:** `D-111` · `D-113` · `D-114` · `D-116` · `D-087` · `D-089` · `D-094` amendment 1 ·
   `D-109` ruling 7 (stitched ≠ ranking-eligible) · `D-110` (PAE figure provenance — still
   deferred) · `F-042` · `F-012` / reserved `F-015`
@@ -174,7 +176,9 @@ So the rule is not "be careful" — it is:
 #### Context
 
 Hold-48 rental E2E closed (owner-verified 2026-09-05 PT): Waves A/B/C1/C2 tiles complete,
-PAE retrieved, Wave2 stitch 17/17 PASS on the D-116 gate. The public React app and the
+PAE retrieved, Wave2 stitch 17/17 PASS on the D-116 gate. The closed-out unique
+stitched-parent inventory for UI / end-state language is **27 unique** = Wave1 PASS
+**10** + Wave2 PASS **17** (do not treat Wave2-only 17 as that inventory). The public React app and the
 operator guides still describe the world **before** that closeout — "48 held", "waiting on
 rented capacity", IGF2R as a CUDA-OOM singleton with no structure, stitch as a laptop-only
 pilot, rental as live.
@@ -230,10 +234,12 @@ the weights; load-bearing for whether a reader can tell what the network actuall
 
 #### Provenance (D-016)
 
-- **Ops numbers** (Wave2 17/17, parent 2817 / Q9P273, tiles 3673/3630, C2 n=36 PAE 36/36,
-  pod Terminated, ~$10.25 RunPod, seam ~88.76 Å, Kabsch PARKED): owner-verified closeout
-  in the 2026-09-05 PT task brief. ⚠ **Not re-queried against Fly or RunPod in this PR.**
-  A later session that needs to treat them as live must name a query or log line.
+- **Ops numbers** (Wave2 17/17 batch; **27 unique** stitched parents = Wave1 PASS **10** +
+  Wave2 PASS **17**; parent 2817 / Q9P273, tiles 3673/3630, C2 n=36 PAE 36/36, pod
+  Terminated, ~$10.25 RunPod, seam ~88.76 Å, Kabsch PARKED): owner-verified closeout in
+  the 2026-09-05 PT task brief, unique-parent count amended on Architect review of PR
+  #225. ⚠ **Not re-queried against Fly or RunPod in this PR.** A later session that
+  needs to treat them as live must name a query or log line.
 - **Code-side inventory** (no job UI; PAE route unused by React; `list_census` has no
   `hold48_kind` filter; `resolve_census_accession` first-`pdb_path` wins;
   `unfolded_rows` keys the v1 features artifact; `censusSummary.js` tranche 5
