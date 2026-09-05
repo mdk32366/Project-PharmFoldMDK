@@ -1,0 +1,480 @@
+{
+  "catalog_id": {
+    "value": "adcs.pipeline.v1",
+    "source": "D-124: this file is the v1 investigational ADC pipeline catalog, a sibling of adcs.v1.json and not merged into it",
+    "as_of": "2026-09-05",
+    "confidence": "derived"
+  },
+  "schema_version": {
+    "value": "1",
+    "source": "D-124: schema version of data/adcs/adcs.pipeline.v1.json",
+    "as_of": "2026-09-05",
+    "confidence": "derived"
+  },
+  "scope": {
+    "value": "pipeline_investigational",
+    "source": "D-124 Architect binding: investigational / non-approved ADC rows only; approved roster stays data/adcs/adcs.v1.json (D-119)",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "completeness": {
+    "value": "floor_not_census",
+    "source": "D-124 / D-029: incompleteness is dated and detectable, not silently complete. Row count is a pin of the non-approved rows already in data/adc_reference_mapping.csv, not a scientific constant and not a census of the clinical ADC field.",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "mapping_sourced_as_of": {
+    "value": "2026-07-27",
+    "source": "data/adc_reference_mapping.csv STATUS line: CURATED 2026-07-27 (owner pass). Antigen / accession / citation / development_stage are that file's reviewed values.",
+    "as_of": "2026-07-27",
+    "confidence": "reviewed"
+  },
+  "catalog_assembled_as_of": {
+    "value": "2026-09-05",
+    "source": "D-124: day this file was assembled from the mapping's non-approved rows. Not a live FDA or ClinicalTrials.gov refresh.",
+    "as_of": "2026-09-05",
+    "confidence": "derived"
+  },
+  "pipeline": [
+    {
+      "id": {
+        "value": "ifinatamab-deruxtecan",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug 'ifinatamab deruxtecan'; named D-119 v1 exclusion",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "ifinatamab deruxtecan",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "CD276",
+        "source": "data/adc_reference_mapping.csv antigen column on the ifinatamab deruxtecan row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "Q5ZPR3",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the ifinatamab deruxtecan row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "clinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the ifinatamab deruxtecan row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "BLA/NDA submitted",
+        "source": "data/adc_reference_mapping.csv source_citation: 'Daiichi Sankyo/Merck BLA Priority Review 2026-04-13, PDUFA 2026-10-10 (not approved as of retrieval)'. Architect D-124 closed vocab; most advanced named token in that citation.",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "Lancet Oncol 2026 IDeate-PanTumor01 ph1/2; JCO IDeate-Lung01 ph2; Daiichi Sankyo/Merck BLA Priority Review 2026-04-13, PDUFA 2026-10-10 (not approved as of retrieval)",
+        "source": "data/adc_reference_mapping.csv source_citation on the ifinatamab deruxtecan row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "ladiratuzumab-vedotin",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug 'ladiratuzumab vedotin'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "ladiratuzumab vedotin",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "SLC39A6",
+        "source": "data/adc_reference_mapping.csv antigen column on the ladiratuzumab vedotin row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "Q13433",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the ladiratuzumab vedotin row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "clinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the ladiratuzumab vedotin row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Other",
+        "source": "data/adc_reference_mapping.csv source_citation names NCT03310957 / NCT04032704 and 'discontinued from clinical development per Mol Cancer Ther 2026;25(2):322'; no Architect phase-vocab token in that citation",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "Mol Cancer Ther 2014;13(12):2991 (SGN-LIV1A); NCT03310957; NCT04032704; discontinued from clinical development per Mol Cancer Ther 2026;25(2):322",
+        "source": "data/adc_reference_mapping.csv source_citation on the ladiratuzumab vedotin row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "depatuxizumab-mafodotin",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug 'depatuxizumab mafodotin'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "depatuxizumab mafodotin",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "EGFR",
+        "source": "data/adc_reference_mapping.csv antigen column on the depatuxizumab mafodotin row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P00533",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the depatuxizumab mafodotin row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "clinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the depatuxizumab mafodotin row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Phase 3",
+        "source": "data/adc_reference_mapping.csv source_citation: 'INTELLANCE-1 phase 3'",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "ABT-414 / Depatux-M; INTELLANCE-1 phase 3, glioblastoma",
+        "source": "data/adc_reference_mapping.csv source_citation on the depatuxizumab mafodotin row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "ly3076226",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug 'LY3076226'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "LY3076226",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "FGFR3",
+        "source": "data/adc_reference_mapping.csv antigen column on the LY3076226 row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P22607",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the LY3076226 row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "clinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the LY3076226 row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Phase 1",
+        "source": "data/adc_reference_mapping.csv source_citation: 'Eli Lilly phase 1, NCT02529553'",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "Eli Lilly phase 1, NCT02529553",
+        "source": "data/adc_reference_mapping.csv source_citation on the LY3076226 row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "ch10d7-mmae",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug 'ch10D7-MMAE'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "ch10D7-MMAE",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "CDCP1",
+        "source": "data/adc_reference_mapping.csv antigen column on the ch10D7-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "Q9H5V8",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the ch10D7-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "preclinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the ch10D7-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Other",
+        "source": "data/adc_reference_mapping.csv development_stage=preclinical (CURATED 2026-07-27). D-124 phase vocab has no preclinical token; Other is the closed-set pin for a sourced non-numbered stage.",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "Theranostics 2022;12(15):6915; JCO 2023;41:e15012 (TNBC); US12371507B2. NB same antibody also used as an 89-Zr imaging conjugate - only the MMAE arm qualifies",
+        "source": "data/adc_reference_mapping.csv source_citation on the ch10D7-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "rgx-019-mmae",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug 'RGX-019-MMAE'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "RGX-019-MMAE",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "MERTK",
+        "source": "data/adc_reference_mapping.csv antigen column on the RGX-019-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "Q12866",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the RGX-019-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "preclinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the RGX-019-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Other",
+        "source": "data/adc_reference_mapping.csv development_stage=preclinical (CURATED 2026-07-27). D-124 phase vocab has no preclinical token; Other is the closed-set pin for a sourced non-numbered stage.",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "Cancer Res 2026;86(8):2024; JCO 2023;41:e15103; Blood 2023;142(Suppl 1):5955",
+        "source": "data/adc_reference_mapping.csv source_citation on the RGX-019-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "19g4-mmae",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug '19G4-MMAE'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "19G4-MMAE",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "SLC3A2",
+        "source": "data/adc_reference_mapping.csv antigen column on the 19G4-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P08195",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the 19G4-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "preclinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the 19G4-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Other",
+        "source": "data/adc_reference_mapping.csv development_stage=preclinical (CURATED 2026-07-27). D-124 phase vocab has no preclinical token; Other is the closed-set pin for a sourced non-numbered stage.",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "ScienceDirect S1936523324001086 (HNSCC); PMC8941813 (anti-CD98hc-DM1, TNBC); WO2017214458A2",
+        "source": "data/adc_reference_mapping.csv source_citation on the 19G4-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "4d11-mmae",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug '4D11-MMAE'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "4D11-MMAE",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "JAG1",
+        "source": "data/adc_reference_mapping.csv antigen column on the 4D11-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P78504",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the 4D11-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "preclinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the 4D11-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Other",
+        "source": "data/adc_reference_mapping.csv development_stage=preclinical (CURATED 2026-07-27). D-124 phase vocab has no preclinical token; Other is the closed-set pin for a sourced non-numbered stage.",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "US9127053; US9688748; US11548943 (activatable anti-Jagged DM4). NB 4D11 is JAG1/JAG2 cross-reactive - binds JAG1, not family precedent",
+        "source": "data/adc_reference_mapping.csv source_citation on the 4D11-MMAE row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "anti-upk1b-adc",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug 'anti-UPK1B ADC (WO2017112829A1)'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "anti-UPK1B ADC (WO2017112829A1)",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "UPK1B",
+        "source": "data/adc_reference_mapping.csv antigen column on the anti-UPK1B ADC row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "O75841",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the anti-UPK1B ADC row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "preclinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the anti-UPK1B ADC row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Other",
+        "source": "data/adc_reference_mapping.csv development_stage=preclinical (CURATED 2026-07-27). D-124 phase vocab has no preclinical token; Other is the closed-set pin for a sourced non-numbered stage.",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "WO2017112829A1 - target-specific antibodies AND ADCs; no named clinical agent found (owner ruling 2026-07-27: counts)",
+        "source": "data/adc_reference_mapping.csv source_citation on the anti-UPK1B ADC row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    },
+    {
+      "id": {
+        "value": "anti-cdh11-immunoconjugate",
+        "source": "derived: lowercase hyphenated stem of data/adc_reference_mapping.csv drug 'anti-CDH11 immunoconjugate (US12522657)'",
+        "as_of": "2026-09-05",
+        "confidence": "derived"
+      },
+      "name": {
+        "value": "anti-CDH11 immunoconjugate (US12522657)",
+        "source": "data/adc_reference_mapping.csv drug column (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "antigen": {
+        "value": "CDH11",
+        "source": "data/adc_reference_mapping.csv antigen column on the anti-CDH11 immunoconjugate row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "uniprot_accession": {
+        "value": "P55287",
+        "source": "data/adc_reference_mapping.csv uniprot_accession column on the anti-CDH11 immunoconjugate row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "development_stage": {
+        "value": "preclinical",
+        "source": "data/adc_reference_mapping.csv development_stage on the anti-CDH11 immunoconjugate row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "phase": {
+        "value": "Other",
+        "source": "data/adc_reference_mapping.csv development_stage=preclinical (CURATED 2026-07-27). D-124 phase vocab has no preclinical token; Other is the closed-set pin for a sourced non-numbered stage.",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "source_citation": {
+        "value": "US12522657 - anti-CDH11 antibodies and immunoconjugates; no named clinical agent found (owner ruling 2026-07-27: counts)",
+        "source": "data/adc_reference_mapping.csv source_citation on the anti-CDH11 immunoconjugate row (CURATED 2026-07-27)",
+        "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      }
+    }
+  ]
+}

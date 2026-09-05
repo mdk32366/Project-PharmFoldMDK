@@ -38,7 +38,12 @@ def test_d125_heading_exists_in_the_living_log():
     assert "### D-121 — Method hold-48 8th-grade explainer" in LOG
     assert "### D-120 — Phase 2 review UI" in LOG
     assert "### D-118 — Phase 1 P0 honesty" in LOG
-    assert "### D-124 —" not in LOG, "this Spec must not spend ADC-C's integer"
+    # D-125 Spec reserved D-124; ADC-C-A (this PR) spends it. Both headings must exist.
+    assert re.search(
+        r"^### D-124 — ADC-C-A:",
+        LOG,
+        re.M,
+    ), "D-124 is ADC-C-A's integer — the Spec did not spend it; this PR does"
 
 
 def test_spec_names_algorithm_and_does_not_replace_the_assembler():

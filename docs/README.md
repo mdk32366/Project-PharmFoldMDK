@@ -40,17 +40,20 @@
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**). Additive
 >   MethodNote section on `/method`. ⚠ **Assembler ≠ Kabsch today. #229 stays merged.**
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
->   **D-125 ships** the Kabsch restitch Spec (docs only). **D-125-A/B** code BUILD
->   is later and waits until **D-124 A+B** (ADC-C) is on `main`. **D-121 ships**
->   the Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC Doc
->   follow-on on `/about` (already on `main`, `2ffd4f8` / #231). **D-122 ships**
->   ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232). **D-119 ships** ADC-A.
->   **D-120 ships** Phase 2 review UI; parent PLAN is **D-117**; parent honesty
->   GO is **D-118**. Not a second living log — authoritative `### D-NNN`
->   entries stay in this file.
+>   **D-124 ships** ADC-C-A (pipeline catalog + access/RTT payload + thin read API).
+>   **D-125 ships** the Kabsch restitch Spec (docs only; already on `main`,
+>   `fbe8978` / #234). **D-125-A/B** code BUILD is later and waits until
+>   **D-124 A+B** (ADC-C) is on `main`. **D-121 ships** the Method hold-48
+>   8th-grade explainer. **D-123 ships** the Nectin-4/ADC Doc follow-on on
+>   `/about` (already on `main`, `2ffd4f8` / #231). **D-122 ships** ADC-B
+>   (`/adcs` UI) on `main` (`86f8a10` / #232). **D-119 ships** ADC-A.
+>   **D-120 ships** Phase 2 review UI; parent PLAN is **D-117**; parent
+>   honesty GO is **D-118**. Not a second living log — authoritative
+>   `### D-NNN` entries stay in this file.
 > - [`../data/adcs/README.md`](../data/adcs/README.md) — ADC-A v1 catalog hook
->   (**D-119**). ADC-B pages consume it (**D-122**). Weekly Drugs@FDA watch is
->   Emma's ops lane; not built here.
+>   (**D-119**). ADC-B pages consume it (**D-122**). **D-124 / ADC-C-A** adds
+>   sibling files `adcs.pipeline.v1.json` + `access.v1.json` — not merged into
+>   `adcs.v1.json`. Weekly Drugs@FDA watch is Emma's ops lane; not built here.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -162,6 +165,189 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-124 — ADC-C-A: pipeline catalog + access/RTT payload are dated JSON contracts, not a UI and not advice
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the ADC-C-A BUILD GO** (Emma BUILD GO; Trinity
+  Architect binding bar 2026-09-05). Data + thin read API only.
+  ⚠ **Not ADC-C-B** (no `/adcs` React changes, no AdcContext / Method rewrite).
+  ⚠ **Not ADC-A / ADC-B.** D-119 `adcs.v1.json` and D-122 `/adcs` pages stay.
+  ⚠ **Does not edit or merge into `data/adcs/adcs.v1.json`.**
+  ⚠ **Not a Kabsch / restitch GO.** ⚠ **Not F-004 / ranking ingest.**
+  ⚠ **Does not invent efficacy, DAR, indications, response rates, or chemistry.**
+  ⚠ **Does not speak as medical or legal advice.**
+- **Ruled by:** Trinity Architect binding 2026-09-05 — ADC-C-A GO, data + API:
+  `data/adcs/adcs.pipeline.v1.json` (scope `pipeline_investigational`) +
+  `data/adcs/access.v1.json` + `GET /api/adcs/pipeline` +
+  `GET /api/adcs/pipeline/{id}` + `GET /api/adcs/access`; every field
+  `{value, source, as_of, confidence}`; closed phase vocab only; row count is
+  a dated floor; approved `/api/adcs` + `/api/adcs/{id}` unchanged.
+- **Cite:** D-119 (approved catalog + envelope discipline; pipeline/RTT was the
+  named ADC-C exclusion) · D-122 (UI consumer of v1; this PR does not rewrite
+  it) · D-029 (mapping = antigen; two freshness dates; gate stays hermetic) ·
+  D-016 (every claim names how it is known) · D-040 (Group B/C stay the scorer
+  file; this pipeline file is a **different object**) · D-034 (unauthenticated
+  `/api` reads) · D-051 (new routes fire the architecture contract) · owner
+  Spec: ADC-A / ADC-B / ADC-C phased cut
+- **Relates:** `D-119` · `D-122` · `D-029` · `D-040` · `D-034` · `D-051` ·
+  ship index [`decisions.md`](decisions.md)
+- **Does not amend:** D-119 catalog schema · `adcs.v1.json` bytes · D-122
+  `/adcs` React routes · Group B labels · F-004 · D-118 census identity ·
+  Kabsch · ranking set · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110`
+  while later numbers are written). This entry spends `D-124`; the pointer stays
+  the owner's.
+
+#### Context
+
+D-119 shipped the dated **FDA-approved** roster (`adcs.v1.json`,
+`fda_approved_only`) and named pipeline / Right-to-Try as **ADC-C**, including
+ifinatamab deruxtecan as a header exclusion (BLA Priority Review / PDUFA
+2026-10-10 on `data/adc_reference_mapping.csv`, not a v1 row). D-122 shipped
+the `/adcs` UI on that approved contract. ADC-C-A is the later GO that gives
+pipeline and access their **own** dated files so a later ADC-C-B page cannot
+type a review-paper pipeline count or mix investigational rows into the
+approved catalog.
+
+The scorer mapping already carries the non-approved Group B labels
+(`development_stage` in `{clinical, preclinical}`). That file is the scorer's
+label instrument. It is **not** a pipeline catalog and it is **not** an
+access/RTT briefing. ADC-C-A starts from those already-cited non-approved
+rows and stops there — a small honest pin, not a census of the clinical ADC
+field.
+
+#### Decision
+
+1. **Two new checked-in files, never merged into v1.**
+   `data/adcs/adcs.pipeline.v1.json` is the investigational roster (scope
+   `pipeline_investigational`). `data/adcs/access.v1.json` is the trials +
+   Right-to-Try informational payload. `adcs.v1.json` is byte-untouched.
+   Completeness on both new files is `floor_not_census`.
+2. **Every field is a provenance envelope** `{value, source, as_of, confidence}`.
+   Same closed confidence set as D-119: `official` · `reviewed` · `derived`.
+   A bare string is not data.
+3. **Closed phase vocabulary — reject all others.** Architect pin:
+   `Phase 1` | `Phase 1/2` | `Phase 2` | `Phase 3` | `BLA/NDA submitted` |
+   `Other`. `development_stage` stays the mapping's closed pair
+   `clinical` | `preclinical` (D-029 / `adc_reference_mapping.csv`). A
+   preclinical row's `phase` is `Other` — the phase vocab has no preclinical
+   token, and inventing `Phase 0` is refused. `approved` is v1's word and is
+   rejected on a pipeline row.
+4. **Seed only what the mapping already cites.** Non-approved CSV rows
+   (clinical + preclinical), including ifinatamab deruxtecan. Antigen and
+   UniProt are the reviewed mapping values (D-029 seam). Phase tokens are
+   taken from the CSV `source_citation` string when that string names a
+   vocab member; otherwise `Other` with that citation as source. No invented
+   efficacy, DAR, indication, response rate, or chemistry field.
+5. **Two dates, never collapsed** (D-029 shape): `mapping_sourced_as_of`
+   (CSV STATUS 2026-07-27) and `catalog_assembled_as_of` (this file's pin
+   day). A single "updated" stamp would overstate the weaker one.
+6. **Access is informational framing, not advice.** The payload cites
+   ClinicalTrials.gov, FDA expanded access, 21 U.S.C. § 360bbb-0a /
+   Pub. L. 115-176, and the FDA Right-to-Try page. It carries a required
+   disclaimer: this is **NOT medical advice, NOT legal advice, and NOT a
+   treatment recommendation**. NCT identifiers appear only when the mapping
+   citation already named them. Eligibility is not determined here.
+7. **Thin read API, no UI.** `GET /api/adcs/pipeline` returns the pipeline
+   catalog. `GET /api/adcs/pipeline/{id}` returns one row or 404.
+   `GET /api/adcs/access` returns the access payload. Declared **before**
+   `GET /api/adcs/{adc_id}` so `pipeline` / `access` are not captured as
+   approved ids (D-120 `census/summary` lesson). Approved
+   `GET /api/adcs` and `GET /api/adcs/{id}` stay the v1 contract.
+   Unauthenticated (D-034). File-derived, no engine. **No** React `/adcs`
+   edit. **No** AdcContext / Method rewrite. ADC-C-B is a later GO.
+8. **Separate from the scorer mapping.** `core.adc_catalog` pipeline/access
+   loaders do not import `core.adc_reference`. Group B/C classification is
+   unchanged. A pipeline id that is already a v1 approved row is rejected
+   at load (no silent merge).
+
+#### Pipeline inclusion (how each row is known)
+
+All ten non-approved rows of `data/adc_reference_mapping.csv` (STATUS
+**CURATED 2026-07-27**). Phase is the Architect token justified by that
+row's `source_citation`; it is not a new literature pass.
+
+| id | development_stage | phase | why that phase |
+| --- | --- | --- | --- |
+| `ifinatamab-deruxtecan` | clinical | `BLA/NDA submitted` | citation names BLA Priority Review 2026-04-13 / PDUFA 2026-10-10 |
+| `ladiratuzumab-vedotin` | clinical | `Other` | NCT03310957 / NCT04032704 + discontinued; no numbered phase token |
+| `depatuxizumab-mafodotin` | clinical | `Phase 3` | "INTELLANCE-1 phase 3" |
+| `ly3076226` | clinical | `Phase 1` | "Eli Lilly phase 1, NCT02529553" |
+| `ch10d7-mmae` | preclinical | `Other` | mapping stage; phase vocab has no preclinical token |
+| `rgx-019-mmae` | preclinical | `Other` | same |
+| `19g4-mmae` | preclinical | `Other` | same |
+| `4d11-mmae` | preclinical | `Other` | same |
+| `anti-upk1b-adc` | preclinical | `Other` | same |
+| `anti-cdh11-immunoconjugate` | preclinical | `Other` | same |
+
+A later clinical ADC absent from this file is incompleteness, not a finding
+that "there are N pipeline ADCs."
+
+#### Deep-learning justification
+
+These files do not run a network. The graded core remains ESMFold (D-003)
+and the scorer (D-041 / F-004). ADC-C-A is the **dated investigational-drug
+set** those folds are *about* when a later page names a pipeline agent —
+so "pipeline ADC" stays a checkable claim (D-016) rather than atmosphere,
+and so an unsourced efficacy number cannot be attributed to a model that
+never measured one. Neutral to the weights; load-bearing for the seam
+between structure output and clinical-development language.
+
+#### Provenance (D-016)
+
+- **Pipeline rows:** `data/adc_reference_mapping.csv` non-approved rows
+  (`development_stage` ∈ {clinical, preclinical}), STATUS line
+  **CURATED 2026-07-27**. Antigen / accession / citation copied from that
+  file; not re-derived from live FDA or a review paper.
+- **ifinatamab as the named v1 exclusion:** `data/adcs/adcs.v1.json`
+  `named_exclusions` (D-119) + the same CSV PDUFA string.
+- **Access statute:** 21 U.S.C. § 360bbb-0a retrieved 2026-09-05 from
+  Cornell LII (`https://www.law.cornell.edu/uscode/text/21/360bbb-0a`).
+  Enacting law Pub. L. 115-176 retrieved 2026-09-05 from GovInfo
+  (`https://www.govinfo.gov/content/pkg/PLAW-115publ176/html/PLAW-115publ176.htm`).
+- **FDA expanded access:** `https://www.fda.gov/news-events/public-health-focus/expanded-access`
+  retrieved 2026-09-05.
+- **ClinicalTrials.gov:** `https://clinicaltrials.gov/` retrieved 2026-09-05.
+- **FDA Right-to-Try page URL:**
+  `https://www.fda.gov/patients/learn-about-expanded-access-and-other-treatment-options/right-try`
+  as cited by 91 FR 12422 (2026-03-13) and indexed as "Right to Try | FDA"
+  on 2026-09-05. ⚠ Direct fetch of that path returned 404 to this session's
+  bot; the citation is the FR + index, not a claim that the HTML was
+  retrieved here.
+- **Named NCT ids:** only those already in the mapping citations
+  (NCT03310957, NCT04032704, NCT02529553). Listed as identifiers, not as
+  enrollment recommendations.
+
+#### Consequences
+
+- Tests that must be able to go red: envelope on every pipeline/access
+  field; `scope` is `pipeline_investigational` and is not
+  `fda_approved_only`; approved v1 ids do not appear as pipeline rows;
+  unknown pipeline `{id}` 404s; denylist on DAR/IC50/ORR/PFS/OS/indication
+  keys; phase outside the closed vocab is rejected; `development_stage`
+  `approved` is rejected; access disclaimer names NOT medical / NOT legal /
+  NOT a treatment recommendation; `### D-124 —` exists in this log;
+  architecture-contract set-equality includes the three new routes; React
+  `App.jsx` still has only D-122's `/adcs` + `/adcs/:id`.
+- `ARCHITECTURE.md` gains the pipeline + access files and three public GET
+  routes. `system-model.json` must list them in the same PR (D-051).
+- ADC-C-B (UI) is a later GO. Emma's Drugs@FDA watcher remains ops, not
+  this PR.
+
+#### Assumptions refused
+
+- That pipeline rows may be appended to `adcs.v1.json` "for convenience."
+- That a review-paper pipeline count may be typed as if it were this file.
+- That `phase` may be `preclinical`, `Phase 4`, `approved`, or any token
+  outside the Architect pin.
+- That this payload may recommend a trial, determine Right-to-Try
+  eligibility, or speak as medical/legal advice.
+- That ADC-C-A may ship `/adcs` React changes (that is ADC-C-B).
+- That this PR may run Kabsch, restitch, or ingest F-004.
+- That this PR may repair the `D-` next-free pointer.
+
+---
 
 ### D-125 — Kabsch restitch Spec: overlap-Cα align, then existing winning_tile stitch (docs-only)
 

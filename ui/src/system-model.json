@@ -99,6 +99,24 @@
         ]
       },
       {
+        "path": "/api/adcs/pipeline",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/adcs/pipeline/{pipeline_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/adcs/access",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
         "path": "/api/adcs/{adc_id}",
         "methods": [
           "GET"
