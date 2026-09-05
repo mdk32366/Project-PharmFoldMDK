@@ -23,12 +23,18 @@ APP = (ROOT / "ui" / "src" / "App.jsx").read_text(encoding="utf-8")
 D122_MAIN = "86f8a10"
 
 
+def _flat(text: str) -> str:
+    """Line-wrap is not the claim. Collapse whitespace so a wrap cannot hide it."""
+    return re.sub(r"\s+", " ", text)
+
+
 def test_assembler_not_kabsch():
     """Assemble is a pLDDT winner-tile assembler, not Kabsch."""
     for text, label in ((DOC, "method-hold48-tiles.md"), (NOTE, "MethodNote.jsx")):
-        assert "winner-tile assembler" in text, label
-        assert "not Kabsch" in text, label
-        lowered = text.lower()
+        flat = _flat(text)
+        assert "winner-tile assembler" in flat, label
+        assert "not Kabsch" in flat, label
+        lowered = flat.lower()
         assert "seams solved" not in lowered, label
         assert "kabsch aligned" not in lowered, label
         assert "we ran kabsch" not in lowered, label
@@ -39,9 +45,10 @@ def test_assembler_not_kabsch():
 def test_seam_not_solved():
     """IGF2R ~88.76 Å is a disclosure, not a solved structure."""
     for text, label in ((DOC, "method-hold48-tiles.md"), (NOTE, "MethodNote.jsx")):
-        assert "88.76" in text, label
-        assert "not scientifically solved" in text, label
-        assert "fix the seam" not in text.lower(), label
+        flat = _flat(text)
+        assert "88.76" in flat, label
+        assert "not scientifically solved" in flat, label
+        assert "fix the seam" not in flat.lower(), label
 
 
 def test_rental_closed():

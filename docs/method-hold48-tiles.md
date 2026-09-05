@@ -53,8 +53,8 @@ ranking-eligible (**D-109** ruling 7).
 
 Because we did not line the tiles up in 3D, the join can jump. On the IGF2R
 pilot, that jump was measured at about **88.76 Å**. That number is a
-**disclosure**, not a solved structure. The seam is **not scientifically
-solved**. A later Kabsch / restitch job is parked until the owner says GO.
+**disclosure**, not a solved structure. The seam is **not scientifically solved**.
+A later Kabsch / restitch job is parked until the owner says GO.
 This write-up is not that GO. There is no button that heals the join.
 
 ## The rental is CLOSED
