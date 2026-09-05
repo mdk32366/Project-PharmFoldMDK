@@ -354,17 +354,20 @@ red **without** a live Fly query, GPU, restitch run, or any edit to
 ⚠ The 10.0 Å refuse gate stays. ⚠ Trim / weight change the fit set,
 not the gate. ⚠ Assembler + D-125 `kabsch/` stay callable.
 
-Future **D-126-A** acceptance tests (not this PR) must be able to go
-red for the weighted fit, the trim loop, the refuse table, and the
-no-overwrite rule.
+**D-126-A** acceptance tests (this PR) must be able to go red for the
+weighted fit, the trim loop, the refuse table, the no-overwrite rule,
+full-overlap disclosure, all-or-nothing parent refuse, and the ops
+report fields. Cite: `core/hold48_confidence_kabsch.py`.
+⚠ The 10.0 Å refuse gate stays. ⚠ Assembler + D-125 `kabsch/` stay
+callable. ⚠ `hold48_kabsch.py` is not edited.
 
 | ID | Check | Test name |
 |----|-------|-----------|
-| **T-1102** | `### D-126 —` exists; Spec file exists; algorithm name `overlap_confidence_kabsch_then_winning_tile`; 10.0 Å gate pinned; inventory of the five; hard stops; not D-126-A/B | `test_d126_heading_exists_in_the_living_log` · `test_spec_file_exists_and_names_algorithm` · `test_refuse_gate_stays_at_10` · `test_primary_five_inventory` · `test_hard_stops_and_not_ab` |
-| **T-1103** | *(future A)* Weighted Kabsch uses \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\) (clamp \(\ge \varepsilon\), **ε = 1e-3**) | `test_weighted_fit_uses_min_plddt_weights` |
-| **T-1104** | *(future A)* Trim loop: while \(n_{\mathrm{eff}} \ge 3\) and weighted RMSD \(> 10.0\) Å, drop highest-residual 10% (min 1), refit; cap 5 rounds | `test_trim_loop_drops_highest_residual_decile` |
-| **T-1105** | *(future A)* Refuse table still gates at 10.0 Å after weight/trim (`overlap_ca_lt_3` / `rmsd_gt_10` / `singular_covariance`); fail closed | `test_refuse_table_stays_at_10_after_trim` |
-| **T-1106** | *(future A)* Artifacts land under `confidence_kabsch/{parent_job_id}/` and do **not** overwrite assembler `stitched.pdb` or D-125 `kabsch/{id}/` | `test_confidence_kabsch_dir_does_not_overwrite_assembler_or_d125_tree` |
+| **T-1102** | `### D-126 —` exists; Spec file exists; algorithm name `overlap_confidence_kabsch_then_winning_tile`; 10.0 Å gate pinned; inventory of the five; hard stops; D-126-B later | `test_d126_heading_exists_in_the_living_log` · `test_spec_file_exists_and_names_algorithm` · `test_refuse_gate_stays_at_10` · `test_primary_five_inventory` · `test_hard_stops_and_not_ab` |
+| **T-1103** | Weighted Kabsch uses \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\) (clamp \(\ge \varepsilon\), **ε = 1e-3**) | `test_weighted_fit_uses_min_plddt_weights` · `test_pair_weight_is_min_plddt_over_100_clamped_at_epsilon` |
+| **T-1104** | Trim loop: while \(n_{\mathrm{eff}} \ge 3\) and weighted RMSD \(> 10.0\) Å, drop highest-residual 10% (min 1), refit; cap 5 rounds | `test_trim_loop_drops_highest_residual_decile` |
+| **T-1105** | Refuse table still gates at 10.0 Å after weight/trim (`overlap_ca_lt_3` / `rmsd_gt_10` / `singular_covariance`); fail closed | `test_refuse_table_stays_at_10_after_trim` |
+| **T-1106** | Artifacts land under `confidence_kabsch/{parent_job_id}/` and do **not** overwrite assembler `stitched.pdb` or D-125 `kabsch/{id}/` | `test_confidence_kabsch_dir_does_not_overwrite_assembler_or_d125_tree` |
 
 ### Addendum — D-126 amendment 1 (Trinity red-team pins; same D-id)
 
@@ -384,7 +387,13 @@ against live ops.
 | **T-1109** | Floor-then-Kabsch-then-trim order is fixed: (a) pLDDT floor 50 first if n≥3 remains; (b) weighted Kabsch; (c) trim loop | `test_floor_then_weighted_kabsch_then_trim_order` |
 | **T-1110** | All-or-nothing parent refuse; cite `_clear_success_artifacts`; no partial `tileN_transformed.pdb` / D-126 `stitched.pdb` | `test_all_or_nothing_parent_refuse` |
 | **T-1111** | Ops report must include confusion vs D-125 (`n_d125_pass_d126_refuse`); a drop is a **named finding**; not a CI assert against live ops | `test_no_regress_ops_report_fields` |
-| **T-1112** | 0-of-5 recovered is an allowed outcome; do not loosen the gate or invent a blend | `test_zero_of_five_recovered_is_allowed` |
+| **T-1112** | 0-of-5 recovered is an allowed outcome; do not loosen the gate or invent a blend | `test_zero_of_five_recovered_is_allowed` · `test_ops_success_report_names_a_drop_on_the_22_and_allows_zero_of_five` |
+
+D-126-A **code** pins for amendment 1 (same ids; now executable, not
+docs-only): `test_accepted_trim_still_discloses_full_overlap_rmsd_and_max_jump`
+(T-1107) · `test_floor_then_kabsch_then_trim_order_floor_clears_outliers_before_trim`
+(T-1109) · `test_all_or_nothing_parent_refuse_clears_partial_success`
+(T-1110). `hold48_kabsch.py` sha256 stays pinned.
 
 ---
 
