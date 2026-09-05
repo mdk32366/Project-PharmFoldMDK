@@ -361,10 +361,30 @@ no-overwrite rule.
 | ID | Check | Test name |
 |----|-------|-----------|
 | **T-1102** | `### D-126 —` exists; Spec file exists; algorithm name `overlap_confidence_kabsch_then_winning_tile`; 10.0 Å gate pinned; inventory of the five; hard stops; not D-126-A/B | `test_d126_heading_exists_in_the_living_log` · `test_spec_file_exists_and_names_algorithm` · `test_refuse_gate_stays_at_10` · `test_primary_five_inventory` · `test_hard_stops_and_not_ab` |
-| **T-1103** | *(future A)* Weighted Kabsch uses \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\) (clamp \(\ge \varepsilon\)) | `test_weighted_fit_uses_min_plddt_weights` |
+| **T-1103** | *(future A)* Weighted Kabsch uses \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\) (clamp \(\ge \varepsilon\), **ε = 1e-3**) | `test_weighted_fit_uses_min_plddt_weights` |
 | **T-1104** | *(future A)* Trim loop: while \(n_{\mathrm{eff}} \ge 3\) and weighted RMSD \(> 10.0\) Å, drop highest-residual 10% (min 1), refit; cap 5 rounds | `test_trim_loop_drops_highest_residual_decile` |
 | **T-1105** | *(future A)* Refuse table still gates at 10.0 Å after weight/trim (`overlap_ca_lt_3` / `rmsd_gt_10` / `singular_covariance`); fail closed | `test_refuse_table_stays_at_10_after_trim` |
 | **T-1106** | *(future A)* Artifacts land under `confidence_kabsch/{parent_job_id}/` and do **not** overwrite assembler `stitched.pdb` or D-125 `kabsch/{id}/` | `test_confidence_kabsch_dir_does_not_overwrite_assembler_or_d125_tree` |
+
+### Addendum — D-126 amendment 1 (Trinity red-team pins; same D-id)
+
+Hermetic **docs pin tests** for the amendment live in the same
+`tests/test_d126_confidence_kabsch_spec.py`. They must be able to go
+red **without** a live Fly query, GPU, restitch run, or any edit to
+`core/hold48_kabsch.py` / `hold48_stitch.py`. Cite: D-126 amendment 1
+in `docs/README.md` + Spec §§1–3, §5, §8, §10.
+⚠ The 10.0 Å refuse gate stays. ⚠ 0-of-5 recovered is allowed.
+⚠ Confusion vs D-125 is a required **report** field, not a CI assert
+against live ops.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1107** | Post-transform disclosure: `rmsd_full_overlap_angstrom` (unweighted, all overlap Cα) + `max_ca_jump_angstrom`; may be null on refuse-before-transform; A writes, B shows | `test_post_transform_full_overlap_disclosure` |
+| **T-1108** | ε = **1e-3**; weighted RMSD = sqrt(Σ w_i ‖R p_i + t − q_i‖² / Σ w_i) on the fit set | `test_epsilon_and_weighted_rmsd_formula` |
+| **T-1109** | Floor-then-Kabsch-then-trim order is fixed: (a) pLDDT floor 50 first if n≥3 remains; (b) weighted Kabsch; (c) trim loop | `test_floor_then_weighted_kabsch_then_trim_order` |
+| **T-1110** | All-or-nothing parent refuse; cite `_clear_success_artifacts`; no partial `tileN_transformed.pdb` / D-126 `stitched.pdb` | `test_all_or_nothing_parent_refuse` |
+| **T-1111** | Ops report must include confusion vs D-125 (`n_d125_pass_d126_refuse`); a drop is a **named finding**; not a CI assert against live ops | `test_no_regress_ops_report_fields` |
+| **T-1112** | 0-of-5 recovered is an allowed outcome; do not loosen the gate or invent a blend | `test_zero_of_five_recovered_is_allowed` |
 
 ---
 

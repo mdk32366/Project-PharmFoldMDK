@@ -15,7 +15,10 @@
 > solved. **D-125-B** already shipped UI dual-path honesty on `main`
 > (`aa8d3f1` / #238). **D-126 ships** the overlap-confidence Kabsch Spec
 > (docs only; [`docs/SPEC-overlap-confidence-kabsch.md`](docs/SPEC-overlap-confidence-kabsch.md));
-> D-125 Kabsch + assembler remain the production dual-path. D-124 A+B is on
+> **D-126 amendment 1** (same D-id) pins full-overlap RMSD + max Cα
+> jump, ε = 1e-3, floor-then-Kabsch-then-trim, all-or-nothing parent
+> refuse, ops confusion vs D-125, and 0-of-5 allowed. D-125 Kabsch +
+> assembler remain the production dual-path. D-124 A+B is on
 > `main` (`57f429d` / #236). **D-121 ships** the Method hold-48
 > 8th-grade explainer (`docs/method-hold48-tiles.md` + additive `/method`
 > section). **D-123 ships** the Nectin-4/ADC Doc follow-on on `/about`
@@ -26,6 +29,9 @@
 > flagged pre-stitch path; D-125-B names it on the review card / Method
 > when artifacts exist. The served assembler path is unchanged. D-126 is
 > a Spec only — it does not add a third stitch path in code.
+> D-126 amendment 1 (same D-id) pins future-A disclosure / ε /
+> floor-then-trim / all-or-nothing / no-regress report / 0-of-5;
+> production dual-path is unchanged.
 
 **Project**: PharmFoldMDK — an Antibody-Drug Conjugate (ADC) target exploration platform.
 **Context**: Graded coursework for a **Deep Learning** class in an ML Master's program.
@@ -947,7 +953,7 @@ never install a CUDA stack.
    already on `main` and D-125-A (already on `main`, `26a40a8` / #237) as
    the core BUILD that feeds `winning_tile` — D-125-B already shipped UI
    dual-path honesty; D-126 ships the overlap-confidence Kabsch Spec
-   (docs only; D-125 Kabsch + assembler remain); D-121 ships the Method hold-48 8th-grade
+   (docs only, including amendment 1 red-team pins; D-125 Kabsch + assembler remain); D-121 ships the Method hold-48 8th-grade
    explainer; D-123 ships the Nectin Doc → AdcContext follow-on, already on
    `main`; D-122 ships ADC-B `/adcs`; D-120 ships Phase 2 review; D-119
    ships ADC-A; D-118 ships P0 honesty; D-117 is the parent PLAN). Do not

@@ -33,6 +33,13 @@
   assembler) stays until D-126 code + ops.
 - ⚠ **10.0 Å gate STAYS.** Trim / weight change the fit set, not the
   gate. No threshold Spec-as-fix. No named-exclusion-as-fix.
+- **D-126 amendment 1** (this PR, same D-id): pins
+  `rmsd_full_overlap_angstrom` + `max_ca_jump_angstrom`; ε = **1e-3**
+  and the weighted RMSD formula; floor-then-Kabsch-then-trim;
+  all-or-nothing parent refuse (`_clear_success_artifacts` spirit);
+  ops confusion vs D-125 (`n_d125_pass_d126_refuse` is a **named
+  finding**); **0-of-5** recovered is allowed. Not D-126-A/B. No
+  stitch code.
 
 Full entries: [`README.md` § D-126](README.md#d-126--overlap-confidence-kabsch-spec-trimmed--plddt-weighted-fit-then-existing-winning_tile-docs-only),
 [`README.md` § D-125-B](README.md#d-125-b--ui-dual-path-honesty-name-assembler-and-kabsch-path-artifacts-without-colliding-them),
