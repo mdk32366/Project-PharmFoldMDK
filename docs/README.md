@@ -30,8 +30,11 @@
 >   Kabsch GO.** Phase 1 P0 honesty is the **D-118** BUILD GO. The stitcher is a pLDDT
 >   assembler; seams are not scientifically solved.
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
->   **D-118 ships** Phase 1 P0 honesty; parent PLAN is **D-117**. Not a second living
->   log — authoritative `### D-NNN` entries stay in this file.
+>   **D-119 ships** ADC-A (FDA-approved catalog + thin read API). **D-118 ships**
+>   Phase 1 P0 honesty; parent PLAN is **D-117**. Not a second living log —
+>   authoritative `### D-NNN` entries stay in this file.
+> - [`../data/adcs/README.md`](../data/adcs/README.md) — ADC-A v1 catalog hook
+>   (**D-119**). Weekly Drugs@FDA watch is Emma's ops lane; not built here.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -143,6 +146,162 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-119 — ADC-A: FDA-approved catalog is a dated JSON contract, not a UI and not a science invention
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the ADC-A BUILD GO** (Matt via Trinity Architect Spec
+  binding, after D-118 P0 merge). Data + thin read API only.
+  ⚠ **Not ADC-B** (`/adcs` pages). ⚠ **Not ADC-C** (pipeline / Right-to-Try).
+  ⚠ **Not a Kabsch / restitch GO.** ⚠ **Not F-004 / ranking ingest.**
+  ⚠ **Not Phase 2** (D-117 P1 review UI — parallel PR train; do not mix).
+  ⚠ **Does not touch `/about` AdcContext or ABOUT-COPY / Nectin-4 Doc.**
+  ⚠ **Does not build Emma's weekly Drugs@FDA watcher** — hook / README note only.
+- **Ruled by:** Trinity Architect Spec binding 2026-09-05 — ADC-A GO, data only:
+  `data/adcs/adcs.v1.json` + `GET /api/adcs` + `GET /api/adcs/{id}`; every field
+  `{value, source, as_of, confidence}`; FDA-approved v1 only; no invented numbers.
+- **Cite:** D-029 (openFDA = approval status; mapping = antigen; two freshness
+  dates; gate stays hermetic) · D-016 (every claim names how it is known) ·
+  D-040 (Group B/C stay the scorer file; this catalog is a **different object**) ·
+  D-034 (unauthenticated `/api` reads) · D-051 (new routes fire the architecture
+  contract) · owner Spec: ADC-A / ADC-B / ADC-C phased cut
+- **Relates:** `D-029` · `D-040` · `D-034` · `D-051` · `F-009` (held-out approved
+  antigens exist; this catalog is the **drug** roster, not that target set) ·
+  ship index [`decisions.md`](decisions.md)
+- **Does not amend:** D-029 reconciliation function · `data/adc_reference_mapping.csv`
+  · Group B labels · F-004 · D-118 census identity · Kabsch · ranking set ·
+  the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110`
+  while later numbers are written). This entry spends `D-119`; the pointer stays
+  the owner's.
+
+#### Context
+
+After D-118, Matt/Trinity split a second product surface: an **approved-ADC
+catalog** the later ADC-B UI can consume. The scorer already has
+`data/adc_reference_mapping.csv` (D-029/D-040) — **three** approved rows
+(Padcev, Kadcyla, Enhertu) plus clinical/preclinical Group B labels, and
+**Group C is still empty with reason**. That file is the scorer's label
+instrument. It is **not** a catalog of FDA-approved ADCs.
+
+D-029 already ruled the seam: Drugs@FDA has **no antigen field and no ADC
+flag**. Reviews go stale (the 2026-07-22 survey missed the October 2025 Blenrep
+re-approval and the May 2026 CD123 ADC). A count taken from a review is wrong
+the moment the field moves. ADC-A therefore cannot be "look up a 2024 review
+and type 15 rows."
+
+#### Decision
+
+1. **One checked-in catalog:** `data/adcs/adcs.v1.json`. Schema version `1`.
+   Scope is **FDA-approved ADCs only** — currently marketed under a Drugs@FDA
+   application that resolved on the reconciliation date. Pipeline, Right-to-Try,
+   NMPA/PMDA-only, and withdrawn-without-reapproval products are **out**
+   (ADC-C or a named exclusion, never a silent omission).
+2. **Every field is a provenance envelope** `{value, source, as_of, confidence}`.
+   A bare string or number is not data. Confidence is a **closed set**:
+   `official` (Drugs@FDA / openFDA field as returned) · `reviewed` (human
+   antigen / UniProt assignment — the D-029 seam) · `derived` (id slug / INN
+   stem computed from an official field). No other token.
+3. **openFDA is authority for approval identity** (application number, brand,
+   active ingredient, sponsor, marketing status, ORIG-AP date on **that**
+   application). Queried 2026-09-05 by `openfda.brand_name`. **No network in
+   the gate** (D-029 / D-018 argument): the live query dated the file; tests
+   load the file.
+4. **Antigen and UniProt accession are reviewed, never FDA-sourced.** Prefer
+   accessions already in-repo (`adc_reference_mapping.csv`,
+   `heldout_positives.csv`). CD123/IL3RA (`P26951`) is the one accession
+   resolved live from UniProt REST this session (`gene_exact:IL3RA`
+   `organism_id:9606` `reviewed:true`, 2026-09-05).
+5. **Two dates, never collapsed** (D-029): `approvals_reconciled_as_of` (the
+   openFDA brand-search day) and `antigen_mapping_reviewed_as_of` (the human
+   antigen pass). A single "updated" stamp would overstate the weaker one.
+6. **Completeness is a floor, dated and detectable — not a census.** v1 pins
+   the rows that resolved on 2026-09-05. A later approval absent from the
+   file is incompleteness, not a finding that "there are N ADCs." Emma's
+   weekly Drugs@FDA watch is the **detection** lane; this PR documents the
+   hook in `data/adcs/README.md` and **does not build the watcher**.
+7. **Thin read API, no UI.** `GET /api/adcs` returns the catalog object.
+   `GET /api/adcs/{id}` returns one row or 404. Unauthenticated (D-034).
+   File-derived, no engine (D-053 associations pattern). **No** `/adcs`
+   React route. **No** AdcContext / ABOUT-COPY edit.
+8. **No invented numbers.** v1 carries identity + approval + reviewed target.
+   It does **not** carry DAR, IC50, ORR, PFS, OS, or payload/linker chemistry
+   unless a later GO cites a named label section. A count of rows is a pin of
+   **this file**, not a scientific constant.
+9. **Separate from the scorer mapping.** `core.adc_catalog` does not import
+   `core.adc_reference`. Group B/C classification is unchanged. Ifinatamab
+   deruxtecan stays clinical on the mapping (PDUFA 2026-10-10) and is a
+   **named exclusion** here, not a catalog row.
+
+#### v1 inclusion (how each row is known)
+
+Brand search against openFDA Drugs@FDA on **2026-09-05** returned one
+`Prescription` record each for: MYLOTARG (`BLA761060`, ORIG-AP 2017-09-01),
+ADCETRIS (`BLA125388`, 2011-08-19), KADCYLA (`BLA125427`, 2013-02-22),
+BESPONSA (`BLA761040`, 2017-08-17), POLIVY (`BLA761121`, 2019-06-10),
+PADCEV (`BLA761137`, 2019-12-18), ENHERTU (`BLA761139`, 2019-12-20),
+TRODELVY (`BLA761115`, 2020-04-22), BLENREP (`BLA761440`, 2025-10-23),
+ZYNLONTA (`BLA761196`, 2021-04-23), TIVDAK (`BLA761208`, 2021-09-20),
+ELAHERE (`BLA761310`, 2022-11-14), DATROWAY (`BLA761394`, 2025-01-17),
+EMRELIS (`BLA761384`, 2025-05-14), DECNUPAZ (`BLA761460`, 2026-05-27).
+`LUMOXITI` brand search **404**. Historic Blenrep `BLA761158` **404** (the
+live marketed application is `BLA761440`). `BLA125399` also resolves to
+ADCETRIS with the same ORIG-AP date; v1 records the brand-search hit
+`BLA125388` and does **not** invent a story about the second number.
+
+Named exclusions (in the catalog header, not rows): Lumoxiti (withdrawn;
+openFDA 404); pipeline / Right-to-Try (ADC-C); ifinatamab deruxtecan (not
+approved; `data/adc_reference_mapping.csv` PDUFA 2026-10-10).
+
+#### Deep-learning justification
+
+This catalog does not run a network. The graded core remains ESMFold (D-003)
+and the scorer (D-041 / F-004). ADC-A is the **dated approved-drug set** those
+folds are *about* — the comparator a later ADC-B page can name without typing
+a review-paper count that D-029 already rejected. An unsourced "15 approved
+ADCs" on a structure surface would attribute clinical validation the model
+never measured. Neutral to the weights; load-bearing for whether "approved
+ADC" stays a checkable claim (D-016) rather than atmosphere.
+
+#### Provenance (D-016)
+
+- **Approval identity:** openFDA `GET /drug/drugsfda.json` brand-name search,
+  this session, 2026-09-05. Fields taken from `results[0]`:
+  `application_number`, `sponsor_name`, `products[0].brand_name`,
+  `products[0].active_ingredients[0].name`, `products[0].marketing_status`,
+  ORIG + AP `submission_status_date`.
+- **Antigen / accession (in-repo):** `data/adc_reference_mapping.csv` (Padcev /
+  Kadcyla / Enhertu; curated 2026-07-27) and `data/heldout_positives.csv`
+  (UniProt REST join 2026-08-01) for the other v1 antigens that file already
+  carries.
+- **IL3RA / P26951:** UniProt REST
+  `gene_exact:IL3RA AND organism_id:9606 AND reviewed:true`, 2026-09-05,
+  `primaryAccession=P26951`.
+- **Decnupaz as the May 2026 CD123 ADC:** D-029 already named a CD123
+  approval in May 2026; the 2026-09-05 brand search resolved DECNUPAZ /
+  `BLA761460` / ORIG-AP 2026-05-27. Antigen symbol remains reviewed.
+
+#### Consequences
+
+- Tests that must be able to go red: envelope on every field; confidence
+  closed set; FDA-approved / `Prescription` only; no pipeline / RTT / Lumoxiti
+  / ifinatamab rows; denylist on DAR/IC50/ORR/PFS/OS keys; unknown `{id}`
+  404s; list payload equals the file; architecture-contract set-equality
+  includes the two new routes; React `App.jsx` still has no `/adcs` route.
+- `ARCHITECTURE.md` gains the catalog + two public GET routes. `system-model.json`
+  must list them in the same PR (D-051).
+- ADC-B (UI) and ADC-C (pipeline / RTT) are later GOs. Emma's watcher is
+  ops, not this PR.
+
+#### Assumptions refused
+
+- That a review-paper count can stand in for Drugs@FDA.
+- That antigen is an FDA field (it is not — D-029).
+- That this catalog extends Group B/C or F-004.
+- That `/about` AdcContext should render it.
+- That weekly openFDA polling belongs in the gate or in this PR.
+
+---
 
 ### D-118 — Phase 1 P0 honesty: one census protein per accession, rental closed, assembler not Kabsch
 
