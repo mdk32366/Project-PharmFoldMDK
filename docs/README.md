@@ -45,10 +45,14 @@
 >   triple-path honesty on `main` (`abbcd00` / #242). **D-127** is the
 >   piecewise / domain-aware Kabsch Spec
 >   ([`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md))
->   (this PR, docs only). Production triple-path (assembler / D-125
->   Kabsch / D-126 confidence) stays callable. ⚠ **Not a restitch run
->   of the 27.** ⚠ **Seams are not scientifically solved.**
->   ⚠ **10.0 Å gate STAYS.** ⚠ **No trim loop.**
+>   (already on `main`, `00fa76d` / #243). **D-127-A** is the core
+>   BUILD (this PR): per-domain weighted Kabsch (no trim) → existing
+>   `winning_tile`; sibling `piecewise_kabsch/` tree. Production
+>   triple-path (assembler / D-125 Kabsch / D-126 confidence) stays
+>   callable. ⚠ **Not D-127-B.** ⚠ **Does not discharge Method**
+>   (Spec §7 — mandatory at B). ⚠ **Not a restitch run of the 27.**
+>   ⚠ **Seams are not scientifically solved.** ⚠ **10.0 Å gate
+>   STAYS.** ⚠ **No trim loop.**
 > - [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) — Kabsch on overlap Cα →
 >   transform tile → existing `winning_tile` stitch. D-125-A implements
 >   that Spec; it does not replace the assembler. D-125-B names both
@@ -61,8 +65,14 @@
 >   `hold48_kabsch.py`. ⚠ **10.0 Å gate stays.**
 > - [`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md) —
 >   piecewise / domain-aware Kabsch (multi-rigid; no trim) → existing
->   `winning_tile`. Spec only in this PR. ⚠ **10.0 Å gate stays.**
->   ⚠ **Another weight / trim knob is forbidden.**
+>   `winning_tile`. Spec already on `main` (`00fa76d` / #243).
+>   **D-127-A** implements it as a sibling module
+>   (`core/hold48_piecewise_kabsch.py`); does not overwrite assembler
+>   or D-125 `kabsch/{id}/` or D-126 `confidence_kabsch/{id}/` /
+>   `hold48_kabsch.py` / `hold48_confidence_kabsch.py`.
+>   ⚠ **10.0 Å gate stays.** ⚠ **Another weight / trim knob is
+>   forbidden.** ⚠ **Method addendum is mandatory at B** (A does
+>   not discharge Spec §7).
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**) plus a
 >   D-125-B addendum (what Kabsch does / does not) and a D-126-B addendum
@@ -81,8 +91,9 @@
 >   + amendment 1 `b32f9db` / #240). **D-126-A** already shipped the
 >   core BUILD on `main` (`aa8aa02` / #241). **D-126-B** already
 >   shipped UI triple-path honesty on `main` (`abbcd00` / #242).
->   **D-127 ships** the piecewise / domain-aware Kabsch Spec (this
->   PR, docs only). **D-121 ships** the
+>   **D-127 ships** the piecewise / domain-aware Kabsch Spec
+>   (already on `main`, `00fa76d` / #243). **D-127-A ships** the
+>   core BUILD (this PR). **D-121 ships** the
 >   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
 >   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
@@ -205,6 +216,275 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-127-A — Piecewise / domain-aware Kabsch core: per-domain weighted fit (no trim), then existing winning_tile
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the D-127-A core BUILD GO** (Emma GO 2026-09-05
+  after D-127 Spec landed on `main` at `00fa76d` / #243). Architect:
+  Trinity. Builder coordinator: Kaylee.
+  ⚠ **Core only.** Implements Spec §1–§3 and §5 as a **sibling path**.
+  ⚠ **Not D-127-B** (UI four-path honesty — later Emma GO).
+  ⚠ **Does not discharge Method.** Spec §7 is **mandatory** before
+  calling D-127 “done.” A code-only A BUILD is not a silent-code-only
+  licence; B (or a Method-bearing PR) must still ship the addendum.
+  ⚠ **Does not replace `winning_tile`.** Piecewise Kabsch is a
+  pre-stitch multi-rigid transform; the assembler stays callable.
+  ⚠ **Does not overwrite** assembler `stitched.pdb`, D-125
+  `core/hold48_kabsch.py` / `kabsch/{id}/`, or D-126
+  `core/hold48_confidence_kabsch.py` / `confidence_kabsch/{id}/`.
+  Assembler + D-125 + D-126 stay callable for A/B compare.
+  ⚠ **Not a restitch run of the 27.** The CLI is inventory-limited and
+  hermetic-testable; it does not re-query Fly and does not fold.
+  ⚠ **Not F-004 ingest.** ⚠ **Not ADC-C.** ⚠ **No rent / GPU / RunPod.**
+  ⚠ **No MD / AF refine.** ⚠ **Seams are not scientifically solved.**
+  ⚠ **The 10.0 Å refuse gate STAYS.** Do not raise it. 0-of-3 recovered
+  is an allowed outcome. ⚠ **No trim loop** (D-126 lie surface).
+- **Ruled by:** Emma BUILD GO D-127-A 2026-09-05: implement the D-127
+  Spec as a **new path** (`core/hold48_piecewise_kabsch.py` +
+  `scripts/piecewise_kabsch_restitch.py`) that feeds `winning_tile` /
+  `write_stitched`. Do not invent a second assembler. Do not edit
+  `hold48_kabsch.py` or `hold48_confidence_kabsch.py`. Sibling
+  `piecewise_kabsch/{parent_job_id}/` tree with per-piece + parent
+  disclosure; never silently overwrite assembler / D-125 / D-126
+  PDBs. Bind Spec pins (ε = 1e-3; weighted Kabsch only; no trim;
+  apply \(R, t\) only to that domain; linker inherit nearest
+  N-terminal accepted piece; all-or-nothing parent; same domain-snap
+  source; 10.0 Å stays; CLI of the 27; primary eval 2939 / 3272 /
+  3432; 0-of-3 allowed; ops confusion vs D-125 **and** D-126). Draft
+  PR; do not merge. Parents: D-127 Spec `00fa76d` / #243 + D-126-A
+  `aa8aa02` / #241 + D-126-B `abbcd00` / #242 + D-125-A `26a40a8` /
+  #237 + D-125-B `aa8d3f1` / #238.
+- **Cite:** D-127 Spec
+  ([`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md))
+  · D-126 Spec
+  ([`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md))
+  · D-126-A `aa8aa02` / #241 · D-126-B `abbcd00` / #242 · D-125 Spec
+  ([`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)) · D-125-A
+  `26a40a8` / #237 · D-125-B `aa8d3f1` / #238 · D-117 / D-118 / D-120 /
+  D-121 · D-111 `winning_tile` / emit domain-snap /
+  `domain_ends_span_relative` · D-116 `stitch_readiness` · D-109
+  ruling 7 · D-016 · primary three REFUSE **2939** `Q7Z408`, **3272**
+  `Q6V0I7`, **3432** `Q8IZF6` (D-126 OPS: full ≫ weighted; jumps
+  **28–68 Å**; motivation, not thresholds) · IGF2R **3356** out ·
+  ship index [`decisions.md`](decisions.md)
+- **Relates:** `D-127` · `D-126` · `D-126-A` · `D-126-B` · `D-125` ·
+  `D-125-A` · `D-125-B` · `D-121` · `D-120` · `D-118` · `D-117` ·
+  `D-116` · `D-111` · `D-109` ruling 7
+- **Does not amend:** D-111 geometry · D-116 gate · today's stitch
+  algorithm · D-125 `hold48_kabsch.py` · D-126
+  `hold48_confidence_kabsch.py` · D-118 census identity · D-120
+  `assembly_review` · D-121 assembler Method copy (the D-127 Method
+  addendum is **mandatory** at B; this A PR does not rewrite D-121
+  and does not ship MethodNote) · D-122 `/adcs` · D-123 `/about` ·
+  D-124 ADC-C · F-004 / ranking set · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
+  `D-110` while later numbers are written). This entry spends `D-127-A`;
+  the pointer stays the owner's. ⚠ **Does not invent D-127-B.**
+
+#### Context
+
+D-127 named multi-rigid piecewise Kabsch: one weighted \(R, t\) per
+UniProt domain that intersects the overlap with ≥3 Cα, from the same
+domain-snap source tile planning already uses, then existing
+`winning_tile`. Another weight / trim knob on one rigid body is the
+D-126 lie surface — a small fit-set RMSD hiding a 28–68 Å jump.
+D-127-A is the code BUILD of that Spec.
+
+Weighting by \(\min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)\) changes the
+**fit set of each piece**. Piecewise changes *which rigid body is
+fitted to which domain*. Neither changes the refuse **gate**.
+Replacing the assembler, overwriting D-125 / D-126 trees, reopening
+trim, or treating a recovered (or un-recovered) seam as scientifically
+solved would hide which tile won each residue and would pretend the
+network jointly placed the chain.
+
+#### Decision
+
+1. **Sibling module, not a replacement.** Algorithm lives in
+   `core/hold48_piecewise_kabsch.py` and is invoked by
+   `scripts/piecewise_kabsch_restitch.py`. It **imports** D-125
+   primitives (`paired_overlap_ca`, SVD helpers,
+   `apply_rigid_transform_pdb`) and D-126 weighted Kabsch
+   (`weighted_kabsch_rotation_translation`, `pair_weight`) and feeds
+   the existing `winning_tile` / `write_stitched` path.
+   `core/hold48_kabsch.py` and `core/hold48_confidence_kabsch.py` are
+   **not edited**. Assembler + D-125 Kabsch + D-126 confidence stay
+   callable for A/B compare.
+2. **Per-piece weighted Kabsch only (no trim).** ε = **1e-3**;
+   \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\), clamped
+   \(\ge \varepsilon\). One weighted Kabsch on that piece's overlap
+   Cα. **No trim loop. No pLDDT-floor-then-trim order.** Weight +
+   one Kabsch. Per-piece weighted RMSD =
+   \(\sqrt{\sum_i w_i \,\lVert R p_i + t - q_i\rVert^2 / \sum_i w_i}\)
+   on that piece's fit set. Gate is that per-piece weighted RMSD
+   **`≤ 10.0 Å`**.
+3. **Domain intervals from the same emit domain-snap source.**
+   `domain_intervals_span_relative` reads the same UniProt
+   `Domain` / `Repeat` feature records
+   `core.hold48.domain_ends_span_relative` already reads
+   (`data/census/spancache/{accession}.json`, same `cache_dir`
+   contract). Emit snap uses those features' **ends**; piecewise
+   uses those same features' **span-relative intervals**. A missing
+   cache is a category (empty intervals), not a fetch. Do not invent
+   a second annotation.
+4. **Pieces / linkers / apply.** Per seam: domain pieces = Domain /
+   Repeat intervals intersecting the overlap. A piece with ≥3
+   corresponding Cα is fitted. A candidate intersecting the overlap
+   whose corresponding Cα count is `< 3` is not fitted; if **zero**
+   candidates exist → parent `no_domain_pieces`; if candidates exist
+   but none reach ≥3 Cα → piece / parent `overlap_ca_lt_3`. Apply
+   each accepted piece's \(R, t\) **only** to moving-tile atoms in
+   that domain. Linker residues (moving-tile residues not in any
+   fitted piece) inherit the nearest N-terminal accepted piece (or
+   the N-terminal-most accepted piece if the linker sits N-terminal
+   of every accepted piece). `max_linker_ca_jump > 10.0 Å` → parent
+   `linker_jump_gt_10`.
+5. **Refuse v1 stays at 10.0 Å.** Piece Cα **`< 3`** →
+   `overlap_ca_lt_3`; piece weighted RMSD **`> 10.0 Å`** →
+   `rmsd_gt_10`; singular / rank `< 2` → `singular_covariance`;
+   zero domain pieces covering the overlap → `no_domain_pieces`;
+   linker max Cα jump **`> 10.0 Å`** → `linker_jump_gt_10`. Fail
+   closed. **All-or-nothing parent:** if any piece refuses or
+   `no_domain_pieces` / `linker_jump_gt_10`, parent outcome =
+   refused; clear / do not leave partial `tileN_transformed.pdb` or
+   D-127-path `stitched.pdb` (same spirit as D-125
+   `_clear_success_artifacts`). Seam rows still recorded.
+6. **Disclosure (anti one-rigid / trim-to-pass lie).** Per piece:
+   `n_ca`, weighted `rmsd_angstrom` (null if refused before RMSD).
+   Parent / seam after piecewise apply: `rmsd_full_overlap_angstrom`
+   (unweighted RMSD on **all** overlap Cα) and `max_ca_jump_angstrom`.
+   Linkers: `linker_n`, `max_linker_ca_jump`. On refuse-before-
+   transform they may be null. They do **not** move the 10.0 Å
+   piece gate.
+7. **Inventory is the 27; primary eval is the three.** CLI re-runs
+   all 27 (not a named-exclusion of 2939 / 3272 / 3432). IGF2R
+   **3356** is out. **0-of-3 recovered is allowed** — do not loosen
+   the gate or invent a blend to force passes. This PR does not
+   restitch the 27.
+8. **Artifact dirs are a fourth sibling tree.** Writes
+   `<ops out_dir>/piecewise_kabsch/{parent_job_id}/`
+   (`provenance.json`, `seams.jsonl` with per-piece `n_ca` /
+   `rmsd_angstrom`, `linker_n`, `max_linker_ca_jump`,
+   `rmsd_full_overlap_angstrom`, `max_ca_jump_angstrom`,
+   `refuse_reason`,
+   `algorithm=piecewise_domain_kabsch_then_winning_tile`,
+   `decision=D-127`). Do not overwrite assembler `stitched.pdb`,
+   D-125 `kabsch/{id}/`, or D-126 `confidence_kabsch/{id}/`.
+9. **Ops success report (not a CI assert against live ops).**
+   `build_ops_success_report` emits `n_d125_pass_d127_pass`,
+   `n_d125_pass_d127_refuse`, `n_d126_pass_d127_pass`,
+   `n_d126_pass_d127_refuse`, `n_d126_refuse_d127_pass`,
+   `n_d126_refuse_d127_refuse`, `recovered_of_primary_three`. A
+   D-125 PASS → D-127 REFUSE drop **or** a D-126 PASS → D-127
+   REFUSE drop is a **named finding**, not silent success.
+10. **UI / Method are not this PR.** Assembler remains the default
+    served PDB. D-127-B (later) reads `piecewise_kabsch/` **and**
+    ships Spec §7 Method. Forbidden: “aligned,” “superimposed,”
+    “seams solved,” “full-length AF-quality.”
+11. **Hard stops.** No rent / GPU / RunPod / MD / AF refine. No
+    F-004. No D-127-B UI. No MethodNote in this PR. No live
+    restitch of the 27. No claim that seams are solved. No second
+    assembler. No edit of `hold48_kabsch.py` /
+    `hold48_confidence_kabsch.py`. No threshold change. No
+    named-exclusion of the three. No trim loop. No invented
+    coordinates. No PAE zeros.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 /
+D-111). D-125 / D-126 Kabsch are already rigid transforms of those
+already-emitted coordinates. Piecewise Kabsch still is: it fits one
+weighted \(R, t\) per UniProt domain on the **same** overlap Cα
+using the network's own pLDDT, then applies that transform only to
+that domain's moving-tile atoms. It is not a new network and not a
+jointly placed holoprotein. A BUILD that hid a 28–68 Å jump behind
+one rigid / a trimmed RMSD, reopened the D-126 trim loop, raised
+10.0 Å, skipped the three by name, left a partial parent PDB,
+silently dropped a D-125 or D-126 PASS, or called a refused seam
+“solved” would attribute to ESMFold a superimposed structure — or a
+repair — the model never produced. Fail-closed thresholds (piece
+`n_ca < 3`, piece weighted RMSD `> 10.0 Å`, degenerate covariance,
+no domain pieces, linker jump `> 10.0 Å`) exist so this path cannot
+invent a pose when a domain is too thin, too far, collinear,
+unannotated, or broken at a linker. Neutral to the weights;
+load-bearing for whether the restitch is still an assembly of the
+network's passes.
+
+#### Provenance (D-016)
+
+- **Spec on `main`:** `00fa76d` / #243
+  (`git rev-parse origin/main` after `git fetch origin main`,
+  2026-09-05).
+- **D-125-A bytes stay pinned:** `core/hold48_kabsch.py` sha256
+  `4c7bb45d04507e2a67ba3600b35d6130d62843ca3bc99c15d3568d5cb105ff6e`
+  at `26a40a8` / #237 (unchanged through D-125-B / D-126 / D-127 Spec).
+  This PR does not edit that file.
+- **D-126-A bytes stay pinned:** `core/hold48_confidence_kabsch.py`
+  sha256
+  `d526a856ec8f1ba978a3586f3dfcf4a0ee858da12132499f2db37368efc77f18`
+  at `aa8aa02` / #241 (unchanged through D-126-B / D-127 Spec).
+  This PR does not edit that file.
+- **Primary three + D-126 OPS jumps 28–68 Å:** D-127 Spec / task
+  brief 2026-09-05 (not re-measured here). ⚠ **Not a restitch of
+  the 27.**
+- **27 parent ids:** same set as D-125 `KABSCH_RESTITCH_PARENT_IDS` /
+  `WAVE1_WAVE2_STITCHED_PARENT_IDS`. ⚠ **Not re-queried on Fly.**
+- **ε / weighted RMSD / no trim / all-or-nothing / 0-of-3 / same
+  domain-snap source:** D-127 Spec §1–§3 / §5.
+- **D-127-A tip this PR starts from:** `origin/main` `00fa76d`.
+
+#### Consequences
+
+- Tests that must be able to go red **(this PR):** per-piece
+  weighted fit (no trim); piece `n_ca < 3` → `overlap_ca_lt_3`;
+  piece weighted RMSD `> 10.0 Å` → `rmsd_gt_10`; singular →
+  `singular_covariance`; `no_domain_pieces`; `linker_jump_gt_10`;
+  apply \(R, t\) only to that domain; linker inherit nearest
+  N-terminal accepted piece; full accept feeds `winning_tile`;
+  off-block PAE null never 0; all-or-nothing parent clears success
+  artifacts; `piecewise_kabsch/` does not overwrite assembler /
+  D-125 `kabsch/` / D-126 `confidence_kabsch/`; D-125
+  `write_kabsch_restitch`, D-126 `write_confidence_kabsch_restitch`,
+  and `write_stitched` stay independently callable; CLI refuses 3356
+  and does **not** skip the primary three; domain intervals from the
+  same emit Domain/Repeat source; ops report fields include
+  `n_d125_pass_d127_refuse` and `n_d126_pass_d127_refuse` and allow
+  `recovered_of_primary_three=0`. Test plan **T-1127**–**T-1132**
+  (now code, not docs-only), plus A hermetic fixtures in
+  `tests/test_d127_piecewise_kabsch.py`. Spec pins in
+  `tests/test_d127_piecewise_kabsch_spec.py` stay and now also
+  require `### D-127-A —`.
+- `ARCHITECTURE.md` records D-127-A as a fourth flagged pre-stitch
+  path. Served census PDBs stay assembler. D-125 Kabsch + D-126
+  confidence stay. Method / four-path UI remain D-127-B.
+- D-127-B, F-004 ingest, a live restitch of the 27, remaining
+  tileable / mucins, rental, and optional GPU refine remain later
+  GOs. B carries the Method obligation; A does not discharge it.
+
+#### Assumptions refused
+
+- That shipping A licenses calling seams solved or the chain one
+  forward pass.
+- That the 10.0 Å gate may move because three parents refused.
+- That naming the three is an algorithm that skips them.
+- That piecewise Kabsch may replace `winning_tile` (it feeds it).
+- That this PR may edit `core/hold48_kabsch.py` or
+  `core/hold48_confidence_kabsch.py` or overwrite `kabsch/{id}/` /
+  `confidence_kabsch/{id}/` / assembler `stitched.pdb`.
+- That a trim loop or another weight knob may reopen the D-126 lie
+  surface.
+- That a parent may keep a partial D-127 `stitched.pdb` when one
+  piece refuses.
+- That a drop vs D-125 or vs D-126 may be silent success.
+- That 0-of-3 recovered licenses raising the gate or inventing a
+  blend.
+- That this PR may ship D-127-B UI, MethodNote, restitch the 27,
+  enter F-004, rent a GPU, or repair the `D-` next-free pointer.
+- That A discharges the Method obligation (Spec §7 stays mandatory
+  at B).
+
+---
 
 ### D-127 — Piecewise / domain-aware Kabsch Spec: multi-rigid fit, then existing winning_tile (docs only)
 

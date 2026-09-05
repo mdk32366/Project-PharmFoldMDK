@@ -5,21 +5,26 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-127 (piecewise / domain-aware Kabsch Spec)
+## Active ship — D-127-A (piecewise / domain-aware Kabsch core)
 
-- **D-127 ships the piecewise / domain-aware Kabsch Spec** (this PR,
-  docs only) —
+- **D-127-A ships the piecewise / domain-aware Kabsch core BUILD** (this
+  PR) — [`core/hold48_piecewise_kabsch.py`](../core/hold48_piecewise_kabsch.py)
+  + CLI [`scripts/piecewise_kabsch_restitch.py`](../scripts/piecewise_kabsch_restitch.py).
+  Per-domain weighted Kabsch (no trim) → existing `winning_tile`.
+  Sibling tree `piecewise_kabsch/{parent_id}/`.
+  `hold48_kabsch.py` and `hold48_confidence_kabsch.py` are **not
+  edited**. **CPU, no rent.** Does **not** discharge the Method
+  obligation (Spec §7 — mandatory at B).
+- **D-127 already shipped** the piecewise / domain-aware Kabsch Spec
+  on `main` (`00fa76d` / #243) —
   [`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md).
   Multi-rigid per UniProt domain; **no trim loop**; 10.0 Å gate STAYS.
   Primary three: 2939 / 3272 / 3432. CLI of the 27 for confusion vs
-  D-125 and D-126. 0-of-3 recovered allowed. No `hold48_*.py` edit.
+  D-125 and D-126. 0-of-3 recovered allowed.
   ⚠ **Method obligation:** Method must surface D-127 and the
   stitch-path train when the path exists (Spec §7). The Method
   addendum is **mandatory** before calling D-127 “done.” No silent
-  code-only.
-- **D-127-A** (later): core BUILD — per-domain weighted Kabsch →
-  existing `winning_tile`; sibling `piecewise_kabsch/{parent_id}/`.
-  **CPU, no rent.** Does **not** discharge the Method obligation.
+  code-only. A does **not** discharge it.
 - **D-127-B** (later): UI four-path honesty **and** Method owner
   markdown + MethodNote additive section (D-121 / D-125-B / D-126-B
   pattern); default served = assembler. **Mandatory** before
@@ -54,9 +59,9 @@
 - ⚠ **Seams are not scientifically solved.** Piecewise Kabsch is a
   multi-rigid transform of already-emitted ESMFold tiles, not a
   jointly placed holoprotein. Production triple-path (assembler /
-  D-125 Kabsch / D-126 confidence) stays until D-127 code + ops.
-  Assembler + D-125 Kabsch + D-126 confidence stay callable. Default
-  served = assembler.
+  D-125 Kabsch / D-126 confidence) stays until D-127 ops. Assembler
+  + D-125 Kabsch + D-126 confidence stay callable. Default served =
+  assembler.
 - ⚠ **10.0 Å gate STAYS.** Do not raise it. No trim loop. No
   threshold Spec-as-fix. No named-exclusion-as-fix.
 - **D-126 amendment 1** (already on `main`, same D-id): pins
@@ -66,7 +71,8 @@
   ops confusion vs D-125 (`n_d125_pass_d126_refuse` is a **named
   finding**); **0-of-5** recovered is allowed.
 
-Full entries: [`README.md` § D-127](README.md#d-127--piecewise--domain-aware-kabsch-spec-multi-rigid-fit-then-existing-winning_tile-docs-only),
+Full entries: [`README.md` § D-127-A](README.md#d-127-a--piecewise--domain-aware-kabsch-core-per-domain-weighted-fit-no-trim-then-existing-winning_tile),
+[`README.md` § D-127](README.md#d-127--piecewise--domain-aware-kabsch-spec-multi-rigid-fit-then-existing-winning_tile-docs-only),
 [`README.md` § D-126-B](README.md#d-126-b--ui-triple-path-honesty-name-assembler-d-125-kabsch-path-and-d-126-confidence-kabsch-artifacts-without-colliding-them),
 [`README.md` § D-126-A](README.md#d-126-a--overlap-confidence-kabsch-core-trimmed--plddt-weighted-fit-then-existing-winning_tile),
 [`README.md` § D-126](README.md#d-126--overlap-confidence-kabsch-spec-trimmed--plddt-weighted-fit-then-existing-winning_tile-docs-only),
@@ -78,8 +84,8 @@ Spec: [`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md).
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-127 Spec** | Piecewise / domain-aware Kabsch Spec (docs only) | **Yes — this PR.** |
-| **D-127-A** | Core BUILD (per-domain weighted Kabsch → `winning_tile`; no trim; CPU, no rent) | No. Later Emma GO. |
+| **D-127 Spec** | Piecewise / domain-aware Kabsch Spec (docs only) | Already shipped on `main` (#243 / `00fa76d`). |
+| **D-127-A** | Core BUILD (per-domain weighted Kabsch → `winning_tile`; no trim; CPU, no rent) | **Yes — this PR.** |
 | **D-127-B** | UI four-path honesty + **mandatory Method addendum** (reads `piecewise_kabsch/`) | No. Later Emma GO. Mandatory before D-127 is “done.” |
 | **D-126 Spec** | Overlap-confidence Kabsch Spec (docs only) | Already shipped on `main` (#239 / `d59be6b` + #240 / `b32f9db`). |
 | **D-126-A** | Core BUILD (weighted + trimmed overlap Cα → `winning_tile`) | Already shipped on `main` (#241 / `aa8aa02`). |

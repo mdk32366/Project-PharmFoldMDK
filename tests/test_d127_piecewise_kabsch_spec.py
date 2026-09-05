@@ -52,6 +52,11 @@ def test_d127_heading_exists_in_the_living_log():
     assert re.search(r"^### D-126-A — Overlap-confidence Kabsch core", LOG, re.M)
     assert re.search(r"^### D-126-B — UI triple-path honesty", LOG, re.M)
     assert re.search(r"^### D-125 — Kabsch restitch Spec", LOG, re.M)
+    assert re.search(
+        r"^### D-127-A — Piecewise / domain-aware Kabsch core",
+        LOG,
+        re.M,
+    ), "D-127-A must be a real ### entry, not a citation of one"
     assert "Docs Spec only" in LOG or "docs only" in LOG.lower()
     assert "Not D-127-A" in LOG or "not d-127-a" in LOG.lower()
     assert "Not D-127-B" in LOG or "not d-127-b" in LOG.lower()
@@ -193,14 +198,15 @@ def test_artifact_dir_is_sibling_piecewise_kabsch():
 
 
 def test_ship_index_distinguishes_spec_from_ab_build():
-    assert "D-127 ships the piecewise / domain-aware Kabsch Spec" in INDEX
+    assert "D-127 already shipped" in INDEX or "D-127 ships the piecewise / domain-aware Kabsch Spec" in INDEX
     assert "Yes — this PR." in INDEX
-    assert re.search(r"D-127 Spec.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
-    assert re.search(r"D-127-A.*No\. Later Emma GO", _flat(INDEX))
+    assert re.search(r"D-127 Spec.*Already shipped on `main`", _flat(INDEX))
+    assert re.search(r"D-127-A.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
     assert re.search(r"D-127-B.*No\. Later Emma GO", _flat(INDEX))
     assert re.search(r"D-126-B.*Already shipped on `main`", _flat(INDEX))
     assert "piecewise_kabsch" in INDEX
     assert "four-path" in INDEX.lower() or "four-path" in INDEX
+    assert "does **not** discharge" in INDEX or "does not discharge" in INDEX.lower()
 
 
 def test_plan_and_architecture_point_at_d127():
@@ -213,7 +219,7 @@ def test_plan_and_architecture_point_at_d127():
 
 
 def test_this_spec_pr_does_not_edit_hold48_modules():
-    """Hard stop: no hold48_*.py edit. Existing paths stay callable."""
+    """Hard stop: D-127-A is a sibling module. D-125 / D-126 bytes stay pinned."""
     assert "def winning_tile" in STITCH
     assert "def kabsch" not in STITCH
     assert "piecewise_domain_kabsch" not in KABSCH
@@ -224,11 +230,21 @@ def test_this_spec_pr_does_not_edit_hold48_modules():
     assert "D-127" not in CONF
     assert "def fit_overlap_kabsch" in KABSCH
     assert hashlib.sha256(KABSCH_PATH.read_bytes()).hexdigest() == D125_KABSCH_SHA256
+    assert hashlib.sha256(CONF_PATH.read_bytes()).hexdigest() == (
+        "d526a856ec8f1ba978a3586f3dfcf4a0ee858da12132499f2db37368efc77f18"
+    )
     assert CONF_PATH.is_file()
     assert "overlap_confidence_kabsch_then_winning_tile" in CONF
     assert "import numpy" not in KABSCH
     assert "from numpy" not in KABSCH
-    assert (ROOT / "core" / "hold48_piecewise_kabsch.py").exists() is False
+    sibling = ROOT / "core" / "hold48_piecewise_kabsch.py"
+    assert sibling.is_file()
+    sib = sibling.read_text(encoding="utf-8")
+    assert "piecewise_domain_kabsch_then_winning_tile" in sib
+    assert "def write_piecewise_kabsch_restitch" in sib
+    assert "import numpy" not in sib
+    assert "from numpy" not in sib
+    assert "trim_highest_residual" not in sib
 
 
 def test_zero_of_three_recovered_is_allowed():
