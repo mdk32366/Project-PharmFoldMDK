@@ -251,6 +251,11 @@ edit those pages.
    extract into the Story+About grade exceeds the 12.5 ceiling, the
    extract is excluded from that measurement and the fight is recorded
    here — ⚠ **the Doc is not trimmed to appease a tripwire.**
+   **Measured this PR (split not taken):** vitest
+   `src/components/readability.tripwire.test.jsx` printed
+   `[D-056] Flesch–Kincaid grade = 10.97 over 1952 words / 103 sentences
+   (ceiling 12.5)` — the eighth-grade extract pulled the mixed grade
+   *down*. No exclusion, no trim.
 
 #### Deep-learning justification
 
