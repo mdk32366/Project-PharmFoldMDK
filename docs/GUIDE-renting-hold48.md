@@ -4,7 +4,9 @@
 >
 > **Hold-48 rental E2E closed 2026-09-05 PT.** The pod is **Terminated**. **Do not Deploy.
 > Do not emit. Do not rent a clean card.** This file is no longer the live operator path.
-> Phase 1 UI honesty is **D-118** / [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md).
+> Phase 1 UI honesty is **D-118**. Phase 2 review UI is **D-120**
+> (`/census/:id` assembled-parent audit — not a restitch GO). D-119 is ADC-A.
+> Plan: [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md).
 > Kabsch / restitch remains **PARKED**.
 >
 > **Review (owner-verified 2026-09-05 PT; not re-queried on Fly here):** Wave2 stitch
@@ -17,8 +19,9 @@
 > Everything below the next heading is **historical** and must not be followed unless Matt
 > re-opens rental.
 
-**Decision:** `D-113`, amended by `D-114`; closeout / honesty **D-117** / **D-118**.
-**Cite:** D-111 · D-112 · D-113 · D-114 · D-115 · D-116 · D-117 · D-118 · vault **D-0036**
+**Decision:** `D-113`, amended by `D-114`; closeout / honesty **D-117** / **D-118**;
+review UI **D-120**.
+**Cite:** D-111 · D-112 · D-113 · D-114 · D-115 · D-116 · D-117 · D-118 · D-120 · vault **D-0036**
 (amended; external, not repo D-036) · issue **#210** · PR **#213**.
 
 **This is not a rewrite of** [`GUIDE-renting-the-a6000.md`](GUIDE-renting-the-a6000.md). That

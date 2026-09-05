@@ -1,5 +1,9 @@
 # Hold-48 budget and tier waves — 2026-09-04 (measured)
 
+> ⚠ **Historical forecast.** Superseded as a **live** plan by the 2026-09-05 PT
+> rental closeout (D-117 / D-118 / D-120). Keep as the pre-run model. Do not
+> silently edit measured walls. Not an emit GO.
+
 **Decision:** `D-113`, amended by `D-114`. **Cite:** D-111 · D-112 · D-113 · vault **D-0036** (amended; external, not repo D-036) · issue **#210**.
 **Companion runbook:** [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md).
 

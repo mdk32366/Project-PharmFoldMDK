@@ -29,4 +29,10 @@ describe('Confidence caveat', () => {
     render(<Confidence meanPlddt={80} plddt={[80]} caveat="" />)
     expect(screen.getByText(/self-reported/i)).toBeInTheDocument()
   })
+
+  it('renames the header on an assembled chain', () => {
+    render(<Confidence meanPlddt={61.07} plddt={[61]} assembled caveat="" />)
+    expect(screen.getByRole('heading', { name: /Assembled-chain pLDDT/ })).toBeInTheDocument()
+    expect(screen.getByText(/winner tile per residue/)).toBeInTheDocument()
+  })
 })

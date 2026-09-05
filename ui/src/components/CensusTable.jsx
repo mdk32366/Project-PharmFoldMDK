@@ -46,7 +46,8 @@ const PROFILE_LABEL = {
   refused_out_of_distribution: 'outside fitted range',
   refused_span_below_floor: 'span too short to describe',
   refused_features_incomplete: 'measurements incomplete',
-  // ⚠ no fold exists, so there is nothing to profile — distinct from the three refusals
+  refused_assembled_incommensurable: 'assembly — not a single-pass measurement',
+  // ⚠ no fold exists, so there is nothing to profile — distinct from the refusals
   not_folded: 'no structure yet',
 }
 

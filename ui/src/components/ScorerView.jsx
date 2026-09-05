@@ -102,6 +102,10 @@ function FullResult({ ranking, coverage, partial }) {
   return (
     <div className="scorer">
       <h2>The scorer result</h2>
+      <p className="note scorer-assembly-note" data-testid="scorer-assembly-note">
+        The 27 unique stitched parents (Wave1 PASS 10 + Wave2 PASS 17) are not in
+        this ranking (D-109).
+      </p>
       {partial && (
         <p className="scorer-status partial">
           Partial result — some pre-registered statistics are blocked. {r.status_detail}

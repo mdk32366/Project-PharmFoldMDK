@@ -201,12 +201,39 @@ describe('D-118 — assembled / tiles-only honesty', () => {
     vi.mocked(getCensusDetail).mockResolvedValue({
       ...DETAIL, structure_kind: 'assembled', structure_kind_label: 'assembled (provisional)',
       assembler_note: 'assembled by pLDDT overlap, not superimposed; seam not solved',
+      assembly_review: {
+        parent_analysis_id: 42, hold48_kind: 'parent',
+        assembler_note: 'assembled by pLDDT overlap, not superimposed; seam not solved',
+        seam_note: 'Kabsch / restitch remains PARKED.',
+        readiness: {
+          source: 'sibling_snapshot', expected_n: 2, present_complete_n: 2,
+          missing: [], uncovered_n: 0, note: 'not a restitch GO.',
+        },
+        tiles: [], chosen_tile_ids: [], spare_tile_ids: [],
+        downloads: { stitched: [], tiles: [] },
+      },
     })
     const { container } = view()
     await screen.findByRole('heading', { name: 'SLC5A10' })
     expect(container.textContent).toMatch(/assembled \(provisional\)/)
     expect(container.textContent).toMatch(/not superimposed/)
+    expect(container.textContent).toMatch(/Assembly review/)
+    expect(container.textContent).toMatch(/winner tile per residue/)
     expect(container.textContent).not.toMatch(/waiting on rented capacity/)
+  })
+
+  it('names both IGF2R populations on the census card', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({
+      ...DETAIL, accession: 'P11717', gene: 'IGF2R',
+      igf2r_two_population: {
+        cohort: 'Cohort IGF2R (tranche 0, job 57) is a CUDA OOM failure.',
+        census: 'Census tiles are a later span (D-081). Neither substitutes for the other.',
+      },
+    })
+    const { container } = view()
+    await screen.findByRole('heading', { name: 'IGF2R' })
+    expect(container.textContent).toMatch(/CUDA OOM/)
+    expect(container.textContent).toMatch(/Neither substitutes/)
   })
 
   it('does not draw a tile as the protein when kind is tiles_only', async () => {

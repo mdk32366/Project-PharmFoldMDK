@@ -45,6 +45,18 @@ from db.models import JobRecord, ProteinAnalysis, RankingResult, RankingRun, Tar
 HOLD48_SPARE_TILE_IDS = frozenset({3693, 3695, 3696})
 HOLD48_PREFERRED_TILE_IDS = frozenset({3673, 3674, 3675})
 
+# 27 unique Wave1+Wave2 stitched parents (D-117 / D-120 inventory). Owner closeout
+# 2026-09-05 PT — not re-queried on Fly in the D-120 PR.
+WAVE1_WAVE2_STITCHED_PARENT_IDS = frozenset({
+    2929, 2938, 2939, 3179, 3188, 3190, 3217, 3321, 3541, 3569,
+    2817, 2917, 3027, 3097, 3153, 3272, 3320, 3368, 3379, 3394,
+    3404, 3432, 3454, 3469, 3516, 3566, 3575,
+})
+assert len(WAVE1_WAVE2_STITCHED_PARENT_IDS) == 27
+
+IGF2R_ACCESSION = "P11717"
+IGF2R_COHORT_JOB_ID = 57
+
 STRUCTURE_KIND_LABEL = {
     "single-pass": "single-pass",
     "assembled": "assembled (provisional)",
@@ -641,6 +653,283 @@ def apply_structure_kind(proj: dict[str, Any], row: ProteinAnalysis, kind: str) 
     return proj
 
 
+def igf2r_two_population_copy() -> dict[str, str]:
+    """Cohort OOM and census tiles are different measurements (D-081 / D-120)."""
+    return {
+        "gene": "IGF2R",
+        "accession": IGF2R_ACCESSION,
+        "cohort": (
+            f"Cohort IGF2R (tranche 0, job {IGF2R_COHORT_JOB_ID}) is a CUDA OOM "
+            "failure — a different measurement under a different span definition."
+        ),
+        "census": (
+            "Census IGF2R tiles (and any later assembly) are a later span "
+            "definition (D-081). Neither substitutes for the other."
+        ),
+    }
+
+
+def _tile_window(row: ProteinAnalysis) -> tuple[Optional[int], Optional[int]]:
+    m = row.meta or {}
+    return m.get("tile_start"), m.get("tile_end")
+
+
+def assign_tile_roles(tiles: list[ProteinAnalysis]) -> dict[int, str]:
+    """Chosen vs spare per window. Prefer lower ids; named unused 3693/3695/3696."""
+    by_window: dict[tuple[Any, Any], list[ProteinAnalysis]] = {}
+    for t in tiles:
+        by_window.setdefault(_tile_window(t), []).append(t)
+    roles: dict[int, str] = {}
+    for group in by_window.values():
+        named_spares = [t for t in group if t.id in HOLD48_SPARE_TILE_IDS]
+        rest = [t for t in group if t.id not in HOLD48_SPARE_TILE_IDS]
+        pool = rest if rest else named_spares
+        preferred = [t for t in pool if t.id in HOLD48_PREFERRED_TILE_IDS]
+        choose_from = preferred if preferred else pool
+        chosen = min(choose_from, key=lambda t: t.id)
+        for t in group:
+            roles[t.id] = "chosen" if t.id == chosen.id else "spare"
+    return roles
+
+
+def _tile_is_complete(row: ProteinAnalysis) -> bool:
+    return bool(row.pdb_path) and bool(row.pae_json_path)
+
+
+def sibling_readiness(parent: ProteinAnalysis, tiles: list[ProteinAnalysis]) -> dict[str, Any]:
+    """Readiness from sibling tile rows — not a restitch GO (D-120)."""
+    span = int((parent.meta or {}).get("span_aa") or 0)
+    windows: list[tuple[int, int]] = []
+    seen: set[tuple[Any, Any]] = set()
+    for t in tiles:
+        start, end = _tile_window(t)
+        key = (start, end)
+        if start is None or end is None or key in seen:
+            continue
+        seen.add(key)
+        windows.append((int(start), int(end)))
+    present = 0
+    missing: list[dict[str, Any]] = []
+    for start, end in windows:
+        group = [t for t in tiles if _tile_window(t) == (start, end)]
+        if any(_tile_is_complete(t) for t in group):
+            present += 1
+        else:
+            missing.append({"start": start, "end": end})
+    uncovered = None
+    if span >= 1 and windows:
+        covered: set[int] = set()
+        for start, end in windows:
+            covered.update(range(start, end + 1))
+        uncovered = sum(1 for i in range(1, span + 1) if i not in covered)
+    return {
+        "source": "sibling_snapshot",
+        "expected_n": len(windows),
+        "present_complete_n": present,
+        "missing": missing,
+        "uncovered_n": uncovered if uncovered is not None else 0,
+        "ready": (not missing) and (uncovered == 0) and len(windows) > 0,
+        "note": (
+            "sibling snapshot from analyses on this accession — ops numbers, "
+            "not a restitch GO. Live stitch_readiness needs a parent jobs row "
+            "and the emit-time UniProt snap (D-116)."
+        ),
+    }
+
+
+def _readiness_from_gate(session: Session, parent: ProteinAnalysis) -> Optional[dict[str, Any]]:
+    """Try D-116 stitch_readiness. None if the parent job or snap is unavailable."""
+    parent_job = session.scalars(
+        select(JobRecord).where(JobRecord.analysis_id == parent.id)
+    ).first()
+    if parent_job is None:
+        return None
+    try:
+        from core.hold48 import stitch_readiness
+        ready = stitch_readiness(session, parent_job, parent)
+    except Exception:  # noqa: BLE001 — a missing snap must not 500 the card
+        return None
+    return {
+        "source": "stitch_readiness",
+        "expected_n": ready.expected_n,
+        "present_complete_n": ready.present_complete_n,
+        "missing": [
+            {"start": spec.start, "end": spec.end, "tile_index": spec.tile_index}
+            for spec in ready.missing
+        ],
+        "uncovered_n": ready.uncovered_n,
+        "ready": ready.ready,
+        "note": "live stitch_readiness (D-116) — ops numbers, not a restitch GO.",
+    }
+
+
+def download_stem_for_row(
+    row: ProteinAnalysis,
+    *,
+    role: Optional[str] = None,
+    tile_n: Optional[int] = None,
+) -> str:
+    """Honest download basename: stitched / tileN / spare{id} / structure."""
+    pdb_name = Path(row.pdb_path).name if row.pdb_path else ""
+    if pdb_name == "stitched.pdb" or (
+        _hold48_kind(row) == HOLD48_KIND_PARENT and row.pdb_path
+    ):
+        return "stitched"
+    if is_census_tile_row(row):
+        if role == "spare" or row.id in HOLD48_SPARE_TILE_IDS:
+            return f"spare{row.id}"
+        if tile_n is not None:
+            return f"tile{tile_n}"
+        idx = (row.meta or {}).get("tile_index")
+        if idx is not None:
+            return f"tile{int(idx) + 1}"
+        return "tile"
+    return "structure"
+
+
+def download_stem(engine: Any, analysis_id: int) -> str:
+    """Route-layer filename stem from the stored row (D-034 §2a — no client path)."""
+    with Session(engine) as session:
+        row = session.get(ProteinAnalysis, analysis_id)
+        if row is None:
+            return "structure"
+        if is_census_tile_row(row):
+            siblings = [
+                r for r in session.scalars(
+                    select(ProteinAnalysis)
+                    .where(ProteinAnalysis.input_value == row.input_value)
+                    .where(ProteinAnalysis.cohort_tranche > COHORT_TRANCHE)
+                ).all()
+                if is_census_tile_row(r)
+            ]
+            roles = assign_tile_roles(siblings)
+            chosen = sorted(
+                [t for t in siblings if roles.get(t.id) == "chosen"],
+                key=lambda t: (_tile_window(t)[0] or 0, t.id),
+            )
+            n = next((i + 1 for i, t in enumerate(chosen) if t.id == row.id), None)
+            return download_stem_for_row(row, role=roles.get(row.id), tile_n=n)
+        return download_stem_for_row(row)
+
+
+def assembly_review(
+    session: Session,
+    parent: ProteinAnalysis,
+    siblings: list[ProteinAnalysis],
+) -> dict[str, Any]:
+    """Review payload for an assembled parent (D-120 / PLAN §3.6). Not a restitch GO."""
+    tiles = [r for r in siblings if is_census_tile_row(r)]
+    roles = assign_tile_roles(tiles)
+    chosen = sorted(
+        [t for t in tiles if roles.get(t.id) == "chosen"],
+        key=lambda t: (_tile_window(t)[0] or 0, t.id),
+    )
+    chosen_n = {t.id: i + 1 for i, t in enumerate(chosen)}
+    job_by_analysis = {
+        j.analysis_id: j.id
+        for j in session.scalars(
+            select(JobRecord).where(
+                JobRecord.analysis_id.in_([t.id for t in tiles] + [parent.id] or [0])
+            )
+        ).all()
+    }
+    readiness = _readiness_from_gate(session, parent) or sibling_readiness(parent, tiles)
+    tile_rows: list[dict[str, Any]] = []
+    tile_downloads: list[dict[str, Any]] = []
+    for t in sorted(tiles, key=lambda r: (_tile_window(r)[0] or 0, r.id)):
+        start, end = _tile_window(t)
+        role = roles.get(t.id, "spare")
+        stem = download_stem_for_row(t, role=role, tile_n=chosen_n.get(t.id))
+        has_pae = bool(t.pae_json_path)
+        status = "complete" if t.pdb_path else "incomplete"
+        if t.pdb_path and not has_pae:
+            status = "complete_no_pae"
+        tile_rows.append({
+            "analysis_id": t.id,
+            "job_id": job_by_analysis.get(t.id),
+            "tile_index": (t.meta or {}).get("tile_index"),
+            "start": start,
+            "end": end,
+            "span_aa": (t.meta or {}).get("span_aa"),
+            "status": status,
+            "has_pae": has_pae,
+            "role": role,
+            "named_spare": t.id in HOLD48_SPARE_TILE_IDS,
+            "preferred_lower_id": t.id in HOLD48_PREFERRED_TILE_IDS,
+            "download_stem": stem,
+        })
+        tile_downloads.extend([
+            {
+                "name": f"{stem}.pdb",
+                "href": f"/api/analyses/{t.id}/structure",
+                "kind": "pdb",
+                "available": bool(t.pdb_path),
+                "role": role,
+            },
+            {
+                "name": f"{stem}_plddt.json",
+                "href": f"/api/analyses/{t.id}/plddt",
+                "kind": "plddt",
+                "available": bool(t.pdb_path),
+                "role": role,
+            },
+            {
+                "name": f"{stem}_pae.json",
+                "href": f"/api/analyses/{t.id}/pae",
+                "kind": "pae",
+                "available": has_pae,
+                "role": role,
+            },
+        ])
+    parent_has_pae = bool(parent.pae_json_path)
+    return {
+        "parent_analysis_id": parent.id,
+        "parent_job_id": job_by_analysis.get(parent.id),
+        "hold48_kind": _hold48_kind(parent),
+        "in_wave1_wave2_inventory": parent.id in WAVE1_WAVE2_STITCHED_PARENT_IDS,
+        "inventory": {
+            "unique_stitched_parents_n": 27,
+            "wave1_pass": 10,
+            "wave2_pass": 17,
+            "parent_ids": sorted(WAVE1_WAVE2_STITCHED_PARENT_IDS),
+        },
+        "readiness": readiness,
+        "tiles": tile_rows,
+        "chosen_tile_ids": [t.id for t in chosen],
+        "spare_tile_ids": [t.id for t in tiles if roles.get(t.id) == "spare"],
+        "downloads": {
+            "stitched": [
+                {
+                    "name": "stitched.pdb",
+                    "href": f"/api/analyses/{parent.id}/structure",
+                    "kind": "pdb",
+                    "available": bool(parent.pdb_path),
+                },
+                {
+                    "name": "stitched_plddt.json",
+                    "href": f"/api/analyses/{parent.id}/plddt",
+                    "kind": "plddt",
+                    "available": bool(parent.pdb_path),
+                },
+                {
+                    "name": "stitched_pae.json",
+                    "href": f"/api/analyses/{parent.id}/pae",
+                    "kind": "pae",
+                    "available": parent_has_pae,
+                },
+            ],
+            "tiles": tile_downloads,
+        },
+        "assembler_note": (
+            "assembled by pLDDT overlap, not superimposed; seam not solved"
+        ),
+        "seam_note": (
+            "IGF2R ≈ 88.76 Å is a measured caveat, not a solved structure. "
+            "Kabsch / restitch remains PARKED."
+        ),
+    }
+
+
 def canonical_census_analysis_id(engine: Any, analysis_id: int) -> Optional[int]:
     """Map a census analysis id to the protein representative (D-118).
 
@@ -982,6 +1271,10 @@ def get_census_detail(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]
         out["sequence"] = (row.meta or {}).get("sequence")
         out["fold_provenance"] = (row.meta or {}).get("fold_provenance")
         out["structure_source"] = row.structure_source
+        if kind == "assembled":
+            out["assembly_review"] = assembly_review(session, row, list(siblings))
+        if row.input_value == IGF2R_ACCESSION:
+            out["igf2r_two_population"] = igf2r_two_population_copy()
     from core.cancer_associations import load_associations
     payload = load_associations()
     gene = out.get("gene")

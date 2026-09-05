@@ -126,6 +126,27 @@ describe('Provenance — three-valued strength (D-071)', () => {
     })
   })
 
+  describe('D-120 assembly addendum', () => {
+    it('names hold48_kind and chosen tiles only when assemblyReview is passed', () => {
+      const review = {
+        hold48_kind: 'parent',
+        parent_job_id: 2817,
+        chosen_tile_ids: [3673, 3630],
+        readiness: {
+          source: 'sibling_snapshot', expected_n: 2,
+          present_complete_n: 2, uncovered_n: 0,
+        },
+      }
+      const { rerender } = render(<Provenance detail={STATE1} />)
+      expect(screen.queryByRole('group', { name: /Hold-48 assembly/i })).toBeNull()
+      rerender(<Provenance detail={STATE1} assemblyReview={review} />)
+      const box = screen.getByRole('group', { name: /Hold-48 assembly/i })
+      expect(box.textContent).toMatch(/parent/)
+      expect(box.textContent).toMatch(/3673, 3630/)
+      expect(box.textContent).toMatch(/not Kabsch/)
+    })
+  })
+
   describe('not-applicable stays distinct; no completeness score', () => {
     it('a whole-chain fold shows its boundary note (state 3)', () => {
       render(<Provenance detail={STATE3} />)

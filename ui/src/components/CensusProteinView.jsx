@@ -6,6 +6,8 @@ import { HpaCreditProvider } from './HpaAttribution.jsx'
 import Confidence from './Confidence.jsx'
 import PlddtExplainer from './PlddtExplainer.jsx'
 import CensusDetail from './CensusDetail.jsx'
+import AssemblyReview, { Igf2rTwoPopulation } from './AssemblyReview.jsx'
+import Provenance from './Provenance.jsx'
 
 // A page per census protein, the same shape as the target page: structure coloured by pLDDT,
 // confidence with its band, and the measured properties beneath.
@@ -166,6 +168,7 @@ export default function CensusProteinView({ id }) {
               : null}
           </p>
         )}
+        <Igf2rTwoPopulation copy={detail.igf2r_two_population} />
         <p className="census-bar">
           {/* ⚠ The bar asserted "this protein WAS FOLDED" on every card, including the ones that
               were never folded — a false claim sitting directly above a NOT FOLDED banner. */}
@@ -249,11 +252,23 @@ export default function CensusProteinView({ id }) {
         <Confidence
           meanPlddt={detail.mean_plddt}
           plddt={plddt}
+          assembled={detail.structure_kind === 'assembled'}
           caveat="the confidence bands are shared with the ranked 82, but this protein is not one of them — the cohort's measured ceiling does not describe the census"
         />
         {/* ⚠ Without the cohort's ceiling — see the Confidence note above. */}
-        <PlddtExplainer showCohortMax={false} />
+        <PlddtExplainer
+          showCohortMax={false}
+          assembled={detail.structure_kind === 'assembled'}
+        />
       </div>
+      )}
+
+      {detail.structure_kind === 'assembled' && (
+        <AssemblyReview review={detail.assembly_review} />
+      )}
+
+      {detail.structure_kind === 'assembled' && (
+        <Provenance detail={detail} assemblyReview={detail.assembly_review} />
       )}
 
       {/* The measured body — status, extracellular topology (F-037), association coverage.

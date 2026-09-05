@@ -10,6 +10,23 @@ import CoverageLine from './CoverageLine.jsx'
 // never-attempted, with jobs.error as the reason. Served by GET /api/coverage (D-038), not the list.
 const ORDER = { excluded: 0, held_out: 1, ranked: 2 }
 
+// D-120 / PLAN §3.4 — IGF2R two populations; FAT2 tileable vs MUC16 mucin.
+function coverageNote(r) {
+  if (r.accession === 'P11717' || r.gene === 'IGF2R') {
+    const fail = r.fail_reason ? `${r.fail_reason} ` : ''
+    return `${fail}Cohort CUDA OOM is one measurement; a later census tiling of this accession is a different span definition (D-081) — see Census. Neither substitutes for the other.`
+  }
+  if (r.gene === 'FAT2') {
+    return `${r.exclusion_reason || ''} FAT2 is tileable in the census; that is not this cohort row.`
+  }
+  if (r.gene === 'MUC16') {
+    return `${r.exclusion_reason || ''} MUC16 is a mucin — out of class; never ESMFold.`
+  }
+  if (r.excluded) return r.exclusion_reason
+  if (r.fold_status === 'failed') return r.fail_reason
+  return ''
+}
+
 export default function CoverageView() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
@@ -50,10 +67,7 @@ export default function CoverageView() {
                 r.fold_status === 'folded' ? <span className="folded">folded</span>
                 : r.fold_status === 'failed' ? <span className="failed">failed</span>
                 : <span className="not-folded">not yet</span>}</td>
-              <td className="note-cell">{
-                r.excluded ? r.exclusion_reason
-                : r.fold_status === 'failed' ? r.fail_reason
-                : ''}</td>
+              <td className="note-cell">{coverageNote(r)}</td>
             </tr>
           ))}
         </tbody>

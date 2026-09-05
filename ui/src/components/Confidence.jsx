@@ -23,12 +23,12 @@ function BandLegend() {
 // unchanged on census protein pages — where the max is 89.25 and six rows exceed it. A page about
 // one population must not display another population's ceiling, least of all one this protein
 // beats. Passing nothing keeps the cohort behaviour exactly as it was (F-038).
-export default function Confidence({ meanPlddt, plddt, caveat }) {
+export default function Confidence({ meanPlddt, plddt, caveat, assembled = false }) {
   const band = bandFor(meanPlddt)
   const note = caveat !== undefined ? caveat : band.caveat
   return (
     <section className="confidence panel">
-      <h3>Confidence</h3>
+      <h3>{assembled ? 'Assembled-chain pLDDT (winner tile per residue)' : 'Confidence'}</h3>
       <div className="band-headline" style={{ borderLeftColor: band.color }}>
         <span className="plddt-num">{meanPlddt != null ? meanPlddt.toFixed(2) : '—'}</span>
         <span className="band-label" style={{ color: band.color }}>{band.label}</span>
