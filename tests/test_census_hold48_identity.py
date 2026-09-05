@@ -14,9 +14,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.reads import (
+    HOLD48_PREFERRED_TILE_IDS,
     HOLD48_SPARE_TILE_IDS,
     canonical_census_analysis_id,
     census_summary,
+    detail_projection,
     get_census_detail,
     get_plddt_path,
     list_census,
@@ -204,6 +206,41 @@ def test_assembled_plddt_uses_stitched_sibling(tmp_path):
     assert json.loads(Path(path).read_text(encoding="utf-8")) == [61.07]
     # classic sibling must not be required
     assert not (tmp_path / "plddt.json").exists()
+
+
+def test_ops_prefers_lower_tile_ids_and_names_the_spares():
+    assert HOLD48_PREFERRED_TILE_IDS == frozenset({3673, 3674, 3675})
+    assert HOLD48_SPARE_TILE_IDS == frozenset({3693, 3695, 3696})
+    assert HOLD48_PREFERRED_TILE_IDS.isdisjoint(HOLD48_SPARE_TILE_IDS)
+
+
+def test_detail_projection_flags_stitched_pdb_as_assembled(tmp_path):
+    """Trinity bar 6: /target/:id is a PK lookup — assembled must be on the detail payload."""
+    pdb = tmp_path / "stitched.pdb"
+    pdb.write_text("HEADER\n", encoding="utf-8")
+    row = ProteinAnalysis(
+        id=2817,
+        input_type="uniprot",
+        input_value="Q9P273",
+        cohort_tranche=5,
+        pdb_path=str(pdb),
+        mean_plddt=61.07,
+        meta={"hold48_kind": "parent", "span_aa": 2368},
+    )
+    out = detail_projection(row)
+    assert out["assembled"] is True
+    assert out["hold48_kind"] == "parent"
+    oneshot = ProteinAnalysis(
+        id=1,
+        input_type="uniprot",
+        input_value="Q96NY8",
+        cohort_tranche=0,
+        pdb_path="/tmp/structure.pdb",
+        mean_plddt=80.0,
+        meta={"tier": "local", "gene": "NECTIN4"},
+    )
+    plain = detail_projection(oneshot)
+    assert plain["assembled"] is False
 
 
 def test_guide_opens_closed_and_does_not_invite_deploy():

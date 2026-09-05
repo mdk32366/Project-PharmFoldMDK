@@ -118,6 +118,15 @@ def detail_projection(row: ProteinAnalysis) -> dict[str, Any]:
     # D-071 state 2: the tier's measured-later environment, or None. A field on the existing detail
     # route — no new route, no system-model.json change. `rental` has no entry by design (decision 3).
     out["tier_environment"] = _TIER_ENVIRONMENTS.get(out.get("tier"))
+    # ⚠ D-118: /target/:id is a primary-key lookup (tranche-exempt). A stitched census
+    # parent typed as /target/2817 must still carry the assembler flag so 3Dmol cannot
+    # present winner-tile pLDDT as one forward pass.
+    pdb_name = Path(row.pdb_path).name if row.pdb_path else ""
+    out["hold48_kind"] = meta.get("hold48_kind")
+    out["assembled"] = bool(
+        pdb_name == "stitched.pdb"
+        or (meta.get("hold48_kind") == HOLD48_KIND_PARENT and row.pdb_path)
+    )
     return out
 
 

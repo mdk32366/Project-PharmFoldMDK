@@ -53,7 +53,7 @@ export default function TargetView({ id }) {
         <h2>{detail.gene}</h2>
         <p className="subtitle">{detail.accession} · {detail.label}</p>
       </header>
-      <StructureViewer id={id} />
+      <StructureViewer id={id} assembled={Boolean(detail.assembled)} />
       <div className="panels">
         <Confidence meanPlddt={detail.mean_plddt} plddt={plddt} />
         <PlddtExplainer />

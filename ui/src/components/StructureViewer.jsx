@@ -54,28 +54,33 @@ export default function StructureViewer({ id, assembled = false }) {
 
   // Fallback (orders §3 / UI Plan v2 §6): the target view must not be a blank frame if the viewer
   // fails — provenance, confidence, and the plot render from JSON alone, below this.
+  const banner = assembled ? (
+    <aside className="assembler-banner" data-testid="assembler-banner">
+      <strong>Assembled chain — not a single ESMFold pass.</strong> pLDDT here is the
+      assembler winner-tile per residue, <strong>not Kabsch</strong> superposition.
+      Seams are <strong>not scientifically solved</strong>. The IGF2R seam ≈ 88.76 Å
+      is a measured caveat, not a solved structure. Not ranking-eligible (D-109).
+    </aside>
+  ) : null
+
   if (error) {
     // A 404 on the structure means there is no stored fold — for a failed fold that is the honest
     // statement, not a viewer malfunction, and must not read as a stack trace (D-068 / D-069).
     const noStructure = /HTTP 404/.test(error)
     return (
-      <div className="viewer-fallback">
-        {noStructure
-          ? 'No structure — this fold did not complete. Confidence, provenance, and the scorer result below still render.'
-          : `Structure viewer unavailable (${error}). Confidence and provenance below still render.`}
+      <div>
+        {banner}
+        <div className="viewer-fallback">
+          {noStructure
+            ? 'No structure — this fold did not complete. Confidence, provenance, and the scorer result below still render.'
+            : `Structure viewer unavailable (${error}). Confidence and provenance below still render.`}
+        </div>
       </div>
     )
   }
   return (
     <div>
-      {assembled && (
-        <aside className="assembler-banner" data-testid="assembler-banner">
-          <strong>Assembled chain — not a single ESMFold pass.</strong> pLDDT here is the
-          assembler winner-tile per residue, <strong>not Kabsch</strong> superposition.
-          Seams are <strong>not scientifically solved</strong>. The IGF2R seam ≈ 88.76 Å
-          is a measured caveat, not a solved structure. Not ranking-eligible (D-109).
-        </aside>
-      )}
+      {banner}
       <div className="viewer-wrap">
         {loading && <div className="viewer-loading">Loading structure…</div>}
         <div ref={ref} className="viewer" />
