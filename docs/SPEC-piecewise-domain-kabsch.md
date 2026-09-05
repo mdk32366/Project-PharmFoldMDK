@@ -15,6 +15,9 @@
 > ⚠ **Another weight / trim knob is forbidden.** Family = multi-rigid
 > piecewise by UniProt domain ends (same domain-snap source as tile
 > planning). **No trim loop** (D-126 lie surface).
+> ⚠ **Method must surface D-127** (and the stitch-path train) when
+> the path exists. The Method addendum is **mandatory** before
+> calling D-127 “done.” **No silent code-only.**
 > Where this file and `docs/README.md` differ, THE LOG GOVERNS.
 > Production triple-path (assembler / D-125 `kabsch/` / D-126
 > `confidence_kabsch/`) stays until D-127 code + ops. Assembler,
@@ -355,15 +358,79 @@ When the `piecewise_kabsch/` tree is missing, the UI must not imply a
 D-127 path exists and must not invent RMSD / piece counts. That
 absence is not a solved seam. Default served = assembler.
 
+**Method is not optional.** Four-path review-card honesty without a
+`/method` addendum is still a silent code-only ship. See §7.
+
 ---
 
-## 7. PR split — Spec vs A/B BUILD
+## 7. Method / owner-facing (mandatory — not a silent code-only ship)
+
+Matt / Emma standing requirement (2026-09-05): **Method must surface
+D-127** (and the stitch-path train) honestly when the path exists.
+A later A BUILD that writes `piecewise_kabsch/` without an owner-facing
+Method addendum is **not done**. Silent code-only is forbidden.
+
+Same pattern as D-121 / D-125-B / D-126-B: an **additive** `/method`
+addendum plus the owner markdown in
+[`method-hold48-tiles.md`](method-hold48-tiles.md). Do not gut the
+assembler Method. Do not rewrite #229. D-121 / D-125-B / D-126-B
+sections stay.
+
+This Spec carries the **8th-grade excerpt** as algorithm / honesty
+authority. **D-127-B** ships the Method owner markdown addendum and
+the MethodNote additive section (with the four-path UI). Calling
+D-127 “done” before that Method surface exists is a miss — not a
+later nice-to-have.
+
+**Required Method copy (plain, 8th-grade):**
+
+The stitch-path train, in order, is:
+
+1. **Assembler** — winner-tile pLDDT. Default **served** PDB until a
+   Matt swap GO.
+2. **D-125 Kabsch** — one unweighted rigid move on overlap Cα, then
+   the same assembler.
+3. **D-126 confidence** — one weighted / trimmed rigid move on
+   overlap Cα, then the same assembler. The D-126 lesson: a small
+   **weighted** RMSD can hide a large **full-overlap** jump
+   (**full ≫ weighted**; ops jumps 28–68 Å on 2939 / 3272 / 3432).
+   That is why a trim-to-pass number is not a solved seam.
+4. **D-127 piecewise / domain** — one weighted rigid move **per
+   UniProt domain** that overlaps the glue, then the same assembler.
+   No trim loop. Linkers inherit the nearest N-terminal accepted
+   piece.
+
+**Refuse table (high level, not a science headline).** A piece can
+refuse if it has fewer than three Cα, if its weighted RMSD is above
+**10.0 Å**, or if the points are collinear. The parent can refuse if
+no domain covers the glue, or if a linker Cα jumps more than
+**10.0 Å**. A refuse writes a record. It does not write a “fixed”
+structure. The **10.0 Å gate stays.**
+
+**Seam disclosure.** When the D-127 path exists, Method and the
+review card name per-piece counts / RMSD and the parent
+full-overlap RMSD + max Cα jump after the piecewise moves. Those
+are measurements. They are **not** a verdict that the holoprotein
+is lined up. **Never claim seams solved.** Forbidden: “aligned,”
+“superimposed,” “seams solved,” “full-length AF-quality.”
+
+**Default served = assembler** until a Matt swap GO. Method must
+say so. Honest empty when `piecewise_kabsch/` is missing — do not
+invent the fourth path.
+
+**What Method does not do.** It does not replace the assembler
+story. It does not make the long chain one ESMFold pass. It does
+not fill PAE. It does not enter F-004. It is not medical advice.
+
+---
+
+## 8. PR split — Spec vs A/B BUILD
 
 | Id | What | This PR? | Gate |
 |---|---|---|---|
-| **D-127 Spec** | This file + `### D-127` + ship index + PLAN one-liner + hermetic docs pin tests | **Yes — this PR.** | Trinity reviewed. Docs only. |
-| **D-127-A** | Core: per-domain weighted Kabsch (no trim) + §2 refuse + apply \(R, t\) per domain + linker inherit + call existing `winning_tile`. No UI. Sibling §5 `piecewise_kabsch/` tree. CLI re-runs all 27; primary eval is the three. **CPU, no rent.** | No. Later Emma GO. | After the Spec. No rent in A. |
-| **D-127-B** | UI four-path honesty (§6). Reads A's sibling tree. No persist rewrite. Default served = assembler until Matt swap GO. | No. Later Emma GO. | After A. |
+| **D-127 Spec** | This file + `### D-127` + ship index + PLAN one-liner + hermetic docs pin tests. Includes this Method excerpt as authority. | **Yes — this PR.** | Trinity reviewed. Docs only. |
+| **D-127-A** | Core: per-domain weighted Kabsch (no trim) + §2 refuse + apply \(R, t\) per domain + linker inherit + call existing `winning_tile`. No UI. Sibling §5 `piecewise_kabsch/` tree. CLI re-runs all 27; primary eval is the three. **CPU, no rent.** | No. Later Emma GO. | After the Spec. No rent in A. **Not “done” without Method.** |
+| **D-127-B** | UI four-path honesty (§6) **and** Method owner markdown + MethodNote additive section (§7). Reads A's sibling tree. No persist rewrite. Default served = assembler until Matt swap GO. | No. Later Emma GO. | After A. **Mandatory** before calling D-127 “done.” |
 | **GPU refine** | Optional MD / AF GPU refine | No. Later phase, **not A**. | Not this family of PRs. |
 
 **Out of this Spec PR:** any edit to `hold48_*.py`, any UI, a live
@@ -376,11 +443,13 @@ named-exclusion, a trim loop, a soft invent blend.
 **Out of the A PR:** any UI, a live restitch run of the 27, F-004
 ingest, rent / GPU / RunPod / MD / AF refine, replacing
 `winning_tile`, overwriting the three existing trees, claiming seams
-solved, raising the 10.0 Å gate, a trim loop.
+solved, raising the 10.0 Å gate, a trim loop. A does **not**
+discharge the Method obligation — B (or a Method-bearing PR) must
+still ship §7.
 
 ---
 
-## 8. Hard stops (Spec + log)
+## 9. Hard stops (Spec + log)
 
 - **No threshold Spec-as-fix.** Writing 10.0 Å again is not a repair of
   the three. The gate stays. Do not raise it.
@@ -408,10 +477,13 @@ solved, raising the 10.0 Å gate, a trim loop.
 - **ε = 1e-3.** Weight floor is pinned. Per-piece weighted Kabsch
   only.
 - **No stitch code in this PR.** No `hold48_*.py` edit.
+- **No silent code-only.** Method must surface D-127 and the
+  stitch-path train when the path exists. The Method addendum is
+  **mandatory** before calling D-127 “done,” not optional.
 
 ---
 
-## 9. What this file is not
+## 10. What this file is not
 
 - **Not D-127-A** (core). **Not D-127-B** (UI). This file is the
   Spec, not a BUILD.
@@ -423,7 +495,9 @@ solved, raising the 10.0 Å gate, a trim loop.
 - Not a threshold change and not a named-exclusion of the three.
 - Not another weight / trim knob. Not a trim loop.
 - Not a Fly re-query of the 27. Not a restitch run.
-- Not ADC-C (D-124). Not Method (D-121). Not ranking ingest.
+- Not ADC-C (D-124). Not a rewrite of D-121 assembler Method.
+  The D-127 Method addendum (§7) is **mandatory**, not optional.
+  Not ranking ingest.
 - Not a repair of the `D-` next-free pointer.
 - Not soft-blend / MD / AF GPU refine (out of v1; later phase, not A).
 - Not a licence to treat 0-of-3 recovered as a failure that moves
@@ -433,7 +507,7 @@ solved, raising the 10.0 Å gate, a trim loop.
 
 ---
 
-## 10. Ops success report (required fields; not a CI assert)
+## 11. Ops success report (required fields; not a CI assert)
 
 When a later D-127-A (or ops) run covers the 27, the **ops success
 report** MUST include confusion vs D-125 **and** vs D-126. This is

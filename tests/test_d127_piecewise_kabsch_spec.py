@@ -255,7 +255,7 @@ def test_ops_confusion_vs_d125_and_d126():
     assert "not a ci assert" in flat
     assert "confusion vs d-125" in flat
     assert "confusion vs d-126" in flat or "vs d-126" in flat
-    assert "## 10." in SPEC
+    assert "## 11." in SPEC
 
 
 def test_gpu_refine_is_later_phase_not_a():
@@ -264,3 +264,38 @@ def test_gpu_refine_is_later_phase_not_a():
     assert "not a" in flat
     assert "gpu refine" in flat or "md / af" in flat
     assert "no rent in a" in flat
+
+
+def test_method_surface_is_mandatory_not_silent_code_only():
+    """Matt/Emma: Method must surface D-127. Not a silent code-only ship."""
+    assert "## 7." in SPEC
+    assert "Method / owner-facing" in SPEC
+    flat = _flat(SPEC).lower()
+    log_flat = _flat(LOG).lower()
+    index_flat = _flat(INDEX).lower()
+    assert "mandatory" in flat
+    assert "silent code-only" in flat
+    assert "no silent code-only" in flat or "not a silent code-only" in flat
+    assert "method addendum is **mandatory**" in SPEC.lower() or "method addendum is **mandatory**" in LOG.lower() or "mandatory** before calling d-127" in flat
+    assert "stitch-path train" in flat
+    assert "assembler" in flat and "d-125" in flat and "d-126" in flat
+    assert "piecewise" in flat
+    assert "8th-grade" in flat or "8th-grade" in SPEC
+    assert "full ≫ weighted" in SPEC or "full >> weighted" in SPEC
+    assert "never claim seams solved" in flat or "never seams solved" in flat
+    assert "default served" in flat and "assembler" in flat
+    assert "methodnote" in flat or "method note" in flat or "/method" in SPEC
+    assert "d-121" in flat and "d-125-b" in flat and "d-126-b" in flat
+    # Living log + ship index cite the Method obligation.
+    assert "method must surface d-127" in log_flat
+    assert "silent code-only" in log_flat
+    assert "mandatory" in log_flat
+    assert "method obligation" in index_flat or "mandatory method" in index_flat
+    assert "silent code-only" in index_flat
+    # B ships Method; A does not discharge it.
+    assert "d-127-b" in flat
+    assert "does **not** discharge the method obligation" in index_flat or "does not discharge" in index_flat
+    # This Spec PR does not ship the MethodNote UI or rewrite method-hold48.
+    method_md = (ROOT / "docs" / "method-hold48-tiles.md").read_text(encoding="utf-8")
+    assert "Addendum D-127" not in method_md
+    assert "D-127 piecewise" not in method_md

@@ -431,7 +431,8 @@ red **without** a live Fly query, GPU, restitch run, or any edit to
 `docs/SPEC-piecewise-domain-kabsch.md`.
 ⚠ The 10.0 Å refuse gate stays. Do not raise it. ⚠ No trim loop
 (D-126 lie surface). ⚠ Assembler + D-125 `kabsch/` + D-126
-`confidence_kabsch/` stay callable.
+`confidence_kabsch/` stay callable. ⚠ Method must surface D-127
+when the path exists — not a silent code-only ship.
 
 **D-127-A** acceptance tests (later PR, not this one) must be able to
 go red for the per-piece weighted fit (no trim), the refuse table
@@ -451,6 +452,7 @@ is not edited in the Spec PR.
 | **T-1124** | Disclosure: per-piece `n_ca` / RMSD; parent `rmsd_full_overlap_angstrom` + `max_ca_jump_angstrom` after piecewise apply (null if refused before any transform); `linker_n` + `max_linker_ca_jump` | `test_disclosure_per_piece_and_parent_after_apply` |
 | **T-1125** | Artifacts land under `piecewise_kabsch/{parent_job_id}/`; `algorithm=piecewise_domain_kabsch_then_winning_tile`; `decision=D-127`; do **not** overwrite assembler / D-125 `kabsch/` / D-126 `confidence_kabsch/` | `test_artifact_dir_is_sibling_piecewise_kabsch` |
 | **T-1126** | Ship index distinguishes Spec vs future A/B; PLAN + ARCHITECTURE point at D-127 | `test_ship_index_distinguishes_spec_from_ab_build` · `test_plan_and_architecture_point_at_d127` |
+| **T-1133** | Spec requires Method surface (stitch-path train; 8th-grade excerpt; never seams solved; default served = assembler); Method addendum is **mandatory** before calling D-127 “done”; forbids silent code-only | `test_method_surface_is_mandatory_not_silent_code_only` |
 
 ### Future A (named; not implemented in this Spec PR)
 

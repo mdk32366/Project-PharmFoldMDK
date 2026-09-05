@@ -229,22 +229,30 @@ So the rule is not "be careful" — it is:
   piecewise by UniProt domain ends (same domain-snap source as tile
   planning). **No trim loop** (D-126 lie surface).
   ⚠ **No `hold48_*.py` edit.**
+  ⚠ **Method must surface D-127** (and the stitch-path train) when
+  the path exists. Same pattern as D-121 / D-125-B / D-126-B.
+  The Method addendum is **mandatory** before calling D-127 “done.”
+  **No silent code-only.** Spec §7 carries the 8th-grade excerpt;
+  D-127-B ships owner markdown + MethodNote.
 - **Ruled by:** Trinity Architect binding 2026-09-05 — Spec =
   piecewise / domain-aware Kabsch on per-domain overlap Cα → existing
   `winning_tile`; refuse v1 defaults stay at **10.0 Å** so later A
   tests can go red; primary inventory is the three D-126 OPS REFUSE
   parents with full ≫ weighted (jumps 28–68 Å); CLI still re-runs
-  all 27. Emma GO this session: docs Spec only; implementing agent
-  does not merge. Parents: D-126 Spec + D-126-A `aa8aa02` / #241 +
-  D-126-B `abbcd00` / #242 + D-125 A+B + D-117 / D-118 / D-120 /
-  D-121 + D-111 emit domain-snap.
+  all 27. Matt / Emma standing requirement 2026-09-05: Method must
+  surface D-127 honestly when the path exists — not a silent
+  code-only ship. Emma GO this session: docs Spec only; implementing
+  agent does not merge. Parents: D-126 Spec + D-126-A `aa8aa02` /
+  #241 + D-126-B `abbcd00` / #242 + D-125 A+B + D-117 / D-118 /
+  D-120 / D-121 + D-111 emit domain-snap.
 - **Cite:** D-126 Spec
   ([`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md))
   · D-126-A `aa8aa02` / #241 · D-126-B `abbcd00` / #242 · D-125 Spec
   ([`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)) · D-125-A
   `26a40a8` / #237 · D-125-B `aa8d3f1` / #238 · D-117 PLAN / Kabsch
   park · D-118 assembler-not-Kabsch honesty · D-120 Phase 2 review of
-  the 27 · D-121 Method (assembler ≠ Kabsch *today*) · D-111
+  the 27 · D-121 Method (assembler ≠ Kabsch *today*; D-125-B / D-126-B
+  addenda are the Method-surface pattern this Spec binds) · D-111
   `winning_tile` / emit domain-snap / `domain_ends_span_relative` ·
   D-116 `stitch_readiness` · D-109 ruling 7 (not ranking-eligible) ·
   D-016 · primary three REFUSE **2939** `Q7Z408`, **3272** `Q6V0I7`,
@@ -253,13 +261,16 @@ So the rule is not "be careful" — it is:
   thresholds) · IGF2R **3356** out · ship index
   [`decisions.md`](decisions.md) · Spec
   [`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md)
+  §7 (Method obligation)
 - **Relates:** `D-126` · `D-126-A` · `D-126-B` · `D-125` · `D-125-A` ·
   `D-125-B` · `D-121` · `D-120` · `D-118` · `D-117` · `D-116` ·
   `D-111` · `D-109` ruling 7
 - **Does not amend:** D-111 geometry · D-116 gate · today's stitch
   algorithm · D-125 `hold48_kabsch.py` · D-126
   `hold48_confidence_kabsch.py` · D-118 census identity · D-120
-  `assembly_review` · D-121 Method copy · D-122 `/adcs` · D-123
+  `assembly_review` · D-121 assembler Method copy (the D-127 Method
+  addendum is **mandatory** at B; this Spec does not rewrite D-121)
+  · D-122 `/adcs` · D-123
   `/about` · D-124 ADC-C · F-004 / ranking set · the `D-` next-free
   pointer
 - ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
@@ -343,16 +354,29 @@ each residue and would pretend the network jointly placed the chain.
    (later) must *name* four paths. Forbidden: “aligned,”
    “superimposed,” “seams solved,” “full-length AF-quality.” No
    invented RMSD. No F-004 ingest. This Spec PR does not touch UI.
-7. **PR split.** This PR is Spec only. **D-127-A** (core piecewise
+7. **Method / owner-facing is mandatory (not a silent code-only
+   ship).** Matt / Emma standing requirement: Method must surface
+   D-127 and the stitch-path train (assembler → D-125 Kabsch →
+   D-126 confidence → D-127 piecewise/domain) when the path exists.
+   Same additive `/method` pattern as D-121 / D-125-B / D-126-B.
+   Spec §7 carries the 8th-grade excerpt (path train, refuse table
+   at high level, full ≫ weighted lesson, never seams solved,
+   default served = assembler). **D-127-B** ships the Method owner
+   markdown addendum in `method-hold48-tiles.md` **and** the
+   MethodNote additive section. The Method addendum is **mandatory**
+   before calling D-127 “done,” not optional. A code-only A BUILD
+   does not discharge it.
+8. **PR split.** This PR is Spec only. **D-127-A** (core piecewise
    Kabsch + refuse + feed `winning_tile`; no UI; **CPU, no rent**)
-   and **D-127-B** (four-path UI) are later Emma GOs. Optional MD /
-   AF GPU refine is a **later phase, not A**.
-8. **Hard stops.** No threshold Spec-as-fix. No named-exclusion-as-fix.
+   and **D-127-B** (four-path UI **+ Method addendum**) are later
+   Emma GOs. Optional MD / AF GPU refine is a **later phase, not A**.
+9. **Hard stops.** No threshold Spec-as-fix. No named-exclusion-as-fix.
    No invented coordinates. No PAE zeros. No F-004. No rent in A.
    Never seams solved. Keep assembler + D-125 Kabsch + D-126
    confidence callable. No stitch code and no `hold48_*.py` edit
    in this PR. No trim loop. No forced recovery of the three.
-9. **Ops success report (later A; not a CI assert).** Must include
+   **No silent code-only** (Method is mandatory).
+10. **Ops success report (later A; not a CI assert).** Must include
    confusion vs D-125 **and** vs D-126. A drop is a **named finding**,
    not silent success. `recovered_of_primary_three` may be 0.
 
@@ -422,17 +446,23 @@ passes.
   `rmsd_full_overlap_angstrom` + `max_ca_jump_angstrom` after
   piecewise apply (null if refused before any transform); ε = 1e-3;
   all-or-nothing parent refuse; ops confusion vs D-125 and vs D-126;
-  0-of-3 allowed.
+  0-of-3 allowed; Method surface is **mandatory** (no silent
+  code-only); Spec §7 names the stitch-path train.
 - Tests that must be able to go red **in a later A BUILD (not this PR):**
   per-piece weighted fit (no trim); refuse table (10.0 Å stays);
   `no_domain_pieces`; `linker_jump_gt_10`; apply \(R, t\) only to
   that domain; linker inherit; all-or-nothing clear; no overwrite of
   assembler / D-125 `kabsch/` / D-126 `confidence_kabsch/`. Test
   plan **T-1120**–**T-1132**.
+- Tests that must be able to go red **in a later B BUILD:** Method
+  owner markdown + MethodNote additive section name the path train
+  and forbid seams-solved language. Test plan **T-1133** (Spec pin
+  now) plus later B Method ATs.
 - `ARCHITECTURE.md` records that the D-127 Spec exists and that the
   production triple-path remains assembler / D-125 / D-126.
 - D-127-A/B, F-004 ingest, remaining tileable / mucins, rental, and
-  optional GPU refine remain later GOs.
+  optional GPU refine remain later GOs. B carries the Method
+  obligation; A does not discharge it.
 
 #### Assumptions refused
 
@@ -453,6 +483,8 @@ passes.
 - That 0-of-3 recovered licenses raising the gate or inventing a
   blend.
 - That MD / AF GPU refine is in A (later phase, not A).
+- That a code-only A BUILD may call D-127 “done” without a Method
+  surface (no silent code-only; Method addendum is **mandatory**).
 
 ### D-126-B — UI triple-path honesty: name assembler, D-125 Kabsch-path, and D-126 confidence-Kabsch artifacts without colliding them
 

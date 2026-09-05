@@ -13,11 +13,17 @@
   Multi-rigid per UniProt domain; **no trim loop**; 10.0 Å gate STAYS.
   Primary three: 2939 / 3272 / 3432. CLI of the 27 for confusion vs
   D-125 and D-126. 0-of-3 recovered allowed. No `hold48_*.py` edit.
+  ⚠ **Method obligation:** Method must surface D-127 and the
+  stitch-path train when the path exists (Spec §7). The Method
+  addendum is **mandatory** before calling D-127 “done.” No silent
+  code-only.
 - **D-127-A** (later): core BUILD — per-domain weighted Kabsch →
   existing `winning_tile`; sibling `piecewise_kabsch/{parent_id}/`.
-  **CPU, no rent.**
-- **D-127-B** (later): UI four-path honesty; default served =
-  assembler.
+  **CPU, no rent.** Does **not** discharge the Method obligation.
+- **D-127-B** (later): UI four-path honesty **and** Method owner
+  markdown + MethodNote additive section (D-121 / D-125-B / D-126-B
+  pattern); default served = assembler. **Mandatory** before
+  calling D-127 “done.”
 - **D-126-B already shipped** **UI triple-path honesty only** on
   `main` (`abbcd00` / #242): name assembler, D-125 Kabsch-path, and
   D-126 `confidence_kabsch/` artifacts as three populations when A's
@@ -74,7 +80,7 @@ Spec: [`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md).
 | --- | --- | --- |
 | **D-127 Spec** | Piecewise / domain-aware Kabsch Spec (docs only) | **Yes — this PR.** |
 | **D-127-A** | Core BUILD (per-domain weighted Kabsch → `winning_tile`; no trim; CPU, no rent) | No. Later Emma GO. |
-| **D-127-B** | UI four-path honesty (reads `piecewise_kabsch/`) | No. Later Emma GO. |
+| **D-127-B** | UI four-path honesty + **mandatory Method addendum** (reads `piecewise_kabsch/`) | No. Later Emma GO. Mandatory before D-127 is “done.” |
 | **D-126 Spec** | Overlap-confidence Kabsch Spec (docs only) | Already shipped on `main` (#239 / `d59be6b` + #240 / `b32f9db`). |
 | **D-126-A** | Core BUILD (weighted + trimmed overlap Cα → `winning_tile`) | Already shipped on `main` (#241 / `aa8aa02`). |
 | **D-126-B** | UI triple-path honesty (reads `confidence_kabsch/`) | Already shipped on `main` (#242 / `abbcd00`). |
