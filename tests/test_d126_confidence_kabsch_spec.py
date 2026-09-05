@@ -64,9 +64,11 @@ def test_d126_heading_exists_in_the_living_log():
         LOG,
         re.M,
     ), "D-126-A must be a real ### entry, not a citation of one"
-    assert not re.search(r"^### D-127", LOG, re.M), (
-        "this amend is the same D-id; do not invent a ### D-127 heading"
-    )
+    assert re.search(
+        r"^### D-127 — Piecewise / domain-aware Kabsch Spec",
+        LOG,
+        re.M,
+    ), "D-127 is the later piecewise Spec; do not treat D-126 amend as forbidding it"
 
 
 def test_spec_file_exists_and_names_algorithm():
@@ -131,7 +133,7 @@ def test_ship_index_distinguishes_spec_from_ab_build():
     assert "Yes — this PR." in INDEX
     assert re.search(r"D-126 Spec.*Already shipped on `main`", _flat(INDEX))
     assert re.search(r"D-126-A.*Already shipped on `main`", _flat(INDEX))
-    assert re.search(r"D-126-B.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
+    assert re.search(r"D-126-B.*Already shipped on `main`", _flat(INDEX))
     assert "confidence_kabsch" in INDEX or "overlap-confidence" in INDEX.lower()
 
 

@@ -422,5 +422,50 @@ D-126-A `aa8aa02` / #241.
 
 ---
 
+## Addendum 2026-09-05 — D-127 piecewise / domain-aware Kabsch Spec (docs pins) + future A
+
+Hermetic **docs pin tests** for this Spec PR live in
+`tests/test_d127_piecewise_kabsch_spec.py`. They must be able to go
+red **without** a live Fly query, GPU, restitch run, or any edit to
+`hold48_*.py`. Cite: D-127 Spec
+`docs/SPEC-piecewise-domain-kabsch.md`.
+⚠ The 10.0 Å refuse gate stays. Do not raise it. ⚠ No trim loop
+(D-126 lie surface). ⚠ Assembler + D-125 `kabsch/` + D-126
+`confidence_kabsch/` stay callable. ⚠ Method must surface D-127
+when the path exists — not a silent code-only ship.
+
+**D-127-A** acceptance tests (later PR, not this one) must be able to
+go red for the per-piece weighted fit (no trim), the refuse table
+including `no_domain_pieces` and `linker_jump_gt_10`, domain-snap
+source identity, all-or-nothing parent refuse, and the no-overwrite
+rule. Cite: a later `core/hold48_piecewise_kabsch.py` (name not
+shipped here).
+⚠ The 10.0 Å refuse gate stays. ⚠ No rent in A. ⚠ `hold48_*.py`
+is not edited in the Spec PR.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1120** | `### D-127 —` exists; Spec file exists; algorithm name `piecewise_domain_kabsch_then_winning_tile`; 10.0 Å gate pinned; inventory of the three; hard stops; D-127-A/B later | `test_d127_heading_exists_in_the_living_log` · `test_spec_file_exists_and_names_algorithm` · `test_refuse_gate_stays_at_10` · `test_primary_three_inventory` · `test_hard_stops_and_not_ab` |
+| **T-1121** | No trim loop; ε = 1e-3; per-piece weighted Kabsch uses \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\) clamped \(\ge \varepsilon\) | `test_no_trim_loop_and_epsilon` |
+| **T-1122** | Refuse table: piece `n_ca < 3` → `overlap_ca_lt_3`; piece weighted RMSD `> 10.0` → `rmsd_gt_10`; singular → `singular_covariance`; `no_domain_pieces`; linker jump `> 10.0` → `linker_jump_gt_10` | `test_refuse_table_names_piece_and_parent_reasons` |
+| **T-1123** | Domain ends / intervals from the same emit domain-snap source (`domain_ends_span_relative` / UniProt Domain/Repeat) | `test_domain_snap_source_is_emit_source` |
+| **T-1124** | Disclosure: per-piece `n_ca` / RMSD; parent `rmsd_full_overlap_angstrom` + `max_ca_jump_angstrom` after piecewise apply (null if refused before any transform); `linker_n` + `max_linker_ca_jump` | `test_disclosure_per_piece_and_parent_after_apply` |
+| **T-1125** | Artifacts land under `piecewise_kabsch/{parent_job_id}/`; `algorithm=piecewise_domain_kabsch_then_winning_tile`; `decision=D-127`; do **not** overwrite assembler / D-125 `kabsch/` / D-126 `confidence_kabsch/` | `test_artifact_dir_is_sibling_piecewise_kabsch` |
+| **T-1126** | Ship index distinguishes Spec vs future A/B; PLAN + ARCHITECTURE point at D-127 | `test_ship_index_distinguishes_spec_from_ab_build` · `test_plan_and_architecture_point_at_d127` |
+| **T-1133** | Spec requires Method surface (stitch-path train; 8th-grade excerpt; never seams solved; default served = assembler); Method addendum is **mandatory** before calling D-127 “done”; forbids silent code-only | `test_method_surface_is_mandatory_not_silent_code_only` |
+
+### Future A (named; not implemented in this Spec PR)
+
+| ID | Check | Test name (later A) |
+|----|-------|---------------------|
+| **T-1127** | Piece `n_ca < 3` refuses (`overlap_ca_lt_3`); no transformed PDB | `test_piece_n_ca_lt_3_refuses` |
+| **T-1128** | Piece weighted RMSD `> 10.0 Å` refuses (`rmsd_gt_10`) and records the RMSD | `test_piece_rmsd_gt_10_refuses` |
+| **T-1129** | Singular / degenerate piece covariance refuses (`singular_covariance`) | `test_piece_singular_covariance_refuses` |
+| **T-1130** | Zero domain pieces covering the overlap refuses parent (`no_domain_pieces`) | `test_no_domain_pieces_refuses_parent` |
+| **T-1131** | Linker max Cα jump `> 10.0 Å` refuses parent (`linker_jump_gt_10`) | `test_linker_jump_gt_10_refuses_parent` |
+| **T-1132** | Accepted pieces apply \(R, t\) only to moving-tile atoms in that domain; linkers inherit nearest N-terminal accepted piece; full accept feeds `winning_tile`; PAE null never 0; `piecewise_kabsch/` does not overwrite the three existing trees; no trim loop; CLI runs the 27; 0-of-3 allowed | `test_accepted_piece_applies_only_to_its_domain` · `test_linker_inherits_n_terminal_piece` · `test_full_accept_feeds_winning_tile` · `test_piecewise_dir_does_not_overwrite_assembler_d125_or_d126` |
+
+---
+
 **End of Test Plan**
 
