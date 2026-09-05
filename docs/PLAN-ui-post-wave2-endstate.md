@@ -359,6 +359,10 @@ Kabsch stays parked. Remaining ~18 tileable + 3 mucins are out of scope.
 4. Method + Scorer + Explainer/Provenance addenda.
 5. BUDGET / GUIDE Review appendix.
 
+⚠ **D-121 is a follow-on after D-120 / #229** (8th-grade `/method` explainer +
+`docs/method-hold48-tiles.md`). Additive copy only. **#229 stays merged.**
+Kabsch stays parked. Not F-004. Not ADC-B `/adcs`.
+
 ### Phase 3 — optional (P2) — only if Matt wants it
 
 - D-110 PAE figure (nulls visible).

@@ -28,14 +28,19 @@
 >   closeout superseded it as a live plan).
 > - [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md) — post-Wave2 UI
 >   evaluation and phased honesty plan (**D-117**). ⚠ **D-117 remains the plan/stance, not a
->   Kabsch GO.** Phase 1 P0 honesty is **D-118**. Phase 2 review UI is **D-120**. The
->   stitcher is a pLDDT assembler; seams are not scientifically solved.
+>   Kabsch GO.** Phase 1 P0 honesty is **D-118**. Phase 2 review UI is **D-120**.
+>   **D-121** is the follow-on 8th-grade Method explainer (`method-hold48-tiles.md` +
+>   `/method` addendum). The stitcher is a pLDDT assembler; seams are not scientifically solved.
+> - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
+>   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**). Additive
+>   MethodNote section on `/method`. ⚠ **Not a Kabsch GO. #229 stays merged.**
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
->   **D-123 ships** the Nectin-4/ADC Doc follow-on on `/about` (AdcContext only).
+>   **D-121 ships** the Method hold-48 8th-grade explainer. **D-123 ships** the
+>   Nectin-4/ADC Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232). **D-119 ships**
->   ADC-A (the dated catalog + thin read API). **D-120 ships** Phase 2 review UI;
->   parent PLAN is **D-117**; parent honesty GO is **D-118**. Not a second living
->   log — authoritative `### D-NNN` entries stay in this file.
+>   ADC-A. **D-120 ships** Phase 2 review UI; parent PLAN is **D-117**; parent
+>   honesty GO is **D-118**. Not a second living log — authoritative `### D-NNN`
+>   entries stay in this file.
 > - [`../data/adcs/README.md`](../data/adcs/README.md) — ADC-A v1 catalog hook
 >   (**D-119**). ADC-B pages consume it (**D-122**). Weekly Drugs@FDA watch is
 >   Emma's ops lane; not built here.
@@ -151,6 +156,126 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-121 — Method hold-48 8th-grade explainer: tiles, glue, winner-tile assembler (not Kabsch)
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the Method hold-48 explainer BUILD GO** (follow-on after
+  D-120 / #229; rebased onto D-123 / #231 at `2ffd4f8`, which already includes
+  D-122 / #232 at `86f8a10`). Additive copy only.
+  ⚠ **#229 stays merged. Do not reopen it.**
+  ⚠ **Not a Kabsch / restitch GO.** ⚠ **Not F-004 ingest.**
+  ⚠ **Does not ADD `/adcs`.** D-122 already shipped ADC-B on `main` (`86f8a10` /
+  #232). This PR must not add a third `/adcs` path and must not delete the two
+  shipped routes. ⚠ **Does not touch AdcContext / `/about`.** D-123 already
+  shipped that follow-on (`2ffd4f8` / #231). ⚠ **Does not invent science
+  numbers.** Window **1656** / overlap **128** are cited only because D-111
+  already named them. IGF2R seam **~88.76 Å** is the measured caveat D-117 /
+  D-118 already recorded — disclosed, not solved.
+- **Ruled by:** owner BUILD GO 2026-09-05 — 8th-grade owner-facing hold-48 Method
+  write-up after Phase 2 review shipped. Trinity rebase 2026-09-05 onto
+  `2ffd4f8` (D-123) after the earlier pin against `86f8a10` (D-122).
+- **Cite:** D-118 P0 honesty `7cc6238` (#227) · D-120 Phase 2 review `04023a8`
+  (#229) · D-122 ADC-B `86f8a10` (#232) · D-123 Nectin Doc `/about` `2ffd4f8`
+  (#231) · D-117 PLAN · D-111 geometry (1656 / 128 / 1528) · IGF2R seam
+  ~88.76 Å (owner analysis, D-117/D-118; not re-measured here) · rental
+  CLOSED 2026-09-05 PT (D-118 GUIDE banner)
+- **Relates:** `D-123` · `D-122` · `D-120` · `D-118` · `D-117` · `D-111` ·
+  `D-109` ruling 7 · ship index [`decisions.md`](decisions.md)
+- **Does not amend:** D-111 geometry · D-116 gate · stitch algorithm · Kabsch ·
+  ranking set / F-004 · D-118 census identity · D-120 `assembly_review` · D-119
+  ADC-A catalog · D-122 ADC-B routes · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110`
+  while later numbers are written). This entry spends `D-121`; the pointer stays
+  the owner's.
+
+#### Context
+
+D-118 stopped a tile from rendering as a protein and put an assembler banner on
+stitched 3D views. D-120 made the 27 assembled parents auditable on
+`/census/:id` and added one Method sentence (Blackwell + assembler-only). Matt
+still needs an **8th-grade** write-up of *why* long proteins became tiles, what
+the overlap is for, what "assemble" actually did, and that the rental is over —
+without implying Kabsch lined the pieces up or that the IGF2R seam is solved.
+
+#229 already merged that review UI. This GO is a **follow-on**, not a rewrite of
+Phase 2 and not a reopen of that PR. While this PR was open, **D-122 / #232**
+merged ADC-B (`/adcs`) onto `main` at `86f8a10`, then **D-123 / #231** merged
+the Nectin Doc `/about` follow-on at `2ffd4f8`. The original "this PR must not
+add `/adcs`" bar still holds as a **path-set pin** of D-122's exact routes
+(`/adcs`, `/adcs/:id`), not as a claim that `main` lacks them. D-121 does not
+touch AdcContext.
+
+#### Decision
+
+1. **Owner-facing explainer:** [`docs/method-hold48-tiles.md`](method-hold48-tiles.md)
+   is the 8th-grade write-up. It covers: long proteins → overlapping tiles;
+   overlap = glue (shared residues, not chemical glue and not Kabsch); assemble
+   = pLDDT **winner-tile assembler**, not Kabsch; seams can look ugly — IGF2R
+   **~88.76 Å** is a disclosure, not a solved structure; rental **CLOSED**.
+   Window **1656** / overlap **128** appear only as D-111's already-logged
+   integers.
+2. **`/method` addendum, not a gut.** `MethodNote.jsx` gains one additive
+   section that states the same claims. Existing MethodNote copy (coverage
+   derivation, D-051 diagram, ranking non-goals, D-120 rental/assembler
+   sentence) stays.
+3. **This PR does not ADD `/adcs`.** D-122 already shipped `/adcs` + `/adcs/:id`
+   on `main` (`86f8a10` / #232). The check is the **exact D-122 path set**, not
+   `git diff 86f8a10` (shallow CI has no that SHA) and not an assertion that
+   `main` lacks the routes. Adding a third `/adcs` path or deleting either
+   shipped path is a D-122 regression and is refused.
+4. **Kabsch stays PARKED.** No alignment box, no "seams solved," no restitch
+   CTA. The explainer exists so a reader can tell a winner-tile chain from one
+   ESMFold forward pass (D-109 ruling 7).
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 / D-111). The
+assembled parent is an **overlap of those passes**, not a new network output and
+not a superimposed holoprotein. An 8th-grade Method page that says "we folded
+the long protein" without naming tiles, glue, winner-tile pLDDT, and the unsolved
+seam attributes to the network a structure it did not produce. Neutral to the
+weights; load-bearing for whether a non-specialist can tell what the network
+actually ran.
+
+#### Provenance (D-016)
+
+- **Geometry 1656 / 128 / 1528:** `### D-111` and `core/contracts.py`
+  (`TILE_WINDOW_AA`, `MIN_OVERLAP_AA`, `STRIDE_AA`). Not re-derived here.
+- **Assembler, not Kabsch:** `core/hold48_stitch.py` `winning_tile` (higher
+  per-residue pLDDT; tie → earlier tile) + `stitch_pdb` (winner-tile atoms, no
+  invented coordinates). D-117 / D-118 already labelled this an assembler.
+- **IGF2R seam ~88.76 Å:** owner analysis cited in D-117 / D-118 / D-120. ⚠
+  **Not re-measured in this PR.**
+- **Rental CLOSED:** D-118 GUIDE banner; pod Terminated 2026-09-05 PT. ⚠ **Not
+  re-queried against Fly or RunPod here.**
+- **#229 / D-120 head:** `04023a8` on `main` when this entry was first written.
+- **#232 / D-122 head:** `86f8a10` — ADC-B `/adcs` already on `main`; this PR
+  must not add or delete those routes.
+- **#231 / D-123 head:** `2ffd4f8` — this PR rebases onto that merge.
+
+#### Consequences
+
+- Tests that must be able to go red: explainer + MethodNote name
+  **assembler-not-Kabsch**; seam **not solved** and carry **~88.76 Å**; rental
+  **CLOSED**; `### D-121 —` exists in this log; this PR does **not ADD**
+  `/adcs` (exact D-122 path set `/adcs` + `/adcs/:id`); D-122 and D-123
+  headings on `main` still exist.
+- `ARCHITECTURE.md` Method / hold-48 rows record the explainer. Ship index
+  points at D-121.
+- Kabsch, F-004 ingest, ADC-C, and remaining tileable / mucin review remain
+  later GOs.
+
+#### Assumptions refused
+
+- That an 8th-grade metaphor ("glue") licenses calling seams solved or the
+  chain one forward pass.
+- That citing 1656 / 128 invents a new window (they are D-111's).
+- That this PR may reopen #229, run Kabsch, or ingest F-004.
+- That this PR may **add** `/adcs` or **delete** D-122's routes.
+- That this PR may repair the `D-` next-free pointer.
+
+---
+
 ### D-123 — Nectin-4/ADC Doc follow-on lands on `/about` AdcContext; two tracks, no second route
 
 - **Date:** 2026-09-05
@@ -185,6 +310,8 @@ So the rule is not "be careful" — it is:
 - ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
   `D-110` while later numbers are written). This entry spends `D-123`; the
   pointer stays the owner's.
+- **Amended by:** `D-121` (Method hold-48 8th-grade explainer + `/method`
+  addendum. D-121 does not touch AdcContext or `/adcs`.)
 
 #### Context
 
@@ -350,6 +477,9 @@ unlocks every V-domain."
   while later numbers are written). This entry spends `D-122`; the pointer stays
   the owner's. ⚠ **Does not write `### D-121`.** That integer is the Method
   hold-48 later GO named in the ADC-B brief as out of scope.
+- **Amended by:** `D-121` (8th-grade Method explainer, later PR). D-122 did
+  not spend that integer; D-121 now writes the heading. D-121 does not add
+  or regress `/adcs`.
 
 #### Context
 
@@ -494,6 +624,9 @@ the model never measured. Neutral to the weights; load-bearing for whether
 - **Does not amend:** D-111 geometry · D-116 gate · stitch algorithm · Kabsch ·
   ranking set membership · D-079 unscored-census bar · D-081 two-span rule ·
   D-119 ADC-A catalog · the `D-` next-free pointer
+- **Amended by:** `D-121` (8th-grade hold-48 Method explainer + `/method` addendum.
+  Additive copy only. Does not amend this entry's review UI, Kabsch park, or F-004
+  disclosure. #229 stays merged.)
 - ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110`
   while later numbers are written). This entry spends `D-120`; the pointer stays
   the owner's.
@@ -796,6 +929,8 @@ ADC" stays a checkable claim (D-016) rather than atmosphere.
   (D-118 ships P0 honesty; D-117 is the parent PLAN — do not rename D-118)
 - **Does not amend:** D-111 geometry · D-116 gate · stitch algorithm · Kabsch · ranking set
   · D-079 unscored-census bar · D-081 two-span rule · the `D-` next-free pointer
+- **Amended by:** `D-121` (owner-facing 8th-grade explainer of the assembler / closed-rental
+  facts this entry already ruled. Does not reopen census identity.)
 - ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110` while
   later numbers are written). This entry spends `D-118`; the pointer stays the owner's.
 

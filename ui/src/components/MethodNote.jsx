@@ -48,6 +48,49 @@ export default function MethodNote() {
       </p>
       <ArchitectureDiagram />
 
+      <h3>Long proteins: tiles, glue, and a winner-tile assembler (D-121)</h3>
+      <div data-testid="hold48-explainer">
+        <p>
+          Some proteins are too long for <Term name="ESMFold">ESMFold</Term> to
+          swallow in one gulp. <strong>D-111</strong> already named the cap: a
+          window of <strong>1656</strong> amino acids, with a{' '}
+          <strong>128</strong>-amino-acid overlap between neighboring windows.
+          We cut those long chains into <strong>overlapping tiles</strong> —
+          like shingles. Each tile is its own network pass. The model never
+          sees the whole long chain at once.
+        </p>
+        <p>
+          The overlap is the <strong>glue</strong>. It is not a chemical glue.
+          It is the same residues, predicted twice, so two tiles have a shared
+          stretch we can compare. We do <strong>not</strong> twist one tile
+          until it sits on the other.
+        </p>
+        <p>
+          Assemble means pick a <strong>winner tile</strong> by{' '}
+          <Term name="pLDDT">pLDDT</Term> at each residue — a{' '}
+          <strong>pLDDT winner-tile assembler</strong>,{' '}
+          <strong>not Kabsch</strong>. Kabsch would rotate and slide pieces so
+          they line up in 3D. We did not do that. Each residue keeps the
+          coordinates its winning tile already had.
+        </p>
+        <p>
+          Seams can look ugly. On the IGF2R pilot the join jumped about{' '}
+          <strong>~88.76 Å</strong>. That is a disclosure,{' '}
+          <strong>not scientifically solved</strong>. A later Kabsch / restitch
+          job is parked. This page is not that GO.
+        </p>
+        <p>
+          The hold-48 rental is <strong>CLOSED</strong> (pod Terminated,
+          2026-09-05; D-118). This section is not a request to rent another
+          card.
+        </p>
+        <p className="note">
+          Owner-facing write-up:{' '}
+          <code>docs/method-hold48-tiles.md</code> (D-121). Parents: D-118
+          honesty, D-120 review UI. #229 stays merged.
+        </p>
+      </div>
+
       <h3>What it does today</h3>
       <ul>
         <li>Renders the structures we folded, coloured by the model's <strong>per-residue</strong> confidence (D-039).</li>

@@ -54,3 +54,32 @@ describe('MethodNote — coverage line derived from /api/coverage, not hardcoded
     expect(container.textContent).toMatch(/A6000/)
   })
 })
+
+describe('MethodNote — D-121 hold-48 8th-grade explainer (additive, not a gut)', () => {
+  it('renders tiles, glue, assembler-not-Kabsch, unsolved seam, and CLOSED rental', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const block = getByTestId('hold48-explainer')
+    expect(block.textContent).toMatch(/overlapping tiles/)
+    expect(block.textContent).toMatch(/glue/)
+    expect(block.textContent).toMatch(/1656/)
+    expect(block.textContent).toMatch(/128/)
+    expect(block.textContent).toMatch(/winner-tile assembler/)
+    expect(block.textContent).toMatch(/not Kabsch/)
+    expect(block.textContent).toMatch(/88\.76/)
+    expect(block.textContent).toMatch(/not scientifically solved/)
+    expect(block.textContent).toMatch(/CLOSED/)
+    expect(block.textContent).not.toMatch(/seams solved|Kabsch aligned|waiting on rented capacity/)
+  })
+
+  it('keeps the standing MethodNote claims (does not gut D-028 / D-050 / D-051)', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    expect(container.textContent).toMatch(/What this system claims/)
+    expect(container.textContent).toMatch(/Where the deep learning runs/)
+    expect(container.textContent).toMatch(/What it will never do/)
+    expect(container.textContent).toMatch(/3 ranked-and-folded of 7/)
+  })
+})
