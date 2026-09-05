@@ -1,0 +1,78 @@
+{
+  "catalog_id": {
+    "value": "adcs.access.v1",
+    "source": "D-124: this file is the trials + Right-to-Try informational payload, a sibling of adcs.v1.json and not merged into it",
+    "as_of": "2026-09-05",
+    "confidence": "derived"
+  },
+  "schema_version": {
+    "value": "1",
+    "source": "D-124: schema version of data/adcs/access.v1.json",
+    "as_of": "2026-09-05",
+    "confidence": "derived"
+  },
+  "scope": {
+    "value": "trials_and_right_to_try_informational",
+    "source": "D-124 Architect binding: sourced registry / statute / FDA links for trials and Right-to-Try framing. Not a treatment list and not merged into the approved catalog.",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "completeness": {
+    "value": "floor_not_census",
+    "source": "D-124 / D-029: this payload cites the public pages retrieved or indexed on the as_of dates below. It is not a census of trials, expanded-access programs, or Right-to-Try uses.",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "as_of": {
+    "value": "2026-09-05",
+    "source": "D-124: retrieval / index date for the official links in this file. NCT identifiers keep the mapping's 2026-07-27 as_of on their own field.",
+    "as_of": "2026-09-05",
+    "confidence": "derived"
+  },
+  "disclaimer": {
+    "value": "This payload is informational only. It is NOT medical advice, NOT legal advice, and NOT a treatment recommendation. It does not determine eligibility for a clinical trial, for FDA expanded access, or for Right to Try. It does not say that any investigational ADC should be requested, prescribed, or taken. Talk to a licensed clinician about medical questions and, where legal questions arise, a qualified attorney.",
+    "source": "D-124 / ADC-C-A required non-advice voice. Architect binding: NOT medical/legal advice.",
+    "as_of": "2026-09-05",
+    "confidence": "reviewed"
+  },
+  "clinical_trials_registry": {
+    "value": "https://clinicaltrials.gov/",
+    "source": "U.S. National Library of Medicine ClinicalTrials.gov home, retrieved 2026-09-05",
+    "as_of": "2026-09-05",
+    "confidence": "official"
+  },
+  "expanded_access_fda": {
+    "value": "https://www.fda.gov/news-events/public-health-focus/expanded-access",
+    "source": "FDA Expanded Access page (sometimes called compassionate use), retrieved 2026-09-05",
+    "as_of": "2026-09-05",
+    "confidence": "official"
+  },
+  "right_to_try_statute": {
+    "value": "21 U.S.C. § 360bbb-0a (FD&C Act § 561B, investigational drugs for use by eligible patients)",
+    "source": "Cornell LII GET https://www.law.cornell.edu/uscode/text/21/360bbb-0a retrieved 2026-09-05",
+    "as_of": "2026-09-05",
+    "confidence": "official"
+  },
+  "right_to_try_public_law": {
+    "value": "Pub. L. 115-176 (Trickett Wendler, Frank Mongiello, Jordan McLinn, and Matthew Bellina Right to Try Act of 2017), approved 2018-05-30",
+    "source": "GovInfo GET https://www.govinfo.gov/content/pkg/PLAW-115publ176/html/PLAW-115publ176.htm retrieved 2026-09-05",
+    "as_of": "2026-09-05",
+    "confidence": "official"
+  },
+  "right_to_try_fda": {
+    "value": "https://www.fda.gov/patients/learn-about-expanded-access-and-other-treatment-options/right-try",
+    "source": "FDA Right to Try page URL as cited by 91 FR 12422 (2026-03-13) and indexed as 'Right to Try | FDA' on 2026-09-05. Direct HTML fetch of this path returned 404 to this session's bot; the citation is the Federal Register + index, not a claim that the HTML body was retrieved here.",
+    "as_of": "2026-09-05",
+    "confidence": "official"
+  },
+  "named_nct_ids_from_pipeline": {
+    "value": [
+      "NCT03310957",
+      "NCT04032704",
+      "NCT02529553"
+    ],
+    "source": "data/adc_reference_mapping.csv source_citation on the ladiratuzumab vedotin row (NCT03310957, NCT04032704) and the LY3076226 row (NCT02529553), CURATED 2026-07-27. Listed as identifiers already cited in that file, not as enrollment recommendations.",
+    "as_of": "2026-07-27",
+    "confidence": "reviewed"
+  }
+}

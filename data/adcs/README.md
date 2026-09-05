@@ -1,13 +1,27 @@
-# ADC catalog v1 (D-119 / ADC-A)
+# ADC catalogs (D-119 / ADC-A, D-124 / ADC-C-A)
 
-Checked-in roster of **FDA-approved** antibody-drug conjugates. Schema:
-`adcs.v1.json`. Every field is `{value, source, as_of, confidence}`.
+Three sibling files. Do **not** merge them.
 
-ADC-B (`/adcs` pages, **D-122**) consumes this file via `GET /api/adcs`.
-Pipeline and Right-to-Try products are **ADC-C** — out of this file.
+| File | Scope | Ships |
+| --- | --- | --- |
+| `adcs.v1.json` | FDA-approved / currently marketed | D-119 / ADC-A |
+| `adcs.pipeline.v1.json` | investigational (`pipeline_investigational`) | D-124 / ADC-C-A |
+| `access.v1.json` | trials + Right-to-Try informational framing | D-124 / ADC-C-A |
+
+Every field is `{value, source, as_of, confidence}`. Completeness is
+`floor_not_census` — a dated pin, not a census.
+
+ADC-B (`/adcs` pages, **D-122**) consumes `adcs.v1.json` via `GET /api/adcs`.
+ADC-C-A serves the pipeline and access files via `GET /api/adcs/pipeline`,
+`GET /api/adcs/pipeline/{id}`, and `GET /api/adcs/access`. ADC-C-B (UI) is
+a later GO.
 
 The scorer's Group B/C file (`data/adc_reference_mapping.csv`, D-029 / D-040)
-is a **different object**. Do not merge them.
+is a **different object**. Pipeline v1 starts from that file's already-cited
+non-approved rows and does not import the scorer module.
+
+Access is **NOT medical advice, NOT legal advice, and NOT a treatment
+recommendation.**
 
 ## How a row gets here
 

@@ -15,7 +15,10 @@ these handlers.
 | `GET /api/analyses/{id}/structure` | the stored PDB file, `text/plain`, streamed |
 | `GET /api/analyses/{id}/plddt` | the per-residue pLDDT array |
 | `GET /api/adcs` | D-119 FDA-approved catalog (file-derived) |
-| `GET /api/adcs/{adc_id}` | one catalog row, or 404 |
+| `GET /api/adcs/pipeline` | D-124 investigational pipeline catalog (file-derived) |
+| `GET /api/adcs/pipeline/{pipeline_id}` | one pipeline row, or 404 |
+| `GET /api/adcs/access` | D-124 trials + Right-to-Try informational payload |
+| `GET /api/adcs/{adc_id}` | one approved catalog row, or 404 |
 """
 
 from __future__ import annotations
@@ -29,7 +32,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from app import reads
 from app.deps import get_engine
-from core.adc_catalog import get_adc, list_adcs
+from core.adc_catalog import get_access, get_adc, get_pipeline_adc, list_adcs, list_pipeline
 from core.cancer_associations import load_associations
 
 read_router = APIRouter(prefix="/api")
@@ -141,6 +144,35 @@ def get_adcs() -> dict:
     count (D-029 / D-016).
     """
     return list_adcs()
+
+
+@read_router.get("/adcs/pipeline")
+def get_pipeline() -> dict:
+    """D-124 / ADC-C-A: investigational pipeline catalog. File-derived, no engine.
+
+    ⚠ REGISTERED BEFORE ``/adcs/{adc_id}``. Declaration order is load-bearing —
+    otherwise ``pipeline`` is looked up as an approved id and 404s.
+    """
+    return list_pipeline()
+
+
+@read_router.get("/adcs/pipeline/{pipeline_id}")
+def get_pipeline_row(pipeline_id: str) -> dict:
+    """One pipeline ADC by derived id. 404 — never 200 with a guess — when unknown."""
+    row = get_pipeline_adc(pipeline_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="unknown pipeline ADC")
+    return row
+
+
+@read_router.get("/adcs/access")
+def get_adc_access() -> dict:
+    """D-124 / ADC-C-A: trials + Right-to-Try informational payload. Not advice.
+
+    ⚠ REGISTERED BEFORE ``/adcs/{adc_id}`` so ``access`` is not captured as an
+    approved id (same declaration-order hazard as ``/census/summary``, D-120).
+    """
+    return get_access()
 
 
 @read_router.get("/adcs/{adc_id}")
