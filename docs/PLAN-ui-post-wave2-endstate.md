@@ -5,7 +5,7 @@
 **Audience:** Matt (operator / owner). Reviewer and worker roles are named per surface.
 
 > **Stance.** The stitcher is a **pLDDT assembler**, not a Kabsch superimposer. Known IGF2R
-> seam ≈ **88.76 Å**. Kabsch / restitch Spec is **PARKED** until Matt GO. No surface may
+> seam ≈ **88.76 Å**. Kabsch park → **D-125** (Spec / docs-only; not a BUILD). No surface may
 > imply seams are scientifically solved. This document inventories what exists and what
 > it now lies about. It does not ship UI.
 
@@ -32,7 +32,7 @@ needs them live must name a query or log line.
 | Dup-tile preference | use **3673/3674/3675**; spares **3693/3695/3696** unused | owner closeout |
 | Stitcher | pLDDT assembler, not Kabsch | `core/hold48_stitch.py` |
 | IGF2R seam | ~88.76 Å | owner analysis |
-| Kabsch / restitch | PARKED until Matt GO | owner ruling |
+| Kabsch / restitch | Spec is **D-125** (docs-only; A/B BUILD later) | [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) |
 | Assembler path | via Fly | owner closeout |
 
 **Code-side inventory** is from the tree on the branch that added this file
@@ -316,7 +316,7 @@ Until Matt GO on a restitch spec:
 | Dup-tile choice (lower id) | Implied scientific preference beyond "first complete cover" |
 | Mucin `out_of_class` | A fake assembled mucin |
 
-A later Kabsch GO is its own `D-NNN`. This plan does not pre-authorise it.
+Kabsch park → **D-125** (Spec / docs-only; confirm `### D-125` exists). D-125-A/B code BUILD is a later Emma GO, not this plan.
 
 ---
 
