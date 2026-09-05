@@ -65,6 +65,8 @@ describe('ScorerView', () => {
     // the excluded set with its reasons
     expect(t).toMatch(/CXCR5 — below_floor/)
     expect(t).toMatch(/MSLN — held_out/)
+    expect(t).toMatch(/27 unique stitched parents/)
+    expect(t).toMatch(/not in this ranking \(D-109\)/)
   })
 
   it('does NOT hardcode any live literal — every number derives from the payload', async () => {

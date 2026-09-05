@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app import reads
 from app.deps import get_engine
@@ -64,7 +64,8 @@ def get_structure(analysis_id: int, engine: Any = Depends(get_engine)) -> FileRe
     pdb_path = reads.get_structure_path(engine, analysis_id)
     if not pdb_path or not Path(pdb_path).is_file():
         raise HTTPException(status_code=404, detail="no structure for this analysis")
-    return FileResponse(pdb_path, media_type="text/plain", filename="structure.pdb")
+    stem = reads.download_stem(engine, analysis_id)
+    return FileResponse(pdb_path, media_type="text/plain", filename=f"{stem}.pdb")
 
 
 @read_router.get("/analyses/{analysis_id}/pae")
@@ -82,24 +83,36 @@ def get_pae(analysis_id: int, engine: Any = Depends(get_engine)) -> FileResponse
     if not pae_path:
         raise HTTPException(
             status_code=404,
-            detail=("this analysis carries no PAE — 2,692 of 2,771 rows do not (F-042). "
-                    "That is a recorded finding, not a missing file."))
+            detail=("this analysis carries no PAE. F-042 (2,692 of 2,771) is about the "
+                    "old census artifact, not a missing file and not hold-48 tiles or "
+                    "assembled parents — those ordinarily return 200 when pae_json_path "
+                    "is stored (D-120)."))
     if not Path(pae_path).is_file():
         # ⚠ a stored path that does not resolve is a DIFFERENT failure from no path at all
         raise HTTPException(status_code=404,
                             detail="this analysis records a PAE path that does not resolve")
-    return FileResponse(pae_path, media_type="application/json",
-                        filename="pae.json.gz" if pae_path.endswith(".gz") else "pae.json")
+    stem = reads.download_stem(engine, analysis_id)
+    filename = (
+        f"{stem}_pae.json.gz" if pae_path.endswith(".gz") else f"{stem}_pae.json"
+    )
+    return FileResponse(pae_path, media_type="application/json", filename=filename)
 
 
 @read_router.get("/analyses/{analysis_id}/plddt")
-def get_plddt(analysis_id: int, engine: Any = Depends(get_engine)) -> list:
+def get_plddt(analysis_id: int, engine: Any = Depends(get_engine)) -> JSONResponse:
     """The per-residue pLDDT array that colours the viewer (D-034 decision 3). 404 when the id
     is unknown or the structure — and so its sibling ``plddt.json`` — does not exist."""
     plddt_path = reads.get_plddt_path(engine, analysis_id)
     if not plddt_path or not Path(plddt_path).is_file():
         raise HTTPException(status_code=404, detail="no plddt for this analysis")
-    return json.loads(Path(plddt_path).read_text(encoding="utf-8"))
+    stem = reads.download_stem(engine, analysis_id)
+    filename = "stitched_plddt.json" if stem == "stitched" else (
+        f"{stem}_plddt.json" if stem != "structure" else "plddt.json"
+    )
+    return JSONResponse(
+        content=json.loads(Path(plddt_path).read_text(encoding="utf-8")),
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
 
 
 @read_router.get("/ranking")
@@ -228,6 +241,8 @@ def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> di
                 # the list showed it would be the worse half of the defect, not a smaller one.
                 out = dict(row)
                 reads._attach_cohort_fold(engine, [out])
+                if out.get("accession") == reads.IGF2R_ACCESSION:
+                    out["igf2r_two_population"] = reads.igf2r_two_population_copy()
                 return out
         if outcome == "cohort":
             raise HTTPException(

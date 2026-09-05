@@ -110,7 +110,7 @@ export function rankCause(row, rankingServed = true) {
   // was ever involved. The OOM is what happened afterwards.
   if (row.disposition === 'held_out') {
     return row.fold_status === 'failed'
-      ? 'held out; fold subsequently attempted and failed (CUDA OOM)'
+      ? 'held out; fold subsequently attempted and failed (CUDA OOM). A later census tiling of this accession is a different span definition — see Census'
       : 'held out'
   }
   if (row.never_attempted || row.fold_status === 'not_folded') return 'not folded — never attempted'

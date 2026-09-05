@@ -37,4 +37,15 @@ describe('PlddtExplainer', () => {
     render(<PlddtExplainer />)
     expect(screen.getByText(/predicted aligned error/i)).toBeInTheDocument()
   })
+
+  it('adds the assembler addendum only on assembled pages', () => {
+    const { rerender, container } = render(<PlddtExplainer />)
+    expect(container.querySelector('[data-testid="assembled-explainer"]')).toBeNull()
+    rerender(<PlddtExplainer assembled />)
+    const add = container.querySelector('[data-testid="assembled-explainer"]')
+    expect(add).toBeTruthy()
+    expect(add.textContent).toMatch(/winner-tile/)
+    expect(add.textContent).toMatch(/null, never 0/)
+    expect(add.textContent).not.toMatch(/will be fixed by alignment/)
+  })
 })

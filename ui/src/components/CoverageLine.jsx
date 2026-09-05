@@ -36,8 +36,8 @@ export default function CoverageLine({ coverage, rows }) {
       <p className="coverage-sub">
         This intersection is the honest denominator.{' '}
         {rankedUnfolded > 0 ? (
-          <>Not the {coverage.ranked} ranked in the manifest ({rankedUnfolded} of them await a rental
-          fold), and not the {rankedFolded + heldFolded} folded ({heldFolded} are held out of
+          <>Not the {coverage.ranked} ranked in the manifest ({rankedUnfolded} of them not
+          folded in the cohort), and not the {rankedFolded + heldFolded} folded ({heldFolded} are held out of
           ranking). Both would overstate the cohort.</>
         ) : (
           <>Not the {rankedFolded + heldFolded} folded ({heldFolded} are held out of ranking) — that
@@ -47,7 +47,7 @@ export default function CoverageLine({ coverage, rows }) {
       <ul className="partition">
         <li>
           <span className="cell-n">{coverage.ranked}</span> ranked
-          <span className="cell-detail">{rankedFolded} folded · {rankedUnfolded} awaiting fold (rental)</span>
+          <span className="cell-detail">{rankedFolded} folded · {rankedUnfolded} not folded in the cohort</span>
           {/* F-049's third instance. `ranked` is the D-024 disposition and is ELIGIBILITY, not
               membership of the ranking set — /api/ranking's `n_ranking_set` is smaller because a
               pLDDT floor is applied downstream. ⚠ D-066 still binds: this component cannot see

@@ -27,7 +27,7 @@
     },
     {
       "id": "rental",
-      "label": "Rented A6000 — batch folds, fp16",
+      "label": "Rented GPU (A6000 cohort 29 · Blackwell hold-48)",
       "zone": "external",
       "gpu": true
     }

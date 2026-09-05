@@ -349,6 +349,10 @@ A later Kabsch GO is its own `D-NNN`. This plan does not pre-authorise it.
 
 **Goal:** Matt can audit Wave2 on `/census/:id` without SQL.
 
+⚠ **D-120 is the BUILD GO for this phase.** Parent honesty is D-118 (`7cc6238` / #227).
+D-119 is ADC-A (#228) — do not reuse.
+Kabsch stays parked. Remaining ~18 tileable + 3 mucins are out of scope.
+
 1. Tile table + readiness counts + chosen/spare ids.
 2. Downloads + PAE present/absent badge (not a heatmap).
 3. IGF2R two-population copy on Targets / Coverage / census card.
@@ -380,7 +384,7 @@ Copy this into a session note. Check means "done in a later GO," not in D-117.
 - [ ] Spare tiles 3693/3695/3696 are not a second protein
 - [ ] pLDDT loads for an assembled parent (`stitched_plddt.json` or equivalent)
 
-**P1**
+**P1** — D-120 BUILD GO (this phase)
 
 - [ ] Parent card shows readiness `expected_n` / missing / uncovered
 - [ ] Tile table with PAE yes/no and chosen-vs-spare

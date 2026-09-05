@@ -159,6 +159,8 @@ describe('every unranked row states its cause, and a two-cause row states both',
     expect(cause).toMatch(/held out/)
     expect(cause).toMatch(/failed/)
     expect(cause.indexOf('held out')).toBeLessThan(cause.indexOf('failed'))
+    expect(cause).toMatch(/census tiling/)
+    expect(cause).toMatch(/Census/)
   })
 
   it('names the pre-registered floor and does not move it', async () => {

@@ -43,4 +43,14 @@ describe('MethodNote — coverage line derived from /api/coverage, not hardcoded
     await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
     expect(container.textContent).not.toMatch(/40 ranked-and-folded of 82/)
   })
+
+  it('names Blackwell hold-48 and assembler-only stitch, not A6000 as the only rental', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    expect(container.textContent).toMatch(/Blackwell/)
+    expect(container.textContent).toMatch(/assembler/)
+    expect(container.textContent).toMatch(/not a Kabsch/)
+    expect(container.textContent).toMatch(/A6000/)
+  })
 })

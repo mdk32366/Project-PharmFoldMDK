@@ -49,6 +49,8 @@ PROFILE_REFUSALS = (
     "refused_out_of_distribution",   # ruling 3 — outside the cohort's observed support
     "refused_span_below_floor",      # ruling 6 — F-048's engulfing set, excluded AT COMPUTATION
     "refused_features_incomplete",   # no six-vector to evaluate; an absence, never a zero
+    # D-120 / D-109 ruling 7 — an assembled (or tile) chain is not a single-pass measurement
+    "refused_assembled_incommensurable",
 )
 
 #: ⚠ Ruling 4. These travel with EVERY rendered profile, in the same frame — never a footnote.
@@ -218,18 +220,10 @@ def profile_many(rows: Sequence[Mapping], *, refused_accessions: frozenset[str] 
 #   · the mount preconditions travel INSIDE the payload, so a surface cannot render the number
 #     without also receiving the frame (ruling 4). They are not a sibling key the UI may skip;
 #   · `band_context` ships the cohort's own span, so the value is never shown alone.
-def profile_payload(
-    features: Mapping[str, Optional[float]],
-    *,
-    accession: str,
-    span_below_floor: bool = False,
-) -> dict:
-    """The census structural profile as a renderable block. ⚠ Never returns a bare number."""
-    result = structural_profile(
-        features, accession=accession, span_below_floor=span_below_floor)
+def _payload_from_result(result: ProfileResult) -> dict:
+    """Shared renderable block. ⚠ Never a bare number; never a scoring KEY."""
     model = load_model()
     support = load_support()
-
     block: dict = {
         "kind": "structural_profile",
         "status": "refused" if result.is_refused else "computed",
@@ -239,7 +233,6 @@ def profile_payload(
             "detail": result.refusal.detail,
         },
         "out_of_range_features": list(result.out_of_range_features),
-        # ⚠ ruling 4 — in the payload, so a surface cannot render the value without the frame.
         "mount_preconditions": list(MOUNT_PRECONDITIONS),
         "provenance": (
             f"run {model['ranking_run_id']} (scorer_version {model['scorer_version']}), applied "
@@ -251,8 +244,6 @@ def profile_payload(
             "population's actual support (D-079 amendment 2 ruling 8). Not p05-p95, which fires "
             "inside the training support; not +/-3 sd, which rests on a standard deviation that "
             "is not recoverable (F-049 amendment 1)."),
-        # ⚠ the value is never shown alone: the cohort's own span is the only context that makes
-        # a number in 0..1 readable, and F-006 is why.
         "band_context": {
             "cohort_fitted_min": 0.116,
             "cohort_fitted_max": 0.285,
@@ -262,9 +253,36 @@ def profile_payload(
         },
         "support_used": {n: {"min": lo, "max": hi} for n, (lo, hi) in support.items()},
     }
-    # ⚠ asserted, not documented: the payload must never carry a scoring word as a KEY.
     for key in block:
         low = key.lower()
         assert not any(b in low for b in ("score", "rank", "suitab")) or key == "structural_profile", \
             f"payload key {key!r} names the value a score/rank/suitability — ruling 1"
     return block
+
+
+def assembly_profile_payload(accession: str) -> dict:
+    """D-120: refuse a profile on an assembled / tile chain (D-109 ruling 7).
+
+    Winner-tile coordinates are not one ESMFold measurement. Computing the
+    single-pass six-vector on them would treat an assembly as commensurable.
+    """
+    result = ProfileResult(accession, None, ProfileRefusal(
+        "refused_assembled_incommensurable",
+        "This chain is a pLDDT-overlap assembly of tile forward passes, not one "
+        "ESMFold measurement. D-109 ruling 7: stitched is not ranking-eligible; "
+        "a single-pass profile on winner-tile coordinates would treat an assembly "
+        "as commensurable. No value is computed (D-120).",
+    ))
+    return _payload_from_result(result)
+
+
+def profile_payload(
+    features: Mapping[str, Optional[float]],
+    *,
+    accession: str,
+    span_below_floor: bool = False,
+) -> dict:
+    """The census structural profile as a renderable block. ⚠ Never returns a bare number."""
+    result = structural_profile(
+        features, accession=accession, span_below_floor=span_below_floor)
+    return _payload_from_result(result)

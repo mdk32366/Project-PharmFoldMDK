@@ -603,3 +603,26 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
    inline: it qualifies the count beside it rather than competing with it, and it renders on 3 of
    20 categories, so it must not read as an alarm. */
 .clin-pooled { color: var(--muted); font-size: 0.82rem; font-style: italic; }
+
+/* D-120 — assembled-parent review */
+.assembly-review { margin: 1rem 0; }
+.assembly-review h3 { margin-top: 0; }
+.tile-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 0.4rem 0 1rem; }
+.tile-table th, .tile-table td { border-bottom: 1px solid var(--line); padding: 0.35rem 0.5rem; text-align: left; }
+.tile-role-spare { opacity: 0.78; }
+.pae-yes { color: #8fd19e; }
+.pae-no { color: var(--muted); }
+.assembly-downloads ul { margin: 0.3rem 0 0.8rem 1.1rem; }
+.spare-tag { color: var(--muted); font-size: 0.82rem; }
+.assembly-prov { display: grid; grid-template-columns: 12rem 1fr; gap: 0.25rem 0.8rem; }
+.assembly-prov div { display: contents; }
+.assembly-prov dt { color: var(--muted); }
+.assembly-prov dd { margin: 0; }
+.igf2r-two-pop {
+  margin: 0 0 0.8rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #1a2236;
+}
+.scorer-assembly-note { margin: 0.4rem 0 1rem; }

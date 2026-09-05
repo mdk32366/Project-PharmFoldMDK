@@ -38,7 +38,10 @@ export default function MethodNote() {
       <h3>Where the deep learning runs (D-051)</h3>
       <p>
         Inference runs on a GPU tier <strong>outside Fly</strong> (D-004): the local worker and the
-        rented A6000 pull jobs over outbound HTTPS, fold, and upload results. The always-on Fly
+        rented GPU (A6000 for the cohort-29 batch; RTX PRO 6000 Blackwell for
+        hold-48 tiles) pull jobs over outbound HTTPS, fold, and upload results. Hold-48
+        stitch is a <strong>pLDDT-overlap assembler</strong>, not a Kabsch
+        superimposer — seams are not scientifically solved. The always-on Fly
         serving tier holds <strong>no <code>worker/</code> and no CUDA</strong> (DEP-001). The diagram
         is rendered from a committed system model and pinned to the live route table by a test, so it
         cannot drift from the running system.

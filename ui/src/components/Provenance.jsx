@@ -44,7 +44,7 @@ function Row({ label, value }) {
   )
 }
 
-export default function Provenance({ detail }) {
+export default function Provenance({ detail, assemblyReview }) {
   const p = detail.fold_provenance || {}
   const sliced = detail.boundary_method === 'sliced_ecd' && detail.ecd_start != null
 
@@ -144,6 +144,31 @@ export default function Provenance({ detail }) {
           </>
         )}
       </div>
+
+      {assemblyReview && (
+        <div role="group" aria-label="Hold-48 assembly" className="prov-group prov-assembly">
+          <h4>How the chain was assembled</h4>
+          <dl>
+            <div><dt>hold48_kind</dt><dd>{assemblyReview.hold48_kind ?? '—'}</dd></div>
+            <div><dt>parent job</dt><dd>{assemblyReview.parent_job_id ?? 'not on this card'}</dd></div>
+            <div>
+              <dt>chosen tile ids</dt>
+              <dd>{(assemblyReview.chosen_tile_ids || []).join(', ') || '—'}</dd>
+            </div>
+            <div>
+              <dt>stitch_readiness</dt>
+              <dd>
+                {assemblyReview.readiness
+                  ? `${assemblyReview.readiness.source}: expected ${assemblyReview.readiness.expected_n}, present ${assemblyReview.readiness.present_complete_n}, uncovered ${assemblyReview.readiness.uncovered_n}`
+                  : '—'}
+              </dd>
+            </div>
+          </dl>
+          <p className="note">
+            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved (D-120).
+          </p>
+        </div>
+      )}
 
       {detail.boundary_method === 'whole' && (
         <p className="note">

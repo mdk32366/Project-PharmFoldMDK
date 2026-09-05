@@ -15,13 +15,15 @@ It attaches a block to the census detail response `/api/census/{analysis_id}` al
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.features import FEATURE_NAMES
-from core.structural_profile import profile_payload
+from core.hold48 import HOLD48_KIND_PARENT, HOLD48_KIND_TILE
+from core.structural_profile import assembly_profile_payload, profile_payload
 from db.models import ProteinAnalysis, ProteinFeatures
 
 COHORT_TRANCHE = 0
@@ -40,6 +42,8 @@ def census_profile_block(engine: Any, analysis_id: int) -> Optional[dict]:
         if row is None or row.cohort_tranche == COHORT_TRANCHE:
             return None                      # not a census row; the route already 404s on cohort ids
         accession = row.input_value
+        if _incommensurable_assembly(row):
+            return assembly_profile_payload(accession)
         feat = session.execute(
             select(ProteinFeatures).where(ProteinFeatures.analysis_id == analysis_id)
         ).scalars().first()
@@ -69,11 +73,26 @@ PROFILE_STATUSES = (
     "refused_out_of_distribution",
     "refused_span_below_floor",
     "refused_features_incomplete",
+    "refused_assembled_incommensurable",
     # ⚠⚠ A NEVER-FOLDED protein has no profile because there is no STRUCTURE to profile —
-    # which is a different absence from the three refusals above, all of which describe a fold
+    # which is a different absence from the refusals above, all of which describe a fold
     # that exists. `None` here would be the absent-value defect: it cannot say which.
     'not_folded',
 )
+
+
+def _incommensurable_assembly(row: ProteinAnalysis) -> bool:
+    """Assembled parent or tile window — not a single-pass measurement (D-120 / D-109)."""
+    meta = row.meta or {}
+    kind = meta.get("hold48_kind")
+    if kind == HOLD48_KIND_TILE:
+        return True
+    if meta.get("parent_job_id") is not None and meta.get("tile_start") is not None:
+        return True
+    pdb_name = Path(row.pdb_path).name if row.pdb_path else ""
+    if pdb_name == "stitched.pdb":
+        return True
+    return bool(kind == HOLD48_KIND_PARENT and row.pdb_path)
 
 
 def census_profile_statuses(engine: Any) -> dict[int, str]:
@@ -93,19 +112,22 @@ def census_profile_statuses(engine: Any) -> dict[int, str]:
     out: dict[int, str] = {}
     with Session(engine) as session:
         rows = session.execute(
-            select(ProteinAnalysis.id, ProteinAnalysis.input_value, ProteinFeatures)
+            select(ProteinAnalysis, ProteinFeatures)
             .outerjoin(ProteinFeatures, ProteinFeatures.analysis_id == ProteinAnalysis.id)
             .where(ProteinAnalysis.cohort_tranche != COHORT_TRANCHE)
         ).all()
 
-    for analysis_id, accession, feat in rows:
+    for analysis, feat in rows:
+        if _incommensurable_assembly(analysis):
+            out[analysis.id] = "refused_assembled_incommensurable"
+            continue
         if feat is None:
             features: dict[str, Optional[float]] = {n: None for n in FEATURE_NAMES}
             below = False
         else:
             features = {n: getattr(feat, n) for n in FEATURE_NAMES}
             below = feat.extraction_outcome == "refused_span_below_floor"
-        result = structural_profile(features, accession=accession, span_below_floor=below)
+        result = structural_profile(features, accession=analysis.input_value, span_below_floor=below)
         # ⚠ only the CATEGORY escapes this function. `result.value` is not read.
-        out[analysis_id] = "computed" if not result.is_refused else result.refusal.category
+        out[analysis.id] = "computed" if not result.is_refused else result.refusal.category
     return out

@@ -24,15 +24,16 @@
 >   **historical** and must not be presented as the live path. Not a rewrite of the A6000 guide.
 > - [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) — measured
 >   budget / tier waves from the IGF2R pilot (D-113). **D-114** amends the cash envelope
->   only; measured forecasts stand.
+>   only; measured forecasts stand. ⚠ **D-120:** stamped historical forecast (2026-09-05
+>   closeout superseded it as a live plan).
 > - [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md) — post-Wave2 UI
 >   evaluation and phased honesty plan (**D-117**). ⚠ **D-117 remains the plan/stance, not a
->   Kabsch GO.** Phase 1 P0 honesty is the **D-118** BUILD GO. The stitcher is a pLDDT
->   assembler; seams are not scientifically solved.
+>   Kabsch GO.** Phase 1 P0 honesty is **D-118**. Phase 2 review UI is **D-120**. The
+>   stitcher is a pLDDT assembler; seams are not scientifically solved.
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
->   **D-119 ships** ADC-A (FDA-approved catalog + thin read API). **D-118 ships**
->   Phase 1 P0 honesty; parent PLAN is **D-117**. Not a second living log —
->   authoritative `### D-NNN` entries stay in this file.
+>   **D-120 ships** Phase 2 review UI; parent PLAN is **D-117**; parent honesty GO is
+>   **D-118**. **D-119 ships** ADC-A (FDA-approved catalog + thin read API). Not a
+>   second living log — authoritative `### D-NNN` entries stay in this file.
 > - [`../data/adcs/README.md`](../data/adcs/README.md) — ADC-A v1 catalog hook
 >   (**D-119**). Weekly Drugs@FDA watch is Emma's ops lane; not built here.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
@@ -147,6 +148,163 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-120 — Phase 2 review UI: assembled-parent `/census/:id` is auditable without SQL
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the Phase 2 review BUILD GO** (Trinity ruling after
+  D-118 P0 merge `7cc6238` / #227). Implements D-117 Phase 2 P1 only, for the
+  **27 unique** Wave1+Wave2 stitched parents. ⚠ **Ship id is D-120, not D-119.**
+  D-119 is ADC-A (`b4f0b02` / #228). A draft of this PR first spent D-119 — that
+  is a D-062-class collision; this entry is the repair. ⚠ **Not a Kabsch /
+  restitch GO.** ⚠ **Not F-004 ingest or ranking-set expansion.** ⚠ **Not the
+  remaining ~18 tileable parents or the 3 mucins.** ⚠ **Not a jobs dashboard.**
+  ⚠ **Not Nectin-4 AdcContext / ADC catalog** (ADC-A is D-119; ADC-B is later).
+- **Ruled by:** Trinity Architect binding 2026-09-05 — Phase 2 ship id is
+  **D-120**; parent PLAN is **D-117**; parent honesty GO is **D-118**. From
+  [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md) §3.6–3.7 /
+  §6 / **D-117**.
+- **Cite:** D-117 Phase 2 · D-118 P0 `7cc6238` (#227) · PLAN §3.6 `/census/:id` ·
+  §3.7 `/scorer` · §3.8 `/method` · §3.10 Explainer/Provenance/Confidence · §4 P1 ·
+  §6 Phase 2 · owner closeout 2026-09-05 PT (not re-queried on Fly here) · **27 unique**
+  stitched parents = Wave1 PASS **10** + Wave2 PASS **17** · parent ids **2929, 2938,
+  2939, 3179, 3188, 3190, 3217, 3321, 3541, 3569, 2817, 2917, 3027, 3097, 3153, 3272,
+  3320, 3368, 3379, 3394, 3404, 3432, 3454, 3469, 3516, 3566, 3575** · prefer
+  **3673/3674/3675** (spares **3693/3695/3696** unused) · first parent **2817**
+  `Q9P273` tiles=`[3673,3630]` · IGF2R seam **~88.76 Å** · D-109 ruling 7
+- **Relates:** `D-118` · `D-117` · `D-116` · `D-111` · `D-109` ruling 7 · `D-081` ·
+  `D-079` amendment 1 · `D-119` (ADC-A — a different object; do not reuse) ·
+  ship index [`decisions.md`](decisions.md)
+- **Does not amend:** D-111 geometry · D-116 gate · stitch algorithm · Kabsch ·
+  ranking set membership · D-079 unscored-census bar · D-081 two-span rule ·
+  D-119 ADC-A catalog · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110`
+  while later numbers are written). This entry spends `D-120`; the pointer stays
+  the owner's.
+
+#### Context
+
+D-118 stopped a tile from rendering as a protein and put an assembler banner on
+any stitched 3D view. That is identity, not review. Matt still cannot audit a
+Wave2 parent on `/census/:id` without SQL: no stitch-readiness counts, no tile
+table, no chosen-vs-spare (lower id), no PAE yes/no, no `stitched.*` / `tileN.*`
+downloads, no IGF2R two-population copy on Targets / Coverage / the census card,
+no Scorer disclosure that the 27 are outside F-004, no Method/Explainer/Provenance
+addenda, and a structural profile that can still treat winner-tile coordinates as
+a single-pass measurement (D-109 ruling 7).
+
+The closed-out inventory is **27 unique** assembled parents (Wave1 PASS 10 +
+Wave2 PASS 17). IGF2R parent **3356** is a different accession story (cohort OOM
+vs census tiles) and is **not** one of those 27. Remaining ~18 tileable parents
+and the 3 mucins stay out of this GO — tiles-only / mucin empty states from D-118
+stand; this PR does not build their review UI.
+
+A first draft of this PR labeled the same work **D-119**. That integer was already
+spent on `main` by ADC-A (`b4f0b02` / #228). Trinity ruled the Phase 2 ship id is
+**D-120**. The check is the `### D-120` heading here, not a citation of it.
+
+#### Decision
+
+1. **`GET /api/census/{id}` carries an `assembly_review` block on assembled
+   parents.** Kind badge stays D-118. New fields: stitch-readiness counts
+   (`expected_n` / `present_complete_n` / `missing` / `uncovered_n`) — ops
+   numbers, not a restitch GO; tile table (analysis/job id, window, status, PAE
+   yes/no, **chosen vs spare**); downloads named `stitched.*` vs `tileN.*`.
+   Prefer lower ids; named unused spares **3693/3695/3696**. Readiness prefers
+   live `stitch_readiness` when a parent `jobs` row exists and `plan_tiles` can
+   run; otherwise a **sibling-snapshot** labeled as such (no UniProt re-plan in
+   the request path). A failed snap must not 500 the card.
+2. **Scope is assembled parents, not a new population.** The review UI attaches
+   when `structure_kind==assembled`. It does not ingest the 27 into F-004, does
+   not open tile ids as proteins (D-118 remap stands), and does not build the
+   remaining tileable / mucin review screens.
+3. **IGF2R two-population copy** on Targets, Coverage, and the census card:
+   cohort job **57** CUDA OOM is one measurement; census tiles / any later
+   assembly are another (D-081). Neither substitutes for the other. No census
+   PDB is linked into `/target/:id`.
+4. **Scorer one-liner only.** *"The 27 unique stitched parents (Wave1 PASS 10 +
+   Wave2 PASS 17) are not in this ranking (D-109)."* Disclosure, not ingest. No
+   new columns. No persist.
+5. **Method / Provenance / Explainer / Confidence addenda on assembled pages.**
+   Method rental node: **"Rented GPU (A6000 cohort 29 · Blackwell hold-48)"**
+   plus one assembler-only sentence (Kabsch parked; no alignment box). Provenance
+   on assembled pages: `hold48_kind`, parent job, chosen tile ids,
+   `stitch_readiness` snapshot. Explainer addendum **only** on assembled pages:
+   assembler; null off-block ≠ independently placed in 3D; seam Å is a caveat.
+   Confidence header: **"Assembled-chain pLDDT (winner tile per residue)."**
+6. **Structural profile refuses assemblies (D-109 ruling 7).** New refusal
+   category `refused_assembled_incommensurable`: an assembled (or tile) chain is
+   not a single-pass measurement. No number is computed. Same-size category +
+   cause as the other refusals (D-079 ruling 3). Commensurability remains a
+   later GO.
+7. **Coverage drops "awaiting rental" as the default not-folded gloss.** Ranked
+   not-folded is "not folded in the cohort." Hold-48 rental is closed.
+8. **GUIDE Review + BUDGET historical stamp.** GUIDE already opens CLOSED
+   (D-118); this GO cites D-120 as the review UI and keeps Kabsch parked.
+   BUDGET is stamped as a historical forecast superseded by the 2026-09-05
+   closeout.
+9. **Download filenames are honest.** Structure / pLDDT / PAE
+   `Content-Disposition` uses `stitched.*` or `tileN.*` derived from the stored
+   row, never from a client path. Path still comes from the stored `pdb_path` /
+   `pae_json_path` (D-034 §2a).
+10. **PAE 404 copy:** F-042 is about the **old census artifact**, not "tiles
+    have no PAE." Ordinary case for a hold-48 tile / assembled parent is 200.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 / D-111). The
+assembled parent is an **overlap of those passes**, not a new network output and
+not a superimposed holoprotein. A review page that hides which tile won each
+window, treats spare dups as a second protein, colours winner-tile pLDDT as one
+pass, or applies the single-pass structural profile to an assembly attributes
+to the network a structure it did not produce. Phase 2 is how a reviewer can
+see the remaining passes and the assembly as different objects. Neutral to the
+weights; load-bearing for whether the 27 are auditable as assemblies.
+
+#### Provenance (D-016)
+
+- **27 parent ids** and the Wave1 10 + Wave2 17 split: owner BUILD GO brief
+  2026-09-05 (this session), same inventory as D-117 / D-118. ⚠ **Not
+  re-queried against Fly here.** A later session that needs them live must name
+  a query or log line.
+- **Parent honesty surface** (one row per accession; parent resolve; assembler
+  banner; `stitched_plddt.json`): D-118 / #227 at `7cc6238`.
+- **Readiness gate:** `core.hold48.stitch_readiness` (D-116 / #224). This GO
+  *displays* those counts; it does not change the gate.
+- **Sibling-snapshot fallback:** measured from the tree — `plan_tiles` needs
+  UniProt cache / emit-time snap; the public read path must not depend on
+  either.
+- **D-119 collision:** `origin/main` at `b4f0b02` (#228) already carries
+  `### D-119 — ADC-A`. Trinity ruling 2026-09-05: Phase 2 ship id is D-120.
+
+#### Consequences
+
+- Tests that must be able to go red: assembled parent 2817 / `Q9P273` detail
+  carries kind badge + readiness counts + tile table with 3673 chosen and 3693
+  spare + PAE yes/no + `stitched.*` / `tileN.*` downloads; spare ids are not a
+  second protein; structural profile on an assembly is
+  `refused_assembled_incommensurable` with no number; Scorer copy names the 27
+  as outside F-004 and the ranking payload is unchanged; Method diagram does
+  not say the only rental was an A6000; Coverage does not say "await a rental
+  fold" as the not-folded gloss; IGF2R Targets / Coverage / census card name
+  both populations; viewer banner from D-118 still refuses Kabsch-solved
+  language; `### D-120 —` exists in this log and Phase 2 text does not claim
+  D-119.
+- `ARCHITECTURE.md` census + hold-48 rows record the Phase 2 review surface.
+- Kabsch, F-004 ingest, remaining tileable + mucin review, Nectin-4 AdcContext,
+  and `/adcs` (ADC-B) remain later GOs.
+
+#### Assumptions refused
+
+- That a tile table or a download licenses calling seams solved or the chain
+  one forward pass.
+- That showing readiness counts is a restitch / Kabsch GO.
+- That the 27 unique stitched parents may enter `/scorer` (D-109 ruling 7).
+- That this PR may build the remaining ~18 tileable parents or the 3 mucins.
+- That this PR may repair the `D-` next-free pointer.
+- That Phase 2 may reuse D-119 (ADC-A already spent it).
+
+---
+
 ### D-119 — ADC-A: FDA-approved catalog is a dated JSON contract, not a UI and not a science invention
 
 - **Date:** 2026-09-05
@@ -154,7 +312,7 @@ So the rule is not "be careful" — it is:
   binding, after D-118 P0 merge). Data + thin read API only.
   ⚠ **Not ADC-B** (`/adcs` pages). ⚠ **Not ADC-C** (pipeline / Right-to-Try).
   ⚠ **Not a Kabsch / restitch GO.** ⚠ **Not F-004 / ranking ingest.**
-  ⚠ **Not Phase 2** (D-117 P1 review UI — parallel PR train; do not mix).
+  ⚠ **Not Phase 2** (D-117 P1 review UI ships as **D-120**; do not mix).
   ⚠ **Does not touch `/about` AdcContext or ABOUT-COPY / Nectin-4 Doc.**
   ⚠ **Does not build Emma's weekly Drugs@FDA watcher** — hook / README note only.
 - **Ruled by:** Trinity Architect Spec binding 2026-09-05 — ADC-A GO, data only:
@@ -396,8 +554,9 @@ whether a reader can tell what the network actually ran.
   rented capacity"; viewer banner refuses Kabsch-solved language.
 - `ARCHITECTURE.md` census + hold-48 rows record the remedy (D-118), not only the D-117
   leak. Root `README.md` stays the greeting.
-- Phase 1 P1 (tile table, readiness counts, downloads, IGF2R two-population copy on
-  Targets/Coverage) and Kabsch remain later GOs.
+- Phase 2 review UI (tile table, readiness counts, downloads, IGF2R two-population
+  copy, Scorer / Method / Explainer addenda, assembly profile refusal) is **D-120**.
+  Kabsch remains a later GO.
 
 #### Assumptions refused
 

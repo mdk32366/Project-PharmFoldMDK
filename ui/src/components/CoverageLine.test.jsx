@@ -57,4 +57,12 @@ describe('CoverageLine', () => {
     expect(t).not.toMatch(/the ranking[^.]*covers/i)
     expect(t).not.toMatch(/\b56\b/)
   })
+
+  it('does not say awaiting rental as the not-folded gloss', () => {
+    const { container } = render(<CoverageLine coverage={COVERAGE} rows={ROWS} />)
+    const t = container.textContent
+    expect(t).toMatch(/not folded in the cohort/)
+    expect(t).not.toMatch(/await a rental/)
+    expect(t).not.toMatch(/awaiting fold \(rental\)/)
+  })
 })

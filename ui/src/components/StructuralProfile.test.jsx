@@ -93,6 +93,22 @@ describe('StructuralProfile', () => {
     expect(container.textContent).toBe('')
   })
 
+  it('refuses an assembly as a category with no number (D-120 / D-109)', () => {
+    const assembled = {
+      ...REFUSED,
+      refusal: {
+        category: 'refused_assembled_incommensurable',
+        detail: 'pLDDT-overlap assembly; D-109 ruling 7; no value is computed (D-120).',
+      },
+      out_of_range_features: [],
+    }
+    const t = render(<StructuralProfile block={assembled} />).container.textContent
+    expect(t).toMatch(/Refused/)
+    expect(t).toMatch(/assembled incommensurable/)
+    expect(t).toMatch(/D-109/)
+    expect(t).not.toMatch(/0\.1876/)
+  })
+
   it('states the bar and names the two settings it is not (F-043: the dial must be visible)', () => {
     const t = render(<StructuralProfile block={COMPUTED} />).container.textContent
     expect(t).toMatch(/p05-p95/)

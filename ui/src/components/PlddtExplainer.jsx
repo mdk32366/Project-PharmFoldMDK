@@ -13,7 +13,7 @@ import { COHORT_MAX_PLDDT } from '../plddt.js'
 // COHORT's measured ceiling — a fact about the 82, shown beside census structures that exceed it
 // (F-038). The "why nothing reaches 90" explanation is about the METHOD and stays; only the
 // population-specific number is conditional.
-export default function PlddtExplainer({ showCohortMax = true }) {
+export default function PlddtExplainer({ showCohortMax = true, assembled = false }) {
   const [open, setOpen] = useState(false)
   return (
     <details className="plddt-explainer panel" open={open} onToggle={(e) => setOpen(e.target.open)}>
@@ -119,6 +119,22 @@ export default function PlddtExplainer({ showCohortMax = true }) {
         comes from one recipe, and the “method-limited” routes above are described as available, not
         as attempted.
       </p>
+      {assembled && (
+        <div className="assembled-explainer" data-testid="assembled-explainer">
+          <h4>What assembly adds — and does not</h4>
+          <p>
+            This page&rsquo;s chain was <strong>assembled by pLDDT overlap</strong>, not
+            superimposed (Kabsch is parked). Mean pLDDT is a <strong>winner-tile</strong>
+            mean, not one forward pass.
+          </p>
+          <p className="caveat">
+            ⚠ Off-block PAE is <strong>null, never 0</strong>. Null does{' '}
+            <em>not</em> mean the domains were independently placed in 3D — they
+            never shared a forward pass. The IGF2R seam ≈ 88.76 Å is a measured
+            caveat, not a solved structure. Alignment will not &quot;fix&quot; PAE.
+          </p>
+        </div>
+      )}
     </details>
   )
 }

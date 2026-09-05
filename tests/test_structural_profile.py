@@ -280,6 +280,16 @@ def test_the_mount_preconditions_name_all_five_things():
         assert token in joined, f"the mount preconditions omit {token!r} (ruling 4 / amendment 2)"
 
 
+def test_assembly_profile_payload_refuses_without_a_number():
+    from core.structural_profile import assembly_profile_payload
+    block = assembly_profile_payload("Q9P273")
+    assert block["status"] == "refused"
+    assert block["structural_profile"] is None
+    assert block["refusal"]["category"] == "refused_assembled_incommensurable"
+    assert "score" not in block or block.get("kind") == "structural_profile"
+
+
 def test_every_refusal_category_is_documented_in_the_vocabulary():
     assert set(PROFILE_REFUSALS) == {
-        "refused_out_of_distribution", "refused_span_below_floor", "refused_features_incomplete"}
+        "refused_out_of_distribution", "refused_span_below_floor",
+        "refused_features_incomplete", "refused_assembled_incommensurable"}
