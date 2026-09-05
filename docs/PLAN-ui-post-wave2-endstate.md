@@ -32,7 +32,7 @@ needs them live must name a query or log line.
 | Dup-tile preference | use **3673/3674/3675**; spares **3693/3695/3696** unused | owner closeout |
 | Stitcher | pLDDT assembler, not Kabsch | `core/hold48_stitch.py` |
 | IGF2R seam | ~88.76 Å | owner analysis |
-| Kabsch / restitch | Spec is **D-125**; **D-125-A** is the core BUILD (feeds `winning_tile`); B later | [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) |
+| Kabsch / restitch | Spec is **D-125**; **D-125-A** is the core BUILD (feeds `winning_tile`); **D-125-B** is UI dual-path honesty | [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) |
 | Assembler path | via Fly | owner closeout |
 
 **Code-side inventory** is from the tree on the branch that added this file
@@ -316,7 +316,7 @@ Until Matt GO on a restitch spec:
 | Dup-tile choice (lower id) | Implied scientific preference beyond "first complete cover" |
 | Mucin `out_of_class` | A fake assembled mucin |
 
-Kabsch park → **D-125** (Spec on `main`; confirm `### D-125` exists). D-125-A is the core BUILD (Emma GO after D-124 A+B). D-125-B UI remains a later Emma GO, not this plan.
+Kabsch park → **D-125** (Spec on `main`; confirm `### D-125` exists). D-125-A is the core BUILD (on `main`, `26a40a8` / #237). **D-125-B** is the UI dual-path honesty BUILD (confirm `### D-125-B` exists). This plan is still not itself a BUILD GO.
 
 ---
 

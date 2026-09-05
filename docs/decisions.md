@@ -5,37 +5,35 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-125-A (Kabsch core)
+## Active ship — D-125-B (UI dual-path honesty)
 
-- **D-125-A ships** the Kabsch restitch **core BUILD**: overlap Cα Kabsch
-  → refuse v1 defaults → transform the moving tile → feed the existing
-  `winning_tile` / `write_stitched` assembler. No UI. New path
-  (`core/hold48_kabsch.py` + `scripts/kabsch_restitch.py`); the assembler
-  stays callable. Sibling `kabsch/{parent_job_id}/` artifacts with
-  provenance. CLI limited to the 27 inventory ids — not a Fly re-query.
+- **D-125-B ships** **UI dual-path honesty only**: name assembler and
+  Kabsch-path artifacts as two populations; Method addendum (what Kabsch
+  does / does not); show seam RMSD / max Cα jump when A's
+  `provenance.json` / `seams.jsonl` already computed them; honest empty
+  when missing. Assembler remains the default served PDB.
+- **A already writes** the sibling `kabsch/{parent_job_id}/` tree
+  (`26a40a8` / #237). B **reads** it. B does **not** re-implement persist.
 - **D-125 ships the Kabsch restitch Spec** (already on `main`,
   `fbe8978` / #234). [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md).
-  This A PR implements that Spec; where they differ, the log governs.
-- **D-125-B is NOT this PR.** B is **UI dual-path honesty only**.
-  A already writes the sibling `kabsch/{parent_job_id}/` tree
-  (`provenance.json`, `seams.jsonl`, transformed tiles on accept,
-  then existing `write_stitched` names).
-- **D-124 A+B already shipped** on `main` (`57f429d` / #236). The wait
-  that gated A is discharged.
+- **D-125-A already shipped** on `main` (`26a40a8` / #237).
+- **D-124 A+B already shipped** on `main` (`57f429d` / #236).
 - ⚠ **Seams are not scientifically solved.** Kabsch is a rigid transform
   of already-emitted ESMFold tiles, not a jointly placed holoprotein.
+- Trinity amend (A tip `c4db39a` / #237): B is UI only. Persist+UI
+  language was stripped from B when A took the sibling tree.
 
-Full entries: [`README.md` § D-125](README.md#d-125--kabsch-restitch-spec-overlap-cα-align-then-existing-winning_tile-stitch-d-125-a-core-build),
-[`README.md` § D-124](README.md#d-124--adc-c-a-pipeline-catalog--accessrtt-payload-are-dated-json-contracts-adc-c-b-is-the-adcs-consumer).
+Full entries: [`README.md` § D-125-B](README.md#d-125-b--ui-dual-path-honesty-name-assembler-and-kabsch-path-artifacts-without-colliding-them),
+[`README.md` § D-125](README.md#d-125--kabsch-restitch-spec-overlap-cα-align-then-existing-winning_tile-stitch-d-125-a-core-build).
 Spec: [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md).
 
 ## Nearby ids (do not conflate)
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-125-A** | Kabsch core BUILD (overlap Cα → transform → `winning_tile`) | **Yes — this PR.** |
+| **D-125-B** | UI dual-path honesty only (A already writes `kabsch/{parent}/`) | **Yes — this PR.** |
+| **D-125-A** | Kabsch core BUILD (overlap Cα → transform → `winning_tile`) | Already shipped on `main` (#237 / `26a40a8`). |
 | **D-125 Spec** | Kabsch restitch Spec (docs only) | Already shipped on `main` (#234 / `fbe8978`). |
-| **D-125-B** | UI dual-path honesty only (A already writes `kabsch/{parent}/`) | **No.** After A. |
 | **D-124** | ADC-C-B `/adcs` Pipeline + Access UI BUILD GO (A already on `main`) | Already shipped on `main` (#236 / `57f429d`). |
 | **D-123** | Nectin Doc → `/about` AdcContext BUILD GO | Already shipped on `main` (#231 / `2ffd4f8`). |
 | **D-122** | ADC-B `/adcs` + `/adcs/:id` UI BUILD GO | Already shipped on `main` (#232 / `86f8a10`). |

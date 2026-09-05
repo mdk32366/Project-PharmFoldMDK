@@ -124,8 +124,11 @@ export default function PlddtExplainer({ showCohortMax = true, assembled = false
           <h4>What assembly adds — and does not</h4>
           <p>
             This page&rsquo;s chain was <strong>assembled by pLDDT overlap</strong>, not
-            superimposed (Kabsch is parked). Mean pLDDT is a <strong>winner-tile</strong>
-            mean, not one forward pass.
+            a jointly placed holoprotein. This page still shows the
+            assembler chain. A Kabsch-path sibling tree, when present, is
+            named on the review card — not as a solved holoprotein. Mean
+            pLDDT is a <strong>winner-tile</strong> mean, not one forward
+            pass.
           </p>
           <p className="caveat">
             ⚠ Off-block PAE is <strong>null, never 0</strong>. Null does{' '}

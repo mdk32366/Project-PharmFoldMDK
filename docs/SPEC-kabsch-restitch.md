@@ -5,8 +5,9 @@
 > GOVERNS.** Confirm the `### D-125` header exists before citing.
 >
 > **Date:** 2026-09-05 · **Status:** Spec (algorithm authority). **D-125-A**
-> (core BUILD) implements this file. ⚠ **Not D-125-B.** ⚠ **Not a restitch
-> run of the 27.** ⚠ **Not F-004 ingest.**
+> (core BUILD) implements §1–§3 and §5 as code (`26a40a8` / #237).
+> **D-125-B** is the UI dual-path honesty BUILD of §6 (this later PR).
+> ⚠ **Not a restitch run of the 27.** ⚠ **Not F-004 ingest.**
 > ⚠ **Seams are not scientifically solved.**
 > Where this file and `docs/README.md` differ, THE LOG GOVERNS.
 > A-ship note: Kabsch lives in `core/hold48_kabsch.py` and feeds existing
@@ -154,12 +155,15 @@ PDB. No invented coordinates.
 
 ---
 
-## 6. UI dual-path honesty (D-125-B — not this PR)
+## 6. UI dual-path honesty (D-125-B)
 
 D-118 / D-120 / D-121 already disclose the **assembler** path: winner-tile
 pLDDT, not Kabsch; seam not solved; IGF2R ≈ 88.76 Å is a caveat.
 
-When (and only when) a later B BUILD has Kabsch artifacts:
+Trinity amend (A tip): B is **UI only**. A already writes the sibling
+`kabsch/{parent}/` tree. B reads it; B does not re-implement persist.
+
+When (and only when) Kabsch-path artifacts are on disk:
 
 - The review card names **both** paths. Assembler remains the default
   served PDB until a GO names a swap.
@@ -171,7 +175,9 @@ When (and only when) a later B BUILD has Kabsch artifacts:
   “seams solved,” “full-length AF-quality.”
 - No alignment-box CTA. No F-004 ingest.
 
-Until B ships, the UI must not imply a Kabsch path exists.
+When the sibling tree is missing, the UI must not imply a Kabsch path
+exists and must not invent RMSD / max Cα jump. That absence is not a
+solved seam.
 
 ---
 
@@ -180,12 +186,12 @@ Until B ships, the UI must not imply a Kabsch path exists.
 | Id | What | This PR? | Gate |
 |---|---|---|---|
 | **D-125 Spec** | This file + `### D-125` + ship index + PLAN one-liner | Already on `main` (`fbe8978` / #234) | Trinity reviewed. |
-| **D-125-A** | Core: overlap Cα Kabsch + §2 refuse + transform tile + call existing `winning_tile` stitch. No UI. Sibling §5 tree. CLI limited to the 27. | **Yes — this PR** | Emma GO after D-124 A+B on `main` (`57f429d`). Draft; do not merge from the implementing agent. |
-| **D-125-B** | UI dual-path honesty (§6). | **No** | After A. Emma GO. |
+| **D-125-A** | Core: overlap Cα Kabsch + §2 refuse + transform tile + call existing `winning_tile` stitch. No UI. Sibling §5 tree. CLI limited to the 27. | Already on `main` (`26a40a8` / #237) | Emma GO after D-124 A+B. |
+| **D-125-B** | UI dual-path honesty (§6). Reads A's sibling tree. No persist rewrite. | **Yes — the B PR** | After A. Emma GO. |
 
-**Out of this A PR:** D-125-B UI, a live restitch run of the 27, F-004
-ingest, ADC-C / pipeline / `/adcs` bleed, rent / GPU / RunPod, replacing
-`winning_tile`, claiming seams solved.
+**Out of the B PR:** a live restitch run of the 27, F-004 ingest,
+ADC-C / pipeline / `/adcs` bleed, rent / GPU / RunPod, replacing
+`winning_tile`, claiming seams solved, re-implementing persist.
 
 ---
 

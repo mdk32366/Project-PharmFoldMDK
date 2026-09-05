@@ -9,7 +9,21 @@ const REVIEW = {
   hold48_kind: 'parent',
   in_wave1_wave2_inventory: true,
   assembler_note: 'assembled by pLDDT overlap, not superimposed; seam not solved',
-  seam_note: 'IGF2R ≈ 88.76 Å is a measured caveat, not a solved structure. Kabsch / restitch remains PARKED.',
+  seam_note: 'IGF2R ≈ 88.76 Å is a measured caveat, not a solved structure. Seams are not scientifically solved. Kabsch-path artifacts are not on disk for this parent.',
+  dual_path: {
+    assembler: {
+      label: 'Assembler path (default served PDB) — pLDDT winner-tile, not a rigid-body transform',
+      persist_stem: 'stitched',
+      default_served: true,
+    },
+    kabsch: {
+      present: false,
+      persist_stem: 'kabsch/2817',
+      empty_reason: 'no_kabsch_artifacts',
+      empty_note: 'Kabsch-path artifacts are not on disk for this parent. No overlap RMSD and no max Cα jump to show. That absence is not a solved seam',
+      seams: [],
+    },
+  },
   readiness: {
     source: 'sibling_snapshot',
     expected_n: 2,
@@ -71,8 +85,48 @@ describe('AssemblyReview', () => {
     expect(screen.getByRole('link', { name: 'tile1.pdb' })).toHaveAttribute(
       'href', '/api/analyses/3673/structure',
     )
-    expect(t).not.toMatch(/superimposed holoprotein|seams solved|Kabsch GO/)
-    expect(t).toMatch(/Kabsch \/ restitch remains PARKED/)
+    expect(t).not.toMatch(/superimposed holoprotein|seams solved|Kabsch GO|Kabsch aligned/)
+    expect(t).toMatch(/Two paths/)
+    expect(t).toMatch(/not on disk for this parent/)
+    expect(t).toMatch(/kabsch\/2817/)
+    expect(t).not.toMatch(/Kabsch \/ restitch remains PARKED/)
+  })
+
+  it('names both paths and shows RMSD when Kabsch-path artifacts exist; jump stays empty if missing', () => {
+    const review = {
+      ...REVIEW,
+      seam_note: 'A Kabsch-path sibling tree is named below as a second path.',
+      dual_path: {
+        assembler: REVIEW.dual_path.assembler,
+        kabsch: {
+          present: true,
+          label: 'Kabsch-path (sibling tree) — overlap-Cα rigid transform, then the same winner-tile assembler. Not the default served PDB. Seams are not scientifically solved',
+          persist_stem: 'kabsch/2817',
+          accepted: true,
+          empty_reason: null,
+          seams: [{
+            moving_tile_index: 2,
+            reference_tile_index: 1,
+            overlap_start: 1529,
+            overlap_end: 1656,
+            n_ca: 128,
+            rmsd_angstrom: 1.25,
+            max_ca_jump_angstrom: null,
+            refuse_reason: null,
+          }],
+        },
+      },
+    }
+    const { container, getByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const t = container.textContent
+    expect(t).toMatch(/Two paths/)
+    expect(t).toMatch(/stitched/)
+    expect(t).toMatch(/kabsch\/2817/)
+    expect(getByTestId('kabsch-seams').textContent).toMatch(/1\.25 Å/)
+    expect(getByTestId('kabsch-seams').textContent).toMatch(/not computed on this path/)
+    expect(t).not.toMatch(/seams solved|Kabsch aligned|fixed badge|full-length AF-quality/)
   })
 
   it('renders nothing without a review block', () => {

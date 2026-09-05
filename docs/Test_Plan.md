@@ -322,5 +322,27 @@ are not scientifically solved.
 
 ---
 
+## Addendum 2026-09-05 — D-125-B UI dual-path honesty
+
+Acceptance tests for the Kabsch-path review / Method addendum. Implemented
+in `tests/test_d125_b_dual_path.py`, `tests/test_method_hold48_explainer.py`,
+`ui/src/components/AssemblyReview.test.jsx`, and
+`ui/src/components/MethodNote.test.jsx`. Each AT must be able to go red
+**without** a live Fly query, GPU, or restitch run. Fixtures stand in for
+A's `kabsch/{parent}/` tree. ⚠ B reads; it does not persist. ⚠ Seams are
+not scientifically solved.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1095** | `### D-125-B —` exists in the living log | `test_d125_b_heading_exists_in_the_living_log` |
+| **T-1096** | Missing sibling tree → honest empty; no invented RMSD / max Cα jump | `test_missing_sibling_tree_is_honest_empty_no_invented_rmsd` |
+| **T-1097** | Present tree names both paths; persist stems `stitched` vs `kabsch/{parent}` do not collide | `test_present_tree_names_both_paths_and_stems_do_not_collide` |
+| **T-1098** | Max Cα jump renders only if A wrote it; otherwise null | `test_max_ca_jump_is_honest_empty_unless_a_wrote_it` |
+| **T-1099** | `assembly_review` carries `dual_path`; assembler downloads stay `stitched.*` | `test_assembly_review_carries_dual_path_empty_and_does_not_collide_stems` |
+| **T-1100** | Method addendum names what Kabsch does / does not; forbids seams-solved language | `test_d125_b_method_addendum_names_does_and_does_not` |
+| **T-1101** | Review card + MethodNote UI can go red for dual-path honesty | `names both paths and shows RMSD when Kabsch-path artifacts exist; jump stays empty if missing` · `adds a D-125-B Kabsch does / does-not addendum without claiming seams solved` |
+
+---
+
 **End of Test Plan**
 

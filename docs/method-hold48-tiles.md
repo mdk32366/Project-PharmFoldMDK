@@ -6,7 +6,8 @@
 UI). #229 stays merged; this file does not reopen it.*
 
 Facts come from entries that already exist. If those entries did not say it,
-this file does not say it. ⚠ **Not a Kabsch GO. Not F-004. Not `/adcs`.**
+this file does not say it. ⚠ **Not a restitch run of the 27. Not F-004. Not `/adcs`.**
+A D-125-B addendum names what a Kabsch-path restitch does and does not.
 
 ---
 
@@ -54,8 +55,37 @@ ranking-eligible (**D-109** ruling 7).
 Because we did not line the tiles up in 3D, the join can jump. On the IGF2R
 pilot, that jump was measured at about **88.76 Å**. That number is a
 **disclosure**, not a solved structure. The seam is **not scientifically solved**.
-A later Kabsch / restitch job is parked until the owner says GO.
-This write-up is not that GO. There is no button that heals the join.
+What a Kabsch-path restitch does — and does not do — is named in the
+D-125-B addendum below. This section is still the assembler story.
+There is no button that heals the join.
+
+## Addendum D-125-B — what a Kabsch-path restitch does (and does not)
+
+The assembler path above is still the **default served structure**. A
+later GO (**D-125-A**) wrote a second, sibling tree of files under
+`kabsch/{parent}/`. This page does not swap that tree in as "the"
+structure.
+
+**What Kabsch does.** After the tiles are already folded by ESMFold,
+Kabsch is a math move. It rotates and slides one tile so the shared
+stretch (the glue residues' Cα atoms) sits closer to the other tile's
+shared stretch. Then the same winner-tile assembler still picks which
+tile wins each residue. The network does not run again. No atom is
+invented. A refused seam writes a record and does not write a
+"fixed" structure.
+
+**What Kabsch does not do.** It does not make the long chain one ESMFold
+pass. It does not fill empty pair-confidence (PAE) between tiles. It
+does not mean the joins are scientifically solved. Seams are
+**not scientifically solved**. It does not put
+these chains into the ranking (**D-109**). It is not medical advice and
+it is not a holoprotein the model jointly placed.
+
+When both trees are on disk, the review card names them as two paths
+with different persist stems (`stitched` vs `kabsch/{parent}`) so they
+cannot be read as one population. Overlap RMSD and max Cα jump are
+shown only if A's provenance/seams files already computed them. If
+those numbers are missing, the card says so — it does not invent them.
 
 ## The rental is CLOSED
 
@@ -67,7 +97,9 @@ to rent another card. Do not Deploy. Do not emit.
 
 ## What this file is not
 
-- Not a licence to run Kabsch, restitch, or re-open rental.
+- Not a licence to call the joins scientifically solved, or to treat a
+  Kabsch-path file as the default served PDB.
+- Not a licence to run a live restitch of the 27, or to re-open rental.
 - Not F-004 / ranking ingest.
 - Not the ADC-B `/adcs` page (D-122 already shipped that on `main`). Not the Nectin-4 Doc.
 - Not a new science number. Window **1656** / overlap **128** are D-111's.

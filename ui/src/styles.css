@@ -622,6 +622,8 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .assembly-prov div { display: contents; }
 .assembly-prov dt { color: var(--muted); }
 .assembly-prov dd { margin: 0; }
+.dual-path { margin: 1rem 0; }
+.dual-path h4 { margin: 0.8rem 0 0.4rem; }
 .igf2r-two-pop {
   margin: 0 0 0.8rem;
   padding: 0.65rem 0.85rem;

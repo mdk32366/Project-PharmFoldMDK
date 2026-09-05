@@ -165,7 +165,10 @@ export default function Provenance({ detail, assemblyReview }) {
             </div>
           </dl>
           <p className="note">
-            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved (D-120).
+            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved (D-120 / D-125-B).
+            {assemblyReview.dual_path?.kabsch?.present
+              ? ` Kabsch-path persist stem ${assemblyReview.dual_path.kabsch.persist_stem} is a second path, not the default served PDB.`
+              : ' Kabsch-path artifacts are not on disk for this parent.'}
           </p>
         </div>
       )}

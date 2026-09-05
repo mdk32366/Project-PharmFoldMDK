@@ -76,8 +76,9 @@ export default function MethodNote() {
         <p>
           Seams can look ugly. On the IGF2R pilot the join jumped about{' '}
           <strong>~88.76 Å</strong>. That is a disclosure,{' '}
-          <strong>not scientifically solved</strong>. A later Kabsch / restitch
-          job is parked. This page is not that GO.
+          <strong>not scientifically solved</strong>. What a Kabsch-path
+          restitch does — and does not do — is named in the D-125-B
+          addendum below. This section is still the assembler story.
         </p>
         <p>
           The hold-48 rental is <strong>CLOSED</strong> (pod Terminated,
@@ -88,6 +89,48 @@ export default function MethodNote() {
           Owner-facing write-up:{' '}
           <code>docs/method-hold48-tiles.md</code> (D-121). Parents: D-118
           honesty, D-120 review UI. #229 stays merged.
+        </p>
+      </div>
+
+      <h3>Kabsch-path restitch — what it does, and what it does not (D-125-B)</h3>
+      <div data-testid="kabsch-method-addendum">
+        <p>
+          The assembler path above is still the <strong>default served
+          structure</strong>. A later GO wrote a second, sibling tree of
+          files under <code>kabsch/{'{parent}'}</code>. This page does not
+          swap that tree in as &quot;the&quot; structure.
+        </p>
+        <p>
+          <strong>What Kabsch does.</strong> After the tiles are already
+          folded by <Term name="ESMFold">ESMFold</Term>, Kabsch is a math
+          move. It rotates and slides one tile so the shared stretch (the
+          glue residues&apos; Cα atoms) sits closer to the other tile&apos;s
+          shared stretch. Then the same winner-tile assembler still picks
+          which tile wins each residue. The network does not run again. No
+          atom is invented. A refused seam writes a record and does not
+          write a &quot;fixed&quot; structure.
+        </p>
+        <p>
+          <strong>What Kabsch does not do.</strong> It does not make the
+          long chain one ESMFold pass. It does not fill empty
+          pair-confidence (PAE) between tiles. It does{' '}
+          <strong>not</strong> mean the joins are scientifically solved.
+          Seams are <strong>not scientifically solved</strong>.
+          It does not put these chains into the ranking. It is not
+          medical advice and it is not a holoprotein the model jointly
+          placed.
+        </p>
+        <p>
+          When both trees are on disk, the review card names them as two
+          paths with different persist stems (<code>stitched</code> vs{' '}
+          <code>kabsch/{'{parent}'}</code>) so they cannot be read as one
+          population. Overlap RMSD and max Cα jump are shown only if
+          those files already computed them. If the numbers are missing,
+          the card says so — it does not invent them.
+        </p>
+        <p className="note">
+          Owner-facing addendum: <code>docs/method-hold48-tiles.md</code>{' '}
+          (D-125-B). Parent Spec: <code>docs/SPEC-kabsch-restitch.md</code>.
         </p>
       </div>
 

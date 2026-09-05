@@ -31,6 +31,8 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
+from app.kabsch_path_read import dual_path_payload, seam_note_for
+
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
 
@@ -816,8 +818,14 @@ def assembly_review(
     session: Session,
     parent: ProteinAnalysis,
     siblings: list[ProteinAnalysis],
+    *,
+    artifact_root: Optional[Path | str] = None,
 ) -> dict[str, Any]:
-    """Review payload for an assembled parent (D-120 / PLAN §3.6). Not a restitch GO."""
+    """Review payload for an assembled parent (D-120 / PLAN §3.6 / D-125-B).
+
+    Ops numbers, not a restitch GO. Kabsch-path metrics are *read* from A's
+    sibling tree when present — never invented, never persisted here.
+    """
     tiles = [r for r in siblings if is_census_tile_row(r)]
     roles = assign_tile_roles(tiles)
     chosen = sorted(
@@ -882,9 +890,17 @@ def assembly_review(
             },
         ])
     parent_has_pae = bool(parent.pae_json_path)
+    parent_job_id = job_by_analysis.get(parent.id)
+    dual_path = dual_path_payload(
+        artifact_root,
+        parent_analysis_id=parent.id,
+        parent_job_id=parent_job_id,
+        assembler_pdb_path=parent.pdb_path,
+        meta=parent.meta,
+    )
     return {
         "parent_analysis_id": parent.id,
-        "parent_job_id": job_by_analysis.get(parent.id),
+        "parent_job_id": parent_job_id,
         "hold48_kind": _hold48_kind(parent),
         "in_wave1_wave2_inventory": parent.id in WAVE1_WAVE2_STITCHED_PARENT_IDS,
         "inventory": {
@@ -923,10 +939,8 @@ def assembly_review(
         "assembler_note": (
             "assembled by pLDDT overlap, not superimposed; seam not solved"
         ),
-        "seam_note": (
-            "IGF2R ≈ 88.76 Å is a measured caveat, not a solved structure. "
-            "Kabsch / restitch remains PARKED."
-        ),
+        "seam_note": seam_note_for(dual_path["kabsch"]),
+        "dual_path": dual_path,
     }
 
 
@@ -1241,7 +1255,12 @@ def get_pae_path(engine: Any, analysis_id: int) -> Optional[str]:
         return row.pae_json_path if row else None
 
 
-def get_census_detail(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]:
+def get_census_detail(
+    engine: Any,
+    analysis_id: int,
+    *,
+    artifact_root: Optional[Path | str] = None,
+) -> Optional[dict[str, Any]]:
     """One census row, with its cancer-association STATUS.
 
     ⚠⚠ THE ASSOCIATION SOURCE COVERS THE 82 COHORT TARGETS ONLY (`targets_covered: 82`). For a
@@ -1272,7 +1291,9 @@ def get_census_detail(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]
         out["fold_provenance"] = (row.meta or {}).get("fold_provenance")
         out["structure_source"] = row.structure_source
         if kind == "assembled":
-            out["assembly_review"] = assembly_review(session, row, list(siblings))
+            out["assembly_review"] = assembly_review(
+                session, row, list(siblings), artifact_root=artifact_root
+            )
         if row.input_value == IGF2R_ACCESSION:
             out["igf2r_two_population"] = igf2r_two_population_copy()
     from core.cancer_associations import load_associations
