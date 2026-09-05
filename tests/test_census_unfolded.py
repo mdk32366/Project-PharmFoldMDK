@@ -27,6 +27,14 @@ def test_her2_and_her3_are_present_and_carry_their_clinical_aliases():
             "%s is listed but carries no %s alias, so the search cannot reach it" % (gene, alias))
 
 
+def test_closed_rental_copy_does_not_wait_on_a_terminated_pod():
+    """D-118: 'waiting on rented capacity' is a live-queue claim and is false after closeout."""
+    for copy in REASON_COPY.values():
+        assert "waiting on rented capacity" not in copy
+    assert "Terminated" in REASON_COPY["above_local_ceiling"]
+    assert "out of class" in REASON_COPY["mucin_out_of_class"]
+
+
 def test_every_row_states_a_reason_and_the_reasons_are_not_pooled():
     counts = counts_by_reason()
     assert set(counts) <= set(REASON_COPY)

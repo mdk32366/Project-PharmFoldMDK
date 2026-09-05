@@ -67,6 +67,11 @@ describe('UB2 — the URL is built from the resolved analysis id, not the route 
 describe('UB3 — the census card hands the viewer the payload id', () => {
   const CARD = src('CensusProteinView.jsx')
 
+  it('passes assembled from structure_kind, never from the route param', () => {
+    const code = stripComments(CARD)
+    expect(code).toMatch(/assembled=\{detail\.structure_kind === 'assembled'\}/)
+  })
+
   it('never passes the route param to StructureViewer or to getPlddt', () => {
     // ⚠ COMMENTS STRIPPED FIRST. A raw grep for `id={id}` matches THIS FILE'S OWN PROSE and the
     // card's own explanatory comment describing the defect. That guard-matches-its-own-warning shape
@@ -100,5 +105,43 @@ describe('UB4 — the stand-aside is honest, and is not mistaken for success', (
     render(<Viewer id={'A0AVI2'} />)
     // ⚠⚠ the component RENDERS — which is exactly why "does it render" is not the test
     await waitFor(() => expect(screen.getByText(/HTTP 422/)).toBeInTheDocument())
+  })
+})
+
+describe('UB5 — assembled disclosure (D-118)', () => {
+  afterEach(() => { vi.unstubAllGlobals?.() })
+
+  it('names assembler-not-Kabsch and refuses solved-seam language when assembled', async () => {
+    vi.resetModules()
+    vi.doMock('../api.js', () => ({
+      structureUrl: (id) => `/api/analyses/${id}/structure`,
+      getPlddt: vi.fn(() => Promise.resolve([])),
+    }))
+    global.fetch = vi.fn(() => Promise.resolve({
+      ok: false, status: 404, text: () => Promise.resolve(''),
+    }))
+    const { default: Viewer } = await import('./StructureViewer.jsx')
+    const { container } = render(<Viewer id={2817} assembled />)
+    const banner = container.querySelector('[data-testid="assembler-banner"]')
+    expect(banner).toBeTruthy()
+    expect(banner.textContent).toMatch(/not Kabsch/i)
+    expect(banner.textContent).toMatch(/not scientifically solved/i)
+    expect(banner.textContent).toMatch(/88\.76/)
+    expect(banner.textContent).not.toMatch(/seams solved/i)
+    expect(banner.textContent).not.toMatch(/superimposed holoprotein/i)
+  })
+
+  it('does not claim an assembler story on a single-pass fold', async () => {
+    vi.resetModules()
+    vi.doMock('../api.js', () => ({
+      structureUrl: (id) => `/api/analyses/${id}/structure`,
+      getPlddt: vi.fn(() => Promise.resolve([])),
+    }))
+    global.fetch = vi.fn(() => Promise.resolve({
+      ok: false, status: 404, text: () => Promise.resolve(''),
+    }))
+    const { default: Viewer } = await import('./StructureViewer.jsx')
+    const { container } = render(<Viewer id={42} />)
+    expect(container.querySelector('[data-testid="assembler-banner"]')).toBeNull()
   })
 })

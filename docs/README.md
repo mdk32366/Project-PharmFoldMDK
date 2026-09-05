@@ -19,21 +19,19 @@
 > - [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — the current-state architecture (must be
 >   updated in the same PR as any architectural change, and before any PR is filed).
 > - [`GUIDE-renting-hold48.md`](GUIDE-renting-hold48.md) — RunPod hold-48 rental runbook
->   (D-113, D-114; RTX PRO 6000 Blackwell). Not a rewrite of the A6000 guide.
->   Pane C transcription: **Pane C — web terminal cheat sheet (copy-paste)** — **general cold start
->   on a clean card** (rent → setup → worker → empty-queue prove → retrieve → Terminate), not a
->   re-test after a named D-NNN. Scar citations (D-112 / D-113 / D-114 / D-115) stay in the
->   why/non-negotiables. **Pane A** prints `WORKER_AUTH_TOKEN` from the laptop `.env` (`fly secrets
->   list` names only). **Watch (live fold wave):** cheat sheet **Watch** + Step 8 — Pane A
->   `fly logs -a pharmfoldmdk`; Pane C `tail -f /workspace/worker.log` (new tab: tail only, do
->   not start a second worker). **D-114:** ≈$50 account envelope; top-up before Wave 0 / emit; Step 0
->   balance glance (do not vacation on E).
+>   (D-113, D-114; RTX PRO 6000 Blackwell). ⚠ **D-118:** rental E2E **CLOSED** 2026-09-05 PT
+>   (pod Terminated). The file opens with a CLOSED banner; Deploy / emit steps are
+>   **historical** and must not be presented as the live path. Not a rewrite of the A6000 guide.
 > - [`BUDGET-hold48-tiers-2026-09-04.md`](BUDGET-hold48-tiers-2026-09-04.md) — measured
 >   budget / tier waves from the IGF2R pilot (D-113). **D-114** amends the cash envelope
 >   only; measured forecasts stand.
 > - [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md) — post-Wave2 UI
->   evaluation and phased honesty plan (**D-117**). ⚠ **Plan only. Not an implementation GO.
->   Not a Kabsch GO.** The stitcher is a pLDDT assembler; seams are not scientifically solved.
+>   evaluation and phased honesty plan (**D-117**). ⚠ **D-117 remains the plan/stance, not a
+>   Kabsch GO.** Phase 1 P0 honesty is the **D-118** BUILD GO. The stitcher is a pLDDT
+>   assembler; seams are not scientifically solved.
+> - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
+>   **D-118 ships** Phase 1 P0 honesty; parent PLAN is **D-117**. Not a second living
+>   log — authoritative `### D-NNN` entries stay in this file.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -146,11 +144,117 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-118 — Phase 1 P0 honesty: one census protein per accession, rental closed, assembler not Kabsch
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the Phase 1 P0 honesty BUILD GO** (Matt via Emma). Implements
+  D-117 Phase 1 P0 only. ⚠ **Not a Kabsch / restitch GO.** ⚠ **Not Phase 1 P1/P2.** ⚠ **No
+  jobs dashboard.** ⚠ **No ranking ingest.** ⚠ **No rent / emit / ops-script change.**
+- **Ruled by:** owner BUILD GO 2026-09-05 — Phase 1 honesty P0 only, from
+  [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md) / **D-117**.
+- **Cite:** D-117 · PLAN §4 P0 + §6 Phase 1 · owner closeout 2026-09-05 PT (not re-queried
+  on Fly here) · **27 unique** stitched parents = Wave1 PASS **10** + Wave2 PASS **17** ·
+  first parent **2817** `Q9P273` tiles=`[3673,3630]` · prefer **3673/3674/3675** (spares
+  **3693/3695/3696** unused) · IGF2R parent **3356** · IGF2R seam **~88.76 Å** · pod
+  Terminated · `write_stitched` sibling `stitched_plddt.json`
+- **Relates:** `D-117` · `D-116` · `D-111` · `D-109` ruling 7 · `D-094` amendment 1 ·
+  `D-087` · `D-081` · `D-079` · `F-042` · ship index [`decisions.md`](decisions.md)
+  (D-118 ships P0 honesty; D-117 is the parent PLAN — do not rename D-118)
+- **Does not amend:** D-111 geometry · D-116 gate · stitch algorithm · Kabsch · ranking set
+  · D-079 unscored-census bar · D-081 two-span rule · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110` while
+  later numbers are written). This entry spends `D-118`; the pointer stays the owner's.
+
+#### Context
+
+D-117 inventoried the lie: `list_census` selects every census `pdb_path`, so a complete
+tile renders as a second protein with the parent accession and the tile span.
+`resolve_census_accession` returns the first such row — `/census/Q9P273` can open tile
+**3673** as the ectodomain. `census_summary` reduces that list, so Story's folded count
+inflates by tile cardinality. Frozen copy still says **"48 held"** and **"waiting on
+rented capacity"** after the rental pod was Terminated and Wave2 stitch completed.
+`get_plddt_path` looks only for `plddt.json` beside `pdb_path`; `write_stitched` writes
+`stitched_plddt.json`, so an assembled parent 404s pLDDT and the viewer degrades. A 3D
+view of assembled coordinates with no banner supplies the premise that the chain is one
+forward pass.
+
+#### Decision
+
+1. **`list_census` projects one row per accession.** A tile (`hold48_kind=tile`, or
+   `parent_job_id` + window) is never a protein. Prefer an assembled parent
+   (`hold48_kind=parent` + `pdb_path`); else a tiles-only parent (tiles exist, parent not
+   assembled); else a single-pass fold; else NOT FOLDED. Spare tile ids **3693 / 3695 /
+   3696** never become the chosen row; when a choice among tiles is forced, prefer the
+   lower ids already chosen in ops (**3673 / 3674 / 3675**).
+2. **`resolve_census_accession` and numeric `/census/{id}` prefer the parent.** An
+   accession opens the parent / assembled analysis, not an arbitrary tile. A numeric tile
+   id remaps to that parent (or 404s — never serves the tile as the protein).
+3. **`census_summary` keeps reducing `list_census`.** `folded` is parent-or-single-pass
+   proteins with a mean pLDDT. Tiles do not increment it. The payload `keys` say so.
+4. **Closed-rental copy.** Tranche-5 frozen **"48 held"** is replaced by the owner-dated
+   closeout (tiles complete / 27 unique stitched parents = Wave1 PASS 10 + Wave2 PASS 17 /
+   mucins 3 / rental closed). `REASON_COPY.above_local_ceiling` must not say "waiting on
+   rented capacity."
+5. **GUIDE-renting-hold48.md opens CLOSED.** Pod Terminated 2026-09-05 PT. Do not Deploy.
+   Do not emit. The Deploy / paste runbook moves under **"Historical — do not run unless
+   Matt re-opens rental."**
+6. **Viewer disclosure on assembled PDBs.** Banner before 3Dmol: pLDDT is assembler
+   winner-tile, **not Kabsch**; seams are not scientifically solved; IGF2R ~88.76 Å is a
+   measured caveat, not a solved structure. No "aligned" / "superimposed" / "seams solved"
+   language.
+7. **`get_plddt_path` accepts the stitched sibling.** When `pdb_path` is `stitched.pdb`
+   (or `plddt.json` is absent and `stitched_plddt.json` exists), load `stitched_plddt.json`.
+   Path still derived from the stored `pdb_path`, never from client input (D-034 §2a).
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 / D-111). The assembled
+parent is an **overlap of those passes**, not a new network output and not a superimposed
+holoprotein. A surface that counts a tile as a protein, opens a 1,656-aa window as the
+ectodomain, or colours an assembled chain without saying the pLDDT is a winner-tile mean
+attributes to the network a structure it did not produce. This GO is how those remaining
+passes stay distinguishable from the assembly. Neutral to the weights; load-bearing for
+whether a reader can tell what the network actually ran.
+
+#### Provenance (D-016)
+
+- **Ops inventory** (27 unique parents; Q9P273 / 2817 / tiles 3673+3630; spare ids;
+  IGF2R 3356; seam ~88.76 Å; pod Terminated): D-117 / owner closeout 2026-09-05 PT, not
+  re-queried against Fly in this PR. A later session that needs them live must name a
+  query or log line.
+- **Code-side defect** (`list_census` no `hold48_kind` filter; first-`pdb_path` resolve;
+  `get_plddt_path` → `plddt.json`; `REASON_COPY` rental-waiting; `censusSummary.js`
+  `held: 48` dated 2026-09-02): measured from the tree on `main` at **080ecf4** (PR #225).
+- **Sibling names:** `core/hold48_stitch.py` `write_stitched` writes `stitched.pdb` /
+  `stitched_plddt.json` / `stitched_pae.json`.
+
+#### Consequences
+
+- Tests that must be able to go red: parent + two tiles → one census row; `/census/Q9P273`
+  opens parent 2817, not tile 3673; spare ids 3693/3695/3696 are not a second protein;
+  `census_summary.folded` does not grow by tile cardinality; assembled `stitched.pdb`
+  resolves `stitched_plddt.json`; GUIDE / census copy refuse "48 held" and "waiting on
+  rented capacity"; viewer banner refuses Kabsch-solved language.
+- `ARCHITECTURE.md` census + hold-48 rows record the remedy (D-118), not only the D-117
+  leak. Root `README.md` stays the greeting.
+- Phase 1 P1 (tile table, readiness counts, downloads, IGF2R two-population copy on
+  Targets/Coverage) and Kabsch remain later GOs.
+
+#### Assumptions refused
+
+- That showing an assembled PDB licenses calling seams solved or the chain one forward pass.
+- That a jobs / stitch-review dashboard is required for P0 identity.
+- That the 27 unique stitched parents may enter `/scorer` (D-109 ruling 7).
+- That this PR may repair the `D-` next-free pointer.
+
+---
+
 ### D-117 — After Wave2 stitch, the UI still speaks a pre-tile language: inventory first, no Kabsch, no implementation GO
 
 - **Date:** 2026-09-05
 - **Status:** accepted as **the post-Wave2 UI evaluation** — a planning artifact, not a build.
-  ⚠ **Not an implementation GO.** ⚠ **Not a Kabsch / restitch GO.** ⚠ **No UI code in this PR.**
+  ⚠ **Phase 1 P0 honesty now has a BUILD GO — see D-118.** This entry remains the plan/stance.
+  ⚠ **Not a Kabsch / restitch GO.** ⚠ **No UI code in the D-117 PR.**
   ⚠ **No Fly change. No GPU. No enqueue. `hold48_stitch.py` untouched.**
 - **Ruled by:** owner task 2026-09-05 PT — evaluate every UI surface against the verified
   hold-48 rental closeout; write a durable plan Matt can act on.

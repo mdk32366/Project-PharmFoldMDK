@@ -204,7 +204,17 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
 
       <h4>Status</h4>
       <ul className="status-list">
-        <li>Folded — tranche {detail.tranche}</li>
+        <li>
+          {detail.structure_kind_label
+            ?? (detail.folded === false ? 'NOT FOLDED' : 'Folded')}
+          {detail.tranche != null ? ` — tranche ${detail.tranche}` : ''}
+        </li>
+        {detail.structure_kind === 'assembled' && (
+          <li className="caveat">
+            Assembled by pLDDT overlap, not superimposed. Seam not solved (IGF2R ≈ 88.76 Å
+            is a measured caveat, not a solved structure).
+          </li>
+        )}
         <li>
           Span {detail.span_aa} aa (amino acids; residues {detail.span_start}–{detail.span_end} of{' '}
           {detail.full_length})

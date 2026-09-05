@@ -11,7 +11,11 @@ vi.mock('../api.js', () => ({
   getPlddt: vi.fn(),
   getRanking: vi.fn(),
 }))
-vi.mock('./StructureViewer.jsx', () => ({ default: () => <div data-testid="viewer-stub" /> }))
+vi.mock('./StructureViewer.jsx', () => ({
+  default: (props) => (
+    <div data-testid="viewer-stub" data-assembled={String(Boolean(props.assembled))} />
+  ),
+}))
 vi.mock('./CancerAssociations.jsx', () => ({ default: () => <div data-testid="assoc-stub" /> }))
 import { getAnalysis, getPlddt, getRanking } from '../api.js'
 import TargetView from './TargetView.jsx'
@@ -39,6 +43,19 @@ describe('TargetView resilience (D-068 fix)', () => {
     expect(t).toMatch(/attempted, but did not complete/)
     // the header still renders from the analysis record
     expect(t).toContain('IGF2R')
+  })
+
+  it('D-118: a stitched detail forwards assembled=true so the 3D banner cannot be skipped', async () => {
+    getAnalysis.mockResolvedValue({
+      ...FAILED_FOLD, id: 2817, gene: 'TENM3', accession: 'Q9P273',
+      mean_plddt: 61.07, assembled: true, hold48_kind: 'parent',
+    })
+    getPlddt.mockResolvedValue([61])
+    getRanking.mockResolvedValue(RANKING)
+    const { container } = render(<MemoryRouter><TargetView id={2817} /></MemoryRouter>)
+    await waitFor(() => expect(container.querySelector('[data-testid="viewer-stub"]')).toBeTruthy())
+    expect(container.querySelector('[data-testid="viewer-stub"]').getAttribute('data-assembled'))
+      .toBe('true')
   })
 
   it('a real page error (analysis itself 404s) still surfaces — resilience is not silence', async () => {

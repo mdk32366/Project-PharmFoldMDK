@@ -103,18 +103,23 @@ export default function CensusView() {
         </p>
         {/* ⚠⚠ D-094 amendment 1 dec 2. PLANNED and IN ARTIFACT are different populations and are
             rendered as two values. ⚠ A bare 776 is forbidden — it asserts 776 structures exist,
-            when 728 are folded and 48 are HELD. The hold's cause is named, never implied. */}
+            when 728 are oneshot-folded and the hold-48 remainder was tiled. D-118 retired
+            "48 held" / "waiting on rented capacity". */}
         <ul>
           {CENSUS.tranches.map((t) => (
             <li key={t.tranche}>
               <strong>Batch {t.tranche}</strong> — {t.span} —{' '}
               {t.rows.toLocaleString()} planned, {t.inArtifact.toLocaleString()} in{' '}
               {CENSUS.profile.artifact}
-              {t.tranche === 5 && (
+              {t.tranche === 5 && t.closeout && (
                 <>
-                  {' '}— ⚠ <strong>{t.complete.toLocaleString()} folded, {t.held} held</strong>:{' '}
-                  {t.heldCause}, measured against production {t.heldMeasuredOn}. The folds are
-                  complete; they are not in the artifact above, which has not been re-parsed.
+                  {' '}— ⚠ <strong>{t.complete.toLocaleString()} oneshot folds</strong>; tiles
+                  complete; <strong>{t.closeout.uniqueStitchedParents} unique stitched
+                  parents</strong> (Wave1 PASS {t.closeout.wave1Pass} + Wave2 PASS{' '}
+                  {t.closeout.wave2Pass}); {t.closeout.mucins} mucins out of class. Rental
+                  closed {t.closeout.measuredOn} ({t.closeout.artifact}); pod Terminated.
+                  The 728 oneshot folds are not in the artifact above, which has not been
+                  re-parsed.
                 </>
               )}
               {t.absent?.length > 0 && (

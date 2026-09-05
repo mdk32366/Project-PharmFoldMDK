@@ -29,6 +29,21 @@ import CensusDetail from './CensusDetail.jsx'
 // ⚠ THREE STATES: a fold exists in the ranked 82 · it was attempted there and failed · neither.
 export function unfoldedCopy(detail) {
   if (detail.folded !== false) return null
+  if (detail.structure_kind === 'tiles_only') {
+    return {
+      bar: 'Tiles exist for this protein; they have not been assembled into a parent '
+        + 'structure. A tile window is not the ectodomain.',
+      body: 'Nothing below treats a tile as the protein. The viewer is withheld so a '
+        + '1,656-aa window cannot be read as the ectodomain (D-118).',
+    }
+  }
+  if (detail.structure_kind === 'mucin') {
+    return {
+      bar: 'Mucin — out of class; never ESMFold. Rental is closed (pod Terminated).',
+      body: 'Hold-48 rental closed 2026-09-05 (pod Terminated). Mucins write zero PDB/PAE '
+        + 'by ruling (D-111), not because a card is still running.',
+    }
+  }
   if (detail.cohort_fold) {
     return {
       bar: 'This protein has not been folded in the census. It IS one of the ranked 82 and was '
@@ -143,12 +158,22 @@ export default function CensusProteinView({ id }) {
         )}
         {/* ⚠ Said at the top, where a reader arriving from a search engine meets it first — not
             buried under the structure they came to look at. */}
+        {detail.structure_kind_label && (
+          <p className="structure-kind-badge" title={detail.assembler_note || undefined}>
+            {detail.structure_kind_label}
+            {detail.structure_kind === 'assembled'
+              ? ' — overlap by pLDDT; not superimposed; seam not solved'
+              : null}
+          </p>
+        )}
         <p className="census-bar">
           {/* ⚠ The bar asserted "this protein WAS FOLDED" on every card, including the ones that
               were never folded — a false claim sitting directly above a NOT FOLDED banner. */}
           <strong>Not scored, not ranked.</strong>{' '}
           {unfoldedCopy(detail)?.bar
-            ?? 'This protein was folded to find out whether it could be; it has not been assessed as a target, and it is not comparable to the ranked 82.'}
+            ?? (detail.structure_kind === 'assembled'
+              ? 'This chain was assembled by pLDDT overlap, not superimposed. It has not been assessed as a target, and it is not comparable to the ranked 82.'
+              : 'This protein was folded to find out whether it could be; it has not been assessed as a target, and it is not comparable to the ranked 82.')}
         </p>
       </header>
 
@@ -212,7 +237,7 @@ export default function CensusProteinView({ id }) {
       ) : (
         /* ⚠⚠ `analysisId`, NEVER `id`. See the note above the pLDDT effect: `id` is the route
            param and may be an accession, which makes the structure URL a 422. */
-        <StructureViewer id={analysisId} />
+        <StructureViewer id={analysisId} assembled={detail.structure_kind === 'assembled'} />
       )}
 
       {detail.folded !== false && (

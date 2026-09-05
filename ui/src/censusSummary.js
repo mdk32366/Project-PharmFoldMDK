@@ -72,7 +72,8 @@ export const CENSUS = {
   // ⚠⚠ D-094 amendment 1 dec 2. `rows` is what the MANIFEST PLANS; `inArtifact` is what
   // census_features.v1.jsonl actually contains. They are different populations and the page must
   // never render one as though it were the other. ⚠ A bare 776 is forbidden: it asserts that 776
-  // structures exist, when 728 are folded and 48 are HELD.
+  // structures exist, when 728 are oneshot-folded and the hold-48 remainder was tiled.
+  // ⚠ D-118: "48 held" / 2026-09-02 hold sentence is retired. Owner closeout 2026-09-05 PT.
   tranches: [
     { tranche: 1, span: '1–50 aa', rows: 1307, inArtifact: 1307 },
     { tranche: 2, span: '51–150 aa', rows: 535, inArtifact: 535 },
@@ -86,9 +87,16 @@ export const CENSUS = {
       rows: 776,
       inArtifact: 0,
       complete: 728,
-      held: 48,
-      heldCause: 'held by D-090’s claim filter under D-109 — the 48 carry no tier',
-      heldMeasuredOn: '2026-09-02',
+      closeout: {
+        measuredOn: '2026-09-05',
+        artifact: 'owner closeout (D-117 / D-118)',
+        uniqueStitchedParents: 27,
+        wave1Pass: 10,
+        wave2Pass: 17,
+        mucins: 3,
+        tilesComplete: true,
+        rentalClosed: true,
+      },
     },
   ],
 

@@ -183,7 +183,12 @@ def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> di
     would hand back a row measured by a rule the caller did not ask for.
     """
     if analysis_id.isdigit():
-        resolved = int(analysis_id)
+        raw = int(analysis_id)
+        resolved = reads.canonical_census_analysis_id(engine, raw)
+        if resolved is None:
+            raise HTTPException(
+                status_code=404,
+                detail=("this analysis is a tile window, not a census protein (D-118)"))
     else:
         resolved, outcome = reads.resolve_census_accession(engine, analysis_id)
         # ⚠⚠ THE NEVER-FOLDED MANIFEST IS CHECKED BEFORE THE COHORT VERDICT, AND THE ORDER IS THE

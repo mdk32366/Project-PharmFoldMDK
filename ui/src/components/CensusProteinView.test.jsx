@@ -195,3 +195,29 @@ describe('CensusProteinView — the structural profile on the 3D page', () => {
     expect(container.textContent).not.toMatch(/Structural profile/)
   })
 })
+
+describe('D-118 — assembled / tiles-only honesty', () => {
+  it('hands assembled=true to the viewer for an assembled parent', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({
+      ...DETAIL, structure_kind: 'assembled', structure_kind_label: 'assembled (provisional)',
+      assembler_note: 'assembled by pLDDT overlap, not superimposed; seam not solved',
+    })
+    const { container } = view()
+    await screen.findByRole('heading', { name: 'SLC5A10' })
+    expect(container.textContent).toMatch(/assembled \(provisional\)/)
+    expect(container.textContent).toMatch(/not superimposed/)
+    expect(container.textContent).not.toMatch(/waiting on rented capacity/)
+  })
+
+  it('does not draw a tile as the protein when kind is tiles_only', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({
+      ...DETAIL, folded: false, structure_kind: 'tiles_only',
+      structure_kind_label: 'tiles only', mean_plddt: null,
+    })
+    const { container } = view()
+    await screen.findByRole('heading', { name: 'SLC5A10' })
+    expect(container.textContent).toMatch(/tile window is not the ectodomain/i)
+    expect(screen.queryByTestId('structure')).toBeNull()
+    expect(container.textContent).not.toMatch(/waiting on rented capacity/)
+  })
+})

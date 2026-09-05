@@ -6,7 +6,7 @@ import { colorFor } from '../plddt.js'
 // the /plddt ARRAY (D-039) — NEVER the PDB B-factor column, whose 0–100-vs-0–1 scale is unverified
 // (S-001 cost real confusion on exactly that rescaling). 3Dmol is dynamically imported so it is a
 // separate chunk loaded only on the target view, keeping the list page light.
-export default function StructureViewer({ id }) {
+export default function StructureViewer({ id, assembled = false }) {
   const ref = useRef(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -54,22 +54,37 @@ export default function StructureViewer({ id }) {
 
   // Fallback (orders §3 / UI Plan v2 §6): the target view must not be a blank frame if the viewer
   // fails — provenance, confidence, and the plot render from JSON alone, below this.
+  const banner = assembled ? (
+    <aside className="assembler-banner" data-testid="assembler-banner">
+      <strong>Assembled chain — not a single ESMFold pass.</strong> pLDDT here is the
+      assembler winner-tile per residue, <strong>not Kabsch</strong> superposition.
+      Seams are <strong>not scientifically solved</strong>. The IGF2R seam ≈ 88.76 Å
+      is a measured caveat, not a solved structure. Not ranking-eligible (D-109).
+    </aside>
+  ) : null
+
   if (error) {
     // A 404 on the structure means there is no stored fold — for a failed fold that is the honest
     // statement, not a viewer malfunction, and must not read as a stack trace (D-068 / D-069).
     const noStructure = /HTTP 404/.test(error)
     return (
-      <div className="viewer-fallback">
-        {noStructure
-          ? 'No structure — this fold did not complete. Confidence, provenance, and the scorer result below still render.'
-          : `Structure viewer unavailable (${error}). Confidence and provenance below still render.`}
+      <div>
+        {banner}
+        <div className="viewer-fallback">
+          {noStructure
+            ? 'No structure — this fold did not complete. Confidence, provenance, and the scorer result below still render.'
+            : `Structure viewer unavailable (${error}). Confidence and provenance below still render.`}
+        </div>
       </div>
     )
   }
   return (
-    <div className="viewer-wrap">
-      {loading && <div className="viewer-loading">Loading structure…</div>}
-      <div ref={ref} className="viewer" />
+    <div>
+      {banner}
+      <div className="viewer-wrap">
+        {loading && <div className="viewer-loading">Loading structure…</div>}
+        <div ref={ref} className="viewer" />
+      </div>
     </div>
   )
 }
