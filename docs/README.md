@@ -29,6 +29,9 @@
 >   evaluation and phased honesty plan (**D-117**). ⚠ **D-117 remains the plan/stance, not a
 >   Kabsch GO.** Phase 1 P0 honesty is the **D-118** BUILD GO. The stitcher is a pLDDT
 >   assembler; seams are not scientifically solved.
+> - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
+>   **D-118 ships** Phase 1 P0 honesty; parent PLAN is **D-117**. Not a second living
+>   log — authoritative `### D-NNN` entries stay in this file.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -155,7 +158,8 @@ So the rule is not "be careful" — it is:
   **3693/3695/3696** unused) · IGF2R parent **3356** · IGF2R seam **~88.76 Å** · pod
   Terminated · `write_stitched` sibling `stitched_plddt.json`
 - **Relates:** `D-117` · `D-116` · `D-111` · `D-109` ruling 7 · `D-094` amendment 1 ·
-  `D-087` · `D-081` · `D-079` · `F-042`
+  `D-087` · `D-081` · `D-079` · `F-042` · ship index [`decisions.md`](decisions.md)
+  (D-118 ships P0 honesty; D-117 is the parent PLAN — do not rename D-118)
 - **Does not amend:** D-111 geometry · D-116 gate · stitch algorithm · Kabsch · ranking set
   · D-079 unscored-census bar · D-081 two-span rule · the `D-` next-free pointer
 - ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads `D-110` while

@@ -5,7 +5,9 @@
 > architecture, and it MUST be brought current **before any PR is filed**. If a PR
 > changes structure, data flow, dependencies, or deployment and does not touch this
 > file, the PR is incomplete. See [`docs/README.md`](docs/README.md) for the
-> chronological log of individual design decisions.
+> chronological log of individual design decisions. [`docs/decisions.md`](docs/decisions.md)
+> is a thin **ship index** (which id ships which work) — not a second living log.
+> **D-118 ships** Phase 1 P0 honesty; parent PLAN is **D-117**.
 
 **Project**: PharmFoldMDK — an Antibody-Drug Conjugate (ADC) target exploration platform.
 **Context**: Graded coursework for a **Deep Learning** class in an ML Master's program.
@@ -911,5 +913,7 @@ never install a CUDA stack.
 1. **Every PR that changes architecture updates this file in the same PR.** No exceptions.
 2. **Every design decision is written into [`docs/README.md`](docs/README.md) *before*
    the work it describes is finished** — the decision log leads the code, not the reverse.
+   [`docs/decisions.md`](docs/decisions.md) indexes which id **ships** (D-118 ships P0
+   honesty; D-117 is the parent PLAN). Do not rename D-118 mid-flight.
 3. When a decision in the log changes the system's shape, fold the outcome into the
    relevant section here so this document never drifts from reality.
