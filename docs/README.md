@@ -48,13 +48,18 @@
 >   (already on `main`, `00fa76d` / #243). **D-127-A** already shipped
 >   the core BUILD on `main` (`e49bf34` / #244): per-domain weighted
 >   Kabsch (no trim) → existing `winning_tile`; sibling
->   `piecewise_kabsch/` tree. **D-127-B** is UI four-path honesty
->   **and** the Spec §7 Method addendum (this PR) — it reads A's tree
->   and discharges the mandatory Method obligation. Production
->   triple-path (assembler / D-125 Kabsch / D-126 confidence) stays
->   callable and stays the served path. ⚠ **Not a restitch run of the
->   27.** ⚠ **Seams are not scientifically solved.** ⚠ **10.0 Å gate
->   STAYS.** ⚠ **No trim loop.**
+>   `piecewise_kabsch/` tree. **D-127-B** already shipped UI four-path
+>   honesty **and** the Spec §7 Method addendum on `main` (`de9a80e` /
+>   #245), discharging the mandatory Method obligation and disclosing
+>   the D-127 OPS result. **D-128** is the linker / seam honesty Spec
+>   ([`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)) —
+>   **this PR**, docs only. Production triple-path (assembler / D-125
+>   Kabsch / D-126 confidence) stays callable and the **assembler**
+>   stays the served path. ⚠ **Not a restitch run of the 27.**
+>   ⚠ **Seams are not scientifically solved.** ⚠ **10.0 Å gate
+>   STAYS.** ⚠ **No trim loop.** ⚠ **D-126 remains the best
+>   experimental path until proven otherwise; the D-127 failed
+>   experiment stays disclosed.**
 > - [`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md) — Kabsch on overlap Cα →
 >   transform tile → existing `winning_tile` stitch. D-125-A implements
 >   that Spec; it does not replace the assembler. D-125-B names both
@@ -73,9 +78,24 @@
 >   or D-125 `kabsch/{id}/` or D-126 `confidence_kabsch/{id}/` /
 >   `hold48_kabsch.py` / `hold48_confidence_kabsch.py`.
 >   **D-127-B** reads that tree for four-path review-card honesty and
->   ships the **mandatory** Spec §7 Method addendum (this PR).
+>   shipped the **mandatory** Spec §7 Method addendum (`de9a80e` /
+>   #245).
 >   ⚠ **10.0 Å gate stays.** ⚠ **Another weight / trim knob is
 >   forbidden.**
+> - [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md) —
+>   linker / seam honesty (**D-128**, this PR, docs only). §1a makes a
+>   per-path / per-seam `max_ca_jump_angstrom` **required**: a path that
+>   ends over **10.0 Å** at a seam is **dishonest** for that seam and no
+>   success PDB may be presented as honest. §1b's optional repair is
+>   **linker-local rigid only** — one weighted Kabsch in a **±32 aa**
+>   window (**W = 32**, ε = 1e-3, **no trim loop**, no pieces, no
+>   linker-inherit) → existing `winning_tile`. Primary inventory is the
+>   **seven** signed must-hunt linker parents (2938, 2939, 3179, 3190,
+>   3321, 3368, 3566). ⚠ **Not piecewise-v2. Not an RMSD Spec
+>   (3272 / 3394 out of primary). Not a domain Spec. 3432 stays
+>   accept-refuse.** ⚠ **10.0 Å stays — no loosen without Matt.**
+>   ⚠ **Never says solved.** **D-128-A** (core) and **D-128-B** (UI +
+>   mandatory Method) are later Emma GOs.
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**) plus a
 >   D-125-B addendum (what Kabsch does / does not), a D-126-B addendum
@@ -100,8 +120,12 @@
 >   **D-127 ships** the piecewise / domain-aware Kabsch Spec
 >   (already on `main`, `00fa76d` / #243). **D-127-A** already
 >   shipped the core BUILD on `main` (`e49bf34` / #244).
->   **D-127-B ships** UI four-path honesty **and** the mandatory
->   Spec §7 Method addendum (this PR). **D-121 ships** the
+>   **D-127-B** already shipped UI four-path honesty **and** the
+>   mandatory Spec §7 Method addendum on `main` (`de9a80e` / #245).
+>   **D-128 ships** the linker / seam honesty Spec (this PR, docs
+>   only) — [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md);
+>   **D-128-A** (core) and **D-128-B** (UI + mandatory Method) are
+>   later Emma GOs. **D-121 ships** the
 >   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
 >   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
@@ -224,6 +248,400 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-128 — Linker / seam honesty Spec: diagnose and refuse dishonest seams, optional linker-local rigid (docs only)
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the linker / seam honesty SPEC GO** (Trinity
+  Architect ship id **D-128**, Matt BUILD GO Phase 3 / D-0043 via Emma;
+  this PR). Architect: Trinity. Builder coordinator: Kaylee.
+  ⚠ **Docs Spec only.** ⚠ **Not D-128-A** (core BUILD — later Emma GO).
+  ⚠ **Not D-128-B** (UI path honesty + Method — later Emma GO).
+  ⚠ **Single failure mode: linker / seam only** — the D-127 OPS
+  `linker_jump_gt_10` class. Parents **2938, 2939, 3179, 3190, 3321,
+  3368, 3566**.
+  ⚠ **NOT piecewise-v2.** ⚠ **NOT an RMSD Spec** (**3272** / **3394**
+  are out of the primary inventory). ⚠ **NOT a domain Spec.**
+  ⚠ **3432 stays accept-refuse** (signed triage) — not re-opened, not
+  reclassified, not a success target, not counted as a D-128 miss.
+  ⚠ **No RMSD / linker threshold loosen without Matt. 10.0 Å stays.**
+  ⚠ **Served stays assembler.** **D-126 remains the best experimental
+  path until proven otherwise.** The **D-127 failed experiment stays
+  disclosed** (PASS 17 / REFUSE 10 / FAIL 0;
+  `recovered_of_primary_three` = 0; named regress 5 vs D-125, 7 vs
+  D-126 — as recorded, ⚠ **not re-measured here**).
+  ⚠ **Method must never say solved.** This Spec names **diagnose and
+  refuse dishonest seams** as the goal framing.
+  ⚠ **Does not replace `winning_tile`.** The optional repair is a
+  pre-stitch window transform; the assembler stays callable.
+  ⚠ **Does not overwrite** assembler `stitched.pdb`, D-125
+  `core/hold48_kabsch.py` / `kabsch/{id}/`, D-126
+  `core/hold48_confidence_kabsch.py` / `confidence_kabsch/{id}/`, or
+  D-127 `core/hold48_piecewise_kabsch.py` / `piecewise_kabsch/{id}/`.
+  ⚠ **Not a restitch run of the 27.** ⚠ **Not F-004 ingest.**
+  ⚠ **Not ADC-C.** ⚠ **No rent / GPU / RunPod.** ⚠ **No trim loop.**
+  ⚠ **No `hold48_*.py` edit.** ⚠ **No `hold48_*.py` edits of any kind
+  in this PR.**
+  ⚠ **Kaylee does not BUILD** until this Spec is on `main` **and** an
+  Emma / Matt GO names D-128-A. CloudAgent is already Opus-pinned; that
+  pin is a fact of the build lane, not a licence to start A early.
+- **Ruled by:** Matt BUILD GO Phase 3 hard bar (D-0043), via Emma,
+  2026-09-05 — bind exactly:
+  1. **Single failure mode: linker / seam only** (`linker_jump_gt_10`
+     class). Parents **2938, 2939, 3179, 3190, 3321, 3368, 3566**.
+  2. **NOT** piecewise-v2. **NOT** an RMSD Spec (3272 / 3394 out of
+     primary). **NOT** a domain Spec.
+  3. **3432 stays accept-refuse** (signed triage).
+  4. **No RMSD / linker threshold loosen without Matt. 10.0 Å stays.**
+  5. **Served stays assembler**; **D-126 remains best experimental
+     until proven otherwise**; **D-127 failed experiment stays
+     disclosed**.
+  6. **Method must never say solved**; the Spec names
+     **diagnose / refuse dishonest seams** as goal framing.
+  7. CloudAgent already Opus-pinned.
+  Spec deliverables this PR:
+  [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md) (D-125 /
+  D-126 / D-127 Spec style) + this `### D-128` entry +
+  [`decisions.md`](decisions.md) Spec/A/B + an `ARCHITECTURE.md`
+  one-liner + a PLAN pointer + [`Test_Plan.md`](Test_Plan.md) T-ids +
+  hermetic docs pin tests `tests/test_d128_linker_seam_spec.py` **only**.
+  **No `hold48_*.py` edits.** Draft PR; do not merge; the Architect
+  merges.
+- **Cite:** D-127 Spec
+  ([`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md))
+  · D-127-A `e49bf34` / #244 · D-127-B `de9a80e` / #245 (four-path UI +
+  mandatory Method + the D-127 OPS result) · D-126 Spec
+  ([`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md))
+  · D-126-A `aa8aa02` / #241 · D-126-B `abbcd00` / #242 · D-125 Spec
+  ([`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)) · D-125-A
+  `26a40a8` / #237 · D-125-B `aa8d3f1` / #238 · D-117 PLAN / Kabsch
+  park · D-118 assembler-not-Kabsch honesty · D-120 Phase 2 review of
+  the 27 · D-121 Method (assembler ≠ Kabsch *today*; the D-125-B /
+  D-126-B / D-127-B addenda are the Method-surface pattern this Spec
+  binds for B) · D-116 `stitch_readiness` · D-111 `winning_tile` /
+  emit domain-snap · D-109 ruling 7 (not ranking-eligible) · D-016 ·
+  seven signed must-hunt linker parents **2938**, **2939** `Q7Z408`,
+  **3179**, **3190**, **3321**, **3368** `Q5SZK8`, **3566** (D-127 OPS
+  `linker_jump_gt_10` ×7 as recorded; ⚠ **not re-measured here**;
+  motivation, not thresholds) · out of primary: **3272** `Q6V0I7` /
+  **3394** `Q8TDW7` (`rmsd_gt_10`) and **3432** `Q8IZF6`
+  (`no_domain_pieces`, **accept-refuse**) · IGF2R **3356** out · ship
+  index [`decisions.md`](decisions.md) · Spec
+  [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md) §1 /
+  §1a / §1b / §7
+- **Relates:** `D-127` · `D-127-A` · `D-127-B` · `D-126` · `D-126-A` ·
+  `D-126-B` · `D-125` · `D-125-A` · `D-125-B` · `D-121` · `D-120` ·
+  `D-118` · `D-117` · `D-116` · `D-111` · `D-109` ruling 7 · `D-001`
+- **Does not amend:** D-111 geometry · D-116 gate · today's stitch
+  algorithm · D-125 `hold48_kabsch.py` · D-126
+  `hold48_confidence_kabsch.py` · D-127 `hold48_piecewise_kabsch.py` ·
+  D-127 §1–§5 (the piecewise algorithm stays as shipped) · the D-127-B
+  OPS disclosure (it stays) · D-118 census identity · D-120
+  `assembly_review` · D-121 assembler Method copy · D-125-B / D-126-B /
+  D-127-B Method addenda (the D-128 addendum is **mandatory at B** and
+  additive) · D-122 `/adcs` · D-123 `/about` · D-124 ADC-C · F-004 /
+  ranking set · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
+  `D-110` while later numbers are written). This entry spends `D-128`
+  — which the D-127-B entry explicitly declined to invent; the pointer
+  stays the owner's.
+
+#### Context
+
+The stitch-path family has now been run three times. D-125 fitted one
+unweighted rigid body to the whole overlap. D-126 weighted and trimmed
+that same one body, and its lesson was that a small **weighted** RMSD
+can hide a large **full-overlap** jump (ops jumps **28–68 Å** on 2939 /
+3272 / 3432, as recorded). D-127 cut the tile into one rigid body **per
+UniProt domain** — and the D-127 OPS run answered that hypothesis
+negatively: **PASS 17 / REFUSE 10 / FAIL 0**,
+`recovered_of_primary_three` = **0**, `n_d125_pass_d127_refuse` = **5**,
+`n_d126_pass_d127_refuse` = **7**, `n_d126_refuse_d127_pass` = **0**
+(Matt GO via Emma 2026-09-05 at tip `e49bf34`; ⚠ **not re-measured
+here**).
+
+What that run also did was **localise the failure**. Its refuse
+histogram is not spread across the refuse table: `linker_jump_gt_10`
+**×7** (2938, 2939, 3179, 3190, 3321, 3368, 3566) against `rmsd_gt_10`
+×2 (3272, 3394) and `no_domain_pieces` ×1 (3432). Seven of ten refuses
+are at the **linkers** — the stretches between domains, which is
+exactly where cutting one rigid body into several creates new joins.
+
+Two temptations follow, and this Spec refuses both. The first is
+**piecewise-v2**: decompose differently, add a knob, try again. The
+second is a **threshold Spec-as-fix**: the seven refuse at 10.0 Å, so
+move 10.0 Å. Both would buy a pass count with a claim nobody measured.
+
+The third option — the one Matt's Phase 3 bar names — is to stop
+chasing a better pose and **measure honesty instead**. A `stitched.pdb`
+that exists is not, by existing, a held join. So D-128's primary
+deliverable is a **per-path, per-seam honesty metric**: what is the max
+Cα jump this path actually ends with, and is that path therefore
+**dishonest** at this seam? Repair is optional, deliberately smaller
+than D-127 (one ±32 aa window, one rigid body, no pieces, no inherit),
+and **0-of-7 repaired is an allowed outcome** pre-registered here.
+
+#### Decision
+
+1. **Spec lives in
+   [`docs/SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md).**
+   §1 goal framing: **diagnose and refuse dishonest seams.** The Spec
+   never says solved. Optional scoped repair is **linker-local rigid
+   only** and is explicitly **not a rebrand of D-127**.
+2. **§1a seam honesty metrics are the required half.** For **each**
+   experimental path artifact tree (D-125 `kabsch/`, D-126
+   `confidence_kabsch/`, D-127 `piecewise_kabsch/`, D-128
+   `linker_seam/`), a later A records **per seam**
+   `max_ca_jump_angstrom` (and `linker_n` / `max_linker_ca_jump` where
+   that path defines linkers), the `path`, and `honest`. A path that
+   **ends** with a seam jump **`> 10.0 Å`** is **dishonest for that
+   seam** — fail-closed: **no success PDB is presented as honest**.
+   Null is not zero and unknown is not honest. **The gate stays 10.0.**
+   Prior trees are **read**, never rewritten; honesty rows land in the
+   D-128 tree.
+3. **§1b linker-local rigid (D-128-A), pinned:** primary inventory is
+   the **seven** signed must-hunt linker parents only; a CLI **may**
+   also run all 27 for confusion vs prior paths but must **not** treat
+   3272 / 3394 / 3432 as success targets. (1) identify the offending
+   seam / linker from the prior D-127 refuse **or** from the measured
+   max jump; (2) window **±32 aa** around the linker / seam centre
+   (**W = 32** pinned; A tests must be able to go red against it);
+   (3) **weighted Kabsch on Cα in that window only**, **ε = 1e-3**,
+   \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\), **NO trim
+   loop**; (4) apply \(R, t\) **only** to moving-tile atoms in that
+   window (no inherit, no pieces); (5) refuse on window Cα `< 3` /
+   weighted RMSD `> 10.0 Å` / singular covariance / **post-apply**
+   seam jump `> 10.0 Å` → `overlap_ca_lt_3` / `rmsd_gt_10` /
+   `singular_covariance` / **`seam_jump_gt_10`**; (6) on accept feed the
+   existing `winning_tile` / `write_stitched`, off-block PAE **null,
+   never 0**; (7) **all-or-nothing parent**, clear partials.
+4. **Inventory is the seven, and the exclusions are named.** Parent job
+   ids **2938**, **2939** `Q7Z408`, **3179**, **3190**, **3321**,
+   **3368** `Q5SZK8`, **3566**. Accessions are written **only** where
+   this log already carries them — the other five are **not on record**
+   and nobody writes one from memory (D-016). **3272** `Q6V0I7` and
+   **3394** `Q8TDW7` are the `rmsd_gt_10` class and are **out of
+   primary** — this is **not an RMSD Spec**. **3432** `Q8IZF6`
+   **stays accept-refuse** (signed triage): not re-opened, not
+   reclassified, not a success target, not counted as a D-128 miss.
+   IGF2R **3356** is out. The 27 stay outside F-004. ⚠ **Not
+   re-queried on Fly.** **0-of-7 repaired is an allowed outcome.**
+5. **Artifact dirs are a fifth sibling tree, never an overwrite.**
+   D-128-A (later) writes `<ops out_dir>/linker_seam/{parent_id}/`
+   (`provenance.json`, `seams.jsonl` with `window_start` /
+   `window_end` / `window_half_width_aa` = 32 / `n_ca` /
+   `rmsd_angstrom` / post-apply `max_ca_jump_angstrom` /
+   `offending_seam_source` / `refuse_reason`, plus
+   `seam_honesty.jsonl` for the §1a rows;
+   `algorithm=linker_local_kabsch_then_winning_tile`,
+   `decision=D-128`). Do not overwrite assembler `stitched.pdb`,
+   `kabsch/{id}/`, `confidence_kabsch/{id}/`, or
+   `piecewise_kabsch/{id}/`. All four prior paths stay callable.
+6. **UI honesty is specified, not built (§6 — later B).** Assembler
+   remains the default served PDB until a Matt swap GO. A dishonest
+   seam is never shown with a success PDB presented as honest — no
+   “fixed” badge, no “repaired” badge. The **D-127 failed experiment
+   stays disclosed** and **D-126 stays named best experimental so far**.
+   Forbidden: “aligned,” “superimposed,” “seams solved,” “seams fixed,”
+   “full-length AF-quality.” This Spec PR does not touch UI.
+7. **Method is later B and mandatory then (§7).** Same additive
+   `/method` + owner-markdown pattern as D-121 / D-125-B / D-126-B /
+   D-127-B, and those sections **stay** (including the D-127 OPS
+   disclosure). §7 carries the 8th-grade excerpt — the five-step path
+   train, what “dishonest” means about a **file** rather than a person,
+   the refuse table at a high level, **10.0 Å stays**, seam numbers as
+   measurements, default served = assembler, **never seams solved**.
+   **This PR ships no Method edit.**
+8. **PR split.** This PR is **Spec only**. **D-128-A** (core: §1a
+   honesty rows + optional ±32 aa window Kabsch; no UI; **CPU, no
+   rent**) and **D-128-B** (UI honesty **+ Method addendum**) are later
+   Emma GOs. Optional MD / AF GPU refine is a **later phase, not A**.
+   **Kaylee does not BUILD** until the Spec is on `main` + Emma / Matt
+   GO.
+9. **Hard stops.** No threshold Spec-as-fix (and **no loosen** without
+   Matt). No piecewise-v2. No RMSD / domain Spec bleed. 3432 stays
+   accept-refuse. No invent (including no invented accession). No PAE
+   zeros. No F-004. No rent in A. **Never seams solved.** Keep prior
+   paths callable; served stays assembler. No trim loop. **W = 32
+   stays.** No stitch code and no `hold48_*.py` edit in this PR.
+10. **Ops success report (later A; not a CI assert).** Must include the
+   §1a honesty counts (`n_dishonest_*`, `n_honesty_unknown`) **and**
+   confusion vs D-125, D-126, and D-127. A drop is a **named finding**,
+   not silent success. `repaired_of_seven` may be **0**.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 /
+D-111). D-125 / D-126 / D-127 Kabsch are all rigid transforms of those
+already-emitted coordinates, and D-128's optional repair is the
+smallest of them: one weighted \(R, t\) fitted on Cα inside a ±32 aa
+window, using the network's own pLDDT as the weight, applied only to
+that window's moving-tile atoms. It is not a new network, not a joint
+placement, and not a new forward pass.
+
+The **required** half of this Spec is the part that carries the
+deep-learning honesty. Three paths now write structures to disk, and
+the D-126 → D-127 arc showed twice over that **a pass on a fit
+statistic is not a held join**: first a trimmed weighted RMSD hiding a
+28–68 Å full-overlap jump, then a per-domain decomposition moving the
+break into the linkers seven times out of ten. §1a answers that class
+of error at its root by making the same measurement — the max Cα jump
+the path actually **ends** with — mandatory for every path, and by
+naming a path over 10.0 Å **dishonest at that seam** so no success PDB
+can be presented as honest.
+
+A Spec that instead loosened the 10.0 Å gate, skipped the seven by
+name, re-opened 3432, reintroduced pieces under a new id, or called a
+refused seam “repaired” would attribute to ESMFold a superimposed
+structure the model never produced — or a repair nobody measured.
+Fail-closed thresholds (window `n_ca < 3`, weighted RMSD `> 10.0 Å`,
+degenerate covariance, post-apply seam jump `> 10.0 Å`) exist so a
+later BUILD cannot invent a pose when the window is too thin, too far,
+collinear, or still broken after the move. Neutral to the weights;
+load-bearing for whether what we serve and what we claim are the same
+object.
+
+#### Provenance (D-016)
+
+- **The seven signed must-hunt linker parents:** the D-127 OPS refuse
+  histogram `linker_jump_gt_10` **×7** — **2938, 2939, 3179, 3190,
+  3321, 3368, 3566** — as recorded by Matt GO via Emma 2026-09-05 for a
+  restitch of the Spec 27 at tip `e49bf34`, and carried in this log at
+  `#### D-127-B amendment 1` item 3, in `ARCHITECTURE.md` (census
+  surface row), and in
+  [`method-hold48-tiles.md`](method-hold48-tiles.md). ⚠ **Not run, not
+  queried, and not re-measured in this PR.** ⚠ **Motivation, not
+  thresholds.** ⚠ **Not a per-parent headline.**
+- **Accessions:** only **2939** `Q7Z408` and **3368** `Q5SZK8` of the
+  seven are on record (D-127 Spec §3 / D-127-B). ⚠ The accessions for
+  **2938 / 3179 / 3190 / 3321 / 3566** are **not recorded in this log**
+  — the Spec says so in place of a number, and a later A BUILD resolves
+  them from the database rather than from prose.
+- **The out-of-primary classes:** same D-127 OPS histogram —
+  `rmsd_gt_10` ×2 (**3272** `Q6V0I7`, **3394** `Q8TDW7`) and
+  `no_domain_pieces` ×1 (**3432** `Q8IZF6`). ⚠ **Not re-measured
+  here.**
+- **3432 accept-refuse:** signed triage, named in the Matt Phase 3
+  BUILD GO bar (2026-09-05, via Emma). Recorded as a **standing
+  status**, not as a new measurement.
+- **D-127 OPS run figures (PASS 17 / REFUSE 10 / FAIL 0;
+  `recovered_of_primary_three` = 0; `n_d125_pass_d127_refuse` = 5;
+  `n_d126_pass_d127_refuse` = 7; `n_d126_refuse_d127_pass` = 0):**
+  D-127-B amendment 1 in this log (`de9a80e` / #245), which itself
+  records them as handed over by that Matt GO. ⚠ **Not re-run and not
+  re-measured in this PR.**
+- **“D-126 remains the best experimental path”:** the same recorded
+  comparison — D-126 OPS recovered **2 of its primary 5** (parents
+  **3368**, **3394**) against D-127's **0 of 3**, both of which D-127
+  gave back. ⚠ A comparison across ops runs, **not** a re-measurement
+  here.
+- **D-126 ops full ≫ weighted / jumps 28–68 Å on 2939 / 3272 / 3432:**
+  task brief 2026-09-05 naming the D-126 OPS surface, carried through
+  D-127 Spec §1 / §3 / §7. ⚠ **Not re-measured here**; quoted as the
+  reason a fit statistic is not a held join.
+- **27 parent ids:** D-117 / D-118 / D-120 / D-125 / D-126 / D-127 /
+  `app/reads.py` `WAVE1_WAVE2_STITCHED_PARENT_IDS`. ⚠ **Not re-queried
+  against Fly.**
+- **Prior paths stay callable:** `core/hold48_stitch.py` `winning_tile`;
+  `core/hold48_kabsch.py` (`26a40a8` / #237);
+  `core/hold48_confidence_kabsch.py` (`aa8aa02` / #241);
+  `core/hold48_piecewise_kabsch.py` (`e49bf34` / #244). This PR does
+  not edit those files, and the pin tests sha256-pin all three Kabsch
+  modules.
+- **Refuse defaults `< 3` / `> 10.0 Å` / singular covariance:** D-125 /
+  D-126 / D-127 Spec + the Matt Phase 3 bar 2026-09-05: the gate
+  **stays**, and no RMSD / linker threshold loosens without Matt.
+- **W = 32 (±32 aa window):** pinned by the Matt Phase 3 algorithm
+  authority in that same GO. A **pinned v1 default**, not a measured
+  optimum — ⚠ **no run has evaluated it**, and A tests must be able to
+  go red against it.
+- **`seam_jump_gt_10` vs D-127 `linker_jump_gt_10`:** the D-127 reason
+  name is read from `core/hold48_piecewise_kabsch.py`
+  (`REFUSE_LINKER_JUMP_GT_10`, `e49bf34`). The D-128 name is **new** in
+  this Spec so the two measurements cannot be conflated.
+- **D-128 tip this PR starts from:** `origin/main` `de9a80e`
+  (`git rev-parse origin/main`, 2026-09-05) — the D-127-B tip / #245.
+
+#### Consequences
+
+- Tests that must be able to go red **in this Spec PR**: `### D-128 —`
+  exists in this log (D-001 naming: the check is the heading, not a
+  citation of one);
+  [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md) exists
+  and names the algorithm
+  (`linker_local_kabsch_then_winning_tile`), `decision=D-128`, the
+  goal framing **diagnose / refuse dishonest seams**, the §1a honesty
+  metric `max_ca_jump_angstrom` with **`> 10.0 Å` = dishonest** and
+  fail-closed, the **10.0 Å** gate staying (no loosen without Matt),
+  **W = 32**, **ε = 1e-3**, **no trim loop**, the four refuse reasons
+  (`overlap_ca_lt_3` / `rmsd_gt_10` / `singular_covariance` /
+  `seam_jump_gt_10`), all **seven** parent ids, **3432
+  accept-refuse**, 3272 / 3394 out of primary, **not piecewise-v2 /
+  not an RMSD Spec / not a domain Spec**, the sibling
+  `linker_seam/{parent_id}/` tree with no overwrite of the four
+  existing trees, served = assembler, D-126 best experimental, the
+  D-127 failed experiment still disclosed, all-or-nothing parent
+  refuse, 0-of-7 allowed, PR split Spec vs A vs B with **no rent in
+  A**, hard stops written, and `hold48_*.py` unedited (all three
+  Kabsch modules sha256-pinned). Test plan **T-1144**–**T-1152**.
+- Tests that must be able to go red **in a later A BUILD (not this
+  PR):** §1a honesty rows per path / per seam (null ≠ zero; unknown ≠
+  honest); the ±32 aa window fit (no trim, no pieces, no inherit);
+  the refuse table (10.0 Å stays) including `seam_jump_gt_10`;
+  offending-seam identification from the D-127 refuse or the measured
+  jump; apply \(R, t\) only inside the window; all-or-nothing clear;
+  no overwrite of assembler / `kabsch/` / `confidence_kabsch/` /
+  `piecewise_kabsch/`.
+- Tests that must be able to go red **in a later B BUILD:** UI path
+  honesty (dishonest seam never shown with a success PDB presented as
+  honest; null renders as absence, never `0.00 Å`) and the Method
+  addendum naming the five-step path train, keeping the D-121 /
+  D-125-B / D-126-B / D-127-B sections, and never claiming solved.
+- `ARCHITECTURE.md` records that the D-128 Spec exists, that the
+  **served** path remains the assembler, and that D-126 remains the
+  best experimental path with the D-127 result still disclosed.
+- D-128-A / D-128-B, F-004 ingest, remaining tileable / mucins,
+  rental, a served-path swap, and optional GPU refine remain later
+  GOs. B carries the Method obligation; A does not discharge it.
+
+#### Assumptions refused
+
+- That writing this Spec licenses calling seams solved, repaired, or
+  aligned — the goal is to **diagnose and refuse dishonest seams**.
+- That the 10.0 Å gate may move **in either direction** because seven
+  parents refused (no threshold Spec-as-fix; no loosen without Matt).
+- That naming the seven is an algorithm that skips them (no
+  named-exclusion-as-fix).
+- That this is a second piecewise decomposition (**no piecewise-v2**:
+  no pieces, no domain intervals as the fit unit, no linker-inherit).
+- That 3272 / 3394 are success targets (**not an RMSD Spec**) or that
+  `no_domain_pieces` is this failure mode (**not a domain Spec**).
+- That **3432** may be re-opened, reclassified, or counted as a D-128
+  miss — it stays **accept-refuse**.
+- That a window size other than **W = 32** may be tried until a parent
+  passes, or that a trim loop may reopen the D-126 lie surface.
+- That an accession may be written for the five parents whose
+  accession this log does not carry.
+- That a null `max_ca_jump_angstrom` may be recorded or rendered as
+  `0.0`, or that an unknown jump may be reported as honest.
+- That an existing path's `stitched.pdb` may be presented as an honest
+  D-128 result, or that a refused seam may wear a “fixed” / “repaired”
+  badge.
+- That D-128 may replace `winning_tile`, overwrite `kabsch/{id}/` /
+  `confidence_kabsch/{id}/` / `piecewise_kabsch/{id}/` / assembler
+  `stitched.pdb`, or flip the served path without a Matt GO.
+- That the D-127 failed experiment may be softened or dropped, or that
+  D-126's standing as best experimental path so far may be retired
+  without a result that proves otherwise.
+- That the 27 may enter `/scorer` (D-109 ruling 7).
+- That this PR may implement stitch code, edit `hold48_*.py`, touch
+  UI, edit Method, run ops, restitch the 27, or query Fly.
+- That this PR may rent a GPU or repair the `D-` next-free pointer.
+- That 0-of-7 repaired licenses raising or loosening the gate or
+  inventing a blend.
+- That MD / AF GPU refine is in A (later phase, not A).
+- That Kaylee may BUILD D-128-A before this Spec is on `main` with an
+  Emma / Matt GO.
 
 ### D-127-B — UI four-path honesty + the mandatory D-127 Method addendum
 
