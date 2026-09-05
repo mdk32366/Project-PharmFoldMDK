@@ -31,7 +31,7 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
-from app.confidence_kabsch_path_read import seam_note_for_triple, triple_path_payload
+from app.piecewise_kabsch_path_read import four_path_payload, seam_note_for_four
 
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
@@ -821,11 +821,12 @@ def assembly_review(
     *,
     artifact_root: Optional[Path | str] = None,
 ) -> dict[str, Any]:
-    """Review payload for an assembled parent (D-120 / PLAN §3.6 / D-125-B / D-126-B).
+    """Review payload for an assembled parent (D-120 / PLAN §3.6 / D-125-B / D-126-B / D-127-B).
 
-    Ops numbers, not a restitch GO. Kabsch-path and D-126-path metrics are
-    *read* from A's sibling trees when present — never invented, never
-    persisted here. Default served PDB stays assembler.
+    Ops numbers, not a restitch GO. Kabsch-path, D-126-path, and
+    D-127-path metrics are *read* from A's sibling trees when present —
+    never invented, never persisted here. Default served PDB stays
+    assembler.
     """
     tiles = [r for r in siblings if is_census_tile_row(r)]
     roles = assign_tile_roles(tiles)
@@ -892,16 +893,23 @@ def assembly_review(
         ])
     parent_has_pae = bool(parent.pae_json_path)
     parent_job_id = job_by_analysis.get(parent.id)
-    triple_path = triple_path_payload(
+    four_path = four_path_payload(
         artifact_root,
         parent_analysis_id=parent.id,
         parent_job_id=parent_job_id,
         assembler_pdb_path=parent.pdb_path,
         meta=parent.meta,
     )
+    # D-125-B / D-126-B consumers keep their narrower views; the wider
+    # payload is additive so an older reader cannot silently gain a path.
+    triple_path = {
+        "assembler": four_path["assembler"],
+        "kabsch": four_path["kabsch"],
+        "confidence_kabsch": four_path["confidence_kabsch"],
+    }
     dual_path = {
-        "assembler": triple_path["assembler"],
-        "kabsch": triple_path["kabsch"],
+        "assembler": four_path["assembler"],
+        "kabsch": four_path["kabsch"],
     }
     return {
         "parent_analysis_id": parent.id,
@@ -944,11 +952,14 @@ def assembly_review(
         "assembler_note": (
             "assembled by pLDDT overlap, not superimposed; seam not solved"
         ),
-        "seam_note": seam_note_for_triple(
-            triple_path["kabsch"], triple_path["confidence_kabsch"]
+        "seam_note": seam_note_for_four(
+            four_path["kabsch"],
+            four_path["confidence_kabsch"],
+            four_path["piecewise_kabsch"],
         ),
         "dual_path": dual_path,
         "triple_path": triple_path,
+        "four_path": four_path,
     }
 
 
