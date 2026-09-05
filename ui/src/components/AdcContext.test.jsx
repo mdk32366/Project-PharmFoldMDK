@@ -125,3 +125,47 @@ describe('D-094 amendment 1 — the paper questions on /about', () => {
     expect(t).not.toMatch(/under review|accepted (at|by)|in press|published in/i)
   })
 })
+
+// D-123 — Nectin-4/ADC Doc follow-on on /about. Additive. Failure-reds against
+// the pre-D-123 component: the section is absent, so the first assertion in
+// T-1231 fails on a missing string, not on an import or a crash.
+describe('D-123 — two tracks (Nectin-4 / ADC framing) on /about', () => {
+  beforeEach(() => {
+    listAnalyses.mockResolvedValue(FIXTURE)
+  })
+
+  it('T-1231: the two-tracks section renders, after the NECTIN4 example and before the questions', () => {
+    const t = renderAdc().container.textContent
+    expect(t).toContain('Two tracks (Nectin-4 / ADC framing)')
+    const iWhy = t.indexOf('Why this project exists')
+    const iTracks = t.indexOf('Two tracks (Nectin-4 / ADC framing)')
+    const iQuestions = t.indexOf('The questions this project is trying to answer')
+    expect(iWhy).toBeGreaterThan(-1)
+    expect(iTracks).toBeGreaterThan(iWhy)
+    expect(iQuestions).toBeGreaterThan(iTracks)
+  })
+
+  it('T-1232: Track A is red without wet bind; Track B ranks; EV is not a universal V-key', () => {
+    const t = renderAdc().container.textContent
+    expect(t).toContain('Two tracks (Nectin-4 / ADC framing)')
+    expect(t).toContain('EV is not a universal V-key')
+    expect(t).toContain('Wet binding assays — required')
+    expect(t).toContain('No bind → stop')
+    expect(t).toContain('Do not rank docking guesses as hits')
+    expect(t).toContain('rank by (cancer × membrane × internalization × density) / normal risk')
+    expect(t).toContain('not a universal V-domain key')
+  })
+
+  it('T-1233: standing line asks whether; PAPER_QUESTIONS and ADC copy stay; no F-004 figures', () => {
+    const t = renderAdc().container.textContent.replace(/\s+/g, ' ')
+    expect(t).toContain('asks whether the same antibody is a universal V-domain key')
+    expect(t).toContain('This project asks whether a second, independent axis')
+    expect(t).toContain('Does the shape of a protein tell you something about its suitability as an ADC target that its abundance does not?')
+    expect(t).toContain('What can an expression-threshold screen actually support?')
+    expect(t).toContain(ADC_COPY)
+    for (const forbidden of ['0.6607', '0.6786', '8 of 12', '9 of 12', '0.49', '0.62']) {
+      expect(t).not.toContain(forbidden)
+    }
+  })
+})
+

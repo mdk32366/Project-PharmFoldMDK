@@ -31,10 +31,11 @@
 >   Kabsch GO.** Phase 1 P0 honesty is **D-118**. Phase 2 review UI is **D-120**. The
 >   stitcher is a pLDDT assembler; seams are not scientifically solved.
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
->   **D-122 ships** ADC-B (`/adcs` UI). **D-119 ships** ADC-A (the dated catalog +
->   thin read API this UI consumes). **D-120 ships** Phase 2 review UI; parent PLAN
->   is **D-117**; parent honesty GO is **D-118**. Not a second living log —
->   authoritative `### D-NNN` entries stay in this file.
+>   **D-123 ships** the Nectin-4/ADC Doc follow-on on `/about` (AdcContext only).
+>   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232). **D-119 ships**
+>   ADC-A (the dated catalog + thin read API). **D-120 ships** Phase 2 review UI;
+>   parent PLAN is **D-117**; parent honesty GO is **D-118**. Not a second living
+>   log — authoritative `### D-NNN` entries stay in this file.
 > - [`../data/adcs/README.md`](../data/adcs/README.md) — ADC-A v1 catalog hook
 >   (**D-119**). ADC-B pages consume it (**D-122**). Weekly Drugs@FDA watch is
 >   Emma's ops lane; not built here.
@@ -149,6 +150,176 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-123 — Nectin-4/ADC Doc follow-on lands on `/about` AdcContext; two tracks, no second route
+
+- **Date:** 2026-09-05
+- **Status:** accepted as **the Nectin Doc → AdcContext BUILD GO** (Trinity
+  ship id **D-123**, after Phase 2 D-120). Additive `/about` copy only.
+  ⚠ **Not a Kabsch / restitch GO.** ⚠ **Not F-004 ingest or ranking-set
+  expansion.** ⚠ **Does not edit ADC-B** — `/adcs` already shipped on `main`
+  as **D-122** (`86f8a10` / #232). ⚠ **Does not rewrite, shorten, or
+  paraphrase** D-094 ABOUT-COPY / `PAPER_QUESTIONS`. ⚠ **Does not invent
+  science.** ⚠ **Does not dump Wave2.** ⚠ **Does not add a second About
+  route.**
+- **Ruled by:** Trinity Architect binding 2026-09-05 — ship id is **D-123**.
+  Parent Phase 2 review is **D-120**. Owner Doc already on `main`:
+  [`docs/pharmfold-adc-nectin4-paper.md`](pharmfold-adc-nectin4-paper.md)
+  (`495fb89` / #226). UI placement in that file (Emma 2026-09-05): expand
+  existing SPA `/about` → `ui/src/components/AdcContext.jsx`; keep Track A
+  red-without-wet-bind and Track B ranking visible.
+- **Cite:** D-094 amendment 1 dec 3 (`/about` names paper **questions**,
+  never a result; ABOUT-COPY / `PAPER_QUESTIONS` transcribed verbatim;
+  "asks whether", never "shows that") · D-094 (claim discipline; a surface
+  is accountable for the premises it supplies) · D-120 (named this as a
+  later GO: *"Not Nectin-4 AdcContext"*) · D-122 (ADC-B `/adcs` — a
+  different object, already on `main`; this GO does not touch it) · D-119
+  (ADC-A catalog) · D-107 (`/about` additive "What's next"; existing ADC
+  copy stays) · F-009 (comparator boundary already on this page)
+- **Relates:** `D-094` amendment 1 · `D-122` · `D-120` · `D-119` · `D-107`
+  · `D-051` (no new About route) · `F-009` · ship index
+  [`decisions.md`](decisions.md)
+- **Does not amend:** D-094 amendment 1 dec 3 wording · `PAPER_QUESTIONS`
+  · ABOUT-COPY · F-004 · D-109 ranking-set membership · D-120 review UI ·
+  D-122 `/adcs` pages · D-119 catalog · Kabsch · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
+  `D-110` while later numbers are written). This entry spends `D-123`; the
+  pointer stays the owner's.
+
+#### Context
+
+D-120 closed Phase 2 review UI and left Nectin-4 AdcContext as a later GO.
+The owner Doc is already on `main` (`495fb89` / #226) as an eighth-grade
+paper: Part 1 is the Padcev / Nectin-4 hold; Part 2 is whether that same
+antibody is a universal V-domain key, and two tracks for what to do next.
+`/about` already teaches ADC mechanism and names the paper **questions**
+(D-094). Without the Doc's two tracks, a reader can take the NECTIN4
+worked example as "find the next V-domain and reuse EV." That is the
+premise the Doc refuses.
+
+A second `/nectin` or `/paper` route would compete with the existing
+explainer (Emma: do not invent one). Rewriting ABOUT-COPY or
+`PAPER_QUESTIONS` to make room would breach D-094. Paraphrasing the Doc
+would invent science. Expanding F-004 is a different object. ⚠ **ADC-B
+`/adcs` is no longer a later GO of this entry:** it shipped on `main` as
+D-122 (`86f8a10` / #232) while this PR was open. This GO still does not
+edit those pages.
+
+#### Decision
+
+1. **One About surface, one About route.** The follow-on mounts on
+   existing `/about` → `AdcContext.jsx` only. No second About page.
+   ⚠ Does not edit `/adcs` (D-122 already shipped ADC-B).
+2. **Additive placement.** A new section sits **after** "Why this project
+   exists" / the NECTIN4 worked-example (and the comparator notes that
+   already follow it) and **before** "The questions this project is
+   trying to answer." ⚠ If a layout fight appears, the section moves
+   *after* the questions and the fight is **reported**, not trimmed
+   (D-094: owner copy is not shortened to fit).
+3. **Title and load-bearing claims, in frame.** Heading chrome:
+   **"Two tracks (Nectin-4 / ADC framing)"**. Explicit chrome:
+   **"EV is not a universal V-key"**. Track A (reuse EV; wet bind
+   required; no bind → stop; do not rank docking guesses) and Track B
+   (new antibody, new antigen; rank by ADC biology, not IgV/4JJH
+   similarity) stay visible. Chrome is a label, not science.
+4. **Single source, verbatim extract.** Science copy is taken from
+   [`docs/pharmfold-adc-nectin4-paper.md`](pharmfold-adc-nectin4-paper.md)
+   Part 2 only, stored in thin `ui/src/aboutPaper.js` as **character
+   substrings of that file**. ⚠ Not rewritten, not shortened, not
+   paraphrased. Part 1 is not dumped — `/about` already teaches
+   mechanism; a full-Doc paste would be the Wave2-dump analogue this
+   GO refuses. Markdown `**bold**` is the only transform (render
+   `<strong>`); words do not change.
+5. **D-094 copy is untouched.** `PAPER_QUESTIONS` and the owner-supplied
+   About paragraphs stay byte-identical. This GO adds a section; it does
+   not edit the questions to mention tracks.
+6. **"asks whether", never "shows that".** The standing line on the new
+   section states the page is derived from the Doc and **asks whether**
+   the same antibody is a universal V-domain key. It does not claim a
+   project result. F-004 figures stay off this page (D-094 am1 dec 3 /
+   existing F8).
+7. **Result-sounding Doc lines are flagged, not rewritten.** Two Part 2
+   sentences read as findings: the Taiwan FDA EV / Nectin-1/2/3 clause,
+   and the "Padcev's durable connection… is a high-affinity…" bottom
+   line. They stay verbatim. The PR body names them for Matt. ⚠ A
+   surface that silently dropped them to look more cautious would be
+   editing the Doc. ⚠ **Stay draft until Matt clears those two lines.**
+8. **Cross-links only.** A link back to NECTIN4 `/target/1` is allowed.
+   No Wave2 inventory, no stitch language, no F-004 expand, no Kabsch.
+9. **D-056 split, if the tripwire fires.** D-056 was calibrated on *our*
+   narrative prose. The owner Doc is a different object. If mixing the
+   extract into the Story+About grade exceeds the 12.5 ceiling, the
+   extract is excluded from that measurement and the fight is recorded
+   here — ⚠ **the Doc is not trimmed to appease a tripwire.**
+   **Measured this PR (split not taken):** vitest
+   `src/components/readability.tripwire.test.jsx` printed
+   `[D-056] Flesch–Kincaid grade = 10.97 over 1952 words / 103 sentences
+   (ceiling 12.5)` — the eighth-grade extract pulled the mixed grade
+   *down*. No exclusion, no trim.
+
+#### Deep-learning justification
+
+Track B names fold confidence (pLDDT) as one ranking input. That number
+is an output of the folding network we run (ESMFold, D-003). Putting it
+on `/about` as a **question input** — "rank by (cancer × membrane ×
+internalization × density) / normal risk", with pLDDT listed among the
+terms — keeps the neural score inside an algorithm the Doc *asks
+whether* to use, not a demonstrated V-key. Track A is the complementary
+honesty: a predicted fold is **not** a wet bind; without the assay the
+track is red. A page that omitted Track A would let a reader take
+pLDDT / IgV shape as EV-binding proof. Neutral to the weights;
+load-bearing for whether About can be read as "the model showed EV
+unlocks every V-domain."
+
+#### Provenance (D-016)
+
+- **Owner Doc on `main`:** `docs/pharmfold-adc-nectin4-paper.md` at
+  `495fb89` (#226, 2026-09-05). Source Drive named in that file.
+  UI placement notes (Emma 2026-09-05) are in the same file, lines
+  "UI placement (Emma 2026-09-05)".
+- **Extract scope:** Part 2 only — headings and body from "Short
+  answer" through "Bottom line", including Track A / Track B and
+  "That same antibody is not a universal V-domain key." Confirmed by
+  reading the file, not a memory of it.
+- **D-094 pin:** `PAPER_QUESTIONS` in `AdcContext.jsx` as of `04023a8`
+  (`origin/main` after D-120). This GO does not edit those literals.
+- **Ship id:** Trinity follow-up this session — **D-123**. The check
+  is the `### D-123` heading here, not a citation of it.
+- **Rebase onto D-122:** `origin/main` at `86f8a10` (#232) shipped
+  ADC-B while this PR was open. The first draft of this entry called
+  `/adcs` a later GO and pinned `App.jsx` as having no `/adcs` route.
+  That absence pin is withdrawn; the do-not-edit-D-122 pin stands.
+
+#### Consequences
+
+- Tests that must be able to go red: `/about` renders "Two tracks
+  (Nectin-4 / ADC framing)"; Track A carries wet-bind required / no
+  bind → stop; Track B carries the ranking product; "not a universal
+  V-domain key" is present; every science excerpt is a substring of
+  `docs/pharmfold-adc-nectin4-paper.md`; `PAPER_QUESTIONS` leads and
+  the "asks whether a second, independent axis" body are unchanged;
+  `App.jsx` still has exactly one `/about` route (D-122's `/adcs` pages
+  exist and are not edited); F-004 figures (`0.6607`, `8 of 12`, …)
+  stay absent (existing F8); the new section sits after "Why this
+  project exists" and before "The questions…"; `### D-123 —` exists
+  in this log.
+- `ui/src/aboutPaper.js` is the thin extract. `AdcContext.jsx` imports
+  it. `ARCHITECTURE.md` records the additive `/about` section.
+- Kabsch, F-004 ingest, and Part 1 dump remain later GOs. ADC-B `/adcs`
+  is D-122 on `main`, not this PR.
+
+#### Assumptions refused
+
+- That `/about` may paraphrase the Doc to sound more cautious.
+- That ABOUT-COPY / `PAPER_QUESTIONS` may be shortened to make room.
+- That a second About route is simpler than an additive section.
+- That Track A without the wet-bind stop is still Track A.
+- That this PR may ingest the 27 into F-004 or edit D-122's `/adcs`.
+- That this PR may repair the `D-` next-free pointer.
+- That Matt has cleared the two result-sounding Doc lines (he has not;
+  this PR stays draft until he does).
+
+---
 
 ### D-122 — ADC-B: `/adcs` index + `/adcs/:id` baseball cards consume the D-119 catalog
 
@@ -290,6 +461,7 @@ the model never measured. Neutral to the weights; load-bearing for whether
 - That this page may invent DAR / efficacy / chemistry D-119 refused.
 - That `/about` AdcContext should render the catalog.
 - That ADC-B may reuse D-119, D-120, or D-121 as its ship id.
+
 
 ---
 

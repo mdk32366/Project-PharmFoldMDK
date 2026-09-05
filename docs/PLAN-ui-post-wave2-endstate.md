@@ -61,7 +61,7 @@ bearer-guarded and has **no HTML**.
 | CLI TUI | **no** | argparse CLIs (`emit_tile_jobs`, `retrieve_rental_pae`, `stitch_readiness`) |
 | FastAPI explorer | yes | `/docs`, `/redoc`, `/openapi.json` (framework defaults; excluded from architecture-contract) |
 | Demo notebook | yes | `notebooks/miniature_NECTIN4.ipynb` (NECTIN4 only) |
-| Papers / briefing surfaces | docs, not app | `docs/papers/surfaces/`; `/about` names questions only (D-094 am1) |
+| Papers / briefing surfaces | docs, not app | `docs/papers/surfaces/`; `/about` names questions (D-094 am1) and the Nectin-4/ADC two-track extract (D-123); still no Wave2 dump |
 | External consoles | not in repo | Fly dashboard, RunPod, MPG |
 
 `UI_Plan.md` (Streamlit) is **superseded**. `UI_Plan_v2.md` is original intent; this plan
@@ -189,11 +189,11 @@ Each surface: purpose · who · assumptions · gaps/lies · UX · priority · Ka
 
 | | |
 |---|---|
-| **Purpose / who** | Reviewer / student: ADC mechanism; 82 is a comparator; paper **questions** only. |
-| **Assumes today** | Comment still names "the 48 hold." "What's next" is MSA / AF2-class, not-built (D-107). |
-| **Gaps / lies** | Low user-visible lie (comment). Mechanism graphics unchanged. |
-| **UX** | Do not add a Wave2 results section. Optional: "oversized proteins were tiled and assembled; that is not this page." |
-| **Priority** | **P2** |
+| **Purpose / who** | Reviewer / student: ADC mechanism; 82 is a comparator; paper **questions** (D-094); Nectin-4/ADC two-track extract (D-123). |
+| **Assumes today** | Comment still names "the 48 hold." "What's next" is MSA / AF2-class, not-built (D-107). D-123 adds Track A / Track B from `docs/pharmfold-adc-nectin4-paper.md` Part 2, verbatim, before the questions. |
+| **Gaps / lies** | Low user-visible lie (comment). Mechanism graphics unchanged. Two Doc sentences read as findings (Taiwan FDA clause; "Padcev's durable connection…") — flagged, not rewritten. |
+| **UX** | Do not add a Wave2 results section. Do not invent a second About route. Do not rewrite ABOUT-COPY / `PAPER_QUESTIONS`. |
+| **Priority** | **P2** (D-123 is the follow-on that lands the Doc; still not a Wave2 dump). |
 | **Kabsch** | None. |
 
 ### 3.10 Shared widgets (Confidence, PlddtExplainer, Provenance, Glossary)

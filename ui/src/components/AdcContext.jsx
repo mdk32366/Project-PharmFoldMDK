@@ -2,9 +2,29 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listAnalyses } from '../api.js'
 import { HELDOUT_EXAMPLES } from '../heldoutExamples.js'
+import {
+  TWO_TRACKS_TITLE,
+  EV_NOT_V_KEY_TITLE,
+  STANDING_LINE,
+  SHORT_ANSWER_HEADING,
+  SHORT_ANSWER,
+  V_SURFACE_HEADING,
+  V_SURFACE_BODY,
+  TRACK_A,
+  TRACK_B,
+  BOTTOM_LINE_HEADING,
+  BOTTOM_LINE_1,
+  BOTTOM_LINE_2,
+} from '../aboutPaper.js'
 import AdcSchematic from './AdcSchematic.jsx'
 import AdcMechanismPanels from './AdcMechanismPanels.jsx'
 import Term from './Term.jsx'
+
+// D-123: markdown **bold** is the only transform on a verbatim Doc string.
+function Verbatim({ text }) {
+  const parts = text.split('**')
+  return parts.map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part))
+}
 
 // ADC framing / onboarding (UI Plan v2 §7): keep the metaphor (it is mechanism, not decoration),
 // bound the outcome claims, and let the honest limits sharpen the purpose rather than soften it.
@@ -179,6 +199,38 @@ export default function AdcContext() {
         being excited about; the target selection is where the difficulty actually lives; and a system
         honest about which is which is the more persuasive artefact, not the more timid one.
       </p>
+
+      {/* D-123 — Nectin-4/ADC Doc follow-on. ADDITIVE. Owner Doc is the source
+          (docs/pharmfold-adc-nectin4-paper.md Part 2); strings come from aboutPaper.js
+          VERBATIM. ⚠ Does not rewrite ABOUT-COPY or PAPER_QUESTIONS (D-094 am1 dec 3).
+          ⚠ Placed after "Why this project exists" / NECTIN4 worked-example / comparator
+          notes, before "The questions…". Chrome asks whether; it does not show that. */}
+      <section className="two-tracks" data-about-paper="nectin4-adc" aria-labelledby="two-tracks-heading">
+        <h3 id="two-tracks-heading">{TWO_TRACKS_TITLE}</h3>
+        <p className="note">{STANDING_LINE}</p>
+        <h4>{SHORT_ANSWER_HEADING}</h4>
+        <ol>
+          {SHORT_ANSWER.map((item) => (
+            <li key={item.slice(0, 24)}><Verbatim text={item} /></li>
+          ))}
+        </ol>
+        <h4>{EV_NOT_V_KEY_TITLE}</h4>
+        <p><strong>{V_SURFACE_HEADING}</strong></p>
+        <p><Verbatim text={V_SURFACE_BODY} /></p>
+        <div className="track track-a">
+          <p><Verbatim text={TRACK_A} /></p>
+        </div>
+        <div className="track track-b">
+          <p><Verbatim text={TRACK_B} /></p>
+        </div>
+        <h4>{BOTTOM_LINE_HEADING}</h4>
+        <p><Verbatim text={BOTTOM_LINE_1} /></p>
+        <p><Verbatim text={BOTTOM_LINE_2} /></p>
+        <p>
+          NECTIN4 is the worked example above.{' '}
+          <Link to="/target/1">See its structure →</Link>
+        </p>
+      </section>
 
       {/* ⚠ D-094 amendment 1 dec 3. Placed after "Why this project exists", before "What's next".
           ⚠ The standing line is NOT a footnote and is NOT trimmed to fit a layout. */}
