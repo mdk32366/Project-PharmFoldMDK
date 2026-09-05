@@ -344,5 +344,29 @@ not scientifically solved.
 
 ---
 
+## Addendum 2026-09-05 — D-126 overlap-confidence Kabsch Spec (docs pins) + future A
+
+Hermetic **docs pin tests** for this Spec PR live in
+`tests/test_d126_confidence_kabsch_spec.py`. They must be able to go
+red **without** a live Fly query, GPU, restitch run, or any edit to
+`core/hold48_kabsch.py`. Cite: D-126 Spec
+`docs/SPEC-overlap-confidence-kabsch.md`.
+⚠ The 10.0 Å refuse gate stays. ⚠ Trim / weight change the fit set,
+not the gate. ⚠ Assembler + D-125 `kabsch/` stay callable.
+
+Future **D-126-A** acceptance tests (not this PR) must be able to go
+red for the weighted fit, the trim loop, the refuse table, and the
+no-overwrite rule.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1102** | `### D-126 —` exists; Spec file exists; algorithm name `overlap_confidence_kabsch_then_winning_tile`; 10.0 Å gate pinned; inventory of the five; hard stops; not D-126-A/B | `test_d126_heading_exists_in_the_living_log` · `test_spec_file_exists_and_names_algorithm` · `test_refuse_gate_stays_at_10` · `test_primary_five_inventory` · `test_hard_stops_and_not_ab` |
+| **T-1103** | *(future A)* Weighted Kabsch uses \(w_i = \min(\mathrm{pLDDT}_A, \mathrm{pLDDT}_B)/100\) (clamp \(\ge \varepsilon\)) | `test_weighted_fit_uses_min_plddt_weights` |
+| **T-1104** | *(future A)* Trim loop: while \(n_{\mathrm{eff}} \ge 3\) and weighted RMSD \(> 10.0\) Å, drop highest-residual 10% (min 1), refit; cap 5 rounds | `test_trim_loop_drops_highest_residual_decile` |
+| **T-1105** | *(future A)* Refuse table still gates at 10.0 Å after weight/trim (`overlap_ca_lt_3` / `rmsd_gt_10` / `singular_covariance`); fail closed | `test_refuse_table_stays_at_10_after_trim` |
+| **T-1106** | *(future A)* Artifacts land under `confidence_kabsch/{parent_job_id}/` and do **not** overwrite assembler `stitched.pdb` or D-125 `kabsch/{id}/` | `test_confidence_kabsch_dir_does_not_overwrite_assembler_or_d125_tree` |
+
+---
+
 **End of Test Plan**
 
