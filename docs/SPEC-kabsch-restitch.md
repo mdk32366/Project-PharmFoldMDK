@@ -6,8 +6,9 @@
 >
 > **Date:** 2026-09-05 · **Status:** Spec (algorithm authority). **D-125-A**
 > (core BUILD) implements this file. ⚠ **Not D-125-B.** ⚠ **Not a restitch
-> run of the 27.** ⚠ **Not F-004 ingest.** ⚠ **Seams are not scientifically
-> solved.** Where this file and `docs/README.md` differ, THE LOG GOVERNS.
+> run of the 27.** ⚠ **Not F-004 ingest.**
+> ⚠ **Seams are not scientifically solved.**
+> Where this file and `docs/README.md` differ, THE LOG GOVERNS.
 > A-ship note: Kabsch lives in `core/hold48_kabsch.py` and feeds existing
 > `winning_tile` / `write_stitched`. The assembler is not replaced.
 

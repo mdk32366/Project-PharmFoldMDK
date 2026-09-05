@@ -67,12 +67,20 @@ def test_refuse_v1_defaults_are_named():
 
 def test_twenty_seven_ids_match_existing_inventory():
     from core.hold48_kabsch import KABSCH_RESTITCH_PARENT_IDS
-    from app.reads import WAVE1_WAVE2_STITCHED_PARENT_IDS
+
+    reads = (ROOT / "app" / "reads.py").read_text(encoding="utf-8")
+    block = re.search(
+        r"WAVE1_WAVE2_STITCHED_PARENT_IDS = frozenset\(\{([^}]+)\}\)",
+        reads,
+        re.S,
+    )
+    assert block, "WAVE1_WAVE2_STITCHED_PARENT_IDS must remain the census inventory"
+    reads_ids = frozenset(int(x) for x in re.findall(r"\d+", block.group(1)))
 
     assert len(PARENT_IDS) == 27
     assert 3356 not in PARENT_IDS
     assert KABSCH_RESTITCH_PARENT_IDS == frozenset(PARENT_IDS)
-    assert KABSCH_RESTITCH_PARENT_IDS == WAVE1_WAVE2_STITCHED_PARENT_IDS
+    assert KABSCH_RESTITCH_PARENT_IDS == reads_ids
     for pid in PARENT_IDS:
         assert str(pid) in SPEC, pid
         assert str(pid) in LOG, pid
