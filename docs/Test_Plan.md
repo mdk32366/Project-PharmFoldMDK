@@ -434,14 +434,15 @@ red **without** a live Fly query, GPU, restitch run, or any edit to
 `confidence_kabsch/` stay callable. ⚠ Method must surface D-127
 when the path exists — not a silent code-only ship.
 
-**D-127-A** acceptance tests (later PR, not this one) must be able to
+**D-127-A** acceptance tests (this PR) must be able to
 go red for the per-piece weighted fit (no trim), the refuse table
 including `no_domain_pieces` and `linker_jump_gt_10`, domain-snap
 source identity, all-or-nothing parent refuse, and the no-overwrite
-rule. Cite: a later `core/hold48_piecewise_kabsch.py` (name not
-shipped here).
-⚠ The 10.0 Å refuse gate stays. ⚠ No rent in A. ⚠ `hold48_*.py`
-is not edited in the Spec PR.
+rule. Cite: `core/hold48_piecewise_kabsch.py` +
+`scripts/piecewise_kabsch_restitch.py`.
+⚠ The 10.0 Å refuse gate stays. ⚠ No rent in A. ⚠ `hold48_kabsch.py`
+and `hold48_confidence_kabsch.py` are not edited. ⚠ Method / UI
+remain D-127-B (A does not discharge Spec §7).
 
 | ID | Check | Test name |
 |----|-------|-----------|
@@ -454,10 +455,16 @@ is not edited in the Spec PR.
 | **T-1126** | Ship index distinguishes Spec vs future A/B; PLAN + ARCHITECTURE point at D-127 | `test_ship_index_distinguishes_spec_from_ab_build` · `test_plan_and_architecture_point_at_d127` |
 | **T-1133** | Spec requires Method surface (stitch-path train; 8th-grade excerpt; never seams solved; default served = assembler); Method addendum is **mandatory** before calling D-127 “done”; forbids silent code-only | `test_method_surface_is_mandatory_not_silent_code_only` |
 
-### Future A (named; not implemented in this Spec PR)
+### D-127-A (this PR; T-1127–T-1132 now code)
 
-| ID | Check | Test name (later A) |
-|----|-------|---------------------|
+Hermetic fixtures in `tests/test_d127_piecewise_kabsch.py`. No Fly.
+No GPU. No restitch run of the 27. Cite Spec §1–§3 / §5 and existing
+`winning_tile`. D-125 `write_kabsch_restitch`, D-126
+`write_confidence_kabsch_restitch`, and the assembler stay
+independently callable.
+
+| ID | Check | Test name |
+|----|-------|-----------|
 | **T-1127** | Piece `n_ca < 3` refuses (`overlap_ca_lt_3`); no transformed PDB | `test_piece_n_ca_lt_3_refuses` |
 | **T-1128** | Piece weighted RMSD `> 10.0 Å` refuses (`rmsd_gt_10`) and records the RMSD | `test_piece_rmsd_gt_10_refuses` |
 | **T-1129** | Singular / degenerate piece covariance refuses (`singular_covariance`) | `test_piece_singular_covariance_refuses` |
