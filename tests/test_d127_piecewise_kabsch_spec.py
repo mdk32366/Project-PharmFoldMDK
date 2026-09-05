@@ -201,8 +201,8 @@ def test_ship_index_distinguishes_spec_from_ab_build():
     assert "D-127 already shipped" in INDEX or "D-127 ships the piecewise / domain-aware Kabsch Spec" in INDEX
     assert "Yes — this PR." in INDEX
     assert re.search(r"D-127 Spec.*Already shipped on `main`", _flat(INDEX))
-    assert re.search(r"D-127-A.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
-    assert re.search(r"D-127-B.*No\. Later Emma GO", _flat(INDEX))
+    assert re.search(r"D-127-A.*Already shipped on `main`", _flat(INDEX))
+    assert re.search(r"D-127-B.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
     assert re.search(r"D-126-B.*Already shipped on `main`", _flat(INDEX))
     assert "piecewise_kabsch" in INDEX
     assert "four-path" in INDEX.lower() or "four-path" in INDEX
@@ -311,7 +311,9 @@ def test_method_surface_is_mandatory_not_silent_code_only():
     # B ships Method; A does not discharge it.
     assert "d-127-b" in flat
     assert "does **not** discharge the method obligation" in index_flat or "does not discharge" in index_flat
-    # This Spec PR does not ship the MethodNote UI or rewrite method-hold48.
+    # D-127-B discharges the obligation: the owner markdown now carries the
+    # addendum, and it cites §7 as the authority that made it mandatory.
     method_md = (ROOT / "docs" / "method-hold48-tiles.md").read_text(encoding="utf-8")
-    assert "Addendum D-127" not in method_md
-    assert "D-127 piecewise" not in method_md
+    assert "Addendum D-127-B" in method_md
+    assert "§7" in method_md
+    assert "mandatory" in method_md.lower()

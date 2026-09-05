@@ -190,6 +190,180 @@ export default function MethodNote() {
         </p>
       </div>
 
+      <h3>Piecewise / domain-aware Kabsch, and the whole stitch-path train (D-127-B)</h3>
+      <div data-testid="piecewise-kabsch-method-addendum">
+        <p>
+          There are now <strong>four</strong> ways this project has put
+          two folded tiles next to each other. They are not four
+          answers to one question; they are four different moves, and
+          only the first one is served. Here is the train, in order.
+        </p>
+        <ol>
+          <li>
+            <strong>Assembler</strong> — pick the winner tile by{' '}
+            <Term name="pLDDT">pLDDT</Term> at each residue. This is
+            the <strong>default served</strong> structure, and it stays
+            that way until Matt says otherwise.
+          </li>
+          <li>
+            <strong>D-125 Kabsch</strong> — one unweighted rigid move
+            on the glue Cα atoms, then the same assembler.
+          </li>
+          <li>
+            <strong>D-126 confidence</strong> — one weighted and
+            trimmed rigid move on the same glue, then the same
+            assembler. This one taught us something: a small{' '}
+            <strong>weighted</strong> RMSD can hide a large{' '}
+            <strong>full-overlap</strong> jump. On 2939 / 3272 / 3432
+            the full-overlap number was far larger than the weighted
+            one, with Cα jumps of about{' '}
+            <strong>28–68 Å</strong>. A number you got by dropping the
+            points that disagreed with you is not a solved seam.
+          </li>
+          <li>
+            <strong>D-127 piecewise / domain</strong> — one weighted
+            rigid move <strong>per UniProt domain</strong> that
+            overlaps the glue, then the same assembler.{' '}
+            <strong>No trim loop.</strong> Residues between domains
+            (the linkers) inherit the nearest domain on their
+            N-terminal side that was accepted.
+          </li>
+        </ol>
+        <p>
+          <strong>The refuse table, in plain terms.</strong> A domain
+          piece can refuse if it has fewer than three Cα atoms to fit,
+          if its weighted RMSD comes out above <strong>10.0 Å</strong>,
+          or if its points sit in a line. The whole parent refuses if
+          no domain covers the glue at all, or if a linker Cα jumps
+          more than <strong>10.0 Å</strong>. A refuse writes a record.
+          It does not write a &quot;fixed&quot; structure, and the
+          10.0 Å gate <strong>stays</strong> — recovering none of those
+          three parents is an allowed result, not a reason to move the
+          bar.
+        </p>
+        <p>
+          <strong>What the seam numbers are.</strong> When the fourth
+          tree is on disk, the review card names each piece separately:
+          its domain interval, how many Cα it fitted, its weighted
+          RMSD, and whether it refused. Beside them sit the parent
+          full-overlap RMSD and max Cα jump after those moves, and the
+          linker count with its worst jump. Those are{' '}
+          <strong>measurements</strong>. They are not a verdict that the
+          holoprotein is lined up. Seams are{' '}
+          <strong>not scientifically solved</strong>.
+        </p>
+        <p>
+          <strong>What piecewise Kabsch does not do.</strong> It does
+          not replace the assembler, and the served PDB is still the
+          assembler one. It does not overwrite the D-125 or D-126
+          files. It does not make the long chain one ESMFold pass. It
+          does not fill empty pair-confidence (PAE) between tiles. It
+          does not put these chains into the ranking. It is not
+          medical advice and it is not a holoprotein the model jointly
+          placed. When the fourth tree is missing, the card says so —
+          it does not invent per-piece RMSD, piece counts, or linker
+          counts, and that absence is not a solved seam.
+        </p>
+        <h4>What happened when we actually ran it (D-127 OPS, 2026-09-05)</h4>
+        <p className="note">
+          ⚠ Ops numbers <strong>as recorded</strong> and handed to this
+          page (Matt GO via Emma, 2026-09-05, naming a D-127 OPS
+          restitch of the 27 at tip <code>e49bf34</code>).{' '}
+          <strong>Not run, not queried, and not re-measured here.</strong>
+        </p>
+        <p>
+          We ran piecewise / domain-aware Kabsch over the 27 stitched
+          parents: <strong>PASS 17 · REFUSE 10 · FAIL 0</strong>.
+          Seventeen accepted is not the headline, and here is why.
+        </p>
+        <ul>
+          <li>
+            <strong>It recovered none of the three parents it was
+            built for.</strong>{' '}
+            <code>recovered_of_primary_three</code> = <strong>0</strong>.
+            Parent <strong>2939</strong> refused{' '}
+            <code>linker_jump_gt_10</code>, <strong>3272</strong>{' '}
+            refused <code>rmsd_gt_10</code>, and <strong>3432</strong>{' '}
+            refused <code>no_domain_pieces</code>. Those three were the
+            whole reason the multi-rigid family was proposed.
+          </li>
+          <li>
+            <strong>It lost ground the earlier paths had held.</strong>{' '}
+            <code>n_d125_pass_d127_refuse</code> = <strong>5</strong> —
+            five parents D-125 accepted now refuse.{' '}
+            <code>n_d126_pass_d127_refuse</code> = <strong>7</strong> —
+            seven parents D-126 accepted now refuse. And{' '}
+            <code>n_d126_refuse_d127_pass</code> = <strong>0</strong> —
+            piecewise did not rescue a single parent D-126 had already
+            refused. That is a <strong>named finding</strong>, not a
+            footnote under an accept count.
+          </li>
+          <li>
+            <strong>Where the refuses came from.</strong>{' '}
+            <code>linker_jump_gt_10</code> <strong>×7</strong> (2938,
+            2939, 3179, 3190, 3321, 3368, 3566);{' '}
+            <code>rmsd_gt_10</code> <strong>×2</strong> (3272, 3394);{' '}
+            <code>no_domain_pieces</code> <strong>×1</strong> (3432).
+            Most failures are at the <strong>linkers</strong> — the
+            stretches between domains — which is exactly where cutting
+            one rigid body into several creates new joins.
+          </li>
+        </ul>
+        <p>
+          <strong>So: D-126 remains the best experimental path among
+          the stitch algorithms we have tried so far.</strong> Plainly.
+          And the comparison is a number, not an opinion:{' '}
+          <strong>D-126 OPS recovered 2 of its primary 5</strong> —
+          parents <strong>3368</strong> and <strong>3394</strong> —
+          against D-127&apos;s <strong>0 of 3</strong>. (Both figures
+          are ops results as recorded and handed to this page;{' '}
+          <strong>not re-measured here</strong>.)
+        </p>
+        <p>
+          Worse than &quot;no gain&quot;:{' '}
+          <strong>both parents D-126 recovered are back in D-127&apos;s
+          refuse list</strong> — <strong>3368</strong> under{' '}
+          <code>linker_jump_gt_10</code> and <strong>3394</strong>{' '}
+          under <code>rmsd_gt_10</code>, as the histogram above shows.
+          Piecewise gave back the ground the previous path had won.
+        </p>
+        <p>
+          D-127 was a reasonable hypothesis — fit each domain in its own
+          frame instead of forcing one frame on the whole tile — and the
+          run says it did not pay off.
+        </p>
+        <p>
+          Recovering zero of the three was{' '}
+          <strong>pre-registered as an allowed outcome</strong> before
+          the run. It is a result, not a failure of nerve, and it is{' '}
+          <strong>not</strong> a reason to raise the 10.0 Å gate, relax
+          the linker gate, add a trim loop, or invent a blend.{' '}
+          <strong>No threshold moved because of this run.</strong>{' '}
+          Nothing here flips the served path either: the{' '}
+          <strong>default served structure is still the assembler</strong>,
+          and only a Matt GO can change that — never a pass count. And
+          17 accepted parents are <strong>17 recorded outcomes</strong>,
+          not 17 solved joins. A seam that was recorded is not a seam
+          that was solved.
+        </p>
+        <p>
+          When the fourth tree is on disk, the review card names four
+          paths with four persist stems (<code>stitched</code> vs{' '}
+          <code>kabsch/{'{parent}'}</code> vs{' '}
+          <code>confidence_kabsch/{'{parent}'}</code> vs{' '}
+          <code>piecewise_kabsch/{'{parent}'}</code>) so they cannot be
+          read as one population. The served download is still the
+          assembler <code>stitched</code> one.
+        </p>
+        <p className="note">
+          Owner-facing addendum: <code>docs/method-hold48-tiles.md</code>{' '}
+          (D-127-B). Parent Spec:{' '}
+          <code>docs/SPEC-piecewise-domain-kabsch.md</code> §6 / §7 —
+          which makes this section <strong>mandatory</strong>, not a
+          later nice-to-have.
+        </p>
+      </div>
+
       <h3>What it does today</h3>
       <ul>
         <li>Renders the structures we folded, coloured by the model's <strong>per-residue</strong> confidence (D-039).</li>
