@@ -70,3 +70,53 @@ export const OUT_OF_SCOPE_ROW_IDS = [
   'right-to-try',
   'pipeline',
 ]
+
+// D-124 / ADC-C-A closed phase vocab. The Pipeline filter may use these
+// tokens and an All-phases default — nothing else, and never a guessed
+// "Phase 0" / "preclinical" / "approved" token.
+export const PHASE_VOCAB = [
+  'Phase 1',
+  'Phase 1/2',
+  'Phase 2',
+  'Phase 3',
+  'BLA/NDA submitted',
+  'Other',
+]
+
+export const PIPELINE_INDEX_COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'phase', label: 'Phase' },
+  { key: 'protein', label: 'Protein' },
+]
+
+export const PIPELINE_SHELF = 'pipeline'
+export const APPROVED_SHELF = 'approved'
+
+export function flattenPipelineRow(row) {
+  if (!row) return null
+  return {
+    id: fieldValue(row.id),
+    name: fieldValue(row.name),
+    protein: fieldValue(row.antigen),
+    accession: fieldValue(row.uniprot_accession),
+    stage: fieldValue(row.development_stage),
+    phase: fieldValue(row.phase),
+    citation: fieldValue(row.source_citation),
+    row,
+  }
+}
+
+export function flattenPipeline(catalog) {
+  const rows = Array.isArray(catalog?.pipeline) ? catalog.pipeline : []
+  return rows.map(flattenPipelineRow).filter((r) => r && r.id)
+}
+
+/** `all` (or empty) keeps every row. Any other token must be in PHASE_VOCAB. */
+export function filterPipelineByPhase(rows, phase) {
+  if (!phase || phase === 'all') return rows
+  return rows.filter((r) => r.phase === phase)
+}
+
+export function looksLikeUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//i.test(value)
+}

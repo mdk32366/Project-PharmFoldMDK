@@ -11,10 +11,11 @@ Three sibling files. Do **not** merge them.
 Every field is `{value, source, as_of, confidence}`. Completeness is
 `floor_not_census` — a dated pin, not a census.
 
-ADC-B (`/adcs` pages, **D-122**) consumes `adcs.v1.json` via `GET /api/adcs`.
-ADC-C-A serves the pipeline and access files via `GET /api/adcs/pipeline`,
-`GET /api/adcs/pipeline/{id}`, and `GET /api/adcs/access`. ADC-C-B (UI) is
-a later GO.
+ADC-B (`/adcs` Approved shelf, **D-122**) consumes `adcs.v1.json` via
+`GET /api/adcs`. ADC-C-A serves the pipeline and access files via
+`GET /api/adcs/pipeline`, `GET /api/adcs/pipeline/{id}`, and
+`GET /api/adcs/access`. ADC-C-B (**D-124** UI) consumes those three
+routes on `/adcs` (Pipeline shelf + Access panel + `/adcs/pipeline/:id`).
 
 The scorer's Group B/C file (`data/adc_reference_mapping.csv`, D-029 / D-040)
 is a **different object**. Pipeline v1 starts from that file's already-cited

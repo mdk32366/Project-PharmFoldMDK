@@ -20,6 +20,9 @@ export const getCensusDetail = (id) => getJSON(`/api/census/${id}`)      // D-08
 export const getCensusSummary = () => getJSON('/api/census/summary')
 export const listAdcs = () => getJSON('/api/adcs')              // D-119 / D-122
 export const getAdc = (id) => getJSON(`/api/adcs/${id}`)        // D-119 / D-122
+export const listPipelineAdcs = () => getJSON('/api/adcs/pipeline')           // D-124
+export const getPipelineAdc = (id) => getJSON(`/api/adcs/pipeline/${id}`)     // D-124
+export const getAdcAccess = () => getJSON('/api/adcs/access')                 // D-124
 
 
 // 3Dmol.js takes the structure BY URL (D-034 decision 2) so the browser caches it independently

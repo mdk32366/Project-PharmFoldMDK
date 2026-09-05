@@ -632,6 +632,27 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .scorer-assembly-note { margin: 0.4rem 0 1rem; }
 
 /* D-122 / ADC-B — catalog index + baseball card */
+/* D-124 / ADC-C-B — Approved | Pipeline shelves + Access panel */
+.adcs-shelf {
+  display: flex; gap: 0.4rem; margin: 0.8rem 0 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.adcs-shelf-tab {
+  background: transparent; color: var(--muted); border: 0;
+  border-bottom: 2px solid transparent; padding: 0.35rem 0.7rem;
+  cursor: pointer; font: inherit;
+}
+.adcs-shelf-tab.active { color: var(--ink); border-bottom-color: var(--link); }
+.adc-access-panel {
+  margin: 1.4rem 0 0; padding: 0.85rem 1rem;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
+}
+.adc-access-disclaimer {
+  margin: 0.4rem 0 0.8rem; padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--line); color: var(--ink);
+}
+.adc-access-floor { color: var(--muted); font-size: 0.9rem; }
+.adc-nct-list { margin: 0.2rem 0 0.4rem; padding-left: 1.1rem; }
 .adcs-index .lede { color: var(--muted); }
 .adcs-floor { margin: 0.8rem 0; }
 .adcs-exclusions { color: var(--muted); font-size: 0.9rem; }

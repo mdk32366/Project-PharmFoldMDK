@@ -279,4 +279,25 @@ Cite: D-111 UncoveredResidue refuse · wave1 FAIL 17 · parent 2817 · Architect
 
 ---
 
+## Addendum 2026-09-05 — D-124 / ADC-C-B `/adcs` Pipeline + Access
+
+Acceptance tests for the ADC-C-B UI slice. Implemented in
+`ui/src/adcCatalog.test.js`, `ui/src/components/AdcsView.test.jsx`,
+`ui/src/components/AdcAccessPanel.test.jsx`,
+`ui/src/components/AdcPipelineCard.test.jsx`, and
+`ui/src/App.test.jsx`. Each AT must be able to go red. Prefers the A
+APIs + fixtures — does not invent pipeline JSON rows.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1082** | `/adcs` default shelf is Approved and still consumes `listAdcs` / D-119 | `renders rows from the catalog payload and derives the count` |
+| **T-1083** | Approved \| Pipeline tablist switches the index to `listPipelineAdcs` | `Pipeline shelf consumes GET /api/adcs/pipeline and not the approved catalog` |
+| **T-1084** | Phase filter is the closed vocab and can empty the table honestly | `phase filter uses the Architect closed set and can empty the table` |
+| **T-1085** | Access panel consumes `/api/adcs/access` and shows the required disclaimer | `Access panel surfaces the A disclaimer and named NCT ids` |
+| **T-1086** | Missing / failed access is an empty state, not invented trials | `failed access fetch is an honest miss, not invented NCT copy` |
+| **T-1087** | `/adcs/pipeline/:id` consumes `getPipelineAdc`; unknown id is not a guess | `pipeline card renders a D-124 row; unknown id is not a 200-with-a-guess` |
+
+---
+
 **End of Test Plan**
+

@@ -18,10 +18,11 @@ NOTE = (ROOT / "ui" / "src" / "components" / "MethodNote.jsx").read_text(
 LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
 APP = (ROOT / "ui" / "src" / "App.jsx").read_text(encoding="utf-8")
 
-# D-122 / #232 shipped this exact route set on main (86f8a10). This PR must
-# not ADD a third /adcs path and must not delete the two that already exist.
+# D-122 / #232 shipped /adcs + /adcs/:id on main (86f8a10). D-124 / ADC-C-B
+# adds /adcs/pipeline/:id before :id. MethodNote still must not grow a route.
 # Pin is the path list, not `git diff 86f8a10` — shallow CI has no that SHA.
 D122_ADCS_PATHS = ["/adcs", "/adcs/:id"]
+D124_ADCS_PATHS = ["/adcs", "/adcs/pipeline/:id", "/adcs/:id"]
 
 
 def _flat(text: str) -> str:
@@ -72,15 +73,16 @@ def test_d121_living_log_present():
 
 
 def test_this_pr_must_not_add_adcs():
-    """THIS PR does not ADD /adcs. D-122 already shipped them on main.
+    """D-121 Method surfaces do not ADD /adcs. D-122 routes stay.
 
-    Do not assert that main lacks /adcs. Do not regress D-122 routes.
-    The pin is the exact D-122 path set (86f8a10 / #232). A third path
-    goes red. Deleting either shipped path goes red. Shallow CI cannot
-    ``git diff 86f8a10``.
+    D-124 / ADC-C-B is the authorized third path (pipeline card).
+    Deleting either shipped D-122 path still goes red. Shallow CI
+    cannot ``git diff 86f8a10``.
     """
     paths = re.findall(r'path="(/adcs[^"]*)"', APP)
-    assert paths == D122_ADCS_PATHS, paths
+    assert paths == D124_ADCS_PATHS, paths
+    for required in D122_ADCS_PATHS:
+        assert required in paths
     assert '<NavLink to="/adcs">ADCs</NavLink>' in APP
     assert 'path="/adcs" element={<AdcsView />}' in APP
     assert 'path="/adcs/:id" element={<AdcCardRoute />}' in APP

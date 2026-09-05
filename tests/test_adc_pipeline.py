@@ -219,10 +219,13 @@ def test_access_missing_disclaimer_token_is_rejected(tmp_path):
         load_access(_write(tmp_path / "a.json", access))
 
 
-def test_no_pipeline_ui_on_adcs_routes():
-    """ADC-C-B is later. D-122's exact React path set stays two routes."""
+def test_pipeline_ui_on_adcs_routes():
+    """ADC-C-B: D-122 paths stay; pipeline card is declared before :id."""
     app = (ROOT / "ui" / "src" / "App.jsx").read_text(encoding="utf-8")
     assert 'path="/adcs"' in app
     assert 'path="/adcs/:id"' in app
-    assert 'path="/adcs/pipeline"' not in app
-    assert "PipelineView" not in app
+    assert 'path="/adcs/pipeline/:id"' in app
+    assert "AdcPipelineCard" in app
+    pipeline_at = app.index('path="/adcs/pipeline/:id"')
+    approved_at = app.index('path="/adcs/:id"')
+    assert pipeline_at < approved_at
