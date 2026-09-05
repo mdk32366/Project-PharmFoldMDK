@@ -105,10 +105,12 @@ describe('AdcsView — D-122 index', () => {
   it('refuses invented science keys and pipeline-as-row language', async () => {
     const { container } = renderIndex()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-    const text = container.textContent.toLowerCase()
-    for (const banned of ['dar', 'ic50', 'orr', 'pfs', '"os"', 'payload', 'linker']) {
-      expect(text).not.toContain(` ${banned} `)
+    // Field labels / columns — not a substring of the existing ADC glossary
+    // ("toxic payload" in Term). D-119 refused DAR/IC50 as catalog keys.
+    for (const banned of [/^\s*DAR\s*$/i, /^\s*IC50\s*$/i, /^\s*ORR\s*$/i, /^\s*PFS\s*$/i]) {
+      expect(screen.queryByRole('columnheader', { name: banned })).toBeNull()
     }
+    expect(container.textContent).not.toMatch(/\bDAR\b|\bIC50\b|\bORR\b|\bPFS\b/)
     expect(container.textContent).toMatch(/not.*pipeline or Right-to-Try/i)
   })
 })
