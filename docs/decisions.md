@@ -13,7 +13,7 @@
   B does **not** re-implement persist. Assembler remains the default
   served PDB until a Matt swap GO. When the tree is missing, do not
   imply a D-126 path exists and do not invent RMSD / trim counts. Cite
-  D-126-A `aa8aa02` + Spec §6.
+  Spec §6 + `#### D-126 amendment 1` + D-126-A `aa8aa02`.
 - **D-126-A already shipped** the overlap-confidence Kabsch core BUILD
   on `main` (`aa8aa02` / #241) —
   [`core/hold48_confidence_kabsch.py`](../core/hold48_confidence_kabsch.py)

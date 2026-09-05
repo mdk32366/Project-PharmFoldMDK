@@ -219,23 +219,31 @@ So the rule is not "be careful" — it is:
   ⚠ **Not ADC-C.** Prefer leave `/adcs` alone.
   ⚠ **No rent / GPU / RunPod.**
   ⚠ **Seams are not scientifically solved.** Never claim they are.
-- **Ruled by:** Trinity Architect bar **LOCKED** 2026-09-05 for D-126-B:
-  UI triple-path honesty only; name assembler vs D-125 `kabsch/` vs
-  D-126 `confidence_kabsch/` clearly when A's tree is on disk;
-  **served path = assembler** until a Matt swap GO
-  (do not pretend D-125 or D-126 is live-served); no invented seam /
-  RMSD / trim numbers — only show if computed/present in A's artifacts;
-  honest empty otherwise; when the `confidence_kabsch/` tree is
-  missing, do **not** imply a D-126 path exists; no F-004; no live
-  restitch of the 27; no rent in this PR; cite D-126-A `aa8aa02` +
-  Spec §6; draft PR, do not merge. Parent: D-126-A (`aa8aa02` / #241)
-  — B is UI only. Emma BUILD GO 2026-09-05 + Emma pin reinforce:
-  triple-path honesty + Method addendum + provenance labeling. Follow
-  existing Method / Phase / D-125-B UI patterns (D-121 / D-120 /
-  D-125-B). Prefer in-repo Spec + this pin if a later note conflicts.
+- **Ruled by:** Trinity Architect bar **LOCKED** 2026-09-05 for D-126-B
+  (bind exactly; prefer Spec §6 + `#### D-126 amendment 1` wording if
+  any conflict):
+  1. UI triple-path: assembler / D-125 `kabsch/` / D-126
+     `confidence_kabsch/`
+  2. Default served = assembler until a Matt swap GO
+  3. Read A's tree only — show `n_ca`, `n_ca_eff`, weighted RMSD,
+     `rmsd_full_overlap_angstrom`, `max_ca_jump_angstrom`,
+     `trim_rounds`, `refuse_reason` when present (amendment 1: A
+     writes full-overlap + jump; B shows; honest null on
+     refuse-before-transform)
+  4. Honest empty if missing; no invent
+  5. No F-004; no live restitch
+  6. Forbidden solved language (“aligned,” “superimposed,”
+     “seams solved,” “full-length AF-quality”)
+  Cite Spec §6 + amend 1 + D-126-A `aa8aa02`. Draft PR; do not merge.
+  Parent: D-126-A (`aa8aa02` / #241) — B is UI only. Emma BUILD GO
+  2026-09-05 + Emma pin reinforce: triple-path honesty + Method
+  addendum + provenance labeling. Follow existing Method / Phase /
+  D-125-B UI patterns (D-121 / D-120 / D-125-B).
 - **Cite:** D-126 Spec §6
   ([`SPEC-overlap-confidence-kabsch.md`](SPEC-overlap-confidence-kabsch.md)
-  §6) · D-126-A sibling tree (`aa8aa02` / #241) · D-125-B dual-path
+  §6) · `#### D-126 amendment 1` (full-overlap RMSD + max Cα jump;
+  B shows, does not invent; null on refuse-before-transform) ·
+  D-126-A sibling tree (`aa8aa02` / #241) · D-125-B dual-path
   pattern (`aa8d3f1` / #238) · D-121 Method hold-48 explainer · D-120
   Phase 2 `assembly_review` · D-118 assembler-not-Kabsch honesty ·
   D-117 PLAN · D-111 `winning_tile` · D-109 ruling 7 · D-016 · D-001

@@ -176,17 +176,30 @@ def test_d126_b_heading_exists_in_the_living_log():
     assert "Seams are not scientifically solved" in LOG
     assert "Spec §6" in LOG
     assert "aa8aa02" in LOG
-    assert "served path = assembler" in LOG
-    assert "do not pretend D-125 or D-126 is live-served" in LOG
+    assert "Default served = assembler" in LOG
+    assert "Do not auto-serve" in LOG
 
 
 def test_trinity_locked_bar_cites_d126a_and_spec_section_six():
-    assert "aa8aa02" in LOG
-    assert "Spec §6" in LOG
-    assert "LOCKED" in LOG
-    assert "served path = assembler" in LOG
+    """Trinity bar LOCKED: cite Spec §6 + amend 1; served path is assembler."""
+    start = LOG.find("### D-126-B — UI triple-path honesty")
+    end = LOG.find("### D-126-A —", start + 1)
+    section = LOG[start:end] if start != -1 and end != -1 else ""
+    assert section, "D-126-B heading must exist so the LOCKED bar can be pinned"
+    assert "LOCKED" in section
+    assert "Spec §6" in section
+    assert "#### D-126 amendment 1" in section
+    assert "rmsd_full_overlap_angstrom" in section
+    assert "max_ca_jump_angstrom" in section
+    assert "refuse-before-transform" in section
+    assert "Default served = assembler" in section
+    assert "No F-004" in section
+    assert "aligned," in section
+    assert "seams solved" in section
+    assert "aa8aa02" in section
     assert "aa8aa02" in INDEX
     assert "Spec §6" in INDEX
+    assert "amendment 1" in INDEX
     assert "UI triple-path honesty only" in INDEX
 
 
