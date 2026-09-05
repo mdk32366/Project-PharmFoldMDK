@@ -261,4 +261,22 @@ MSA worker image is slice C.
 
 ---
 
+## Addendum 2026-09-04 — D-116 `stitch_readiness` gate (wave1 false-ready)
+
+Acceptance tests for the hold-48 stitch-ready gate. Implemented in
+`tests/test_hold48_stitch_readiness.py` against SQLite + the same `plan_tiles` /
+`emit_tile_jobs` path as D-111. Each AT must be able to go red **without the gate**
+(import/`ready` contract). No GPU. No Fly. `hold48_stitch.py` is not the subject.
+Cite: D-111 UncoveredResidue refuse · wave1 FAIL 17 · parent 2817 · Architect ruling
+2026-09-04.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1078** | Long parent with only 1 complete tile (Wave A / parent-2817 class) → `ready=False`, `missing` includes the rest | `test_long_parent_with_one_complete_tile_is_not_ready` |
+| **T-1079** | Full cover, every expected tile complete + PDB + PAE → `ready=True` | `test_full_cover_complete_with_pae_is_ready` |
+| **T-1080** | Full cover but one tile missing PAE → `ready=False` | `test_full_cover_missing_one_pae_is_not_ready` |
+| **T-1081** | Mucin / no tiles → not ready, empty expected | `test_mucin_or_no_tiles_is_not_ready` |
+
+---
+
 **End of Test Plan**
