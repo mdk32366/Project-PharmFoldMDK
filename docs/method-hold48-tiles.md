@@ -8,6 +8,8 @@ UI). #229 stays merged; this file does not reopen it.*
 Facts come from entries that already exist. If those entries did not say it,
 this file does not say it. ⚠ **Not a restitch run of the 27. Not F-004. Not `/adcs`.**
 A D-125-B addendum names what a Kabsch-path restitch does and does not.
+A D-126-B addendum names what weighted / trimmed Kabsch does and does not
+versus the assembler and versus D-125.
 
 ---
 
@@ -87,6 +89,44 @@ cannot be read as one population. Overlap RMSD and max Cα jump are
 shown only if A's provenance/seams files already computed them. If
 those numbers are missing, the card says so — it does not invent them.
 
+## Addendum D-126-B — what overlap-confidence Kabsch does (and does not)
+
+The assembler path above is still the **default served structure**.
+D-125-A wrote a second sibling tree under `kabsch/{parent}/`.
+D-126-A wrote a **third** sibling tree under
+`confidence_kabsch/{parent}/`. This page does not swap either tree
+in as "the" structure. A later Matt GO would have to name that swap.
+
+**What overlap-confidence Kabsch does.** After the tiles are already
+folded by ESMFold, this third path is still a math move. It rotates
+and slides one tile so the shared stretch sits closer to the other
+tile's shared stretch. The difference is which glue atoms it listens
+to: it down-weights shaky residues (low pLDDT) and can drop the
+worst-fitting 10% of overlap points, then measures a **weighted**
+RMSD. The **10.0 Å refuse gate stays**. Then the same winner-tile
+assembler still picks which tile wins each residue. The network does
+not run again. No atom is invented. A refused seam writes a record
+and does not write a "fixed" structure.
+
+**What overlap-confidence Kabsch does not do.** It does not replace
+the assembler. It does not overwrite the D-125 Kabsch-path files.
+It does not make the long chain one ESMFold pass. It does not fill
+empty pair-confidence (PAE) between tiles. It does **not** mean the
+joins are scientifically solved. Seams are **not scientifically
+solved**. It does not put these chains into the ranking (**D-109**).
+It is not medical advice and it is not a holoprotein the model
+jointly placed. It does not invent RMSD or trim counts when the
+third tree is missing.
+
+When the third tree is on disk, the review card names **three**
+paths with different persist stems (`stitched` vs `kabsch/{parent}`
+vs `confidence_kabsch/{parent}`) so they cannot be read as one
+population. Weighted RMSD, full-overlap RMSD, max Cα jump, effective
+Cα count, and trim rounds are shown only if A's provenance/seams
+files already computed them. If those numbers are missing, the card
+says so — it does not invent them. When the third tree is missing,
+the card does not pretend the D-126 path exists.
+
 ## The rental is CLOSED
 
 The rented GPU that folded these tiles is done. Hold-48 rental is **CLOSED**
@@ -98,7 +138,7 @@ to rent another card. Do not Deploy. Do not emit.
 ## What this file is not
 
 - Not a licence to call the joins scientifically solved, or to treat a
-  Kabsch-path file as the default served PDB.
+  Kabsch-path or D-126-path file as the default served PDB.
 - Not a licence to run a live restitch of the 27, or to re-open rental.
 - Not F-004 / ranking ingest.
 - Not the ADC-B `/adcs` page (D-122 already shipped that on `main`). Not the Nectin-4 Doc.

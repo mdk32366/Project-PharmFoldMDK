@@ -134,6 +134,62 @@ export default function MethodNote() {
         </p>
       </div>
 
+      <h3>Overlap-confidence Kabsch — what it does, and what it does not (D-126-B)</h3>
+      <div data-testid="confidence-kabsch-method-addendum">
+        <p>
+          The assembler path above is still the <strong>default served
+          structure</strong>. A later GO wrote a third, sibling tree of
+          files under <code>confidence_kabsch/{'{parent}'}</code>. This
+          page does not swap that tree in as &quot;the&quot; structure.
+          The D-125 Kabsch-path files stay a separate population.
+        </p>
+        <p>
+          <strong>What overlap-confidence Kabsch does.</strong> After
+          the tiles are already folded by{' '}
+          <Term name="ESMFold">ESMFold</Term>, this third path is still
+          a math move. It rotates and slides one tile so the shared
+          stretch sits closer to the other tile. The difference is
+          which glue atoms it listens to: it down-weights shaky
+          residues (low <Term name="pLDDT">pLDDT</Term>) and can drop
+          the worst-fitting 10% of overlap points, then measures a
+          weighted RMSD. The 10.0 Å refuse gate stays. Then the same
+          winner-tile assembler still picks which tile wins each
+          residue. The network does not run again. No atom is invented.
+          A refused seam writes a record and does not write a
+          &quot;fixed&quot; structure.
+        </p>
+        <p>
+          <strong>What overlap-confidence Kabsch does not do.</strong>{' '}
+          It does not replace the assembler. It does not overwrite the
+          D-125 Kabsch-path files. It does not make the long chain one
+          ESMFold pass. It does not fill empty pair-confidence (PAE)
+          between tiles. It does <strong>not</strong> mean the joins
+          are scientifically solved. Seams are{' '}
+          <strong>not scientifically solved</strong>. It does not put
+          these chains into the ranking. It is not medical advice and
+          it is not a holoprotein the model jointly placed. It does
+          not invent RMSD or trim counts when the third tree is
+          missing.
+        </p>
+        <p>
+          When the third tree is on disk, the review card names three
+          paths with different persist stems (<code>stitched</code> vs{' '}
+          <code>kabsch/{'{parent}'}</code> vs{' '}
+          <code>confidence_kabsch/{'{parent}'}</code>) so they cannot
+          be read as one population. Weighted RMSD, full-overlap RMSD,
+          max Cα jump, effective Cα count, and trim rounds are shown
+          only if those files already computed them. If the numbers
+          are missing, the card says so — it does not invent them.
+          When the third tree is missing, the card does not pretend
+          the D-126 path exists.
+        </p>
+        <p className="note">
+          Owner-facing addendum: <code>docs/method-hold48-tiles.md</code>{' '}
+          (D-126-B). Parent Spec:{' '}
+          <code>docs/SPEC-overlap-confidence-kabsch.md</code>.
+        </p>
+      </div>
+
       <h3>What it does today</h3>
       <ul>
         <li>Renders the structures we folded, coloured by the model's <strong>per-residue</strong> confidence (D-039).</li>

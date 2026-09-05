@@ -77,6 +77,24 @@ def test_d125_b_method_addendum_names_does_and_does_not():
         assert "full-length af-quality" not in lowered, label
 
 
+def test_d126_b_method_addendum_names_does_and_does_not():
+    """D-126-B addendum: what weighted/trimmed Kabsch does / does not; never seams solved."""
+    for text, label in ((DOC, "method-hold48-tiles.md"), (NOTE, "MethodNote.jsx")):
+        flat = _flat(text)
+        lowered = flat.lower()
+        assert "What overlap-confidence Kabsch does" in flat, label
+        assert "What overlap-confidence Kabsch does not do" in flat, label
+        assert "default served" in lowered, label
+        assert "not scientifically solved" in lowered, label
+        assert "not medical advice" in lowered, label
+        assert "does not invent" in lowered, label
+        assert "confidence_kabsch" in lowered, label
+        assert "seams solved" not in lowered, label
+        assert "kabsch aligned" not in lowered, label
+        assert "we ran kabsch" not in lowered, label
+        assert "full-length af-quality" not in lowered, label
+
+
 def test_d125_b_living_log_present():
     """Living-doc rule: the B heading exists. A citation is not the entry."""
     assert re.search(
@@ -85,6 +103,11 @@ def test_d125_b_living_log_present():
         re.M,
     ), "D-125-B must be a real ### entry, not a citation of one"
     assert re.search(r"^### D-125 — Kabsch restitch Spec", LOG, re.M)
+    assert re.search(
+        r"^### D-126-B — UI triple-path honesty",
+        LOG,
+        re.M,
+    ), "D-126-B must be a real ### entry, not a citation of one"
 
 
 def test_d121_living_log_present():

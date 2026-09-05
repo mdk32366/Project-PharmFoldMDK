@@ -239,7 +239,7 @@ def test_b_does_not_reimplement_persist_writer():
     assert "def write_kabsch_restitch" not in reader
     assert "def write_provenance" not in reader
     assert "write_kabsch_restitch" in KABSCH_WRITER
-    assert "dual_path_payload" in READS
+    assert "dual_path_payload" in READS or "triple_path_payload" in READS
     assert "WAVE1_WAVE2_STITCHED_PARENT_IDS" not in (ROOT / "core" / "scorer.py").read_text(
         encoding="utf-8"
     )

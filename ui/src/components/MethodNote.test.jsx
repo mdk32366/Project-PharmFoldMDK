@@ -88,6 +88,22 @@ describe('MethodNote — D-121 hold-48 8th-grade explainer (additive, not a gut)
     expect(add.textContent).not.toMatch(/seams solved|Kabsch aligned|we ran Kabsch|full-length AF-quality/)
   })
 
+  it('adds a D-126-B weighted/trimmed Kabsch does / does-not addendum without claiming seams solved', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const add = getByTestId('confidence-kabsch-method-addendum')
+    expect(add.textContent).toMatch(/What overlap-confidence Kabsch does/)
+    expect(add.textContent).toMatch(/What overlap-confidence Kabsch does not do/)
+    expect(add.textContent).toMatch(/default served/)
+    expect(add.textContent).toMatch(/does not run again/)
+    expect(add.textContent).toMatch(/not medical advice/)
+    expect(add.textContent).toMatch(/not scientifically solved/)
+    expect(add.textContent).toMatch(/does not invent/)
+    expect(add.textContent).toMatch(/confidence_kabsch/)
+    expect(add.textContent).not.toMatch(/seams solved|Kabsch aligned|we ran Kabsch|full-length AF-quality/)
+  })
+
   it('keeps the standing MethodNote claims (does not gut D-028 / D-050 / D-051)', async () => {
     getCoverage.mockResolvedValue(FIXTURE)
     const { container } = renderMethod()
