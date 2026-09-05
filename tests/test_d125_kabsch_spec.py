@@ -86,13 +86,14 @@ def test_twenty_seven_ids_match_existing_inventory():
         assert str(pid) in LOG, pid
 
 
-def test_ship_index_names_a_as_this_pr_and_b_as_later():
+def test_ship_index_names_b_as_this_pr_and_a_as_already_shipped():
     assert "D-125 ships the Kabsch restitch Spec" in INDEX
-    assert "D-125-A ships" in INDEX or "D-125-A** | Kabsch core BUILD" in INDEX
+    assert "D-125-B ships" in INDEX
     assert "Yes — this PR." in INDEX
-    assert re.search(r"D-125-A.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
-    assert re.search(r"D-125-B.*\*\*No\.\*\*", _flat(INDEX))
-    assert "Not D-125-B" in INDEX or "D-125-B is NOT this PR" in INDEX
+    assert re.search(r"D-125-B.*\*\*Yes — this PR\.\*\*", _flat(INDEX))
+    assert re.search(r"D-125-A.*Already shipped on `main`", _flat(INDEX))
+    assert "UI dual-path honesty only" in INDEX
+    assert "does **not** re-implement persist" in INDEX or "does not re-implement persist" in INDEX.lower()
 
 
 def test_plan_kabsch_park_points_at_d125():

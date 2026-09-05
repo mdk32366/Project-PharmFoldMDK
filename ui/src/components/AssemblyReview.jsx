@@ -1,7 +1,103 @@
 import { Link } from 'react-router-dom'
 
 // D-120 / PLAN §3.6 — review payload for an assembled parent.
-// Ops numbers, not a restitch GO. Kabsch stays parked.
+// D-125-B — dual-path honesty: name assembler vs Kabsch-path when A's
+// sibling tree is on disk. Ops numbers, not a restitch GO. Seams not solved.
+
+function formatMeasure(value, { missing = 'not computed on this path' } = {}) {
+  if (value == null || value === '') return missing
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return `${value.toFixed(2)} Å`
+  }
+  return String(value)
+}
+
+function DualPathHonesty({ dualPath }) {
+  if (!dualPath) return null
+  const assembler = dualPath.assembler || {}
+  const kabsch = dualPath.kabsch || {}
+  const seams = kabsch.seams || []
+  return (
+    <div className="dual-path" data-testid="dual-path-honesty">
+      <h4>Two paths — not one population</h4>
+      <p className="caveat">
+        ⚠ Persist stems must not collide. Assembler files stay{' '}
+        <code>{assembler.persist_stem || 'stitched'}</code>. Kabsch-path
+        files, when present, live under{' '}
+        <code>{kabsch.persist_stem || 'kabsch/{parent}'}</code>. The
+        assembler PDB remains the default served structure. Seams are{' '}
+        <strong>not scientifically solved</strong>.
+      </p>
+      <dl className="assembly-prov">
+        <div>
+          <dt>Assembler path</dt>
+          <dd>{assembler.label || 'pLDDT winner-tile assembler (default served)'}</dd>
+        </div>
+        <div>
+          <dt>Kabsch-path</dt>
+          <dd>{kabsch.present ? kabsch.label : (kabsch.empty_note || 'not on disk for this parent')}</dd>
+        </div>
+        <div>
+          <dt>Kabsch persist stem</dt>
+          <dd><code>{kabsch.persist_stem || '—'}</code></dd>
+        </div>
+      </dl>
+
+      {kabsch.present ? (
+        <div data-testid="kabsch-seams">
+          <h4>Kabsch-path seam measurements</h4>
+          <p className="note">
+            Numbers come from A&apos;s <code>provenance.json</code> /{' '}
+            <code>seams.jsonl</code>. A missing RMSD or max Cα jump is an
+            absence, not a solved seam. A refuse is a recorded outcome,
+            not a &quot;fixed&quot; badge.
+          </p>
+          {seams.length === 0 ? (
+            <p className="note" data-testid="kabsch-seams-empty">
+              Seam rows were not written on this path.
+            </p>
+          ) : (
+            <table className="tile-table">
+              <thead>
+                <tr>
+                  <th>Tiles</th>
+                  <th>Overlap</th>
+                  <th>n_Cα</th>
+                  <th>RMSD</th>
+                  <th>Max Cα jump</th>
+                  <th>Refuse</th>
+                </tr>
+              </thead>
+              <tbody>
+                {seams.map((s, i) => (
+                  <tr key={`${s.moving_tile_index}-${i}`}>
+                    <td className="mono">
+                      {s.reference_tile_index}→{s.moving_tile_index}
+                    </td>
+                    <td className="mono">
+                      {s.overlap_start != null && s.overlap_end != null
+                        ? `${s.overlap_start}–${s.overlap_end}`
+                        : '—'}
+                    </td>
+                    <td className="mono">{s.n_ca != null ? s.n_ca : '—'}</td>
+                    <td>{formatMeasure(s.rmsd_angstrom)}</td>
+                    <td>{formatMeasure(s.max_ca_jump_angstrom)}</td>
+                    <td className="mono">{s.refuse_reason == null ? 'none' : s.refuse_reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      ) : (
+        <p className="note" data-testid="kabsch-path-empty">
+          {kabsch.empty_note
+            || 'Kabsch-path artifacts are not on disk for this parent. No overlap RMSD and no max Cα jump to show.'}
+        </p>
+      )}
+    </div>
+  )
+}
 
 function PaeBadge({ yes }) {
   return (
@@ -96,8 +192,10 @@ export default function AssemblyReview({ review }) {
         </tbody>
       </table>
 
-      <DownloadList items={review.downloads?.stitched} heading="Downloads — stitched.*" />
+      <DownloadList items={review.downloads?.stitched} heading="Downloads — assembler stitched.*" />
       <DownloadList items={review.downloads?.tiles} heading="Downloads — tileN.* / spare*" />
+
+      <DualPathHonesty dualPath={review.dual_path} />
 
       <h4>Assembly provenance</h4>
       <dl className="assembly-prov">

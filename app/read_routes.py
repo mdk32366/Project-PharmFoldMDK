@@ -31,7 +31,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
 from app import reads
-from app.deps import get_engine
+from app.deps import get_artifact_root, get_engine
 from core.adc_catalog import get_access, get_adc, get_pipeline_adc, list_adcs, list_pipeline
 from core.cancer_associations import load_associations
 
@@ -233,7 +233,11 @@ def census_summary(engine: Any = Depends(get_engine)) -> dict:
 
 
 @read_router.get("/census/{analysis_id}")
-def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> dict:
+def get_census_detail(
+    analysis_id: str,
+    engine: Any = Depends(get_engine),
+    artifact_root: str = Depends(get_artifact_root),
+) -> dict:
     """One census protein: status, span topology (F-037), and cancer-association COVERAGE.
 
     ⚠ A cohort id here is a 404, not a redirect — the two populations are measured under different
@@ -287,7 +291,7 @@ def get_census_detail(analysis_id: str, engine: Any = Depends(get_engine)) -> di
                 status_code=404,
                 detail=("no census protein carries the accession %s"
                         % analysis_id.strip().upper()))
-    record = reads.get_census_detail(engine, resolved)
+    record = reads.get_census_detail(engine, resolved, artifact_root=artifact_root)
     if record is None:
         raise HTTPException(status_code=404, detail="unknown census analysis")
     # ⚠ D-079 amendment 1, ruled by amendment 2. Composed HERE, at the route, from a supplier that

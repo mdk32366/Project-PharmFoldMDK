@@ -165,7 +165,41 @@ export default function Provenance({ detail, assemblyReview }) {
             </div>
           </dl>
           <p className="note">
-            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved (D-120).
+            pLDDT-overlap assembler, not Kabsch. Seams are not scientifically solved (D-120 / D-125-B).
+          </p>
+        </div>
+      )}
+
+      {assemblyReview?.dual_path && (
+        <div role="group" aria-label="Dual-path persist stems" className="prov-group prov-dual-path" data-testid="dual-path-provenance">
+          <h4>Persist stems — two paths, not one population</h4>
+          <dl>
+            <div>
+              <dt>Assembler persist stem</dt>
+              <dd>
+                <code>{assemblyReview.dual_path.assembler?.persist_stem || 'stitched'}</code>
+                {' '}(default served PDB)
+              </dd>
+            </div>
+            <div>
+              <dt>Kabsch-path persist stem</dt>
+              <dd>
+                <code>{assemblyReview.dual_path.kabsch?.persist_stem || 'kabsch/{parent}'}</code>
+                {assemblyReview.dual_path.kabsch?.present
+                  ? ' — sibling tree on disk; not the served path'
+                  : ' — not on disk for this parent'}
+              </dd>
+            </div>
+            <div>
+              <dt>Served path</dt>
+              <dd>assembler until a later ops restitch GO names a swap</dd>
+            </div>
+          </dl>
+          <p className="note">
+            Kabsch-path files, when present, keep the stem prefix{' '}
+            <code>kabsch</code> so they cannot be read as assembler{' '}
+            <code>stitched</code>. Missing RMSD / max Cα jump stay empty.
+            Seams are not scientifically solved.
           </p>
         </div>
       )}
