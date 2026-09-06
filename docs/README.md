@@ -410,10 +410,20 @@ So the rule is not "be careful" — it is:
   `D-110` while later numbers are written). This entry spends `D-129`;
   the pointer stays the owner's. ⚠ **Does not invent D-129-B** and does
   not pre-authorise one.
-- ⚠ **No vault file is on disk at this tip.** The Phase 5 fates are
-  recorded **here**, from the signed handover, and are **not** quoted
-  from a vault document. ⚠ **Do not invent vault prose**; if a vault
-  file lands later and diverges from this entry, **THE LOG GOVERNS**.
+- ⚠ **The vault lives in Obsidian on the owner's laptop, not in this
+  repo.** No vault *file* is on disk at this tip — and none is waited
+  on: **Emma confirmed the vault pin matches this brief**, and the
+  **full SIGNED source is now on file and quoted verbatim** at
+  `#### D-129 amendment 1`. ⚠ **Cite it as `D-0043 Phase 5
+  named-refuse, SIGNED 2026-09-05 ~17:58 PT`.**
+  ⚠ **Vault `D-0043` is external numbering — NOT a project decision**
+  (`D-109` ruling 1 / `F-065`). The colliding repo **`### D-043`** is
+  the Coverage `fold_status` three-state entry and is **untouched** —
+  the same trap the log already handles for vault `D-0036` vs
+  `### D-036` at D-114.
+  ⚠ **No vault prose is invented.** Where this log and the pin differ,
+  **THE LOG GOVERNS** — and amendment 1 records that they do **not**
+  differ.
 
 #### Context
 
@@ -564,16 +574,40 @@ we claim are the same object.
 
 #### Provenance (D-016)
 
-- **The Phase 5 sign:** **Matt SIGNED Phase 5 named-refuse
-  2026-09-05 ~17:58 PT, via Emma** (signed handover text to the
-  Architect lane). ⚠ **No vault file is on disk at this tip** — the
-  fates are recorded in this entry, **not** quoted from a vault
-  document, and no vault prose is invented. ⚠ Recorded as a **standing
-  ruling**, not as a measurement.
-- **D-0043 roadmap Phase 5:** the same roadmap whose **Phase 3** hard
-  bar ruled D-128 (`### D-128` **Ruled by**, this log). Phase 4 (RMSD
-  class) and Phase 5 (named-refuse) are named by that sign. ⚠ Phase 4
-  is **named, not scoped**, here.
+- **The Phase 5 sign:** **`D-0043 Phase 5 named-refuse`, SIGNED
+  2026-09-05 ~17:58 PT** — *"Matt: Sign Phase 5 as drafted. Architect
+  support on file."* Routed via Emma, who **confirmed the vault pin
+  matches the Architect brief**. The **full SIGNED source is quoted
+  verbatim** at `#### D-129 amendment 1` below, so this entry rests on
+  the artefact rather than on a paraphrase of it. ⚠ The vault itself
+  lives in **Obsidian on the owner's laptop** — no vault file is on
+  disk in this repo, and none is waited on. ⚠ Recorded as a
+  **standing ruling**, not as a measurement.
+- **Vault `D-0043` is external numbering, not a project decision**
+  (`D-109` ruling 1 / `F-065`). ⚠ **Not repo `### D-043`**, which is
+  the Coverage `fold_status` three-state entry and is untouched — the
+  same collision the log already disambiguates for vault `D-0036` vs
+  `### D-036` (D-114). The roadmap's **Phase 3** hard bar is what ruled
+  D-128 (`### D-128` **Ruled by**, this log); **Phase 4** (RMSD class)
+  and **Phase 5** (named-refuse) are named by this sign. ⚠ Phase 4 is
+  **named, not scoped**, here.
+- **The pin's own stated basis, quoted:** *"Forced by: D-128 OPS tip
+  9e65cbf — PASS 0 / REFUSE 7 / recovered 0 on linker must-hunt seven.
+  Architect: diagnosis yes, repair no."* ⚠ The pin cites the **same
+  tip** (`9e65cbf`) this entry does, and its `recovered 0` is
+  Kaylee's `repaired_of_seven` = **0**. ⚠ **Not re-measured.**
+- **Two independent artefacts agree on the per-parent refuse reasons —
+  and this is the check that could have disqualified the entry.** The
+  SIGNED pin names them (*"2938 seam_jump_gt_10; 2939 rmsd_gt_10;
+  3179/3190/3321/3368/3566 seam_jump_gt_10"*) and so does Kaylee's OPS
+  rollup (`seam_jump_gt_10` ×6 on 2938 / 3179 / 3190 / 3321 / 3368 /
+  3566; `rmsd_gt_10` ×1 on 2939). **They match exactly, parent for
+  parent** — including the one parent that breaks the pattern, **2939**,
+  which the §1a reading places in `n_honesty_unknown` rather than the
+  dishonest count because it refused **before any transform**. A
+  disagreement here would have meant the fates were signed against a
+  different run; they were not. ⚠ Agreement between two recorded
+  artefacts, **not** a re-measurement.
 - **D-128 OPS rollup — the whole basis of the sign — as recorded by
   Kaylee** at tip **`9e65cbf`** (D-128-A / #247), out_root
   **`linker_seam_ops_2026-09-05`**: **PASS 0 / REFUSE 7 / FAIL 0 /
