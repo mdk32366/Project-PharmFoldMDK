@@ -76,6 +76,11 @@ def test_d128_heading_exists_in_the_living_log():
     assert re.search(r"^### D-127-B — UI four-path honesty", LOG, re.M)
     assert re.search(r"^### D-126 — Overlap-confidence Kabsch Spec", LOG, re.M)
     assert re.search(r"^### D-125 — Kabsch restitch Spec", LOG, re.M)
+    assert re.search(
+        r"^### D-128-A — Linker / seam honesty core",
+        LOG,
+        re.M,
+    ), "D-128-A must be a real ### entry, not a citation of one"
     log_flat = _flat(LOG).lower()
     assert "docs spec only" in log_flat or "docs only" in log_flat
     assert "not d-128-a" in log_flat
@@ -455,12 +460,17 @@ def test_ops_report_fields_name_honesty_and_confusion():
 
 
 def test_ship_index_distinguishes_spec_from_ab_build():
-    assert "D-128 ships the linker / seam honesty Spec" in INDEX
+    assert (
+        "D-128 already shipped" in INDEX
+        or "D-128 ships the linker / seam honesty Spec" in INDEX
+    )
     assert "**Yes — this PR.**" in INDEX
     index_flat = _flat(INDEX)
-    assert re.search(r"D-128 Spec.*\*\*Yes — this PR\.\*\*", index_flat)
-    assert re.search(r"D-128-A.*No\. Later Emma GO", index_flat)
+    assert re.search(r"D-128 Spec.*Already shipped on `main`", index_flat)
+    assert re.search(r"D-128-A.*\*\*Yes — this PR\.\*\*", index_flat)
     assert re.search(r"D-128-B.*No\. Later Emma GO", index_flat)
+    # A ships code; it does not discharge the mandatory Method obligation.
+    assert "does **not** discharge" in INDEX or "does not discharge" in INDEX.lower()
     assert re.search(r"D-127-B.*Already shipped on `main`", index_flat)
     assert re.search(r"D-127-A.*Already shipped on `main`", index_flat)
     assert "linker_seam" in INDEX
@@ -511,7 +521,7 @@ def test_hard_stops_and_not_ab():
 
 
 def test_this_spec_pr_does_not_edit_hold48_modules():
-    """Hard stop: no hold48_*.py edit. All prior paths stay byte-identical."""
+    """Hard stop: D-128-A is a fifth sibling module. Prior paths stay byte-identical."""
     assert "def winning_tile" in STITCH
     assert "def kabsch" not in STITCH
     assert "linker_seam" not in STITCH
@@ -535,5 +545,15 @@ def test_this_spec_pr_does_not_edit_hold48_modules():
     for path in (KABSCH, CONF, PIECEWISE):
         assert "import numpy" not in path
         assert "from numpy" not in path
-    # D-128-A is a later Emma GO; its module does not exist yet.
-    assert (ROOT / "core" / "hold48_linker_seam.py").exists() is False
+    # D-128-A now exists as a fifth sibling module — and only as that.
+    sibling = ROOT / "core" / "hold48_linker_seam.py"
+    assert sibling.is_file()
+    sib = sibling.read_text(encoding="utf-8")
+    assert "linker_local_kabsch_then_winning_tile" in sib
+    assert "def write_linker_seam_restitch" in sib
+    assert "seam_jump_gt_10" in sib
+    assert "import numpy" not in sib
+    assert "from numpy" not in sib
+    assert "trim_highest_residual" not in sib
+    assert "DomainInterval" not in sib  # not piecewise-v2
+    assert "inherit_piece_for_residue" not in sib

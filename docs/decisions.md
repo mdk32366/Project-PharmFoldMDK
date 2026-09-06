@@ -5,10 +5,54 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-128 (Spec: linker / seam honesty — docs only)
+## Active ship — D-128-A (core: linker / seam honesty)
 
-- **D-128 ships the linker / seam honesty Spec** (**this PR**, docs
-  only) — [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md).
+- **D-128-A ships the linker / seam honesty core BUILD** (**this PR**) —
+  [`core/hold48_linker_seam.py`](../core/hold48_linker_seam.py) + CLI
+  [`scripts/linker_seam_restitch.py`](../scripts/linker_seam_restitch.py).
+  The **required** half is Spec §1a: per seam, per path (`kabsch/`,
+  `confidence_kabsch/`, `piecewise_kabsch/`, `linker_seam/`), the
+  `max_ca_jump_angstrom` that path **ends** with and whether it is
+  therefore **honest** at that seam (`> 10.0 Å` → dishonest). Each row
+  names how it is known — `read_from_path_record`,
+  `measured_from_path_artifacts`, or an **absence with a stated
+  reason**; **null is not `0.0`** and **unknown is not honest**. Prior
+  trees are opened **read-only**; the rows land in the D-128 tree.
+  The optional §1b repair is **linker-local rigid only**: one weighted
+  Kabsch on Cα inside a **±32 aa** window (**W = 32**, ε = **1e-3**,
+  **no trim loop**, **no pieces**, **no linker-inherit**) around the
+  offending seam centre, applied to that window's moving-tile atoms
+  only → existing `winning_tile` / `write_stitched`. Refuse on
+  `overlap_ca_lt_3` / `rmsd_gt_10` / `singular_covariance` /
+  **`seam_jump_gt_10`**, the last measured across the **whole** seam
+  after apply, not just the fitted window. Fail-closed and
+  all-or-nothing; a dishonest or unknown seam carries no D-128 success
+  PDB and no other path's `stitched.pdb` is presented as one.
+  Fifth sibling tree `linker_seam/{parent_id}/`
+  (`provenance.json`, `seams.jsonl`, `seam_honesty.jsonl`;
+  `algorithm=linker_local_kabsch_then_winning_tile`, `decision=D-128`);
+  `hold48_kabsch.py`, `hold48_confidence_kabsch.py`,
+  `hold48_piecewise_kabsch.py` and `hold48_stitch.py` are **not
+  edited** (all sha256-pinned). Primary inventory is the **seven**
+  signed must-hunt linker parents; the CLI still runs the 27, and
+  **3272 / 3394 / 3432 are recorded rows, not success targets**
+  (**3432 stays accept-refuse** and is never counted as a D-128 miss).
+  **CPU, no rent.** **0-of-7 repaired is an allowed outcome** — and
+  **this PR measured nothing**: no ops run, no restitch of the 27, no
+  Fly POST, no `repaired_of_seven` claimed for any parent.
+  ⚠ **The BUILD gate is discharged, not waived:** Spec §8 says **Kaylee
+  does not BUILD** until the Spec is on `main` **and** an Emma / Matt GO
+  names D-128-A. Both hold at this PR — Spec `2004c5a` / #246 is on
+  `main`, and the Emma BUILD GO (Matt GO NOW) is recorded at
+  `### D-128-A` in [`README.md`](README.md).
+  ⚠ **A does not discharge the Method obligation** (Spec §7 —
+  **mandatory** at D-128-B); **D-128-B** (UI honesty + Method addendum)
+  is a later Emma GO. ⚠ **Served stays assembler**; **D-126 remains the
+  best experimental path until proven otherwise**; the **D-127 failed
+  experiment stays disclosed**. ⚠ **Seams recorded ≠ seams solved.**
+- **D-128 already shipped the linker / seam honesty Spec** on `main`
+  (`2004c5a` / #246) —
+  [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md).
   §1 goal framing is **diagnose and refuse dishonest seams** — the Spec
   never says solved. §1a makes a per-path / per-seam
   `max_ca_jump_angstrom` **required** for every experimental path tree
@@ -34,9 +78,9 @@
   ⚠ **Served stays assembler**; **D-126 remains the best experimental
   path until proven otherwise**; the **D-127 failed experiment stays
   disclosed**. ⚠ **No `hold48_*.py` edit; no UI; no Method edit; no ops
-  run.** **D-128-A** (core, **CPU, no rent**) and **D-128-B** (UI
-  honesty + **mandatory** Method addendum) are later Emma GOs; **Kaylee
-  does not BUILD** until this Spec is on `main` + Emma / Matt GO.
+  run.** **D-128-A** (core, **CPU, no rent**) is the PR above;
+  **D-128-B** (UI honesty + **mandatory** Method addendum) is a later
+  Emma GO, and D-128 is “done” only with it.
 - **D-127-B already shipped UI four-path honesty and the Spec §7 Method
   addendum** on `main` (`de9a80e` / #245) —
   [`app/piecewise_kabsch_path_read.py`](../app/piecewise_kabsch_path_read.py)
@@ -138,8 +182,8 @@ Spec: [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-128 Spec** | Linker / seam honesty Spec (docs only) — §1a required per-path seam honesty metric; §1b optional linker-local rigid (±32 aa window, no pieces, no trim) | **Yes — this PR.** Docs only; no `hold48_*.py` edit. |
-| **D-128-A** | Core BUILD (honesty rows for every path tree + optional ±32 aa window weighted Kabsch → `winning_tile`; CPU, no rent) | No. Later Emma GO, after the Spec is on `main`. |
+| **D-128 Spec** | Linker / seam honesty Spec (docs only) — §1a required per-path seam honesty metric; §1b optional linker-local rigid (±32 aa window, no pieces, no trim) | Already shipped on `main` (#246 / `2004c5a`). |
+| **D-128-A** | Core BUILD (honesty rows for every path tree + optional ±32 aa window weighted Kabsch → `winning_tile`; CPU, no rent) | **Yes — this PR.** Fifth sibling `linker_seam/`; no `hold48_*.py` edit; no ops run. Does **not** discharge Spec §7 Method. |
 | **D-128-B** | UI path honesty + **mandatory Method addendum** (reads `linker_seam/`) | No. Later Emma GO, after A. D-128 is “done” only with it. |
 | **D-127 Spec** | Piecewise / domain-aware Kabsch Spec (docs only) | Already shipped on `main` (#243 / `00fa76d`). |
 | **D-127-A** | Core BUILD (per-domain weighted Kabsch → `winning_tile`; no trim; CPU, no rent) | Already shipped on `main` (#244 / `e49bf34`). |
