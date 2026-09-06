@@ -841,6 +841,82 @@ a limit of the model's outputs or merely a limit of our effort.
   until proven otherwise, and callable.** **Served stays the
   assembler.** Seams are **not** solved, and nothing here says they are.
 
+#### D-130-A amendment 1 — Trinity Architect LOCKED bar, verified clause by clause
+
+- **Date:** 2026-09-06
+- **Status:** the **Trinity D-130-A Architect LOCKED bar** (2026-09-06, after
+  the branch was pushed and PR **#253** filed as a draft), bound here as the
+  merge gate. ⚠ **No clause of it changed the build** — every one was already
+  satisfied, and this block exists so that claim rests on an artefact rather
+  than on the builder's recollection (D-016). ⚠ **Not a second GO**, not a new
+  id, and **not** an amendment to the D-130 Spec, which stays as shipped.
+- **The bar, and how each clause is known.** Checked against the branch at
+  `3c5807e`, base `854c2ab`:
+  1. **Tip `854c2ab`; Spec + `### D-130` are the authority.**
+     `git merge-base HEAD origin/main` → **`854c2ab`**;
+     `git diff --stat 854c2ab..HEAD -- docs/SPEC-residual-rmsd-hunt.md` →
+     **empty** (the Spec is authority, not a file this BUILD edits);
+     `grep -n "^### D-130" docs/README.md` → **exactly two** headings, the
+     Spec entry and this one, each once. ⚠ Written without the heading's own
+     `###`-plus-title form on purpose: quoting it verbatim in prose splits the
+     entry that the Spec's own pins scope their negative checks to, which is
+     how this line first went red.
+  2. **Primary only 3272 / 3394; sibling tree; no overwrite.**
+     `PHASE_4_PAIR_PARENT_IDS` → **{3272, 3394}**;
+     `ACCEPT_REFUSE_PARENT_IDS` → the **eight**, held as *never success
+     targets* inside the runnable **27**; `residual_rmsd_out_dir` →
+     `<root>/residual_rmsd/{id}`;
+     `git diff --stat 854c2ab..HEAD -- core/hold48_{kabsch,confidence_kabsch,piecewise_kabsch,linker_seam,stitch}.py`
+     → **empty**, and a test digests all prior trees before and after a run.
+  3. **§1a required, §1b optional, no new geometry.** The module's **AST
+     identifiers** contain no `trim`, `subset`, `prune`, `pair_weight`,
+     `weighted_kabsch_rotation_translation`, `WEIGHT_EPSILON`,
+     `WINDOW_HALF_WIDTH_AA`, `DomainInterval`, `domain_pieces` or
+     `inherit_piece_for_residue`, and the fit is
+     `kabsch_rotation_translation` **imported from D-125** rather than
+     re-implemented. ⚠ Checked as identifiers, not as text: the docstrings
+     forbidding these knobs say their names out loud.
+  4. **Gate 10.0 Å; never solved; served = assembler; no linker-v2; no rent /
+     F-004.** `RESIDUAL_FLOOR_GATE_ANGSTROM is RMSD_REFUSE_ANGSTROM` → the
+     **same object**, not a second 10.0; the reason set is the Spec's five and
+     contains **neither** `linker_jump_gt_10` **nor** `seam_jump_gt_10`; a
+     written `provenance.json` carries `served_path: "assembler"` and
+     `seams_solved: false`; the import graph is **stdlib + `core` only**
+     (`__future__`, `dataclasses`, `json`, `math`, `pathlib`, `typing`), and
+     the added diff under `core/` and `scripts/` contains **no** `requests` /
+     `httpx` / `POST` / `runpod`.
+  5. **0-of-2 allowed; tests that go red; draft PR.**
+     `build_ops_success_report` with no recovery map returns
+     `recovered_of_two = 0` with `recovered_of_two_source = "none_supplied"`
+     — a zero that names itself as unmeasured — beside
+     `zero_of_two_recovered_is_allowed` and *named refuse after a failed hunt
+     is a complete outcome*. **Redness is measured, not asserted:** nineteen
+     single-clause mutations of `core/hold48_residual_rmsd.py`, each reverted,
+     **all nineteen red** (the floor divisor at `/4` **and** `/1.5`, the dRMSD
+     normalisation, the gate boundary, the class precedence, the audit
+     tie-break and its verified-pairing early return, the achieved-RMSD
+     laundering, the floor measured off a path's output, an absence written as
+     a zero, a trimmed correspondence, the artifact clear, the all-or-nothing
+     parent, the audit gate on an irreducible seam, the unreadable-identity
+     match, `recovered = accepted`, both overwrite guards, and the inventory
+     guard). `gh pr view 253` → `isDraft: true`, base `main`. **Trinity
+     merges.**
+  6. **No UI / Method in A; B owns that.**
+     `git diff --name-only 854c2ab..HEAD | grep -E "^ui/|MethodNote|method-hold48-tiles"`
+     → **empty**, and `docs/method-hold48-tiles.md` still digests
+     `607de9a4…`, the value `tests/test_d130_residual_rmsd_spec.py` pins.
+     **Opus pin unchanged** (claude-opus-5, thinking, effort **high** —
+     **D-0037**).
+- ⚠ **One clause of the bar was already failing when the bar arrived, and it
+  is the one clause 5 is about.** The mutation audit that produced the list
+  above found **eighteen of nineteen** red on its first pass: the floor's
+  divisor was **unpinned**, because `RMSD ≥ floor` is satisfied by any weaker
+  floor. That is recorded in the Consequences above and was fixed at `3c5807e`
+  before this block was written. ⚠ **Stated rather than smoothed over:** a bar
+  verified only after the fix would read as though the fix had never been
+  needed, and the interesting fact is that the *strongest-looking* test in the
+  file was the one that could not go red.
+
 ### D-130 — Phase 4 residual-RMSD hunt: certify the floor before claiming a fit — 3272 / 3394 only, recover with honesty or refuse by name (docs only)
 
 - **Date:** 2026-09-06
