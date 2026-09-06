@@ -565,6 +565,27 @@ def test_linker_seam_dir_does_not_overwrite_the_four_existing_paths(tmp_path):
             refuse_sibling_overwrite(target, assembler, d125.out_dir, d126.out_dir, d127.out_dir)
 
 
+def test_only_a_linker_seam_directory_may_receive_d128_artifacts(tmp_path):
+    """The catch-all: a caller that names no prior dir still cannot write elsewhere.
+
+    Comparing against the four known dirs only refuses the four we were told
+    about. The path guard is what stops a D-128 write landing on a tree nobody
+    passed in — including a future fifth caller's own mistake.
+    """
+    with pytest.raises(SiblingOverwriteRefused):
+        refuse_sibling_overwrite(tmp_path / "kabsch" / str(IN_INVENTORY))
+    with pytest.raises(SiblingOverwriteRefused):
+        refuse_sibling_overwrite(tmp_path / "confidence_kabsch" / str(IN_INVENTORY))
+    with pytest.raises(SiblingOverwriteRefused):
+        refuse_sibling_overwrite(tmp_path / "piecewise_kabsch" / str(IN_INVENTORY))
+    with pytest.raises(SiblingOverwriteRefused):
+        refuse_sibling_overwrite(tmp_path / "assembler")
+    with pytest.raises(SiblingOverwriteRefused):
+        refuse_sibling_overwrite(tmp_path)
+    # The one shape that is allowed needs no prior dirs to be recognised.
+    refuse_sibling_overwrite(linker_seam_out_dir(tmp_path, IN_INVENTORY))
+
+
 def test_d128_writes_nothing_outside_its_own_tree(tmp_path):
     """Served stays assembler: this path cannot flip or touch anything it reads."""
     a, b, assembler, d125, d126, d127 = _all_four_trees(tmp_path)
