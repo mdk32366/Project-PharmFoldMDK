@@ -298,8 +298,17 @@ describe('MethodNote — D-121 hold-48 8th-grade explainer (additive, not a gut)
     expect(t).toMatch(/until the count improves/)
     expect(t).toMatch(/D-126 is still the best of them/)
     expect(t).toMatch(/not a sixth one/)
-    // Phase 5 label vocabulary is NOT shipped by this PR.
-    expect(t).not.toMatch(/named[- ]refuse|refuse label|Phase 5/i)
+    // ⚠ SUPERSEDED at D-129-B. This asserted that Phase 5 label vocabulary
+    // was NOT shipped — correct on 2026-09-05, when no Phase 5 Spec was
+    // signed. D-129 landed (`1baf4c0` / #249) and D-129-B ships the label
+    // under the Emma BUILD GO of 2026-09-06. What the D-128 section may now
+    // carry is exactly one pointer saying its own "must-hunt" wording was
+    // superseded — a pointer, not a second label surface.
+    expect(t).toMatch(/must-hunt is what they were called/)
+    expect(t).toMatch(/named refuse \/ accept-refuse/)
+    expect(t).toMatch(/The numbers here are unchanged/)
+    expect(t.match(/named refuse \/ accept-refuse/g)).toHaveLength(1)
+    expect(t).not.toMatch(/refuse label/i)
   })
 
   it('says plainly that D-126 remains the best path, keeps every gate, and never flips the served path', async () => {
@@ -330,6 +339,57 @@ describe('MethodNote — D-121 hold-48 8th-grade explainer (additive, not a gut)
     expect(t).toMatch(/17 recorded outcomes/)
     expect(t).toMatch(/not 17 solved joins/)
     expect(t).not.toMatch(/seams solved|Kabsch aligned|we ran Kabsch|full-length AF-quality/)
+  })
+
+  // D-129-B — the Phase 5 §3 re-label. ⚠ The failure these exist for is a
+  // true label standing alone: "accepted" reading like resolution while the
+  // 0 of 7 and the give-back drift off the page. The label and the numbers
+  // are asserted in the SAME section, never page-wide.
+  it('labels the eight named refuse / accept-refuse and keeps the numbers beside the label', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const t = getByTestId('phase5-named-refuse-addendum').textContent
+    expect(t).toMatch(/named refuse \/ accept-refuse/)
+    expect(t).toMatch(/accepted refusal/i)
+    expect(t).toMatch(/these joins do not hold/)
+    expect(t).toMatch(/stopped trying to fix them/)
+    // All eight, and only the eight, in the accepted sentence.
+    for (const pid of [2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432]) {
+      expect(t).toMatch(new RegExp(String(pid)))
+    }
+    // §4: the disclosure ships WITH the label, in this section.
+    expect(t).toMatch(/0 of 7/)
+    expect(t).toMatch(/gave back/)
+    expect(t).toMatch(/5 vs D-125/)
+    expect(t).toMatch(/6 vs D-126/)
+    expect(t).toMatch(/allowed outcome/)
+    expect(t).toMatch(/retires the hunt, not the record/)
+    // Forbidden badges, and the negations that must be present.
+    expect(t).toMatch(/does not mean the seam is solved/)
+    expect(t).toMatch(/Never claim the seams are solved/)
+    expect(t).toMatch(/may be shown as an open must-hunt/)
+    expect(t).not.toMatch(/the seams are fixed|full-length AF-quality|pending rescue/)
+    // Phase 4 stays open, on the same page as the accepted eight.
+    expect(t).toMatch(/3272/)
+    expect(t).toMatch(/3394/)
+    expect(t).toMatch(/still being looked at/)
+    expect(t).toMatch(/Phase 4 must-hunt/)
+    expect(t).toMatch(/explicit Matt GO naming Phase 4/)
+    // 3432 is carried, not re-ruled, and is not one of the seven.
+    expect(t).toMatch(/already/i)
+    expect(t).toMatch(/not one of the seven/)
+    // The freeze is restated where the label ships.
+    expect(t).toMatch(/no fifth stitching algorithm/i)
+    expect(t).toMatch(/10\.0 Å/)
+    expect(t).toMatch(/W = 32/)
+    expect(t).toMatch(/D-126 remains the best experimental path/)
+    expect(t).toMatch(/callable/)
+    expect(t).toMatch(/stay disclosed/)
+    expect(t).toMatch(/assembler/)
+    // Not a re-measurement.
+    expect(t).toMatch(/9e65cbf/)
+    expect(t).toMatch(/linker_seam_ops_2026-09-05/)
   })
 
   it('keeps the standing MethodNote claims (does not gut D-028 / D-050 / D-051)', async () => {

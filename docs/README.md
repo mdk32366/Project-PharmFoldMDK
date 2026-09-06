@@ -567,6 +567,34 @@ that asserted A was the active PR.
   assertions and the mutation-resistance D-128-B paid for would quietly
   weaken.
 
+#### Mutation testing — and the one assertion that could not go red
+
+Fourteen mutations were run against the two lanes. **Thirteen reddened**:
+dropping a parent from the eight; leaking **3272** into the accepted set;
+dropping the D-126 give-back from the rollup; handing out the label with
+`ops_rollup` set to `None`; counting **3432** into the D-128 seven;
+labelling a Phase 4 parent accepted; burying the give-back sentence on the
+owner Method; putting **3272** inside the accepted-eight passage; claiming
+the seams are solved on `/method`; disabling the card's rollup conditional;
+moving the give-back out of the fate block; and dropping the label from the
+Method page.
+
+**One did not, and it was a real gap.** Forcing the accept-refuse paragraph
+to render for a **Phase 4** parent left every assertion green. That
+paragraph says the join is *not an open must-hunt* and that *no fifth
+stitch algorithm is coming* — true of the eight, **false of 3272 / 3394**.
+It is a Phase 4 leak in **prose** rather than in a label, which is exactly
+the shape a membership check does not catch: the fate said `phase-4-must-hunt`
+and the card still read like a closed case. The card test now asserts that
+copy is **absent** for a Phase 4 parent, and the mutation reddens.
+
+⚠ **A related weakness is named rather than papered over.** Disabling the
+card's conditional (`{false && rollup ?`) left the **Python** lane green,
+because the `data-testid` string was still in the file — a source substring
+is not a rendered surface. The **vitest** render test is the real guard
+there; the Python test now also pins the gate expression, so the two lanes
+fail for the same reason rather than one silently covering the other.
+
 #### Deep-learning justification
 
 Nothing here touches a network, a weight, a threshold, or a transform.

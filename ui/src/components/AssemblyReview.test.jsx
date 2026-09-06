@@ -625,6 +625,123 @@ describe('AssemblyReview', () => {
     const { container } = render(<MemoryRouter><AssemblyReview /></MemoryRouter>)
     expect(container.textContent).toBe('')
   })
+
+  // D-129-B — the Phase 5 fate block. ⚠ The card is where "accepted" is most
+  // likely to read as resolution, so the rollup is asserted INSIDE the fate
+  // block: a card that keeps the label and loses the numbers reddens here.
+  it('labels an accept-refuse parent and renders the rollup inside the same block', () => {
+    const review = {
+      ...REVIEW,
+      phase5_fate: {
+        parent_job_id: 2938,
+        fate: 'accept-refuse',
+        label: 'named refuse / accept-refuse',
+        is_accept_refuse: true,
+        hunt_closed: true,
+        meaning: 'accept-refuse is the recorded honest outcome of a refusal: the join is not held, we say it is not held, and we have stopped hunting it',
+        not_a_miss: 'not a D-128 miss and not a D-128 failure: 0 of 7 repaired was pre-registered as an allowed outcome before the run',
+        recorded_refuse_reason: 'seam_jump_gt_10',
+        recorded_by_path: 'D-128',
+        already_accept_refuse_note: null,
+        disclosure_required: true,
+        ops_rollup: {
+          population: 'the D-128 linker seven',
+          pass: 0, refuse: 7, fail: 0, skip: 0,
+          repaired_of_seven: 0,
+          pre_registered_at: 'D-128 Spec §1b / §3 / §11, before the run',
+          refuse_seam_jump_gt_10: [2938, 3179, 3190, 3321, 3368, 3566],
+          refuse_rmsd_gt_10: [2939],
+          n_d125_pass_d128_refuse: 5,
+          n_d126_pass_d128_refuse: 6,
+          n_d127_pass_d128_refuse: 0,
+          n_d127_refuse_d128_pass: 0,
+          gate_angstrom: 10.0,
+          recorded_by: 'Kaylee',
+          recorded_at_tip: '9e65cbf',
+          out_root: 'linker_seam_ops_2026-09-05',
+          give_back_note: 'D-128 gave back 5 parents D-125 had accepted and 6 D-126 had accepted',
+          best_experimental_path: 'D-126 remains the best experimental path until proven otherwise',
+        },
+      },
+    }
+    const { getByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const fate = getByTestId('phase5-fate').textContent
+    expect(fate).toMatch(/named refuse \/ accept-refuse/)
+    expect(fate).toMatch(/seam_jump_gt_10/)
+    expect(fate).toMatch(/recorded by D-128/)
+    expect(fate).toMatch(/not solved, not fixed, not repaired/)
+    expect(fate).toMatch(/not an open must-hunt/)
+    expect(fate).toMatch(/no fifth stitch algorithm/)
+    // The rollup is INSIDE the fate block, not a sibling somewhere else.
+    const rollup = getByTestId('phase5-ops-rollup').textContent
+    expect(fate).toContain(rollup)
+    expect(rollup).toMatch(/PASS 0 · REFUSE 7 · FAIL 0 · SKIP 0/)
+    expect(rollup).toMatch(/repaired_of_seven/)
+    expect(rollup).toMatch(/pre-registered as an allowed outcome/)
+    expect(rollup).toMatch(/9e65cbf/)
+    expect(rollup).toMatch(/linker_seam_ops_2026-09-05/)
+    expect(rollup).toMatch(/not re-measured here/)
+    // The give-back travels with the zero.
+    const giveBack = getByTestId('phase5-give-back').textContent
+    expect(giveBack).toMatch(/n_d125_pass_d128_refuse/)
+    expect(giveBack).toMatch(/n_d126_pass_d128_refuse/)
+    expect(giveBack).toMatch(/gave back 5 parents/)
+    expect(giveBack).toMatch(/6 D-126 had accepted/)
+    // Never solved, and the served path does not move because a label did.
+    expect(fate).toMatch(/assembler/)
+    expect(fate).not.toMatch(/seams solved|seam is repaired|full-length AF-quality/)
+  })
+
+  it('keeps a Phase 4 parent open and never badges it accepted', () => {
+    const review = {
+      ...REVIEW,
+      phase5_fate: {
+        parent_job_id: 3272,
+        fate: 'phase-4-must-hunt',
+        label: 'Phase 4 must-hunt',
+        is_accept_refuse: false,
+        hunt_closed: false,
+        meaning: 'Phase 4 must-hunt: this parent refused rmsd_gt_10, the whole-overlap class, and is open work. It is not accept-refuse, not retired, and not closed',
+        recorded_refuse_reason: 'rmsd_gt_10',
+        recorded_by_path: 'D-127',
+        moves_only_on: 'a separate explicit Matt GO naming Phase 4',
+        disclosure_required: false,
+        ops_rollup: null,
+      },
+    }
+    const { getByTestId, queryByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const fate = getByTestId('phase5-fate').textContent
+    expect(fate).toMatch(/Phase 4 must-hunt/)
+    expect(fate).toMatch(/not accept-refuse/)
+    expect(fate).toMatch(/not retired/)
+    expect(fate).toMatch(/separate explicit Matt GO naming Phase 4/)
+    expect(fate).not.toMatch(/named refuse \/ accept-refuse/)
+    // ⚠ Nor the accept-refuse copy. Mutation testing found this: forcing that
+    // paragraph to render left every other assertion green, and it says the
+    // hunt is closed and no fifth algorithm is coming — true of the eight,
+    // false of a Phase 4 parent, and a leak in prose rather than in a label.
+    expect(fate).not.toMatch(/not solved, not fixed, not repaired/)
+    expect(fate).not.toMatch(/not an open must-hunt/)
+    expect(fate).not.toMatch(/no fifth stitch algorithm/)
+    // The rollup is of the seven; a Phase 4 parent must not wear it.
+    expect(queryByTestId('phase5-ops-rollup')).toBeNull()
+    expect(queryByTestId('phase5-give-back')).toBeNull()
+  })
+
+  it('renders no fate block for a parent with no Phase 5 fate', () => {
+    const { queryByTestId } = render(
+      <MemoryRouter><AssemblyReview review={{ ...REVIEW, phase5_fate: {
+        parent_job_id: 2817, fate: null, label: null, is_accept_refuse: false,
+        meaning: 'No Phase 5 fate is recorded for this parent', ops_rollup: null,
+      } }} /></MemoryRouter>,
+    )
+    expect(queryByTestId('phase5-fate')).toBeNull()
+    expect(queryByTestId('phase5-ops-rollup')).toBeNull()
+  })
 })
 
 describe('Igf2rTwoPopulation', () => {

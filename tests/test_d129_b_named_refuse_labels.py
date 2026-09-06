@@ -583,6 +583,15 @@ def test_the_card_renders_the_rollup_inside_the_label_block():
         "give_back_note",
     ):
         assert key in card, key
+    # ⚠ The gate expression itself, not just the testid. Mutation testing
+    # found that disabling the conditional (`{false && rollup ?`) left every
+    # source-substring check green while the rendered card lost its numbers —
+    # the vitest render test is the real guard, and this keeps the Python
+    # lane from reporting a surface it never rendered.
+    assert "{fate.is_accept_refuse && rollup ? (" in card
+    assert "{fate.is_accept_refuse ? (" in card, (
+        "the accept-refuse copy must be gated on the fate, not shown to Phase 4"
+    )
     lowered = _plain(card)
     assert "not run, not queried, and not re-measured here" in lowered
     assert "pre-registered as an allowed outcome" in lowered
