@@ -567,6 +567,35 @@ that asserted A was the active PR.
   assertions and the mutation-resistance D-128-B paid for would quietly
   weaken.
 
+#### D-129-B amendment 1 — Trinity Architect confirm, checked clause by clause
+
+**Trinity Architect confirmed the bar 2026-09-06**, at merged Spec tip
+`1baf4c0` (#249), binding six clauses. Recording the confirm here because
+the entry above named only the **Emma BUILD GO**, and an authority that is
+not written is one a later reader cannot check (D-062 / method-note item 7).
+
+⚠ **Each clause was verified against the shipped diff rather than asserted
+from the intent that produced it.** A build reporting on itself is exactly
+where "true as stated, wrong in what it implied" gets in (D-016).
+
+| Bound clause | How it was checked | Result |
+|---|---|---|
+| Named-refuse labels on the **eight** | `phase5_fate()` over 2938 / 2939 / 3179 / 3190 / 3321 / 3368 / 3566 / 3432 | All eight return **one** label — `named refuse / accept-refuse` — and **all eight** carry `repaired_of_seven` = 0 with `n_d125_pass_d128_refuse` = 5 / `n_d126_pass_d128_refuse` = 6 |
+| **No linker-v2** | `git diff --name-only 1baf4c0..HEAD` over `core/` and `scripts/` | **No `core/` or `scripts/` file touched.** All five stitch modules digest-identical to the merged tip, `hold48_stitch.py` included |
+| **Phase 4 cold** (3272 / 3394) | `phase5_fate()` + `is_accept_refuse()` on both ids | `phase-4-must-hunt`, `is_accept_refuse` **False**, `ops_rollup` **None**; neither id can reach the accept-refuse label by any entry point |
+| **Never solved** | `solved` flag across all ten fates | **False** on every one; the forbidden-language park is asserted inside each D-129-B section |
+| **Keep Method OPS 0/7 + confusion standing** | Diffed the **D-128 section alone** on both surfaces against **`cd071d7`** (#248) | **5 changed lines** on the owner Method, **7** on `MethodNote.jsx` — and every one of them is the same supersession parenthetical on the `must-hunt` sentence. **Not one OPS figure, not the give-back, and not *"bury a drop under a pre-registration"* is altered** |
+| **Draft PR; Trinity merges; no self-merge** | `gh pr view 250` | `isDraft: true`, `state: OPEN`, base `main`. Not merged, and not merged by this Builder |
+
+⚠ **The fifth row is the one worth reading twice**, because it is the clause
+this PR could most plausibly have broken while believing it had not. The
+check that could have disqualified it was **not** *"do the numbers still
+appear somewhere on the page"* — a re-label PR passes that trivially while
+having rewritten the passage around them. It was a **section-scoped diff
+against what #248 actually shipped**, which is the only form that can tell
+*added beside* from *edited in place*. The D-128 addendum is otherwise
+byte-identical to `cd071d7`.
+
 #### Mutation testing — and the one assertion that could not go red
 
 Fourteen mutations were run against the two lanes. **Thirteen reddened**:
