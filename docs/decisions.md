@@ -5,10 +5,48 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-129-B (BUILD: Phase 5 named-refuse labels)
+## Active ship — D-129-C (hygiene: the retired name never stands bare)
 
-- **D-129-B ships the Phase 5 named-refuse LABELS on Method + UI**
-  (**this PR**) — the **§3 re-label** that `### D-129` left **owed**,
+- **D-129-C ships the `must-hunt` supersession hygiene patch on the LIVE
+  surfaces** (**this PR**, off `cbcb47d`) — **copy and one test only**,
+  under the **Emma GO 2026-09-06** (*"hygiene patch ONLY"*). `### D-129-B`
+  corrected the superseded `must-hunt` wording **in place**, but only on
+  the narrative sentence: the **MANDATORY §7 provenance inject** two
+  sentences above it still read *"a D-128 OPS restitch of the must-hunt
+  **seven** at tip `9e65cbf`"* on
+  [`method-hold48-tiles.md`](method-hold48-tiles.md) and on
+  `MethodNote.jsx`, with the supersession four lines away in the **next
+  paragraph**. A qualifier in the neighbourhood is not qualification of
+  the claim — **D-062's shape one size down**.
+  The rule now enforced: on a **live** surface, every occurrence of
+  `must-hunt` is **Phase-4-scoped**, **a negation**, or
+  **supersession-carrying**, and the qualifier is in **the same sentence
+  as the occurrence** — adjacency does not count.
+  **Twelve** bare occurrences at `cbcb47d` were qualified by **adding** a
+  clause: 2 on the Method surfaces, 4 in
+  [`../ARCHITECTURE.md`](../ARCHITECTURE.md), 2 in the **living header**
+  of [`README.md`](README.md), 3 here, and 1 in
+  [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md).
+  Guarded by `tests/test_d129_c_must_hunt_supersession.py` (hermetic,
+  stdlib), which also re-pins that the rule was **not** satisfied by
+  deletion.
+  ⚠ **Phase 5 is NOT reopened.** No label inventory is re-taken, no fate
+  moves, no id joins or leaves the **eight**, and no Spec clause is
+  re-argued. ⚠ **Phase 4 is NOT touched:** **3272 / 3394** stay **Phase 4
+  must-hunt** — one of the three qualified forms — and their wording is
+  left exactly as it was. ⚠ **Nothing is gutted:** the **0 of 7**, the
+  give-back (**5** / **6**), *"bury a drop under a pre-registration"*,
+  the never-solved refusals and the accept-refuse copy all stay.
+  ⚠ **No geometry, no threshold, no registry field, no route, no payload
+  key, no served byte** — `core/hold48_*.py`,
+  `app/phase5_named_refuse.py` and `app/linker_seam_path_read.py` are all
+  **sha256-pinned and untouched**. ⚠ **No linker-v2, no ops run, no
+  re-measurement, no Fly / RunPod / rent, no F-004.** Draft PR; **no
+  self-merge**; **Trinity merges**. Full entry: `### D-129-C` in
+  [`README.md`](README.md).
+- **D-129-B already shipped the Phase 5 named-refuse LABELS on Method +
+  UI** on `main` (`cbcb47d` / #250) — the **§3 re-label** that
+  `### D-129` left **owed**,
   under the **Emma BUILD GO 2026-09-06** (*"Matt: Go"*) that Spec §8
   gated it on. ⚠ **D-129 did not pre-authorise this id**; the GO did.
   The **eight** parents — **2938, 2939, 3179, 3190, 3321, 3368, 3566**
@@ -35,9 +73,10 @@
   no threshold, no refuse reason, no artifact tree, no served byte, no
   ops run, no Fly / rent, no F-004. **10.0 Å / W = 32 / ε = 1e-3 stay;
   served stays assembler; D-126 remains best experimental and callable;
-  both failed rescues stay disclosed. Never solved.** Draft PR; **no
-  self-merge**; **Trinity merges**. Full entry: `### D-129-B` in
-  [`README.md`](README.md).
+  both failed rescues stay disclosed. Never solved.** ⚠ **It corrected
+  the superseded `must-hunt` wording in place on the narrative sentence
+  and not on the §7 provenance inject above it** — the hole `D-129-C`
+  closes. Full entry: `### D-129-B` in [`README.md`](README.md).
 - **D-129 already shipped the Phase 5 named-refuse Spec** on `main`
   (`1baf4c0` / #249) —
   [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md).
@@ -107,7 +146,9 @@
   follow-up.
   ⚠ **It also discloses the D-128 OPS result** (MANDATORY Method §7 OPS
   honesty inject, Matt GO via Emma 2026-09-06; restitch of the must-hunt
-  **seven** at tip `9e65cbf`, out_root `linker_seam_ops_2026-09-05`;
+  **seven** — ⚠ **`must-hunt` is what they were called when that run was
+  chosen; the Phase 5 sign has since superseded that name (D-129 /
+  D-129-B)** — at tip `9e65cbf`, out_root `linker_seam_ops_2026-09-05`;
   ⚠ **not run, not queried, and not re-measured in this PR**):
   **PASS 0 / REFUSE 7 / FAIL 0 / SKIP 0**; `recovered_of_seven` = **0**;
   `repaired_of_seven` = **0** (**the pre-registered allowed outcome**);
@@ -151,7 +192,9 @@
   `hold48_kabsch.py`, `hold48_confidence_kabsch.py`,
   `hold48_piecewise_kabsch.py` and `hold48_stitch.py` are **not
   edited** (all sha256-pinned). Primary inventory is the **seven**
-  signed must-hunt linker parents; the CLI still runs the 27, and
+  signed must-hunt linker parents (⚠ **`must-hunt` is what they were
+  called then; the Phase 5 sign has since superseded that name —
+  D-129 / D-129-B**); the CLI still runs the 27, and
   **3272 / 3394 / 3432 are recorded rows, not success targets**
   (**3432 stays accept-refuse** and is never counted as a D-128 miss).
   **CPU, no rent.** **0-of-7 repaired is an allowed outcome** — and
@@ -197,7 +240,9 @@
   `rmsd_gt_10` / `singular_covariance` / **`seam_jump_gt_10`**;
   all-or-nothing parent. Primary inventory is the **seven** signed
   must-hunt linker parents (**2938, 2939, 3179, 3190, 3321, 3368,
-  3566** — the D-127 OPS `linker_jump_gt_10` class, as recorded).
+  3566** — the D-127 OPS `linker_jump_gt_10` class, as recorded; ⚠
+  **`must-hunt` is what they were called when D-128 was written, and
+  the Phase 5 sign has since superseded that name — D-129 / D-129-B**).
   Sibling tree `linker_seam/{parent_id}/`,
   `algorithm=linker_local_kabsch_then_winning_tile`,
   `decision=D-128`. **0-of-7 repaired is an allowed outcome.**
