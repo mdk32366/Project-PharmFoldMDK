@@ -325,6 +325,40 @@ So the rule is not "be careful" — it is:
   and the **D-127 failed experiment stays disclosed** — a D-128 surface
   may not soften, bury, or replace either with a fresh-hypothesis story.
   ⚠ **Not F-004 ingest.** ⚠ **Not ADC-C.** ⚠ **No rent / GPU / RunPod.**
+- **Also ruled by:** **Trinity Architect bar LOCKED** 2026-09-06 for
+  D-128-B (bind exactly; prefer Spec §6 + §7 wording on any conflict):
+  1. Spec §6 UI + **§7 Method mandatory** — additive MethodNote +
+     [`method-hold48-tiles.md`](method-hold48-tiles.md); do **not** gut
+     the D-121 / D-125-B / D-126-B / D-127-B Method sections; the
+     **D-127 failed experiment stays disclosed**; **D-126 stays best
+     experimental until proven otherwise**.
+  2. Fifth path named **only** when `linker_seam/` exists; **honest
+     empty** if missing; a **null jump ≠ `0.00 Å`**.
+  3. Never *solved* / *aligned* / *superimposed* / *fixed* /
+     *full-length AF-quality*.
+  4. **Served = assembler** (no auto-flip).
+  5. **3432 accept-refuse**, not re-opened, **not a D-128 miss**.
+  6. A **dishonest seam is never shown as a success PDB**; no
+     “repaired” / “fixed” badge; **no prior-path PDB as a D-128
+     success**.
+  7. **No gate loosen (10 Å)**; no core rewrite of A; no rent / F-004;
+     Opus pin.
+  8. Hermetic tests **that can go red**; CI green; **draft PR; Trinity
+     merges (the Builder does not)**.
+  **Done = Method §7 shipped, not a code-only UI.**
+
+  ⚠ **The bar was audited clause by clause, and two clauses had no test
+  that could go red** (same exercise, and same result, as the D-128-A
+  merge-gate audit). **Clause 1:** renaming the D-121 assembler heading
+  out of the owner markdown left every check green, because
+  “winner-tile assembler” and “not Kabsch” also occur in the D-125-B
+  addendum below it — a phrase is not a section, so the section
+  **headings** are now the anchor. **Clause 6:** dropping the
+  `"stitched.pdb" in files` condition left an accepted, all-honest
+  parent announced as carrying a D-128 success PDB **when its tree held
+  no such file** — precisely the door clause 6 closes, since the
+  assembler's own `stitched.pdb` sits one directory up. Both are pinned
+  now, and re-running each mutation reddens.
 - **Ruled by:** Emma BUILD GO D-128-B 2026-09-06 (Matt GO) — bind exactly:
   1. **Scope is B only (UI + Method).** UI path honesty for the new
      linker / seam path, reading A's `linker_seam/{id}/` tree. **Do not**

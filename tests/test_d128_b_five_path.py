@@ -421,6 +421,13 @@ def test_emma_bar_cites_d128a_and_spec_sections_six_and_seven():
     # The distinctive hazard is named, not merely implied.
     assert "average" in lowered
     assert "unknown is not honest" in lowered or "unknown is never honest" in lowered
+    # Trinity's LOCKED bar is bound in the log, not merely referenced, and
+    # the audit that found two unpinned clauses is recorded with it.
+    assert "LOCKED" in section
+    assert "clause by clause" in lowered
+    assert "no test that could go red" in lowered or "could go red" in lowered
+    for clause in ("3432", "10 Å", "auto-flip", "Trinity merges"):
+        assert clause in section, clause
     # Ship index carries the same bar.
     assert "9e65cbf" in INDEX
     assert "five-path" in INDEX.lower() or "five paths" in INDEX.lower()
@@ -854,6 +861,28 @@ def test_an_all_honest_accepted_parent_may_name_its_own_pdb(tmp_path):
     assert block["default_served"] is False
 
 
+def test_a_d128_success_requires_d128s_own_pdb_on_disk(tmp_path):
+    """Trinity bar 6: no prior path's `stitched.pdb` may stand in for D-128's.
+
+    ⚠ Found by auditing the bar clause by clause: dropping the
+    ``"stitched.pdb" in files`` condition left every other test green, so
+    an accepted all-honest parent with **no D-128 file** would have been
+    announced as carrying one — which is the door the clause closes. The
+    assembler's own `stitched.pdb` sits one directory up.
+    """
+    _write_linker_seam_tree(tmp_path, write_stitched=False)
+    dest = tmp_path / "linker_seam" / "2817"
+    assert not (dest / "stitched.pdb").exists()
+    # The assembler tree does have one; it must not be borrowed.
+    (tmp_path / "2817").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "2817" / "stitched.pdb").write_text("HEADER assembler\n", encoding="utf-8")
+    block = read_linker_seam_path(tmp_path, parent_analysis_id=2817)
+    assert block["accepted"] is True
+    assert block["has_dishonest_or_unknown_seam"] is False
+    assert block["success_pdb_on_disk"] is False
+    assert "stitched.pdb" not in block["files_on_disk"]
+
+
 def test_gate_and_window_are_reported_not_redeclared(tmp_path):
     _write_linker_seam_tree(tmp_path)
     block = read_linker_seam_path(tmp_path, parent_analysis_id=2817)
@@ -1009,6 +1038,36 @@ def test_b_does_not_invoke_a_restitch_or_an_ops_run():
             assert phrase not in lowered, f"{label}: {phrase}"
 
 
+def test_no_d128_surface_rents_a_gpu_or_ingests_into_f004():
+    """Trinity bar 7: no rent / F-004 from the surface this PR adds.
+
+    ⚠ Word boundaries matter here: a bare "rent" substring matches every
+    ``parent`` on the page, so the naive form of this guard would be
+    green for a reason that has nothing to do with renting anything.
+    """
+    surfaces = [(READER, "linker_seam_path_read")]
+    surfaces.extend(
+        (text, label) for text, label in d128_method_sections()
+    )
+    surfaces.append(
+        (
+            _slice(
+                REVIEW_JSX,
+                'data-testid="d128-seam-honesty"',
+                "function PaeBadge",
+                "AssemblyReview.jsx",
+            ),
+            "AssemblyReview.jsx (D-128 blocks)",
+        )
+    )
+    for text, label in surfaces:
+        lowered = text.lower()
+        assert not re.search(r"\brent\b|\brented\b|\brenting\b", lowered), label
+        assert not re.search(r"\brunpod\b|\btorch\b|\bcuda\b", lowered), label
+        assert "core.scorer" not in lowered, label
+        assert "ingest" not in lowered, label
+
+
 def test_algorithm_modules_are_not_edited_by_this_ui_pr():
     """Hard stop: B reads. All five paths' bytes stay as they landed on main."""
     for path, digest, label in (
@@ -1117,6 +1176,12 @@ def test_d128_b_method_names_seam_disclosure_as_measurement_and_refuses_an_avera
         assert "not scientifically solved" in lowered, label
         for phrase in FORBIDDEN:
             assert phrase not in lowered, f"{label}: {phrase}"
+        # Trinity bar 3 names "aligned" and "superimposed" outright. The
+        # D-128 section says "lined up" in its negation and never needs
+        # either word, so ban them here rather than page-wide (D-118's
+        # assembler note legitimately says "not superimposed").
+        for parked in ("aligned", "superimposed", "full-length af-quality"):
+            assert parked not in lowered, f"{label}: {parked}"
 
 
 def test_method_addendum_does_not_gut_the_four_earlier_sections():
@@ -1130,13 +1195,31 @@ def test_method_addendum_does_not_gut_the_four_earlier_sections():
         assert "What overlap-confidence Kabsch does" in flat, label
         assert "per UniProt domain" in flat, label
         assert "CLOSED" in text, label
+    # ⚠ Section anchors, not just phrases. Found by auditing the Trinity
+    # bar: renaming the D-121 assembler heading left every phrase check
+    # green, because "winner-tile assembler" and "not Kabsch" also appear
+    # in the D-125-B addendum below it. A gutted section has to be missing
+    # its own heading to be noticed.
     for heading in (
-        "Addendum D-125-B",
-        "Addendum D-126-B",
-        "Addendum D-127-B",
-        "Addendum D-128-B",
+        "## The problem — a long protein does not fit in one gulp",
+        "## The overlap is the glue",
+        "## Assemble means pick a winner — not Kabsch",
+        "## Seams can look ugly",
+        "## Addendum D-125-B",
+        "## Addendum D-126-B",
+        "## Addendum D-127-B",
+        "## Addendum D-128-B",
+        "## The rental is CLOSED",
     ):
         assert heading in METHOD_MD, heading
+    for heading in (
+        "<h3>Kabsch-path restitch",
+        "<h3>Overlap-confidence Kabsch",
+        "<h3>Piecewise / domain-aware Kabsch",
+        "<h3>Linker / seam honesty",
+        "<h3>Long proteins: tiles, glue, and a winner-tile assembler (D-121)</h3>",
+    ):
+        assert heading in METHOD_NOTE, heading
     for testid in (
         "hold48-explainer",
         "kabsch-method-addendum",
