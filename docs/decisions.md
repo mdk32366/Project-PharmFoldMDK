@@ -5,10 +5,49 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-128-B (UI five-path honesty + the mandatory Method addendum)
+## Active ship — D-129 (Spec: Phase 5 named-refuse)
 
-- **D-128-B ships UI linker / seam path honesty and the Spec §7 Method
-  addendum** (**this PR**) —
+- **D-129 ships the Phase 5 named-refuse Spec** (**this PR**) —
+  [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md).
+  **Ruled by Matt SIGNED Phase 5 named-refuse 2026-09-05 ~17:58 PT, via
+  Emma.** ⚠ **Its authority is over LABELS, not algorithms** — no
+  geometry, no threshold, no artifact tree, no served byte changes.
+  **Eight** parents are **`accept-refuse`**: **2938, 2939, 3179, 3190,
+  3321, 3368, 3566** (the D-128 linker seven) **+ 3432** (already
+  accept-refuse under signed triage — re-affirmed, not newly ruled).
+  `accept-refuse` = **the recorded honest outcome of a refusal**: the
+  join is **not held**, we say so, and we **stop hunting it**.
+  UI / Method (**B**) must **label** those eight **named refuse /
+  accept-refuse** and must **never** label them **open must-hunt**,
+  **solved / fixed / repaired / aligned**, or **a D-128 miss** —
+  **0-of-7 was pre-registered** as allowed by D-128 §1b / §3 / §11
+  *before* the run.
+  ⚠ **`accept-refuse` ≠ Method silence.** **B still must disclose** the
+  recorded D-128 OPS rollup — **PASS 0 / REFUSE 7 / FAIL 0 / SKIP 0**,
+  `repaired_of_seven` = **0**, and the **named confusion**
+  `n_d125_pass_d128_refuse` = **5** / `n_d126_pass_d128_refuse` = **6**
+  (`n_d127_pass_d128_refuse` = 0, `n_d127_refuse_d128_pass` = 0) — as
+  recorded by Kaylee at tip `9e65cbf`, out_root
+  `linker_seam_ops_2026-09-05`. ⚠ **Not re-measured; do not
+  re-measure.** The label and the disclosure ship **together**.
+  ⚠ **3272 / 3394 stay Phase 4 must-hunt** (`rmsd_gt_10` class), are
+  **out of this Spec**, and move only on a **separate Matt GO** — **no
+  RMSD Spec bleed**.
+  ⚠ **NO linker-v2.** The stitch-algorithm family **freezes**: served
+  stays **assembler**, the **10.0 Å** gate **stays** (W = 32, ε = 1e-3
+  stay), **D-126 remains the best experimental path until proven
+  otherwise**, and the **D-127 and D-128 failed rescues stay
+  disclosed**.
+  ⚠ **Seams are NOT solved** — accepting a refusal retires the
+  **hunt**, not the **record**.
+  ⚠ **Docs only: no UI / React, no `MethodNote.jsx`, no Method file
+  edit** (§5 carries the 8th-grade excerpt as **authority only**, the
+  same Spec-PR pattern as #243 / #246), **no `hold48_*.py` edit, no
+  core algorithm change, no restitch / ops run / Fly / rent**, and it
+  does **not merge D-128-B**. Draft PR; **no self-merge**; **Trinity
+  merges**. Full entry: `### D-129` in [`README.md`](README.md).
+- **D-128-B already shipped UI linker / seam path honesty and the Spec
+  §7 Method addendum** on `main` (`cd071d7` / #248) —
   [`app/linker_seam_path_read.py`](../app/linker_seam_path_read.py)
   projects A's sibling `linker_seam/{parent_id}/` tree onto
   `assembly_review.five_path`; the review card names **five** paths
@@ -84,15 +123,28 @@
   **3272 / 3394 / 3432 are recorded rows, not success targets**
   (**3432 stays accept-refuse** and is never counted as a D-128 miss).
   **CPU, no rent.** **0-of-7 repaired is an allowed outcome** — and
-  **this PR measured nothing**: no ops run, no restitch of the 27, no
+  **that PR measured nothing**: no ops run, no restitch of the 27, no
   Fly POST, no `repaired_of_seven` claimed for any parent.
-  ⚠ **The BUILD gate is discharged, not waived:** Spec §8 says **Kaylee
-  does not BUILD** until the Spec is on `main` **and** an Emma / Matt GO
-  names D-128-A. Both hold at this PR — Spec `2004c5a` / #246 is on
-  `main`, and the Emma BUILD GO (Matt GO NOW) is recorded at
-  `### D-128-A` in [`README.md`](README.md).
+  ⚠ **The BUILD gate was discharged, not waived:** Spec §8 says
+  **Kaylee does not BUILD** until the Spec is on `main` **and** an
+  Emma / Matt GO names D-128-A. Both held at that PR — Spec `2004c5a` /
+  #246 was on `main`, and the Emma BUILD GO (Matt GO NOW) is recorded
+  at `### D-128-A` in [`README.md`](README.md).
   ⚠ **A did not discharge the Method obligation** (Spec §7 —
-  **mandatory** at D-128-B); **D-128-B**, the PR above, discharges it.
+  **mandatory** at D-128-B); **D-128-B** (`cd071d7` / #248) discharged
+  it.
+  ⚠ **The D-128 OPS run is recorded** (by Kaylee, at that same tip
+  `9e65cbf`, out_root `linker_seam_ops_2026-09-05`): **PASS 0 /
+  REFUSE 7 / FAIL 0 / SKIP 0**, `repaired_of_seven` = **0** — the
+  pre-registered allowed outcome — and **D-128-B's Method §7 already
+  discloses it** with the **5** / **6** give-back beside the zero.
+  **Matt SIGNED Phase 5 named-refuse** on that result, so the **seven
+  are no longer must-hunt**: they are **`accept-refuse`** with **3432**
+  (**eight** total). Authority is **D-129**
+  ([`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md)), which
+  keeps that disclosure **mandatory and standing** and adds the
+  **named-refuse label rules** the shipped Method does not carry yet.
+  ⚠ **Not re-measured.**
   ⚠ **Served stays assembler**; **D-126 remains the
   best experimental path until proven otherwise**; the **D-127 failed
   experiment stays disclosed**. ⚠ **Seams recorded ≠ seams solved.**
@@ -202,6 +254,15 @@
   piecewise + D-128 linker / seam stay callable. Default served =
   assembler. **D-128's goal framing is diagnose / refuse dishonest
   seams — never solved**, and its own OPS run repaired **0 of 7**.
+  ⚠ **And `accept-refuse` (D-129) does not change that:** the eight
+  accepted parents' joins are **not held** — accepting a refusal
+  retires the **hunt**, not the **record**, and **never** means
+  solved / fixed / repaired.
+- ⚠ **The stitch-algorithm family is FROZEN (D-129 §7).** **No
+  linker-v2**, no piecewise-v3, no new decomposition, no second window
+  size, no restitch. A fifth algorithm needs its own Matt GO. **D-126
+  remains the best experimental path until proven otherwise**, and the
+  **D-127 and D-128 failed rescues stay disclosed** — both.
 - ⚠ **10.0 Å gate STAYS.** Do not raise it **and do not loosen it** —
   no RMSD / linker threshold change without Matt. No trim loop. No
   threshold Spec-as-fix. No named-exclusion-as-fix. **W = 32** is a
@@ -213,7 +274,8 @@
   ops confusion vs D-125 (`n_d125_pass_d126_refuse` is a **named
   finding**); **0-of-5** recovered is allowed.
 
-Full entries: [`README.md` § D-128-B](README.md#d-128-b--ui-linker--seam-path-honesty--the-mandatory-d-128-method-addendum),
+Full entries: [`README.md` § D-129](README.md#d-129--phase-5-named-refuse-the-eight-linker--seam-parents-are-accept-refuse-the-d-128-rescues-0-of-7-stays-disclosed-and-the-stitch-family-freezes-docs-only),
+[`README.md` § D-128-B](README.md#d-128-b--ui-linker--seam-path-honesty--the-mandatory-d-128-method-addendum),
 [`README.md` § D-128-A](README.md#d-128-a--linker--seam-honesty-core-1a-per-path-seam-honesty-rows--optional-32-aa-linker-local-rigid-then-existing-winning_tile),
 [`README.md` § D-128](README.md#d-128--linker--seam-honesty-spec-diagnose-and-refuse-dishonest-seams-optional-linker-local-rigid-docs-only),
 [`README.md` § D-127-B](README.md#d-127-b--ui-four-path-honesty--the-mandatory-d-127-method-addendum),
@@ -224,7 +286,8 @@ Full entries: [`README.md` § D-128-B](README.md#d-128-b--ui-linker--seam-path-h
 [`README.md` § D-126](README.md#d-126--overlap-confidence-kabsch-spec-trimmed--plddt-weighted-fit-then-existing-winning_tile-docs-only),
 [`README.md` § D-125-B](README.md#d-125-b--ui-dual-path-honesty-name-assembler-and-kabsch-path-artifacts-without-colliding-them),
 [`README.md` § D-125](README.md#d-125--kabsch-restitch-spec-overlap-cα-align-then-existing-winning_tile-stitch-d-125-a-core-build).
-Spec: [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)
+Spec: [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md)
+(D-129) · [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)
 (D-128) · [`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md)
 (D-127).
 
@@ -232,9 +295,10 @@ Spec: [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-128 Spec** | Linker / seam honesty Spec (docs only) — §1a required per-path seam honesty metric; §1b optional linker-local rigid (±32 aa window, no pieces, no trim) | Already shipped on `main` (#246 / `2004c5a`). |
-| **D-128-A** | Core BUILD (honesty rows for every path tree + optional ±32 aa window weighted Kabsch → `winning_tile`; CPU, no rent) | Already shipped on `main` (#247 / `9e65cbf`). Fifth sibling `linker_seam/`; no `hold48_*.py` edit; no ops run. Did **not** discharge Spec §7 Method. |
-| **D-128-B** | UI five-path honesty (one row per `(path, seam)`, never an average) + **mandatory Method addendum** (reads `linker_seam/`) | **Yes — this PR.** Discharges Spec §7 and discloses the D-128 OPS result (PASS 0 / REFUSE 7 / FAIL 0; `repaired_of_seven` = 0; give-back 5 vs D-125, 6 vs D-126) **as recorded**. No ops run here. |
+| **D-129 Spec** | **Phase 5 named-refuse** Spec (docs only) — **labels, not algorithms**. The **eight** parents **2938 / 2939 / 3179 / 3190 / 3321 / 3368 / 3566 + 3432** are **`accept-refuse`**; a surface labels them **named refuse**, never **open must-hunt** / **solved** / **a D-128 miss**. The D-128 OPS **0 of 7** + confusion (**5** vs D-125, **6** vs D-126) stays a **mandatory, standing** disclosure — **already discharged** by D-128-B (`cd071d7` / #248) and **not to be softened or dropped**. **3272 / 3394 stay Phase 4 must-hunt** (separate Matt GO). **No linker-v2**; 10.0 Å stays; served = assembler | **Yes — this PR.** Docs only; no UI, no `MethodNote.jsx`, no Method file edit, no `hold48_*.py` edit, no ops run. |
+| **D-128 Spec** | Linker / seam honesty Spec (docs only) — §1a required per-path seam honesty metric; §1b optional linker-local rigid (±32 aa window, no pieces, no trim) | Already shipped on `main` (#246 / `2004c5a`). §3 / §9 gain the **D-129 Phase 5 cross-link** in this PR (the seven are accept-refuse, not must-hunt); the algorithm stays as shipped. |
+| **D-128-A** | Core BUILD (honesty rows for every path tree + optional ±32 aa window weighted Kabsch → `winning_tile`; CPU, no rent) | Already shipped on `main` (#247 / `9e65cbf`). Fifth sibling `linker_seam/`; no `hold48_*.py` edit; no ops run. Did **not** discharge Spec §7 Method. Its OPS run has since been recorded: **0 of 7** (→ **D-129**). |
+| **D-128-B** | UI five-path honesty (one row per `(path, seam)`, never an average) + **mandatory Method addendum** (reads `linker_seam/`) | Already shipped on `main` (#248 / `cd071d7`). Discharged Spec §7 and disclosed the D-128 OPS result (PASS 0 / REFUSE 7 / FAIL 0; `repaired_of_seven` = 0; give-back 5 vs D-125, 6 vs D-126) **as recorded**. No ops run there. ⚠ Its Method still calls the seven **must-hunt**; **D-129** re-labels them **accept-refuse**, so a follow-on Method / UI edit is owed — **not** this docs Spec PR. |
 | **D-127 Spec** | Piecewise / domain-aware Kabsch Spec (docs only) | Already shipped on `main` (#243 / `00fa76d`). |
 | **D-127-A** | Core BUILD (per-domain weighted Kabsch → `winning_tile`; no trim; CPU, no rent) | Already shipped on `main` (#244 / `e49bf34`). |
 | **D-127-B** | UI four-path honesty + **mandatory Method addendum** (reads `piecewise_kabsch/`) | Already shipped on `main` (#245 / `de9a80e`). Discharged Spec §7 and disclosed the D-127 OPS result. |
