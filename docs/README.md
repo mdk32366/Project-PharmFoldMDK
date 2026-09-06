@@ -162,8 +162,13 @@
 >   **not** `accept-refuse`, the eight are unchanged, §4's disclosure
 >   stays standing, and §7's freeze is **not repealed**.
 > - [`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md) —
->   Phase 4 residual-RMSD hunt (**D-130**, **this PR**). **Algorithm
->   authority** for a later **D-130-A**. ⚠ **Single failure mode:
+>   Phase 4 residual-RMSD hunt (**D-130**, already on `main`, `854c2ab` /
+>   #252). **Algorithm authority** for **D-130-A**, which is **this PR**
+>   and implements §1a / §1b / §2 / §3 / §5 / §11 as a sixth sibling
+>   module (`core/hold48_residual_rmsd.py` +
+>   `scripts/residual_rmsd_restitch.py`); it overwrites none of the five
+>   earlier trees, edits no `hold48_*.py`, ships no UI and no Method
+>   edit, and **runs no ops**. ⚠ **Single failure mode:
 >   residual RMSD** (the `rmsd_gt_10` whole-overlap class). ⚠ **Two
 >   parents only: 3272** `Q6V0I7` **/ 3394** `Q8TDW7` — both **Phase 4
 >   must-hunt**, both out of the D-128 OPS seven. ⚠ **NOT a linker
@@ -187,7 +192,11 @@
 >   module. ⚠ **The eight stay `accept-refuse`; Phase 5 is not
 >   reopened.** ⚠ **10.0 Å stays. Served stays assembler. No F-004, no
 >   auto-flip. D-126 remains best experimental and callable. Never
->   solved — and never solved without measurement.**
+>   solved — and never solved without measurement.** ⚠ **D-130-A ships
+>   the code and NOT the claim:** the §1a decomposition is written for
+>   every seam and every path, `recovered_of_two` = 0 stays an allowed
+>   outcome, and **D-130-B** (UI + Method §7) is still owed before D-130
+>   is "done".
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**) plus a
 >   D-125-B addendum (what Kabsch does / does not), a D-126-B addendum
@@ -231,11 +240,18 @@
 >   **D-128-A** already shipped the core BUILD on `main` (`9e65cbf` /
 >   #247); **D-128-B** already shipped UI five-path honesty **and** the
 >   mandatory Spec §7 Method addendum on `main` (`cd071d7` / #248).
->   **D-129 ships** the Phase 5 named-refuse Spec (**this PR**) —
+>   **D-129 ships** the Phase 5 named-refuse Spec (already on `main`,
+>   `1baf4c0` / #249) —
 >   [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md): the
 >   **eight** parents are **`accept-refuse`**, the D-128 OPS **0 of 7**
 >   disclosure is **standing**, **3272 / 3394** stay **Phase 4
->   must-hunt**, and there is **no linker-v2**. **D-121 ships** the
+>   must-hunt**, and there is **no linker-v2**. **D-129-B** shipped
+>   those labels on `main` (`cbcb47d` / #250) and **D-129-C** the hygiene
+>   patch that stops the eight's retired name standing bare (`544e821` /
+>   #251). **D-130 ships** the
+>   Phase 4 residual-RMSD Spec (already on `main`, `854c2ab` / #252);
+>   **D-130-A** ships its core BUILD — **this PR** — and **D-130-B**
+>   (UI + Method §7) is still owed. **D-121 ships** the
 >   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
 >   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
@@ -358,6 +374,451 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-130-A — Phase 4 residual-RMSD core: §1a floor decomposition for every path + optional residue-identity correspondence audit, then existing winning_tile
+
+- **Date:** 2026-09-06
+- **Status:** accepted as **the D-130-A core BUILD GO** (**Emma BUILD GO
+  Phase 4 residual RMSD 2026-09-06**, routed via Emma from Matt —
+  *"BUILD GO Phase 4 — residual RMSD … Spec #252 merge = GO, no second
+  GO"* — off tip **`854c2ab`**, the D-130 Spec on `main` as **#252**).
+  Architect: Trinity. Builder: Kaylee, sole owner.
+  ⚠ **Core only (D-130-A).** Implements D-130 Spec §1a / §1b / §2 / §3 /
+  §5 / §11 as a **sixth sibling path**.
+  ⚠ **Not D-130-B** (UI path honesty + Method) — that is a later PR
+  after A lands on `main`, and it needs its own GO. This BUILD does not
+  stuff B into A.
+  ⚠ **Does not discharge Method.** Spec §7 stays **mandatory** before
+  anyone calls D-130 “done”; a code-only A is not a silent-code-only
+  licence.
+  ⚠ **The decomposition is the deliverable.** §1a is the required half;
+  §1b's audit is optional, and **`recovered_of_two` = 0 is an allowed
+  outcome** — pre-registered at **D-130**, before this code existed, not
+  discovered here.
+  ⚠ **Single failure mode: residual RMSD.** The `rmsd_gt_10`
+  **whole-overlap** class. ⚠ **NOT a linker Spec** (D-128's family,
+  **closed** at Phase 5). ⚠ **NOT a domain-partition Spec** (D-127's).
+  ⚠ **NOT both, NOT dual-mode, NOT a kitchen sink.** No window, no
+  pieces, no linker-inherit, no blend is implemented here — and the
+  tests go red if one appears.
+  ⚠ **Two parents, and only two: 3272** `Q6V0I7` **and 3394** `Q8TDW7`,
+  both **Phase 4 must-hunt**. No third id is a success target.
+  ⚠ **Phase 5 is not reopened.** **2938, 2939, 3179, 3190, 3321, 3368,
+  3566 + 3432** stay **`accept-refuse`**; they may be **recorded** by a
+  CLI run of the 27 and are **never** a D-130 miss. D-129 §4's
+  **standing** D-128 OPS disclosure (**0 of 7**, give-back **5** vs
+  D-125 and **6** vs D-126) is untouched, and D-128's **OPS 0/7**
+  standing is not gutted.
+  ⚠ **The 10.0 Å gate STAYS.** No raise, no loosen, no per-parent
+  exception, no named-exclusion, **no threshold Spec-as-fix**. ⚠ **No
+  trim** (the D-126 lie surface, on **3272** itself). ⚠ **No
+  weights-as-fix** — §1b's fit is D-125's **unweighted, untrimmed**
+  Kabsch. ⚠ **No RMSD-v2:** this BUILD introduces **no new geometry**.
+  ⚠ **Served stays assembler.** No auto-flip on any count; the
+  transform is pre-stitch and `winning_tile` is called, never replaced.
+  ⚠ **Does not overwrite** the assembler tree, D-125 `kabsch/{id}/`,
+  D-126 `confidence_kabsch/{id}/`, D-127 `piecewise_kabsch/{id}/` or
+  D-128 `linker_seam/{id}/`. Prior trees are opened **read-only**; every
+  row lands in the D-130 tree.
+  ⚠ **No `hold48_*.py` edit.** `core/hold48_kabsch.py`,
+  `core/hold48_confidence_kabsch.py`,
+  `core/hold48_piecewise_kabsch.py`, `core/hold48_linker_seam.py` and
+  `core/hold48_stitch.py` stay **sha256-pinned and byte-identical**;
+  D-130-A adds a new file beside them.
+  ⚠ **No UI / React / `MethodNote.jsx` and no Method file edit** —
+  [`method-hold48-tiles.md`](method-hold48-tiles.md) stays byte-pinned.
+  ⚠ **Not an ops run.** The CLI is inventory-limited and
+  hermetic-testable; **nothing is re-measured here** and every D-125 /
+  D-126 / D-127 / D-128 figure quoted stays **as recorded**. ⚠ **No Fly
+  POST, no F-004, no ADC-C, no rent / GPU / RunPod / MD / AF refine.**
+  ⚠ **Never solved, and never solved without measurement.** This BUILD
+  measures and refuses; it claims no seam is fixed.
+- **Ruled by:** **Emma BUILD GO Phase 4 residual RMSD, 2026-09-06** (Matt
+  via Emma; the **#252 merge is the GO** and no second GO is waited on).
+  Bind exactly:
+  1. **Scope is D-130-A (core) only** — §1a / §1b / §2 / §3 / §5 / §11.
+     **B is a later PR after A is on `main`**; A stays core.
+  2. **Parents 3272 and 3394 only**, the Phase 4 must-hunt pair. The
+     CLI may re-run the **27** for confusion; nobody else is a target.
+  3. **RMSD class only** — not linker-v2, not domain, not a Phase 5
+     re-open.
+  4. **Freeze holds; no dual-mode with the linker / domain paths.**
+  5. **Do not gut** the Phase 5 eight `accept-refuse`, the **D-128 OPS
+     0/7** standing disclosure, or the D-129-C `must-hunt` hygiene
+     supersession rule.
+  6. **Served stays assembler**; no gate loosen without Spec; **never
+     claim seams solved.**
+  7. **No Fly POST / F-004 / rent** — ops CLI only, CPU, stdlib.
+  8. **Hermetic tests that can go red.**
+  9. Model pin unchanged (claude-opus-5, thinking, effort **high** —
+     **D-0037**). **Draft PR; no self-merge; Trinity merges.**
+- **Cite:** **Emma BUILD GO Phase 4 residual RMSD 2026-09-06** · D-130
+  Spec ([`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md))
+  §1 / §1a / §1b / §2 / §3 / §5 / §7 / §9 / §11 / §12 · `### D-130` in
+  this log (header confirmed present before citing — D-062 /
+  method-note item 7) · D-130 `854c2ab` / #252 · `### D-129` · D-129
+  Spec ([`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md))
+  §2 / §4 / §6 / §7 · D-129 `1baf4c0` / #249 · D-129-B `cbcb47d` / #250
+  · D-129-C `544e821` / #251 · `### D-128-A` · D-128 Spec
+  ([`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)) §1a
+  (the honesty-row contract this BUILD carries forward) · D-128-A
+  `9e65cbf` / #247 · D-128-B `cd071d7` / #248 · D-127-A `e49bf34` /
+  #244 · D-127-B `de9a80e` / #245 · D-126-A `aa8aa02` / #241 · D-125
+  Spec ([`SPEC-kabsch-restitch.md`](SPEC-kabsch-restitch.md)) (**the
+  fit unit reused unchanged**) · D-125-A `26a40a8` / #237 · D-121
+  Method · D-120 Phase 2 review · D-118 assembler-not-Kabsch honesty ·
+  D-117 PLAN / Kabsch park · D-116 `stitch_readiness` · D-111
+  `winning_tile` / off-block PAE null · D-109 ruling 7 · D-062 /
+  method-note item 7 · D-016 (provenance) · D-0037 (model pin) ·
+  D-0043 roadmap Phase 4 · **Phase 4 pair 3272** `Q6V0I7` **/ 3394**
+  `Q8TDW7` · **the eight accept-refuse parents 2938, 2939** `Q7Z408`**,
+  3179, 3190, 3321, 3368** `Q5SZK8`**, 3566 + 3432** `Q8IZF6` (recorded,
+  **never** success targets) · ship index [`decisions.md`](decisions.md)
+- **Relates:** `D-130` · `D-129-C` · `D-129-B` · `D-129` · `D-128-B` ·
+  `D-128-A` · `D-128` · `D-127-B` · `D-127-A` · `D-127` · `D-126-B` ·
+  `D-126-A` · `D-126` · `D-125-B` · `D-125-A` · `D-125` · `D-121` ·
+  `D-120` · `D-118` · `D-117` · `D-116` · `D-111` · `D-109` ruling 7 ·
+  `D-062` · `D-016` · `D-0037` · `D-0043`
+- **Does not amend:** the D-130 Spec §1–§12 (it stays as shipped; where
+  this log and that file differ, **THE LOG GOVERNS**, and this entry
+  does not diverge from it) · D-111 geometry · D-116 gate · the
+  **10.0 Å** gate (it stays) · **W = 32** · ε = 1e-3 · the assembler
+  `core/hold48_stitch.py` · D-125 `hold48_kabsch.py` / `kabsch/{id}/` ·
+  D-126 `hold48_confidence_kabsch.py` / `confidence_kabsch/{id}/` ·
+  D-127 `hold48_piecewise_kabsch.py` / `piecewise_kabsch/{id}/` ·
+  D-128 `hold48_linker_seam.py` / `linker_seam/{id}/` · the D-128 §1a
+  honesty-row contract · **D-129 §2's eight** (they stay
+  `accept-refuse`) · **D-129 §4's standing D-128 OPS disclosure** ·
+  **D-129 §7's freeze** · D-129-B's fate registry
+  `app/phase5_named_refuse.py` · D-129-C's hygiene rule · the D-127 /
+  D-128 OPS disclosures (both stay) · D-126's standing as best
+  experimental path (it stays, and stays callable) · D-118 census
+  identity · D-120 `assembly_review` · D-122 `/adcs` · D-123 `/about` ·
+  D-124 ADC-C · F-004 / ranking set · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
+  `D-110` while later numbers are written). This entry spends
+  `D-130-A`; the pointer stays the owner's. ⚠ **Does not invent
+  D-130-B** and does not pre-authorise it or the OPS run.
+
+#### Context
+
+**Five stitch paths are on disk and each one reported the RMSD it
+achieved. None reported the smallest RMSD any rigid motion could have
+achieved.** D-130 specced that second number — the rigid-invariant
+internal-distance disagreement of the two overlap copies, halved — and
+proved it is a floor under **every** rigid transform at once. D-130-A is
+the code BUILD of that Spec, and the thing it must not do is become the
+fifth knob: the family's recorded history is that every new degree of
+freedom bought a pass somewhere and gave one back somewhere else, and a
+knob chosen *after* seeing which two parents refuse would be a search
+dressed as a test. **So this BUILD adds no fit.** §1b's only permitted
+refit is D-125's, unchanged, on a correspondence corrected by residue
+identity.
+
+**Four implementation facts drove design choices, and they are recorded
+here rather than discovered later.** Each is a place where the Spec's
+prose admits more than one reading, and picking silently would leave a
+number in a report that nobody could reconstruct (D-016).
+
+1. **A prior path's recorded `rmsd_angstrom` is NOT its
+   `rigid_rmsd_angstrom`.** §1a wants the **full-overlap** RMSD a path
+   *ends* with. Read from `core/hold48_kabsch.py` at `4c7bb45…`, D-125's
+   `seams.jsonl` records exactly that — but D-126's is **weighted and
+   trimmed**, D-127's is **per-domain**, and D-128's is **weighted
+   inside a ±32 aa window** (read from those modules at `d526a85…`,
+   `ad48b2b…` and `c270f87…`). Copying any of the latter three into a
+   column headed *full-overlap RMSD* would be the **D-126 lie surface
+   one level up**: four different statistics stacked in one column and
+   compared. So D-130-A **never reads `rmsd_angstrom` from a prior
+   record.** It **measures** the full-overlap corresponded Cα RMSD from
+   the artifacts that path itself wrote (`provenance.json` windows +
+   `tileN.pdb`), labels the row `measured_from_path_artifacts`, and
+   reports a **stated absence** — never a zero — when those artifacts do
+   not exist. A refused parent writes no PDB, so that absence is the
+   common case for a refusing path and it is labelled
+   `refused_before_transform`, exactly the D-128 §1a contract carried
+   forward.
+2. **The floor is measured once per seam, from the pre-transform
+   coordinates, and shared by every path row.** §1a says the internal
+   dRMSD is *"computed from coordinates before any transform; it does
+   not depend on one."* Two of the five paths do **not** move a tile
+   rigidly — D-127 moves per-domain pieces and D-128 moves a window —
+   so their **output** coordinates have different internal distances
+   from their input, and measuring the floor off those outputs would
+   silently make the floor path-dependent. It is not. The floor is a
+   property of the **two ESMFold tiles and the correspondence**, which
+   is why it bounds all five paths at once, so this BUILD measures it
+   from the **input** tiles and labels its source
+   `measured_pre_transform_from_input_tiles`. That the `residual_rmsd`
+   rows and the `kabsch` rows carry the **same** floor for a seam is the
+   correct behaviour, not a copy-paste bug.
+3. **`residual_class` needed a precedence rule, and the Spec's table
+   does not state one.** Two of its three conditions can hold at once —
+   a floor **over** the gate with a **null** achieved RMSD is both
+   *"`rmsd_floor_angstrom > 10.0`"* (`irreducible`) and *"either input
+   is null"* (`unknown`). If `unknown` won, D-130's **own** path could
+   never emit `irreducible`, because §2 refuses on the floor **before**
+   any fit and therefore always with a null achieved RMSD — the
+   certificate the Spec is built on would be unreachable. So
+   **`irreducible` is evaluated first**: a **known** floor over the gate
+   certifies impossibility regardless of whether any transform was ever
+   attempted. `unknown` then takes every remaining null, and `placement`
+   is what is left. ⚠ The Spec's third row is written *"floor `≤ 10.0`
+   **and** achieved `> 10.0`"*, which leaves a **passing** seam (floor
+   and achieved both within the gate) unclassed while requiring the
+   field to be **three-valued**. This BUILD classes it **`placement`** —
+   impossibility was not certified, which is exactly true — and keeps
+   §11's `n_placement` counting the Spec's own condition
+   (`placement` **and** achieved `> 10.0`), with the passing rows
+   counted separately as `n_placement_within_gate` so a pass can never
+   be folded into a count the Spec calls *"not a recovery forecast"*.
+4. **A too-permissive offset search fails toward refusal, never toward a
+   false recovery.** §1b step 3 admits an integer register correction
+   only when **exactly one** offset makes the overlap residue identities
+   agree; none or more than one is `correspondence_unverifiable`. The
+   candidate set is therefore **derived, not tuned**: every integer
+   offset for which the two tile spans still overlap in at least
+   `OVERLAP_CA_MIN` = **3** corresponded Cα, which the hold-48 tile size
+   bounds. A short chance agreement does not buy a recovery — it adds a
+   **second** candidate and makes the audit **ambiguous**, which
+   refuses. That is the fail-closed direction, and it is why no
+   minimum-agreement length was invented to suppress it.
+
+#### Decision
+
+1. **Sixth sibling module, replacing nothing.** The algorithm lives in
+   `core/hold48_residual_rmsd.py` and is invoked by
+   `scripts/residual_rmsd_restitch.py`. It **imports** D-125's
+   primitives (`kabsch_rotation_translation`, `paired_overlap_ca`,
+   `overlap_parent_residues`, `ca_xyz_at_parent`,
+   `apply_rigid_transform_pdb`, `require_inventory_parent`,
+   `KABSCH_RESTITCH_PARENT_IDS`, the stdlib linear algebra) and reads
+   the four prior trees through their own `*_out_dir` helpers, then
+   feeds the existing `winning_tile` / `write_stitched`. It imports
+   **one** measurement helper from D-128 — `seam_max_ca_jump`, the
+   whole-seam max Cα jump §1b's disclosure list requires — and
+   **nothing** of D-128's window, linker identification, or inherit
+   logic. ⚠ Importing a jump ruler is not importing the linker
+   algorithm, and no D-128 refuse name enters this module. **ZERO
+   third-party imports** (CPU, stdlib; no rent), the same footprint as
+   D-125-A through D-128-A.
+2. **§1a is the required deliverable and is written whatever the
+   outcome.** For each seam and each of the five paths (`kabsch`,
+   `confidence_kabsch`, `piecewise_kabsch`, `linker_seam`,
+   `residual_rmsd`) a row records `path`, `n_overlap_ca`,
+   `rigid_rmsd_angstrom`, `internal_drmsd_angstrom`,
+   `rmsd_floor_angstrom`, `residual_class`, `floor_exceeds_gate` — and
+   **how each is known**, per field: `rigid_rmsd_source` and
+   `internal_drmsd_source` ∈ {`read_from_path_record`,
+   `measured_from_path_artifacts`,
+   `measured_pre_transform_from_input_tiles`, `absent`}, with
+   `absence_reason` ∈ {`tree_absent`, `no_seam_rows`,
+   `refused_before_transform`, `path_artifacts_absent`,
+   `overlap_ca_lt_3`} whenever a number is null. **Null is never
+   `0.0`**, an absent tree is an honest absence with a reason, and no
+   number is carried across parents or paths.
+3. **The floor, and the direction it runs.**
+   `rmsd_floor_angstrom = internal_drmsd_angstrom / 2`, from the dRMSD
+   of §1a on the corresponded overlap Cα. `floor_exceeds_gate` is
+   `true` above **10.0 Å**, `false` at or below it, and **null** when
+   the floor is null. The module exposes the direction as data
+   (`FLOOR_OVER_GATE_CERTIFIES_REFUSAL` / `FLOOR_UNDER_GATE_PROVES_NOTHING`)
+   and computes **no** "distance to recovery", no per-parent exception
+   and no threshold from a floor. ⚠ `irreducible` is **sufficient and
+   never necessary**; reading the floor backwards is a Spec violation,
+   not an interpretation.
+4. **§1b is an audit, not a search.** It runs **only** where the seam's
+   `residual_class` is `placement`. Residue identity comes from the
+   tile PDBs the paths already carry (`res_name` at each overlap Cα).
+   If the **declared** pairing already agrees on identity, the
+   correspondence is **verified**, `register_offset_aa` = **0**, and
+   there is nothing to correct — the seam refuses `rmsd_gt_10` on
+   D-125's own achieved number rather than being refitted to the same
+   pairs, which would recover nothing **by construction**. Otherwise a
+   correction is accepted **only** when exactly one integer offset makes
+   every corrected pair's identity agree; **none or more than one
+   refuses `correspondence_unverifiable`**. No offset is ever chosen by
+   RMSD, by pLDDT, by seam jump, or by which one passes, and the
+   corrected correspondence is the **full** identity-agreeing overlap —
+   dropping pairs to improve a number is trim, and trim is forbidden.
+5. **The fit is D-125's, unchanged.** One **unweighted, untrimmed**
+   Kabsch on the full corrected overlap Cα — centroids → covariance →
+   SVD → `det R = +1` — applied to the **whole** moving tile, chained
+   from the N-terminal reference exactly as D-125 chains it. No
+   weights, no trim loop, no pieces, no window, no linker-inherit, no
+   blend. On accept the transformed `TileFold` list goes to the
+   **existing** `winning_tile` / `write_stitched`; off-block PAE stays
+   **null, never 0**, and no atom is invented for a gap.
+6. **Refuse names, fail closed, all-or-nothing.** `overlap_ca_lt_3`,
+   `rmsd_gt_10` and `singular_covariance` are **D-125's, carried
+   unchanged**. `rmsd_irreducible` and `correspondence_unverifiable`
+   are **new names for this module's own two measurements** and are
+   never conflated with D-127's `linker_jump_gt_10` or D-128's
+   `seam_jump_gt_10` — a test asserts neither name appears in this
+   module's reason set. The floor is checked **before** the fit, and
+   again on a corrected correspondence before that correspondence is
+   fitted. If any seam refuses, the parent refuses: no
+   `tileN_transformed.pdb`, no D-130-path `stitched.pdb`, and any
+   artifact from a previous accepted run is **cleared** so a refuse can
+   never wear an earlier success.
+7. **Sixth tree, no overwrite.** Artifacts land in
+   `<ops out_dir>/residual_rmsd/{parent_job_id}/` —
+   `provenance.json`, `seams.jsonl`, `residual_decomposition.jsonl`,
+   and on accept `tile{n}_transformed.pdb` + the `write_stitched` set.
+   `algorithm = residual_rmsd_decomposition_then_winning_tile`,
+   `decision = D-130`. A write is **refused** if the destination is not
+   under `residual_rmsd/`, or if it is (or shares a `stitched.pdb`
+   with) the assembler, `kabsch/`, `confidence_kabsch/`,
+   `piecewise_kabsch/` or `linker_seam/`.
+8. **Inventory.** The writer refuses any parent outside D-125's **27**.
+   Primary evaluation is **3272 and 3394**; the eight `accept-refuse`
+   parents and the rest of the 27 may be **run and recorded** and are
+   **never** success targets and **never** a D-130 miss. The CLI says
+   so on stderr when it is pointed at one.
+9. **§11 report, including the count most likely to embarrass the run.**
+   `build_ops_success_report` emits every §11 field, with
+   `recovered_of_two` counting only parents that accepted **and**
+   actually carried a non-zero identity-determined register correction
+   — an accept with no correction is D-125's result, not a recovery —
+   and with `recovered_of_two_source` naming whether a correction record
+   was supplied at all, so a zero is never read as a measured zero.
+   `n_d126_recovered_d130_refuse` is emitted by name because **3394** is
+   in this Spec's inventory and it is the count most likely to
+   disqualify the run.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 /
+D-111). This BUILD touches no network, no weight and no threshold: like
+D-125 through D-128 it moves coordinates the model already emitted, and
+a transformed tile is still that tile's network output, moved.
+
+What is load-bearing is that it makes a **negative result about the
+model's outputs** computable instead of merely repeated. Four
+pre-registered rigid-body hypotheses have been run and three recovered
+nothing on their primary sets; the ordinary next move is a fifth variant
+chosen after seeing which parents refuse, reported as though it were a
+test. This BUILD computes, **before any fit**, a quantity no fit can
+beat, so where the floor clears the gate the honest statement is not
+*"our method failed"* but *"these two ESMFold tiles do not agree about
+this region's shape, and no rigid superposition of them ever will."*
+That is a claim about the network's coordinates, and being able to make
+it — with the arithmetic on disk and the direction of the bound written
+beside it — is the part a deep-learning project is graded on.
+
+The recovery half is constrained in the same direction: the only repair
+permitted is one where the earlier fits were solving the **wrong
+pairing**, decided by **residue identity** rather than by which offset
+scores best. Fixing an indexing bug is a finding about the pipeline;
+tuning until the number improves is a finding about nothing.
+`recovered_of_two` = 0 was pre-registered before this code existed,
+which is what keeps a later zero interpretable and a later one honest.
+
+Neutral to the weights; load-bearing for whether a refusal we publish is
+a limit of the model's outputs or merely a limit of our effort.
+
+#### Provenance (D-016)
+
+- **The BUILD GO:** **Emma BUILD GO Phase 4 residual RMSD, 2026-09-06**,
+  routed via Emma from Matt, stating that the **#252 merge is the GO**
+  and that **no second GO** is pending. ⚠ Recorded as a **standing
+  ruling**, not as a measurement.
+- **The tip:** **`854c2ab`** — `git log --oneline -5` in the working
+  clone on 2026-09-06 returned
+  *"854c2ab D-130: Spec — Phase 4 residual-RMSD hunt (3272/3394)
+  (#252)"* as `HEAD`, with `544e821` (D-129-C / #251) directly beneath
+  it. ⚠ The brief's tip and the checkout **agreed** this time; that is
+  stated because at D-130 they did not, and an agreement nobody checked
+  is indistinguishable from one nobody had.
+- **`### D-130` exists as a heading**, and so do `### D-129`,
+  `### D-129-B`, `### D-129-C` and `### D-128-A` —
+  `grep -n "^### D-1[23][0-9]" docs/README.md` at `854c2ab` returns all
+  of them. ⚠ **Checked as entries, not as citations** (D-062 /
+  method-note item 7), because this entry cites them as authority.
+- **The four prior modules' recorded RMSD statistics** (decision context
+  item 1) are read from the module sources at this tip —
+  `core/hold48_kabsch.py` `4c7bb45…` (`SeamRecord.rmsd_angstrom`, the
+  full-overlap unweighted fit), `core/hold48_confidence_kabsch.py`
+  `d526a85…` (trimmed + pLDDT-weighted),
+  `core/hold48_piecewise_kabsch.py` `ad48b2b…` (per-domain piece) and
+  `core/hold48_linker_seam.py` `c270f87…` (weighted, ±32 aa window).
+  ⚠ **A read of the code, not a re-measurement of any parent**, and the
+  digests are the ones `tests/test_d130_residual_rmsd_spec.py` pins.
+- **The RMSD floor** \(\mathrm{RMSD} \ge \mathrm{dRMSD}/2\) is a
+  **proved inequality** (D-130 Spec §1a). ⚠ **Mathematics, not a
+  measurement.** This BUILD implements it and exercises it on
+  constructed point sets under real rigid transforms, including
+  far-from-optimal ones; **no parent's floor is computed in this PR**,
+  because this PR runs no ops.
+- **No parent was run.** ⚠ **This PR ships no ops run, no restitch of
+  the 27, no Fly query and no fold.** Every D-125 / D-126 / D-127 /
+  D-128 figure named above is quoted **as recorded**, and the §11
+  report builder is a **report** surface, not a CI assert against live
+  ops.
+- **The Phase 4 pair and the eight** are the ids the record already
+  carries (D-130 Spec §3; D-129 §2 / §3). ⚠ **No accession is written
+  from memory** and none is invented here.
+- **The five prior modules are unedited:** re-pinned by sha256 in
+  `tests/test_d130_residual_rmsd_spec.py`, which this PR keeps green
+  without touching a digest.
+
+#### Consequences
+
+- **New surfaces:** `core/hold48_residual_rmsd.py` (sixth sibling
+  module), `scripts/residual_rmsd_restitch.py` (inventory-limited CLI:
+  restitch, `--decomposition-report`, `--confusion-report`), and
+  `tests/test_d130_residual_rmsd.py` (**T-1200**–**T-1209**, hermetic /
+  stdlib).
+- Tests that must be able to go red: the floor identity holds on
+  constructed sets and is **rigid-invariant**; a floor over the gate
+  refuses `rmsd_irreducible` **before** any fit; the audit refuses an
+  ambiguous or unmatched register instead of picking one, and **never**
+  by score; a verified pairing is **not** refitted; the corrected
+  correspondence is the **full** identity-agreeing overlap (a trimmed
+  subset reddens); the fit is D-125's, unweighted and untrimmed, and
+  produces the **same** transform as `core/hold48_kabsch.py` on the same
+  pairs; a refuse writes rows and **no** PDB and clears a prior
+  success; the parent is **all-or-nothing**; prior trees are
+  **byte-unchanged** after a D-130 run; a write outside
+  `residual_rmsd/` or onto any of the five prior trees is **refused**;
+  `null` never renders `0.0` and `unknown` is neither `irreducible` nor
+  `placement`; the module's reason set contains **neither**
+  `linker_jump_gt_10` **nor** `seam_jump_gt_10`; the module imports no
+  third-party package and defines no window / piece / trim / weight; a
+  parent outside the 27 is refused; and `recovered_of_two` = 0 is
+  reported as an **allowed** outcome rather than a miss.
+- **Two amendments to landed tests, named rather than made quietly**, in
+  `tests/test_d130_residual_rmsd_spec.py`. Both are **widened, not
+  loosened.** (a) `test_d130_is_the_next_free_decision_id` asserted the
+  D-130 suffix set was **empty** because A and B were unauthorised;
+  the GO authorises **A**, so the set is enumerated as `["", "-A"]` —
+  a stray `### D-130-B` or `### D-131` still reddens. (b)
+  `test_ship_index_plan_architecture_and_test_plan_carry_d130` asserted
+  the Spec row read *"Yes — this PR"* and the A row *"Later Emma / Matt
+  GO"*; the ship index now records the Spec as **shipped** and **A** as
+  this PR, so the pins move with it and additionally require the index
+  to say that A does **not** discharge the Method obligation. (c) The
+  same file's docs-only pin is **strengthened**: the sixth module must
+  now exist, must carry this algorithm string, and must contain no
+  `numpy`, no trim loop, no domain interval and no window half-width —
+  so "A shipped" cannot be claimed by a file that quietly re-imports the
+  frozen family. ⚠ **No digest and no other assertion in that file is
+  touched**, and the D-130 Spec markdown is **not edited** — it is
+  authority, and the log governs.
+- `ARCHITECTURE.md`, [`decisions.md`](decisions.md),
+  [`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md) and
+  [`Test_Plan.md`](Test_Plan.md) carry D-130-A. Every new `must-hunt`
+  occurrence on those live surfaces is written **Phase-4-scoped**, so
+  the D-129-C hygiene checker stays green without deleting a sentence.
+- **Phase 4 is now built but not run.** The **OPS** run of 3272 / 3394
+  is a separate GO, and **D-130-B** (UI + Method) is a separate PR after
+  this one is on `main`. **D-130 is not "done"** until §7's Method
+  surface ships.
+- **Phase 5 is untouched.** The eight stay `accept-refuse`, D-129 §4's
+  disclosure stays standing and ungutted, and the D-127 and D-128 failed
+  rescues stay disclosed. **D-126 remains the best experimental path
+  until proven otherwise, and callable.** **Served stays the
+  assembler.** Seams are **not** solved, and nothing here says they are.
 
 ### D-130 — Phase 4 residual-RMSD hunt: certify the floor before claiming a fit — 3272 / 3394 only, recover with honesty or refuse by name (docs only)
 
