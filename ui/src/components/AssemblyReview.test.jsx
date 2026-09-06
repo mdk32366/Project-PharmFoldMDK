@@ -393,6 +393,234 @@ describe('AssemblyReview', () => {
     expect(queryByTestId('d127-accepted')).toBeNull()
   })
 
+  // D-128-B — five-path honesty. A's §1a rows are CROSS-PATH, so the
+  // collapse to guard against here is a mean jump per path or an
+  // "N of M honest" tally: either hides which path is dishonest where.
+  // The card renders one row per (path, seam) and derives nothing.
+  const D128_HONESTY = [
+    {
+      path: 'kabsch', moving_tile_index: 2, reference_tile_index: 1,
+      max_ca_jump_angstrom: 4.20, honest: true, honest_recorded: true,
+      honest_disagrees_with_record: false, linker_fields_applicable: false,
+      linker_n: null, max_linker_ca_jump: null,
+      source: 'measured_from_path_artifacts', absence_reason: null, refuse_reason: null,
+    },
+    {
+      path: 'confidence_kabsch', moving_tile_index: 2, reference_tile_index: 1,
+      max_ca_jump_angstrom: 6.10, honest: true, honest_recorded: true,
+      honest_disagrees_with_record: false, linker_fields_applicable: false,
+      linker_n: null, max_linker_ca_jump: null,
+      source: 'read_from_path_record', absence_reason: null, refuse_reason: null,
+    },
+    {
+      path: 'piecewise_kabsch', moving_tile_index: 2, reference_tile_index: 1,
+      max_ca_jump_angstrom: 28.60, honest: false, honest_recorded: false,
+      honest_disagrees_with_record: false, linker_fields_applicable: true,
+      linker_n: 12, max_linker_ca_jump: 3.05,
+      source: 'read_from_path_record', absence_reason: null, refuse_reason: null,
+    },
+    {
+      path: 'linker_seam', moving_tile_index: 2, reference_tile_index: 1,
+      max_ca_jump_angstrom: null, honest: null, honest_recorded: null,
+      honest_disagrees_with_record: false, linker_fields_applicable: false,
+      linker_n: null, max_linker_ca_jump: null,
+      source: 'absent', absence_reason: 'refused_before_transform',
+      refuse_reason: 'seam_jump_gt_10',
+    },
+  ]
+  const D128_SEAM = {
+    moving_tile_index: 2, reference_tile_index: 1,
+    overlap_start: 1529, overlap_end: 1656,
+    offending_seam_source: 'from_d127_refuse', no_offending_seam: false,
+    seam_centre: 1592, window_start: 1560, window_end: 1624,
+    window_half_width_aa: 32, n_ca: 65, rmsd_angstrom: 2.75,
+    max_ca_jump_angstrom: 7.40, pre_transform_max_ca_jump_angstrom: 31.20,
+    honest: true, refuse_reason: null, accepted: true,
+  }
+  const fivePath = (linkerSeam) => ({
+    ...fourPath({
+      present: true,
+      label: 'Piecewise / domain-aware Kabsch-path (sibling tree)',
+      persist_stem: 'piecewise_kabsch/2817',
+      accepted: true,
+      seams: [D127_SEAM],
+    }),
+    linker_seam: linkerSeam,
+  })
+
+  it('names five paths and shows one honesty row per path per seam', () => {
+    const review = {
+      ...REVIEW,
+      seam_note: 'A linker / seam honesty sibling tree is named below as a fifth path.',
+      five_path: fivePath({
+        present: true,
+        label: 'Linker / seam honesty path (sibling tree) — per-path seam honesty rows. Not the default served PDB. Seams are not scientifically solved',
+        persist_stem: 'linker_seam/2817',
+        accepted: true,
+        repaired: true,
+        seams: [D128_SEAM],
+        seam_honesty: D128_HONESTY,
+        seam_honesty_empty_reason: null,
+        window_half_width_aa: 32,
+        success_pdb_on_disk: true,
+        has_dishonest_or_unknown_seam: false,
+      }),
+    }
+    const { container, getByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const t = container.textContent
+    expect(t).toMatch(/Five paths/)
+    expect(t).toMatch(/linker_seam\/2817/)
+    expect(t).toMatch(/default served/)
+    const honesty = getByTestId('d128-seam-honesty').textContent
+    // Every path is named separately, with its own jump.
+    expect(honesty).toMatch(/kabsch/)
+    expect(honesty).toMatch(/confidence_kabsch/)
+    expect(honesty).toMatch(/piecewise_kabsch/)
+    expect(honesty).toMatch(/linker_seam/)
+    expect(honesty).toMatch(/4\.20 Å/)
+    expect(honesty).toMatch(/6\.10 Å/)
+    expect(honesty).toMatch(/28\.60 Å/)
+    expect(honesty).toMatch(/honest at this seam/)
+    expect(honesty).toMatch(/dishonest at this seam/)
+    // How each row is known travels with it.
+    expect(honesty).toMatch(/measured_from_path_artifacts/)
+    expect(honesty).toMatch(/read_from_path_record/)
+    // ⚠ No derived number: mean(4.20, 6.10, 28.60) = 12.97 and the max is
+    // 28.60. Neither a mean nor an "N of M honest" tally may stand in for
+    // the per-path rows.
+    expect(honesty).not.toMatch(/12\.97 Å/)
+    expect(honesty).not.toMatch(/Mean jump|Average jump|Honesty score|seams honest|Best path/i)
+    expect(t).not.toMatch(/seams solved|Kabsch aligned|fixed badge|full-length AF-quality/)
+  })
+
+  it('renders an unknown jump as not honest, never as 0.00 Å', () => {
+    const review = {
+      ...REVIEW,
+      five_path: fivePath({
+        present: true,
+        label: 'Linker / seam honesty path (sibling tree). Not the default served PDB.',
+        persist_stem: 'linker_seam/2817',
+        accepted: false,
+        repaired: false,
+        seams: [{
+          ...D128_SEAM,
+          n_ca: 2,
+          rmsd_angstrom: null,
+          max_ca_jump_angstrom: null,
+          honest: null,
+          refuse_reason: 'overlap_ca_lt_3',
+          accepted: false,
+        }],
+        seam_honesty: D128_HONESTY,
+        success_pdb_on_disk: false,
+        has_dishonest_or_unknown_seam: true,
+      }),
+    }
+    const { container, getByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const honesty = getByTestId('d128-seam-honesty').textContent
+    const seams = getByTestId('d128-seams').textContent
+    // Unknown is spelled out, not left blank and not read as a pass.
+    expect(honesty).toMatch(/unknown — not honest/)
+    expect(honesty).toMatch(/refused_before_transform/)
+    expect(seams).toMatch(/unknown — not honest/)
+    expect(seams).toMatch(/overlap_ca_lt_3/)
+    expect(honesty).toMatch(/not measured/)
+    expect(seams).toMatch(/not computed on this path/)
+    // The block's own prose says "never 0.00 Å"; what must never appear is
+    // a RENDERED 0.00 Å where A wrote null. Drop the explanation, then look.
+    expect(honesty.replace('never 0.00 Å', '')).not.toMatch(/0\.00 Å/)
+    expect(seams).not.toMatch(/0\.00 Å/)
+    // A dishonest or unknown seam never carries a success PDB.
+    expect(getByTestId('d128-served-note').textContent)
+      .toMatch(/No D-128-path stitched.pdb is presented as an honest result/)
+    expect(getByTestId('d128-accepted').textContent).toMatch(/refused/)
+    expect(container.textContent).not.toMatch(/fixed badge|seams solved/)
+  })
+
+  it('says linker fields are not defined on the paths that do not define them', () => {
+    const review = {
+      ...REVIEW,
+      five_path: fivePath({
+        present: true,
+        label: 'Linker / seam honesty path (sibling tree).',
+        persist_stem: 'linker_seam/2817',
+        accepted: true,
+        repaired: false,
+        seams: [D128_SEAM],
+        seam_honesty: D128_HONESTY,
+        success_pdb_on_disk: false,
+        has_dishonest_or_unknown_seam: false,
+      }),
+    }
+    const { getByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const honesty = getByTestId('d128-seam-honesty').textContent
+    expect(honesty).toMatch(/not defined on this path/)
+    // D-127 is the one path that does define them, so its numbers show.
+    expect(honesty).toMatch(/12/)
+    expect(honesty).toMatch(/3\.05 Å/)
+  })
+
+  it('shows the window fit with the jump before and after, and how the seam was found', () => {
+    const review = {
+      ...REVIEW,
+      five_path: fivePath({
+        present: true,
+        label: 'Linker / seam honesty path (sibling tree).',
+        persist_stem: 'linker_seam/2817',
+        accepted: true,
+        repaired: true,
+        seams: [D128_SEAM],
+        seam_honesty: D128_HONESTY,
+        window_half_width_aa: 32,
+        success_pdb_on_disk: true,
+        has_dishonest_or_unknown_seam: false,
+      }),
+    }
+    const { getByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const seams = getByTestId('d128-seams').textContent
+    expect(seams).toMatch(/1560–1624/)
+    expect(seams).toMatch(/±32 aa/)
+    expect(seams).toMatch(/2\.75 Å/)
+    expect(seams).toMatch(/31\.20 Å/)
+    expect(seams).toMatch(/7\.40 Å/)
+    expect(seams).toMatch(/from_d127_refuse/)
+    expect(seams).toMatch(/whole seam/)
+    // A window transform is a recorded move, never a repaired seam.
+    expect(getByTestId('d128-repaired').textContent).toMatch(/not a repaired seam/)
+  })
+
+  it('does not imply a D-128 path when linker_seam artifacts are absent', () => {
+    const review = {
+      ...REVIEW,
+      five_path: fivePath({
+        present: false,
+        persist_stem: 'linker_seam/2817',
+        empty_reason: 'no_linker_seam_artifacts',
+        empty_note: 'Linker / seam honesty artifacts are not on disk for this parent.',
+        seams: [],
+        seam_honesty: [],
+      }),
+    }
+    const { container, queryByTestId } = render(
+      <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+    )
+    const t = container.textContent
+    expect(t).toMatch(/Four paths/)
+    expect(t).not.toMatch(/Five paths/)
+    expect(t).not.toMatch(/linker_seam\/2817/)
+    expect(queryByTestId('d128-seam-honesty')).toBeNull()
+    expect(queryByTestId('d128-seams')).toBeNull()
+    expect(queryByTestId('d128-accepted')).toBeNull()
+  })
+
   it('renders nothing without a review block', () => {
     const { container } = render(<MemoryRouter><AssemblyReview /></MemoryRouter>)
     expect(container.textContent).toBe('')

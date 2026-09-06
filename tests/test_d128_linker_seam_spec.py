@@ -467,10 +467,14 @@ def test_ship_index_distinguishes_spec_from_ab_build():
     assert "**Yes — this PR.**" in INDEX
     index_flat = _flat(INDEX)
     assert re.search(r"D-128 Spec.*Already shipped on `main`", index_flat)
-    assert re.search(r"D-128-A.*\*\*Yes — this PR\.\*\*", index_flat)
-    assert re.search(r"D-128-B.*No\. Later Emma GO", index_flat)
-    # A ships code; it does not discharge the mandatory Method obligation.
-    assert "does **not** discharge" in INDEX or "does not discharge" in INDEX.lower()
+    # A shipped at #247; B is the PR that ships the UI + mandatory Method.
+    assert re.search(r"D-128-A.*Already shipped on `main`", index_flat)
+    assert re.search(r"D-128-B.*\*\*Yes — this PR\.\*\*", index_flat)
+    # A shipped code; it did not discharge the mandatory Method obligation,
+    # and the index must still say which id does.
+    lowered_index = INDEX.lower()
+    assert "not** discharge" in INDEX or "not discharge" in lowered_index
+    assert "discharges it" in lowered_index or "discharges the mandatory" in lowered_index
     assert re.search(r"D-127-B.*Already shipped on `main`", index_flat)
     assert re.search(r"D-127-A.*Already shipped on `main`", index_flat)
     assert "linker_seam" in INDEX
