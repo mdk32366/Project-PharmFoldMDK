@@ -589,7 +589,9 @@ def test_b_does_not_reimplement_persist_writer():
     assert "def write_confidence_kabsch_restitch" not in READER
     assert "def write_kabsch_restitch" not in READER
     assert "write_piecewise_kabsch_restitch" in D127_WRITER
-    assert "four_path_payload" in READS
+    # D-128-B composes the four-path payload inside five_path_payload;
+    # either wiring keeps reads.py a consumer rather than a second writer.
+    assert "four_path_payload" in READS or "five_path_payload" in READS
 
 
 def test_b_does_not_invoke_a_restitch_of_the_twenty_seven():

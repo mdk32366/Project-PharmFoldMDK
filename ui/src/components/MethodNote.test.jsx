@@ -185,6 +185,123 @@ describe('MethodNote — D-121 hold-48 8th-grade explainer (additive, not a gut)
     expect(t).toMatch(/not re-measured here/)
   })
 
+  // D-128-B — Spec §7 makes this section MANDATORY too, and the MANDATORY
+  // OPS honesty inject (Matt GO via Emma 2026-09-06) puts the D-128 run on
+  // it as recorded. These are ship checks, not documentation polish.
+  it('adds the mandatory D-128-B addendum naming the whole five-step stitch-path train', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const t = getByTestId('linker-seam-method-addendum').textContent
+    expect(t).toMatch(/five/i)
+    expect(t).toMatch(/Assembler/)
+    expect(t).toMatch(/D-125 Kabsch/)
+    expect(t).toMatch(/D-126 confidence/)
+    expect(t).toMatch(/D-127 piecewise/)
+    expect(t).toMatch(/D-128 linker \/ seam honesty/)
+    expect(t).toMatch(/±32 aa/)
+    expect(t).toMatch(/7 of 10/)
+    // "Dishonest" is a claim about the file, not about a person.
+    expect(t).toMatch(/structure file/)
+    expect(t).toMatch(/not about a person/)
+    expect(t).toMatch(/10\.0 Å/)
+    expect(t).not.toMatch(/seams solved|seams fixed|Kabsch aligned|full-length AF-quality/)
+  })
+
+  it('names the D-128 refuse table and calls the seam numbers measurements, never an average', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const t = getByTestId('linker-seam-method-addendum').textContent
+    expect(t).toMatch(/fewer than three Cα/)
+    expect(t).toMatch(/in a line/)
+    expect(t).toMatch(/refuse writes a record/)
+    expect(t).toMatch(/measurements/)
+    expect(t).toMatch(/not a verdict/)
+    expect(t).toMatch(/one row per path per seam/)
+    expect(t).toMatch(/never an average/)
+    expect(t).toMatch(/unknown jump is not honest/)
+    expect(t).toMatch(/0\.00 Å/)
+    expect(t).toMatch(/not scientifically solved/)
+    expect(t).toMatch(/not medical advice/)
+    expect(t).toMatch(/does not invent/)
+    expect(t).not.toMatch(/seams solved|seams fixed|Kabsch aligned|full-length AF-quality/)
+  })
+
+  it('discloses the D-128 OPS run and never states the allowed zero without its give-back', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const t = getByTestId('linker-seam-method-addendum').textContent
+    expect(t).toMatch(/PASS 0/)
+    expect(t).toMatch(/REFUSE 7/)
+    expect(t).toMatch(/FAIL 0/)
+    expect(t).toMatch(/SKIP 0/)
+    expect(t).toMatch(/9e65cbf/)
+    expect(t).toMatch(/linker_seam_ops_2026-09-05/)
+    expect(t).toMatch(/recovered_of_seven/)
+    expect(t).toMatch(/repaired_of_seven/)
+    // Refuse histogram, counts and ids, each beside its reason.
+    expect(t).toMatch(/seam_jump_gt_10/)
+    expect(t).toMatch(/×6/)
+    expect(t).toMatch(/rmsd_gt_10/)
+    expect(t).toMatch(/×1/)
+    for (const pid of ['2938', '2939', '3179', '3190', '3321', '3368', '3566']) {
+      expect(t).toMatch(new RegExp(pid))
+    }
+    // ⚠ The allowed zero must never appear without the give-back beside it.
+    expect(t).toMatch(/allowed outcome/)
+    expect(t).toMatch(/n_d125_pass_d128_refuse/)
+    expect(t).toMatch(/n_d126_pass_d128_refuse/)
+    expect(t).toMatch(/named finding/)
+    expect(t).toMatch(/bury a drop under a pre-registration/)
+    // As-recorded, not our measurement.
+    expect(t).toMatch(/as recorded/i)
+    expect(t).toMatch(/not re-measured here/)
+    // D-128's reason name is not D-127's.
+    expect(t).toMatch(/measured after the single window move/)
+    expect(t).toMatch(/linker_jump_gt_10/)
+    // Standing disclosures survive the new result.
+    expect(t).toMatch(/D-126 remains the best experimental path/)
+    expect(t).toMatch(/0 of 7/)
+    expect(t).toMatch(/0 of 3/)
+    expect(t).toMatch(/2 of its primary 5/)
+    // No gate moves, no served flip, 3432 untouched, W = 32 not an optimum.
+    expect(t).toMatch(/No threshold moved/)
+    expect(t).toMatch(/default served structure is still the assembler/)
+    expect(t).toMatch(/never a pass count/)
+    expect(t).toMatch(/3432 stays accept-refuse/)
+    expect(t).toMatch(/not a measured optimum/)
+    // Recorded is not solved, said about these seven specifically.
+    expect(t).toMatch(/seven recorded outcomes/)
+    expect(t).toMatch(/recorded is not a seam that was solved/)
+    expect(t).not.toMatch(/seams solved|seams fixed|Kabsch aligned|full-length AF-quality/)
+  })
+
+  // Matt SIGNED Phase 5 scope split (via Emma, 2026-09-06): accept-refuse
+  // is not silence, and 0-of-7 does not license a linker-v2. Phase 5
+  // named-refuse LABELS are a later Spec and must not appear here.
+  it('says an accepted refusal is a record rather than a silence, and refuses a linker-v2', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const t = getByTestId('linker-seam-method-addendum').textContent
+    expect(t).toMatch(/An accepted refusal is a record, not a silence/)
+    expect(t).toMatch(/Accept-refuse/)
+    expect(t).toMatch(/3432/)
+    expect(t).toMatch(/dropped from the run/)
+    expect(t).toMatch(/excluded from the inventory/)
+    expect(t).toMatch(/written row/)
+    expect(t).toMatch(/measurement came out negative/)
+    // No linker-v2: another window family is D-127's mistake repeating.
+    expect(t).toMatch(/no linker-v2/i)
+    expect(t).toMatch(/until the count improves/)
+    expect(t).toMatch(/D-126 is still the best of them/)
+    expect(t).toMatch(/not a sixth one/)
+    // Phase 5 label vocabulary is NOT shipped by this PR.
+    expect(t).not.toMatch(/named[- ]refuse|refuse label|Phase 5/i)
+  })
+
   it('says plainly that D-126 remains the best path, keeps every gate, and never flips the served path', async () => {
     getCoverage.mockResolvedValue(FIXTURE)
     const { container, getByTestId } = renderMethod()

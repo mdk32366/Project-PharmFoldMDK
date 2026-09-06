@@ -8,6 +8,11 @@ import { Link } from 'react-router-dom'
 // way, and render ONE ROW PER DOMAIN PIECE. A seam average across pieces
 // would hide the per-domain disagreement multi-rigid exists to expose,
 // which is the D-126 lie surface wearing a new number.
+// D-128-B — five-path honesty: name the linker_seam/ tree, and render A's
+// §1a rows ONE PER (PATH, SEAM). Those rows are cross-path, so the
+// tempting collapse here is a mean jump per path or an "N of M honest"
+// tally — either would hide WHICH path is dishonest WHERE, which is the
+// whole content of §1a. No average is derived anywhere below.
 // Ops numbers, not a restitch GO. Seams not solved.
 
 function formatMeasure(value, { missing = 'not computed on this path' } = {}) {
@@ -23,27 +28,40 @@ function formatCount(value) {
   return String(value)
 }
 
-function pathCountWord(three, four) {
+// Spec §1a is three-valued and unknown is NOT honest. A null jump has no
+// verdict to render, so it must not fall through to either boolean.
+function honestyWord(honest) {
+  if (honest === true) return 'honest at this seam (≤ 10.0 Å)'
+  if (honest === false) return 'dishonest at this seam (> 10.0 Å)'
+  return 'unknown — not honest'
+}
+
+function pathCountWord(three, four, five) {
+  if (five) return 'Five'
   if (four) return 'Four'
   if (three) return 'Three'
   return 'Two'
 }
 
-function DualPathHonesty({ dualPath, triplePath, fourPath }) {
-  const paths = fourPath || triplePath || dualPath
+function DualPathHonesty({ dualPath, triplePath, fourPath, fivePath }) {
+  const paths = fivePath || fourPath || triplePath || dualPath
   if (!paths) return null
   const assembler = paths.assembler || {}
   const kabsch = paths.kabsch || {}
   const d126 = paths.confidence_kabsch || {}
   const d127 = paths.piecewise_kabsch || {}
+  const d128 = paths.linker_seam || {}
   const three = Boolean(d126.present)
   const four = Boolean(d127.present)
+  const five = Boolean(d128.present)
   const seams = kabsch.seams || []
   const d126Seams = d126.seams || []
   const d127Seams = d127.seams || []
+  const d128Seams = d128.seams || []
+  const honestyRows = d128.seam_honesty || []
   return (
     <div className="dual-path" data-testid="dual-path-honesty">
-      <h4>{pathCountWord(three, four)} paths — not one population</h4>
+      <h4>{pathCountWord(three, four, five)} paths — not one population</h4>
       <p className="caveat">
         ⚠ Persist stems must not collide. Assembler files stay{' '}
         <code>{assembler.persist_stem || 'stitched'}</code>. Kabsch-path
@@ -59,6 +77,12 @@ function DualPathHonesty({ dualPath, triplePath, fourPath }) {
           <>
             . Piecewise / domain-aware Kabsch-path files live under{' '}
             <code>{d127.persist_stem || 'piecewise_kabsch/{parent}'}</code>
+          </>
+        ) : null}
+        {five ? (
+          <>
+            . Linker / seam honesty files live under{' '}
+            <code>{d128.persist_stem || 'linker_seam/{parent}'}</code>
           </>
         ) : null}
         . The assembler PDB remains the default served structure. Seams are{' '}
@@ -116,6 +140,38 @@ function DualPathHonesty({ dualPath, triplePath, fourPath }) {
                   ? 'accepted on this path — not the served PDB'
                   : d127.accepted === false
                     ? 'refused — recorded outcome, not a success badge'
+                    : 'not recorded'}
+              </dd>
+            </div>
+          </>
+        ) : null}
+        {five ? (
+          <>
+            <div>
+              <dt>Linker / seam honesty path</dt>
+              <dd>{d128.label}</dd>
+            </div>
+            <div>
+              <dt>D-128 persist stem</dt>
+              <dd><code>{d128.persist_stem || '—'}</code></dd>
+            </div>
+            <div>
+              <dt>D-128 parent outcome</dt>
+              <dd data-testid="d128-accepted">
+                {d128.accepted === true
+                  ? 'accepted on this path — not the served PDB'
+                  : d128.accepted === false
+                    ? 'refused — recorded outcome, not a success badge'
+                    : 'not recorded'}
+              </dd>
+            </div>
+            <div>
+              <dt>±32 aa window transform applied</dt>
+              <dd data-testid="d128-repaired">
+                {d128.repaired === true
+                  ? 'at least one seam window was transformed — a recorded move, not a repaired seam'
+                  : d128.repaired === false
+                    ? 'no window transform was applied on this parent'
                     : 'not recorded'}
               </dd>
             </div>
@@ -325,6 +381,167 @@ function DualPathHonesty({ dualPath, triplePath, fourPath }) {
           )}
         </div>
       ) : null}
+
+      {five ? (
+        <div data-testid="d128-seam-honesty">
+          <h4>Seam honesty — every path, every seam (D-128 §1a)</h4>
+          <p className="note">
+            Numbers come from A&apos;s D-128{' '}
+            <code>seam_honesty.jsonl</code>. Each row is{' '}
+            <strong>one path at one seam</strong>: the max Cα jump that
+            path <strong>ends</strong> with, and whether it is therefore{' '}
+            <strong>honest</strong> there — a jump over{' '}
+            <strong>10.0 Å</strong> is <strong>dishonest for that
+            seam</strong>. There is deliberately <strong>no average, no
+            per-path score, and no &quot;how many seams passed&quot;
+            count</strong>: a mean would hide the one seam that flies
+            apart, which is the disagreement these rows exist to show. A
+            missing jump is an <strong>absence</strong>, never{' '}
+            <code>0.00 Å</code>, and <strong>unknown is not
+            honest</strong>. Each row also says how it is known — read
+            from that path&apos;s record, measured from the artifacts
+            that path itself wrote, or an absence with a reason.
+          </p>
+          {honestyRows.length === 0 ? (
+            <p className="note" data-testid="d128-honesty-empty">
+              No per-path seam honesty rows were recorded
+              {d128.seam_honesty_empty_reason
+                ? ` (${d128.seam_honesty_empty_reason})`
+                : null}
+              . That absence is not a count of zero dishonest seams.
+            </p>
+          ) : (
+            <table className="tile-table">
+              <thead>
+                <tr>
+                  <th>Path</th>
+                  <th>Tiles</th>
+                  <th>Max Cα jump</th>
+                  <th>Honest?</th>
+                  <th>Linker Cα</th>
+                  <th>Max linker jump</th>
+                  <th>How it is known</th>
+                  <th>Refuse</th>
+                </tr>
+              </thead>
+              <tbody>
+                {honestyRows.map((r, i) => (
+                  <tr key={`d128-honesty-${r.path}-${i}`}>
+                    <td className="mono">{r.path || '—'}</td>
+                    <td className="mono">
+                      {r.reference_tile_index != null && r.moving_tile_index != null
+                        ? `${r.reference_tile_index}→${r.moving_tile_index}`
+                        : 'whole path'}
+                    </td>
+                    <td>{formatMeasure(r.max_ca_jump_angstrom, { missing: 'not measured' })}</td>
+                    <td>
+                      {honestyWord(r.honest)}
+                      {r.honest_disagrees_with_record ? (
+                        <> — recorded verdict disagrees with the 10.0 Å gate; the gate wins</>
+                      ) : null}
+                    </td>
+                    <td className="mono">
+                      {r.linker_fields_applicable
+                        ? formatCount(r.linker_n)
+                        : 'not defined on this path'}
+                    </td>
+                    <td>
+                      {r.linker_fields_applicable
+                        ? formatMeasure(r.max_linker_ca_jump)
+                        : 'not defined on this path'}
+                    </td>
+                    <td className="mono">
+                      {r.source || '—'}
+                      {r.absence_reason ? ` (${r.absence_reason})` : null}
+                    </td>
+                    <td className="mono">{r.refuse_reason == null ? 'none' : r.refuse_reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      ) : null}
+
+      {five ? (
+        <div data-testid="d128-seams">
+          <h4>Linker / seam honesty path — window fit</h4>
+          <p className="note">
+            Numbers come from A&apos;s D-128 <code>provenance.json</code> /{' '}
+            <code>seams.jsonl</code>. This path fits{' '}
+            <strong>at most one weighted rigid move</strong> inside a{' '}
+            <strong>±32 aa window</strong> around the offending seam, and
+            moves nothing outside it. The post-move jump is measured
+            across the <strong>whole seam</strong>, not just the window
+            that was fitted — a window that lands while the rest of the
+            seam flies apart is not a held join. Missing values are
+            absences, not zeros: on a refuse-before-transform there is
+            nothing to measure. A refuse is a recorded outcome, not a
+            &quot;fixed&quot; badge. This path is never the default
+            served PDB.
+          </p>
+          {d128Seams.length === 0 ? (
+            <p className="note" data-testid="d128-seams-empty">
+              Seam rows were not written on this path.
+            </p>
+          ) : (
+            <table className="tile-table">
+              <thead>
+                <tr>
+                  <th>Tiles</th>
+                  <th>Overlap</th>
+                  <th>Window (±{d128.window_half_width_aa ?? 32} aa)</th>
+                  <th>n_Cα</th>
+                  <th>Weighted RMSD</th>
+                  <th>Jump before</th>
+                  <th>Jump after (whole seam)</th>
+                  <th>Honest?</th>
+                  <th>Seam identified by</th>
+                  <th>Refuse</th>
+                </tr>
+              </thead>
+              <tbody>
+                {d128Seams.map((s, i) => (
+                  <tr key={`d128-${s.moving_tile_index}-${i}`}>
+                    <td className="mono">
+                      {s.reference_tile_index}→{s.moving_tile_index}
+                    </td>
+                    <td className="mono">
+                      {s.overlap_start != null && s.overlap_end != null
+                        ? `${s.overlap_start}–${s.overlap_end}`
+                        : '—'}
+                    </td>
+                    <td className="mono">
+                      {s.window_start != null && s.window_end != null
+                        ? `${s.window_start}–${s.window_end}`
+                        : 'no window fitted'}
+                    </td>
+                    <td className="mono">{formatCount(s.n_ca)}</td>
+                    <td>{formatMeasure(s.rmsd_angstrom)}</td>
+                    <td>{formatMeasure(s.pre_transform_max_ca_jump_angstrom)}</td>
+                    <td>{formatMeasure(s.max_ca_jump_angstrom)}</td>
+                    <td>{honestyWord(s.honest)}</td>
+                    <td className="mono">
+                      {s.no_offending_seam
+                        ? 'nothing offended — no window fitted'
+                        : s.offending_seam_source || '—'}
+                    </td>
+                    <td className="mono">{s.refuse_reason == null ? 'none' : s.refuse_reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p className="note" data-testid="d128-served-note">
+            {d128.success_pdb_on_disk
+              ? 'A D-128-path stitched.pdb is on disk for this parent and every seam ended inside the gate. It is still not the served structure.'
+              : 'No D-128-path stitched.pdb is presented as an honest result for this parent. A dishonest or unknown seam never carries one, and no assembler / D-125 / D-126 / D-127 file stands in for it.'}{' '}
+            The assembler PDB remains the default served structure, and{' '}
+            <strong>a seam that was recorded is not a seam that was
+            solved</strong>.
+          </p>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -429,6 +646,7 @@ export default function AssemblyReview({ review }) {
         dualPath={review.dual_path}
         triplePath={review.triple_path}
         fourPath={review.four_path}
+        fivePath={review.five_path}
       />
 
       <h4>Assembly provenance</h4>

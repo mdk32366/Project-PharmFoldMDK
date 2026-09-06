@@ -31,7 +31,7 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
-from app.piecewise_kabsch_path_read import four_path_payload, seam_note_for_four
+from app.linker_seam_path_read import five_path_payload, seam_note_for_five
 
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
@@ -893,23 +893,29 @@ def assembly_review(
         ])
     parent_has_pae = bool(parent.pae_json_path)
     parent_job_id = job_by_analysis.get(parent.id)
-    four_path = four_path_payload(
+    five_path = five_path_payload(
         artifact_root,
         parent_analysis_id=parent.id,
         parent_job_id=parent_job_id,
         assembler_pdb_path=parent.pdb_path,
         meta=parent.meta,
     )
-    # D-125-B / D-126-B consumers keep their narrower views; the wider
-    # payload is additive so an older reader cannot silently gain a path.
+    # D-125-B / D-126-B / D-127-B consumers keep their narrower views; the
+    # wider payload is additive so an older reader cannot silently gain a path.
+    four_path = {
+        "assembler": five_path["assembler"],
+        "kabsch": five_path["kabsch"],
+        "confidence_kabsch": five_path["confidence_kabsch"],
+        "piecewise_kabsch": five_path["piecewise_kabsch"],
+    }
     triple_path = {
-        "assembler": four_path["assembler"],
-        "kabsch": four_path["kabsch"],
-        "confidence_kabsch": four_path["confidence_kabsch"],
+        "assembler": five_path["assembler"],
+        "kabsch": five_path["kabsch"],
+        "confidence_kabsch": five_path["confidence_kabsch"],
     }
     dual_path = {
-        "assembler": four_path["assembler"],
-        "kabsch": four_path["kabsch"],
+        "assembler": five_path["assembler"],
+        "kabsch": five_path["kabsch"],
     }
     return {
         "parent_analysis_id": parent.id,
@@ -952,14 +958,16 @@ def assembly_review(
         "assembler_note": (
             "assembled by pLDDT overlap, not superimposed; seam not solved"
         ),
-        "seam_note": seam_note_for_four(
-            four_path["kabsch"],
-            four_path["confidence_kabsch"],
-            four_path["piecewise_kabsch"],
+        "seam_note": seam_note_for_five(
+            five_path["kabsch"],
+            five_path["confidence_kabsch"],
+            five_path["piecewise_kabsch"],
+            five_path["linker_seam"],
         ),
         "dual_path": dual_path,
         "triple_path": triple_path,
         "four_path": four_path,
+        "five_path": five_path,
     }
 
 
