@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from app.linker_seam_path_read import five_path_payload, seam_note_for_five
+from app.phase5_named_refuse import phase5_fate
 
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
@@ -968,6 +969,11 @@ def assembly_review(
         "triple_path": triple_path,
         "four_path": four_path,
         "five_path": five_path,
+        # D-129-B — the Phase 5 fate, keyed by parent job id. A label, never a
+        # metric: it rewrites no seam row and reads no artifact tree. The
+        # accept-refuse block arrives carrying the D-128 OPS rollup, because
+        # the label may not travel without it (D-129 Spec §4).
+        "phase5_fate": phase5_fate(parent_job_id),
     }
 
 

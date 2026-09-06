@@ -339,7 +339,10 @@ out_root `linker_seam_ops_2026-09-05`). ⚠ **Not run, not queried, and not
 re-measured here.***
 
 We ran the linker / seam path over the seven signed must-hunt linker
-parents: **PASS 0 · REFUSE 7 · FAIL 0 · SKIP 0**.
+parents (**"must-hunt" is what they were called when this run was
+chosen**; the Phase 5 sign has since re-labelled them **named refuse /
+accept-refuse** — see the D-129-B addendum below. The numbers in this
+section are unchanged): **PASS 0 · REFUSE 7 · FAIL 0 · SKIP 0**.
 
 - **It repaired none of the seven.** `recovered_of_seven` = **0** and
   `repaired_of_seven` = **0**. That zero was **pre-registered as an
@@ -414,6 +417,81 @@ five persist stems (`stitched` vs `kabsch/{parent}` vs
 `linker_seam/{parent}`) so they cannot be read as one population. The
 served download is still the assembler `stitched` one.
 
+## Addendum D-129-B — what we now call the eight joins we could not hold
+
+*Spec authority: [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md)
+§3 (the label), §4 (the disclosure that ships with it), §5 (this copy),
+§6 (Phase 4 stays out) and §7 (the freeze). Ruled by **Matt SIGNED Phase 5
+named-refuse, 2026-09-05 ~17:58 PT via Emma**. ⚠ **Labels only** — this
+section changes no geometry, no threshold, and no served byte, and it
+**adds nothing to and removes nothing from** the D-128 numbers above.*
+
+**What we tried, and what happened.** To join two overlapping tiles we
+tried four different ways of **moving** one tile onto the other. All four
+move coordinates the network already produced; none of them is a new
+fold. **D-125** fitted one rigid move to the whole overlap. **D-126**
+fitted the same one move, but weighted by the model's own confidence, and
+trimmed — its lesson is that a small **weighted** score can hide a big
+**whole-overlap** gap (gaps of **28–68 Å** on 2939 / 3272 / 3432), and it
+is **still the best of the four**, because it fixed **2 of its 5** target
+joins (parents 3368 and 3394). **D-127** fitted one rigid move **per
+protein domain**, and **it did not pay off**: **0 of 3** target joins
+fixed, and it **gave back** 5 joins D-125 had accepted and 7 that D-126
+had. **7 of its 10** failures were at the **linkers** — the floppy
+stretches between domains. **D-128** first **measured** every path's gap
+at every join and said plainly which are **dishonest** (a gap over
+**10.0 Å**), then optionally tried **one** small rigid move inside a
+**±32 aa** window around the bad linker. **The measuring worked. The
+fixing did not: 0 of 7** joins were repaired, and D-128 also **gave
+back** 5 joins D-125 had accepted and 6 that D-126 had.
+
+**Why 0 of 7 is a result and not a hidden failure.** Before that run, we
+wrote down that **fixing zero of the seven was an allowed outcome**. We
+said in advance what would count, and then we reported what happened.
+That is the whole point of writing the plan first.
+
+**What we decided to call these joins: "accepted refusal."** Eight joins
+— parents **2938, 2939, 3179, 3190, 3321, 3368, 3566** and **3432** —
+are now marked **named refuse / accept-refuse**. In plain words: **these
+joins do not hold, we say so, and we have stopped trying to fix them.**
+Parent **3432** was **already** accept-refuse under signed triage; the
+Phase 5 sign re-affirms it rather than newly ruling it, and it is **not**
+one of the seven the D-128 run covered.
+
+**"Accepted" does not mean fixed, and it does not mean quiet.** It does
+**not** mean the seam is solved, aligned, or repaired — it is **not**.
+And it does **not** mean we stop reporting the numbers: the **0 of 7**
+and the joins D-128 **gave back** (**5** vs D-125, **6** vs D-126) stay
+on this page next to the label, exactly as the section above records
+them. Accepting a refusal retires the **hunt**, not the **record**.
+**Never claim the seams are solved.** None of the eight may be shown as an
+**open must-hunt**, as **solved / fixed / repaired**, or as **a D-128
+miss** — the zero was pre-registered, and the diagnosis half landed.
+
+**Two joins are still open.** Parents **3272** and **3394** failed for a
+**different** reason (the whole-overlap distance, not the linker) and are
+**still being looked at**. They are **Phase 4 must-hunt**, they are
+**not** covered by the decision above, and nothing here changes them: no
+card, no ops run, and no tidy-up may reclassify them without an explicit
+Matt GO naming Phase 4.
+
+**What we are not doing next.** There is **no fifth stitching
+algorithm**. We are not loosening the **10.0 Å** limit that decides
+whether a join counts as honest, we are not moving **W = 32** or
+ε = 1e-3, and we are not changing which structure the site serves: the
+**served** structure is still the **assembler** (the winner-tile method),
+as it has been all along. **D-126 remains the best experimental path
+until proven otherwise**, and stays **callable**. Both the **D-127** and
+the **D-128** failed rescues **stay disclosed** above — neither replaces
+nor softens the other.
+
+**What this addendum does not do.** It does not replace the assembler
+story, does not make the long chain one ESMFold pass, does not fill PAE,
+does not enter F-004 / the ranking, and is not medical advice. It is not
+a re-measurement: every number it names is quoted from the run recorded
+at tip `9e65cbf`, out_root `linker_seam_ops_2026-09-05`, and nothing here
+ran, queried, or re-derived it.
+
 ## The rental is CLOSED
 
 The rented GPU that folded these tiles is done. Hold-48 rental is **CLOSED**
@@ -435,6 +513,12 @@ to rent another card. Do not Deploy. Do not emit.
   either — nor to report either zero without the parents the same run
   gave back.
 - Not a licence to re-open **3432**, which stays accept-refuse.
+- Not a licence to label **3272 / 3394** accepted, retired, or closed.
+  They stay **Phase 4 must-hunt** and move only on an explicit Matt GO
+  naming Phase 4 (**D-129-B**).
+- Not a licence to ship the **accept-refuse** label without the **0 of 7**
+  and the **5 / 6** give-back beside it. The label is *why we stopped*;
+  those numbers are *what we found*.
 - Not F-004 / ranking ingest.
 - Not the ADC-B `/adcs` page (D-122 already shipped that on `main`). Not the Nectin-4 Doc.
 - Not a new science number. Window **1656** / overlap **128** are D-111's.

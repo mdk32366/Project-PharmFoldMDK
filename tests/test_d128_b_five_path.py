@@ -111,13 +111,18 @@ def d128_method_sections() -> tuple[tuple[str, str], ...]:
     assertion green, because the D-127-B section further up says it too. A
     claim this section is required to make must be found **in this
     section**.
+
+    ⚠ D-129-B appended a Phase 5 section to both surfaces, so the end
+    markers move to its headings. Slicing to the old markers would have
+    swallowed that section into every D-128 assertion below and quietly
+    weakened the section-scoping this suite paid for by mutation.
     """
     return (
         (
             _slice(
                 METHOD_MD,
                 "## Addendum D-128-B",
-                "## The rental is CLOSED",
+                "## Addendum D-129-B",
                 "method-hold48-tiles.md",
             ),
             "method-hold48-tiles.md (D-128-B section)",
@@ -126,7 +131,7 @@ def d128_method_sections() -> tuple[tuple[str, str], ...]:
             _slice(
                 METHOD_NOTE,
                 "<h3>Linker / seam honesty, and the five-step stitch-path train",
-                "<h3>What it does today</h3>",
+                "<h3>What we now call the eight joins we could not hold",
                 "MethodNote.jsx",
             ),
             "MethodNote.jsx (D-128-B addendum)",
@@ -1401,33 +1406,40 @@ def test_method_refuses_a_linker_v2():
         assert "not a sixth" in lowered, label
 
 
-# Phase 5 named-refuse labels are a LATER Spec (Trinity Phase 5 green +
-# Emma GO). The inventory is recorded in the log for that Spec; writing a
-# list down is not shipping a label, and this PR ships no label.
+# The Phase 5 named-refuse inventory. ⚠ This constant used to back a fence
+# that kept the label OFF every surface: on 2026-09-05 no Phase 5 Spec was
+# signed, and naming an inventory has been mistaken for shipping the thing
+# before. That fence is now SUPERSEDED — D-129 landed on `main` (`1baf4c0` /
+# #249) and D-129-B ships the label under the Emma BUILD GO of 2026-09-06.
+# The assertion is flipped rather than deleted: it still goes red, in the
+# other direction.
 PHASE5_NAMED_REFUSE_INVENTORY = (2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432)
 PHASE4_NOT_YET_LABELLED = (3272, 3394)
 
 
-def test_this_pr_ships_no_phase5_named_refuse_label_surface():
-    """Disclosing a run's reasons is required; shipping a label vocabulary is not.
+def test_the_d128_sections_still_carry_no_phase5_label_of_their_own():
+    """D-129-B labels in ITS section; it does not rewrite D-128's.
 
-    ⚠ The line this guards: Method may say *what the run recorded*. It may
-    not introduce a named-refuse **status** and apply it to an inventory —
-    that is the Phase 5 Spec's, and naming an inventory has been mistaken
-    for shipping the thing before (Spec §9, no named-exclusion-as-fix).
+    ⚠ The line this still guards: the D-128 passage reports *what the run
+    recorded*. The Phase 5 **status** belongs to the D-129-B section, and
+    the only Phase 5 words allowed inside D-128's own copy are the
+    parenthetical that says its "must-hunt" wording was superseded — which
+    is a pointer, not a second label surface.
     """
-    surfaces = list(d128_method_sections())
-    surfaces.append((READER, "linker_seam_path_read"))
-    surfaces.append((REVIEW_JSX, "AssemblyReview.jsx"))
-    for text, label in surfaces:
+    for text, label in d128_method_sections():
         lowered = _flat(text).lower()
-        for vocab in ("named refuse", "named-refuse", "named_refuse", "refuse label", "phase 5"):
+        # One pointer, and only one, inside the D-128 section.
+        assert lowered.count("named refuse / accept-refuse") == 1, label
+        assert "see the" in lowered, label
+        for vocab in ("named_refuse", "refuse label"):
             assert vocab not in lowered, f"{label}: {vocab}"
-    # The log may (and must) carry the deferred inventory; the surfaces
-    # may not. Recording it is how the later Spec inherits it.
+    # The reader stays a projection of A's tree: no fate, no label, no Spec
+    # vocabulary. Labelling lives in app/phase5_named_refuse.py.
+    reader_lower = _flat(READER).lower()
+    for vocab in ("named refuse", "named-refuse", "accept-refuse", "phase 5"):
+        assert vocab not in reader_lower, f"linker_seam_path_read: {vocab}"
     log_flat = _flat(LOG)
     assert "named-refuse" in log_flat.lower()
-    assert "Trinity Phase 5 Spec" in log_flat
     for pid in PHASE5_NAMED_REFUSE_INVENTORY:
         assert str(pid) in log_flat, pid
 

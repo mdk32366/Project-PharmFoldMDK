@@ -13,6 +13,9 @@ import { Link } from 'react-router-dom'
 // tempting collapse here is a mean jump per path or an "N of M honest"
 // tally — either would hide WHICH path is dishonest WHERE, which is the
 // whole content of §1a. No average is derived anywhere below.
+// D-129-B — Phase 5 named-refuse: the eight accept-refuse parents get the
+// signed label, and it renders WITH the D-128 OPS rollup rather than beside
+// it. 3272 / 3394 stay Phase 4 and render as open.
 // Ops numbers, not a restitch GO. Seams not solved.
 
 function formatMeasure(value, { missing = 'not computed on this path' } = {}) {
@@ -546,6 +549,103 @@ function DualPathHonesty({ dualPath, triplePath, fourPath, fivePath }) {
   )
 }
 
+// D-129-B — Phase 5 named-refuse label for the eight accept-refuse parents.
+// The label and the D-128 OPS rollup are ONE block on purpose: "accepted"
+// reads like resolution, and a friendly word that outlives its numbers is
+// exactly what Spec §4 calls a violation. 3272 / 3394 are Phase 4 and render
+// an OPEN fate here — never accepted, retired, or closed.
+function Phase5Fate({ fate }) {
+  if (!fate || !fate.fate) return null
+  const rollup = fate.ops_rollup
+  return (
+    <div className="phase5-fate" data-testid="phase5-fate">
+      <h4>Phase 5 fate — what we now call this join</h4>
+      <dl className="assembly-prov">
+        <div>
+          <dt>Fate</dt>
+          <dd data-testid="phase5-label">
+            <strong>{fate.label}</strong>
+          </dd>
+        </div>
+        <div>
+          <dt>Recorded refuse reason</dt>
+          <dd className="mono">
+            {fate.recorded_refuse_reason || 'not recorded'}
+            {fate.recorded_by_path ? ` (recorded by ${fate.recorded_by_path})` : null}
+          </dd>
+        </div>
+      </dl>
+      <p className="note">{fate.meaning}</p>
+      {fate.is_accept_refuse ? (
+        <p className="note">
+          This is <strong>{fate.not_a_miss}</strong>. It is{' '}
+          <strong>not solved, not fixed, not repaired</strong>, and it is
+          not an open must-hunt: there is no fifth stitch algorithm
+          coming. The <strong>assembler</strong> remains the default
+          served structure.
+        </p>
+      ) : null}
+      {fate.already_accept_refuse_note ? (
+        <p className="note" data-testid="phase5-3432-note">
+          {fate.already_accept_refuse_note}
+        </p>
+      ) : null}
+      {fate.is_accept_refuse && rollup ? (
+        <div data-testid="phase5-ops-rollup">
+          <h4>Why we stopped — the D-128 OPS rollup, as recorded</h4>
+          <p className="note">
+            ⚠ Ops numbers <strong>as recorded</strong> by{' '}
+            {rollup.recorded_by} at tip <code>{rollup.recorded_at_tip}</code>,
+            out_root <code>{rollup.out_root}</code>.{' '}
+            <strong>Not run, not queried, and not re-measured here.</strong>{' '}
+            This rollup is of <strong>{rollup.population}</strong>.
+          </p>
+          <ul>
+            <li>
+              Outcome of the seven:{' '}
+              <strong>
+                PASS {rollup.pass} · REFUSE {rollup.refuse} · FAIL{' '}
+                {rollup.fail} · SKIP {rollup.skip}
+              </strong>
+              . <code>repaired_of_seven</code> ={' '}
+              <strong>{rollup.repaired_of_seven}</strong> — and that zero
+              was <strong>pre-registered as an allowed outcome</strong> (
+              {rollup.pre_registered_at}).
+            </li>
+            <li data-testid="phase5-give-back">
+              <code>n_d125_pass_d128_refuse</code> ={' '}
+              <strong>{rollup.n_d125_pass_d128_refuse}</strong>;{' '}
+              <code>n_d126_pass_d128_refuse</code> ={' '}
+              <strong>{rollup.n_d126_pass_d128_refuse}</strong>;{' '}
+              <code>n_d127_pass_d128_refuse</code> ={' '}
+              <strong>{rollup.n_d127_pass_d128_refuse}</strong> and{' '}
+              <code>n_d127_refuse_d128_pass</code> ={' '}
+              <strong>{rollup.n_d127_refuse_d128_pass}</strong>.{' '}
+              {rollup.give_back_note}.
+            </li>
+            <li>
+              Where the refuses came from:{' '}
+              <code>seam_jump_gt_10</code> (
+              {(rollup.refuse_seam_jump_gt_10 || []).join(', ')}) and{' '}
+              <code>rmsd_gt_10</code> (
+              {(rollup.refuse_rmsd_gt_10 || []).join(', ')}). The{' '}
+              <strong>{rollup.gate_angstrom} Å</strong> gate stays.
+            </li>
+            <li>{rollup.best_experimental_path}.</li>
+          </ul>
+        </div>
+      ) : null}
+      {fate.moves_only_on ? (
+        <p className="note" data-testid="phase5-phase4-open">
+          This parent is <strong>open</strong>. It moves only on{' '}
+          {fate.moves_only_on}, and no card, ops run, or tidy-up may
+          reclassify it.
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 function PaeBadge({ yes }) {
   return (
     <span className={yes ? 'pae-yes' : 'pae-no'}>
@@ -648,6 +748,8 @@ export default function AssemblyReview({ review }) {
         fourPath={review.four_path}
         fivePath={review.five_path}
       />
+
+      <Phase5Fate fate={review.phase5_fate} />
 
       <h4>Assembly provenance</h4>
       <dl className="assembly-prov">
