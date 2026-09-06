@@ -609,7 +609,48 @@ assembler. ⚠ 10.0 Å gate is reported, never moved.
 | **T-1171** | **Phase 5 scope split (Matt SIGNED, via Emma).** **IN:** both Method surfaces say **accept-refuse ≠ silence** in those terms — an accepted refusal is a **record**, not a parent dropped / skipped / excluded from the inventory (3432 named as the standing example, every one of the seven carrying a written row), and the negative result is owned (“the measurement came out negative”); and both refuse a **linker-v2** — another window family after 0-of-7 is D-127's mistake repeating, named as *decompose differently until the count improves*, with **D-126 still the best of them**. **OUT:** this PR ships **no Phase 5 named-refuse label vocabulary** on any surface (reader / card / both Method sections), while the log **does** carry the deferred inventory (2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432) for the later Trinity Phase 5 Spec — recording a list is not shipping a label. **Phase 4 (3272 / 3394) is not labelled with a D-128 refuse:** the D-128 refuse listing contains exactly the seven, and neither Phase 4 parent, though both stay legible where D-127's histogram and D-126's recovered pair already carry them | `test_method_says_an_accepted_refusal_is_a_record_not_a_silence` · `test_method_refuses_a_linker_v2` · `test_this_pr_ships_no_phase5_named_refuse_label_surface` · `test_phase4_parents_are_not_labelled_with_a_d128_refuse` · `says an accepted refusal is a record rather than a silence, and refuses a linker-v2` |
 | **T-1170** | **D-128 OPS honesty (MANDATORY §7 inject, Matt GO via Emma).** Method discloses the run **as recorded** — PASS 0 / REFUSE 7 / FAIL 0 / SKIP 0 at tip `9e65cbf`, out_root `linker_seam_ops_2026-09-05`; `recovered_of_seven` = `repaired_of_seven` = **0**; the refuse histogram (`seam_jump_gt_10` ×6 · `rmsd_gt_10` ×1) with its parent ids; **the allowed zero never appears without the named give-back beside it** (`n_d125_pass_d128_refuse` = 5, `n_d126_pass_d128_refuse` = 6, both D-127 counts 0), position-checked so it cannot drift to another part of the page; **D-126 still named the best experimental path** (2 of 5 vs 0 of 3 vs 0 of 7) and the **D-127 failed experiment still disclosed as D-127's**; no gate loosened, served path never flipped, **3432 stays accept-refuse**, W = 32 named as a pinned default rather than a measured optimum; D-128's `seam_jump_gt_10` never conflated with D-127's `linker_jump_gt_10`; seven refuses = seven **recorded** outcomes; the log records the inject with its provenance **and names the superseded draft claim**; and this PR ships no ops run, no new Spec, and no Fly POST | `test_ops_figures_are_internally_consistent_before_they_are_quoted` · `test_method_discloses_the_d128_ops_run_as_recorded` · `test_method_never_reports_the_allowed_zero_without_its_give_back` · `test_method_keeps_d126_best_and_the_d127_failed_experiment_disclosed` · `test_method_refuses_to_loosen_a_gate_flip_the_served_path_or_reopen_3432` · `test_method_does_not_conflate_d128_reason_names_with_d127s` · `test_living_log_records_the_ops_inject_with_its_provenance` · `test_this_pr_ships_no_ops_run_no_new_spec_and_no_fly_post` · `discloses the D-128 OPS run and never states the allowed zero without its give-back` |
 
-### D-129-B (this PR; T-1181–T-1186) — Phase 5 named-refuse LABELS
+### D-129-C (this PR; T-1187–T-1190) — `must-hunt` hygiene on the live surfaces
+
+Hermetic tests in `tests/test_d129_c_must_hunt_supersession.py`. **Stdlib
+only** — no DB, no network, no artifact read, no ops run, no
+re-measurement. They read the seven **live** surfaces
+(`docs/method-hold48-tiles.md`, `ui/src/components/MethodNote.jsx`,
+`ui/src/components/AssemblyReview.jsx`, `ARCHITECTURE.md`, the **living
+header** of `docs/README.md` above `## Log (newest first)`,
+`docs/decisions.md`, `docs/PLAN-ui-post-wave2-endstate.md`) plus the
+sha256 bytes of `core/hold48_*.py`, `app/phase5_named_refuse.py` and
+`app/linker_seam_path_read.py`. Cite: **Emma GO 2026-09-06** (*"hygiene
+patch ONLY"*); `### D-129-C`; the rollup as recorded by Kaylee at tip
+`9e65cbf`, out_root `linker_seam_ops_2026-09-05`.
+
+⚠ **The failure this exists to redden** (T-1187): a live surface names the
+accept-refuse **eight** `must-hunt` with **no qualifier in that sentence**.
+At `cbcb47d` the MANDATORY §7 provenance inject did exactly that on both
+Method surfaces, with the supersession four lines away in the **next
+paragraph** — and the page-wide assertion `"must-hunt is what they were
+called" in text` was **green** the whole time. A qualifier in the
+neighbourhood is not qualification of the claim.
+
+⚠ **The rule is three-valued, not a ban** (T-1189). `must-hunt` stays
+available **Phase-4-scoped** (3272 / 3394, for whom it is the *current*
+status), as **a negation** (the copy that forbids the badge — banning the
+bare words would fire on the sentence that does the forbidding, the trap
+D-128-B documented), and **supersession-carrying**. T-1189 asserts all
+three forms still occur, so the rule cannot be satisfied by **deletion**.
+
+⚠ **The checker must be able to fail** (T-1188): a bare fixture, an
+adjacent-paragraph fixture (the exact `cbcb47d` shape), a JSX
+inline-vs-block fixture, and a mixed sentence where a true Phase-4 clause
+must not launder a bare one.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1187** | **No live surface carries a bare `must-hunt`.** Every occurrence on the seven enforced surfaces classifies as **Phase-4-scoped**, **a negation**, or **supersession-carrying**, judged **per occurrence** in **its own sentence**; the two surfaces the GO named stay in the enforced set and still contain the token (deletion is not qualification); on both Method surfaces the **§7 provenance inject's own sentence** carries the supersession **and** keeps its tip `9e65cbf` and out_root `linker_seam_ops_2026-09-05`; the `## Log (newest first)` marker that separates the living header from the dated record still exists | `test_no_live_surface_carries_a_bare_must_hunt` · `test_every_go_named_hole_is_actually_in_the_enforced_set` · `test_the_provenance_inject_carries_the_supersession_itself` |
+| **T-1188** | **The classifier can go red.** A bare fixture is **BARE**; a fixture whose supersession sits in the **next paragraph** is **BARE** while the same clause **in the same sentence** passes; JSX **inline** tags (`<strong>`, `<code>`) do **not** split a sentence while **block** tags (`</p>`) do; a sentence holding a true `Phase 4 must-hunt` clause **and** a bare one yields **two** verdicts, not one | `test_the_checker_reddens_on_a_bare_occurrence` · `test_adjacent_paragraph_supersession_does_not_count` · `test_the_jsx_reader_splits_on_block_elements_not_inline_ones` · `test_a_true_half_sentence_cannot_carry_a_bare_half` |
+| **T-1189** | **Qualifying is not deleting.** All three qualified forms still occur across the live surfaces; both Method surfaces still carry **PASS 0** / **REFUSE 7** / **0 of 7**, `repaired_of_seven`, `n_d125_pass_d128_refuse`, `n_d126_pass_d128_refuse`, *bury a drop under a pre-registration*, the standing **0 of 3** and *D-126 remains the best experimental path*, **accept-refuse** / **named refuse**, *never claim the seams are solved*, *retires the hunt, not the record*, and D-129-B's *must-hunt is what they were called*; **3272 / 3394** stay **Phase 4 must-hunt** and *still being looked at*, with no surface calling them accepted or retired | `test_the_rule_is_three_valued_and_all_three_forms_survive` · `test_qualifying_is_not_deleting` · `test_the_phase_4_pair_is_left_exactly_where_it_was` |
+| **T-1190** | **Copy and one test — nothing that computes anything moves.** `hold48_kabsch.py` / `hold48_confidence_kabsch.py` / `hold48_piecewise_kabsch.py` / `hold48_linker_seam.py` / `hold48_stitch.py` / `app/phase5_named_refuse.py` / `app/linker_seam_path_read.py` are **sha256-pinned**; both Method surfaces still say **as recorded**, name the tip and out_root, and say **not run** / **re-measured**; the living docs carry `### D-129-C` **as a heading** (checked, not cited — D-062) with its GO, its *does not reopen Phase 5* boundary, its deep-learning line, its D-016 provenance and its **twelve**-occurrence breakdown, and `decisions.md` / `Test_Plan.md` / `ARCHITECTURE.md` each name the id | `test_this_hygiene_pr_edits_no_algorithm_no_registry_and_no_reader` · `test_this_pr_runs_no_ops_and_re_measures_nothing` · `test_living_docs_carry_d129_c` |
+
+### D-129-B (already on `main`, `cbcb47d` / #250; T-1181–T-1186) — Phase 5 named-refuse LABELS
 
 Hermetic tests in `tests/test_d129_b_named_refuse_labels.py`. They read the
 fate registry `app/phase5_named_refuse.py`, build an in-memory SQLite

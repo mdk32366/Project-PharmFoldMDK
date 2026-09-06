@@ -87,7 +87,15 @@ D128_LINKER_SEAM_SHA256 = "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9e
 # honest because the by-content guard below
 # (`test_the_shipped_method_disclosure_survives_by_content_not_just_by_hash`)
 # is left untouched: a softened 0-of-7 still fails with a reason, not a hash.
-METHOD_SHA256 = "4cd8f832a835e91ae18f75898acd64d67a29b388c742da2dfd1d092b73054949"
+#
+# ⚠ Re-pinned again at **D-129-C** (`4cd8f832…` → below). Its failure message
+# asks for a decision entry behind any Method edit outside the labelling
+# BUILD, and `### D-129-C` is that entry: the §7 provenance inject gained the
+# supersession clause D-129-B put only on the sentence beneath it. **Additive
+# only** — the by-content guard below is again left untouched, and
+# `tests/test_d129_c_must_hunt_supersession.py` adds a second content guard
+# that goes red if the rule is ever satisfied by deleting the sentence.
+METHOD_SHA256 = "607de9a448e8a511baa6f0c8393144f657c4b9030aca4c35ed544ff46ee9ba77"
 
 MODULE_PINS = {
     "core/hold48_kabsch.py": D125_KABSCH_SHA256,
@@ -322,17 +330,26 @@ def test_scar_candidate_stays_a_candidate():
 def test_d129_is_the_next_free_decision_id():
     """D-129 must not collide, and must be the highest id in the log.
 
-    ⚠ D-129-B (the labelling BUILD) is a **suffix** of this id, not a new
-    number: it spends no `D-` id of its own and opens no pointer. So the
-    Spec entry stays unique as `### D-129 —`, and exactly one `### D-129-B`
-    joins it. A second Spec entry, or a third D-129-* entry, still reddens.
+    ⚠ D-129-B (the labelling BUILD) and D-129-C (the `must-hunt`
+    supersession hygiene patch) are **suffixes** of this id, not new
+    numbers: neither spends a `D-` id of its own and neither opens a
+    pointer. So the Spec entry stays unique as `### D-129 —`, and exactly
+    one `### D-129-B` and one `### D-129-C` join it.
+
+    ⚠ Widened at D-129-C — from 2 to 3 — rather than loosened: the count is
+    still exact, so a second Spec entry or a **fourth** D-129-* entry
+    reddens, and the suffix set is enumerated so a stray `### D-129-D`
+    fails by name instead of slipping under a `>=`.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 129 in ids
     assert max(ids) == 129, f"D-129 must be the newest id; found {ids[-3:]}"
     assert len(re.findall(r"^### D-129 —", LOG, re.M)) == 1, "exactly one D-129 Spec entry"
     assert len(re.findall(r"^### D-129-B —", LOG, re.M)) == 1, "exactly one D-129-B entry"
-    assert len(re.findall(r"^### D-129", LOG, re.M)) == 2, "only the Spec and its BUILD"
+    assert len(re.findall(r"^### D-129-C —", LOG, re.M)) == 1, "exactly one D-129-C entry"
+    suffixes = sorted(set(re.findall(r"^### D-129(-[A-Z])? ", LOG, re.M)))
+    assert suffixes == ["", "-B", "-C"], f"unexpected D-129 suffix entries: {suffixes}"
+    assert len(re.findall(r"^### D-129", LOG, re.M)) == 3, "the Spec and its two suffixes"
 
 
 # ---------------------------------------------------------------- T-1173
