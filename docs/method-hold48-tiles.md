@@ -381,6 +381,23 @@ solved. It is also **one run, as recorded, at one window size**: **W = 32**
 stays a pinned v1 default, not a measured optimum, and a second window
 size tried until a parent passes is forbidden by Spec §1b.
 
+**And no linker-v2.** The obvious move after 0 of 7 is to go round again
+with a different window — a wider one, a narrower one, two of them, a
+linker boundary picked some other way — and call it the next version.
+That is D-127's mistake wearing D-128's clothes: decompose differently
+until the count improves, and buy a pass with a claim nobody measured.
+Three rigid-body families have now been tried on these joins and **D-126
+is still the best of them**. The honest next move is not a sixth one.
+
+**An accepted refusal is a record, not a silence.** *Accept-refuse* means
+we accepted the refusal as the honest outcome for that parent — parent
+**3432**'s signed triage is the standing example. It does **not** mean
+the parent was dropped from the run, quietly skipped, excluded from the
+inventory, or left unmentioned. Every one of the seven has a written row
+naming its reason, and so does 3432. A refusal we can point at is the
+opposite of silence, and it is the whole product of this path: **the
+deliverable was the measurement, and the measurement came out negative.**
+
 **No threshold moved because of this run.** Nothing here flips the served
 path either: the **default served structure is still the assembler**, and
 only a Matt GO can change that — never a pass count. **3432 stays

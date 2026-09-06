@@ -278,6 +278,30 @@ describe('MethodNote — D-121 hold-48 8th-grade explainer (additive, not a gut)
     expect(t).not.toMatch(/seams solved|seams fixed|Kabsch aligned|full-length AF-quality/)
   })
 
+  // Matt SIGNED Phase 5 scope split (via Emma, 2026-09-06): accept-refuse
+  // is not silence, and 0-of-7 does not license a linker-v2. Phase 5
+  // named-refuse LABELS are a later Spec and must not appear here.
+  it('says an accepted refusal is a record rather than a silence, and refuses a linker-v2', async () => {
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const t = getByTestId('linker-seam-method-addendum').textContent
+    expect(t).toMatch(/An accepted refusal is a record, not a silence/)
+    expect(t).toMatch(/Accept-refuse/)
+    expect(t).toMatch(/3432/)
+    expect(t).toMatch(/dropped from the run/)
+    expect(t).toMatch(/excluded from the inventory/)
+    expect(t).toMatch(/written row/)
+    expect(t).toMatch(/measurement came out negative/)
+    // No linker-v2: another window family is D-127's mistake repeating.
+    expect(t).toMatch(/no linker-v2/i)
+    expect(t).toMatch(/until the count improves/)
+    expect(t).toMatch(/D-126 is still the best of them/)
+    expect(t).toMatch(/not a sixth one/)
+    // Phase 5 label vocabulary is NOT shipped by this PR.
+    expect(t).not.toMatch(/named[- ]refuse|refuse label|Phase 5/i)
+  })
+
   it('says plainly that D-126 remains the best path, keeps every gate, and never flips the served path', async () => {
     getCoverage.mockResolvedValue(FIXTURE)
     const { container, getByTestId } = renderMethod()

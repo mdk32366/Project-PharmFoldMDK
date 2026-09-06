@@ -542,6 +542,30 @@ export default function MethodNote() {
           pinned default, not a measured optimum.
         </p>
         <p>
+          <strong>And no linker-v2.</strong> The obvious move after 0 of
+          7 is to go round again with a different window — a wider one, a
+          narrower one, two of them, a linker boundary picked some other
+          way — and call it the next version. That is D-127&apos;s
+          mistake wearing D-128&apos;s clothes: decompose differently
+          until the count improves, and buy a pass with a claim nobody
+          measured. Three rigid-body families have now been tried on
+          these joins and <strong>D-126 is still the best of them</strong>.
+          The honest next move is not a sixth one.
+        </p>
+        <p>
+          <strong>An accepted refusal is a record, not a silence.</strong>{' '}
+          <em>Accept-refuse</em> means we accepted the refusal as the
+          honest outcome for that parent — parent <strong>3432</strong>
+          &apos;s signed triage is the standing example. It does{' '}
+          <strong>not</strong> mean the parent was dropped from the run,
+          quietly skipped, excluded from the inventory, or left
+          unmentioned. Every one of the seven has a written row naming
+          its reason, and so does 3432. A refusal we can point at is the
+          opposite of silence, and it is the whole product of this path:{' '}
+          <strong>the deliverable was the measurement, and the
+          measurement came out negative.</strong>
+        </p>
+        <p>
           <strong>No threshold moved because of this run.</strong>{' '}
           Nothing here flips the served path either: the{' '}
           <strong>default served structure is still the assembler</strong>,

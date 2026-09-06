@@ -1371,6 +1371,88 @@ def test_method_refuses_to_loosen_a_gate_flip_the_served_path_or_reopen_3432():
             assert phrase not in lowered, f"{label}: {phrase}"
 
 
+def test_method_says_an_accepted_refusal_is_a_record_not_a_silence():
+    """Matt SIGNED Phase 5 split: accept-refuse ≠ silence, in those terms."""
+    for text, label in d128_method_sections():
+        flat = _flat(text)
+        lowered = flat.lower()
+        assert "not a silence" in lowered, label
+        assert "accept-refuse" in lowered, label
+        assert "3432" in flat, label
+        # The three things accept-refuse must NOT be read as.
+        assert "dropped from the run" in lowered, label
+        assert "skipped" in lowered, label
+        assert "excluded from the inventory" in lowered, label
+        assert "written row" in lowered, label
+        # The negative result is owned, not narrated away.
+        assert "measurement came out negative" in lowered, label
+
+
+def test_method_refuses_a_linker_v2():
+    """Matt SIGNED: 0-of-7 does not license another window family."""
+    for text, label in d128_method_sections():
+        flat = _flat(text)
+        lowered = flat.lower()
+        assert "no linker-v2" in lowered, label
+        assert "d-126 is still the best of them" in lowered, label
+        # Named as the D-127 failure repeating, not as a fresh idea.
+        assert "wider one" in lowered and "narrower one" in lowered, label
+        assert "until the count improves" in lowered, label
+        assert "not a sixth" in lowered, label
+
+
+# Phase 5 named-refuse labels are a LATER Spec (Trinity Phase 5 green +
+# Emma GO). The inventory is recorded in the log for that Spec; writing a
+# list down is not shipping a label, and this PR ships no label.
+PHASE5_NAMED_REFUSE_INVENTORY = (2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432)
+PHASE4_NOT_YET_LABELLED = (3272, 3394)
+
+
+def test_this_pr_ships_no_phase5_named_refuse_label_surface():
+    """Disclosing a run's reasons is required; shipping a label vocabulary is not.
+
+    ⚠ The line this guards: Method may say *what the run recorded*. It may
+    not introduce a named-refuse **status** and apply it to an inventory —
+    that is the Phase 5 Spec's, and naming an inventory has been mistaken
+    for shipping the thing before (Spec §9, no named-exclusion-as-fix).
+    """
+    surfaces = list(d128_method_sections())
+    surfaces.append((READER, "linker_seam_path_read"))
+    surfaces.append((REVIEW_JSX, "AssemblyReview.jsx"))
+    for text, label in surfaces:
+        lowered = _flat(text).lower()
+        for vocab in ("named refuse", "named-refuse", "named_refuse", "refuse label", "phase 5"):
+            assert vocab not in lowered, f"{label}: {vocab}"
+    # The log may (and must) carry the deferred inventory; the surfaces
+    # may not. Recording it is how the later Spec inherits it.
+    log_flat = _flat(LOG)
+    assert "named-refuse" in log_flat.lower()
+    assert "Trinity Phase 5 Spec" in log_flat
+    for pid in PHASE5_NAMED_REFUSE_INVENTORY:
+        assert str(pid) in log_flat, pid
+
+
+def test_phase4_parents_are_not_labelled_with_a_d128_refuse():
+    """3272 / 3394 are Phase 4, later still — not in any D-128 refuse listing.
+
+    They stay legible where the record already carries them for a
+    *different* path (D-127's histogram, D-126's recovered pair). What is
+    forbidden is this PR attaching a **D-128** refuse to them.
+    """
+    for text, label in d128_method_sections():
+        flat = _flat(text)
+        lowered = flat.lower()
+        idx = lowered.find("where the refuses came from")
+        assert idx != -1, label
+        passage = flat[idx : idx + 900]
+        for pid in SEVEN_LINKER_PARENT_IDS:
+            assert str(pid) in passage, f"{label}: {pid} missing from the D-128 refuse listing"
+        for pid in PHASE4_NOT_YET_LABELLED:
+            assert str(pid) not in passage, (
+                f"{label}: {pid} is Phase 4 and must not be labelled with a D-128 refuse"
+            )
+
+
 def test_method_does_not_conflate_d128_reason_names_with_d127s():
     """`seam_jump_gt_10` is a new name, not a rename of `linker_jump_gt_10`."""
     for text, label in d128_method_sections():
@@ -1420,7 +1502,7 @@ def test_this_pr_ships_no_ops_run_no_new_spec_and_no_fly_post():
 
 def test_test_plan_and_architecture_record_d128_b():
     assert "T-1161" in PLAN_TEST
-    assert "T-1170" in PLAN_TEST
+    assert "T-1171" in PLAN_TEST
     assert "D-128-B" in PLAN_TEST
     assert "linker_seam_path_read" in ARCH
     assert "D-128-B" in ARCH

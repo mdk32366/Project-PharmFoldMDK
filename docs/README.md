@@ -664,6 +664,64 @@ the algorithm, does not re-open D-128 §1–§11, does not authorise an ops
 run from this PR, does not move a threshold, and does not enter F-004.
 No Fly POST.
 
+#### D-128-B amendment 2 — Phase 5 named-refuse is scoped OUT; the OPS honesty stays IN
+
+- **Date:** 2026-09-06 · **Ruled by:** **Matt SIGNED Phase 5 named-refuse
+  scope split**, via Emma, 2026-09-06, during the D-128-B build.
+
+**What stays IN this PR** (unchanged from amendment 1, restated because a
+scope split is exactly where a required disclosure gets dropped by
+accident): Method §7 discloses the D-128 OPS honesty **as recorded** —
+**PASS 0 / REFUSE 7**, `recovered_of_seven` = **0**,
+`repaired_of_seven` = **0**, the refuse reasons (**six**
+`seam_jump_gt_10` plus **2939** `rmsd_gt_10`), and the named confusion
+`n_d125_pass_d128_refuse` = **5** / `n_d126_pass_d128_refuse` = **6**.
+Plus, newly required by this ruling and **added here**:
+
+1. **Accept-refuse ≠ silence.** *Accept-refuse* means the refusal was
+   accepted as the honest outcome for that parent (**3432**'s signed
+   triage is the standing example). It does **not** mean the parent was
+   dropped from the run, quietly skipped, excluded from the inventory, or
+   left unmentioned. Every one of the seven has a written row naming its
+   reason, and so does 3432. **A refusal we can point at is the opposite
+   of silence** — and it is the product of this path: the deliverable was
+   the measurement, and the measurement came out negative.
+2. **No linker-v2.** The obvious move after 0-of-7 is another window — a
+   wider one, a narrower one, two of them, a linker boundary chosen some
+   other way — shipped as the next version. That is **D-127's mistake
+   wearing D-128's clothes**: decompose differently until the count
+   improves, and buy a pass with a claim nobody measured. Spec §1b
+   already forbids a second window size tried until a parent passes;
+   this ruling names the whole family. **Three rigid-body families have
+   now been tried and D-126 is still the best of them.**
+
+Also unchanged and restated: **never solved**, **served = assembler**,
+**no gate loosen**.
+
+**What is scoped OUT of this PR.** **Do not implement Phase 5 Method /
+UI named-refuse labels.** They wait on a **Trinity Phase 5 Spec green +
+an Emma GO**. This PR ships **no** named-refuse label vocabulary on any
+surface.
+
+- **Named-refuse inventory — recorded here for that later Spec, and
+  deliberately not implemented:** **2938, 2939, 3179, 3190, 3321, 3368,
+  3566, 3432**. ⚠ Writing the list down is **not** shipping the label.
+  Naming an inventory has been mistaken for an algorithm before
+  (D-128 Spec §9, “no named-exclusion-as-fix”); the same caution applies
+  to a label.
+- **Phase 4 is later still: 3272 / 3394 — do not label refuse yet.**
+  These stay out of any D-128 refuse listing on any surface. They may
+  continue to appear where the record already carries them for a
+  *different* path — D-127's own histogram (`rmsd_gt_10` ×2) and D-126's
+  recovered pair (3394) — because those are D-127's and D-126's
+  disclosures, not a D-128 label.
+
+⚠ **The distinction this amendment turns on.** *Disclosing the run's
+refuse reasons as recorded* is required; *shipping a named-refuse
+labelling surface* is a later Spec. The first says what happened; the
+second creates a status vocabulary and applies it to an inventory. This
+PR does the first only, and a test goes red if the second leaks in.
+
 #### Deep-learning justification
 
 Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 / D-111),
