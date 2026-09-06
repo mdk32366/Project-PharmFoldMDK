@@ -350,9 +350,13 @@ def test_b_does_not_reimplement_persist_writer():
     assert "def write_provenance" not in reader
     assert "def write_kabsch_restitch" not in reader
     assert "write_confidence_kabsch_restitch" in D126_WRITER
-    # D-127-B composes the triple payload inside four_path_payload; either
-    # wiring keeps reads.py a consumer rather than a second writer.
-    assert "triple_path_payload" in READS or "four_path_payload" in READS
+    # D-127-B composes the triple payload inside four_path_payload, and
+    # D-128-B composes that inside five_path_payload; any of the wirings
+    # keeps reads.py a consumer rather than a second writer.
+    assert any(
+        name in READS
+        for name in ("triple_path_payload", "four_path_payload", "five_path_payload")
+    )
     assert "WAVE1_WAVE2_STITCHED_PARENT_IDS" not in (ROOT / "core" / "scorer.py").read_text(
         encoding="utf-8"
     )
