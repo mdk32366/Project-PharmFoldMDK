@@ -5,13 +5,69 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-130 (Phase 4 residual-RMSD hunt Spec)
+## Active ship — D-130-A (Phase 4 residual-RMSD core BUILD)
 
-- **D-130 ships the Phase 4 residual-RMSD hunt Spec** (**this PR**, off
-  `544e821`) — [`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md),
+- **D-130-A ships the Phase 4 residual-RMSD core BUILD** (**this PR**, off
+  `854c2ab`) — `core/hold48_residual_rmsd.py` +
+  `scripts/residual_rmsd_restitch.py`, under the **Emma BUILD GO Phase 4
+  residual RMSD 2026-09-06** (Matt via Emma; the **#252 merge is the GO**,
+  and no second GO is waited on). It implements D-130 Spec §1a / §1b / §2 /
+  §3 / §5 / §11 as a **sixth sibling path**.
+  ⚠ **Core only.** **D-130-B** (UI path honesty + the **mandatory** Spec §7
+  Method addendum) is a **later PR after A is on `main`**, and it needs its
+  own GO. **A does not discharge the Method obligation**, so D-130 is not
+  "done" here.
+  ⚠ **§1a is the deliverable.** Per seam, per path (`kabsch` /
+  `confidence_kabsch` / `piecewise_kabsch` / `linker_seam` /
+  `residual_rmsd`), a row records `n_overlap_ca`, the achieved
+  **full-overlap** `rigid_rmsd_angstrom`, the rigid-invariant
+  `internal_drmsd_angstrom`, the **proved floor**
+  `rmsd_floor_angstrom = dRMSD / 2`, the three-valued `residual_class` and
+  `floor_exceeds_gate` — plus **how each is known**, per field.
+  ⚠ **A prior path's recorded `rmsd_angstrom` is NEVER copied into that
+  column**: only D-125's is a full-overlap unweighted number, so the achieved
+  RMSD is **measured** from each path's own artifacts and an absent tree is an
+  **honest absence with a reason** (never a zero, never an assumed pass).
+  ⚠ **The floor is measured once per seam from the PRE-transform input
+  tiles** — D-127 and D-128 do not move a tile rigidly, so measuring off their
+  outputs would make a path-independent quantity look path-dependent.
+  ⚠ **`irreducible` is evaluated before `unknown`** — the Spec's table leaves
+  the precedence open, and §2 refuses on the floor *before* any fit, so the
+  other order would make the certificate unreachable.
+  ⚠ **§1b is an audit, not a search.** It runs **only** on a `placement`
+  seam; a correction is accepted **only** when exactly one integer register
+  offset makes every corrected pair's **residue identities** agree; none or
+  more than one refuses `correspondence_unverifiable`; a pairing that was
+  already right is **not** refitted. The fit is **D-125's, imported
+  unchanged** — unweighted, untrimmed, full corrected overlap, whole moving
+  tile → existing `winning_tile`. **No trim, no weights, no pieces, no
+  window, no linker-inherit, no blend, no RMSD-v2.**
+  ⚠ **Refuse names:** `overlap_ca_lt_3` / `rmsd_gt_10` /
+  `singular_covariance` are **D-125's, unchanged**; `rmsd_irreducible` and
+  `correspondence_unverifiable` are **D-130's own** and are never conflated
+  with D-127's `linker_jump_gt_10` or D-128's `seam_jump_gt_10`. Fail closed,
+  **all-or-nothing parent**, and a refuse clears any earlier success artifact.
+  ⚠ **Sixth tree `residual_rmsd/{parent}/`**, overwriting none of the five;
+  prior trees are opened **read-only** and stay byte-identical.
+  ⚠ **`recovered_of_two` = 0 stays a pre-registered ALLOWED outcome**, and an
+  accept with **no** register correction is **not** a recovery — it is
+  D-125's result.
+  ⚠ **Phase 5 is not reopened:** the **eight** stay **`accept-refuse`**, may
+  be **recorded** by a CLI run of the 27, and are **never** success targets or
+  a D-130 miss; D-129 §4's **standing** disclosure stays **ungutted**.
+  ⚠ **10.0 Å stays; served stays assembler; no auto-flip; no F-004; D-126
+  remains best experimental and callable; both failed rescues stay
+  disclosed.** ⚠ **Never solved — and never solved without measurement.**
+  ⚠ **No `hold48_*.py` edit** (five modules sha256-pinned), **no UI, no
+  Method file edit, no ops run, no re-measurement, no Fly / RunPod / rent.**
+  Guarded by `tests/test_d130_residual_rmsd.py` (hermetic, stdlib;
+  **T-1200**–**T-1209**). Draft PR; **no self-merge**; **Trinity merges**.
+  Full entry: `### D-130-A` in [`README.md`](README.md).
+- **D-130 already shipped the Phase 4 residual-RMSD hunt Spec** on `main`
+  (`854c2ab` / #252) — [`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md),
   under the **Emma/Matt GO Phase 4 RMSD 2026-09-05 ~20:39 PT**
   (*"Go phase 4"*) that **D-129 §6 required** before either parent could
-  move. ⚠ **Algorithm authority for a later D-130-A** — this PR is
+  move. ⚠ **Algorithm authority for D-130-A** — that Spec PR was
   **docs only**.
   ⚠ **One failure mode: residual RMSD** (the `rmsd_gt_10` whole-overlap
   class). ⚠ **Two parents only: 3272** `Q6V0I7` **and 3394** `Q8TDW7`,
@@ -54,9 +110,9 @@
   F-004.** Guarded by `tests/test_d130_residual_rmsd_spec.py`
   (hermetic, stdlib; **T-1191**–**T-1199**), which reddens if the
   inventory bleeds into the linker or domain classes or if the gate
-  loosens. ⚠ **D-130-A and D-130-B are not pre-authorised** — each
-  needs its own Emma / Matt GO, and the **OPS** run of the two is a
-  third. Draft PR; **no self-merge**; **Trinity merges**. Full entry:
+  loosens. ⚠ **That Spec PR pre-authorised neither A nor B** — each
+  needed its own Emma / Matt GO. **A's arrived** (2026-09-06, above);
+  **B's has not**, and the **OPS** run of the two is a third. Full entry:
   `### D-130` in [`README.md`](README.md).
 - **D-129-C already shipped the `must-hunt` supersession hygiene patch
   on the LIVE surfaces** on `main` (`544e821` / #251) — **copy and one
@@ -426,8 +482,8 @@ Spec: [`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md)
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-130 Spec** | **Phase 4 residual-RMSD hunt** Spec (docs only) — **algorithm authority**, one failure mode (`rmsd_gt_10`, whole overlap), two parents (**3272** `Q6V0I7` / **3394** `Q8TDW7`). §1a's required decomposition puts the **proved floor** `dRMSD / 2` beside every path's achieved RMSD and classes it `irreducible` / `placement` / `unknown`; the floor is **one-directional** and never an argument to loosen a gate. §1b's optional recovery is a **residue-identity** correspondence audit plus **D-125's fit unchanged** — **no trim, no weights, no pieces, no window, no linker-inherit**. **`recovered_of_two` = 0 is pre-registered as allowed.** The **eight** stay `accept-refuse` and Phase 5 is **not** reopened; 10.0 Å stays; served = assembler | **Yes — this PR.** Docs only; no `hold48_*.py` edit (five modules sha256-pinned), no UI, no Method file edit, no ops run. Draft; **Trinity merges**. |
-| **D-130-A** | Core BUILD (§1a decomposition rows for every path tree + optional §1b correspondence audit and D-125 refit → `winning_tile`; sixth sibling `residual_rmsd/`; CPU, no rent) | No. **Later Emma / Matt GO.** Not pre-authorised by the Spec. Not "done" without Method. |
+| **D-130 Spec** | **Phase 4 residual-RMSD hunt** Spec (docs only) — **algorithm authority**, one failure mode (`rmsd_gt_10`, whole overlap), two parents (**3272** `Q6V0I7` / **3394** `Q8TDW7`). §1a's required decomposition puts the **proved floor** `dRMSD / 2` beside every path's achieved RMSD and classes it `irreducible` / `placement` / `unknown`; the floor is **one-directional** and never an argument to loosen a gate. §1b's optional recovery is a **residue-identity** correspondence audit plus **D-125's fit unchanged** — **no trim, no weights, no pieces, no window, no linker-inherit**. **`recovered_of_two` = 0 is pre-registered as allowed.** The **eight** stay `accept-refuse` and Phase 5 is **not** reopened; 10.0 Å stays; served = assembler | Already shipped on `main` (#252 / `854c2ab`). Docs only there; no `hold48_*.py` edit (five modules sha256-pinned), no UI, no Method file edit, no ops run. |
+| **D-130-A** | Core BUILD (§1a decomposition rows for every path tree + optional §1b correspondence audit and D-125 refit → `winning_tile`; sixth sibling `residual_rmsd/`; CPU, no rent) | **Yes — this PR.** Sixth sibling module + CLI; no `hold48_*.py` edit (five sha256-pinned), no UI, no Method file edit, no ops run. It does **not** discharge the mandatory Spec §7 Method obligation — that is B's. Draft; **Trinity merges**. |
 | **D-130-B** | UI path honesty + **mandatory Method addendum** (reads `residual_rmsd/`; the floor never rendered without its direction) | No. **Later Emma / Matt GO**, after A. The **OPS** run of the two is a third GO. |
 | **D-129 Spec** | **Phase 5 named-refuse** Spec (docs only) — **labels, not algorithms**. The **eight** parents **2938 / 2939 / 3179 / 3190 / 3321 / 3368 / 3566 + 3432** are **`accept-refuse`**; a surface labels them **named refuse**, never **open must-hunt** / **solved** / **a D-128 miss**. The D-128 OPS **0 of 7** + confusion (**5** vs D-125, **6** vs D-126) stays a **mandatory, standing** disclosure — **already discharged** by D-128-B (`cd071d7` / #248) and **not to be softened or dropped**. **3272 / 3394 stay Phase 4 must-hunt** (separate Matt GO). **No linker-v2**; 10.0 Å stays; served = assembler | Already shipped on `main` (#249 / `1baf4c0`). Docs only there; the **§3 re-label** it left owed shipped at **D-129-B**. ⚠ Its **§6** now carries the **D-130 Phase 4 cross-link**: the separate Matt GO **arrived**, so the pair's hunt is **Spec-governed** — still **not** `accept-refuse`, and §4 / §7 stand. |
 | **D-129-B** | **Phase 5 named-refuse LABELS** — the §3 re-label onto the owner Method, `/method`, and the review card, from one signed fate registry (`app/phase5_named_refuse.py` → `assembly_review.phase5_fate`). The **eight** are **named refuse / `accept-refuse`**; the block is **constructed carrying** the D-128 OPS **0 of 7** and the give-back (**5** / **6**), so the label cannot ship without the numbers. **3272 / 3394** render an **open** Phase 4 fate; **3432** is carried, not re-ruled | Already shipped on `main` (#250 / `cbcb47d`). Labels only; no `hold48_*.py` edit (sha256-pinned), no threshold, no artifact tree, no served byte, no ops run. Its hygiene gap on the retired name was closed at **D-129-C** (#251 / `544e821`). |

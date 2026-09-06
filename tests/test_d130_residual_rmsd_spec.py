@@ -218,16 +218,24 @@ def test_d130_is_the_next_free_decision_id():
     """D-130 must not collide, and must be the newest id in the log.
 
     ⚠ Exact, not ``>=``: a stray ``### D-131`` reddens here, and a second
-    ``### D-130 —`` entry reddens too. D-130 has no suffix entries yet — A
-    and B are unauthorised — so the suffix set must be empty, and inventing
-    ``### D-130-A`` before its GO fails by name rather than slipping past.
+    ``### D-130 —`` entry reddens too.
+
+    ⚠ **Widened at D-130-A — from an empty suffix set to exactly ``{-A}`` —
+    rather than loosened.** The Spec PR asserted no ``D-130-*`` entry existed
+    because neither A nor B was authorised; the Emma BUILD GO of 2026-09-06
+    authorised **A**, so its entry is *required* and enumerated. **B is still
+    unauthorised**, so a ``### D-130-B`` appearing without its own GO fails by
+    name here rather than slipping under a ``>=``, and a second ``### D-130-A``
+    fails on the count.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
     assert max(ids) == 130, f"D-130 must be the newest id; found {ids[-3:]}"
     assert len(re.findall(r"^### D-130 —", LOG, re.M)) == 1, "exactly one D-130 entry"
+    assert len(re.findall(r"^### D-130-A —", LOG, re.M)) == 1, "exactly one D-130-A entry"
     suffixes = sorted(set(re.findall(r"^### D-130(-[A-Z])? ", LOG, re.M)))
-    assert suffixes == [""], f"D-130-* entries are not authorised yet: {suffixes}"
+    assert suffixes == ["", "-A"], f"unexpected D-130 suffix entries: {suffixes}"
+    assert len(re.findall(r"^### D-130", LOG, re.M)) == 2, "the Spec and its one suffix"
     # The pointer is the owner's; this entry spends an id, it does not repair one.
     assert "next-free pointer" in _plain(_d130_entry())
 
@@ -687,7 +695,26 @@ def test_the_sixth_tree_and_module_names_collide_with_nothing():
 
 
 def test_this_spec_pr_edits_no_module_no_method_and_no_ui():
-    """Docs only. Five modules pinned; the Method file pinned; no ui/ path."""
+    """Docs only. Five modules pinned; the Method file pinned; no ui/ path.
+
+    ⚠ Strengthened at D-130-A rather than relaxed: the sixth module now has to
+    **exist**, carry this Spec's algorithm string, and contain none of the
+    frozen family's knobs — so "A shipped" cannot be claimed by a file that
+    quietly re-imports a window, a weight, or a trim loop. The five digests
+    below are untouched.
+    """
+    sixth = ROOT / SIXTH_MODULE
+    assert sixth.is_file(), "D-130-A's sixth sibling module must be on disk"
+    sib = sixth.read_text(encoding="utf-8")
+    assert "residual_rmsd_decomposition_then_winning_tile" in sib
+    assert "def write_residual_rmsd_restitch" in sib
+    assert "rmsd_irreducible" in sib and "correspondence_unverifiable" in sib
+    assert "import numpy" not in sib and "from numpy" not in sib
+    assert "trim_highest_residual" not in sib  # not D-126
+    assert "DomainInterval" not in sib  # not D-127
+    assert "WINDOW_HALF_WIDTH_AA =" not in sib  # not D-128
+    assert "def winning_tile" not in sib, "the assembler is imported, not re-implemented"
+
     for name, expected in MODULE_PINS.items():
         path = ROOT / name
         assert path.is_file(), name
@@ -818,11 +845,20 @@ def test_the_standing_disclosure_and_the_freeze_survive():
 
 
 def test_ship_index_plan_architecture_and_test_plan_carry_d130():
+    """⚠ Widened at D-130-A — the ship rows move with the ship, exactly.
+
+    The Spec PR pinned *"D-130 Spec … Yes — this PR"* and *"D-130-A … Later
+    Emma / Matt GO"*. A's GO arrived, so the Spec row must now read
+    **already shipped** and **A** must be this PR — and B must **still** be
+    unauthorised, which is the clause a tidy-up would quietly drop.
+    """
     index_flat = _flat(INDEX)
     assert "Active ship — D-130" in index_flat
-    assert re.search(r"\*\*D-130 Spec\*\*.*\*\*Yes — this PR\.\*\*", index_flat)
-    assert re.search(r"\*\*D-130-A\*\*.*Later Emma / Matt GO", index_flat)
+    assert re.search(r"\*\*D-130 Spec\*\*.*Already shipped on `main` \(#252", index_flat)
+    assert re.search(r"\*\*D-130-A\*\*.*\*\*Yes — this PR\.\*\*", index_flat)
     assert re.search(r"\*\*D-130-B\*\*.*Later Emma / Matt GO", index_flat)
+    # A ships code; it does not discharge the mandatory Method obligation.
+    assert "does **not** discharge" in INDEX or "does not discharge" in INDEX.lower()
     assert re.search(r"\*\*D-129 Spec\*\*.*Already shipped on `main` \(#249", index_flat)
     assert "SPEC-residual-rmsd-hunt.md" in INDEX
     # PLAN + ARCHITECTURE point at D-130 and its Spec file.
