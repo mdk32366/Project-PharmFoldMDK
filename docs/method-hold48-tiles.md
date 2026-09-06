@@ -12,7 +12,9 @@ A D-126-B addendum names what weighted / trimmed Kabsch does and does not
 versus the assembler and versus D-125. A **D-127-B** addendum names the
 whole four-step stitch-path train and what piecewise / domain-aware
 Kabsch does and does not — **mandatory** under D-127 Spec §7, not a
-later nice-to-have.
+later nice-to-have. A **D-128-B** addendum names the **five**-step train,
+what *dishonest* means about a structure file, and the D-128 OPS result
+as recorded — **mandatory** under D-128 Spec §7 on the same terms.
 
 ---
 
@@ -254,6 +256,147 @@ missing, the card says so; it does not invent them. When the fourth tree
 is missing, the card does not pretend the D-127 path exists, and that
 absence is not a solved seam.
 
+## Addendum D-128-B — linker / seam honesty, and the five-step stitch-path train
+
+*Spec authority: [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)
+§6 (UI) and §7 (Method). ⚠ **§7 makes this section mandatory** — D-128 is
+**not "done"** without it, and a code-only ship is forbidden by name.*
+
+There are now **five** ways this project has put two folded tiles next to
+each other. Only the first one is served, and the fifth one is not really
+another way of joining tiles at all — it is a way of **checking** the
+other four.
+
+**The stitch-path train, in order.**
+
+1. **Assembler** — pick the winner tile by pLDDT at each residue. This is
+   the **default served** structure and stays that way until a Matt swap GO.
+2. **D-125 Kabsch** — one unweighted rigid move on the glue Cα, then the
+   same assembler.
+3. **D-126 confidence** — one weighted / trimmed rigid move on the same
+   glue, then the same assembler. Its lesson: a small **weighted** RMSD
+   can hide a large **full-overlap** jump (ops jumps about **28–68 Å** on
+   2939 / 3272 / 3432, as recorded; ⚠ **not re-measured here**).
+   **D-126 is still the best experimental path we have tried** — it
+   recovered **2 of its primary 5**, parents **3368** and **3394**.
+4. **D-127 piecewise / domain** — one weighted rigid move **per UniProt
+   domain**, then the same assembler. **The run says it did not pay
+   off:** PASS 17 / REFUSE 10 / FAIL 0, **0 of 3** primary parents
+   recovered, and it **gave back** 5 parents D-125 had accepted and 7
+   D-126 had accepted. That failed experiment **stays disclosed** above,
+   and none of D-128's numbers stand in for it.
+5. **D-128 linker / seam honesty** — first, **measure** every path's seam
+   jump and say plainly which paths are **dishonest** at that seam (a
+   jump over **10.0 Å**). Then, optionally, try **one** small rigid move
+   inside a **±32 aa** window around the offending linker. Most of
+   D-127's failures were at the linkers (**7 of 10** refuses), which is
+   why the window is where it is.
+
+**What "dishonest" means here.** It is a statement about the **structure
+file**, not about a person. If a path's seam still jumps more than
+**10.0 Å** after that path's own transform, then presenting that path's
+`stitched.pdb` as a good join would be dishonest — so we refuse it and
+record why. **The 10.0 Å gate stays.**
+
+**The refuse table, in plain terms.** A window refuses if it has fewer
+than three Cα to fit, if its weighted RMSD comes out above **10.0 Å**, or
+if its points sit in a line. The parent refuses if the seam still jumps
+more than **10.0 Å** after the move. A refuse writes a record. It does
+**not** write a "fixed" structure.
+
+**Seam disclosure.** When the fifth tree is on disk, the review card
+names, for **each path and each seam**, the max Cα jump that path
+**ends** with and whether it is therefore honest there — plus, for D-128
+itself, the window it fitted, how many Cα were in it, the weighted RMSD,
+the jump before and after, and how the offending seam was identified.
+Those are **measurements**. They are not a verdict that the holoprotein
+is lined up. Never claim the seams are solved.
+Seams are **not scientifically solved**.
+
+The card shows **one row per path per seam** and never an average across
+them. A mean jump would hide the single seam that flies apart, and an
+"N of M seams honest" score would hide **which** path is dishonest
+**where** — which is the whole content of the check. A missing jump is an
+absence, never `0.00 Å`, and an **unknown jump is not honest**.
+
+**What linker / seam honesty does not do.** It does not replace the
+assembler; the served PDB is still the assembler one. It does not
+overwrite the D-125 `kabsch/{parent}/`, D-126
+`confidence_kabsch/{parent}/`, or D-127 `piecewise_kabsch/{parent}/`
+files. It does not make the long chain one ESMFold pass. It does not fill
+empty pair-confidence (PAE) between tiles. It does not put these chains
+into the ranking (**D-109**). It is not medical advice and it is not a
+holoprotein the model jointly placed. When the fifth tree is missing, the
+card says so — it does not invent a jump, a window, or an honesty verdict,
+and that absence is not a solved seam.
+
+### What happened when we actually ran it (D-128 OPS, 2026-09-06)
+
+*⚠ These are ops numbers **as recorded** and handed to this write-up
+(MANDATORY Method §7 OPS honesty inject, Matt GO via Emma, 2026-09-06,
+naming a D-128 OPS restitch of the must-hunt **seven** at tip `9e65cbf`,
+out_root `linker_seam_ops_2026-09-05`). ⚠ **Not run, not queried, and not
+re-measured here.***
+
+We ran the linker / seam path over the seven signed must-hunt linker
+parents: **PASS 0 · REFUSE 7 · FAIL 0 · SKIP 0**.
+
+- **It repaired none of the seven.** `recovered_of_seven` = **0** and
+  `repaired_of_seven` = **0**. That zero was **pre-registered as an
+  allowed outcome** before the code existed, so it is a result rather
+  than a failure of nerve — and it is **not** a reason to raise the
+  10.0 Å gate, relax it, add a trim loop, invent a blend, try a second
+  window size, or re-open 3432.
+- **Where the refuses came from.** `seam_jump_gt_10` **×6** (2938, 3179,
+  3190, 3321, 3368, 3566) — the ±32 aa window fitted, and the **whole
+  seam** still jumped more than **10.0 Å** afterwards. `rmsd_gt_10`
+  **×1** (2939) — the window's own weighted RMSD was above the gate, so
+  nothing was applied at all. ⚠ These are **D-128's** reason names:
+  `seam_jump_gt_10` is measured after the single window move and is
+  **not** D-127's `linker_jump_gt_10`, and this `rmsd_gt_10` is the
+  **window weighted** RMSD, not D-127's full-overlap class.
+- **It lost ground the earlier paths had held — and a zero is not a place
+  to hide that.** `n_d125_pass_d128_refuse` = **5** — five parents D-125
+  accepted now refuse. `n_d126_pass_d128_refuse` = **6** — six parents
+  D-126 accepted now refuse. `n_d127_pass_d128_refuse` = **0** and
+  `n_d127_refuse_d128_pass` = **0**, because D-127 had already refused
+  all seven; there was no D-127 ground to win or lose here. **That is a
+  named finding**, and it ships in the same breath as the allowed zero.
+  Reporting "0 of 7, which we said was allowed" without the 5 and the 6
+  beside it would bury a drop under a pre-registration.
+
+**So: D-126 remains the best experimental path among the stitch
+algorithms we have tried so far.** This run points the same way rather
+than disturbing it: **2 of its primary 5** for D-126, against **0 of 3**
+for D-127 and **0 of 7** for D-128. And **3368** — one of the two parents
+D-126 recovered — sits in this refuse list too, under `seam_jump_gt_10`.
+Both later paths gave back ground D-126 had won.
+
+D-128 was a reasonable hypothesis — if the break is at the linkers, fit a
+small rigid window right there instead of cutting the whole tile up — and
+the run says it did not pay off. On **six of the seven** the window
+*fitted* and the seam broke anyway, which is evidence about that
+hypothesis and **not** evidence that the joins are closer to being
+solved. It is also **one run, as recorded, at one window size**: **W = 32**
+stays a pinned v1 default, not a measured optimum, and a second window
+size tried until a parent passes is forbidden by Spec §1b.
+
+**No threshold moved because of this run.** Nothing here flips the served
+path either: the **default served structure is still the assembler**, and
+only a Matt GO can change that — never a pass count. **3432 stays
+accept-refuse** (signed triage): it is not a success target of this path,
+not re-opened, and not counted as a D-128 miss.
+
+And seven recorded refuses are **seven recorded outcomes**, not seven
+diagnosed-and-repaired joins. A seam that was recorded is not a seam that
+was solved.
+
+When the fifth tree is on disk, the review card names **five** paths with
+five persist stems (`stitched` vs `kabsch/{parent}` vs
+`confidence_kabsch/{parent}` vs `piecewise_kabsch/{parent}` vs
+`linker_seam/{parent}`) so they cannot be read as one population. The
+served download is still the assembler `stitched` one.
+
 ## The rental is CLOSED
 
 The rented GPU that folded these tiles is done. Hold-48 rental is **CLOSED**
@@ -265,10 +408,16 @@ to rent another card. Do not Deploy. Do not emit.
 ## What this file is not
 
 - Not a licence to call the joins scientifically solved, or to treat a
-  Kabsch-path, D-126-path, or D-127-path file as the default served PDB.
+  Kabsch-path, D-126-path, D-127-path, or D-128-path file as the default
+  served PDB.
 - Not a licence to run a live restitch of the 27, or to re-open rental.
+  The D-127 and D-128 ops figures above were **handed to this file as
+  recorded**; nothing here ran, queried, or re-measured them.
 - Not a licence to raise the **10.0 Å** refuse gate, to reopen a trim
-  loop, or to treat 0-of-3 recovered as a reason to move either.
+  loop, or to treat 0-of-3 or 0-of-7 recovered as a reason to move
+  either — nor to report either zero without the parents the same run
+  gave back.
+- Not a licence to re-open **3432**, which stays accept-refuse.
 - Not F-004 / ranking ingest.
 - Not the ADC-B `/adcs` page (D-122 already shipped that on `main`). Not the Nectin-4 Doc.
 - Not a new science number. Window **1656** / overlap **128** are D-111's.
