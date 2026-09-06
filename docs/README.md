@@ -53,13 +53,23 @@
 >   #245), discharging the mandatory Method obligation and disclosing
 >   the D-127 OPS result. **D-128** is the linker / seam honesty Spec
 >   ([`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md))
->   (already on `main`, `2004c5a` / #246). **D-128-A** is the core
->   BUILD (**this PR**): sibling `core/hold48_linker_seam.py` +
->   `linker_seam/` tree; §1a honesty rows for every path (null ≠ 0,
->   unknown ≠ honest, prior trees read-only); optional ±32 aa window
->   fit → existing `winning_tile`. Production paths (assembler / D-125
+>   (already on `main`, `2004c5a` / #246). **D-128-A** already shipped
+>   the core BUILD on `main` (`9e65cbf` / #247): sibling
+>   `core/hold48_linker_seam.py` + `linker_seam/` tree; §1a honesty rows
+>   for every path (null ≠ 0, unknown ≠ honest, prior trees read-only);
+>   optional ±32 aa window fit → existing `winning_tile`. **D-128-B** is
+>   UI path honesty for that tree **and** the Spec §7 Method addendum
+>   (**this PR**), discharging the mandatory Method obligation.
+>   Production paths (assembler / D-125
 >   Kabsch / D-126 confidence / D-127 piecewise) stay callable and the
->   **assembler** stays the served path. ⚠ **Not a restitch run of the 27.**
+>   **assembler** stays the served path. ⚠ **Neither A nor B ran ops.**
+>   A **D-128 OPS restitch of the must-hunt seven** (tip `9e65cbf`,
+>   out_root `linker_seam_ops_2026-09-05`) was handed to D-128-B **as
+>   recorded** and is disclosed on the Method surface: **PASS 0 /
+>   REFUSE 7 / FAIL 0**, `repaired_of_seven` = **0** (the pre-registered
+>   allowed outcome), with the named give-back
+>   `n_d125_pass_d128_refuse` = **5** and `n_d126_pass_d128_refuse` =
+>   **6**. ⚠ **Not re-measured in that PR.**
 >   ⚠ **Seams are not scientifically solved.** ⚠ **10.0 Å gate
 >   STAYS.** ⚠ **No trim loop.** ⚠ **D-126 remains the best
 >   experimental path until proven otherwise; the D-127 failed
@@ -102,15 +112,25 @@
 >   sibling module (`core/hold48_linker_seam.py` +
 >   `scripts/linker_seam_restitch.py`); it does not overwrite the
 >   assembler or `kabsch/` / `confidence_kabsch/` / `piecewise_kabsch/`,
->   and it runs no ops. **D-128-B** (UI honesty + the **mandatory**
->   Method addendum) is a later Emma GO.
+>   and it runs no ops. **D-128-B** (**this PR**) **reads** that tree for
+>   five-path review-card honesty — one row per `(path, seam)`, never an
+>   average — and ships the **mandatory** Spec §7 Method addendum,
+>   including the **D-128 OPS result as recorded** (PASS 0 / REFUSE 7 /
+>   FAIL 0; `repaired_of_seven` = 0; `seam_jump_gt_10` ×6 / `rmsd_gt_10`
+>   ×1; give-back 5 vs D-125 and 6 vs D-126). ⚠ **That PR ran no ops and
+>   re-measured nothing.**
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**) plus a
 >   D-125-B addendum (what Kabsch does / does not), a D-126-B addendum
 >   (what weighted / trimmed Kabsch does / does not vs assembler vs
->   D-125), and a **D-127-B** addendum (the four-step stitch-path train
+>   D-125), a **D-127-B** addendum (the four-step stitch-path train
 >   assembler → D-125 → D-126 → D-127; per-domain pieces; linker
->   inherit; the refuse table; **10.0 Å stays**). Additive MethodNote
+>   inherit; the refuse table; **10.0 Å stays**), and a **D-128-B**
+>   addendum (the **five**-step train with linker / seam honesty; what
+>   **dishonest** means about a structure file; the refuse table;
+>   **never solved**; **3432 accept-refuse**; and the **D-128 OPS
+>   result as recorded** — PASS 0 / REFUSE 7 / FAIL 0 with its named
+>   give-back). Additive MethodNote
 >   sections on `/method`. ⚠ **Assembler remains the default served
 >   PDB. #229 stays merged.**
 > - [`decisions.md`](decisions.md) — thin **ship index** (which id ships which work).
@@ -133,8 +153,9 @@
 >   **D-128 ships** the linker / seam honesty Spec (already on `main`,
 >   `2004c5a` / #246) —
 >   [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md).
->   **D-128-A ships** the core BUILD (this PR); **D-128-B** (UI +
->   mandatory Method) is a later Emma GO. **D-121 ships** the
+>   **D-128-A** already shipped the core BUILD on `main` (`9e65cbf` /
+>   #247); **D-128-B ships** UI five-path honesty **and** the mandatory
+>   Spec §7 Method addendum (this PR). **D-121 ships** the
 >   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
 >   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
@@ -257,6 +278,576 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-128-B — UI linker / seam path honesty + the mandatory D-128 Method addendum
+
+- **Date:** 2026-09-06
+- **Status:** accepted as **the D-128-B UI path honesty + Method BUILD GO**
+  (Emma GO 2026-09-06 after D-128-A landed on `main` at `9e65cbf` / #247;
+  Matt GO). Architect: Trinity. Builder coordinator: Kaylee.
+  ⚠ **UI + Method only.** A already writes
+  `linker_seam/{parent_job_id}/` (`provenance.json`, `seams.jsonl`,
+  `seam_honesty.jsonl`, transformed tiles on accept, then the existing
+  `write_stitched` names). This PR **reads** that fifth sibling tree. It
+  does **not** re-implement persist and does **not** implement any core
+  algorithm — A already shipped it.
+  ⚠ **Method is not optional.** Spec §7 makes the owner-facing addendum
+  **mandatory**: D-128 is **not “done”** without it, and a code-only ship
+  is forbidden by name. A shipped correctly under its own GO, which
+  deferred §7 to B; **this PR discharges it.**
+  ⚠ **This PR ran no ops.** No restitch of the seven, none of the 27, no
+  Fly POST, no Fly query, no fold. A **D-128 OPS run does exist** and was
+  handed to this PR **as recorded** (Matt GO via Emma, 2026-09-06;
+  restitch of the must-hunt seven at tip `9e65cbf`, out_root
+  `linker_seam_ops_2026-09-05`) — see `#### D-128-B amendment 1`.
+  ⚠ **Not run, not queried, and not re-measured in this PR.** Its
+  headline is **PASS 0 / REFUSE 7 / FAIL 0**, `repaired_of_seven` = **0**
+  — the pre-registered allowed outcome — and it is **not** a licence to
+  move a gate.
+  ⚠ **Does not replace `winning_tile`.** **Served stays the assembler**
+  until a Matt swap GO. Do not auto-serve D-125, D-126, D-127, or D-128
+  as the primary download, and never on a pass count.
+  ⚠ **Does not overwrite** assembler `stitched.pdb`, D-125 `kabsch/{id}/`,
+  D-126 `confidence_kabsch/{id}/`, D-127 `piecewise_kabsch/{id}/`, or A's
+  `linker_seam/{id}/` tree. No prior path tree is written, appended to, or
+  re-keyed by this PR.
+  ⚠ **Does not edit** `core/hold48_kabsch.py`,
+  `core/hold48_confidence_kabsch.py`,
+  `core/hold48_piecewise_kabsch.py`, `core/hold48_linker_seam.py`, or
+  `core/hold48_stitch.py` (all sha256-pinned by the suite).
+  ⚠ **Never solved.** Seams **recorded** ≠ seams **solved**. Goal framing
+  stays **diagnose and refuse dishonest seams**.
+  ⚠ **The 10.0 Å gate STAYS.** B renders it; B does not move it, in
+  either direction, for any parent.
+  ⚠ **3432 stays accept-refuse** (signed triage) — not re-opened, not
+  reclassified, not counted as a D-128 miss on any surface.
+  ⚠ **D-126 remains the best experimental path until proven otherwise**
+  and the **D-127 failed experiment stays disclosed** — a D-128 surface
+  may not soften, bury, or replace either with a fresh-hypothesis story.
+  ⚠ **Not F-004 ingest.** ⚠ **Not ADC-C.** ⚠ **No rent / GPU / RunPod.**
+- **Ruled by:** Emma BUILD GO D-128-B 2026-09-06 (Matt GO) — bind exactly:
+  1. **Scope is B only (UI + Method).** UI path honesty for the new
+     linker / seam path, reading A's `linker_seam/{id}/` tree. **Do not**
+     implement core algorithm (A already shipped). **Do not** run an OPS
+     restitch in this PR.
+  2. **Method §7 honesty:** disclose the stitch-path train **including
+     D-128**; **never solved**; **served stays assembler**; **3432
+     accept-refuse**; **D-126 best experimental until proven otherwise**;
+     **D-127 failed experiment stays disclosed**; **no threshold loosen**.
+  3. **Show the seam honesty fields from A's tree** —
+     `max_ca_jump_angstrom`, `honest`, `path`, and the rest — **without
+     inventing averages that lie.**
+  4. **No overwrite of prior path trees.**
+  5. **Hermetic tests that can go red** if Method honesty, served =
+     assembler, or never-solved softens.
+  6. **Living docs updated per KEEL** (ARCHITECTURE, decisions, testplan,
+     ship index). README greeting only.
+  7. No Fly POST / F-004 / rent / gate loosen. Model pin unchanged
+     (claude-opus-5, thinking, effort high — D-0037; never Auto). Draft
+     PR; **no self-merge**; Kaylee undrafts on green, Trinity merges.
+- **Cite:** D-128 Spec
+  ([`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)) §1 / §1a /
+  §5 / **§6** (UI) / **§7** (Method) / §9 / §11 · `### D-128` and
+  `### D-128-A` in this log (both headers confirmed present before citing
+  — D-062 / method-note item 7) · D-128-A `9e65cbf` / #247 (the fifth
+  sibling tree this PR reads) · D-127-B four-path UI + mandatory Method
+  precedent (`de9a80e` / #245) · D-127-A `e49bf34` / #244 · D-126-B
+  triple-path pattern (`abbcd00` / #242) · D-126-A `aa8aa02` / #241 ·
+  D-125-B dual-path pattern (`aa8d3f1` / #238) · D-125-A `26a40a8` / #237
+  · D-121 Method hold-48 explainer · D-120 Phase 2 `assembly_review` ·
+  D-118 assembler-not-Kabsch honesty · D-117 PLAN / Kabsch park · D-111
+  `winning_tile` / off-block PAE null · D-109 ruling 7 (not
+  ranking-eligible) · D-016 (provenance) · D-001 (living-doc naming) ·
+  seven signed must-hunt linker parents **2938**, **2939** `Q7Z408`,
+  **3179**, **3190**, **3321**, **3368** `Q5SZK8`, **3566** (D-127 OPS
+  `linker_jump_gt_10` ×7 **as recorded**; ⚠ **not re-measured here**) ·
+  out of primary **3272** `Q6V0I7` / **3394** `Q8TDW7` (`rmsd_gt_10`) and
+  **3432** `Q8IZF6` (`no_domain_pieces`, **accept-refuse**) · IGF2R seam
+  **~88.76 Å** (join-jump disclosure, **not** a Kabsch RMSD, ⚠ **not
+  re-measured here**) · ship index [`decisions.md`](decisions.md)
+- **Relates:** `D-128` · `D-128-A` · `D-127` · `D-127-A` · `D-127-B` ·
+  `D-126` · `D-126-A` · `D-126-B` · `D-125` · `D-125-A` · `D-125-B` ·
+  `D-121` · `D-120` · `D-118` · `D-117` · `D-111` · `D-109` ruling 7 ·
+  `D-016` · `D-001`
+- **Does not amend:** D-128 Spec §1–§11 (the Spec stays as shipped; where
+  this log and that file differ, **THE LOG GOVERNS**, and this entry does
+  not diverge from it) · D-128-A's algorithm or its written rows · D-111
+  geometry · D-116 gate · today's stitch algorithm · D-118 census
+  identity · D-120 readiness / chosen-vs-spare table · D-121 assembler
+  Method section · D-125-B / D-126-B / D-127-B Method addenda (all
+  **stay**; this one is additive) · the D-127-B OPS disclosure (it
+  **stays**) · D-126's standing as best experimental path so far (it
+  **stays**) · D-122 `/adcs` · D-123 `/about` · D-124 ADC-C · F-004 /
+  ranking set · the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
+  `D-110` while later numbers are written). This entry spends `D-128-B`;
+  the pointer stays the owner's. ⚠ **Does not invent D-129.**
+
+#### Context
+
+D-125-B named a second path, D-126-B a third, D-127-B a fourth. D-128-A
+then wrote a **fifth** sibling tree — and its rows are a different kind
+of object from the four before it. `seams.jsonl` describes D-128's own
+window fit, but `seam_honesty.jsonl` is **cross-path**: one row per
+`(path, seam)` for **all four** experimental trees, each carrying the max
+Cα jump that path *ends* with, whether that path is therefore **honest**
+at that seam, and — because A wrote it that way — **how the row is
+known** (`read_from_path_record`, `measured_from_path_artifacts`, or an
+absence with a stated reason). Until B, the review card named at most
+four paths and showed no honesty read at all, which becomes a lie the
+moment A's `linker_seam/` files exist.
+
+**The new lie surface is aggregation across paths.** The previous three
+B PRs each had one: D-125-B could have collided two persist stems,
+D-126-B could have shown a trimmed weighted RMSD as the seam truth,
+D-127-B could have averaged *k* domain pieces into one seam number. The
+D-128 version is bigger, because the honesty rows are the first thing on
+this surface that *invites* a score. A card that printed a **mean jump
+per path**, an **“N of M seams honest”** tally, or a **best-path badge**
+would be the D-126 lie surface re-created one level up: a mean over seams
+hides the single seam that flies apart, and a count hides **which** path
+is dishonest **where** — which is the entire content of §1a. So the card
+renders **one row per (path, seam)** and derives no mean, no min, no max,
+no honesty score, and no pass count. That is what “show the seam honesty
+fields without inventing averages that lie” means in code.
+
+**The second hazard is a result that reads as an endorsement of its own
+apparatus.** This entry was drafted stating that **no D-128 ops run
+existed**, which was true of the record available when the build began
+and was **superseded mid-build** by a Matt GO handing over one (recorded
+in full at `#### D-128-B amendment 1`; the superseded draft claim is kept
+named here rather than quietly overwritten, per method-note item 4). The
+run repaired **0 of 7** — and the shape of that number is the hazard.
+0-of-7 was **pre-registered as an allowed outcome** at D-128 and D-128-A,
+so a surface could truthfully present it as *the Spec working as
+designed* while never mentioning that the same run **gave back 5 parents
+D-125 had accepted and 6 D-126 had accepted**. That is the D-127-B
+mistake inverted: there the danger was an accept count without its
+regress, here it is a **pre-registration without its regress**. Both bury
+a drop. So the named regress ships beside the zero, on the Method
+surface, in the same passage.
+
+The third thing this PR closes is not a UI defect at all. Spec §7 makes
+the Method surface **mandatory**: a D-128-A that writes `linker_seam/`
+without an owner-facing addendum **is not done**. A shipped correctly
+under its own GO, which deferred §7 to B. That leaves D-128 in the state
+the Spec forbids by name — code on disk, no owner-facing account — and
+closing it is a **deliverable of this PR**, not a follow-up.
+
+#### Decision
+
+1. **Read A's fifth sibling tree. Do not write it.** Look under
+   `{ARTIFACT_ROOT}/linker_seam/{parent_job_id}/` (and, if needed, beside
+   an assembler `stitched.pdb` parent) for `provenance.json`,
+   `seams.jsonl`, and `seam_honesty.jsonl`, via
+   `app/linker_seam_path_read.py`. No new persist path, no copy into any
+   prior tree, no swap of the default served PDB. The reader opens files
+   read-only and defines no writer.
+2. **Five paths, five persist stems — when (and only when) the D-128 tree
+   is on disk.** Assembler keeps the D-120 stem `stitched`; D-125 keeps
+   `kabsch/{parent}`; D-126 keeps `confidence_kabsch/{parent}`; D-127
+   keeps `piecewise_kabsch/{parent}`; D-128 files are named with the stem
+   prefix `linker_seam` / persist stem `linker_seam/{parent_job_id}`. A
+   D-128-path `stitched.pdb` is never presented as the assembler's, nor
+   as a D-125 / D-126 / D-127 success. Five populations, not one.
+3. **Default served PDB remains the assembler** until a Matt GO names a
+   swap. No auto-flip, and never on a pass count.
+4. **One row per (path, seam) is the unit of disclosure — no average.**
+   The card renders A's §1a rows individually: `path`,
+   `max_ca_jump_angstrom`, the three-valued `honest`, `source`,
+   `absence_reason`, `refuse_reason`, and `linker_n` /
+   `max_linker_ca_jump` **only for the path that defines linkers**
+   (D-127; the others carry `linker_fields_applicable: false` and render
+   as *not defined on this path*, never `0`). **B never computes a mean,
+   a min, a max, an “N of M honest” tally, or a best-path badge across
+   paths or seams.** The Spec §11 counts are an **ops-report** object over
+   a whole run — A's `build_ops_success_report` — and this PR neither
+   computes them nor has a run to compute them from.
+5. **Three-valued honesty, and unknown is not honest.** `honest = true`
+   renders as *honest at this seam (≤ 10.0 Å)*; `false` as *dishonest at
+   this seam (> 10.0 Å)*; **`null` as “unknown — not honest”**, with the
+   stated `absence_reason` beside it. A null `max_ca_jump_angstrom` is an
+   **absence**, never `0.00 Å`, and never a blank that could read as zero.
+6. **B applies A's own gate to A's own number; it does not copy a verdict
+   or invent one.** `honest` is recomputed with `honest_for_jump`
+   **imported from `core/hold48_linker_seam.py`**, applied to the jump A
+   recorded. B carries no threshold constant of its own. The value A
+   wrote is kept beside it as `honest_recorded`, and a row whose recorded
+   verdict disagrees with the gate is flagged
+   (`honest_disagrees_with_record`) and rendered **fail-closed** — the
+   gate wins. This cannot manufacture a measurement (the jump is A's) and
+   it cannot be softened by editing a boolean in a file.
+7. **Fail-closed success, all-or-nothing.** A D-128 `stitched.pdb` is
+   surfaced as a D-128 success only when A recorded `accepted: true`,
+   the file is on disk, **and** no D-128 seam row is dishonest or
+   unknown. A refused or dishonest parent gets the recorded reason and
+   **no “fixed” / “repaired” badge**. Assembler / D-125 / D-126 / D-127
+   PDBs are never surfaced as a D-128 result.
+8. **Honest empty everywhere A wrote nothing.** A missing `linker_seam/`
+   tree → no fifth path is implied, and no jump, window, `n_ca`, RMSD, or
+   honesty verdict is invented. The card says the absence is **not a
+   solved seam**. A tree with no honesty rows is an absence with a
+   reason, not “0 dishonest seams”.
+9. **Method addendum (mandatory, additive, 8th-grade) — Spec §7.**
+   `/method` and [`method-hold48-tiles.md`](method-hold48-tiles.md) gain
+   a D-128-B section carrying the Spec §7 copy: the **five-step
+   stitch-path train** in order (1 assembler — winner-tile pLDDT, the
+   **default served** structure; 2 D-125 — one unweighted rigid move on
+   overlap Cα; 3 D-126 — one weighted / trimmed rigid move, whose lesson
+   is that a small weighted RMSD can hide a large full-overlap jump, ops
+   jumps **28–68 Å** on 2939 / 3272 / 3432, and which **remains the best
+   experimental path we have tried**, having recovered **2 of its primary
+   5** (3368, 3394) against D-127's **0 of 3**; 4 D-127 piecewise /
+   domain — **the run says it did not pay off**: PASS 17 / REFUSE 10 /
+   FAIL 0, 0 of 3 recovered, and it **gave back** 5 parents D-125 had
+   accepted and 7 D-126 had accepted — **that failed experiment stays
+   disclosed**; 5 D-128 linker / seam honesty — **first measure** every
+   path's seam jump and say plainly which paths are **dishonest** at that
+   seam, then **optionally** try **one** small rigid move inside a
+   **±32 aa** window, because **7 of D-127's 10 refuses were at the
+   linkers**); **what “dishonest” means** (a statement about the
+   **structure file**, not about a person); the **refuse table** in plain
+   terms (a window refuses under three Cα, above **10.0 Å** weighted
+   RMSD, or when collinear; the parent refuses if the seam still jumps
+   more than **10.0 Å** after the move; a refuse writes a record, not a
+   “fixed” structure); **seam disclosure as measurement**, not a verdict
+   that the holoprotein is lined up; **default served = assembler**;
+   honest empty when `linker_seam/` is missing; **3432 stays
+   accept-refuse**; and the **10.0 Å gate stays**. D-121's tiles / glue /
+   assembler section and the D-125-B, D-126-B, and D-127-B addenda all
+   **stay**; #229 stays merged.
+10. **Method discloses the D-128 OPS run as recorded, with its regress
+    beside it** (amendment 1). **PASS 0 / REFUSE 7 / FAIL 0 / SKIP 0**
+    over the must-hunt seven; `recovered_of_seven` = **0**;
+    `repaired_of_seven` = **0**; refuse reasons **`seam_jump_gt_10` ×6**
+    (2938, 3179, 3190, 3321, 3368, 3566) and **`rmsd_gt_10` ×1** (2939);
+    confusion `n_d125_pass_d128_refuse` = **5**,
+    `n_d126_pass_d128_refuse` = **6**, `n_d127_pass_d128_refuse` = **0**,
+    `n_d127_refuse_d128_pass` = **0**. Marked **as recorded** and **not
+    re-measured by this PR**. **0-of-7 is the pre-registered allowed
+    outcome and is not a licence to move a gate** — and it never ships
+    without the 5 / 6 give-back beside it. D-127's PASS 17 / REFUSE 10 /
+    FAIL 0 stays labelled as **D-127's** result and is never re-used as
+    D-128's.
+11. **Forbidden language (Spec §6 / §7 / D-117 §5 / D-125 §6 / D-126 §6 /
+    D-127 §6 park):** “aligned,” “superimposed” as a success claim,
+    “seams solved,” “seams fixed,” “full-length AF-quality,” a “fixed” or
+    “repaired” badge. No alignment-box CTA. No F-004 ingest.
+12. **Hard stops.** No ops restitch of the seven or the 27. No Fly POST,
+    no Fly query, no fold, no rent / GPU / RunPod / MD / AF refine. No
+    F-004 ingest. No ADC-C bleed. No persist rewrite. No threshold change
+    in either direction. No re-opening of 3432. No `hold48_*.py` edit —
+    including A's new module. Never claim seams solved. Draft PR; **no
+    self-merge**; never push `main`.
+
+#### D-128-B amendment 1 — the D-128 OPS result is disclosed, as recorded
+
+- **Date:** 2026-09-06 · **Ruled by:** **MANDATORY Method §7 OPS honesty
+  inject**, Matt GO via Emma, 2026-09-06, during the D-128-B build.
+  ⚠ **Provenance (D-016): these are OPS numbers handed to this PR as
+  recorded. This PR did not run the restitch, did not query Fly, did not
+  fold, and did not re-measure any of them.** The artefact behind every
+  figure below is that GO message, naming a **D-128 OPS restitch of the
+  linker must-hunt seven** at tip **`9e65cbf`** with out_root
+  **`linker_seam_ops_2026-09-05`**. Where this PR states them, it states
+  them **as reported**, with that attribution attached — never as its own
+  measurement.
+
+⚠ **This supersedes an earlier claim inside this same entry.** The
+D-128-B entry was drafted saying **“there is no D-128 OPS result”** and
+that **“the seven remain must-hunt, not hunted.”** That was true of the
+record available when the build began and is **false now**. The
+superseded wording is named here rather than silently overwritten
+(method-note item 4: record the provenance chain when a claim changes,
+including the wrong intermediate version) — and it is a small instance of
+the thing this whole entry is about: an absence is only honest until the
+artefact arrives.
+
+1. **The run.** D-128 OPS restitch of the **must-hunt seven** at tip
+   `9e65cbf`, out_root `linker_seam_ops_2026-09-05`:
+   **PASS 0 / REFUSE 7 / FAIL 0 / SKIP 0**.
+2. **`recovered_of_seven` = 0** and **`repaired_of_seven` = 0.** None of
+   the seven signed must-hunt linker parents was repaired. Spec §3 / §1b
+   and the `### D-128-A` entry **pre-registered 0-of-7 as an allowed
+   outcome** *before this code existed* — so it is a **finding**, and it
+   is **not** a licence to loosen the 10.0 Å gate, add a trim loop,
+   invent a blend, try a second window size, or re-open **3432**.
+3. **Refuse reasons (7 parents).** **`seam_jump_gt_10` ×6** — 2938,
+   3179, 3190, 3321, 3368, 3566 — the window fit landed and the **whole
+   seam** still jumped more than **10.0 Å** afterwards. **`rmsd_gt_10`
+   ×1** — 2939 — the ±32 aa window's **weighted** RMSD was itself over
+   the gate, so nothing was applied.
+   ⚠ **Neither name may be conflated with D-127's.** D-128's
+   `seam_jump_gt_10` is measured after the **single window transform**;
+   D-127's `linker_jump_gt_10` is measured after **linker inherit across
+   domain pieces**. And D-128's `rmsd_gt_10` is the **window weighted**
+   RMSD, not D-127's full-overlap RMSD class. Different algorithms,
+   different measurements, same threshold.
+4. **Named regress — the zero never ships alone (Spec §11).**
+   `n_d125_pass_d128_refuse` = **5**. `n_d126_pass_d128_refuse` = **6**.
+   `n_d127_pass_d128_refuse` = **0** and `n_d127_refuse_d128_pass` =
+   **0** — D-127 had already refused all seven (they *are* its
+   `linker_jump_gt_10` class), so there was no D-127 ground to win or
+   lose here. Against the two paths that *had* held ground, D-128 lost
+   it: **five parents D-125 accepted and six D-126 accepted now refuse.**
+   ⚠ **0-of-7 being pre-registered does not make the give-back a
+   footnote.** A surface that reported the allowed zero without the 5 / 6
+   beside it would be burying a drop under a pre-registration — the
+   D-127-B failure mode inverted.
+5. **D-126 remains the best experimental path among the stitch
+   algorithms tried so far.** This run does not disturb that; it points
+   the same way. D-126 OPS recovered **2 of its primary 5** (parents
+   **3368** and **3394**, as recorded), against D-127's **0 of 3** and
+   now D-128's **0 of 7** — and **3368**, one of the two D-126 recovered,
+   sits in **this** refuse list too, under `seam_jump_gt_10`. Both later
+   paths gave back ground D-126 had won. ⚠ Comparisons across ops runs,
+   **not** a re-measurement here.
+6. **The D-127 failed experiment stays disclosed**, unsoftened and
+   labelled as D-127's: PASS 17 / REFUSE 10 / FAIL 0,
+   `recovered_of_primary_three` = 0, regress 5 vs D-125 and 7 vs D-126.
+   A D-128 result does not retire it, and D-128's figures never stand in
+   for it.
+7. **Nothing here is a solved seam.** Seven recorded refuses are **seven
+   recorded outcomes** of a measurement, not seven diagnosed-and-fixed
+   joins. **Seams recorded ≠ seams solved.** The honesty gate stays
+   **10.0 Å**.
+8. **Default served path stays assembler. Never auto-flip.** No result
+   in this run moves the served PDB — and a *better* result would not
+   have either. That swap is a Matt GO, never an inference from a count.
+9. **What the run does say, stated at its actual strength.** The §1a
+   apparatus ran over the seven and produced a recorded outcome for every
+   one of them, and the failure mode it was built to hunt held: on six of
+   the seven the ±32 aa window **fitted** and the seam **still** broke.
+   That is evidence about the *linker-local rigid hypothesis*, not
+   evidence that the seams are closer to solved. ⚠ It is **one run, as
+   recorded, of one window size**, and W = 32 stays a **pinned v1
+   default, not a measured optimum** — a second window size tried until a
+   parent passes is forbidden by Spec §1b, and 0-of-7 does not authorise
+   it.
+
+⚠ **This amendment is disclosure, not a new Spec.** It does not revise
+the algorithm, does not re-open D-128 §1–§11, does not authorise an ops
+run from this PR, does not move a threshold, and does not enter F-004.
+No Fly POST.
+
+#### Deep-learning justification
+
+Every hold-48 tile is an ESMFold forward pass (T5 recipe, D-047 / D-111),
+and every path after the assembler is a rigid transform of coordinates
+the network already emitted. This PR adds **no** transform at all: it is
+the surface that says, per path and per seam, how far apart the two
+copies of the glue actually ended up, and whether that path is therefore
+honest at that join.
+
+That surface is where the deep-learning claim can most easily be
+overstated, because the reader's question — *is this structure any good?*
+— is exactly the question the numbers do not answer. A card that averaged
+four paths' seam jumps into one figure, that printed `0.00 Å` where A
+wrote null, that reported an unknown as honest, that badged a refused
+seam as “fixed,” or that served a D-128-path PDB under the assembler stem
+would attribute to ESMFold a superimposed structure the model never
+produced. So the honesty verdict here is recomputed from A's own jump
+with A's own gate rather than copied from a boolean, the null stays null,
+and the fail-closed rule is that nothing over 10.0 Å is presented as an
+honest success.
+
+And the ops result (amendment 1) is load-bearing in the same way. The
+run repaired **0 of 7**, and on six of those seven the ±32 aa window
+fitted while the whole seam still broke — so the honest deep-learning
+statement is that a **third** rigid-body hypothesis about these joins did
+not pay off, and that the measurement apparatus is what shipped. Not that
+a fifth path improved anything. The specific temptation this surface must
+refuse is subtler than D-127-B's: 0-of-7 was **pre-registered as
+allowed**, so it can be narrated as a success of process while five
+D-125 and six D-126 passes quietly disappear. Reporting the zero without
+that give-back, or letting a pre-registration stand in for a result,
+would attribute to ESMFold an assembly quality no run measured. Neutral
+to the weights; load-bearing for whether what we serve and what we claim
+are the same object.
+
+#### Provenance (D-016)
+
+- **Tip this branch starts from:** `9e65cbf` (`git log --oneline -1` in
+  this working clone, 2026-09-06) — D-128-A / #247 on `main`.
+- **`### D-128` and `### D-128-A` headers exist** in this log, checked
+  before citing (method-note item 7): `grep -n "^### D-128" docs/README.md`
+  → `### D-128-A — Linker / seam honesty core…` and `### D-128 — Linker /
+  seam honesty Spec…` in the pre-branch file. The check is the heading,
+  not a citation of one.
+- **A already writes the fifth sibling tree:**
+  `core/hold48_linker_seam.py` `write_linker_seam_restitch` →
+  `linker_seam/{parent_job_id}/provenance.json` + `seams.jsonl` +
+  `seam_honesty.jsonl` (`9e65cbf` / #247). This PR adds no second writer.
+- **The row shapes B reads are A's, read from A's code rather than
+  assumed:** `SeamHonestyRow.to_json_row` emits `path` /
+  `moving_tile_index` / `reference_tile_index` / `max_ca_jump_angstrom` /
+  `honest` / `linker_n` / `max_linker_ca_jump` /
+  `linker_fields_applicable` / `source` / `absence_reason` /
+  `refuse_reason` / `honesty_gate_angstrom`; `LinkerSeamRecord.to_json_row`
+  emits `overlap_start` / `overlap_end` / `offending_seam_source` /
+  `no_offending_seam` / `seam_centre` / `window_start` / `window_end` /
+  `window_half_width_aa` / `n_ca` / `rmsd_angstrom` /
+  `max_ca_jump_angstrom` / `pre_transform_max_ca_jump_angstrom` /
+  `refuse_reason` / `honest` / `R` / `t`
+  (`core/hold48_linker_seam.py`, `9e65cbf`).
+- **`ALGORITHM` / `DECISION` / the gate / `honest_for_jump` /
+  `WINDOW_HALF_WIDTH_AA` are imported from A, never retyped:**
+  `linker_local_kabsch_then_winning_tile` / `D-128` /
+  `SEAM_HONESTY_GATE_ANGSTROM` (an alias of D-125's
+  `RMSD_REFUSE_ANGSTROM`, so the honesty line **is** the existing refuse
+  gate rather than a second number) / `32`, all from
+  `core/hold48_linker_seam.py`.
+- **Only D-127 defines linkers:** `PATHS_DEFINING_LINKERS =
+  frozenset({PATH_PIECEWISE_KABSCH})` in A's module. That is why the
+  linker columns are *not applicable* on the other four paths rather
+  than `0`.
+- **D-127-B four-path UI precedent this PR extends:**
+  `app/piecewise_kabsch_path_read.py` + `tests/test_d127_b_four_path.py` +
+  AssemblyReview / MethodNote / Provenance (`de9a80e` / #245).
+- **Assembler remains the default served PDB:**
+  `GET /api/analyses/{id}/structure` still streams the stored `pdb_path`
+  (D-034 / D-118 / D-120 / D-125-B / D-126-B / D-127-B). Not re-pointed
+  here.
+- **D-127 OPS figures (PASS 17 / REFUSE 10 / FAIL 0;
+  `recovered_of_primary_three` = 0; the refuse histogram
+  `linker_jump_gt_10` ×7 / `rmsd_gt_10` ×2 / `no_domain_pieces` ×1;
+  `n_d125_pass_d127_refuse` = 5; `n_d126_pass_d127_refuse` = 7;
+  `n_d126_refuse_d127_pass` = 0) and the **D-126 OPS recovered 2 of its
+  primary 5** (3368, 3394) comparison:** carried from
+  `#### D-127-B amendment 1` in this log and the D-128 Spec. ⚠ **Not run,
+  not queried, and not re-measured in this PR.** They are **D-127's** and
+  **D-126's** results and are labelled as such on every surface.
+- **The IGF2R seam ~88.76 Å:** owner analysis cited in D-117 / D-118 /
+  D-120 / D-121. A join-jump disclosure, **not** a Kabsch RMSD and **not**
+  a D-128 metric. ⚠ **Not re-measured in this PR.**
+- **D-128 OPS restitch figures (PASS 0 / REFUSE 7 / FAIL 0 / SKIP 0;
+  `recovered_of_seven` = 0; `repaired_of_seven` = 0; `seam_jump_gt_10`
+  ×6 on 2938 / 3179 / 3190 / 3321 / 3368 / 3566 and `rmsd_gt_10` ×1 on
+  2939; `n_d125_pass_d128_refuse` = 5, `n_d126_pass_d128_refuse` = 6,
+  `n_d127_pass_d128_refuse` = 0, `n_d127_refuse_d128_pass` = 0):**
+  MANDATORY Method §7 OPS honesty inject — Matt GO via Emma, 2026-09-06,
+  naming a D-128 OPS restitch of the must-hunt seven at tip `9e65cbf`,
+  out_root `linker_seam_ops_2026-09-05`. ⚠ **Not run, not queried, and
+  not re-measured in this PR.** Recorded as reported, with that
+  attribution carried onto the Method surface. Internal consistency was
+  checked before recording — 0 + 7 + 0 + 0 = 7; the reason histogram sums
+  to the 7 refuses and its ids are exactly the seven, with no parent in
+  two buckets; `recovered_of_seven` = 0 agrees with PASS 0; and both
+  D-127 confusion counts are 0, which is what the already-recorded
+  histogram requires, since D-127 refused all seven and D-128 accepted
+  none. **A consistency check is not a measurement and does not upgrade
+  the provenance.**
+- ⚠ **This PR still produced no ops numbers of its own.** No parent was
+  restitched by this PR, nothing was folded, and no figure above was
+  observed here. **The out_root `linker_seam_ops_2026-09-05` is named as
+  the artefact; its files were not read by this PR** — the numbers come
+  from the GO message that names them.
+
+#### Consequences
+
+- Tests that must be able to go red, in `tests/test_d128_b_five_path.py`
+  (**T-1161**–**T-1169**) plus the vitest suites: `### D-128-B —` exists
+  in this log (the check is the heading, not a citation of one); a
+  missing `linker_seam/` tree implies no fifth path and invents no jump /
+  window / RMSD / honesty verdict; a present tree names **five** paths
+  whose persist stems do not collide; **default served = assembler**;
+  per-(path, seam) honesty rows render `path` / `max_ca_jump_angstrom` /
+  three-valued `honest` / `source` / `absence_reason`, with linker fields
+  only on D-127; **no mean, min, max, tally, or best-path badge is
+  derived anywhere in reader or card**; a null jump renders as an absence
+  and **never `0.00 Å`**; **unknown is never honest**; a recorded
+  `honest: true` over the gate is overridden fail-closed; a dishonest or
+  unknown seam carries **no** D-128 success PDB and no “fixed” badge; the
+  D-128 window fields (`window_start` / `window_end` /
+  `window_half_width_aa` = 32 / `n_ca` / weighted `rmsd_angstrom` /
+  post-apply `max_ca_jump_angstrom` / `offending_seam_source` /
+  `refuse_reason`) render from A's JSON; B carries no threshold constant
+  and imports the gate from A; A's module and the three before it stay
+  **sha256-pinned**; and the **mandatory** Method addendum names the
+  five-step train, the 10.0 Å gate staying, **3432 accept-refuse**,
+  **D-126 as best experimental path so far** with its 2-of-5 against
+  D-127's 0-of-3, the **D-127 failed experiment** with its named regress,
+  and **(amendment 1) the D-128 OPS result as recorded** — PASS 0 /
+  REFUSE 7 / FAIL 0 at tip `9e65cbf`, `repaired_of_seven` = 0 with the
+  `seam_jump_gt_10` ×6 / `rmsd_gt_10` ×1 reasons and their parent ids,
+  and the named give-back (`n_d125_pass_d128_refuse` = 5,
+  `n_d126_pass_d128_refuse` = 6) **in the same passage as the zero** —
+  while never claiming seams solved and while the D-121 / D-125-B /
+  D-126-B / D-127-B sections survive intact.
+- `ARCHITECTURE.md` records D-128-B as the census / Method consumer of
+  A's `linker_seam/` tree. Served census PDBs stay assembler.
+- With this PR the Spec §7 Method obligation is **discharged**; the ship
+  index stops carrying D-128 as “not done without Method.”
+- **The linker-local rigid hypothesis is answered, and the answer is
+  negative.** Three rigid-body families have now been tried on these
+  joins — one body (D-125), one weighted / trimmed body (D-126), *k*
+  domain bodies (D-127), and one ±32 aa window body (D-128) — and
+  **D-126 is still the best of them**. The served path stays the
+  assembler; all five trees stay on disk and callable. A later GO that
+  wants a sixth path starts from that finding, not from a fresh
+  hypothesis that a smaller rigid window was promising.
+- **What is still open after this PR:** a D-128 run over the **27** (this
+  run covered the seven) and its full §11 report, F-004 ingest, remaining
+  tileable / mucins, rental, a served-path swap, and optional GPU refine.
+  All are later GOs, and none is authorised by a 0-of-7.
+
+#### Assumptions refused
+
+- That B may write, append to, re-key, or “upgrade” A's `linker_seam/`
+  tree, or any of the four before it.
+- That B may implement, re-implement, or adjust any part of the D-128
+  algorithm — A already shipped it, and B reads.
+- That the four paths' honesty rows may be reduced to a **mean jump**, a
+  **best path**, an **“N of M seams honest”** tally, or any other single
+  number in place of the per-(path, seam) rows. That is the D-126 lie
+  surface re-created one level up, inside the fix for it.
+- That a null `max_ca_jump_angstrom` may render as `0.00 Å`, or that an
+  unknown seam may be reported, badged, or counted as honest.
+- That a `honest: true` in a file outranks the 10.0 Å gate applied to the
+  jump beside it.
+- That a dishonest or unknown seam may carry a D-128 success PDB, or that
+  an assembler / D-125 / D-126 / D-127 `stitched.pdb` may be presented as
+  a D-128 result.
+- That a refused seam may wear a “fixed” or “repaired” badge.
+- That a missing `linker_seam/` tree may be filled with invented jumps,
+  windows, or RMSD — or with the IGF2R 88.76 Å figure, or the D-126 ops
+  28–68 Å jumps, as if either were this parent's D-128 measurement.
+- That D-127's PASS 17 / REFUSE 10 / FAIL 0 may be presented as a D-128
+  result, or that D-128's figures may stand in for D-127's disclosure.
+- That the D-128 OPS **0-of-7**, being pre-registered as allowed, may be
+  reported **without** the give-back beside it
+  (`n_d125_pass_d128_refuse` = 5, `n_d126_pass_d128_refuse` = 6) — a
+  pre-registration is not a place to bury a drop.
+- That 0-of-7 repaired licenses a gate change, a trim loop, a blend, a
+  second window size, or re-opening 3432 — or, in the other direction,
+  that it may be narrated as the fifth path succeeding.
+- That D-128's `seam_jump_gt_10` may be conflated with D-127's
+  `linker_jump_gt_10`, or D-128's window-weighted `rmsd_gt_10` with
+  D-127's full-overlap RMSD class.
+- That this PR measured any of the OPS figures it discloses, or read the
+  `linker_seam_ops_2026-09-05` tree, rather than recording them as handed
+  over.
+- That the 10.0 Å gate may move in either direction, that a trim loop may
+  reopen, or that **W = 32** may be presented as a tuned optimum.
+- That **3432** may be re-opened, reclassified, converted, or counted as
+  a D-128 miss on any surface.
+- That the **D-127 failed experiment** disclosure or **D-126's** standing
+  as best experimental path so far may be softened, buried, or replaced
+  by a fresh-hypothesis story about the fifth path.
+- That naming a D-128 path licenses calling seams solved, aligned,
+  superimposed, or the chain one forward pass.
+- That the served path may auto-flip on any pass count rather than a Matt
+  swap GO.
+- That the Method addendum is a later nice-to-have rather than a
+  deliverable of this PR (Spec §7 says otherwise), or that it may gut the
+  D-121, D-125-B, D-126-B, or D-127-B sections.
+- That the 27 may enter `/scorer` (D-109 ruling 7).
+- That this PR may run ops, restitch anything, POST to or query Fly, rent
+  a GPU, edit `hold48_*.py`, or repair the `D-` next-free pointer.
+- That a draft PR may be self-merged (Kaylee undrafts on green; Trinity
+  merges).
+
+---
 
 ### D-128-A — Linker / seam honesty core: §1a per-path seam honesty rows + optional ±32 aa linker-local rigid, then existing winning_tile
 
