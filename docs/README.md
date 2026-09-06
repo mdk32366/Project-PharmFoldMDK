@@ -69,7 +69,9 @@
 >   Production paths (assembler / D-125
 >   Kabsch / D-126 confidence / D-127 piecewise) stay callable and the
 >   **assembler** stays the served path. ⚠ **Neither A nor B ran ops.**
->   A **D-128 OPS restitch of the must-hunt seven** (tip `9e65cbf`,
+>   A **D-128 OPS restitch of the must-hunt seven** (⚠ **`must-hunt` is
+>   what they were called when that run was chosen; the Phase 5 sign has
+>   since superseded that name — see D-129 / D-129-B**; tip `9e65cbf`,
 >   out_root `linker_seam_ops_2026-09-05`) was handed to D-128-B **as
 >   recorded** and is disclosed on the Method surface: **PASS 0 /
 >   REFUSE 7 / FAIL 0**, `repaired_of_seven` = **0** (the pre-registered
@@ -111,7 +113,10 @@
 >   window (**W = 32**, ε = 1e-3, **no trim loop**, no pieces, no
 >   linker-inherit) → existing `winning_tile`. Primary inventory is the
 >   **seven** signed must-hunt linker parents (2938, 2939, 3179, 3190,
->   3321, 3368, 3566). ⚠ **Not piecewise-v2. Not an RMSD Spec
+>   3321, 3368, 3566 — ⚠ **`must-hunt` is what they were called when
+>   D-128 was written; the Phase 5 sign has since superseded that name
+>   and they are `accept-refuse`, D-129 / D-129-B**).
+>   ⚠ **Not piecewise-v2. Not an RMSD Spec
 >   (3272 / 3394 out of primary). Not a domain Spec. 3432 stays
 >   accept-refuse.** ⚠ **10.0 Å stays — no loosen without Matt.**
 >   ⚠ **Never says solved.** **D-128-A** implements it as a fifth
@@ -321,6 +326,276 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-129-C — must-hunt hygiene: on every LIVE surface the eight's retired name is Phase-4-scoped, negated, or carries its supersession in the same sentence
+
+- **Date:** 2026-09-06
+- **Status:** accepted as a **hygiene patch** on the surfaces `### D-129-B`
+  shipped (Architect: Trinity. **Builder: Kaylee, sole owner.** Routed by
+  **Emma GO 2026-09-06**, relaying **Matt: "GO — hygiene patch ONLY"**;
+  this PR, off `cbcb47d`).
+  ⚠ **This does not reopen Phase 5.** No label inventory is re-taken, no
+  Spec clause is re-argued, no fate moves, and no id joins or leaves the
+  eight. The signed set is still **2938, 2939, 3179, 3190, 3321, 3368,
+  3566 + 3432**, ruled by **`D-0043 Phase 5 named-refuse`, SIGNED
+  2026-09-05 ~17:58 PT** and discharged by `### D-129-B`.
+  ⚠ **Copy and one test only.** No geometry, no threshold, no refuse
+  reason, no fate registry field, no route, no payload key, no served
+  byte. Every `core/hold48_*.py` stays sha256-pinned and untouched;
+  `app/phase5_named_refuse.py` is **not edited**.
+  ⚠ **Phase 4 is not touched.** **3272** / **3394** stay **Phase 4
+  must-hunt** — and that is precisely one of the three qualified forms
+  this entry allows, so the patch **leaves their wording exactly as it
+  is**. ⚠ **No RMSD Spec bleed.**
+  ⚠ **Nothing is gutted.** The D-128 OPS **0 of 7**, the give-back
+  (**5** vs D-125, **6** vs D-126), *"bury a drop under a
+  pre-registration"*, the never-solved refusals, and the accept-refuse
+  copy all stay **byte-for-byte** where D-128-B and D-129-B put them.
+  This entry **adds** a qualifier; it removes no number and no negation.
+  ⚠ **No linker-v2, no core algorithm, no ops run, no re-measurement,
+  no Fly / RunPod / rent, no F-004.** ⚠ **Not an accession.**
+  ⚠ **No self-merge** — draft PR; **Trinity merges.**
+- **Ruled by:** **Emma GO 2026-09-06** (*"hygiene patch ONLY"*), binding
+  exactly:
+  1. **Close the hole named in the GO:** the bare `must-hunt seven` in
+     the **D-128 OPS provenance inject** on
+     [`method-hold48-tiles.md`](method-hold48-tiles.md) and its
+     `MethodNote.jsx` mirror.
+  2. **Then close the class, not just the instance.** *Every* occurrence
+     of `must-hunt` on a **live** surface must be one of three things —
+     **Phase-4-scoped**, **a negation**, or **supersession-carrying** —
+     and the qualifier must be in **the same sentence as the
+     occurrence**, not merely nearby.
+  3. **A hermetic test goes red** if a bare occurrence returns.
+  4. **Change nothing else.** No Phase 5 re-litigation, no Phase 4 move,
+     no disclosure softened, no algorithm touched.
+  5. Model pin unchanged (**claude-opus-5**, thinking, effort **high** —
+     **D-0037**; never Auto). Draft PR; **no self-merge**; **Trinity
+     merges**.
+- **Cite:** **Emma GO 2026-09-06** · `### D-129-B` / `cbcb47d` / #250 (the
+  tip this branches from, and the surfaces it shipped — heading confirmed
+  present at that tip before citing, D-062 / method-note item 7) ·
+  `### D-129` / `1baf4c0` / #249 (the labelling authority, **not**
+  reopened here) · `### D-128-B` / `cd071d7` / #248 (the §7 Method
+  addendum and the OPS inject this patch qualifies without editing its
+  numbers) · `### D-128-A` / `9e65cbf` / #247 (the tip the rollup was
+  recorded at) · D-128 Spec `2004c5a` / #246 §3 · **`D-0043 Phase 5
+  named-refuse`, SIGNED 2026-09-05 ~17:58 PT via Emma** · **D-062** /
+  method-note item 7 (a pointer is not proof of its target — the shape
+  this entry is a small instance of) · **D-016** (provenance) · **D-0037**
+  (model pin) · ship index [`decisions.md`](decisions.md)
+- **Relates:** `D-129-B` · `D-129` · `D-128-B` · `D-128-A` · `D-128` ·
+  `D-127-B` · `D-121` · `D-062` · `D-016` · `D-0037` · `D-0043`
+- **Does not amend:** the D-129 Spec · the D-128 Spec (§1a / §1b / §2 /
+  §3 / §5 / §9 / §11) · the accept-refuse **eight** · the Phase 4 pair's
+  status · the **10.0 Å** gate · **W = 32** · ε = 1e-3 · the refuse
+  reason set · `app/phase5_named_refuse.py` · `app/reads.py` ·
+  `app/linker_seam_path_read.py` · any `core/hold48_*.py` · the D-128-B
+  §4 OPS disclosure · the D-127-B OPS disclosure · D-126's standing as
+  best experimental path · the served path · F-004 / the ranking set ·
+  the `D-` next-free pointer
+- ⚠ **Does not repair the RESERVED `D-` next-free pointer** (still reads
+  `D-110`). This entry spends `D-129-C`, a suffix of an id D-129 already
+  spent; it opens no new number.
+
+#### Context
+
+`### D-129-B` re-labelled the eight and **corrected the superseded
+`must-hunt` wording in place** rather than deleting it — which was the
+right call, and which its own suite pins (`test_the_d128_b_disclosure_is_
+not_gutted_by_the_relabel` asserts *"must-hunt is what they were
+called"* survives on both Method surfaces).
+
+**It corrected one sentence and left the one above it.** Read at
+`cbcb47d`, the D-128 OPS passage on
+[`method-hold48-tiles.md`](method-hold48-tiles.md) opens with the
+**MANDATORY §7 provenance inject**:
+
+> *…naming a D-128 OPS restitch of the must-hunt **seven** at tip
+> `9e65cbf`, out_root `linker_seam_ops_2026-09-05`…*
+
+and only **four lines later**, in the next paragraph, says *"**must-hunt**
+is what they were called when this run was chosen; the Phase 5 sign has
+since re-labelled them **named refuse / accept-refuse**."*
+`MethodNote.jsx` mirrors both, in the same order.
+
+**Nearby is not the same as on the claim, and the inject is the worst
+place to be approximate.** The inject exists so a reader who trusts
+nothing else can see where a number came from; it is the line the rest of
+the section defers to. A reader who reads it and stops — which is exactly
+what a provenance line invites — carries away a **retired** name with no
+signal that it is retired, while the correction sits in a paragraph they
+had no reason to reach.
+
+**This is D-062's shape, one size down.** D-062 was a *reference* treated
+as proof of its *target*; this is a *qualifier in the neighbourhood*
+treated as qualification *of the claim*. In both, the document reads as
+complete to someone who does not walk the pointer. The fix is the same
+fix: **check the thing, not the thing near it** — so the rule below is
+written per-occurrence and per-sentence, and a checker enforces it,
+because "we were careful" is what produced the hole.
+
+**The class, not the instance.** Fixing two lines by hand would leave the
+next writer free to reintroduce a third, and the same two stock sentences
+(*"Primary inventory is the seven signed must-hunt linker parents…"* and
+*"…restitch of the must-hunt seven at tip `9e65cbf`…"*) are copied across
+several live documents. Read at `cbcb47d`, **twelve** occurrences were
+bare — the two named in the GO, four in `ARCHITECTURE.md`, two in this
+log's living header, three in [`decisions.md`](decisions.md), and one in
+[`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md).
+
+#### Decision
+
+**1. The rule.** On a **live** surface, every occurrence of the token
+`must-hunt` must be exactly one of:
+
+| Form | What it looks like | Why it is honest |
+|------|--------------------|------------------|
+| **Phase-4-scoped** | the token is `Phase 4 must-hunt` / `phase-4-must-hunt` | it names **3272 / 3394**, for whom must-hunt is the **current, true** status (D-129 §6) |
+| **A negation** | a negation cue (`not` / `never` / `no longer` / `none of` / `forbidden`) governs the occurrence | the sentence **forbids** the badge; it is the copy that keeps the eight from wearing it |
+| **Supersession-carrying** | the **same sentence** says the name is superseded (*what they were called*, *since re-labelled*, *still called*, *superseded*, *no longer*) | the retired name is legible **as retired** at the point of use |
+
+Anything else is **bare**, and bare is the defect.
+
+**2. The unit is the sentence, and the sentence only.** The qualifier must
+sit in the sentence that carries the occurrence. Adjacent-paragraph
+supersession does **not** count — that permissiveness *is* the hole this
+entry closes, and a checker that accepted it would have passed `cbcb47d`.
+
+**3. Which surfaces are live, and which are records.** Enforced:
+[`method-hold48-tiles.md`](method-hold48-tiles.md),
+`ui/src/components/MethodNote.jsx`, `ui/src/components/AssemblyReview.jsx`,
+[`../ARCHITECTURE.md`](../ARCHITECTURE.md), the **living header** of this
+log (everything above `## Log (newest first)`),
+[`decisions.md`](decisions.md), and
+[`PLAN-ui-post-wave2-endstate.md`](PLAN-ui-post-wave2-endstate.md). Each
+is prose a reader meets as **current state**, and each is rewritten as
+state changes.
+
+**Deliberately NOT enforced, and not edited:**
+
+- **The dated `### D-NNN` entries in this log.** `### D-128-B` recorded
+  what was true when it shipped. Retro-editing it would make the log
+  claim it always knew — the exact provenance failure **D-016** forbids —
+  and would destroy the evidence that the re-label happened at all. The
+  supersession is carried **forward** by later entries, which is how an
+  append-at-top log is supposed to work.
+- **[`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md) and
+  [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md).** Signed
+  documents. D-128 §3 already carries an **in-place** `⚠ Phase 5
+  amendment (D-129) — these seven are no longer must-hunt` block, which is
+  the amendment mechanism this project uses on signed text. Re-cutting a
+  signed §3 heading under a hygiene GO would be re-fighting Spec, which
+  the GO forbids.
+- **[`Test_Plan.md`](Test_Plan.md).** Its rows describe what a **test**
+  asserts, including tests whose subject is the word itself.
+- **`core/hold48_linker_seam.py`, `scripts/linker_seam_restitch.py`,
+  `tests/*`.** They name the D-128 Spec §3 inventory as a code constant.
+  The four modules are sha256-pinned; this PR could not edit them and
+  does not.
+
+**4. The scrub.** Twelve bare occurrences become supersession-carrying by
+**adding** a clause. No sentence loses a number, a negation, an id, or a
+threshold. Phase-4-scoped and negated occurrences are left **untouched**.
+
+**5. The checker.** `tests/test_d129_c_must_hunt_supersession.py` —
+hermetic, stdlib, no DB, no network, no artifact read. It normalises each
+surface (JSX tags and entities out, markdown emphasis out, blockquote
+markers out), splits on structural boundaries **and then on sentences**,
+and classifies **each occurrence** under the table above. A bare
+occurrence fails with the file and the sentence.
+
+⚠ **It also re-pins that this patch is additive**: the OPS figures, the
+give-back, the never-solved refusals, the accept-refuse label, and the
+Phase 4 pair's open status are all asserted still present, so a future
+edit cannot satisfy the hygiene rule by **deleting** the sentence that
+needed qualifying. **Deleting the claim is not qualifying the claim.**
+
+**6. `METHOD_SHA256` is re-pinned, not removed.**
+`tests/test_d129_phase5_named_refuse_spec.py` pins
+[`method-hold48-tiles.md`](method-hold48-tiles.md) by digest, and its own
+failure message says a Method edit outside the labelling BUILD *"needs its
+own decision entry."* This is that entry; the pin moves to this PR's
+content and keeps guarding.
+
+#### Deep-learning justification
+
+**Neutral to the neural core, and deliberately so.** The graded deliverable
+is the ESMFold fold path and the F-004 scorer; the hold-48 stitch family is
+downstream geometry that has **never** entered the ranking and does not
+here. This patch touches no model, no inference path, no feature, and no
+threshold.
+
+What it defends is the honesty boundary **around** the network's output.
+The eight joins are places where the tiled assembly of a network-produced
+chain does **not** hold. A live surface that calls them `must-hunt` without
+qualification implies open work on those structures — a claim the project
+retired under a signed decision, and one that would flatter the pipeline in
+exactly the direction a reader is least able to check. Keeping the retired
+name legible **as retired** keeps the neural claim and the geometry claim
+from blurring into each other.
+
+#### Provenance (D-016)
+
+- **The hole:** read directly at `cbcb47d` from
+  `docs/method-hold48-tiles.md` line 337 and
+  `ui/src/components/MethodNote.jsx` line 475 — not from a summary of
+  either.
+- **The twelve:** the count is the checker's own output over the seven
+  enforced surfaces at `cbcb47d`, before any edit in this PR — a
+  breakdown (2 / 4 / 2 / 3 / 1) rather than a total, per method-note
+  item 2. The same run reports the qualified occurrences it left alone,
+  so the number that could disqualify the patch is the one on the page.
+- **`### D-129-B` and `### D-129` were confirmed present as `### `
+  headings** at `cbcb47d` before being cited here (D-062 / method-note
+  item 7).
+- **Not re-measured:** every OPS figure named on the touched surfaces is
+  Kaylee's, recorded at tip `9e65cbf`, out_root
+  `linker_seam_ops_2026-09-05`. **This PR ran no ops and re-derived
+  nothing.**
+
+#### Consequences
+
+- A live surface can no longer carry the eight's retired name unqualified;
+  the next writer who copies the stock sentence gets a red test naming the
+  file and the sentence.
+- The rule is **three-valued, not a ban.** `must-hunt` stays fully
+  available for **3272 / 3394**, where it is true, and for the negations
+  that forbid the badge. A blanket ban would have deleted the copy that
+  makes the eight honest.
+- **New maintenance cost, stated:** a **seventh** live surface that names
+  the eight will not be checked until it is added to the enforced list.
+  The list is explicit rather than glob-discovered, so that a new document
+  cannot silently opt itself in with a wrong classification — but the
+  trade is that adding a surface is a manual step. Named here so it is a
+  known limit and not a surprise (D-074 dec 3: name the check, do not
+  build a framework that becomes a second thing to drift).
+- **What this does NOT prove:** that the sentences are *well written*, or
+  that a reader will understand the supersession. It proves only that the
+  qualifier is **present in the same sentence**. That is a strictly
+  smaller claim than "the page is honest," and it is the only one the
+  checker earns.
+
+#### Assumptions refused
+
+- **That the nearby parenthetical was "good enough."** It was four lines
+  and one paragraph break away from the line it corrected, on the one line
+  a provenance-minded reader is most likely to quote in isolation.
+- **That the fix is to delete the word.** Deleting `must-hunt` from the
+  inject would have removed the trace of *what the run was chosen under* —
+  and D-129-B had already ruled, correctly, that the superseded wording is
+  **corrected in place, not deleted**. This entry extends that ruling; it
+  does not reverse it.
+- **That a page-wide substring check would do.** `"must-hunt is what they
+  were called" in text` is green on a page whose inject is bare — it was
+  green at `cbcb47d`. The trap D-127-B documented and D-128-B re-learned:
+  a claim a **sentence** must make has to be found **in that sentence**.
+- **That every occurrence in the repository should be scrubbed.** Records
+  are not surfaces. The boundary is drawn above and enforced by the
+  checker's explicit file list.
+- **That Phase 4 needed tidying while we were in here.** It did not.
+  3272 / 3394 stay **Phase 4 must-hunt**, untouched, and move only on a
+  separate explicit Matt GO naming Phase 4.
 
 ### D-129-B — Phase 5 named-refuse LABELS on Method + UI: the eight are named refuse / accept-refuse, and the 0-of-7 disclosure travels with the label
 

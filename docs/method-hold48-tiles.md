@@ -334,9 +334,11 @@ and that absence is not a solved seam.
 
 *⚠ These are ops numbers **as recorded** and handed to this write-up
 (MANDATORY Method §7 OPS honesty inject, Matt GO via Emma, 2026-09-06,
-naming a D-128 OPS restitch of the must-hunt **seven** at tip `9e65cbf`,
-out_root `linker_seam_ops_2026-09-05`). ⚠ **Not run, not queried, and not
-re-measured here.***
+naming a D-128 OPS restitch of the must-hunt **seven** — **"must-hunt" is
+what they were called when that run was chosen, and the Phase 5 sign has
+since superseded that name; see the D-129-B addendum below** — at tip
+`9e65cbf`, out_root `linker_seam_ops_2026-09-05`). ⚠ **Not run, not
+queried, and not re-measured here.***
 
 We ran the linker / seam path over the seven signed must-hunt linker
 parents (**"must-hunt" is what they were called when this run was

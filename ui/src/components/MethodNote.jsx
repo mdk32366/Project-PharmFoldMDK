@@ -472,7 +472,13 @@ export default function MethodNote() {
         <p className="note">
           ⚠ Ops numbers <strong>as recorded</strong> and handed to this
           page (Matt GO via Emma, 2026-09-06, naming a D-128 OPS restitch
-          of the must-hunt seven at tip <code>9e65cbf</code>, out_root{' '}
+          of the must-hunt seven —{' '}
+          <strong>
+            must-hunt is what they were called when that run was chosen,
+            and the Phase 5 sign has since superseded that name; see the
+            section below
+          </strong>{' '}
+          — at tip <code>9e65cbf</code>, out_root{' '}
           <code>linker_seam_ops_2026-09-05</code>).{' '}
           <strong>Not run, not queried, and not re-measured here.</strong>
         </p>

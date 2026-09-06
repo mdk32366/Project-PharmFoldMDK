@@ -311,6 +311,33 @@ describe('MethodNote — D-121 hold-48 8th-grade explainer (additive, not a gut)
     expect(t).not.toMatch(/refuse label/i)
   })
 
+  it('carries the supersession on the §7 provenance inject itself, not only in the paragraph below it', async () => {
+    // ⚠ D-129-C. D-129-B put the "must-hunt is what they were called"
+    // correction on the narrative sentence and left the MANDATORY §7
+    // provenance inject above it reading "a D-128 OPS restitch of the
+    // must-hunt seven at tip 9e65cbf" — bare. The inject is the line a
+    // reader quotes in isolation, so a qualifier one paragraph away is not
+    // qualification of the claim.
+    //
+    // ⚠ This asserts on the INJECT'S OWN sentence, not on the section: the
+    // section-wide `must-hunt is what they were called` above was green the
+    // whole time the inject was bare.
+    getCoverage.mockResolvedValue(FIXTURE)
+    const { container, getByTestId } = renderMethod()
+    await waitFor(() => expect(container.textContent).toMatch(/3 ranked-and-folded of 7/))
+    const t = getByTestId('linker-seam-method-addendum').textContent.replace(/\s+/g, ' ')
+    const inject = t.slice(t.indexOf('Ops numbers'), t.indexOf('linker_seam_ops_2026-09-05'))
+    expect(inject).toMatch(/restitch of the must-hunt seven/)
+    expect(inject).toMatch(/what they were called when that run was chosen/)
+    expect(inject).toMatch(/has since superseded that name/)
+    // Additive: the inject keeps its provenance, and the run stays not-run.
+    expect(t).toMatch(/9e65cbf/)
+    expect(t).toMatch(/linker_seam_ops_2026-09-05/)
+    expect(t).toMatch(/Not run, not queried, and not re-measured here/)
+    // And it did not become a second label surface (D-128-B's fence holds).
+    expect(t.match(/named refuse \/ accept-refuse/g)).toHaveLength(1)
+  })
+
   it('says plainly that D-126 remains the best path, keeps every gate, and never flips the served path', async () => {
     getCoverage.mockResolvedValue(FIXTURE)
     const { container, getByTestId } = renderMethod()
