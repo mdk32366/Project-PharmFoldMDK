@@ -5,9 +5,41 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-129 (Spec: Phase 5 named-refuse)
+## Active ship — D-129-B (BUILD: Phase 5 named-refuse labels)
 
-- **D-129 ships the Phase 5 named-refuse Spec** (**this PR**) —
+- **D-129-B ships the Phase 5 named-refuse LABELS on Method + UI**
+  (**this PR**) — the **§3 re-label** that `### D-129` left **owed**,
+  under the **Emma BUILD GO 2026-09-06** (*"Matt: Go"*) that Spec §8
+  gated it on. ⚠ **D-129 did not pre-authorise this id**; the GO did.
+  The **eight** parents — **2938, 2939, 3179, 3190, 3321, 3368, 3566**
+  **+ 3432** — are labelled **named refuse / `accept-refuse`** on
+  [`method-hold48-tiles.md`](method-hold48-tiles.md), on `/method`
+  (`MethodNote.jsx`) and on the review card (`AssemblyReview.jsx`),
+  from one signed fate registry
+  ([`app/phase5_named_refuse.py`](../app/phase5_named_refuse.py))
+  projected onto `assembly_review.phase5_fate`.
+  ⚠ **The label is constructed carrying the disclosure.** The
+  accept-refuse block holds the recorded D-128 OPS rollup — **PASS 0 /
+  REFUSE 7 / FAIL 0 / SKIP 0**, `repaired_of_seven` = **0**, and the
+  give-back `n_d125_pass_d128_refuse` = **5** /
+  `n_d126_pass_d128_refuse` = **6** — so **no code path hands a surface
+  the label without the numbers**. D-128-B's shipped disclosure is
+  **untouched** and still guarded by content.
+  ⚠ **Phase 4 stays cold:** **3272 / 3394** resolve to an **open**
+  `phase-4-must-hunt` fate (`is_accept_refuse` **False**) and are never
+  labelled accepted, retired, or closed.
+  ⚠ **3432** is carried, **not re-ruled**, and is **not** counted into
+  the D-128 seven. ⚠ **No accession field** exists in the registry —
+  five of the seven have none on record (D-016).
+  ⚠ **Labels only:** no `hold48_*.py` edit (four modules sha256-pinned),
+  no threshold, no refuse reason, no artifact tree, no served byte, no
+  ops run, no Fly / rent, no F-004. **10.0 Å / W = 32 / ε = 1e-3 stay;
+  served stays assembler; D-126 remains best experimental and callable;
+  both failed rescues stay disclosed. Never solved.** Draft PR; **no
+  self-merge**; **Trinity merges**. Full entry: `### D-129-B` in
+  [`README.md`](README.md).
+- **D-129 already shipped the Phase 5 named-refuse Spec** on `main`
+  (`1baf4c0` / #249) —
   [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md).
   **Ruled by Matt SIGNED Phase 5 named-refuse 2026-09-05 ~17:58 PT, via
   Emma.** ⚠ **Its authority is over LABELS, not algorithms** — no
@@ -40,12 +72,12 @@
   disclosed**.
   ⚠ **Seams are NOT solved** — accepting a refusal retires the
   **hunt**, not the **record**.
-  ⚠ **Docs only: no UI / React, no `MethodNote.jsx`, no Method file
-  edit** (§5 carries the 8th-grade excerpt as **authority only**, the
-  same Spec-PR pattern as #243 / #246), **no `hold48_*.py` edit, no
-  core algorithm change, no restitch / ops run / Fly / rent**, and it
-  does **not merge D-128-B**. Draft PR; **no self-merge**; **Trinity
-  merges**. Full entry: `### D-129` in [`README.md`](README.md).
+  ⚠ **Docs only in that PR: no UI / React, no `MethodNote.jsx`, no
+  Method file edit** (§5 carried the 8th-grade excerpt as **authority
+  only**, the same Spec-PR pattern as #243 / #246), **no `hold48_*.py`
+  edit, no core algorithm change, no restitch / ops run / Fly / rent**.
+  ⚠ **The §3 re-label it left owed is discharged by D-129-B above.**
+  Full entry: `### D-129` in [`README.md`](README.md).
 - **D-128-B already shipped UI linker / seam path honesty and the Spec
   §7 Method addendum** on `main` (`cd071d7` / #248) —
   [`app/linker_seam_path_read.py`](../app/linker_seam_path_read.py)
@@ -295,10 +327,11 @@ Spec: [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md)
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-129 Spec** | **Phase 5 named-refuse** Spec (docs only) — **labels, not algorithms**. The **eight** parents **2938 / 2939 / 3179 / 3190 / 3321 / 3368 / 3566 + 3432** are **`accept-refuse`**; a surface labels them **named refuse**, never **open must-hunt** / **solved** / **a D-128 miss**. The D-128 OPS **0 of 7** + confusion (**5** vs D-125, **6** vs D-126) stays a **mandatory, standing** disclosure — **already discharged** by D-128-B (`cd071d7` / #248) and **not to be softened or dropped**. **3272 / 3394 stay Phase 4 must-hunt** (separate Matt GO). **No linker-v2**; 10.0 Å stays; served = assembler | **Yes — this PR.** Docs only; no UI, no `MethodNote.jsx`, no Method file edit, no `hold48_*.py` edit, no ops run. |
-| **D-128 Spec** | Linker / seam honesty Spec (docs only) — §1a required per-path seam honesty metric; §1b optional linker-local rigid (±32 aa window, no pieces, no trim) | Already shipped on `main` (#246 / `2004c5a`). §3 / §9 gain the **D-129 Phase 5 cross-link** in this PR (the seven are accept-refuse, not must-hunt); the algorithm stays as shipped. |
+| **D-129 Spec** | **Phase 5 named-refuse** Spec (docs only) — **labels, not algorithms**. The **eight** parents **2938 / 2939 / 3179 / 3190 / 3321 / 3368 / 3566 + 3432** are **`accept-refuse`**; a surface labels them **named refuse**, never **open must-hunt** / **solved** / **a D-128 miss**. The D-128 OPS **0 of 7** + confusion (**5** vs D-125, **6** vs D-126) stays a **mandatory, standing** disclosure — **already discharged** by D-128-B (`cd071d7` / #248) and **not to be softened or dropped**. **3272 / 3394 stay Phase 4 must-hunt** (separate Matt GO). **No linker-v2**; 10.0 Å stays; served = assembler | Already shipped on `main` (#249 / `1baf4c0`). Docs only there; the **§3 re-label** it left owed ships at **D-129-B**. |
+| **D-129-B** | **Phase 5 named-refuse LABELS** — the §3 re-label onto the owner Method, `/method`, and the review card, from one signed fate registry (`app/phase5_named_refuse.py` → `assembly_review.phase5_fate`). The **eight** are **named refuse / `accept-refuse`**; the block is **constructed carrying** the D-128 OPS **0 of 7** and the give-back (**5** / **6**), so the label cannot ship without the numbers. **3272 / 3394** render an **open** Phase 4 fate; **3432** is carried, not re-ruled | **Yes — this PR.** Labels only; no `hold48_*.py` edit (sha256-pinned), no threshold, no artifact tree, no served byte, no ops run. Draft; **Trinity merges**. |
+| **D-128 Spec** | Linker / seam honesty Spec (docs only) — §1a required per-path seam honesty metric; §1b optional linker-local rigid (±32 aa window, no pieces, no trim) | Already shipped on `main` (#246 / `2004c5a`). §3 / §9 carry the **D-129 Phase 5 cross-link** (the seven are accept-refuse, not must-hunt); the algorithm stays as shipped. |
 | **D-128-A** | Core BUILD (honesty rows for every path tree + optional ±32 aa window weighted Kabsch → `winning_tile`; CPU, no rent) | Already shipped on `main` (#247 / `9e65cbf`). Fifth sibling `linker_seam/`; no `hold48_*.py` edit; no ops run. Did **not** discharge Spec §7 Method. Its OPS run has since been recorded: **0 of 7** (→ **D-129**). |
-| **D-128-B** | UI five-path honesty (one row per `(path, seam)`, never an average) + **mandatory Method addendum** (reads `linker_seam/`) | Already shipped on `main` (#248 / `cd071d7`). Discharged Spec §7 and disclosed the D-128 OPS result (PASS 0 / REFUSE 7 / FAIL 0; `repaired_of_seven` = 0; give-back 5 vs D-125, 6 vs D-126) **as recorded**. No ops run there. ⚠ Its Method still calls the seven **must-hunt**; **D-129** re-labels them **accept-refuse**, so a follow-on Method / UI edit is owed — **not** this docs Spec PR. |
+| **D-128-B** | UI five-path honesty (one row per `(path, seam)`, never an average) + **mandatory Method addendum** (reads `linker_seam/`) | Already shipped on `main` (#248 / `cd071d7`). Discharged Spec §7 and disclosed the D-128 OPS result (PASS 0 / REFUSE 7 / FAIL 0; `repaired_of_seven` = 0; give-back 5 vs D-125, 6 vs D-126) **as recorded**. No ops run there. ⚠ Its Method still called the seven **must-hunt**; **D-129** re-labelled them **accept-refuse**, and **D-129-B** (this PR) lands that re-label on the surfaces. Its §4 disclosure is **untouched** and still guarded by content. |
 | **D-127 Spec** | Piecewise / domain-aware Kabsch Spec (docs only) | Already shipped on `main` (#243 / `00fa76d`). |
 | **D-127-A** | Core BUILD (per-domain weighted Kabsch → `winning_tile`; no trim; CPU, no rent) | Already shipped on `main` (#244 / `e49bf34`). |
 | **D-127-B** | UI four-path honesty + **mandatory Method addendum** (reads `piecewise_kabsch/`) | Already shipped on `main` (#245 / `de9a80e`). Discharged Spec §7 and disclosed the D-127 OPS result. |

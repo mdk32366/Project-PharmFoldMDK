@@ -80,8 +80,14 @@ D125_KABSCH_SHA256 = "4c7bb45d04507e2a67ba3600b35d6130d62843ca3bc99c15d3568d5cb1
 D126_CONF_SHA256 = "d526a856ec8f1ba978a3586f3dfcf4a0ee858da12132499f2db37368efc77f18"
 D127_PIECEWISE_SHA256 = "ad48b2be577b987466274000c508a621792bc029bb9e087eec94ba7237f13e04"
 D128_LINKER_SEAM_SHA256 = "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9ed4f4eb19843"
-# The Method file this Spec PR promises not to touch (§5 is authority only).
-METHOD_SHA256 = "885ecda3c9a872494240150d2cf216363936646f2add16408dec379a93d6d79c"
+# The Method file. ⚠ RE-PINNED at D-129-B. The Spec PR (`1baf4c0` / #249)
+# shipped `885ecda3…` — §5 was authority only, and a docs Spec PR may not
+# edit the Method file. A **B** PR is precisely the PR that may, and D-129-B
+# is the §3 re-label §8 gated on a later Emma GO. Re-pinning a digest is only
+# honest because the by-content guard below
+# (`test_the_shipped_method_disclosure_survives_by_content_not_just_by_hash`)
+# is left untouched: a softened 0-of-7 still fails with a reason, not a hash.
+METHOD_SHA256 = "4cd8f832a835e91ae18f75898acd64d67a29b388c742da2dfd1d092b73054949"
 
 MODULE_PINS = {
     "core/hold48_kabsch.py": D125_KABSCH_SHA256,
@@ -314,11 +320,19 @@ def test_scar_candidate_stays_a_candidate():
 
 
 def test_d129_is_the_next_free_decision_id():
-    """D-129 must not collide, and must be the highest id in the log."""
+    """D-129 must not collide, and must be the highest id in the log.
+
+    ⚠ D-129-B (the labelling BUILD) is a **suffix** of this id, not a new
+    number: it spends no `D-` id of its own and opens no pointer. So the
+    Spec entry stays unique as `### D-129 —`, and exactly one `### D-129-B`
+    joins it. A second Spec entry, or a third D-129-* entry, still reddens.
+    """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 129 in ids
     assert max(ids) == 129, f"D-129 must be the newest id; found {ids[-3:]}"
-    assert len(re.findall(r"^### D-129\b", LOG, re.M)) == 1, "exactly one D-129 entry"
+    assert len(re.findall(r"^### D-129 —", LOG, re.M)) == 1, "exactly one D-129 Spec entry"
+    assert len(re.findall(r"^### D-129-B —", LOG, re.M)) == 1, "exactly one D-129-B entry"
+    assert len(re.findall(r"^### D-129", LOG, re.M)) == 2, "only the Spec and its BUILD"
 
 
 # ---------------------------------------------------------------- T-1173
@@ -526,12 +540,24 @@ def test_the_shipped_disclosure_is_discharged_and_now_standing():
         assert "standing" in plain, name
 
 
-def test_the_owed_relabel_is_named_and_is_not_in_this_pr():
-    """B's Method still says must-hunt; that re-label is the one open item."""
+def test_the_owed_relabel_is_named_and_is_discharged_at_d129_b():
+    """The Spec named one open item; D-129-B closed it.
+
+    ⚠ Extended at D-129-B. The Spec and the `### D-129` entry are historical
+    records and still say the re-label was owed — that stays pinned, because
+    a Spec that stopped naming what it deferred would be unreadable. What is
+    added is the other half: `ARCHITECTURE.md` must name the id that
+    discharged it, so the doc cannot sit claiming an open item that shipped.
+    """
     for text, name in ((SPEC, "Spec"), (_d129_entry(), "log"), (ARCH, "arch")):
         plain = _plain(text)
         assert "still call" in plain or "still calls the seven" in plain, name
         assert "must-hunt" in plain, name
+    arch_plain = _plain(ARCH)
+    assert "d-129-b" in arch_plain, "ARCHITECTURE must name the id that re-labelled"
+    assert "was owed" in arch_plain, "the owed item must read as closed, not open"
+    log_plain = _plain(LOG)
+    assert "### d-129-b" in log_plain, "the BUILD needs its own entry (D-062)"
     plain = _plain(SPEC)
     assert "superseded by this sign" in plain or "superseded by the phase 5 sign" in plain
     assert "later method / ui pr" in plain
@@ -814,14 +840,20 @@ def test_this_spec_pr_does_not_edit_hold48_modules():
 # ---------------------------------------------------------------- T-1179
 
 
-def test_no_method_file_edit_in_this_spec_pr():
-    """§5 is authority. The Method file is edited at B, never in a Spec PR."""
+def test_the_method_edit_landed_at_b_and_not_in_the_spec_pr():
+    """§5 is authority. The Method file is edited at B, never in a Spec PR.
+
+    ⚠ Flipped at D-129-B. The Spec PR shipped no Method edit; the §3
+    re-label did, under the later Emma GO §8 required. What this now pins
+    is that the Method file is at **B's** content and carries the D-129-B
+    section — and, still, that the Spec itself claims no Method edit.
+    """
+    method = METHOD_PATH.read_text(encoding="utf-8")
     assert _sha256(METHOD_PATH) == METHOD_SHA256, (
-        "method-hold48-tiles.md was edited — the D-127 (#243) and D-128 (#246) "
-        "Spec PRs shipped the excerpt as Spec authority and edited the Method "
-        "file only at B"
+        "method-hold48-tiles.md moved off the D-129-B pin — a Method edit "
+        "outside the labelling BUILD needs its own decision entry"
     )
-    assert "D-129" not in METHOD_PATH.read_text(encoding="utf-8")
+    assert "## Addendum D-129-B" in method, "the §3 re-label must be on the Method file"
     for text, name in ((SPEC, "Spec"), (LOG, "log")):
         flat = _flat(text).lower()
         assert "no method edit" in flat or "ships no method edit" in flat, name

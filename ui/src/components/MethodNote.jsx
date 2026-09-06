@@ -478,8 +478,11 @@ export default function MethodNote() {
         </p>
         <p>
           We ran the linker / seam path over the seven signed must-hunt
-          linker parents: <strong>PASS 0 · REFUSE 7 · FAIL 0 · SKIP
-          0</strong>.
+          linker parents (<strong>must-hunt is what they were called when
+          this run was chosen</strong>; the Phase 5 sign has since
+          re-labelled them <strong>named refuse / accept-refuse</strong>{' '}
+          — see the section below. The numbers here are unchanged):{' '}
+          <strong>PASS 0 · REFUSE 7 · FAIL 0 · SKIP 0</strong>.
         </p>
         <ul>
           <li>
@@ -592,6 +595,108 @@ export default function MethodNote() {
           <code>docs/SPEC-linker-seam-honesty.md</code> §6 / §7 — which
           makes this section <strong>mandatory</strong>, not a later
           nice-to-have.
+        </p>
+      </div>
+
+      <h3>What we now call the eight joins we could not hold (D-129-B)</h3>
+      <div data-testid="phase5-named-refuse-addendum">
+        <p className="note">
+          Spec authority: <code>docs/SPEC-phase5-named-refuse.md</code>{' '}
+          §3 / §4 / §5 / §6 / §7, ruled by{' '}
+          <strong>Matt SIGNED Phase 5 named-refuse, 2026-09-05 ~17:58 PT
+          via Emma</strong>. ⚠ <strong>Labels only</strong> — no
+          geometry, no threshold, no served byte, and nothing added to or
+          removed from the D-128 numbers above.
+        </p>
+        <p>
+          <strong>What we tried, and what happened.</strong> To join two
+          overlapping tiles we tried four different ways of{' '}
+          <strong>moving</strong> one tile onto the other. All four move
+          coordinates the network already produced; none is a new fold.{' '}
+          <strong>D-125</strong> fitted one rigid move to the whole
+          overlap. <strong>D-126</strong> fitted the same move, weighted
+          by the model&apos;s own confidence and trimmed — a small{' '}
+          <strong>weighted</strong> score can hide a big{' '}
+          <strong>whole-overlap</strong> gap, and D-126 is{' '}
+          <strong>still the best of the four</strong> because it fixed{' '}
+          <strong>2 of its 5</strong> target joins (parents 3368 and
+          3394). <strong>D-127</strong> fitted one rigid move{' '}
+          <strong>per protein domain</strong> and{' '}
+          <strong>did not pay off</strong>: <strong>0 of 3</strong>{' '}
+          fixed, giving back 5 joins D-125 had accepted and 7 that D-126
+          had, with <strong>7 of its 10</strong> failures at the
+          linkers. <strong>D-128</strong> measured every path&apos;s gap
+          at every join, then optionally tried{' '}
+          <strong>one</strong> small rigid move inside a{' '}
+          <strong>±32 aa</strong> window. <strong>The measuring worked.
+          The fixing did not: 0 of 7</strong> joins were repaired, and
+          D-128 also <strong>gave back</strong> 5 joins D-125 had
+          accepted and 6 that D-126 had.
+        </p>
+        <p>
+          <strong>Why 0 of 7 is a result and not a hidden failure.</strong>{' '}
+          Before that run we wrote down that{' '}
+          <strong>fixing zero of the seven was an allowed outcome</strong>.
+          We said in advance what would count, then reported what
+          happened. That is the whole point of writing the plan first.
+        </p>
+        <p>
+          <strong>What we decided to call these joins: &quot;accepted
+          refusal.&quot;</strong> Eight joins — parents{' '}
+          <strong>2938, 2939, 3179, 3190, 3321, 3368, 3566</strong> and{' '}
+          <strong>3432</strong> — are now marked{' '}
+          <strong>named refuse / accept-refuse</strong>. In plain words:{' '}
+          <strong>these joins do not hold, we say so, and we have stopped
+          trying to fix them.</strong> Parent <strong>3432</strong> was{' '}
+          <strong>already</strong> accept-refuse under signed triage — the
+          sign re-affirms it rather than newly ruling it, and it is{' '}
+          <strong>not</strong> one of the seven the D-128 run covered.
+        </p>
+        <p>
+          <strong>Accepted does not mean fixed, and it does not mean
+          quiet.</strong> It does not mean the seam is solved, aligned, or
+          repaired — it is not. And it does not mean we stop reporting the
+          numbers: the <strong>0 of 7</strong> and the joins D-128{' '}
+          <strong>gave back</strong> (5 vs D-125, 6 vs D-126) stay on
+          this page beside the label,
+          exactly as the section above records them. Accepting a refusal
+          retires the hunt, not the record. Never claim the seams are
+          solved. None of the eight may be shown as an open must-hunt, as
+          solved / fixed / repaired, or as a D-128 miss — the zero was
+          pre-registered and the diagnosis half landed.
+        </p>
+        <p>
+          <strong>Two joins are still open.</strong> Parents{' '}
+          <strong>3272</strong> and <strong>3394</strong> failed for a{' '}
+          <strong>different</strong> reason — the whole-overlap distance,
+          not the linker — and are <strong>still being looked at</strong>.
+          They are <strong>Phase 4 must-hunt</strong>, they are not
+          covered by the decision above, and no card, ops run, or tidy-up
+          may reclassify them without an explicit Matt GO naming Phase 4.
+        </p>
+        <p>
+          <strong>What we are not doing next.</strong> There is{' '}
+          <strong>no fifth stitching algorithm</strong>. We are not
+          loosening the <strong>10.0 Å</strong> limit that decides
+          whether a join counts as honest, not moving{' '}
+          <strong>W = 32</strong> or ε = 1e-3, and not changing which
+          structure the site serves: the <strong>served</strong>{' '}
+          structure is still the <strong>assembler</strong> (the
+          winner-tile method), as it has been all along.{' '}
+          <strong>D-126 remains the best experimental path until proven
+          otherwise</strong> and stays <strong>callable</strong>. Both
+          the <strong>D-127</strong> and the <strong>D-128</strong>{' '}
+          failed rescues <strong>stay disclosed</strong> above — neither
+          replaces nor softens the other.
+        </p>
+        <p className="note">
+          This addendum does not replace the assembler story, does not
+          make the long chain one ESMFold pass, does not fill PAE, does
+          not enter the ranking, and is not medical advice. It is{' '}
+          <strong>not a re-measurement</strong>: every number it names is
+          quoted from the run recorded at tip <code>9e65cbf</code>,
+          out_root <code>linker_seam_ops_2026-09-05</code>. Owner-facing
+          addendum: <code>docs/method-hold48-tiles.md</code> (D-129-B).
         </p>
       </div>
 
