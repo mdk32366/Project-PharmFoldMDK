@@ -328,7 +328,7 @@ def test_scar_candidate_stays_a_candidate():
 
 
 def test_d129_is_the_next_free_decision_id():
-    """D-129 must not collide, and must be the highest id in the log.
+    """D-129 must not collide, and its successor must be exactly D-130.
 
     ⚠ D-129-B (the labelling BUILD) and D-129-C (the `must-hunt`
     supersession hygiene patch) are **suffixes** of this id, not new
@@ -343,7 +343,19 @@ def test_d129_is_the_next_free_decision_id():
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 129 in ids
-    assert max(ids) == 129, f"D-129 must be the newest id; found {ids[-3:]}"
+    # ⚠ Widened at D-130 — from "129 is the highest" to "130 is the only id
+    # above it" — rather than loosened. Spending D-130 reddened the old form
+    # BY DESIGN: that is the collision guard working, not a false alarm. The
+    # successor is enumerated rather than admitted by a `>=`, so a stray
+    # `### D-131` still reddens, and D-130 must be THIS Spec's successor
+    # heading rather than any entry that happens to take the number.
+    assert [i for i in ids if i > 129] == [130], (
+        f"D-129's only successor must be D-130; found {ids[-3:]}"
+    )
+    assert re.search(r"^### D-130 — Phase 4 residual-RMSD hunt", LOG, re.M), (
+        "D-130 is the recorded successor id; it must be the residual-RMSD "
+        "Spec entry, not some other entry that took the number"
+    )
     assert len(re.findall(r"^### D-129 —", LOG, re.M)) == 1, "exactly one D-129 Spec entry"
     assert len(re.findall(r"^### D-129-B —", LOG, re.M)) == 1, "exactly one D-129-B entry"
     assert len(re.findall(r"^### D-129-C —", LOG, re.M)) == 1, "exactly one D-129-C entry"
@@ -1055,8 +1067,16 @@ def test_unreproducible_counts_are_marked_recorded_not_rederived():
 
 def test_ship_index_plan_architecture_and_test_plan_carry_d129():
     index_flat = _flat(INDEX)
-    assert "Active ship — D-129" in index_flat
-    assert re.search(r"D-129 Spec.*\*\*Yes — this PR\.\*\*", index_flat)
+    # ⚠ Re-pointed at D-130, not weakened. These two lines used to read
+    # "Active ship — D-129" and "D-129 Spec … **Yes — this PR.**", which
+    # were true while D-129 was in flight and are false now that #249, #250
+    # and #251 have landed and D-130 is the active ship. Both are replaced
+    # by the claim that is *currently* checkable — the index records the
+    # D-129 Spec as shipped, with its PR number — so the pin still fails if
+    # D-129 is dropped from the index, renumbered, or quietly demoted.
+    assert "Active ship — D-130" in index_flat
+    assert re.search(r"\*\*D-129 Spec\*\*.*Already shipped on `main` \(#249", index_flat)
+    assert re.search(r"\*\*D-130 Spec\*\*.*\*\*Yes — this PR\.\*\*", index_flat)
     assert re.search(r"D-128 Spec.*Already shipped on `main`", index_flat)
     assert re.search(r"D-128-A.*Already shipped on `main`", index_flat)
     assert re.search(r"D-128-B.*Already shipped on `main`", index_flat)

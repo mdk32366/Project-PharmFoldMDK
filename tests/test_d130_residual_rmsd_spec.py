@@ -1,0 +1,860 @@
+"""D-130 — Phase 4 residual-RMSD hunt Spec. These must be able to go red.
+
+Spec GO: the living-log heading exists, the Spec file exists, the Phase 4 pin
+is quoted verbatim, the primary inventory is **exactly** {3272, 3394}, the
+**eight** ``accept-refuse`` parents stay out of it (Phase 5 is not reopened),
+the single failure mode is **residual RMSD** and nothing else, the **10.0 Å**
+gate stays with every loosening route fenced, the **floor** is written as
+**one-directional**, §1b's only permitted refit is **D-125's unchanged** on a
+correspondence corrected by **residue identity**, ``recovered_of_two`` = 0 is
+**pre-registered**, the sixth tree name collides with none of the five, and
+this PR edits no ``hold48_*.py``, no Method file and no UI file.
+
+⚠ **Three failures these pin red.** **Inventory bleed** (T-1193): the hunt
+quietly grows a linker half, a domain half, or a third parent — the pin says
+*"residual RMSD only — never dual with linker/domain-partition"*, and a
+Spec that hunts everything has pre-registered nothing. **Gate erosion**
+(T-1194): a `0 of 2` read as a reason the threshold is too strict, which is
+the exact move four Specs in a row have forbidden. **The floor read
+backwards** (T-1195): treating ``floor ≤ 10.0 Å`` as a promise that a parent
+is recoverable, or as evidence the gate is wrong. The bound runs one way,
+its constant is not tight, and the arithmetic here proves both rather than
+asserting them.
+"""
+from __future__ import annotations
+
+import hashlib
+import itertools
+import math
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+SPEC_PATH = ROOT / "docs" / "SPEC-residual-rmsd-hunt.md"
+SPEC = SPEC_PATH.read_text(encoding="utf-8")
+D129_SPEC_PATH = ROOT / "docs" / "SPEC-phase5-named-refuse.md"
+D129_SPEC = D129_SPEC_PATH.read_text(encoding="utf-8")
+D128_SPEC = (ROOT / "docs" / "SPEC-linker-seam-honesty.md").read_text(encoding="utf-8")
+INDEX = (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8")
+PLAN = (ROOT / "docs" / "PLAN-ui-post-wave2-endstate.md").read_text(encoding="utf-8")
+TEST_PLAN = (ROOT / "docs" / "Test_Plan.md").read_text(encoding="utf-8")
+ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
+METHOD_PATH = ROOT / "docs" / "method-hold48-tiles.md"
+
+# The Phase 4 pair the GO named, with the ONLY accessions this log carries
+# for them. A sixth id here would be an invention (D-016).
+PHASE_4_PAIR = {3272: "Q6V0I7", 3394: "Q8TDW7"}
+
+# Phase 5's fates, listed so a leak into this Spec's inventory is a failure
+# rather than a judgement call. Not this Spec's work.
+ACCEPT_REFUSE_EIGHT = (2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432)
+
+GATE_ANGSTROM = "10.0"
+
+# The five sibling trees / modules already on disk. A sixth may not reuse a
+# name, and this Spec may not edit a module.
+PRIOR_TREES = ("kabsch/", "confidence_kabsch/", "piecewise_kabsch/", "linker_seam/")
+SIXTH_TREE = "residual_rmsd/"
+SIXTH_MODULE = "core/hold48_residual_rmsd.py"
+
+MODULE_PINS = {
+    "core/hold48_kabsch.py": "4c7bb45d04507e2a67ba3600b35d6130d62843ca3bc99c15d3568d5cb105ff6e",
+    "core/hold48_confidence_kabsch.py": "d526a856ec8f1ba978a3586f3dfcf4a0ee858da12132499f2db37368efc77f18",
+    "core/hold48_piecewise_kabsch.py": "ad48b2be577b987466274000c508a621792bc029bb9e087eec94ba7237f13e04",
+    "core/hold48_linker_seam.py": "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9ed4f4eb19843",
+    "core/hold48_stitch.py": "6e2fcb643e4f5549297182e42def2a54fbb48d2e33659798d7314d56486ef629",
+}
+
+# ⚠ A hash alone would let a later PR buy this green by reverting the file.
+# Content survival is checked separately (T-1198) — the hash says "unedited
+# in THIS PR", the content says "the disclosure is still there".
+METHOD_SHA256 = "607de9a448e8a511baa6f0c8393144f657c4b9030aca4c35ed544ff46ee9ba77"
+
+
+def _flat(text: str) -> str:
+    return re.sub(r"\s+", " ", text)
+
+
+def _plain(text: str) -> str:
+    """Flat, lowercased, markdown decoration stripped.
+
+    Phrase checks read the *claim*, not its formatting — otherwise moving a
+    ``**`` or wrapping a line inside a ``>`` block silently disarms a pin.
+    """
+    stripped = re.sub(r"[*`>\"\u201c\u201d]", "", _flat(text))
+    return re.sub(r"\s+", " ", stripped).lower()
+
+
+def _section(number: str, following: str | None) -> str:
+    """One numbered section of the D-130 Spec. ``following=None`` = to the end."""
+    body = SPEC.split(f"## {number}")[1]
+    return body if following is None else body.split(f"## {following}")[0]
+
+
+def _d130_entry() -> str:
+    """Just the D-130 living-log entry.
+
+    Negative checks must be scoped to this entry: the full log is 20k lines
+    of history that legitimately quotes phrases this entry forbids, so a
+    repo-wide ban would either fail on old prose or be watered down until it
+    catches nothing.
+    """
+    after = LOG.split("### D-130 —", 1)
+    assert len(after) == 2, "no ### D-130 entry to scope against"
+    return after[1].split("\n### ", 1)[0]
+
+
+def _absent(banned: tuple[str, ...], text: str, label: str) -> None:
+    """Assert none of ``banned`` appears, without a pathological pytest diff."""
+    plain = _plain(text)
+    present = [phrase for phrase in banned if phrase in plain]
+    assert present == [], f"{label} makes a forbidden claim: {present}"
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+BANNED_SOLVED_CLAIMS = (
+    "the seams are solved",
+    "seams are now solved",
+    "we solved the seam",
+    "the seam is repaired",
+    "the seams are fixed",
+    "full-length af-quality structure",
+    "the residual is solved",
+    "the rmsd class is solved",
+)
+
+
+# ---------------------------------------------------------------- T-1191
+
+
+def test_d130_heading_exists_in_the_living_log():
+    """The check is the entry, not a citation of one (D-062 / method-note 7)."""
+    assert re.search(r"^### D-130 — Phase 4 residual-RMSD hunt", LOG, re.M), (
+        "D-130 must be a real ### entry, not a citation of one"
+    )
+    # Every entry this one cites as authority must itself be a real heading.
+    for cited in (
+        r"^### D-129 — Phase 5 named-refuse",
+        r"^### D-129-B —",
+        r"^### D-129-C —",
+        r"^### D-128 — Linker / seam honesty Spec",
+        r"^### D-128-A —",
+        r"^### D-127 — Piecewise / domain-aware Kabsch Spec",
+        r"^### D-126 — Overlap-confidence Kabsch Spec",
+        r"^### D-125 — Kabsch restitch Spec",
+    ):
+        assert re.search(cited, LOG, re.M), f"cited entry missing: {cited}"
+    entry = _plain(_d130_entry())
+    assert "docs spec only" in entry
+    assert "algorithm authority" in entry
+    assert "residual rmsd" in entry
+
+
+def test_spec_file_exists_and_names_its_authority():
+    assert SPEC_PATH.is_file()
+    flat = _plain(SPEC)
+    assert "phase 4 residual-rmsd hunt" in flat
+    assert "algorithm authority" in flat
+    assert "go phase 4" in flat
+    assert "2026-09-05 ~20:39 pt" in flat
+    # It points back at the log, which governs.
+    assert "the log governs" in flat
+    assert "### D-130" in SPEC, "the Spec must tell a reader to confirm the heading"
+    assert "SPEC-residual-rmsd-hunt.md" in INDEX
+
+
+def test_the_phase_4_go_is_bound_with_provenance():
+    """The GO, its route, its date, and the vault id it rules under."""
+    for text, name in ((SPEC, "Spec"), (LOG, "log")):
+        flat = _plain(text)
+        assert "emma/matt go phase 4 rmsd" in flat, name
+        assert "go phase 4" in flat, name
+        assert "d-0043" in flat, name
+        # Vault numbering is not repo numbering — the D-114 / D-129 trap.
+        assert "external numbering" in flat, name
+        assert "d-043" in flat, name
+    # D-129 §6 required exactly this, and the Spec says the requirement is met.
+    spec_flat = _plain(SPEC)
+    assert "explicit matt go" in spec_flat
+    assert "d-129 §6" in spec_flat
+
+
+def test_the_pin_is_quoted_verbatim_and_every_clause_is_placed():
+    """§12 carries the source, so clauses can be checked against the artefact."""
+    sec = _section("12.", None)
+    for clause in (
+        "Parents: 3272, 3394",
+        "Mode: residual RMSD only — never dual with linker/domain-partition",
+        "3272: hard mismatch; not in D-128 OPS seven",
+        "3394: D-126 recover gave-back; not hunted in D-128",
+        "recover with honesty OR named refuse after failed hunt",
+        "served=assembler",
+        "no linker-v2",
+        "no F-004 / no auto-flip",
+        "no kitchen-sink Spec",
+        "never solved without measurement",
+        "not another RMSD-v2 without new Matt GO",
+    ):
+        assert clause in sec, f"pin clause missing from the verbatim block: {clause}"
+    # And each clause is mapped to the section that binds it.
+    assert "Where the pin lands in this Spec" in sec
+    assert "```text" in sec, "the source must be a verbatim block, not a paraphrase"
+
+
+def test_no_vault_prose_is_invented():
+    """The vault is not on disk here; say so rather than implying a file."""
+    for text, name in ((SPEC, "Spec"), (LOG, "log")):
+        flat = _plain(text)
+        assert "obsidian" in flat, name
+        assert "no vault file is on disk" in flat, name
+    assert "the log governs" in _plain(LOG)
+
+
+def test_d130_is_the_next_free_decision_id():
+    """D-130 must not collide, and must be the newest id in the log.
+
+    ⚠ Exact, not ``>=``: a stray ``### D-131`` reddens here, and a second
+    ``### D-130 —`` entry reddens too. D-130 has no suffix entries yet — A
+    and B are unauthorised — so the suffix set must be empty, and inventing
+    ``### D-130-A`` before its GO fails by name rather than slipping past.
+    """
+    ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
+    assert 130 in ids
+    assert max(ids) == 130, f"D-130 must be the newest id; found {ids[-3:]}"
+    assert len(re.findall(r"^### D-130 —", LOG, re.M)) == 1, "exactly one D-130 entry"
+    suffixes = sorted(set(re.findall(r"^### D-130(-[A-Z])? ", LOG, re.M)))
+    assert suffixes == [""], f"D-130-* entries are not authorised yet: {suffixes}"
+    # The pointer is the owner's; this entry spends an id, it does not repair one.
+    assert "next-free pointer" in _plain(_d130_entry())
+
+
+# ---------------------------------------------------------------- T-1192
+
+
+def test_the_primary_inventory_is_exactly_the_phase_4_pair():
+    """Two parents. A third id in the §3 inventory table is a failure."""
+    sec = _section("3.", "4.")
+    rows = re.findall(r"^\|\s*\*\*(\d{4})\*\*\s*\|", sec, re.M)
+    assert sorted(int(r) for r in rows) == sorted(PHASE_4_PAIR), (
+        f"§3's inventory table must hold exactly 3272 and 3394; found {rows}"
+    )
+    for pid, acc in PHASE_4_PAIR.items():
+        row = re.search(rf"^\|\s*\*\*{pid}\*\*\s*\|.*$", sec, re.M)
+        assert row, f"{pid} has no §3 inventory row"
+        assert acc in row.group(0), f"{pid}'s row does not carry {acc}"
+        assert "rmsd_gt_10" in row.group(0), f"{pid}'s row does not name its refuse"
+        assert str(pid) in LOG, pid
+    for text, name in ((SPEC, "Spec"), (LOG, "log"), (INDEX, "index"), (ARCH, "arch")):
+        flat = _plain(text)
+        assert "3272" in flat and "3394" in flat, name
+        assert "phase 4 must-hunt" in flat, name
+
+
+def test_the_accept_refuse_eight_are_out_and_phase_5_is_not_reopened():
+    """Phase 5's fates are not this Spec's inventory, and are not re-hunted."""
+    sec = _section("3.", "4.")
+    inventory_rows = re.findall(r"^\|\s*\*\*(\d{4})\*\*\s*\|", sec, re.M)
+    for pid in ACCEPT_REFUSE_EIGHT:
+        assert str(pid) not in inventory_rows, f"{pid} leaked into the §3 inventory"
+    assert not set(PHASE_4_PAIR) & set(ACCEPT_REFUSE_EIGHT), "the fate sets are disjoint"
+    # Named as OUT, with their fate, in the out-of-inventory table.
+    out_block = sec.split("Explicitly out of the primary inventory")[1]
+    for pid in ACCEPT_REFUSE_EIGHT:
+        assert str(pid) in out_block, f"{pid} is not named as out of this Spec"
+    assert "accept-refuse" in _plain(out_block)
+    for text, name in ((SPEC, "Spec"), (LOG, "log"), (INDEX, "index"), (ARCH, "arch")):
+        flat = _plain(text)
+        assert "phase 5 is not reopened" in flat, name
+        assert "accept-refuse" in flat, name
+    spec_flat = _plain(SPEC)
+    assert "3432 stays accept-refuse" in spec_flat or "3432 stays" in spec_flat
+    assert "not re-hunted" in spec_flat
+    assert "not a d-130 miss" in spec_flat
+
+
+def test_no_invented_accessions():
+    """Only the two on record are named, and no third is written from memory."""
+    sec = _section("3.", "4.")
+    # Every UniProt-shaped token in §3 must be one the log already carries.
+    known = set(PHASE_4_PAIR.values()) | {"Q7Z408", "Q5SZK8", "Q8IZF6"}
+    found = set(re.findall(r"\b[OPQ][0-9][A-Z0-9]{3}[0-9]\b", sec))
+    assert found <= known, f"§3 names an accession this log does not carry: {found - known}"
+    for acc in PHASE_4_PAIR.values():
+        assert acc in LOG, acc
+    assert "nobody writes an accession from memory" in _plain(SPEC)
+
+
+def test_recorded_history_is_marked_as_read_not_re_measured():
+    """D-016: the §3 histories are reads of the record, not fresh findings."""
+    sec_flat = _plain(_section("3.", "4."))
+    assert "not re-measured" in sec_flat
+    assert "checking that two records agree is not a measurement" in sec_flat
+    # The two histories the GO named, each attributable.
+    assert "hard mismatch" in sec_flat
+    assert "not in the d-128 ops seven" in sec_flat
+    assert "give-back" in sec_flat
+    assert "2 of 5" in sec_flat or "2 of the 5" in sec_flat
+    for text, name in ((SPEC, "Spec"), (LOG, "log")):
+        assert "as recorded" in _plain(text), name
+
+
+# ---------------------------------------------------------------- T-1193
+
+
+def test_the_failure_mode_is_singular_and_named():
+    """One class: residual RMSD. The pin's own words, bound."""
+    for text, name in ((SPEC, "Spec"), (LOG, "log"), (INDEX, "index"), (ARCH, "arch")):
+        flat = _plain(text)
+        assert "single failure mode" in flat or "one failure mode" in flat, name
+        assert "residual rmsd" in flat, name
+        assert "whole-overlap" in flat or "whole overlap" in flat, name
+    spec_flat = _plain(SPEC)
+    assert "rmsd_gt_10" in SPEC
+    assert "never dual with linker/domain-partition" in spec_flat
+
+
+def test_inventory_and_mode_bleed_are_written_as_forbidden():
+    """⚠ The failure this file exists to redden: the hunt grows a second half.
+
+    A Spec that hunts the linker class *and* the domain class *and* the
+    residual class has pre-registered nothing — whichever half passes gets
+    reported. The pin forbids it by name, so the fence is checked by name.
+    """
+    for text, name in ((SPEC, "Spec"), (LOG, "log")):
+        flat = _plain(text)
+        assert "not a linker" in flat, name
+        assert "not a domain-partition spec" in flat, name
+        assert "not both" in flat, name
+        assert "kitchen sink" in flat or "kitchen-sink" in flat, name
+    spec_flat = _plain(SPEC)
+    assert "no dual-mode spec" in spec_flat
+    # The frozen families, refused by their own names.
+    for banned in ("linker-v2", "piecewise-v2", "rmsd-v2"):
+        assert f"no {banned}" in spec_flat, banned
+    # And the fit units that belong to the earlier Specs.
+    hard = _plain(_section("9.", "10."))
+    for unit in (
+        "no pieces",
+        "no window",
+        "no linker-inherit",
+        "domain intervals as the fit unit",
+    ):
+        assert unit in hard, unit
+
+
+def test_a_third_parent_cannot_be_added_by_the_cli_run():
+    """Running the 27 for confusion is allowed; treating them as targets is not."""
+    sec_flat = _plain(_section("3.", "4."))
+    assert "cli may also re-run all 27" in sec_flat
+    assert "not success targets" in sec_flat
+    assert "not a phase 4 recovery" in sec_flat
+
+
+def test_spec_never_says_solved():
+    _absent(BANNED_SOLVED_CLAIMS, SPEC, "the D-130 Spec")
+    _absent(BANNED_SOLVED_CLAIMS, _d130_entry(), "the D-130 log entry")
+    for text, name in ((SPEC, "Spec"), (LOG, "log"), (INDEX, "index"), (ARCH, "arch")):
+        flat = _plain(text)
+        assert "never solved without measurement" in flat, name
+    assert "this spec never says solved" in _plain(SPEC)
+
+
+# ---------------------------------------------------------------- T-1194
+
+
+def test_the_gate_stays_at_ten_and_every_loosening_route_is_fenced():
+    """10.0 A stays. A `0 of 2` licenses none of it."""
+    assert GATE_ANGSTROM in SPEC
+    for text, name in ((SPEC, "Spec"), (LOG, "log"), (INDEX, "index"), (ARCH, "arch")):
+        flat = _plain(text)
+        assert "10.0 å stays" in flat, name
+    spec_flat = _plain(SPEC)
+    for fence in (
+        "no gate loosen",
+        "no per-parent exception",
+        "named-exclusion",
+        "no threshold spec-as-fix",
+        "not a threshold change",
+    ):
+        assert fence in spec_flat, fence
+    assert "0 of 2 does not license one" in spec_flat
+    # The gate is D-128's, unchanged — this Spec introduces no second number.
+    assert "10.0 å" in _plain(_section("2.", "3."))
+
+
+def test_trim_is_forbidden_and_the_d126_lie_surface_is_named():
+    """⚠ Trim-as-fix is only refusable if the risk is named — so it is named.
+
+    D-126's trimmed / weighted score ran small while the full overlap ran
+    28-68 A, and 3272 — one of this Spec's two parents — is on that list.
+    A Spec that forbade trim without saying why would be a preference; this
+    one cites the artefact.
+    """
+    hard = _plain(_section("9.", "10."))
+    assert "no trim" in hard
+    assert "trim-as-fix" in hard
+    assert "d-126 lie surface" in hard
+    assert "28–68 å" in hard or "28-68 å" in hard
+    assert "3272" in hard, "the lie surface must be named on a parent of THIS Spec"
+    # Subset selection is trim under any other name.
+    assert "any subset selection that improves a number is trim" in hard
+    for text, name in ((SPEC, "Spec"), (LOG, "log")):
+        assert "no trim" in _plain(text), name
+
+
+def test_the_only_permitted_fit_is_d125s_unchanged():
+    """No new geometry: unweighted, untrimmed, full overlap, whole tile."""
+    sec = _plain(_section("1b.", "2."))
+    assert "exactly d-125's fit, unchanged" in sec
+    assert "unweighted" in sec
+    assert "untrimmed" in sec
+    assert "full corrected overlap" in sec
+    assert "no weights" in sec
+    assert "no trim loop" in sec
+    assert "no pieces" in sec
+    assert "no window" in sec
+    assert "no linker-inherit" in sec
+    # And it feeds the EXISTING assembler, replacing nothing.
+    assert "winning_tile" in _section("1b.", "2.")
+    assert "no new geometry" in _plain(SPEC)
+
+
+# ---------------------------------------------------------------- T-1195
+
+
+def test_the_floor_is_written_as_one_directional():
+    """⚠ The failure: `floor <= 10 A` read as a promise, or as gate criticism."""
+    sec = _plain(_section("1a.", "1b."))
+    assert "one-directional" in sec
+    assert "proves nothing" in sec
+    assert "sufficient and never necessary" in sec
+    # The four backwards readings, each named as forbidden.
+    for wrong in (
+        "means this parent can be fixed",
+        "the 10.0 å gate is too strict here",
+        "recovery forecast",
+    ):
+        assert wrong in sec, wrong
+    assert "spec violation" in sec
+    hard = _plain(_section("9.", "10."))
+    assert "reading it backwards is a spec violation" in hard
+    for text, name in ((SPEC, "Spec"), (LOG, "log"), (ARCH, "arch"), (INDEX, "index")):
+        assert "one-directional" in _plain(text), name
+
+
+def test_the_floor_is_labelled_mathematics_and_not_a_measurement():
+    """D-016: an inequality is proved; no parent's floor is computed here."""
+    sec = _plain(_section("1a.", "1b."))
+    assert "proof" in sec
+    assert "mathematics, not a measurement" in sec
+    assert "no parent's floor is computed, asserted, or estimated" in sec
+    assert "not a measurement" in _plain(_section("10.", "11."))
+    assert "proved mathematics" in _plain(SPEC)
+    # The three-valued class, with unknown belonging to neither bucket.
+    for value in ("irreducible", "placement", "unknown"):
+        assert value in sec, value
+    assert "unknown is not irreducible" in sec or "unknown is neither" in sec
+
+
+def test_the_claimed_inequality_actually_holds_and_is_not_tight():
+    """The Spec's load-bearing claim, checked as arithmetic rather than prose.
+
+    ⚠ A Spec that asserts a bound the code cannot reproduce is exactly the
+    pointer-is-not-proof failure this project keeps re-learning. So the
+    inequality ``RMSD(R, t) >= dRMSD / 2`` is exercised here on constructed
+    point sets under real rigid transforms — including transforms far from
+    optimal, since the claim is about *every* rigid motion, not the best one.
+
+    The second half matters just as much: the bound is **not tight**, which
+    is precisely why ``irreducible`` is *sufficient and never necessary*.
+    A future edit that promoted the floor to "the answer" would have to get
+    past this.
+    """
+
+    # ⚠ The divisor exercised below is the one the Spec states. Without this,
+    # a Spec that quietly changed the constant would be asserting a bound
+    # nothing checks — the pointer-is-not-proof shape again.
+    assert "internal_drmsd_angstrom / 2" in SPEC
+    assert r"\mathrm{dRMSD}/2" in SPEC
+
+    def drmsd(p, q):
+        pairs = list(itertools.combinations(range(len(p)), 2))
+        total = sum(
+            (_dist(p[i], p[j]) - _dist(q[i], q[j])) ** 2 for i, j in pairs
+        )
+        return math.sqrt(total / len(pairs))
+
+    def rmsd(p, q):
+        return math.sqrt(sum(_dist(a, b) ** 2 for a, b in zip(p, q)) / len(p))
+
+    def rotate_z(points, radians):
+        c, s = math.cos(radians), math.sin(radians)
+        return [(c * x - s * y, s * x + c * y, z) for x, y, z in points]
+
+    def translate(points, shift):
+        return [(x + shift[0], y + shift[1], z + shift[2]) for x, y, z in points]
+
+    # A deterministic, non-degenerate reference set and a genuinely
+    # differently-shaped partner (not a rigid image of it).
+    reference = [
+        (0.0, 0.0, 0.0),
+        (3.8, 0.0, 0.0),
+        (7.1, 1.9, 0.0),
+        (9.6, 4.8, 1.2),
+        (10.4, 8.6, 3.1),
+        (8.2, 11.9, 2.4),
+    ]
+    deformed = [
+        (0.0, 0.0, 0.0),
+        (3.8, 0.0, 0.0),
+        (6.9, 2.2, 0.4),
+        (7.4, 6.0, 2.9),
+        (4.8, 9.1, 4.6),
+        (0.9, 9.9, 3.3),
+    ]
+
+    floor = drmsd(reference, deformed) / 2.0
+    assert floor > 0, "the fixture must actually disagree about internal shape"
+
+    for radians in (0.0, 0.4, 1.1, 2.7, 5.9):
+        for shift in ((0.0, 0.0, 0.0), (2.5, -1.0, 0.7), (-40.0, 12.0, 3.0)):
+            moved = translate(rotate_z(reference, radians), shift)
+            assert rmsd(moved, deformed) >= floor - 1e-9, (
+                "RMSD >= dRMSD / 2 must hold for EVERY rigid transform; it "
+                f"failed at radians={radians}, shift={shift}"
+            )
+
+    # dRMSD is rigid-invariant: moving one copy must not move the floor.
+    spun = translate(rotate_z(reference, 1.9), (11.0, -4.0, 2.0))
+    assert abs(drmsd(spun, deformed) / 2.0 - floor) < 1e-9, (
+        "the floor must be invariant under rigid motion of either copy"
+    )
+
+    # Identical shapes have a zero floor and can be fitted perfectly — so a
+    # small floor really does say nothing about the achieved RMSD.
+    far = translate(rotate_z(reference, 2.2), (95.0, -60.0, 40.0))
+    assert drmsd(far, reference) / 2.0 < 1e-9
+    assert rmsd(far, reference) > 50.0, (
+        "a zero floor coexists with an enormous achieved RMSD — the bound is "
+        "not tight, which is why `irreducible` is sufficient and never necessary"
+    )
+
+
+# ---------------------------------------------------------------- T-1196
+
+
+def test_the_correspondence_audit_is_decided_by_identity_never_by_score():
+    """The one recovery route, and the search it is not."""
+    sec = _plain(_section("1b.", "2."))
+    assert "residue identity" in sec
+    assert "never by rmsd" in sec or "never chosen by score" in sec
+    assert "unique and identity-determined" in sec or "must be unique" in sec
+    # Ambiguity refuses instead of picking a winner.
+    assert "ambiguous" in sec
+    assert "do not choose among candidate offsets by rmsd" in sec
+    assert "do not scan a window of offsets and keep the best" in sec
+    # Re-pairing is not subset selection.
+    assert "it is not a subset chosen for fit quality" in sec
+    assert "correspondence_unverifiable" in _section("1b.", "2.")
+
+
+def test_the_audit_is_gated_on_the_required_half():
+    """§1b runs only where §1a said `placement`; auditing anyway is a search."""
+    sec = _plain(_section("1b.", "2."))
+    assert "runs only where" in sec
+    assert "placement" in sec
+    assert "rmsd_irreducible" in sec
+    assert "running the audit anyway to see what happens is a search" in sec
+
+
+def test_required_half_records_every_path_and_names_how_it_is_known():
+    """§1a is per (path, seam), across all five trees, with sources."""
+    sec = _section("1a.", "1b.")
+    for path in ("kabsch", "confidence_kabsch", "piecewise_kabsch", "linker_seam", "residual_rmsd"):
+        assert path in sec, path
+    for field in (
+        "n_overlap_ca",
+        "rigid_rmsd_angstrom",
+        "internal_drmsd_angstrom",
+        "rmsd_floor_angstrom",
+        "residual_class",
+        "floor_exceeds_gate",
+    ):
+        assert field in sec, field
+    flat = _plain(sec)
+    assert "no trim, no subset, no window" in flat
+    assert "null is not 0.0" in flat
+    assert "honest absence with a stated reason" in flat
+    assert "must not rewrite, append to, or overwrite" in flat
+    assert "how it is known" in flat
+    # The deliverable is the measurement, not a pass count.
+    assert "recovers zero parents has run this spec" in flat
+
+
+# ---------------------------------------------------------------- T-1197
+
+
+def test_the_new_refuse_names_are_new_and_are_not_conflated():
+    """A reason name from another algorithm is a different measurement."""
+    sec = _section("2.", "3.")
+    for reason in (
+        "overlap_ca_lt_3",
+        "rmsd_irreducible",
+        "correspondence_unverifiable",
+        "rmsd_gt_10",
+        "singular_covariance",
+    ):
+        assert reason in sec, reason
+    flat = _plain(sec)
+    assert "new reason names, not renames" in flat
+    assert "linker_jump_gt_10" in sec, "D-127's name must be named as NOT this one"
+    assert "seam_jump_gt_10" in sec, "D-128's name must be named as NOT this one"
+    assert "must never be conflated" in flat
+    assert "carried unchanged" in flat
+    # Fail-closed, all-or-nothing, rows still written.
+    assert "fail closed" in flat
+    assert "all-or-nothing parent" in flat
+    assert "a refuse is a recorded outcome" in flat
+
+
+def test_zero_of_two_is_pre_registered_and_a_named_refuse_completes_the_spec():
+    """Both allowed outcomes, written before any run — not discovered after."""
+    for text, name in ((SPEC, "Spec"), (LOG, "log"), (INDEX, "index"), (ARCH, "arch")):
+        flat = _plain(text)
+        assert "recovered_of_two" in flat, name
+        assert "pre-registered" in flat, name
+        assert "allowed outcome" in flat, name
+    spec_flat = _plain(SPEC)
+    assert "named refuse after a failed hunt" in spec_flat
+    assert "complete outcome" in spec_flat or "complete completion" in spec_flat
+    assert "before any run" in spec_flat
+    # The escalation route the pin closes.
+    assert "accept-refuse or a dual-path disclose" in spec_flat
+    assert "not another rmsd-v2 without a new matt go" in spec_flat
+
+
+def test_the_ops_report_fields_are_required_and_name_the_embarrassing_one():
+    """§11 is a required report field set, not a CI assert."""
+    sec = _section("11.", "12.")
+    for field in (
+        "n_overlap_pairs_measured",
+        "n_irreducible",
+        "n_placement",
+        "n_residual_unknown",
+        "n_correspondence_audited",
+        "n_correspondence_corrected",
+        "n_correspondence_unverifiable",
+        "recovered_of_two",
+        "n_d125_pass_d130_refuse",
+        "n_d126_pass_d130_refuse",
+        "n_d127_pass_d130_refuse",
+        "n_d128_pass_d130_refuse",
+        "n_d126_recovered_d130_refuse",
+    ):
+        assert field in sec, field
+    flat = _plain(sec)
+    assert "not a ci assert" in flat
+    assert "do not bury a drop inside an overall accept count" in flat
+    # The count most likely to embarrass the run is named as such (D-016:
+    # prefer the query whose answer could disqualify you).
+    assert "most likely to embarrass the run" in flat
+    assert "n_placement" in sec and "not a recovery forecast" in flat
+    assert "which figures were measured by that run" in flat
+
+
+# ---------------------------------------------------------------- T-1198
+
+
+def test_the_sixth_tree_and_module_names_collide_with_nothing():
+    """A sixth path may not overwrite a fifth."""
+    sec = _section("5.", "6.")
+    assert SIXTH_TREE in sec
+    assert SIXTH_MODULE in sec
+    for tree in PRIOR_TREES:
+        assert tree in sec, f"{tree} must be named as NOT overwritten"
+    assert SIXTH_TREE.rstrip("/") not in {t.rstrip("/") for t in PRIOR_TREES}
+    flat = _plain(sec)
+    assert "sixth sibling tree" in flat
+    assert "do not overwrite" in flat
+    assert "collide with none" in flat
+    assert "may not reuse an earlier name" in flat
+    assert "residual_rmsd_decomposition_then_winning_tile" in sec
+    assert "decision" in flat and "d-130" in flat
+
+
+def test_this_spec_pr_edits_no_module_no_method_and_no_ui():
+    """Docs only. Five modules pinned; the Method file pinned; no ui/ path."""
+    for name, expected in MODULE_PINS.items():
+        path = ROOT / name
+        assert path.is_file(), name
+        assert _sha256(path) == expected, (
+            f"{name} was edited — D-130 is a docs Spec PR and may not touch "
+            "geometry, a threshold, or a served byte"
+        )
+        assert "D-130" not in path.read_text(encoding="utf-8"), (
+            f"{name} names D-130 — the Spec must not have become a code change"
+        )
+    assert _sha256(METHOD_PATH) == METHOD_SHA256, (
+        "method-hold48-tiles.md moved — the Method edit belongs to D-130-B, "
+        "not to this Spec PR (the #243 / #246 / #249 pattern)"
+    )
+    assert not re.search(r"\bui/src/", SPEC), "no UI file belongs in this Spec PR"
+    for text, name in ((SPEC, "Spec"), (LOG, "log")):
+        flat = _plain(text)
+        assert "no method file edit" in flat, name
+        # ⚠ On the raw flattened text, not `_plain`: `_plain` strips ``*`` for
+        # emphasis, which would silently eat the glob in ``hold48_*.py`` and
+        # leave this pin matching a string nobody wrote.
+        assert re.search(r"[Nn]o\s+(>\s+)?`hold48_\*\.py`\s+edit", _flat(text)), name
+        assert "methodnote.jsx" in flat, name
+
+
+def test_the_method_excerpt_is_authority_and_is_eighth_grade():
+    """§7 carries the copy a later B must ship, in plain language."""
+    sec = _section("7.", "8.")
+    flat = _plain(sec)
+    assert "8th-grade" in flat
+    assert "required method copy" in flat
+    assert "this spec pr ships no method edit" in flat
+    # The precedent it follows, named rather than assumed.
+    for pr in ("#243", "#246", "#249"):
+        assert pr in sec, pr
+    # The train, as recorded, including the two failures and the best path.
+    for path in ("d-125", "d-126", "d-127", "d-128"):
+        assert path in flat, path
+    assert "0 of 7" in flat
+    assert "0 of 3" in flat
+    assert "2 of\nits 5".replace("\n", " ") in flat or "2 of its 5" in flat
+    assert "d-126 is still the best of them" in flat
+    # Phase 5's label survives on the owner surface, with its numbers.
+    assert "accept-refuse" in flat
+    assert "we have stopped trying to fix them" in flat
+    assert "gave back" in flat
+    # Phase 4, in plain words, including the floor and its one direction.
+    assert "3272" in sec and "3394" in sec
+    assert "residual rmsd" in flat
+    assert "floor" in flat
+    assert "proves nothing at all" in flat
+    assert "never a reason to move the 10.0 å limit" in flat
+    assert "we are not adding a fifth way of moving tiles" in flat
+    assert "fixing zero of the two is an allowed outcome" in flat
+    assert "served" in flat and "assembler" in flat
+    assert "not medical advice" in flat
+    assert "f-004" in flat
+
+
+def test_out_of_scope_fences_are_written():
+    sec = _plain(_section("8.", "9."))
+    for fence in (
+        "linker spec",
+        "domain-partition spec",
+        "dual-mode spec",
+        "linker-v2 / piecewise-v2 / rmsd-v2",
+        "threshold change",
+        "served-path swap",
+        "rent / gpu / runpod / fly post",
+        "claiming seams solved",
+        "self-merging",
+        "inventing an accession",
+    ):
+        assert fence in sec, fence
+    assert "**Yes — this PR.**" in _section("8.", "9.")
+    assert "later emma / matt go" in sec
+    assert "trinity merges" in _plain(SPEC)
+    # A and B are not pre-authorised by the Spec that specs them.
+    log_flat = _plain(_d130_entry())
+    assert "does not invent d-130-a or d-130-b" in log_flat
+    assert "no self-merge" in log_flat
+
+
+# ---------------------------------------------------------------- T-1199
+
+
+def test_the_d129_crosslink_moves_the_hunt_without_moving_the_fate():
+    """§6 records that the GO arrived — and that nothing else changed."""
+    flat = _flat(D129_SPEC)
+    assert "Phase 4 amendment (D-130)" in flat
+    assert "SPEC-residual-rmsd-hunt.md" in D129_SPEC
+    assert "### D-130" in D129_SPEC
+    section_6 = D129_SPEC.split("## 6.")[1].split("## 7.")[0]
+    low = _plain(section_6)
+    assert "go phase 4" in low
+    assert "spec-governed" in low
+    # ⚠ The whole point: governed is not accepted.
+    assert "still not accept-refuse" in low
+    assert "a governed hunt is an open fate" in low
+    assert "phase 5 is not reopened" in low
+    assert "freeze is not repealed" in low
+    assert "the log governs" in low
+    # And D-129's own clauses are untouched by the cross-link.
+    assert "3432 stays accept-refuse" in low
+    assert "may not be softened, dropped, split apart" in low
+    _absent(BANNED_SOLVED_CLAIMS, D129_SPEC, "the D-129 Spec after the cross-link")
+
+
+def test_the_standing_disclosure_and_the_freeze_survive():
+    """D-129 §4 and §7 are inherited, not spent."""
+    for text, name in ((SPEC, "Spec"), (LOG, "log"), (INDEX, "index"), (ARCH, "arch")):
+        flat = _plain(text)
+        assert "0 of 7" in flat, name
+        assert "standing" in flat, name
+        assert "served" in flat and "assembler" in flat, name
+        assert "no auto-flip" in flat, name
+        assert "no f-004" in flat, name
+        assert "best experimental" in flat, name
+    spec_flat = _plain(SPEC)
+    assert "ungutted" in spec_flat or "may not be softened" in spec_flat
+    assert "both failed rescues" in spec_flat or "both the d-127 and d-128 failed rescues" in spec_flat
+    assert "callable" in spec_flat
+    # Only ONE freeze clause is satisfied, and it is named.
+    assert "phase 4 rmsd only on explicit matt go" in spec_flat
+    assert "is not repealed" in spec_flat or "not a repeal" in spec_flat
+    # D-128's Spec keeps its own Phase 5 amendment — nothing here undoes it.
+    assert "Phase 5 amendment (D-129)" in _flat(D128_SPEC)
+
+
+def test_ship_index_plan_architecture_and_test_plan_carry_d130():
+    index_flat = _flat(INDEX)
+    assert "Active ship — D-130" in index_flat
+    assert re.search(r"\*\*D-130 Spec\*\*.*\*\*Yes — this PR\.\*\*", index_flat)
+    assert re.search(r"\*\*D-130-A\*\*.*Later Emma / Matt GO", index_flat)
+    assert re.search(r"\*\*D-130-B\*\*.*Later Emma / Matt GO", index_flat)
+    assert re.search(r"\*\*D-129 Spec\*\*.*Already shipped on `main` \(#249", index_flat)
+    assert "SPEC-residual-rmsd-hunt.md" in INDEX
+    # PLAN + ARCHITECTURE point at D-130 and its Spec file.
+    assert "**D-130**" in PLAN
+    assert "SPEC-residual-rmsd-hunt.md" in PLAN
+    assert "confirm `### D-130` exists" in PLAN
+    assert "D-130" in ARCH
+    assert "SPEC-residual-rmsd-hunt.md" in ARCH
+    arch_flat = _plain(ARCH)
+    assert "residual_rmsd/" in ARCH
+    assert "one-directional" in arch_flat
+    assert "phase 4 must-hunt" in arch_flat
+    # Test plan carries the D-130 T-ids and this file.
+    for tid in ("T-1191", "T-1194", "T-1195", "T-1199"):
+        assert tid in TEST_PLAN, tid
+    assert "test_d130_residual_rmsd_spec.py" in TEST_PLAN
+
+
+def test_this_pr_runs_no_ops_and_re_measures_nothing():
+    """Every prior figure is quoted; none is re-derived (D-016)."""
+    for text, name in ((SPEC, "Spec"), (LOG, "log")):
+        flat = _plain(text)
+        assert "not an ops run" in flat, name
+        assert "nothing is re-measured here" in flat or "nothing re-measured here" in flat, name
+        assert "no re-measure" in flat or "not re-measured" in flat, name
+    entry = _plain(_d130_entry())
+    # The tip was confirmed against the remote rather than taken from the brief.
+    assert "544e821" in entry
+    assert "confirmed against the remote before citing" in entry
+    # And the provenance names the disagreement it found while confirming.
+    assert "cbcb47d" in entry
+
+
+def _dist(a, b):
+    return math.sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))

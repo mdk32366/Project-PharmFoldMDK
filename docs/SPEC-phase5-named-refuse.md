@@ -46,6 +46,15 @@
 > ⚠ **3272 / 3394 remain Phase 4 must-hunt** (`rmsd_gt_10` class) and
 > move only on a **separate Matt GO**. ⚠ **No RMSD Spec bleed** — this
 > file does not spec, scope, or schedule Phase 4 (§6).
+> ⚠⚠ **PHASE 4 (D-130): that separate Matt GO has ARRIVED**
+> (**Emma/Matt GO Phase 4 RMSD 2026-09-05 ~20:39 PT**, *"Go phase 4"*),
+> so the pair's hunt is now **Spec-governed** by
+> [`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md)
+> (**D-130**). Read §6's **Phase 4 amendment** before treating either
+> parent's fate as settled. ⚠ **They are still NOT `accept-refuse`**,
+> the §2 **eight** are **unchanged**, §4's disclosure stays
+> **standing**, and §7's freeze is **not repealed** — only its *"Phase 4
+> RMSD only on explicit Matt GO"* clause is **satisfied**.
 > ⚠ **NO linker-v2.** The stitch-algorithm family **freezes**: no
 > linker-v2, no piecewise-v3, no new decomposition, no second window
 > size, no restitch (§7).
@@ -424,6 +433,46 @@ It does not enter F-004. It is not medical advice.
   the RMSD class, does not set a target, and is **not** that GO.
 - **3432 is not Phase 4.** It refused `no_domain_pieces`, and it is
   **accept-refuse** (§2) — already signed triage, re-affirmed here.
+
+> ### ⚠ Phase 4 amendment (D-130) — the separate Matt GO arrived; the hunt is now Spec-governed
+>
+> **Emma/Matt GO Phase 4 RMSD, 2026-09-05 ~20:39 PT** — *"Go phase 4"* —
+> against **vault `D-0043` roadmap Phase 4**. That is the **explicit
+> Matt GO language** this section required, and it names Phase 4 and
+> both parents. So the boundary above was **crossed on its own terms**,
+> not eroded.
+>
+> **What changed:** **3272** `Q6V0I7` and **3394** `Q8TDW7` move from an
+> **unspecced** Phase 4 must-hunt to a **Spec-governed** one. Authority:
+> [`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md)
+> (**D-130**) and `### D-130` in [`README.md`](README.md) — where that
+> log and this file differ, **THE LOG GOVERNS**.
+>
+> **What did NOT change, and this is the whole point of the amendment:**
+>
+> - **They are still NOT `accept-refuse`.** They are still not in the
+>   §2 eight, and no surface may label them accepted, retired, or
+>   closed. A **governed** hunt is an **open** fate.
+> - **The §2 eight are unchanged.** No parent joins or leaves them, and
+>   **Phase 5 is not reopened**. **3432** stays `accept-refuse`.
+> - **§4's disclosure stays standing.** The D-128 OPS **0 of 7** and the
+>   give-back (**5** vs D-125, **6** vs D-126) may not be softened,
+>   dropped, split apart, or replaced by a D-130 surface.
+> - **§7's freeze is NOT repealed.** Only the pin's own *"Phase 4 RMSD
+>   only on explicit Matt GO"* clause is **satisfied**. **10.0 Å
+>   stays**, **served stays assembler**, **no auto-flip**, **no
+>   F-004**, **no linker-v2**, and **D-126 remains the best
+>   experimental path until proven otherwise, and callable**.
+> - **This file is still not a Phase 4 Spec.** §6 does not spec, scope,
+>   or schedule the hunt; D-130 does, in its own file under its own GO.
+>
+> ⚠ **D-130 introduces no new fit.** Its optional recovery reuses
+> **D-125's** unweighted, untrimmed Kabsch on a correspondence
+> corrected by **residue identity**; **no trim, no weights, no pieces,
+> no window, no linker-inherit.** ⚠ **`recovered_of_two` = 0 is
+> pre-registered as an allowed outcome**, and a **named refuse after a
+> failed hunt** is a complete outcome. ⚠ **Seams are still NOT
+> solved**, and nothing is called solved without measurement.
 
 ---
 

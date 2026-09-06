@@ -172,6 +172,62 @@
 > field, no route, no payload key, no served byte:** `core/hold48_*.py`,
 > `app/phase5_named_refuse.py` and `app/linker_seam_path_read.py` are
 > **sha256-pinned and unedited**. ⚠ **No ops run, no re-measurement.**
+> **`D-130` ships** the **Phase 4 residual-RMSD hunt** Spec (**this
+> PR**, off `544e821`;
+> [`docs/SPEC-residual-rmsd-hunt.md`](docs/SPEC-residual-rmsd-hunt.md);
+> **Emma/Matt GO Phase 4 RMSD 2026-09-05 ~20:39 PT**, *"Go phase 4"*,
+> against **vault `D-0043` roadmap Phase 4**) — the separate Matt GO
+> **D-129 §6** required before either Phase 4 parent could move. It is
+> **algorithm authority** for a later **D-130-A**, and this PR is
+> **docs only**. ⚠ **One failure mode: residual RMSD** (the
+> `rmsd_gt_10` **whole-overlap** class). ⚠ **Two parents only —
+> `3272` `Q6V0I7` and `3394` `Q8TDW7`**, both **Phase 4 must-hunt**
+> and both **absent from the D-128 OPS seven**. ⚠ **Not a linker Spec,
+> not a domain-partition Spec, not both, not a kitchen sink.** §1a's
+> **required** half decomposes the residual: per `(path, seam)` it
+> records the achieved **full-overlap** RMSD beside the
+> rigid-invariant internal **dRMSD** and the **proved floor**
+> `dRMSD / 2` that lower-bounds **every** rigid transform, classing the
+> row `irreducible` / `placement` / `unknown` (**null never `0.0`**,
+> **unknown neither**). ⚠ **The floor is one-directional:** above
+> **10.0 Å** it **certifies** that no rigid move can pass; below it, it
+> **proves nothing** — never a recovery forecast, never an argument to
+> loosen a gate, and reading it backwards is a **Spec violation**.
+> §1b's optional recovery is a **residue-identity correspondence
+> audit** — a correction must be **unique and identity-determined**,
+> never chosen by score — followed by **D-125's fit unchanged**
+> (unweighted, untrimmed, full overlap) → existing `winning_tile`,
+> writing a **sixth** sibling tree `residual_rmsd/{parent_id}/`
+> (`algorithm=residual_rmsd_decomposition_then_winning_tile`,
+> `decision=D-130`) from `core/hold48_residual_rmsd.py` — names that
+> collide with **none** of `kabsch/` / `confidence_kabsch/` /
+> `piecewise_kabsch/` / `linker_seam/` or their modules. ⚠ **No trim**
+> (the D-126 lie surface, which hid a 28–68 Å gap on `3272` itself),
+> **no weights, no pieces, no window, no linker-inherit, no blend.**
+> New refuse names `rmsd_irreducible` / `correspondence_unverifiable`
+> are **D-130's own** and are never conflated with D-127's
+> `linker_jump_gt_10` or D-128's `seam_jump_gt_10`; `rmsd_gt_10` /
+> `overlap_ca_lt_3` / `singular_covariance` stay D-125's, unchanged.
+> ⚠ **`recovered_of_two` = 0 is PRE-REGISTERED as an allowed
+> outcome**, and a **named refuse after a failed hunt** is a complete
+> outcome. ⚠ **Phase 5 is NOT reopened:** the **eight** stay
+> **`accept-refuse`** (3432 included) and D-129 §4's **standing**
+> D-128 OPS disclosure (**0 of 7** with the give-back **5** / **6**)
+> stays **ungutted**. ⚠ **D-129 §7's freeze is not repealed** — only
+> its own *"Phase 4 RMSD only on explicit Matt GO"* clause is
+> **satisfied**: **10.0 Å stays**, **served stays the assembler** with
+> **no auto-flip**, **no F-004**, **D-126 remains the best experimental
+> path until proven otherwise and callable**, and **both** the D-127
+> and D-128 failed rescues **stay disclosed**. ⚠ **Never solved — and
+> never solved without measurement.** ⚠ **Docs only in D-130: no
+> `hold48_*.py` edit** (all five sha256-pinned by
+> [`tests/test_d130_residual_rmsd_spec.py`](tests/test_d130_residual_rmsd_spec.py),
+> hermetic / stdlib, **T-1191**–**T-1199**), **no UI / React /
+> `MethodNote.jsx`, no Method file edit** (§7 is the 8th-grade excerpt
+> as **authority only**), **no ops run, no re-measurement, no Fly /
+> RunPod / rent, no F-004.** ⚠ **D-130-A and D-130-B are not
+> pre-authorised** — each needs its own Emma / Matt GO, and the OPS run
+> of the two is a third.
 > D-124 A+B is on
 > `main` (`57f429d` / #236). **D-121 ships** the Method hold-48
 > 8th-grade explainer (`docs/method-hold48-tiles.md` + additive `/method`
@@ -197,8 +253,14 @@
 > restitches nothing. D-128-B names that fifth path on the review card /
 > Method when artifacts exist (honest absence when missing, and
 > **unknown is not honest**) and discharges the D-128 Spec §7 Method
-> obligation. The **served** path is still the assembler, so
-> production stays the triple-path until a Matt swap GO.
+> obligation. **D-130 specs — and does not build — a sixth flagged
+> pre-stitch path** (`residual_rmsd/`), whose required half is again a
+> **measurement**: the rigid-invariant floor under every possible fit,
+> recorded beside each earlier path's achieved RMSD. It introduces no
+> new fit (§1b reuses D-125's), replaces none of the five, restitches
+> nothing, and is **docs only** at D-130. The **served** path is still
+> the assembler, so production stays the triple-path until a Matt swap
+> GO.
 
 **Project**: PharmFoldMDK — an Antibody-Drug Conjugate (ADC) target exploration platform.
 **Context**: Graded coursework for a **Deep Learning** class in an ML Master's program.

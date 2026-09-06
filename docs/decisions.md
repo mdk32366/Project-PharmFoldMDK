@@ -5,10 +5,62 @@
 > file is a thin index of which id **ships** which work, so a PR or review cannot
 > treat a PLAN id as a BUILD GO.
 
-## Active ship — D-129-C (hygiene: the retired name never stands bare)
+## Active ship — D-130 (Phase 4 residual-RMSD hunt Spec)
 
-- **D-129-C ships the `must-hunt` supersession hygiene patch on the LIVE
-  surfaces** (**this PR**, off `cbcb47d`) — **copy and one test only**,
+- **D-130 ships the Phase 4 residual-RMSD hunt Spec** (**this PR**, off
+  `544e821`) — [`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md),
+  under the **Emma/Matt GO Phase 4 RMSD 2026-09-05 ~20:39 PT**
+  (*"Go phase 4"*) that **D-129 §6 required** before either parent could
+  move. ⚠ **Algorithm authority for a later D-130-A** — this PR is
+  **docs only**.
+  ⚠ **One failure mode: residual RMSD** (the `rmsd_gt_10` whole-overlap
+  class). ⚠ **Two parents only: 3272** `Q6V0I7` **and 3394** `Q8TDW7`,
+  both **Phase 4 must-hunt** and both **absent from the D-128 OPS
+  seven**. ⚠ **NOT a linker Spec, NOT a domain-partition Spec, NOT
+  both, NOT a kitchen sink.**
+  **§1a (required)** decomposes the residual: per `(path, seam)` it
+  records the achieved full-overlap RMSD **beside** the
+  rigid-invariant internal **dRMSD** and the **proved floor**
+  `dRMSD / 2` under *every* rigid transform, classing each row
+  `irreducible` / `placement` / `unknown`.
+  ⚠ **The floor is one-directional:** above **10.0 Å** it **certifies**
+  that no rigid move can pass; below it, it **proves nothing** — never
+  a recovery forecast and never an argument to loosen a gate. Reading
+  it backwards is a **Spec violation**.
+  **§1b (optional)** is a **residue-identity correspondence audit**
+  followed by **D-125's fit unchanged** (unweighted, untrimmed, full
+  overlap) — a correction must be **unique and identity-determined**,
+  never chosen by score. ⚠ **No trim** (the **D-126 lie surface**,
+  which hid a **28–68 Å** gap on **3272** itself), **no weights, no
+  pieces, no window, no linker-inherit, no blend.**
+  ⚠ **Pre-registered, before any run: `recovered_of_two` = 0 is an
+  ALLOWED outcome**, and a **named refuse after a failed hunt** is a
+  complete outcome (the Phase 3 / Phase 5 pattern).
+  Sixth sibling tree `residual_rmsd/{parent}/` +
+  `core/hold48_residual_rmsd.py`, **colliding with no earlier tree or
+  module**.
+  ⚠ **Phase 5 is NOT reopened:** the **eight** stay **`accept-refuse`**,
+  **3432** included, and D-129 §4's **standing** D-128 OPS disclosure
+  (**0 of 7** with the give-back **5** / **6**) stays **ungutted**.
+  ⚠ **D-129 §7's freeze is not repealed** — only its own *"Phase 4 RMSD
+  only on explicit Matt GO"* clause is **satisfied**. **10.0 Å stays;
+  served stays assembler; no auto-flip; no F-004; D-126 remains best
+  experimental and callable; both failed rescues stay disclosed.**
+  ⚠ **Never solved — and never solved without measurement.**
+  ⚠ **Docs only: no `hold48_*.py` edit** (five modules sha256-pinned),
+  **no UI / React / `MethodNote.jsx`, no Method file edit** (§7 carries
+  the 8th-grade excerpt as **authority only**, the #243 / #246 / #249
+  pattern), **no ops run, no re-measurement, no Fly / RunPod / rent, no
+  F-004.** Guarded by `tests/test_d130_residual_rmsd_spec.py`
+  (hermetic, stdlib; **T-1191**–**T-1199**), which reddens if the
+  inventory bleeds into the linker or domain classes or if the gate
+  loosens. ⚠ **D-130-A and D-130-B are not pre-authorised** — each
+  needs its own Emma / Matt GO, and the **OPS** run of the two is a
+  third. Draft PR; **no self-merge**; **Trinity merges**. Full entry:
+  `### D-130` in [`README.md`](README.md).
+- **D-129-C already shipped the `must-hunt` supersession hygiene patch
+  on the LIVE surfaces** on `main` (`544e821` / #251) — **copy and one
+  test only**,
   under the **Emma GO 2026-09-06** (*"hygiene patch ONLY"*). `### D-129-B`
   corrected the superseded `must-hunt` wording **in place**, but only on
   the narrative sentence: the **MANDATORY §7 provenance inject** two
@@ -351,7 +403,8 @@
   ops confusion vs D-125 (`n_d125_pass_d126_refuse` is a **named
   finding**); **0-of-5** recovered is allowed.
 
-Full entries: [`README.md` § D-129](README.md#d-129--phase-5-named-refuse-the-eight-linker--seam-parents-are-accept-refuse-the-d-128-rescues-0-of-7-stays-disclosed-and-the-stitch-family-freezes-docs-only),
+Full entries: [`README.md` § D-130](README.md#d-130--phase-4-residual-rmsd-hunt-certify-the-floor-before-claiming-a-fit--3272--3394-only-recover-with-honesty-or-refuse-by-name-docs-only),
+[`README.md` § D-129](README.md#d-129--phase-5-named-refuse-the-eight-linker--seam-parents-are-accept-refuse-the-d-128-rescues-0-of-7-stays-disclosed-and-the-stitch-family-freezes-docs-only),
 [`README.md` § D-128-B](README.md#d-128-b--ui-linker--seam-path-honesty--the-mandatory-d-128-method-addendum),
 [`README.md` § D-128-A](README.md#d-128-a--linker--seam-honesty-core-1a-per-path-seam-honesty-rows--optional-32-aa-linker-local-rigid-then-existing-winning_tile),
 [`README.md` § D-128](README.md#d-128--linker--seam-honesty-spec-diagnose-and-refuse-dishonest-seams-optional-linker-local-rigid-docs-only),
@@ -363,7 +416,8 @@ Full entries: [`README.md` § D-129](README.md#d-129--phase-5-named-refuse-the-e
 [`README.md` § D-126](README.md#d-126--overlap-confidence-kabsch-spec-trimmed--plddt-weighted-fit-then-existing-winning_tile-docs-only),
 [`README.md` § D-125-B](README.md#d-125-b--ui-dual-path-honesty-name-assembler-and-kabsch-path-artifacts-without-colliding-them),
 [`README.md` § D-125](README.md#d-125--kabsch-restitch-spec-overlap-cα-align-then-existing-winning_tile-stitch-d-125-a-core-build).
-Spec: [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md)
+Spec: [`SPEC-residual-rmsd-hunt.md`](SPEC-residual-rmsd-hunt.md)
+(D-130) · [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md)
 (D-129) · [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)
 (D-128) · [`SPEC-piecewise-domain-kabsch.md`](SPEC-piecewise-domain-kabsch.md)
 (D-127).
@@ -372,8 +426,11 @@ Spec: [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md)
 
 | Id | Role | Ships? |
 | --- | --- | --- |
-| **D-129 Spec** | **Phase 5 named-refuse** Spec (docs only) — **labels, not algorithms**. The **eight** parents **2938 / 2939 / 3179 / 3190 / 3321 / 3368 / 3566 + 3432** are **`accept-refuse`**; a surface labels them **named refuse**, never **open must-hunt** / **solved** / **a D-128 miss**. The D-128 OPS **0 of 7** + confusion (**5** vs D-125, **6** vs D-126) stays a **mandatory, standing** disclosure — **already discharged** by D-128-B (`cd071d7` / #248) and **not to be softened or dropped**. **3272 / 3394 stay Phase 4 must-hunt** (separate Matt GO). **No linker-v2**; 10.0 Å stays; served = assembler | Already shipped on `main` (#249 / `1baf4c0`). Docs only there; the **§3 re-label** it left owed ships at **D-129-B**. |
-| **D-129-B** | **Phase 5 named-refuse LABELS** — the §3 re-label onto the owner Method, `/method`, and the review card, from one signed fate registry (`app/phase5_named_refuse.py` → `assembly_review.phase5_fate`). The **eight** are **named refuse / `accept-refuse`**; the block is **constructed carrying** the D-128 OPS **0 of 7** and the give-back (**5** / **6**), so the label cannot ship without the numbers. **3272 / 3394** render an **open** Phase 4 fate; **3432** is carried, not re-ruled | **Yes — this PR.** Labels only; no `hold48_*.py` edit (sha256-pinned), no threshold, no artifact tree, no served byte, no ops run. Draft; **Trinity merges**. |
+| **D-130 Spec** | **Phase 4 residual-RMSD hunt** Spec (docs only) — **algorithm authority**, one failure mode (`rmsd_gt_10`, whole overlap), two parents (**3272** `Q6V0I7` / **3394** `Q8TDW7`). §1a's required decomposition puts the **proved floor** `dRMSD / 2` beside every path's achieved RMSD and classes it `irreducible` / `placement` / `unknown`; the floor is **one-directional** and never an argument to loosen a gate. §1b's optional recovery is a **residue-identity** correspondence audit plus **D-125's fit unchanged** — **no trim, no weights, no pieces, no window, no linker-inherit**. **`recovered_of_two` = 0 is pre-registered as allowed.** The **eight** stay `accept-refuse` and Phase 5 is **not** reopened; 10.0 Å stays; served = assembler | **Yes — this PR.** Docs only; no `hold48_*.py` edit (five modules sha256-pinned), no UI, no Method file edit, no ops run. Draft; **Trinity merges**. |
+| **D-130-A** | Core BUILD (§1a decomposition rows for every path tree + optional §1b correspondence audit and D-125 refit → `winning_tile`; sixth sibling `residual_rmsd/`; CPU, no rent) | No. **Later Emma / Matt GO.** Not pre-authorised by the Spec. Not "done" without Method. |
+| **D-130-B** | UI path honesty + **mandatory Method addendum** (reads `residual_rmsd/`; the floor never rendered without its direction) | No. **Later Emma / Matt GO**, after A. The **OPS** run of the two is a third GO. |
+| **D-129 Spec** | **Phase 5 named-refuse** Spec (docs only) — **labels, not algorithms**. The **eight** parents **2938 / 2939 / 3179 / 3190 / 3321 / 3368 / 3566 + 3432** are **`accept-refuse`**; a surface labels them **named refuse**, never **open must-hunt** / **solved** / **a D-128 miss**. The D-128 OPS **0 of 7** + confusion (**5** vs D-125, **6** vs D-126) stays a **mandatory, standing** disclosure — **already discharged** by D-128-B (`cd071d7` / #248) and **not to be softened or dropped**. **3272 / 3394 stay Phase 4 must-hunt** (separate Matt GO). **No linker-v2**; 10.0 Å stays; served = assembler | Already shipped on `main` (#249 / `1baf4c0`). Docs only there; the **§3 re-label** it left owed shipped at **D-129-B**. ⚠ Its **§6** now carries the **D-130 Phase 4 cross-link**: the separate Matt GO **arrived**, so the pair's hunt is **Spec-governed** — still **not** `accept-refuse`, and §4 / §7 stand. |
+| **D-129-B** | **Phase 5 named-refuse LABELS** — the §3 re-label onto the owner Method, `/method`, and the review card, from one signed fate registry (`app/phase5_named_refuse.py` → `assembly_review.phase5_fate`). The **eight** are **named refuse / `accept-refuse`**; the block is **constructed carrying** the D-128 OPS **0 of 7** and the give-back (**5** / **6**), so the label cannot ship without the numbers. **3272 / 3394** render an **open** Phase 4 fate; **3432** is carried, not re-ruled | Already shipped on `main` (#250 / `cbcb47d`). Labels only; no `hold48_*.py` edit (sha256-pinned), no threshold, no artifact tree, no served byte, no ops run. Its hygiene gap on the retired name was closed at **D-129-C** (#251 / `544e821`). |
 | **D-128 Spec** | Linker / seam honesty Spec (docs only) — §1a required per-path seam honesty metric; §1b optional linker-local rigid (±32 aa window, no pieces, no trim) | Already shipped on `main` (#246 / `2004c5a`). §3 / §9 carry the **D-129 Phase 5 cross-link** (the seven are accept-refuse, not must-hunt); the algorithm stays as shipped. |
 | **D-128-A** | Core BUILD (honesty rows for every path tree + optional ±32 aa window weighted Kabsch → `winning_tile`; CPU, no rent) | Already shipped on `main` (#247 / `9e65cbf`). Fifth sibling `linker_seam/`; no `hold48_*.py` edit; no ops run. Did **not** discharge Spec §7 Method. Its OPS run has since been recorded: **0 of 7** (→ **D-129**). |
 | **D-128-B** | UI five-path honesty (one row per `(path, seam)`, never an average) + **mandatory Method addendum** (reads `linker_seam/`) | Already shipped on `main` (#248 / `cd071d7`). Discharged Spec §7 and disclosed the D-128 OPS result (PASS 0 / REFUSE 7 / FAIL 0; `repaired_of_seven` = 0; give-back 5 vs D-125, 6 vs D-126) **as recorded**. No ops run there. ⚠ Its Method still called the seven **must-hunt**; **D-129** re-labelled them **accept-refuse**, and **D-129-B** (this PR) lands that re-label on the surfaces. Its §4 disclosure is **untouched** and still guarded by content. |
