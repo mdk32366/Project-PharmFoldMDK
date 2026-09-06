@@ -6,8 +6,17 @@
 > before citing.
 >
 > **Date:** 2026-09-05 · **Status:** Spec (labelling authority).
-> **Ruled by:** **Matt SIGNED Phase 5 named-refuse 2026-09-05 ~17:58 PT,
-> via Emma.**
+> **Ruled by:** **`D-0043 Phase 5 named-refuse`, SIGNED 2026-09-05
+> ~17:58 PT** — *"Matt: Sign Phase 5 as drafted. Architect support on
+> file."* Routed via Emma, who confirmed the vault pin matches the
+> Architect brief. **The full SIGNED source is quoted verbatim in §11**,
+> and every clause below is bound to it.
+> ⚠ **Vault `D-0043` is external numbering — NOT a project decision**
+> (`D-109` ruling 1 / `F-065`), and **NOT** repo **`### D-043`** (the
+> Coverage `fold_status` three-state entry, untouched). Same collision
+> the log already disambiguates for vault `D-0036` vs `### D-036`
+> (D-114). The vault lives in **Obsidian on the owner's laptop**; no
+> vault file is on disk in this repo, and none is waited on.
 >
 > ⚠ **This Spec's authority is over LABELS, not over algorithms.** It
 > governs what a surface may **call** a set of already-measured
@@ -20,10 +29,18 @@
 > The join is **not held**, we **say** it is not held, and we **stop
 > hunting it**. It is **not** a success, **not** a repair, and **not** a
 > miss to chase with another stitch algorithm.
-> ⚠ **`accept-refuse` ≠ Method silence.** A later **D-128-B** **must
-> still disclose** the D-128 OPS rollup — **0 of 7** repaired and the
-> named confusion (**5** vs D-125, **6** vs D-126). Labelling a refusal
-> as accepted is **not** licence to bury it, soften it, or drop it (§4).
+> ⚠ **`accept-refuse` ≠ Method silence.** **D-128-B** (`cd071d7` / #248)
+> **already discloses** the D-128 OPS rollup — **0 of 7** repaired and
+> the named give-back (**5** vs D-125, **6** vs D-126) — on the Method
+> surface. This Spec makes that disclosure **STANDING**: it may never be
+> softened, dropped, or split apart, and any surface that carries the
+> §3 label must carry it too (§4). Labelling a refusal as accepted is
+> **not** licence to bury it.
+> ⚠ **One piece of B-side work is still OWED.** The Method D-128-B
+> shipped still calls the seven **`must-hunt`** — true when it was
+> written, superseded by this sign. Re-labelling them **named refuse /
+> `accept-refuse`** is a later Method / UI PR and is **not** in this
+> docs Spec PR (§5, §8).
 > ⚠ **Seams are NOT solved. This Spec never says solved.** Accepting a
 > refusal retires the **hunt**, not the **record**.
 > ⚠ **3272 / 3394 remain Phase 4 must-hunt** (`rmsd_gt_10` class) and
@@ -127,6 +144,13 @@ ruling 7).
 `accept-refuse`: the recorded honest outcome of a refusal, closed to
 further hunting.
 
+The pin's own words for the first seven are **"Linker class →
+accept-refuse (**failed hunt**)"**, and for the eighth **"Already
+accept-refuse: 3432 (`no_domain_pieces`) **unchanged**."** Both terms
+are load-bearing: **failed hunt** says the hunt was real and it lost —
+not that it was never tried, and not that it succeeded — and
+**unchanged** says 3432's status is carried, not re-decided.
+
 | parent job id | accession | Recorded refuse | Fate |
 |---|---|---|---|
 | **2938** | *not recorded in this log — do not invent* | D-128 `seam_jump_gt_10` | **accept-refuse** |
@@ -167,10 +191,16 @@ a named-exclusion, and not an algorithm that skips anyone. It is a
 
 ## 3. Label rules — what UI / Method (B) must and must not say
 
-**Required label.** For each of the eight parents of §2, a surface that
-names the parent's stitch outcome at all must label it **named refuse /
-`accept-refuse`**, and must make plain that this is a **recorded
-refusal we accepted**, not a held join.
+**Required label.** The pin's instruction is *"label linker seven +
+3432 as named refuse."* So: for each of the eight parents of §2, a
+surface that names the parent's stitch outcome at all must label it
+**named refuse / `accept-refuse`**, and must make plain that this is a
+**recorded refusal we accepted**, not a held join.
+
+⚠ **This is the one clause D-128-B has not yet discharged.** Its
+Method and review card still describe the seven as **`must-hunt`** —
+correct when written, superseded by this sign. A later Method / UI PR
+adds the label; §4's disclosure stays exactly as B shipped it.
 
 **Forbidden labels.** None of the eight may be labelled or badged:
 
@@ -208,8 +238,35 @@ call it.
 
 ## 4. Disclosure that stays mandatory (accept-refuse ≠ bury)
 
-**A later D-128-B must disclose the D-128 OPS rollup, as recorded,
-alongside the §3 labels.** This is the half that keeps §3 honest.
+**The D-128 OPS rollup must be disclosed, as recorded, alongside the §3
+labels.** This is the half that keeps §3 honest.
+
+**Status: already discharged, and now standing.** **D-128-B**
+(`cd071d7` / #248) shipped that disclosure on the Method surface
+(§7 addendum, *"What happened when we actually ran it"*) and in the
+five-path review card. It is already there, it is already correct, and
+**this Spec does not restate it as a new obligation — it makes the
+existing one permanent.** Concretely:
+
+- **Do not gut it.** No later PR may soften, shorten, re-word into
+  vagueness, or delete the **0 of 7** or the give-back. Removing it is
+  a **Spec violation** (§9), not a cleanup.
+- **Do not split it.** The zero and the give-back travel **together**.
+  D-128-B's own wording is the standard to keep: *"Reporting '0 of 7,
+  which we said was allowed' without the 5 and the 6 beside it would
+  bury a drop under a pre-registration."*
+- **Do not let the §3 label replace it.** A surface that adds
+  `accept-refuse` and drops the numbers has moved backwards. The label
+  is *why we stopped*; the rollup is *what we found*.
+- **Anything new that names these parents inherits it.** A future
+  card, page, or export that labels the eight must carry the rollup or
+  link to the surface that does.
+
+⚠ **What D-128-B did not do, and this Spec now requires:** its Method
+still calls the seven **`must-hunt`** — accurate when written, and
+superseded by the Phase 5 sign. §3's re-label is therefore **owed** to
+a later Method / UI PR. That PR **adds** the label; it does **not**
+touch the disclosure below.
 
 **Recorded D-128 OPS rollup** — as recorded by **Kaylee** at tip
 **`9e65cbf`** (D-128-A / #247), out_root
@@ -374,7 +431,27 @@ It does not enter F-004. It is not medical advice.
 
 The stitch-algorithm family **stops here**.
 
-- **No linker-v2.** No piecewise-v3. No new decomposition, no piece
+**The pin's freeze clause, bound item for item.** The SIGNED source
+(§11) says *"Freeze unchanged: served=assembler; D-126 best
+experimental; no threshold loosen; no F-004; no auto-flip."* All five
+hold, and **"unchanged" is the operative word** — none of them is a new
+ruling this Spec invents, and none may be re-opened by a 0 of 7:
+
+| Pin clause | Bound here |
+|---|---|
+| `served=assembler` | Default served structure stays the **assembler** `winning_tile`. A swap is a **Matt GO**, never a pass count. |
+| `D-126 best experimental` | **D-126 remains the best experimental path until proven otherwise** — and stays **callable**, per the pin's *"D-126 remains best experimental callable."* |
+| `no threshold loosen` | **10.0 Å stays**; **W = 32** and **ε = 1e-3** stay. No per-parent exception, no named-exclusion. |
+| `no F-004` | The 27 stay **outside** `/scorer` (D-109 ruling 7). No ranking ingest. |
+| `no auto-flip` | No surface flips the served path on any count, pass rate, or label change. |
+
+And the pin's **Stop** clause: *"no linker-v2 without new Matt GO; no
+gate loosen; Phase 4 RMSD only on explicit Matt GO."*
+
+- **No linker-v2** — and the pin's qualifier is exact: **not without a
+  new Matt GO**. A fifth algorithm is not forbidden forever; it is
+  forbidden *by default*, and only an explicit new GO reopens it.
+  No piecewise-v3. No new decomposition, no piece
   list, no domain intervals as a fit unit, no linker-inherit, no second
   window size, no trim loop, no soft invent blend, no joint placement.
   A later Spec that reintroduces any of those under a new decision id is
@@ -403,7 +480,8 @@ The stitch-algorithm family **stops here**.
 | Id | What | This PR? | Gate |
 |---|---|---|---|
 | **D-129 Spec** | This file + `### D-129` + ship index + `ARCHITECTURE.md` one-liner + PLAN pointer + `Test_Plan.md` T-ids + hermetic docs pin tests + the D-128 Spec §3 / §9 cross-link. Includes the §5 Method excerpt as **authority**. | **Yes — this PR.** | Trinity reviewed. **Docs only.** |
-| **D-128-B** | UI path honesty + the **mandatory** Method addendum, now also carrying the §3 labels and the §4 disclosure. Reads A's `linker_seam/` tree. No persist rewrite. Default served = assembler. | No. Later Emma GO. | After this Spec is on `main`. **Mandatory** before calling D-128 “done.” |
+| **D-128-B** | UI five-path honesty + the **mandatory** Method addendum, including the **§4 disclosure** (0 of 7 + the 5 / 6 give-back). Reads A's `linker_seam/` tree. Default served = assembler. | **No — already shipped** on `main` (`cd071d7` / #248). | Discharged Spec §7. §4 makes its disclosure **standing**: do not gut it. |
+| **The §3 re-label** (later Method / UI PR) | Re-label the eight from **must-hunt** to **named refuse / `accept-refuse`** on `method-hold48-tiles.md`, `MethodNote.jsx`, and the review card, per §3 and the §5 copy. **Additive** — it does **not** touch D-128-B's §4 disclosure. | No. Later Emma GO. | After this Spec is on `main`. The one B-side item D-129 leaves **owed**. |
 | **Phase 4 (RMSD class)** | 3272 / 3394 | No. **Separate Matt GO** (§6). | Not this family of PRs. |
 | **linker-v2 / any fifth algorithm** | — | **No. Frozen** (§7). | Would need its own Matt GO. |
 
@@ -431,7 +509,14 @@ D-128-B**, inventing a D-129-B, claiming seams solved, or self-merging.
   fifth algorithm is coming.
 - **Never “a D-128 miss.”** **0-of-7 was pre-registered** as an allowed
   outcome before the run. The diagnosis half landed.
-- **No linker-v2** and no fifth stitch algorithm (§7).
+- **No linker-v2 without a new Matt GO**, and no fifth stitch algorithm
+  by default (§7 — the pin's `Stop` clause).
+- **No gate loosen** (pin `Stop`). **Phase 4 RMSD only on explicit Matt
+  GO** (pin `Stop`).
+- **No F-004** and **no auto-flip** (pin `Freeze unchanged`) — carried
+  as unchanged standing rules, not re-decided here.
+- **The scar candidate `S-20260905` stays a candidate.** This Spec does
+  not create a scar registry, assign a repo id, or promote it.
 - **No threshold Spec-as-fix.** **10.0 Å stays**, **W = 32** stays,
   **ε = 1e-3** stays. No loosen, no per-parent exception, no
   named-exclusion, no trim loop, no soft invent blend.
@@ -501,3 +586,61 @@ D-128-B**, inventing a D-129-B, claiming seams solved, or self-merging.
 - **Not a merge of D-128-B** and not an invention of D-129-B.
 - **Not a CI assert against live ops** — §4's rollup is a required
   **disclosure** field set, quoted as recorded, not a gate test.
+
+---
+
+## 11. The SIGNED source, verbatim
+
+Reproduced **verbatim** so every clause above can be checked against the
+artefact rather than against a paraphrase of it (D-016). Supplied by
+Emma, who confirmed the vault pin matches the Architect brief.
+⚠ **Vault `D-0043` is external numbering, not a project decision**, and
+**not** repo `### D-043`. ⚠ **Not re-measured here.**
+
+**Cite as:** `D-0043 Phase 5 named-refuse, SIGNED 2026-09-05 ~17:58 PT`.
+
+```text
+# Phase 5 named-refuse — SIGNED (D-0043)
+Status: SIGNED 2026-09-05 ~17:58 PT — Matt: Sign Phase 5 as drafted. Architect support on file.
+Forced by: D-128 OPS tip 9e65cbf — PASS 0 / REFUSE 7 / recovered 0 on linker must-hunt seven. Architect: diagnosis yes, repair no.
+Freeze unchanged: served=assembler; D-126 best experimental; no threshold loosen; no F-004; no auto-flip.
+
+Linker class → accept-refuse (failed hunt): 2938 seam_jump_gt_10; 2939 rmsd_gt_10; 3179/3190/3321/3368/3566 seam_jump_gt_10.
+Already accept-refuse: 3432 (no_domain_pieces) unchanged.
+Still must-hunt Phase 4 later: 3272, 3394 (RMSD).
+
+Method/UI: Disclose D-128 OPS 0/7 + confusion; label linker seven + 3432 as named refuse; never solved; D-126 remains best experimental callable.
+Stop: no linker-v2 without new Matt GO; no gate loosen; Phase 4 RMSD only on explicit Matt GO.
+
+Scar candidate S-20260905: linker/seam honesty diagnosed; did not repair; seven → named refuse.
+```
+
+**Where the pin lands in this Spec:**
+
+| Pin clause | Section |
+|---|---|
+| `Linker class → accept-refuse (failed hunt)` + per-parent reasons | §2 (the eight), §4 (the rollup) |
+| `Already accept-refuse: 3432 … unchanged` | §2 (re-affirmed, not newly ruled) |
+| `Still must-hunt Phase 4 later: 3272, 3394 (RMSD)` | §6 |
+| `Disclose D-128 OPS 0/7 + confusion` | §4 (standing; already discharged by D-128-B) |
+| `label linker seven + 3432 as named refuse` | §3 (owed re-label) |
+| `never solved` | §1, §3, §9, §10 |
+| `D-126 remains best experimental callable` | §7 |
+| `Freeze unchanged` (five clauses) | §7 |
+| `Stop` (three clauses) | §6, §7, §9 |
+
+**The pin's own framing of the result — *"Architect: diagnosis yes,
+repair no"*** — is the sentence this whole Spec exists to keep legible.
+D-128's required half (§1a honesty measurement) **worked**. Its optional
+half (the ±32 aa repair) **recovered nothing**. `accept-refuse` names
+the second without erasing the first, which is why §4's disclosure is
+not optional decoration.
+
+**Scar candidate `S-20260905`** — recorded **verbatim as a candidate**,
+exactly as the pin words it: *"linker/seam honesty diagnosed; did not
+repair; seven → named refuse."*
+⚠ **This repo has no `S-NNNNNNNN` scar registry**, and this Spec does
+**not** create one, promote the candidate to a ruled scar, or assign it
+a repo id. It is carried so the candidate is not lost, and so a later
+scar ruling has the wording it came from. Naming a candidate is not
+ruling it.

@@ -81,7 +81,7 @@ D126_CONF_SHA256 = "d526a856ec8f1ba978a3586f3dfcf4a0ee858da12132499f2db37368efc7
 D127_PIECEWISE_SHA256 = "ad48b2be577b987466274000c508a621792bc029bb9e087eec94ba7237f13e04"
 D128_LINKER_SEAM_SHA256 = "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9ed4f4eb19843"
 # The Method file this Spec PR promises not to touch (§5 is authority only).
-METHOD_SHA256 = "026011c34b91240497633b27d315f9d20e1c66cfedc268c4ee4c3d2707f0fb4f"
+METHOD_SHA256 = "885ecda3c9a872494240150d2cf216363936646f2add16408dec379a93d6d79c"
 
 MODULE_PINS = {
     "core/hold48_kabsch.py": D125_KABSCH_SHA256,
@@ -96,17 +96,20 @@ def _flat(text: str) -> str:
 
 
 def _plain(text: str) -> str:
-    """Flat, lowercased, with markdown emphasis and smart quotes stripped.
+    """Flat, lowercased, with markdown decoration stripped.
 
-    Phrase checks read the *claim*, not its bolding — otherwise moving a ``**``
-    inside a sentence silently disarms a pin.
+    Phrase checks read the *claim*, not its formatting — otherwise moving a
+    ``**``, or a line wrapping inside a ``>`` blockquote, silently disarms a
+    pin. Emphasis, backticks, quotes and blockquote markers all go.
     """
-    return re.sub(r"[*`\u201c\u201d]", "", _flat(text)).lower()
+    stripped = re.sub(r"[*`>\"\u201c\u201d]", "", _flat(text))
+    return re.sub(r"\s+", " ", stripped).lower()
 
 
-def _section(number: str, following: str) -> str:
-    """One numbered section of the D-129 Spec."""
-    return SPEC.split(f"## {number}")[1].split(f"## {following}")[0]
+def _section(number: str, following: str | None) -> str:
+    """One numbered section of the D-129 Spec. ``following=None`` = to the end."""
+    body = SPEC.split(f"## {number}")[1]
+    return body if following is None else body.split(f"## {following}")[0]
 
 
 def _d129_entry() -> str:
@@ -150,7 +153,7 @@ BANNED_SOLVED_CLAIMS = (
 )
 
 
-# ---------------------------------------------------------------- T-1161
+# ---------------------------------------------------------------- T-1172
 
 
 def test_d129_heading_exists_in_the_living_log():
@@ -192,11 +195,15 @@ def test_spec_file_exists_and_names_its_authority():
 def test_matt_signed_phase_5_is_bound_with_provenance():
     """The sign is the authority; it is named, dated, and routed."""
     for text, name in ((SPEC, "Spec"), (LOG, "log")):
-        flat = _flat(text)
-        assert "Matt SIGNED Phase 5 named-refuse" in flat, name
-        assert "2026-09-05" in flat, name
-        assert "17:58 PT" in flat, name
-        assert "Emma" in flat, name
+        plain = _plain(text)
+        assert (
+            "d-0043 phase 5 named-refuse, signed 2026-09-05 ~17:58 pt" in plain
+            or "matt signed phase 5 named-refuse" in plain
+        ), name
+        assert "2026-09-05" in plain, name
+        assert "17:58 pt" in plain, name
+        assert "emma" in plain, name
+        assert "sign phase 5 as drafted" in plain, name
     # The D-0043 roadmap phase this sign belongs to.
     assert "D-0043" in LOG
     assert "D-0043" in SPEC
@@ -206,14 +213,104 @@ def test_matt_signed_phase_5_is_bound_with_provenance():
 
 
 def test_no_vault_prose_is_invented():
-    """The fates are recorded here; no vault file is on disk at this tip."""
-    log_flat = _flat(LOG).lower()
-    assert "no vault file is on disk" in log_flat
-    assert "do not invent vault prose" in log_flat
-    # And no vault document is quoted as if it existed.
-    assert not list(ROOT.glob("**/*vault*")), (
-        "a vault file appeared on disk — the log's stated absence is now false"
-    )
+    """Vault prose enters only as the verbatim SIGNED source Emma supplied."""
+    entry = _plain(_d129_entry())
+    assert "no vault file is on disk" in entry
+    assert "obsidian" in entry, "the log must say where the vault actually lives"
+    assert "emma confirmed the vault pin matches" in entry
+    # The source is quoted, not paraphrased: a fenced verbatim block exists.
+    assert "## 11. The SIGNED source, verbatim" in SPEC
+    assert "# Phase 5 named-refuse — SIGNED (D-0043)" in SPEC
+    # Invention stays forbidden even though quoting is now possible.
+    assert "invented" in entry
+    assert "paraphrased as if quoted" in entry or "reconstructed" in entry
+    # No vault file has appeared in this repo (scoped: docs/ and repo root).
+    strays = [
+        q
+        for q in list((ROOT / "docs").glob("*vault*")) + list(ROOT.glob("*vault*"))
+    ]
+    assert strays == [], f"a vault file appeared on disk: {strays}"
+
+
+def test_signed_source_is_quoted_verbatim_and_every_clause_is_bound():
+    """§11 reproduces the pin, and each clause is mapped to a section."""
+    sec = _section("11.", None)
+    # The pin's own lines, verbatim — not reworded.
+    for line in (
+        "Status: SIGNED 2026-09-05 ~17:58 PT — Matt: Sign Phase 5 as drafted.",
+        "Forced by: D-128 OPS tip 9e65cbf — PASS 0 / REFUSE 7 / recovered 0",
+        "Architect: diagnosis yes, repair no.",
+        "Freeze unchanged: served=assembler; D-126 best experimental; "
+        "no threshold loosen; no F-004; no auto-flip.",
+        "Linker class → accept-refuse (failed hunt): 2938 seam_jump_gt_10; "
+        "2939 rmsd_gt_10; 3179/3190/3321/3368/3566 seam_jump_gt_10.",
+        "Already accept-refuse: 3432 (no_domain_pieces) unchanged.",
+        "Still must-hunt Phase 4 later: 3272, 3394 (RMSD).",
+        "label linker seven + 3432 as named refuse",
+        "D-126 remains best experimental callable.",
+        "Stop: no linker-v2 without new Matt GO; no gate loosen; "
+        "Phase 4 RMSD only on explicit Matt GO.",
+        "Scar candidate S-20260905: linker/seam honesty diagnosed; "
+        "did not repair; seven → named refuse.",
+    ):
+        assert line in sec, f"pin line not quoted verbatim: {line[:60]}"
+    # Exact citation form, and the external-numbering trap.
+    assert "D-0043 Phase 5 named-refuse, SIGNED 2026-09-05 ~17:58 PT" in SPEC
+    plain = _plain(SPEC)
+    assert "external numbering" in plain
+    assert "not repo ### d-043" in plain or "not** repo **### d-043" in _flat(SPEC).lower()
+    assert "### d-043" in plain, "the colliding repo id must be named to be avoided"
+    # And each clause is mapped to a section, so "bound exactly" is checkable.
+    assert "Where the pin lands in this Spec" in SPEC
+    entry = _plain(_d129_entry())
+    assert "d-0043" in entry
+    assert "### d-043" in entry
+
+
+def test_the_five_item_freeze_is_bound_item_for_item():
+    """The pin's freeze clause has five items, including no F-004 / no auto-flip."""
+    sec = _plain(_section("7.", "8."))
+    assert "freeze unchanged" in sec
+    for clause in (
+        "served=assembler",
+        "d-126 best experimental",
+        "no threshold loosen",
+        "no f-004",
+        "no auto-flip",
+    ):
+        assert clause in sec, clause
+    # "unchanged" is the operative word: these are carried, not re-decided.
+    assert "unchanged is the operative word" in sec
+    assert "callable" in sec, "the pin says D-126 stays callable, not merely named"
+    # The Stop clause, with its qualifier intact.
+    assert "not without a new matt go" in sec
+    assert "no linker-v2 without new matt go" in sec, "the pin's Stop line, quoted"
+    assert "forbidden by default" in sec
+    assert "no linker-v2 without a new matt go" in _plain(_section("9.", "10."))
+    hard = _plain(_section("9.", "10."))
+    assert "no f-004" in hard and "no auto-flip" in hard
+    assert "phase 4 rmsd only on explicit matt go" in hard
+
+
+def test_scar_candidate_stays_a_candidate():
+    """No scar registry is created and no repo id is assigned (cf. the D- pointer)."""
+    assert "S-20260905" in SPEC
+    plain = _plain(SPEC)
+    assert "scar candidate" in plain
+    assert "no s-nnnnnnnn scar registry" in plain
+    assert "naming a candidate is not ruling it" in plain
+    entry = _plain(_d129_entry())
+    assert "s-20260905" in entry
+    assert "naming a candidate is not ruling it" in entry
+    # The repo genuinely has no scar registry; this PR must not have added one.
+    assert not list((ROOT / "docs").glob("*scar*")), "a scar registry appeared"
+    others = [
+        f for f in (ROOT / "docs").glob("*.md")
+        if f.name != "SPEC-phase5-named-refuse.md"
+        and "S-20260905" in f.read_text(encoding="utf-8")
+        and f.name != "README.md"
+    ]
+    assert others == [], f"the scar candidate leaked into {others}"
 
 
 def test_d129_is_the_next_free_decision_id():
@@ -224,7 +321,7 @@ def test_d129_is_the_next_free_decision_id():
     assert len(re.findall(r"^### D-129\b", LOG, re.M)) == 1, "exactly one D-129 entry"
 
 
-# ---------------------------------------------------------------- T-1162
+# ---------------------------------------------------------------- T-1173
 
 
 def test_the_eight_parents_are_accept_refuse():
@@ -308,7 +405,7 @@ def test_no_invented_accessions_for_unrecorded_parents():
         assert str(pid) in SPEC, pid
 
 
-# ---------------------------------------------------------------- T-1163
+# ---------------------------------------------------------------- T-1174
 
 
 def test_forbidden_labels_are_named_as_forbidden():
@@ -378,14 +475,14 @@ def test_spec_never_says_seams_are_solved():
         assert parked in plain, parked
 
 
-# ---------------------------------------------------------------- T-1164
+# ---------------------------------------------------------------- T-1175
 
 
 def test_b_must_still_disclose_the_d128_ops_rollup():
     """accept-refuse != Method silence. The label and disclosure ship together."""
     sec = _section("4.", "5.")
     sec_flat = _flat(sec).lower()
-    assert "must disclose" in sec_flat
+    assert "must disclose" in sec_flat or "must be disclosed" in sec_flat
     assert "mandatory" in sec_flat
     # The headline outcome of the seven.
     assert "PASS 0 / REFUSE 7 / FAIL 0 / SKIP 0" in _flat(sec)
@@ -400,12 +497,52 @@ def test_b_must_still_disclose_the_d128_ops_rollup():
     # Honesty counts and the gate.
     assert "n_dishonest_linker_seam" in sec
     assert GATE_ANGSTROM in sec
-    # The obligation is bound to a named later PR, not left ownerless.
+    # The obligation is bound to a named PR, not left ownerless.
     assert "d-128-b" in sec_flat
     for text, name in ((SPEC, "Spec"), (LOG, "log"), (INDEX, "index"), (ARCH, "arch")):
         flat = _flat(text).lower()
         assert "method silence" in flat, name
         assert "0 of 7" in flat, name
+
+
+def test_the_shipped_disclosure_is_discharged_and_now_standing():
+    """D-128-B already shipped it; this Spec makes it permanent, not re-owed."""
+    sec = _plain(_section("4.", "5."))
+    assert "already discharged, and now standing" in sec
+    assert "cd071d7" in _section("4.", "5.")
+    assert "#248" in _section("4.", "5.")
+    # The four ways it could be quietly lost are each named.
+    for guard in ("do not gut it", "do not split it", "do not let the §3 label replace it"):
+        assert guard in sec, guard
+    assert "inherits it" in sec
+    assert "spec violation" in sec
+    # B's own sentence is kept as the standard, so the bar is not re-invented.
+    assert "bury a drop under a pre-registration" in sec
+    # And the Spec is explicit that it is not restating a new obligation.
+    assert "does not restate it as a new obligation" in sec
+    for text, name in ((SPEC, "Spec"), (_d129_entry(), "log"), (INDEX, "index")):
+        plain = _plain(text)
+        assert "cd071d7" in plain, name
+        assert "standing" in plain, name
+
+
+def test_the_owed_relabel_is_named_and_is_not_in_this_pr():
+    """B's Method still says must-hunt; that re-label is the one open item."""
+    for text, name in ((SPEC, "Spec"), (_d129_entry(), "log"), (ARCH, "arch")):
+        plain = _plain(text)
+        assert "still call" in plain or "still calls the seven" in plain, name
+        assert "must-hunt" in plain, name
+    plain = _plain(SPEC)
+    assert "superseded by this sign" in plain or "superseded by the phase 5 sign" in plain
+    assert "later method / ui pr" in plain
+    assert "not in this docs spec pr" in plain or "not** in this docs spec pr" in plain
+    # It adds a label; it does not remove a number.
+    entry = _plain(_d129_entry())
+    assert "adds a label; it does not remove a number" in entry
+    # §8 carries it as its own row, owned and gated.
+    split = _plain(_section("8.", "9."))
+    assert "the §3 re-label" in split
+    assert "already shipped" in split and "cd071d7" in _section("8.", "9.")
 
 
 def test_confusion_keys_are_exact_and_valued():
@@ -475,7 +612,7 @@ def test_both_failed_rescues_stay_disclosed():
     assert "may not soften either" in spec_flat
 
 
-# ---------------------------------------------------------------- T-1165
+# ---------------------------------------------------------------- T-1176
 
 
 def test_phase_4_pair_stays_must_hunt():
@@ -535,7 +672,7 @@ def test_no_rmsd_spec_bleed():
     assert "not a phase 4 / rmsd spec" in spec_flat
 
 
-# ---------------------------------------------------------------- T-1166
+# ---------------------------------------------------------------- T-1177
 
 
 def test_no_linker_v2_and_the_family_freezes():
@@ -598,7 +735,7 @@ def test_served_stays_assembler_and_d126_stays_best_experimental():
     assert "a measured result, not a newer idea" in spec_flat
 
 
-# ---------------------------------------------------------------- T-1167
+# ---------------------------------------------------------------- T-1178
 
 
 def test_d128_spec_carries_the_phase5_crosslink_in_section_3_and_9():
@@ -674,7 +811,7 @@ def test_this_spec_pr_does_not_edit_hold48_modules():
         assert "D-129" not in text, name
 
 
-# ---------------------------------------------------------------- T-1168
+# ---------------------------------------------------------------- T-1179
 
 
 def test_no_method_file_edit_in_this_spec_pr():
@@ -690,6 +827,38 @@ def test_no_method_file_edit_in_this_spec_pr():
         assert "no method edit" in flat or "ships no method edit" in flat, name
         assert "method-hold48-tiles.md" in text, name
     assert "authority only" in _flat(SPEC).lower()
+
+
+def test_the_shipped_method_disclosure_survives_by_content_not_just_by_hash():
+    """Do not gut what D-128-B shipped.
+
+    The sha256 pin below already fails on any edit, but a hash mismatch says
+    only "changed". This says *what* must still be there, so a future PR that
+    softens the OPS disclosure fails with the reason rather than a digest.
+    """
+    method = METHOD_PATH.read_text(encoding="utf-8")
+    plain = _plain(method)
+    # The zero, and the give-back that must travel with it.
+    assert "pass 0 · refuse 7 · fail 0 · skip 0" in plain or "pass 0" in plain
+    assert "repaired_of_seven" in method
+    assert "n_d125_pass_d128_refuse" in method
+    assert "n_d126_pass_d128_refuse" in method
+    assert "5" in method and "6" in method
+    # B's own statement of why they are inseparable.
+    assert "bury a drop under a pre-registration" in plain
+    # The standing facts D-129 also depends on.
+    assert "pre-registered as an" in plain
+    assert "d-126 remains the best experimental path" in plain
+    assert "no linker-v2" in plain
+    assert "3432 stays accept-refuse" in plain
+    assert "accept-refuse" in plain
+    # And it still refuses the fix claim. Checked as the presence of the
+    # negation rather than the absence of the words: this file says "never
+    # claim the seams are solved", so a substring ban would fire on the very
+    # sentence that forbids the claim.
+    assert "never claim the seams are solved" in plain
+    assert "seams are not scientifically solved" in plain
+    assert "not a seam that" in plain or "recorded is not a seam that was solved" in plain
 
 
 def test_no_ui_file_in_this_spec_pr():
@@ -768,7 +937,7 @@ def test_out_of_scope_fences_are_written():
     assert "no self-merge" in log_flat
 
 
-# ---------------------------------------------------------------- T-1169
+# ---------------------------------------------------------------- T-1180
 
 
 def test_ops_figures_are_internally_consistent_before_they_are_quoted():
@@ -841,7 +1010,7 @@ def test_ship_index_plan_architecture_and_test_plan_carry_d129():
     assert re.search(r"D-129 Spec.*\*\*Yes — this PR\.\*\*", index_flat)
     assert re.search(r"D-128 Spec.*Already shipped on `main`", index_flat)
     assert re.search(r"D-128-A.*Already shipped on `main`", index_flat)
-    assert re.search(r"D-128-B.*No\. Later Emma GO", index_flat)
+    assert re.search(r"D-128-B.*Already shipped on `main`", index_flat)
     assert "9e65cbf" in INDEX
     assert "SPEC-phase5-named-refuse.md" in INDEX
     # PLAN + ARCHITECTURE point at D-129 and its Spec file.
@@ -857,6 +1026,6 @@ def test_ship_index_plan_architecture_and_test_plan_carry_d129():
     # ARCHITECTURE is current: D-128-A is no longer described as "this PR".
     assert "D-128-A** is the core BUILD (this PR" not in ARCH
     # Test plan carries the D-129 T-ids and this file.
-    for tid in ("T-1161", "T-1164", "T-1165", "T-1169"):
+    for tid in ("T-1172", "T-1175", "T-1176", "T-1180"):
         assert tid in TEST_PLAN, tid
     assert "test_d129_phase5_named_refuse_spec.py" in TEST_PLAN
