@@ -694,43 +694,66 @@ describe('AssemblyReview', () => {
     expect(fate).not.toMatch(/seams solved|seam is repaired|full-length AF-quality/)
   })
 
-  it('keeps a Phase 4 parent open and never badges it accepted', () => {
+  it('labels a Phase 4 parent accept-refuse with the Phase 4 0/2 rollup', () => {
     const review = {
       ...REVIEW,
       phase5_fate: {
         parent_job_id: 3272,
-        fate: 'phase-4-must-hunt',
-        label: 'Phase 4 must-hunt',
-        is_accept_refuse: false,
-        hunt_closed: false,
-        meaning: 'Phase 4 must-hunt: this parent refused rmsd_gt_10, the whole-overlap class, and is open work. It is not accept-refuse, not retired, and not closed',
-        recorded_refuse_reason: 'rmsd_gt_10',
-        recorded_by_path: 'D-127',
-        moves_only_on: 'a separate explicit Matt GO naming Phase 4',
-        disclosure_required: false,
-        ops_rollup: null,
+        fate: 'accept-refuse',
+        label: 'named refuse / accept-refuse',
+        is_accept_refuse: true,
+        hunt_closed: true,
+        phase: 'phase4',
+        meaning: 'named refuse / accept-refuse after Phase 4 residual-RMSD OPS: this parent refused on the whole-overlap class, the hunt is stopped, and the 0 of 2 plus refuse class stay beside the label. It is not open must-hunt, not solved, and not an RMSD-v2 miss',
+        not_a_miss: 'not a Phase 4 miss and not an RMSD-v2 miss: recovered_of_two = 0 was an allowed outcome written before the run, and both refuse classes landed beside the label',
+        recorded_refuse_reason: 'rmsd_irreducible',
+        recorded_by_path: 'D-130-A',
+        moves_only_on: null,
+        disclosure_required: true,
+        ops_rollup: {
+          population: 'the Phase 4 residual-RMSD pair (3272, 3394)',
+          pass: 0, refuse: 2, fail: 0, skip: 0,
+          recovered_of_two: 0,
+          pre_registered_at: 'D-130 Spec / D-130-A (932292d / #253), before / with the run',
+          refuse_rmsd_irreducible: [3272],
+          refuse_rmsd_gt_10: [3394],
+          notes: {
+            3272: 'rmsd_irreducible; floor ≈ 12.63 Å (above the 10.0 Å gate)',
+            3394: 'rmsd_gt_10; floor ≈ 4.77 Å; achieved RMSD ≈ 13.77 Å; correspondence offset = 0',
+          },
+          gate_angstrom: 10.0,
+          recorded_by: 'recorded OPS',
+          recorded_at_tip: '932292d',
+          out_root: 'residual_rmsd_ops_2026-09-05',
+          best_experimental_path: 'D-126 remains the best experimental path until proven otherwise; Phase 4 residual-RMSD recovered 0 of 2 at tip 932292d',
+        },
       },
     }
     const { getByTestId, queryByTestId } = render(
       <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
     )
     const fate = getByTestId('phase5-fate').textContent
-    expect(fate).toMatch(/Phase 4 must-hunt/)
-    expect(fate).toMatch(/not accept-refuse/)
-    expect(fate).toMatch(/not retired/)
-    expect(fate).toMatch(/separate explicit Matt GO naming Phase 4/)
-    expect(fate).not.toMatch(/named refuse \/ accept-refuse/)
-    // ⚠ Nor the accept-refuse copy. Mutation testing found this: forcing that
-    // paragraph to render left every other assertion green, and it says the
-    // hunt is closed and no fifth algorithm is coming — true of the eight,
-    // false of a Phase 4 parent, and a leak in prose rather than in a label.
-    expect(fate).not.toMatch(/not solved, not fixed, not repaired/)
-    expect(fate).not.toMatch(/not an open must-hunt/)
-    expect(fate).not.toMatch(/no fifth stitch algorithm/)
-    // The rollup is of the seven; a Phase 4 parent must not wear it.
+    expect(fate).toMatch(/named refuse \/ accept-refuse/)
+    expect(fate).toMatch(/rmsd_irreducible/)
+    expect(fate).toMatch(/recorded by D-130-A/)
+    expect(fate).toMatch(/not solved, not fixed, not repaired/)
+    expect(fate).toMatch(/not an open must-hunt/)
+    expect(fate).not.toMatch(/Phase 4 must-hunt/)
+    expect(queryByTestId('phase5-phase4-open')).toBeNull()
     expect(queryByTestId('phase5-ops-rollup')).toBeNull()
-    expect(queryByTestId('phase5-give-back')).toBeNull()
+    const rollup = getByTestId('phase4-ops-rollup').textContent
+    expect(fate).toContain(rollup)
+    expect(rollup).toMatch(/PASS 0/)
+    expect(rollup).toMatch(/REFUSE 2/)
+    expect(rollup).toMatch(/recovered_of_two/)
+    expect(rollup).toMatch(/932292d/)
+    expect(rollup).toMatch(/residual_rmsd_ops_2026-09-05/)
+    expect(rollup).toMatch(/12\.63/)
+    expect(rollup).toMatch(/13\.77/)
+    expect(getByTestId('phase4-labelled').textContent).toMatch(/hunt stopped/)
+    expect(fate).toMatch(/assembler/)
   })
+
 
   it('renders no fate block for a parent with no Phase 5 fate', () => {
     const { queryByTestId } = render(

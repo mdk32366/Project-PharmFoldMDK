@@ -672,13 +672,16 @@ export default function MethodNote() {
           pre-registered and the diagnosis half landed.
         </p>
         <p>
-          <strong>Two joins are still open.</strong> Parents{' '}
+          <strong>Phase 4 pair — now labelled.</strong> Parents{' '}
           <strong>3272</strong> and <strong>3394</strong> failed for a{' '}
-          <strong>different</strong> reason — the whole-overlap distance,
-          not the linker — and are <strong>still being looked at</strong>.
-          They are <strong>Phase 4 must-hunt</strong>, they are not
-          covered by the decision above, and no card, ops run, or tidy-up
-          may reclassify them without an explicit Matt GO naming Phase 4.
+          <strong>different</strong> reason — the whole-overlap /
+          residual-RMSD class, not the linker. They are{' '}
+          <strong>no longer</strong> open must-hunt. After Phase 4 OPS
+          (tip <code>932292d</code>, 0 of 2 recovered) and Matt&apos;s
+          Phase 4 named-refuse sign, both are{' '}
+          <strong>named refuse / accept-refuse</strong>. See the
+          D-130-B / D-131 addendum below for the OPS table and inventory.
+          The Phase 5 eight above are unchanged.
         </p>
         <p>
           <strong>What we are not doing next.</strong> There is{' '}
@@ -703,6 +706,102 @@ export default function MethodNote() {
           quoted from the run recorded at tip <code>9e65cbf</code>,
           out_root <code>linker_seam_ops_2026-09-05</code>. Owner-facing
           addendum: <code>docs/method-hold48-tiles.md</code> (D-129-B).
+        </p>
+      </div>
+
+
+      <h3>Phase 4 residual-RMSD OPS and named refuse (D-130-B / D-131)</h3>
+      <div data-testid="phase4-named-refuse-addendum">
+        <p className="note">
+          Ruled by <strong>Matt SIGNED Phase 4 named-refuse, 2026-09-05
+          ~22:32 PT via Emma</strong>, after D-130-A OPS at tip{' '}
+          <code>932292d</code>, out_root{' '}
+          <code>residual_rmsd_ops_2026-09-05</code>. ⚠ Ops numbers{' '}
+          <strong>as recorded</strong> and handed to this page.{' '}
+          <strong>Not run, not queried, and not re-measured here.</strong>{' '}
+          Freeze unchanged: served = <strong>assembler</strong>; gate{' '}
+          <strong>10.0 Å</strong>; <strong>D-126</strong> best
+          experimental callable; no RMSD-v2; no F-004; no auto-flip.
+        </p>
+        <p>
+          <strong>What we ran.</strong> Phase 4 tried a{' '}
+          <strong>residual-RMSD</strong> path on the signed pair —
+          parents <strong>3272</strong> and <strong>3394</strong> — the
+          two joins that had failed for the <strong>whole-overlap</strong>{' '}
+          class rather than the linker/seam class Phase 5 retired.
+        </p>
+        <p>
+          <strong>Rollup as recorded:</strong>{' '}
+          <strong>PASS 0 · REFUSE 2 · FAIL 0</strong>,{' '}
+          <code>recovered_of_two</code> = <strong>0</strong>. Recovering
+          zero of the two was an <strong>allowed outcome</strong> written
+          before the run, so the zero is a result — not a hidden failure,
+          and <strong>not</strong> a reason to loosen the 10.0 Å gate or
+          open an RMSD-v2.
+        </p>
+        <ul>
+          <li>
+            <strong>3272</strong> refused{' '}
+            <code>rmsd_irreducible</code> — floor ≈ <strong>12.63 Å</strong>{' '}
+            (above the gate; no rigid superposition holds the join).
+          </li>
+          <li>
+            <strong>3394</strong> refused <code>rmsd_gt_10</code> — floor ≈{' '}
+            <strong>4.77 Å</strong>, achieved RMSD ≈{' '}
+            <strong>13.77 Å</strong>, correspondence offset = 0.
+          </li>
+        </ul>
+        <p>
+          <strong>What we now call these two joins.</strong> Parents{' '}
+          <strong>3272</strong> and <strong>3394</strong> are marked{' '}
+          <strong>named refuse / accept-refuse</strong>. In plain words:{' '}
+          <strong>
+            these joins do not hold, we say so, and we have stopped trying
+            to fix them on this path.
+          </strong>{' '}
+          They are <strong>no longer</strong> Phase 4 must-hunt / open
+          work. Accepting the refusal retires the <strong>hunt</strong>,
+          not the <strong>record</strong>: the <strong>0 of 2</strong> and
+          both refuse classes stay on this page beside the label.
+        </p>
+        <p>
+          <strong>Accepted does not mean fixed, and it does not mean
+          quiet.</strong> It does not mean the seam is solved, aligned, or
+          repaired — it is not. Neither parent may be shown as an open
+          must-hunt, as solved / fixed / repaired, or as an RMSD-v2 miss —
+          the zero was pre-registered and the diagnosis half landed.
+        </p>
+        <p>
+          <strong>Inventory on the 27 (no silent holes).</strong> After
+          this sign + label:{' '}
+          <strong>17 PASS</strong> (2817, 2917, 2929, 3027, 3097, 3153,
+          3188, 3217, 3320, 3379, 3404, 3454, 3469, 3516, 3541, 3569,
+          3575) and <strong>10 accept-refuse</strong> — the Phase 5 eight
+          (2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432) plus Phase 4{' '}
+          <strong>3272</strong> and <strong>3394</strong>.{' '}
+          <strong>Never claim 27/27 PASS.</strong> Never claim the seams
+          are solved.
+        </p>
+        <p>
+          <strong>What we are not doing next.</strong> There is{' '}
+          <strong>no residual-RMSD-v2</strong> and no fifth stitching
+          algorithm in this section. We are not loosening the{' '}
+          <strong>10.0 Å</strong> gate, not flipping served off the{' '}
+          <strong>assembler</strong>, and not entering the ranking.
+          <strong> D-126 remains the best experimental path until proven
+          otherwise</strong> and stays callable. D-127, D-128, Phase 5
+          labels, and this Phase 4 OPS disclosure <strong>all stay on the
+          page</strong> — none softens another.
+        </p>
+        <p className="note">
+          This addendum does not replace the assembler story, does not
+          make the long chain one ESMFold pass, does not fill PAE, does
+          not enter the ranking, and is not medical advice. It is{' '}
+          <strong>not a re-measurement</strong>: every number it names is
+          quoted from the run recorded at tip <code>932292d</code>,
+          out_root <code>residual_rmsd_ops_2026-09-05</code>. Owner-facing
+          addendum: <code>docs/method-hold48-tiles.md</code> (D-130-B /
+          D-131).
         </p>
       </div>
 

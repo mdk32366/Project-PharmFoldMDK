@@ -375,6 +375,33 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-130-B / D-131 — Phase 4 residual-RMSD OPS disclosure + named refuse labels for 3272 / 3394
+
+- **Status:** accepted as the **Method + UI labelling PR** discharging D-130
+  Spec section 7 Method obligation and Matt SIGNED Phase 4 named-refuse
+  (2026-09-05 ~22:32 PT via Emma). Tip base **932292d** (D-130-A / #253).
+- **What it is:**
+  - **D-130-B** discloses Phase 4 residual-RMSD OPS **as recorded**: tip
+    932292d, out_root 
+esidual_rmsd_ops_2026-09-05, rollup PASS **0** /
+    REFUSE **2** / 
+ecovered_of_two=**0**; **3272** 
+msd_irreducible
+    floor≈12.63 Å; **3394** 
+msd_gt_10 floor≈4.77 Å rmsd≈13.77 Å offset=0.
+  - **D-131** labels parents **3272** and **3394** **named refuse /
+    accept-refuse**. Inventory on the 27 = **17 PASS + 10 accept-refuse**
+    (Phase 5 eight + Phase 4 two). Never 27/27 PASS / never "solved".
+- **Surfaces:** docs/method-hold48-tiles.md addendum; MethodNote.jsx
+  (phase4-named-refuse-addendum); AssemblyReview.jsx fate flip;
+  pp/phase5_named_refuse.py (Phase 4 accept-refuse + PHASE4_OPS_ROLLUP).
+- **Freeze unchanged:** served = **assembler**; gate **10.0 Å**; **D-126**
+  best experimental callable; no residual-RMSD re-run; no RMSD-v2; no F-004.
+- **Does not:** merge itself; re-run OPS; loosen the gate; invent victory
+  language; touch unrelated census/tmp.
+- **Cite:** Matt SIGNED Phase 4 named-refuse 2026-09-05 ~22:32 PT · D-130-A
+  932292d / #253 · D-129-B cbcb47d / #250 · Phase 5 eight stay labelled.
+
 ### D-130-A — Phase 4 residual-RMSD core: §1a floor decomposition for every path + optional residue-identity correspondence audit, then existing winning_tile
 
 - **Date:** 2026-09-06

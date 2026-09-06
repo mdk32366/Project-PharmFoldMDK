@@ -470,12 +470,14 @@ them. Accepting a refusal retires the **hunt**, not the **record**.
 **open must-hunt**, as **solved / fixed / repaired**, or as **a D-128
 miss** — the zero was pre-registered, and the diagnosis half landed.
 
-**Two joins are still open.** Parents **3272** and **3394** failed for a
-**different** reason (the whole-overlap distance, not the linker) and are
-**still being looked at**. They are **Phase 4 must-hunt**, they are
-**not** covered by the decision above, and nothing here changes them: no
-card, no ops run, and no tidy-up may reclassify them without an explicit
-Matt GO naming Phase 4.
+**Phase 4 pair — now labelled.** Parents **3272** and **3394** failed for
+a **different** reason (the whole-overlap / residual-RMSD class, not the
+linker). They are **no longer** open must-hunt. After Phase 4 OPS
+(`932292d`, 0 of 2 recovered) and Matt's Phase 4 named-refuse sign, both
+are **named refuse / accept-refuse**. See **Addendum D-130-B / D-131**
+below for the OPS table and inventory. The Phase 5 eight above are
+unchanged.
+
 
 **What we are not doing next.** There is **no fifth stitching
 algorithm**. We are not loosening the **10.0 Å** limit that decides
@@ -493,6 +495,71 @@ does not enter F-004 / the ranking, and is not medical advice. It is not
 a re-measurement: every number it names is quoted from the run recorded
 at tip `9e65cbf`, out_root `linker_seam_ops_2026-09-05`, and nothing here
 ran, queried, or re-derived it.
+
+## Addendum D-130-B / D-131 — Phase 4 residual-RMSD OPS and named refuse
+
+Ruled by **Matt SIGNED Phase 4 named-refuse** (2026-09-05 ~22:32 PT) after
+D-130-A OPS at tip `932292d`. Freeze unchanged: served = **assembler**;
+gate **10.0 Å**; **D-126** best experimental callable; no RMSD-v2; no
+F-004; no auto-flip.
+
+### Phase 4 OPS (as recorded)
+
+We ran the Phase 4 **residual-RMSD** path on the signed pair — parents
+**3272** and **3394** — at tip `932292d`, out_root
+`residual_rmsd_ops_2026-09-05`.
+
+**Rollup as recorded:** PASS **0** / REFUSE **2** / FAIL **0** /
+`recovered_of_two` = **0**. Recovering zero of the two was an **allowed
+outcome** written before the run.
+
+| parent | refuse reason | notes (as recorded) |
+|--------|---------------|---------------------|
+| **3272** | `rmsd_irreducible` | floor ≈ **12.63** Å (above the 10.0 Å gate — no rigid superposition holds the join) |
+| **3394** | `rmsd_gt_10` | floor ≈ **4.77** Å; achieved RMSD ≈ **13.77** Å; correspondence offset = 0 |
+
+These numbers are **quoted from the recorded run**. Nothing in this
+addendum re-ran, queried, or re-derived them.
+
+### What we now call these two joins
+
+Parents **3272** and **3394** are marked **named refuse /
+accept-refuse**. In plain words: **these joins do not hold, we say so,
+and we have stopped trying to fix them on this path.**
+
+They failed for the **whole-overlap / residual-RMSD** class (not the
+linker/seam class that Phase 5 retired). Accepting the refusal retires
+the **hunt**, not the **record**: the **0 of 2** and both refuse classes
+stay on this page beside the label.
+
+**Accepted does not mean fixed.** It does not mean quiet. Neither parent
+may be shown as an open must-hunt, as solved / fixed / repaired, or as
+an RMSD-v2 miss — the zero was allowed, and the diagnosis half landed.
+
+### Inventory on the 27 (no silent holes)
+
+After this sign + label:
+
+- **17 PASS** (unchanged): 2817, 2917, 2929, 3027, 3097, 3153, 3188,
+  3217, 3320, 3379, 3404, 3454, 3469, 3516, 3541, 3569, 3575
+- **10 accept-refuse:** the Phase 5 eight (2938, 2939, 3179, 3190, 3321,
+  3368, 3566, 3432) **plus** Phase 4 **3272** and **3394**
+
+**Never claim 27/27 PASS.** Never claim the seams are solved.
+
+### What we are not doing next
+
+There is **no residual-RMSD-v2** and **no fifth stitching algorithm** in
+this addendum. We are not loosening the **10.0 Å** gate, not flipping
+served off **assembler**, and not entering F-004. **D-126** remains the
+best experimental path until proven otherwise. D-127, D-128, and this
+Phase 4 OPS disclosure **all stay on the page** — none softens another.
+
+### Provenance
+
+Matt SIGNED Phase 4 named-refuse 2026-09-05 ~22:32 PT. Architect support
+on file. OPS tip `932292d` / out_root `residual_rmsd_ops_2026-09-05`.
+This addendum ships **no** new ops run and **no** Fly POST by itself.
 
 ## The rental is CLOSED
 
@@ -515,11 +582,14 @@ to rent another card. Do not Deploy. Do not emit.
   either — nor to report either zero without the parents the same run
   gave back.
 - Not a licence to re-open **3432**, which stays accept-refuse.
-- Not a licence to label **3272 / 3394** accepted, retired, or closed.
-  They stay **Phase 4 must-hunt** and move only on an explicit Matt GO
-  naming Phase 4 (**D-129-B**).
-- Not a licence to ship the **accept-refuse** label without the **0 of 7**
-  and the **5 / 6** give-back beside it. The label is *why we stopped*;
+- Not a licence to re-open **3272 / 3394** as must-hunt, or to treat
+  accept-refuse as solved. Both are **named refuse / accept-refuse**
+  after Phase 4 OPS 0/2 and Matt's named-refuse sign (D-130-B / D-131).
+- Not a licence to open **RMSD-v2** without a **new** explicit Matt GO
+  and new evidence.
+- Not a licence to ship an **accept-refuse** label without the recorded
+  zero beside it (**0 of 7** for Phase 5 / D-128 and the **5 / 6**
+  give-back; **0 of 2** for Phase 4 / D-130). The label is *why we stopped*;
   those numbers are *what we found*.
 - Not F-004 / ranking ingest.
 - Not the ADC-B `/adcs` page (D-122 already shipped that on `main`). Not the Nectin-4 Doc.
