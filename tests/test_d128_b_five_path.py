@@ -94,6 +94,46 @@ def _flat(text: str) -> str:
     return re.sub(r"\s+", " ", text)
 
 
+def _slice(text: str, start_marker: str, end_marker: str, label: str) -> str:
+    start = text.find(start_marker)
+    assert start != -1, f"{label}: missing {start_marker!r}"
+    end = text.find(end_marker, start + len(start_marker))
+    assert end != -1, f"{label}: missing {end_marker!r} after {start_marker!r}"
+    return text[start:end]
+
+
+def d128_method_sections() -> tuple[tuple[str, str], ...]:
+    """The D-128-B addendum ALONE, on both surfaces.
+
+    ⚠ Whole-page substring checks are the trap D-127-B documented and this
+    suite re-learned by mutation: deleting "the default served structure is
+    still the assembler" from the D-128 passage left every whole-file
+    assertion green, because the D-127-B section further up says it too. A
+    claim this section is required to make must be found **in this
+    section**.
+    """
+    return (
+        (
+            _slice(
+                METHOD_MD,
+                "## Addendum D-128-B",
+                "## The rental is CLOSED",
+                "method-hold48-tiles.md",
+            ),
+            "method-hold48-tiles.md (D-128-B section)",
+        ),
+        (
+            _slice(
+                METHOD_NOTE,
+                "<h3>Linker / seam honesty, and the five-step stitch-path train",
+                "<h3>What it does today</h3>",
+                "MethodNote.jsx",
+            ),
+            "MethodNote.jsx (D-128-B addendum)",
+        ),
+    )
+
+
 def _engine():
     eng = create_engine("sqlite://")
     Base.metadata.create_all(eng)
@@ -1008,7 +1048,7 @@ def test_the_ui_pr_writes_nothing_to_any_path_tree(tmp_path):
 
 def test_d128_b_method_addendum_names_the_five_step_stitch_path_train():
     """Spec §7 is mandatory: the train, in order, on both surfaces."""
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         assert "stitch-path train" in lowered, label
@@ -1025,7 +1065,7 @@ def test_d128_b_method_addendum_names_the_five_step_stitch_path_train():
 
 def test_d128_b_method_addendum_defines_dishonest_about_the_file():
     """"Dishonest" is a claim about a structure file, not about a person."""
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         assert "dishonest" in lowered, label
@@ -1034,8 +1074,16 @@ def test_d128_b_method_addendum_defines_dishonest_about_the_file():
         assert "10.0 Å" in flat, label
 
 
+# The only Å figures the D-128 addendum may carry: the gate (**10.0**),
+# the null-rendering example (**0.00**), and the upper end of D-126's
+# recorded 28–68 Å lesson. ⚠ A bare "10.0 Å" assertion does NOT pin the
+# gate — mutation showed the refuse table could be moved to 12.0 Å while
+# other sentences kept saying 10.0. Pinning the whole set is what goes red.
+ANGSTROM_FIGURES_ALLOWED = {"10.0", "0.00", "68"}
+
+
 def test_d128_b_method_addendum_names_the_refuse_table_and_keeps_the_gate():
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         assert "fewer than three" in lowered, label
@@ -1045,10 +1093,16 @@ def test_d128_b_method_addendum_names_the_refuse_table_and_keeps_the_gate():
         assert "no threshold moved" in lowered, label
         assert "trim loop" in lowered, label
         assert "blend" in lowered, label
+        # ⚠ No second threshold may appear anywhere in this section, in
+        # either direction. A loosened refuse table is the failure Spec §9
+        # names first, and it does not announce itself.
+        figures = set(re.findall(r"(\d+(?:\.\d+)?)\s*Å", flat))
+        assert figures <= ANGSTROM_FIGURES_ALLOWED, f"{label}: {figures}"
+        assert "10.0" in figures, label
 
 
 def test_d128_b_method_names_seam_disclosure_as_measurement_and_refuses_an_average():
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         assert "measurements" in lowered, label
@@ -1148,7 +1202,7 @@ def test_ops_figures_are_internally_consistent_before_they_are_quoted():
 
 
 def test_method_discloses_the_d128_ops_run_as_recorded():
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         assert "PASS 0" in flat, label
@@ -1177,7 +1231,7 @@ def test_method_never_reports_the_allowed_zero_without_its_give_back():
     Goes red if either confusion figure, or the 'allowed outcome' framing,
     is dropped from the passage that carries the zero.
     """
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         for key, value in OPS_CONFUSION.items():
@@ -1198,7 +1252,7 @@ def test_method_never_reports_the_allowed_zero_without_its_give_back():
 
 def test_method_keeps_d126_best_and_the_d127_failed_experiment_disclosed():
     """A D-128 result may not soften or replace either standing disclosure."""
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         assert "d-126 remains the best experimental path" in lowered, label
@@ -1216,7 +1270,7 @@ def test_method_keeps_d126_best_and_the_d127_failed_experiment_disclosed():
 
 
 def test_method_refuses_to_loosen_a_gate_flip_the_served_path_or_reopen_3432():
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         assert "10.0 Å" in flat, label
@@ -1236,7 +1290,7 @@ def test_method_refuses_to_loosen_a_gate_flip_the_served_path_or_reopen_3432():
 
 def test_method_does_not_conflate_d128_reason_names_with_d127s():
     """`seam_jump_gt_10` is a new name, not a rename of `linker_jump_gt_10`."""
-    for text, label in ((METHOD_MD, "method-hold48-tiles.md"), (METHOD_NOTE, "MethodNote.jsx")):
+    for text, label in d128_method_sections():
         flat = _flat(text)
         lowered = flat.lower()
         assert "seam_jump_gt_10" in flat, label
