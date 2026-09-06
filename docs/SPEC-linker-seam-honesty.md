@@ -23,6 +23,17 @@
 > per-parent exception.
 > ⚠ **Parent 3432 stays accept-refuse** (signed triage). It is not a
 > success target of this Spec and its status is not re-opened.
+> ⚠⚠ **PHASE 5 (D-129): the seven are now `accept-refuse`, NOT
+> must-hunt.** **Matt SIGNED Phase 5 named-refuse 2026-09-05 ~17:58 PT
+> via Emma**, on the recorded D-128 OPS **0 of 7**. Read §3's Phase 5
+> amendment and §9 before treating any parent below as open work —
+> authority is
+> [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md) (**D-129**).
+> ⚠ **A label, not an algorithm change:** §1a / §1b / §2 / §5 / §11
+> stand as shipped, the 10.0 Å gate stays, **the seams are still NOT
+> solved**, and the D-128 OPS disclosure stays **mandatory at D-128-B**
+> (accept-refuse ≠ Method silence). ⚠ **3272 / 3394 stay Phase 4
+> must-hunt.** ⚠ **No linker-v2.**
 > ⚠ **Served stays assembler.** **D-126 remains the best experimental
 > path until proven otherwise**, and the **D-127 failed experiment
 > stays disclosed** (PASS 17 / REFUSE 10 / FAIL 0;
@@ -347,6 +358,42 @@ the other five the accession is **not on record in this log**; a later
 A BUILD resolves it from the database rather than from prose, and
 **nobody writes one here from memory** (D-016).
 
+> ### ⚠ Phase 5 amendment (D-129) — these seven are no longer must-hunt
+>
+> **Matt SIGNED Phase 5 named-refuse 2026-09-05 ~17:58 PT, via Emma.**
+> After that sign the seven parents in the table above — **2938, 2939,
+> 3179, 3190, 3321, 3368, 3566** — are **no longer must-hunt**. They
+> are **`accept-refuse`**: the recorded honest outcome of a refusal,
+> **closed to further hunting**, together with **3432** (already
+> accept-refuse). Authority:
+> [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md) (**D-129**)
+> §2 / §3 / §4, and `### D-129` in [`README.md`](README.md) — where that
+> log and this file differ, **THE LOG GOVERNS**.
+>
+> The basis was the D-128 OPS run of these seven: **PASS 0 / REFUSE 7 /
+> FAIL 0 / SKIP 0**, `repaired_of_seven` = **0** (as recorded by Kaylee
+> at tip `9e65cbf`, out_root `linker_seam_ops_2026-09-05`;
+> ⚠ **not re-measured**). That zero was **pre-registered as an allowed
+> outcome** by this Spec (§1b / §3 / §11) *before* the run, so it is a
+> **finding, not a D-128 miss**.
+>
+> ⚠ **This changes a LABEL, not the algorithm.** §1a, §1b, §2, §5 and
+> §11 stand exactly as shipped. The **10.0 Å** gate stays, **W = 32**
+> stays, **ε = 1e-3** stays, and the refuse reason set is unchanged.
+> ⚠ **The seams are NOT solved.** This Spec still never says solved;
+> accept-refuse retires the **hunt**, not the **record**.
+> ⚠ **`accept-refuse` ≠ Method silence.** D-129 §4 keeps the D-128 OPS
+> disclosure **mandatory** at D-128-B — the **0 of 7** and the named
+> confusion (`n_d125_pass_d128_refuse` = **5**,
+> `n_d126_pass_d128_refuse` = **6**) ship **with** the label, never
+> buried under it.
+> ⚠ **3272 / 3394 are NOT covered** by that sign. They stay **Phase 4
+> must-hunt** (D-129 §6) and move only on a **separate Matt GO**.
+> ⚠ **No linker-v2** follows. The stitch-algorithm family **freezes**
+> (D-129 §7): served stays **assembler**, **D-126 remains the best
+> experimental path until proven otherwise**, and the **D-127 and D-128
+> failed rescues stay disclosed**.
+
 **Explicitly out of the primary inventory:**
 
 | parent job id | D-127 OPS reason | Why it is out of *this* Spec |
@@ -626,6 +673,22 @@ B (or a Method-bearing PR) must still ship §7.
   unit and `no_domain_pieces` is not this Spec's failure mode.
 - **3432 stays accept-refuse** (signed triage). Not re-opened, not
   reclassified, not a success target, not counted as a D-128 miss.
+- ⚠ **After the Phase 5 sign, the seven are accept-refuse too — not
+  must-hunt** (**D-129**;
+  [`SPEC-phase5-named-refuse.md`](SPEC-phase5-named-refuse.md) §2 / §3;
+  `### D-129` in [`README.md`](README.md)). **Matt SIGNED Phase 5
+  named-refuse 2026-09-05 ~17:58 PT via Emma** on the recorded D-128
+  OPS **0 of 7**. So: **eight** parents are `accept-refuse` (the seven
+  **+ 3432**); none of the eight may be labelled **open must-hunt**,
+  **solved / fixed / repaired**, or **a D-128 miss**; **0-of-7 was
+  pre-registered** as allowed by this Spec, not discovered as a
+  failure. ⚠ **A label, not an algorithm change** — §1a / §1b / §2 /
+  §5 / §11 stand as shipped, the **10.0 Å** gate stays, and **the
+  seams are still NOT solved**. ⚠ **Accept-refuse is not Method
+  silence:** D-129 §4 keeps the D-128 OPS disclosure **mandatory at
+  D-128-B** (**0 of 7** plus **5** vs D-125 / **6** vs D-126, never
+  buried). ⚠ **3272 / 3394 stay Phase 4 must-hunt** and need a
+  **separate Matt GO**. ⚠ **No linker-v2** — the family freezes.
 - **No named-exclusion-as-fix.** Listing the seven is the primary
   evaluation inventory, not an algorithm that skips anyone. A CLI may
   still run the 27.

@@ -467,9 +467,9 @@ def test_ship_index_distinguishes_spec_from_ab_build():
     assert "**Yes — this PR.**" in INDEX
     index_flat = _flat(INDEX)
     assert re.search(r"D-128 Spec.*Already shipped on `main`", index_flat)
-    # A shipped at #247; B is the PR that ships the UI + mandatory Method.
+    # A shipped at #247 and B at #248; the active ship is now D-129.
     assert re.search(r"D-128-A.*Already shipped on `main`", index_flat)
-    assert re.search(r"D-128-B.*\*\*Yes — this PR\.\*\*", index_flat)
+    assert re.search(r"D-128-B.*Already shipped on `main`", index_flat)
     # A shipped code; it did not discharge the mandatory Method obligation,
     # and the index must still say which id does.
     lowered_index = INDEX.lower()
