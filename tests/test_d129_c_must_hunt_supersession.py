@@ -77,14 +77,15 @@ GO_NAMED_HOLES = (
 
 TOKEN = "must-hunt"
 
-# Modules this hygiene PR may not touch. Digests as on `main` at `cbcb47d`.
+# Modules this hygiene PR may not touch. Digests as on `main` at `cbcb47d`,
+# except phase5_named_refuse.py widened at D-130-B / D-131.
 FROZEN = {
     "core/hold48_kabsch.py": "4c7bb45d04507e2a67ba3600b35d6130d62843ca3bc99c15d3568d5cb105ff6e",
     "core/hold48_confidence_kabsch.py": "d526a856ec8f1ba978a3586f3dfcf4a0ee858da12132499f2db37368efc77f18",
     "core/hold48_piecewise_kabsch.py": "ad48b2be577b987466274000c508a621792bc029bb9e087eec94ba7237f13e04",
     "core/hold48_linker_seam.py": "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9ed4f4eb19843",
     "core/hold48_stitch.py": "6e2fcb643e4f5549297182e42def2a54fbb48d2e33659798d7314d56486ef629",
-    "app/phase5_named_refuse.py": "2e22d343d8a7341bbb8c925c302458591054d9a24933cd1f37230cfe55f55404",
+    "app/phase5_named_refuse.py": "d880cd7ac6acdfc89f4037c42bd78d3faf287c26d47d4b3ef07bfce634ccf6fc",
     "app/linker_seam_path_read.py": "5d346eacbcdfdca3370da7c54af16848b5509691da3b4323d40b0f7040c251e8",
 }
 
@@ -244,7 +245,9 @@ def occurrences(rel: str) -> list[tuple[str, str]]:
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    # Normalize CRLF->LF so Windows checkouts match the LF pins from Linux CI.
+    data = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def _plain(text: str) -> str:
@@ -416,18 +419,26 @@ def test_qualifying_is_not_deleting():
 
 
 def test_the_phase_4_pair_is_left_exactly_where_it_was():
-    """3272 / 3394 are not tidied while we are in here."""
+    """⚠ Widened at D-130-B / D-131 — Phase 4 pair is now named refuse.
+
+    D-129-C pinned 3272 / 3394 as still-open must-hunt so a hygiene PR could
+    not quietly retire them. The Matt SIGNED Phase 4 named-refuse GO
+    (2026-09-05 ~22:32 PT via Emma) authorised that retirement: surfaces must
+    now say accept-refuse, and must-hunt-as-current-status is forbidden.
+    """
     for rel in ("docs/method-hold48-tiles.md", "ui/src/components/MethodNote.jsx"):
         text = _plain((ROOT / rel).read_text(encoding="utf-8"))
-        assert "phase 4 must-hunt" in text, rel
         assert "3272" in text and "3394" in text, rel
-        assert "still being looked at" in text, rel
-        for accepted in (
-            "3272 and 3394 are accept-refuse",
-            "3272 / 3394 are accept-refuse",
-            "3272 / 3394 are retired",
+        assert "accept-refuse" in text, rel
+        assert "named refuse" in text, rel
+        assert "still being looked at" not in text, rel
+        # Supersession prose may still name "phase 4 must-hunt" while retiring it
+        # (D-129-C three-valued rule). Ban only the open-status claims.
+        for retired_open in (
+            "two joins are still open",
+            "they stay phase 4 must-hunt",
         ):
-            assert accepted not in text, f"{rel}: Phase 4 leak — {accepted}"
+            assert retired_open not in text, f"{rel}: stale open hunt — {retired_open}"
 
 
 # ---------------------------------------------------------------- T-1190
