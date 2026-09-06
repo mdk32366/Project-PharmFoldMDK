@@ -787,6 +787,27 @@ a limit of the model's outputs or merely a limit of our effort.
   third-party package and defines no window / piece / trim / weight; a
   parent outside the 27 is refused; and `recovered_of_two` = 0 is
   reported as an **allowed** outcome rather than a miss.
+- **One clause could not go red, and it was the load-bearing one.** Auditing
+  this BUILD's own tests by mutation — nineteen single-clause edits to
+  `core/hold48_residual_rmsd.py`, each reverted — found **eighteen** reddened
+  and **one** that did not: changing the floor's divisor from **2** to **4**
+  left all 81 tests green. The reason is worth writing down, because it is a
+  shape this project keeps meeting. `test_the_floor_bounds_every_rigid_transform`
+  asserts `RMSD ≥ floor`, and **a weaker floor satisfies a weaker test**:
+  `dRMSD / 4` is still a lower bound, and so is `dRMSD / 400`. The test proved
+  the module computes *a* bound; it never proved the module computes **the
+  Spec's** bound. ⚠ The Spec's own pin
+  (`test_the_claimed_inequality_actually_holds_and_is_not_tight`) does not
+  close this either — it checks the constant appears in the **prose** of
+  `SPEC-residual-rmsd-hunt.md`, which is D-062's shape again: a pointer near
+  the claim is not the claim. **Fixed by pinning two things instead of one:**
+  the module's constant as an **identity** (`rmsd_floor(x) == x / 2`, plus the
+  `2 / (n(n-1))` dRMSD normalisation hand-computed on n = 2 and n = 3), and
+  the constant as **attained** — on two corresponded points the best rigid
+  placement achieves *exactly* `dRMSD / 2`, so `/ 2` is the greatest lower
+  bound the proof gives rather than a conservative guess, and a "safer"
+  divisor would be reporting a floor no configuration can reach. Re-running
+  the same nineteen mutations now reddens on all of them.
 - **Two amendments to landed tests, named rather than made quietly**, in
   `tests/test_d130_residual_rmsd_spec.py`. Both are **widened, not
   loosened.** (a) `test_d130_is_the_next_free_decision_id` asserted the

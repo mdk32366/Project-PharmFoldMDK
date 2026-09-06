@@ -371,6 +371,52 @@ def test_the_floor_bounds_every_rigid_transform():
             )
 
 
+def test_the_floor_constant_is_the_specs_and_is_attained():
+    """⚠ Found by mutation: the bound above held with the divisor changed to 4.
+
+    A test that only asserts ``RMSD >= floor`` is satisfied by a floor of
+    ``dRMSD / 4``, or ``/ 400`` — **a weaker claim passes a weaker test**, and
+    the clause the whole Spec rests on was unpinned. Two things are pinned
+    here instead.
+
+    First, the module's constant **is** the Spec's, checked as an identity
+    rather than inferred from an inequality it cannot fail.
+
+    Second, the constant is **attained**: on two corresponded points the best
+    rigid placement achieves *exactly* ``dRMSD / 2``. So ``/ 2`` is the
+    greatest lower bound the proof gives, not a conservative guess — and a
+    divisor that made the bound "safer" would be reporting a floor no
+    configuration can reach, which is a different (and weaker) claim than the
+    one §1a makes.
+    """
+    for value in (0.0, 1.0, 4.0, 13.7):
+        assert rmsd_floor(value) == value / 2.0
+
+    # dRMSD's own normalisation, hand-computed rather than round-tripped.
+    # n = 2 → one pair → dRMSD = |d^A - d^B|.
+    a = [(0.0, 0.0, 0.0), (10.0, 0.0, 0.0)]
+    b = [(0.0, 0.0, 0.0), (6.0, 0.0, 0.0)]
+    assert internal_drmsd(a, b) == pytest.approx(4.0)
+    floor = rmsd_floor(internal_drmsd(a, b))
+    assert floor == pytest.approx(2.0)
+
+    # The optimal placement of `a` onto `b`: shared centroid, shared axis.
+    best = [(-2.0, 0.0, 0.0), (8.0, 0.0, 0.0)]
+    achieved = math.sqrt(sum(_dist(p, q) ** 2 for p, q in zip(best, b)) / len(b))
+    assert achieved == pytest.approx(floor), "the floor must be reachable, not merely safe"
+    for deg in (0.0, 31.0, 97.0, 214.0):
+        for shift in ((0.0, 0.0, 0.0), (7.0, -3.0, 1.0)):
+            moved = [_apply(_rot_z(deg), shift, p) for p in a]
+            got = math.sqrt(sum(_dist(p, q) ** 2 for p, q in zip(moved, b)) / len(b))
+            assert got >= floor - 1e-9, "and nothing beats it"
+
+    # n = 3 pins the 2 / (n(n-1)) normalisation independently of the n = 2 case.
+    three_a = [(0.0, 0.0, 0.0), (10.0, 0.0, 0.0), (20.0, 0.0, 0.0)]
+    three_b = [(0.0, 0.0, 0.0), (6.0, 0.0, 0.0), (12.0, 0.0, 0.0)]
+    # pairwise distance differences: 4, 8, 4 → sqrt((16 + 64 + 16) / 3)
+    assert internal_drmsd(three_a, three_b) == pytest.approx(math.sqrt(96.0 / 3.0))
+
+
 def test_the_floor_is_rigid_invariant():
     """Moving one copy must not move the floor — that is why it bounds all paths."""
     a = [_curve_xyz(i) for i in range(9)]
@@ -420,7 +466,19 @@ def test_a_floor_over_the_gate_refuses_before_anything_is_fitted(tmp_path):
     assert seam.rmsd_angstrom is None
     assert seam.pre_fit_rmsd_angstrom is None
     assert seam.max_ca_jump_angstrom is None
+    # ⚠ §1b step 1: the audit runs ONLY on a `placement` seam. Auditing an
+    # irreducible one could not help, and running it to see what happens is a
+    # search — so the record carries no audit field at all, not even a zero.
     assert seam.correspondence_verified is None, "an irreducible seam is not audited"
+    assert seam.register_offset_aa is None
+    assert seam.identity_evidence is None
+    row = json.loads(
+        (result.out_dir / "seams.jsonl").read_text(encoding="utf-8").splitlines()[0]
+    )
+    assert row["correspondence_verified"] is None
+    assert row["register_offset_aa"] is None
+    assert row["identity_evidence"] is None
+    assert row["floor_exceeds_gate"] is True
     assert result.accepted is False
     assert result.stitched is None
     assert not (result.out_dir / "stitched.pdb").exists()
