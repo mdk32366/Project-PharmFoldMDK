@@ -52,10 +52,14 @@
 >   honesty **and** the Spec §7 Method addendum on `main` (`de9a80e` /
 >   #245), discharging the mandatory Method obligation and disclosing
 >   the D-127 OPS result. **D-128** is the linker / seam honesty Spec
->   ([`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md)) —
->   **this PR**, docs only. Production triple-path (assembler / D-125
->   Kabsch / D-126 confidence) stays callable and the **assembler**
->   stays the served path. ⚠ **Not a restitch run of the 27.**
+>   ([`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md))
+>   (already on `main`, `2004c5a` / #246). **D-128-A** is the core
+>   BUILD (**this PR**): sibling `core/hold48_linker_seam.py` +
+>   `linker_seam/` tree; §1a honesty rows for every path (null ≠ 0,
+>   unknown ≠ honest, prior trees read-only); optional ±32 aa window
+>   fit → existing `winning_tile`. Production paths (assembler / D-125
+>   Kabsch / D-126 confidence / D-127 piecewise) stay callable and the
+>   **assembler** stays the served path. ⚠ **Not a restitch run of the 27.**
 >   ⚠ **Seams are not scientifically solved.** ⚠ **10.0 Å gate
 >   STAYS.** ⚠ **No trim loop.** ⚠ **D-126 remains the best
 >   experimental path until proven otherwise; the D-127 failed
@@ -83,7 +87,7 @@
 >   ⚠ **10.0 Å gate stays.** ⚠ **Another weight / trim knob is
 >   forbidden.**
 > - [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md) —
->   linker / seam honesty (**D-128**, this PR, docs only). §1a makes a
+>   linker / seam honesty (**D-128**, already on `main`). §1a makes a
 >   per-path / per-seam `max_ca_jump_angstrom` **required**: a path that
 >   ends over **10.0 Å** at a seam is **dishonest** for that seam and no
 >   success PDB may be presented as honest. §1b's optional repair is
@@ -94,8 +98,12 @@
 >   3321, 3368, 3566). ⚠ **Not piecewise-v2. Not an RMSD Spec
 >   (3272 / 3394 out of primary). Not a domain Spec. 3432 stays
 >   accept-refuse.** ⚠ **10.0 Å stays — no loosen without Matt.**
->   ⚠ **Never says solved.** **D-128-A** (core) and **D-128-B** (UI +
->   mandatory Method) are later Emma GOs.
+>   ⚠ **Never says solved.** **D-128-A** implements it as a fifth
+>   sibling module (`core/hold48_linker_seam.py` +
+>   `scripts/linker_seam_restitch.py`); it does not overwrite the
+>   assembler or `kabsch/` / `confidence_kabsch/` / `piecewise_kabsch/`,
+>   and it runs no ops. **D-128-B** (UI honesty + the **mandatory**
+>   Method addendum) is a later Emma GO.
 > - [`method-hold48-tiles.md`](method-hold48-tiles.md) — owner-facing 8th-grade write-up
 >   of hold-48 tiles / overlap-as-glue / winner-tile assembler (**D-121**) plus a
 >   D-125-B addendum (what Kabsch does / does not), a D-126-B addendum
@@ -122,10 +130,11 @@
 >   shipped the core BUILD on `main` (`e49bf34` / #244).
 >   **D-127-B** already shipped UI four-path honesty **and** the
 >   mandatory Spec §7 Method addendum on `main` (`de9a80e` / #245).
->   **D-128 ships** the linker / seam honesty Spec (this PR, docs
->   only) — [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md);
->   **D-128-A** (core) and **D-128-B** (UI + mandatory Method) are
->   later Emma GOs. **D-121 ships** the
+>   **D-128 ships** the linker / seam honesty Spec (already on `main`,
+>   `2004c5a` / #246) —
+>   [`SPEC-linker-seam-honesty.md`](SPEC-linker-seam-honesty.md).
+>   **D-128-A ships** the core BUILD (this PR); **D-128-B** (UI +
+>   mandatory Method) is a later Emma GO. **D-121 ships** the
 >   Method hold-48 8th-grade explainer. **D-123 ships** the Nectin-4/ADC
 >   Doc follow-on on `/about` (already on `main`, `2ffd4f8` / #231).
 >   **D-122 ships** ADC-B (`/adcs` UI) on `main` (`86f8a10` / #232).
