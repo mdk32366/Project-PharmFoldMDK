@@ -95,7 +95,7 @@ D128_LINKER_SEAM_SHA256 = "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9e
 # only** — the by-content guard below is again left untouched, and
 # `tests/test_d129_c_must_hunt_supersession.py` adds a second content guard
 # that goes red if the rule is ever satisfied by deleting the sentence.
-METHOD_SHA256 = "607de9a448e8a511baa6f0c8393144f657c4b9030aca4c35ed544ff46ee9ba77"
+METHOD_SHA256 = "4c250063b83978b854b43ea9748b0287ac22f0dacf1b4c832680138113a1e380"
 
 MODULE_PINS = {
     "core/hold48_kabsch.py": D125_KABSCH_SHA256,
@@ -151,7 +151,8 @@ def _absent(banned: tuple[str, ...], text: str, label: str) -> None:
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    data = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 # Claims that may never appear: a fix nobody measured.

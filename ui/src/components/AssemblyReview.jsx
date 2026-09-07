@@ -552,14 +552,19 @@ function DualPathHonesty({ dualPath, triplePath, fourPath, fivePath }) {
 // D-129-B — Phase 5 named-refuse label for the eight accept-refuse parents.
 // The label and the D-128 OPS rollup are ONE block on purpose: "accepted"
 // reads like resolution, and a friendly word that outlives its numbers is
-// exactly what Spec §4 calls a violation. 3272 / 3394 are Phase 4 and render
-// an OPEN fate here — never accepted, retired, or closed.
+// exactly what Spec §4 calls a violation. After D-131, 3272 / 3394 render
+// as named refuse / accept-refuse with the Phase 4 0/2 rollup (D-130-B / D-131).
 function Phase5Fate({ fate }) {
   if (!fate || !fate.fate) return null
   const rollup = fate.ops_rollup
+  const isPhase4 = fate.phase === 'phase4' || (rollup && rollup.recovered_of_two !== undefined)
   return (
     <div className="phase5-fate" data-testid="phase5-fate">
-      <h4>Phase 5 fate — what we now call this join</h4>
+      <h4>
+        {isPhase4
+          ? 'Phase 4 fate — what we now call this join'
+          : 'Phase 5 fate — what we now call this join'}
+      </h4>
       <dl className="assembly-prov">
         <div>
           <dt>Fate</dt>
@@ -590,7 +595,7 @@ function Phase5Fate({ fate }) {
           {fate.already_accept_refuse_note}
         </p>
       ) : null}
-      {fate.is_accept_refuse && rollup ? (
+      {fate.is_accept_refuse && rollup && !isPhase4 ? (
         <div data-testid="phase5-ops-rollup">
           <h4>Why we stopped — the D-128 OPS rollup, as recorded</h4>
           <p className="note">
@@ -635,11 +640,54 @@ function Phase5Fate({ fate }) {
           </ul>
         </div>
       ) : null}
+      {fate.is_accept_refuse && rollup && isPhase4 ? (
+        <div data-testid="phase4-ops-rollup">
+          <h4>Why we stopped — the Phase 4 residual-RMSD OPS rollup, as recorded</h4>
+          <p className="note">
+            ⚠ Ops numbers <strong>as recorded</strong> at tip{' '}
+            <code>{rollup.recorded_at_tip}</code>, out_root{' '}
+            <code>{rollup.out_root}</code>.{' '}
+            <strong>Not run, not queried, and not re-measured here.</strong>{' '}
+            This rollup is of <strong>{rollup.population}</strong>.
+          </p>
+          <ul>
+            <li>
+              Outcome of the two:{' '}
+              <strong>
+                PASS {rollup.pass} · REFUSE {rollup.refuse} · FAIL{' '}
+                {rollup.fail}
+              </strong>
+              . <code>recovered_of_two</code> ={' '}
+              <strong>{rollup.recovered_of_two}</strong> — recovering zero
+              of the two was an <strong>allowed outcome</strong> (
+              {rollup.pre_registered_at}).
+            </li>
+            <li data-testid="phase4-refuse-rows">
+              <strong>3272</strong> refused <code>rmsd_irreducible</code>
+              {rollup.notes && rollup.notes[3272]
+                ? ` — ${rollup.notes[3272]}`
+                : ''}; <strong>3394</strong> refused{' '}
+              <code>rmsd_gt_10</code>
+              {rollup.notes && rollup.notes[3394]
+                ? ` — ${rollup.notes[3394]}`
+                : ''}. The <strong>{rollup.gate_angstrom} Å</strong> gate
+              stays.
+            </li>
+            <li>{rollup.best_experimental_path}.</li>
+          </ul>
+        </div>
+      ) : null}
       {fate.moves_only_on ? (
         <p className="note" data-testid="phase5-phase4-open">
           This parent is <strong>open</strong>. It moves only on{' '}
           {fate.moves_only_on}, and no card, ops run, or tidy-up may
           reclassify it.
+        </p>
+      ) : null}
+      {isPhase4 && fate.hunt_closed ? (
+        <p className="note" data-testid="phase4-labelled">
+          Phase 4 pair labelled: hunt stopped after OPS 0/2 and Matt&apos;s
+          named-refuse sign. See Method (D-130-B / D-131).
         </p>
       ) : null}
     </div>

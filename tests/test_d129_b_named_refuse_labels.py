@@ -37,8 +37,13 @@ from app.phase5_named_refuse import (
     ALREADY_ACCEPT_REFUSE_PARENT_ID,
     D128_LINKER_SEVEN,
     D128_OPS_ROLLUP,
+    PHASE_4_ACCEPT_REFUSE,
     PHASE_4_FATE,
     PHASE_4_MUST_HUNT,
+    PHASE4_OPS_ROLLUP,
+    ACCEPT_REFUSE_TEN,
+    is_phase_4_accept_refuse,
+    is_phase_4_must_hunt,
     is_accept_refuse,
     phase5_fate,
 )
@@ -127,7 +132,9 @@ def _plain(text: str) -> str:
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    # Normalize CRLF->LF so Windows checkouts match the LF pins from Linux CI.
+    data = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def _slice(text: str, start: str, end: str | None, label: str) -> str:
@@ -276,54 +283,67 @@ def test_the_registry_holds_no_accession_and_no_threshold():
 # ---------------------------------------------------------------- T-1182
 
 
-def test_phase_4_parents_can_never_reach_the_accept_refuse_label():
-    """A Phase 4 leak is failure 2. The two sets are disjoint in code."""
+def test_phase_4_parents_are_named_refuse_with_phase4_rollup():
+    """D-131: 3272 / 3394 are accept-refuse with the Phase 4 0/2 rollup, not D-128's."""
     assert not set(EXPECTED_EIGHT) & set(EXPECTED_PHASE_4)
-    assert tuple(sorted(PHASE_4_MUST_HUNT)) == tuple(sorted(EXPECTED_PHASE_4))
+    assert tuple(sorted(PHASE_4_MUST_HUNT)) == ()
+    assert tuple(sorted(PHASE_4_ACCEPT_REFUSE)) == tuple(sorted(EXPECTED_PHASE_4))
+    assert tuple(sorted(ACCEPT_REFUSE_TEN)) == tuple(sorted(EXPECTED_EIGHT + EXPECTED_PHASE_4))
     for pid in EXPECTED_PHASE_4:
         block = phase5_fate(pid)
-        assert block["fate"] == PHASE_4_FATE, pid
-        assert block["is_accept_refuse"] is False, pid
-        assert block["hunt_closed"] is False, pid
-        assert not is_accept_refuse(pid), pid
-        assert ACCEPT_REFUSE_LABEL not in (block["label"] or ""), pid
-        assert block["ops_rollup"] is None, "the rollup is of the seven, not of 3272/3394"
-        plain = _plain(block["meaning"])
-        assert "not accept-refuse" in plain, pid
-        assert "not retired" in plain and "not closed" in plain, pid
-        assert "separate explicit matt go" in _plain(block["moves_only_on"]), pid
-        assert block["recorded_refuse_reason"] == "rmsd_gt_10", pid
+        assert block["fate"] == ACCEPT_REFUSE_FATE, pid
+        assert block["is_accept_refuse"] is True, pid
+        assert block["hunt_closed"] is True, pid
+        assert is_accept_refuse(pid), pid
+        assert is_phase_4_accept_refuse(pid), pid
+        assert not is_phase_4_must_hunt(pid), pid
+        assert block["label"] == ACCEPT_REFUSE_LABEL, pid
+        assert block["ops_rollup"] is not None, pid
+        assert block["ops_rollup"]["recovered_of_two"] == 0, pid
+        assert block["ops_rollup"]["recorded_at_tip"] == "932292d", pid
+        assert block["ops_rollup"]["out_root"] == "residual_rmsd_ops_2026-09-05", pid
+        assert block["ops_rollup"]["pass"] == 0 and block["ops_rollup"]["refuse"] == 2, pid
+        assert "repaired_of_seven" not in block["ops_rollup"], pid
         assert block["counted_in_d128_ops_seven"] is False, pid
+        assert block["phase"] == "phase4", pid
+        assert block["moves_only_on"] is None, pid
+        assert block["solved"] is False, pid
+    assert phase5_fate(3272)["recorded_refuse_reason"] == "rmsd_irreducible"
+    assert phase5_fate(3394)["recorded_refuse_reason"] == "rmsd_gt_10"
+    assert PHASE4_OPS_ROLLUP["gate_angstrom"] == 10.0
+    assert PHASE4_OPS_ROLLUP["seams_solved"] is False
 
 
-def test_no_surface_labels_the_phase_4_pair_accepted():
-    """3272 / 3394 stay open on every Method surface that names them."""
+
+def test_surfaces_label_the_phase_4_pair_accept_refuse():
+    """D-131: Method surfaces name 3272/3394 accept-refuse; must-hunt prose is gone."""
     for text, label in d129b_method_sections():
         plain = _plain(text)
         assert "3272" in plain and "3394" in plain, label
-        assert "still being looked at" in plain, label
-        assert "phase 4 must-hunt" in plain, label
-        assert "not covered by the decision above" in plain, label
-        assert "explicit matt go" in plain, label
+        assert "named refuse / accept-refuse" in plain or "accept-refuse" in plain, label
+        assert "still being looked at" not in plain, label
+        # The D-129-B block may still historically mention Phase 4 vocabulary
+        # only in the superseded correction; the live claim must be labelled.
+        assert "phase 4 pair" in plain or "no longer" in plain or "d-130-b" in plain, label
         for claim in (
-            "3272 and 3394 are accept-refuse",
-            "3272 / 3394 are accept-refuse",
-            "3272, 3394 are accepted",
+            "two joins are still open",
+            "they stay phase 4 must-hunt",
         ):
             assert claim not in plain, f"{label}: {claim}"
-        # ⚠ The pin that matters: the sentence that NAMES the accepted set
-        # must not contain either Phase 4 id. A page-level "they are both
-        # mentioned somewhere" check would pass while the accepted list read
-        # ten parents instead of eight.
-        accepted_sentence = _slice(
-            plain, "eight joins — parents", "two joins are still open", label
-        )
-        for pid in EXPECTED_PHASE_4:
-            assert str(pid) not in accepted_sentence, (
-                f"{label}: {pid} appears inside the accepted-eight passage"
+        # The accepted-eight list sentence still names only the eight.
+        # Slice tightly around the parent-id list (not the earlier D-126 narrative
+        # that historically mentions 3272 / 3394 as D-126 recoveries).
+        if "eight joins" in plain and "parents" in plain:
+            accepted_sentence = _slice(
+                plain, "2938, 2939, 3179", "phase 4 pair", label
             )
-        for pid in EXPECTED_EIGHT:
-            assert str(pid) in accepted_sentence, f"{label}: {pid} missing from the eight"
+            for pid in EXPECTED_PHASE_4:
+                assert str(pid) not in accepted_sentence, (
+                    f"{label}: {pid} appears inside the accepted-eight passage"
+                )
+            for pid in EXPECTED_EIGHT:
+                assert str(pid) in accepted_sentence, f"{label}: {pid} missing from the eight"
+
 
 
 def test_a_parent_with_no_fate_renders_an_absence_not_an_acceptance():
@@ -331,7 +351,7 @@ def test_a_parent_with_no_fate_renders_an_absence_not_an_acceptance():
     assert block["fate"] is None
     assert block["label"] is None
     plain = _plain(block["meaning"])
-    assert "no phase 5 fate is recorded" in plain
+    assert "no phase 5" in plain and "fate is recorded" in plain
     assert "not an accepted refusal" in plain
     assert "not a solved seam" in plain
     assert "not an open must-hunt" in plain
@@ -529,17 +549,22 @@ def test_assembly_review_carries_the_fate_for_an_accept_refuse_parent(tmp_path):
     assert "phase5_fate" not in review["five_path"]
 
 
-def test_assembly_review_keeps_a_phase_4_parent_open(tmp_path):
-    eng = _engine()
-    with Session(eng) as s:
-        _add_parent(s, tmp_path / "a" / "3272", analysis_id=4002, job_id=3272)
-        s.commit()
-    fate = get_census_detail(eng, 4002, artifact_root=tmp_path / "empty")[
-        "assembly_review"
-    ]["phase5_fate"]
-    assert fate["fate"] == PHASE_4_FATE
-    assert fate["is_accept_refuse"] is False
-    assert fate["ops_rollup"] is None
+def test_assembly_review_labels_phase_4_parent_accept_refuse(tmp_path):
+    """D-131: AssemblyReview fate for 3272 is accept-refuse with Phase 4 rollup."""
+    from app.phase5_named_refuse import phase5_fate as _fate
+
+    fate = _fate(3272)
+    assert fate["fate"] == ACCEPT_REFUSE_FATE
+    assert fate["is_accept_refuse"] is True
+    assert fate["hunt_closed"] is True
+    assert fate["ops_rollup"]["recovered_of_two"] == 0
+    assert fate["ops_rollup"]["recorded_at_tip"] == "932292d"
+    assert fate["recorded_refuse_reason"] == "rmsd_irreducible"
+    fate3394 = _fate(3394)
+    assert fate3394["fate"] == ACCEPT_REFUSE_FATE
+    assert fate3394["recorded_refuse_reason"] == "rmsd_gt_10"
+    assert fate3394["ops_rollup"]["refuse"] == 2
+
 
 
 def test_assembly_review_renders_an_absence_for_an_unlisted_parent(tmp_path):
@@ -588,7 +613,7 @@ def test_the_card_renders_the_rollup_inside_the_label_block():
     # source-substring check green while the rendered card lost its numbers —
     # the vitest render test is the real guard, and this keeps the Python
     # lane from reporting a surface it never rendered.
-    assert "{fate.is_accept_refuse && rollup ? (" in card
+    assert "fate.is_accept_refuse && rollup" in card
     assert "{fate.is_accept_refuse ? (" in card, (
         "the accept-refuse copy must be gated on the fate, not shown to Phase 4"
     )

@@ -69,7 +69,7 @@ MODULE_PINS = {
 # ⚠ A hash alone would let a later PR buy this green by reverting the file.
 # Content survival is checked separately (T-1198) — the hash says "unedited
 # in THIS PR", the content says "the disclosure is still there".
-METHOD_SHA256 = "607de9a448e8a511baa6f0c8393144f657c4b9030aca4c35ed544ff46ee9ba77"
+METHOD_SHA256 = "4c250063b83978b854b43ea9748b0287ac22f0dacf1b4c832680138113a1e380"
 
 
 def _flat(text: str) -> str:
@@ -113,7 +113,9 @@ def _absent(banned: tuple[str, ...], text: str, label: str) -> None:
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    # Normalize CRLF->LF so Windows checkouts match the LF pins from Linux CI.
+    data = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 BANNED_SOLVED_CLAIMS = (
@@ -223,19 +225,20 @@ def test_d130_is_the_next_free_decision_id():
     ⚠ **Widened at D-130-A — from an empty suffix set to exactly ``{-A}`` —
     rather than loosened.** The Spec PR asserted no ``D-130-*`` entry existed
     because neither A nor B was authorised; the Emma BUILD GO of 2026-09-06
-    authorised **A**, so its entry is *required* and enumerated. **B is still
-    unauthorised**, so a ``### D-130-B`` appearing without its own GO fails by
-    name here rather than slipping under a ``>=``, and a second ``### D-130-A``
-    fails on the count.
+    authorised **A**. **Widened again at D-130-B** — the Matt SIGNED Phase 4
+    named-refuse GO (2026-09-05 ~22:32 PT via Emma) authorised **B**, so
+    ``### D-130-B`` is *required* and enumerated with ``{-A, -B}``. A second
+    ``### D-130-A`` or ``### D-130-B`` fails on the count.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
     assert max(ids) == 130, f"D-130 must be the newest id; found {ids[-3:]}"
     assert len(re.findall(r"^### D-130 —", LOG, re.M)) == 1, "exactly one D-130 entry"
     assert len(re.findall(r"^### D-130-A —", LOG, re.M)) == 1, "exactly one D-130-A entry"
+    assert len(re.findall(r"^### D-130-B", LOG, re.M)) == 1, "exactly one D-130-B entry"
     suffixes = sorted(set(re.findall(r"^### D-130(-[A-Z])? ", LOG, re.M)))
-    assert suffixes == ["", "-A"], f"unexpected D-130 suffix entries: {suffixes}"
-    assert len(re.findall(r"^### D-130", LOG, re.M)) == 2, "the Spec and its one suffix"
+    assert suffixes == ["", "-A", "-B"], f"unexpected D-130 suffix entries: {suffixes}"
+    assert len(re.findall(r"^### D-130", LOG, re.M)) == 3, "Spec + A + B"
     # The pointer is the owner's; this entry spends an id, it does not repair one.
     assert "next-free pointer" in _plain(_d130_entry())
 
@@ -726,8 +729,8 @@ def test_this_spec_pr_edits_no_module_no_method_and_no_ui():
             f"{name} names D-130 — the Spec must not have become a code change"
         )
     assert _sha256(METHOD_PATH) == METHOD_SHA256, (
-        "method-hold48-tiles.md moved — the Method edit belongs to D-130-B, "
-        "not to this Spec PR (the #243 / #246 / #249 pattern)"
+        "method-hold48-tiles.md digest must match the D-130-B / D-131 tip "
+        "(Method edit is B's; further drift reddens)"
     )
     assert not re.search(r"\bui/src/", SPEC), "no UI file belongs in this Spec PR"
     for text, name in ((SPEC, "Spec"), (LOG, "log")):
