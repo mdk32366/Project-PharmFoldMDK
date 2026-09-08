@@ -399,6 +399,13 @@ So the rule is not "be careful" — it is:
   the fifth pass through that resolution and the rule has not moved — **never** a `>=`, because a
   `>=` is precisely the change that would end the guard's ability to tell a spent id from a free
   one.
+  ⚠ **Effect on the `docs/RESERVED.md` citation invariant: none — the hole moved, it did not grow.**
+  Run before and after: `origin/main` at `dd06e9c` reported `['D-131', 'D-139', 'F-067']`; this
+  branch reports `['D-131', 'D-140', 'F-067']`. **D-139 resolved** (it now has a `### ` entry) and
+  **D-140 took its place**, because the next-free guards cite the barred integer by name — the same
+  forward reference D-138 left behind when it barred 139, and the reason `RESERVED.md` distinguishes
+  a reference that announces its own absence from the D-062 defect. `D-131` (the suffix half of
+  `### D-130-B / D-131`) and `F-067` (open in #222) are both pre-existing and untouched here.
 - **Context, and how the PASS subset is known (D-016).** Matt **BUILD GO** 2026-09-08 ~2:57 PM PT
   via Emma. ⚠ **The subset was enumerated off the tree at `dd06e9c`, not recalled**, and the
   enumeration is the load-bearing part of this entry:
@@ -474,8 +481,9 @@ So the rule is not "be careful" — it is:
 - **⚠ What this does NOT do.**
   - **Not** a threshold move. 10.0 Å stands; the three refuse reasons stand; nothing was re-fit,
     re-run or re-measured, and this PR performs **no** ops.
-  - **Not** an auto-flip. No parent flips because a tree appeared, because a PR merged, or because a
-    count improved. **Never a pass count** — the allowlist is the authority and it is enumerated.
+  - **Not** an auto-flip — **no auto-flip**, in the freeze's own words. No parent flips because a
+    tree appeared, because a PR merged, or because a count improved. **Never a pass count** — the
+    allowlist is the authority and it is enumerated.
   - **Not** a promotion of the ten. All ten accept-refuse parents keep **assembler** and keep their
     labels; `phase5_fate()` is untouched, the Phase 4 hunt stays **closed**, and 3432 is **not
     re-opened**.
