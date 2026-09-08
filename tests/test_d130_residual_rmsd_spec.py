@@ -240,17 +240,28 @@ def test_d130_is_the_next_free_decision_id():
     ⚠ **Widened at D-132 — from "130 is the newest id" to "132 is the only id
     above it" — rather than loosened.** Spending D-132 reddened the ``max``
     form BY DESIGN: the guard did its job. The successor is enumerated, so a
-    stray ``### D-131`` or ``### D-133`` still reddens, and D-132 must be the
+    stray ``### D-131`` still reddens, and D-132 must be the
     inventory-amend entry rather than any entry that took the number.
+
+    ⚠ **Widened again at D-133 — from ``[132]`` to ``[132, 133]`` — and again
+    by enumeration, not by a ``>=``.** Spending D-133 reddened the previous
+    form BY DESIGN, which is the guard working rather than a false alarm.
+    D-133 is the census sortable-Structure-column entry, named here so an
+    entry that merely *takes* the number still fails, and a stray
+    ``### D-134`` fails too.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132], (
-        f"D-130's only successor must be D-132; found {ids[-3:]}"
+    assert [i for i in ids if i > 130] == [132, 133], (
+        f"D-130's successors must be exactly D-132 and D-133; found {ids[-3:]}"
     )
     assert re.search(r"^### D-132 — Assemble-inventory amend", LOG, re.M), (
         "D-132 must be the inventory-amend entry, not some other entry that "
         "took the number"
+    )
+    assert re.search(r"^### D-133 — Census gains a sortable Structure column", LOG, re.M), (
+        "D-133 must be the census sortable-Structure-column entry, not some "
+        "other entry that took the number"
     )
     assert len(re.findall(r"^### D-130 —", LOG, re.M)) == 1, "exactly one D-130 entry"
     assert len(re.findall(r"^### D-130-A —", LOG, re.M)) == 1, "exactly one D-130-A entry"
