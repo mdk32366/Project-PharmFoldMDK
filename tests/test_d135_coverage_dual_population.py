@@ -398,40 +398,37 @@ def test_the_sibling_read_is_tranche_filtered_and_uses_the_shared_representative
         assert banned not in ast.unparse(fn), banned
 
 
-def test_a_broken_census_read_costs_the_note_and_not_the_page(engine):
+def test_a_broken_census_read_costs_the_note_and_not_the_row():
     """⚠ ADDITIVE. /coverage exists to serve the honest denominator; the bridge is a bonus on it, so
-    a failure in the census read must not take the route down.
+    a failure in the census read must leave the rows exactly as they arrived.
+
+    ⚠ The attachment is exercised DIRECTLY rather than through ``coverage_payload`` with a
+    counting fake engine. The counting version passed, and it would have kept passing while
+    measuring the wrong session: a later refactor that opens one more session before this one would
+    make the fake break an EARLIER read, and the test would go green on a case it was not written
+    for. Calling the function is the check.
 
     Prove it bites by removing the ``except`` around the scoped query."""
-    class _Boom:
-        def connect(self, *a, **k):
+    class _Down:
+        def connect(self, *args, **kwargs):
             raise RuntimeError("census read is down")
 
-    payload = coverage_payload(_ExplodingAfterManifest(_seeded(engine)))
+    rows = [{"accession": IGF2R, "fold_status": "failed"},
+            {"accession": FAT2, "fold_status": "not_folded"}]
+    from app.reads import _attach_census_sibling
+    _attach_census_sibling(_Down(), rows)                 # must not raise
+    assert all("census_sibling" not in r for r in rows)
+    assert rows == [{"accession": IGF2R, "fold_status": "failed"},
+                    {"accession": FAT2, "fold_status": "not_folded"}]
+
+
+def test_the_whole_coverage_page_survives_a_census_with_nothing_in_it(engine):
+    """⚠ The empty case is not the error case, and both must render. A census holding no row for any
+    cohort accession attaches nothing and leaves all 82 rows intact."""
+    payload = coverage_payload(engine)
     assert payload["coverage"]["denominator"] == 82
     assert len(payload["rows"]) == 82
     assert all("census_sibling" not in r for r in payload["rows"])
-
-
-class _ExplodingAfterManifest:
-    """An engine that answers the cohort reads and then refuses the census one.
-
-    ⚠ Counted rather than flagged: ``coverage_payload`` opens a session for the folded accessions,
-    one for the failures, then one for the census sibling. Failing the LAST one is the case under
-    test — failing the first would prove nothing about the sibling being additive."""
-
-    def __init__(self, real):
-        self._real = real
-        self._opened = 0
-
-    def __getattr__(self, name):
-        return getattr(self._real, name)
-
-    def connect(self, *args, **kwargs):
-        self._opened += 1
-        if self._opened > 2:
-            raise RuntimeError("census read is down")
-        return self._real.connect(*args, **kwargs)
 
 
 # ─────────────────────────────── the surfaces, read as source ───────────────────────────────
