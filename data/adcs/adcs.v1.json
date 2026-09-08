@@ -121,6 +121,20 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — gemtuzumab ozogamicin row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Acute myeloid leukemia"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"MYLOTARG\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 32fd2bb2-1cfa-4250-feb8-d7956c794e05 version 19 effective_time 20251219; results[0].openfda.application_number BLA761060 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE MYLOTARG is a CD33-directed antibody and cytotoxic drug conjugate indicated for: • treatment of newly-diagnosed CD33-positive acute myeloid leukemia (AML) in adults and pediatric patients 1 month and older ( 1.1 ). • treatment of relapsed or refractory CD33-positive AML in adults and pediatric patients 2 years and older ( 1.2 ). 1.1 Newly-Diagnosed CD33-positive Acute Myeloid Leukemia (AML) MYLOTARG is indicated for the treatment of newly-diagnosed CD33-positive acute myeloid leukemia in adults and pediatric patients 1 month and older. 1.2 Relapsed or Refractory CD33-positive AML MYLOTARG is indicated for the treatment of relapsed or refractory CD33-positive acute myeloid leukemia in adults and pediatric patients 2 years and older.",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"MYLOTARG\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 32fd2bb2-1cfa-4250-feb8-d7956c794e05 version 19 effective_time 20251219. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2017-09-01 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -183,6 +197,25 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — brentuximab vedotin row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Classical Hodgkin lymphoma",
+          "Systemic anaplastic large cell lymphoma",
+          "Peripheral T-cell lymphoma",
+          "Primary cutaneous anaplastic large cell lymphoma",
+          "Mycosis fungoides",
+          "Large B-cell lymphoma"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 3904f8dd-1aef-3490-e48f-bd55f32ed67f version 38 effective_time 20251111; results[0].openfda.application_number BLA125388 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE ADCETRIS is a CD30-directed antibody and microtubule inhibitor conjugate indicated for treatment of: • Adult patients with previously untreated Stage III or IV classical Hodgkin lymphoma (cHL), in combination with doxorubicin, vinblastine, and dacarbazine ( 1.1 ). • Pediatric patients 2 years and older with previously untreated high risk classical Hodgkin lymphoma (cHL), in combination with doxorubicin, vincristine, etoposide, prednisone, and cyclophosphamide ( 1.2 ). • Adult patients with classical Hodgkin lymphoma (cHL) at high risk of relapse or progression as post-autologous hematopoietic stem cell transplantation (auto-HSCT) consolidation ( 1.3 ). • Adult patients with classical Hodgkin lymphoma (cHL) after failure of auto-HSCT or after failure of at least two prior multi-agent chemotherapy regimens in patients who are not auto-HSCT candidates ( 1.4 ). • Adult patients with previously untreated systemic anaplastic large cell lymphoma (sALCL) or other CD30-expressing peripheral T-cell lymphomas (PTCL), including angioimmunoblastic T-cell lymphoma and PTCL not otherwise specified (NOS), in combination with cyclophosphamide, doxorubicin, and prednisone ( 1.5 ). • Adult patients with systemic anaplastic large cell lymphoma (sALCL) after failure of at least one prior multi-agent chemotherapy regimen ( 1.6 ). • Adult patients with primary cutaneous anaplastic large cell lymphoma (pcALCL) or CD30-expressing mycosis fungoides (MF) who have received prior systemic therapy ( 1.7 ). • Adult patients with relapsed or refractory large B-cell lymphoma (LBCL), including diffuse large B-cell lymphoma (DLBCL) NOS, DLBCL arising from indolent lymphoma, or high-grade B-cell lymphoma (HGBL), after two or more lines of systemic therapy who are not eligible for auto-HSCT or CAR T-cell therapy, in combination with lenalidomide and a rituximab product ( 1.8 ). 1.1 Previously Untreated Stage III or IV Classical Hodgkin Lymphoma (cHL), in Combination with Chemotherapy ADCETRIS is indicated for the treatment of adult patients with previously untreated Stage III or IV cHL, in combination with doxorubicin, vinblastine, and dacarbazine. 1.2 Previously Untreated High Risk Classical Hodgkin Lymphoma (cHL), in Combination with Chemotherapy ADCETRIS is indicated for the treatment of pediatric patients 2 years and older with previously untreated high risk cHL, in combination with doxorubicin, vincristine, etoposide, prednisone, and cyclophosphamide. 1.3 Classical Hodgkin Lymphoma (cHL) Consolidation ADCETRIS is indicated for the treatment of adult patients with cHL at high risk of relapse or progression as post-autologous hematopoietic stem cell transplantation (auto-HSCT) consolidation. 1.4 Relapsed Classical Hodgkin Lymphoma (cHL) ADCETRIS is indicated for the treatment of adult patients with cHL after failure of auto-HSCT or after failure of at least two prior multi-agent chemotherapy regimens in patients who are not auto-HSCT candidates. 1.5 Previously Untreated Systemic Anaplastic Large Cell Lymphoma (sALCL) or Other CD30-Expressing Peripheral T-cell Lymphomas (PTCL), in Combination with Chemotherapy ADCETRIS is indicated for the treatment of adult patients with previously untreated sALCL or other CD30-expressing PTCL, including angioimmunoblastic T-cell lymphoma and PTCL not otherwise specified (NOS), in combination with cyclophosphamide, doxorubicin, and prednisone. 1.6 Relapsed Systemic Anaplastic Large Cell Lymphoma (sALCL) ADCETRIS is indicated for the treatment of adult patients with sALCL after failure of at least one prior multi-agent chemotherapy regimen. 1.7 Relapsed Primary Cutaneous Anaplastic Large Cell Lymphoma (pcALCL) or CD30-Expressing Mycosis Fungoides (MF) ADCETRIS is indicated for the treatment of adult patients with pcALCL or CD30-expressing MF who have received prior systemic therapy. 1.8 Relapsed or Refractory Large B-Cell Lymphoma (LBCL) ADCETRIS in combination with lenalidomide and a rituximab product is indicated for the treatment of adult patients with relapsed or refractory LBCL, including diffuse large B-cell lymphoma (DLBCL) NOS, DLBCL arising from indolent lymphoma, or high-grade B-cell lymphoma (HGBL), after two or more lines of systemic therapy who are not eligible for auto-HSCT or chimeric antigen receptor (CAR) T-cell therapy.",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 3904f8dd-1aef-3490-e48f-bd55f32ed67f version 38 effective_time 20251111. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2011-08-19 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -245,6 +278,20 @@
         "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — ado-trastuzumab emtansine row",
         "as_of": "2026-07-27",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Breast cancer"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"KADCYLA\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 23f3c1f4-0fc8-4804-a9e3-04cf25dd302e version 35 effective_time 20260401; results[0].openfda.application_number BLA125427 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE KADCYLA is a HER2-targeted antibody and microtubule inhibitor conjugate indicated, as a single agent, for: the treatment of patients with HER2-positive, metastatic breast cancer who previously received trastuzumab and a taxane, separately or in combination. Patients should have either: received prior therapy for metastatic disease, or developed disease recurrence during or within six months of completing adjuvant therapy. ( 1.1 ) the adjuvant treatment of patients with HER2-positive early breast cancer who have residual invasive disease after neoadjuvant taxane and trastuzumab-based treatment. ( 1.2 ) Select patients for therapy based on an FDA-authorized test for KADCYLA [see Dosage and Administration (2.1) ] 1.1 Metastatic Breast Cancer (MBC) KADCYLA ® , as a single agent, is indicated for the treatment of patients with HER2-positive, metastatic breast cancer who previously received trastuzumab and a taxane, separately or in combination. Patients should have either: Received prior therapy for metastatic disease, or Developed disease recurrence during or within six months of completing adjuvant therapy. Select patients for therapy based on an FDA-authorized test for KADCYLA [ see Dosage and Administration (2.1) ]. 1.2 Early Breast Cancer (EBC) KADCYLA, as a single agent, is indicated for the adjuvant treatment of patients with HER2-positive early breast cancer who have residual invasive disease after neoadjuvant taxane and trastuzumab -based treatment. Select patients for therapy based on an FDA-authorized test for KADCYLA [ see Dosage and Administration (2.1) ].",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"KADCYLA\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 23f3c1f4-0fc8-4804-a9e3-04cf25dd302e version 35 effective_time 20260401. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2013-02-22 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -307,6 +354,20 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — inotuzumab ozogamicin row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "B-cell precursor acute lymphoblastic leukemia"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"BESPONSA\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id cc7014b1-c775-411d-b374-8113248b4077 version 8 effective_time 20260206; results[0].openfda.application_number BLA761040 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1. INDICATIONS AND USAGE BESPONSA is indicated for the treatment of relapsed or refractory CD22-positive B-cell precursor acute lymphoblastic leukemia (ALL) in adult and pediatric patients 1 year and older . BESPONSA is a CD22-directed antibody and cytotoxic drug conjugate indicated for the treatment of relapsed or refractory CD22-positive B-cell precursor acute lymphoblastic leukemia (ALL) in adult and pediatric patients 1 year and older. ( 1 )",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"BESPONSA\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id cc7014b1-c775-411d-b374-8113248b4077 version 8 effective_time 20260206. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2017-08-17 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -369,6 +430,21 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — polatuzumab vedotin row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Diffuse large B-cell lymphoma",
+          "High-grade B-cell lymphoma"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"POLIVY\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 20a16ab2-f338-4abb-9dcd-254bd949a2bc version 15 effective_time 20260824; results[0].openfda.application_number BLA761121 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE POLIVY is a CD79b-directed antibody and microtubule inhibitor conjugate indicated: in combination with a rituximab product, cyclophosphamide, doxorubicin, and prednisone (R-CHP) for the treatment of adult patients who have previously untreated diffuse large B-cell lymphoma (DLBCL), not otherwise specified (NOS) or high-grade B-cell lymphoma (HGBL) and who have an International Prognostic Index score of 2 or greater. ( 1.1 ) in combination with bendamustine and a rituximab product for the treatment of adult patients with relapsed or refractory DLBCL, NOS, after at least two prior therapies. ( 1.2 ) 1.1 Previously Untreated DLBCL, NOS or HGBL POLIVY in combination with a rituximab product, cyclophosphamide, doxorubicin, and prednisone (R-CHP) is indicated for the treatment of adult patients who have previously untreated diffuse large B-cell lymphoma (DLBCL), not otherwise specified (NOS) or high-grade B-cell lymphoma (HGBL) and who have an International Prognostic Index score of 2 or greater. 1.2 Relapsed or Refractory DLBCL, NOS POLIVY in combination with bendamustine and a rituximab product is indicated for the treatment of adult patients with relapsed or refractory DLBCL, NOS, after at least two prior therapies.",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"POLIVY\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 20a16ab2-f338-4abb-9dcd-254bd949a2bc version 15 effective_time 20260824. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2019-06-10 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -431,6 +507,21 @@
         "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — enfortumab vedotin row",
         "as_of": "2026-07-27",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Urothelial cancer",
+          "Muscle invasive bladder cancer"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"PADCEV\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id b5631d3e-4604-4363-8f20-11dfc5a4a8ed version 18 effective_time 20260804; results[0].openfda.application_number BLA761137 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE PADCEV ® , in combination with pembrolizumab or pembrolizumab and berahyaluronidase alfa-pmph, as neoadjuvant treatment and then continued after cystectomy as adjuvant treatment, is indicated for the treatment of adult patients with muscle invasive bladder cancer (MIBC). PADCEV ® , in combination with pembrolizumab or pembrolizumab and berahyaluronidase alfa-pmph, is indicated for the treatment of adult patients with locally advanced or metastatic urothelial cancer (la/mUC). PADCEV, as a single agent, is indicated for the treatment of adult patients with la/mUC who: • have previously received a programmed death receptor-1 (PD-1) or programmed death-ligand 1 (PD-L1) inhibitor and platinum-containing chemotherapy, or • are ineligible for cisplatin-containing chemotherapy and have previously received one or more prior lines of therapy. PADCEV is a Nectin-4-directed antibody and microtubule inhibitor conjugate indicated: • in combination with pembrolizumab or pembrolizumab and berahyaluronidase alfa-pmph, as neoadjuvant treatment and then continued after cystectomy as adjuvant treatment, for the treatment of adult patients with muscle invasive bladder cancer (MIBC). ( 1 ) • in combination with pembrolizumab or pembrolizumab and berahyaluronidase alfa-pmph, for the treatment of adult patients with locally advanced or metastatic urothelial cancer (la/mUC). ( 1 ) • as a single agent for the treatment of adult patients with la/mUC who: ○ have previously received a programmed death receptor-1 (PD-1) or programmed death-ligand 1 (PD-L1) inhibitor and platinum-containing chemotherapy, or ○ are ineligible for cisplatin-containing chemotherapy and have previously received one or more prior lines of therapy. ( 1 )",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"PADCEV\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id b5631d3e-4604-4363-8f20-11dfc5a4a8ed version 18 effective_time 20260804. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2019-12-18 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -493,6 +584,23 @@
         "source": "data/adc_reference_mapping.csv (D-029/D-040 owner-curated 2026-07-27; antigen + uniprot_accession on the named approved row) — trastuzumab deruxtecan row",
         "as_of": "2026-07-27",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Breast cancer",
+          "Non-small cell lung cancer",
+          "Gastric or gastroesophageal junction adenocarcinoma",
+          "Solid tumors"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ENHERTU\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 7e67e73e-ddf4-4e4d-8b50-09d7514910b6 version 28 effective_time 20260515; results[0].openfda.application_number BLA761139 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE ENHERTU is a HER2-directed antibody and topoisomerase inhibitor conjugate indicated for: HER2-Positive Early Breast Cancer as neoadjuvant treatment of adult patients with HER2-positive (IHC 3+ or ISH+) Stage II or III breast cancer, as determined by an FDA-authorized test followed by a taxane, trastuzumab, and pertuzumab (THP). ( 1.1 ) as adjuvant treatment of adult patients with HER2-positive (IHC 3+ or ISH+) breast cancer who have residual invasive disease following neoadjuvant trastuzumab (with or without pertuzumab) and taxane-based treatment. ( 1.1 ) HER2-Positive Metastatic Breast Cancer in combination with pertuzumab as first-line treatment of adult patients with unresectable or metastatic HER2-positive (IHC 3+ or ISH+) breast cancer, as determined by an FDA-authorized test. ( 1.2 ) as monotherapy for the treatment of adult patients with unresectable or metastatic HER2-positive (IHC 3+ or ISH+) breast cancer who have received a prior anti-HER2-based regimen either in the metastatic setting, or, in the neoadjuvant or adjuvant setting and have developed disease recurrence during or within six months of completing therapy. ( 1.2 ) HER2-Low and HER2-Ultralow Metastatic Breast Cancer as monotherapy for the treatment of adult patients with unresectable or metastatic hormone receptor (HR)-positive, HER2-low (IHC 1+ or IHC 2+/ISH-) or HER2-ultralow (IHC 0 with membrane staining) breast cancer, as determined by an FDA-authorized test, that has progressed on one or more endocrine therapies in the metastatic setting. ( 1.3 ) as monotherapy for the treatment of adult patients with unresectable or metastatic HER2-low (IHC 1+ or IHC 2+/ISH-) breast cancer, as determined by an FDA-authorized test, who have received a prior chemotherapy in the metastatic setting; or developed disease recurrence during or within 6 months of completing adjuvant chemotherapy. ( 1.3 ) HER2-Mutant Unresectable or Metastatic Non-Small Cell Lung Cancer as monotherapy for the treatment of adult patients with unresectable or metastatic non-small cell lung cancer (NSCLC) whose tumors have activating HER2 (ERBB2) mutations, as detected by an FDA-authorized test, and who have received a prior systemic therapy* ( 1.4 ) HER2-Positive Locally Advanced or Metastatic Gastric Cancer as monotherapy for the treatment of adult patients with locally advanced or metastatic HER2-positive (IHC 3+ or IHC 2+/ISH positive) gastric or gastroesophageal junction adenocarcinoma who have received a prior trastuzumab-based regimen. ( 1.5 ) HER2-Positive (IHC 3+) Unresectable or Metastatic Solid Tumors as monotherapy for the treatment of adult patients with unresectable or metastatic HER2-positive (IHC 3+) solid tumors who have received prior systemic treatment and have no satisfactory alternative treatment options* ( 1.6 ) * These indications are approved under accelerated approval based on objective response rate and duration of response. Continued approval for this indication may be contingent upon verification and description of clinical benefit in a confirmatory trial. ( 14.3 , 14.5 ) 1.1 HER2-Positive Early Breast Cancer ENHERTU followed by a taxane, trastuzumab, and pertuzumab (THP) is indicated for the neoadjuvant treatment of adult patients with HER2-positive (IHC 3+ or ISH+) Stage II or III breast cancer as determined by an FDA-authorized test [see Dosage and Administration (2.1) ]. ENHERTU is indicated for the adjuvant treatment of adult patients with HER2-positive (IHC 3+ or ISH+) breast cancer who have residual invasive disease following neoadjuvant trastuzumab (with or without pertuzumab) and taxane-based treatment. 1.2 HER2-Positive Metastatic Breast Cancer ENHERTU, in combination with pertuzumab, is indicated for the first-line treatment of adult patients with unresectable or metastatic HER2-positive (IHC 3+ or ISH+) breast cancer, as determined by an FDA-authorized test [see Dosage and Administration (2.1) ]. ENHERTU, as monotherapy, is indicated for the treatment of adult patients with unresectable or metastatic HER2-positive (IHC 3+ or ISH+) breast cancer who have received a prior anti-HER2-based regimen either in the metastatic setting, or, in the neoadjuvant or adjuvant setting and have developed disease recurrence during or within six months of completing therapy. 1.3 HER2-Low and HER2-Ultralow Metastatic Breast Cancer ENHERTU, as monotherapy, is indicated for the treatment of adult patients with unresectable or metastatic Hormone receptor (HR)-positive HER2-low (IHC 1+ or IHC 2+/ISH-) or HER2-ultralow (IHC 0 with membrane staining) breast cancer, as determined by an FDA-authorized test, that has progressed on one or more endocrine therapies in the metastatic setting [see Dosage and Administration (2.1) ] . HER2-low (IHC 1+ or IHC 2+/ISH-) breast cancer, as determined by an FDA-authorized test, who have received a prior chemotherapy in the metastatic setting or developed disease recurrence during or within 6 months of completing adjuvant chemotherapy [see Dosage and Administration (2.1) ] . 1.4 HER2-Mutant Unresectable or Metastatic Non-Small Cell Lung Cancer ENHERTU, as monotherapy, is indicated for the treatment of adult patients with unresectable or metastatic non-small cell lung cancer (NSCLC) whose tumors have activating HER2 (ERBB2) mutations, as detected by an FDA-authorized test, and who have received a prior systemic therapy. This indication is approved under accelerated approval based on objective response rate and duration of response [see Clinical Studies (14.4) ] . Continued approval for this indication may be contingent upon verification and description of clinical benefit in a confirmatory trial. 1.5 HER2-Positive Locally Advanced or Metastatic Gastric Cancer ENHERTU, as monotherapy, is indicated for the treatment of adult patients with locally advanced or metastatic HER2-positive (IHC 3+ or IHC 2+/ISH positive) gastric or gastroesophageal junction (GEJ) adenocarcinoma who have received a prior trastuzumab-based regimen. 1.6 HER2-Positive (IHC 3+) Unresectable or Metastatic Solid Tumors ENHERTU, as monotherapy, is indicated for the treatment of adult patients with unresectable or metastatic HER2-positive (IHC 3+) solid tumors who have received prior systemic treatment and have no satisfactory alternative treatment options. This indication is approved under accelerated approval based on objective response rate and duration of response [see Clinical Studies (14.6) ] . Continued approval for this indication may be contingent upon verification and description of clinical benefit in a confirmatory trial.",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ENHERTU\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 7e67e73e-ddf4-4e4d-8b50-09d7514910b6 version 28 effective_time 20260515. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2019-12-20 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -555,6 +663,20 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — sacituzumab govitecan row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Breast cancer"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"TRODELVY\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 57a597d2-03f0-472e-b148-016d7169169d version 20 effective_time 20260624; results[0].openfda.application_number BLA761115 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE TRODELVY is a Trop-2-directed antibody and topoisomerase inhibitor conjugate indicated: Locally Advanced or Metastatic Triple-Negative Breast Cancer First Line As a single agent for the first-line treatment of adult patients with unresectable locally advanced or metastatic triple negative breast cancer (TNBC) who are not candidates for PD-1 or PD-L1 inhibitor-based therapy. ( 1.1 , 14.1 ) In combination with pembrolizumab or pembrolizumab and berahyaluronidase alfa-pmph for the first-line treatment of adult patients with unresectable locally advanced or metastatic TNBC whose tumors express PD-L1 (CPS ≥ 10) as determined by an FDA-authorized test. ( 1.1 , 14.1 ) Second Line or Later For the treatment of adult patients with unresectable locally advanced or mTNBC who have received two or more prior systemic therapies, at least one of them for metastatic disease. ( 1.1 , 14.1 ) Locally Advanced or Metastatic HR-Positive, HER2-Negative Breast Cancer For the treatment of adult patients with unresectable locally advanced or metastatic hormone receptor (HR)-positive, human epidermal growth factor receptor 2 (HER2)-negative (IHC 0, IHC 1+ or IHC 2+/ISH–) breast cancer who have received endocrine-based therapy and at least two additional systemic therapies in the metastatic setting. ( 1.1 , 14.2 ) 1.1 Locally Advanced or Metastatic Triple-Negative Breast Cancer First Line TRODELVY as a single agent is indicated for the first-line treatment of adult patients with unresectable locally advanced or metastatic triple negative breast cancer (TNBC) who are not candidates for PD-1 or PD-L1 inhibitor based therapy. TRODELVY, in combination with pembrolizumab or pembrolizumab and berahyaluronidase alfa-pmph, is indicated for the first-line treatment of adult patients with unresectable locally advanced or metastatic TNBC whose tumors express PD-L1 [Combined Positive Score (CPS ≥ 10)] as determined by an FDA-authorized test [see Dosage and Administration (2.1) ] . Second Line or Later TRODELVY is indicated for the treatment of adult patients with unresectable locally advanced or metastatic TNBC who have received two or more prior systemic therapies, at least one of them for metastatic disease. 1.2 Locally Advanced or Metastatic HR-positive, HER2-negative Breast Cancer TRODELVY is indicated for the treatment of adult patients with unresectable locally advanced or metastatic hormone receptor (HR)-positive, human epidermal growth factor receptor 2 (HER2)-negative (IHC 0, IHC 1+ or IHC 2+/ISH–) breast cancer who have received endocrine-based therapy and at least two additional systemic therapies in the metastatic setting.",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"TRODELVY\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 57a597d2-03f0-472e-b148-016d7169169d version 20 effective_time 20260624. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2020-04-22 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -617,6 +739,20 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — belantamab mafodotin row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Multiple myeloma"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"BLENREP\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id aef7c34c-fef8-407c-99c0-a68aded53c60 version 1 effective_time 20251023; results[0].openfda.application_number BLA761440 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE BLENREP is indicated in combination with bortezomib and dexamethasone for the treatment of adult patients with relapsed or refractory multiple myeloma who have received at least two prior lines of therapy, including a proteasome inhibitor and an immunomodulatory agent. BLENREP, a B‑cell maturation antigen (BCMA)‑directed antibody and microtubule inhibitor conjugate, is indicated in combination with bortezomib and dexamethasone for the treatment of adult patients with relapsed or refractory multiple myeloma who have received at least two prior lines of therapy, including a proteasome inhibitor and an immunomodulatory agent. ( 1 )",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"BLENREP\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id aef7c34c-fef8-407c-99c0-a68aded53c60 version 1 effective_time 20251023. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2025-10-23 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -679,6 +815,22 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — loncastuximab tesirine row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Large B-cell lymphoma",
+          "Diffuse large B-cell lymphoma",
+          "High-grade B-cell lymphoma"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ZYNLONTA\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id af54af12-3edf-4301-8bc5-0446bc813c1d version 15 effective_time 20260612; results[0].openfda.application_number BLA761196 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE ZYNLONTA is indicated for the treatment of adult patients with relapsed or refractory large B-cell lymphoma after two or more lines of systemic therapy, including diffuse large B-cell lymphoma (DLBCL) not otherwise specified, DLBCL arising from low-grade lymphoma, and high-grade B-cell lymphoma. This indication is approved under accelerated approval based on overall response rate [see Clinical Studies (14.1) ] . Continued approval for this indication may be contingent upon verification and description of clinical benefit in a confirmatory trial(s). ZYNLONTA is a CD19-directed antibody and alkylating agent conjugate indicated for the treatment of adult patients with relapsed or refractory large B-cell lymphoma after two or more lines of systemic therapy, including diffuse large B-cell lymphoma (DLBCL) not otherwise specified, DLBCL arising from low-grade lymphoma, and high-grade B-cell lymphoma. ( 1 ) This indication is approved under accelerated approval based on overall response rate. Continued approval for this indication may be contingent upon verification and description of clinical benefit in a confirmatory trial(s). ( 1 )",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ZYNLONTA\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id af54af12-3edf-4301-8bc5-0446bc813c1d version 15 effective_time 20260612. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2021-04-23 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -741,6 +893,20 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — tisotumab vedotin row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Cervical cancer"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"TIVDAK\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id c9fe3f32-4219-466e-acb9-3f609b4f4df1 version 10 effective_time 20251120; results[0].openfda.application_number BLA761208 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE TIVDAK ® is indicated for the treatment of adult patients with recurrent or metastatic cervical cancer with disease progression on or after chemotherapy. TIVDAK is a tissue factor-directed antibody and microtubule inhibitor conjugate indicated for the treatment of adult patients with recurrent or metastatic cervical cancer with disease progression on or after chemotherapy. ( 1 )",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"TIVDAK\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id c9fe3f32-4219-466e-acb9-3f609b4f4df1 version 10 effective_time 20251120. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2021-09-20 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -803,6 +969,20 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — mirvetuximab soravtansine row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Epithelial ovarian, fallopian tube, or primary peritoneal cancer"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ELAHERE\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 00c424b5-6ccd-48ab-9e88-1986451120e2 version 14 effective_time 20250714; results[0].openfda.application_number BLA761310 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE ELAHERE ® is indicated for the treatment of adult patients with folate receptor-alpha (FRα) positive, platinum-resistant epithelial ovarian, fallopian tube, or primary peritoneal cancer, who have received one to three prior systemic treatment regimens. Select patients for therapy based on an FDA-approved test [see Dosage and Administration ( 2.1 )]. ELAHERE is a folate receptor alpha (FRα)-directed antibody and microtubule inhibitor conjugate indicated for the treatment of adult patients with FRα positive, platinum-resistant epithelial ovarian, fallopian tube, or primary peritoneal cancer, who have received one to three prior systemic treatment regimens. Select patients for therapy based on an FDA-approved test. ( 1 , 2.1 )",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ELAHERE\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 00c424b5-6ccd-48ab-9e88-1986451120e2 version 14 effective_time 20250714. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2022-11-14 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -865,6 +1045,21 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — TACSTD2 accession from the sacituzumab govitecan row (same gene); antigen Trop-2 named on the FDA 2025-01-17 Datroway approval notification. Reviewed assignment, not a Drugs@FDA field (D-029 seam).",
         "as_of": "2026-09-05",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Non-small cell lung cancer",
+          "Breast cancer"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 2950227c-6230-4ca4-a135-46e44d9424a0 version 18 effective_time 20260527; results[0].openfda.application_number BLA761394 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE DATROWAY is a Trop-2-directed antibody and topoisomerase inhibitor conjugate indicated for the treatment of: adult patients with locally advanced or metastatic epidermal growth factor receptor (EGFR)-mutated non-small cell lung cancer (NSCLC) who have received prior EGFR-directed therapy and platinum-based chemotherapy. ( 1.1 ) This indication is approved under accelerated approval based on objective response rate and duration of response [see Clinical Studies (14.1) ] . Continued approval for this indication may be contingent upon verification and description of clinical benefit in the confirmatory trial. adult patients with unresectable or metastatic triple-negative breast cancer (TNBC) who are not candidates for PD-1/PD-L1 inhibitor therapy [see Clinical Studies (14.2) ] . ( 1.2 ) adult patients with unresectable or metastatic, hormone receptor (HR)-positive, human epidermal growth factor receptor 2 (HER2)-negative (IHC 0, IHC 1+ or IHC 2+/ISH-) breast cancer who have received prior endocrine-based therapy and chemotherapy for unresectable or metastatic disease. ( 1.3 ) 1.1 Locally Advanced or Metastatic EGFR-Mutated Non-Small Cell Lung Cancer (NSCLC) DATROWAY is indicated for the treatment of adult patients with locally advanced or metastatic epidermal growth factor receptor (EGFR)-mutated non-small cell lung cancer (NSCLC) who have received prior EGFR-directed therapy and platinum-based chemotherapy. This indication is approved under accelerated approval based on objective response rate and duration of response [see Clinical Studies (14.1) ] . Continued approval for this indication may be contingent upon verification and description of clinical benefit in the confirmatory trial. 1.2 Unresectable or Metastatic Triple-Negative Breast Cancer (TNBC) DATROWAY is indicated for the treatment of adult patients with unresectable or metastatic triple-negative breast cancer (TNBC) who are not candidates for PD-1/PD-L1 inhibitor therapy [see Clinical Studies (14.2) ]. 1.3 Unresectable or Metastatic, HR-Positive, HER2-Negative Breast Cancer DATROWAY is indicated for the treatment of adult patients with unresectable or metastatic, hormone receptor (HR)-positive, human epidermal growth factor receptor 2 (HER2)-negative (IHC 0, IHC 1+ or IHC 2+/ISH-) breast cancer who have received prior endocrine-based therapy and chemotherapy for unresectable or metastatic disease.",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 2950227c-6230-4ca4-a135-46e44d9424a0 version 18 effective_time 20260527. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2025-01-17 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -927,6 +1122,20 @@
         "source": "data/heldout_positives.csv (UniProt REST join 2026-08-01; gene_symbol + uniprot_accession on the named agent row) — telisotuzumab vedotin row",
         "as_of": "2026-08-01",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Non-small cell lung cancer"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"EMRELIS\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id bc04f980-3957-4e35-ab81-8ec2ffe87215 version 3 effective_time 20250525; results[0].openfda.application_number BLA761384 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1 INDICATIONS AND USAGE EMRELIS is indicated for the treatment of adult patients with locally advanced or metastatic, non-squamous non-small cell lung cancer (NSCLC) with high c-Met protein overexpression [≥50% of tumor cells with strong (3+) staining], as determined by an FDA-approved test [see Dosage and Administration ( 2.1 )] , who have received a prior systemic therapy . This indication is approved under accelerated approval based on overall response rate (ORR) and duration of response (DOR) [see Clinical Studies ( 14 )] . Continued approval for this indication may be contingent upon verification and description of clinical benefit in a confirmatory trial(s). EMRELIS is a c-Met-directed antibody and microtubule inhibitor conjugate indicated for the treatment of adult patients with locally advanced or metastatic non-squamous non-small cell lung cancer (NSCLC) with high c-Met protein overexpression [≥50% of tumor cells with strong (3+) staining], as determined by an FDA-approved test, who have received a prior systemic therapy. ( 1 ) This indication is approved under accelerated approval based on overall response rate (ORR) and duration of response (DOR). Continued approval for this indication may be contingent upon verification and description of clinical benefit in a confirmatory trial(s). ( 1 )",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"EMRELIS\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id bc04f980-3957-4e35-ab81-8ec2ffe87215 version 3 effective_time 20250525. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2025-05-14 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     },
     {
@@ -989,7 +1198,27 @@
         "source": "UniProt REST gene_exact:IL3RA AND organism_id:9606 AND reviewed:true retrieved 2026-09-05; primaryAccession=P26951; gene_primary=IL3RA. Antigen CD123/IL3RA is a reviewed assignment (D-029: Drugs@FDA has no antigen field).",
         "as_of": "2026-09-05",
         "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "Blastic plasmacytoid dendritic cell neoplasm"
+        ],
+        "source": "reviewed reduction of FDA label section 1 INDICATIONS AND USAGE to tumour type only — stage, line of therapy and biomarker qualifiers stay in label_indications_verbatim on this row (D-136 decision 3). Text from openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"DECNUPAZ\" retrieved 2026-09-08; results[0].indications_and_usage; SPL set_id 508b6ff8-601d-4901-a7a5-816141134054 version 2 effective_time 20260527; results[0].openfda.application_number BLA761460 matches this row's application_number, so the indication belongs to this application and not to another drug of the same brand search (D-136 provenance). Every token here is a literal substring of label_indications_verbatim (D-136 decision 2).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "label_indications_verbatim": {
+        "value": "1. INDICATIONS AND USAGE DECNUPAZ is indicated for the treatment of adult patients with blastic plasmacytoid dendritic cell neoplasm (BPDCN). DECNUPAZ is a CD123-directed antibody and alkylating agent conjugate indicated for the treatment of adult patients with blastic plasmacytoid dendritic cell neoplasm (BPDCN). ( 1 )",
+        "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"DECNUPAZ\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 508b6ff8-601d-4901-a7a5-816141134054 version 2 effective_time 20260527. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2026-05-27 (D-136 provenance).",
+        "as_of": "2026-09-08",
+        "confidence": "official"
       }
     }
-  ]
+  ],
+  "indications_reviewed_as_of": {
+    "value": "2026-09-08",
+    "source": "D-136 openFDA SPL label pass: GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"<BRAND>\" for the 15 v1 brands, retrieved 2026-09-08; results[0].indications_and_usage. A third date, never collapsed into approvals_reconciled_as_of or antigen_mapping_reviewed_as_of (D-119 decision 5 / D-029): three questions asked on three days against two endpoints. Confidence is reviewed, not official: this one date gates both the official verbatim pull and the reviewed reduction beside it, and naming it official would overstate the weaker of the two.",
+    "as_of": "2026-09-08",
+    "confidence": "reviewed"
+  }
 }
