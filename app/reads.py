@@ -114,6 +114,27 @@ STRUCTURE_KIND_LABEL = {
     "mucin": "mucin — not folded",
 }
 
+# ⚠ The bucket a row with no `structure_kind` falls into, and its label says the absence rather
+# than implying a fold. A blank reads as `single-pass` — a forward pass that never happened
+# (D-133) — so the missing field is named here once and both the payload and the surface read it.
+STRUCTURE_KIND_NONE = "none"
+STRUCTURE_KIND_NOT_RECORDED_LABEL = "not recorded"
+
+# ⚠ The order the kinds are SERVED in (D-135), not a ranking — the two folded kinds first because
+# they are what a reader came for, then the two absences, then the unrecorded rows. It ships in the
+# payload so a consumer never has to type its own list of categories to iterate (Constraint A's
+# neighbouring failure: a component that decides which kinds exist stops showing a new one).
+STRUCTURE_KIND_ORDER = (
+    "assembled", "single-pass", "tiles_only", "mucin", STRUCTURE_KIND_NONE,
+)
+
+# ⚠ The two kinds that mean a STRUCTURE EXISTS — mirrors `apply_structure_kind`, which sets
+# `folded: True` for exactly these and `False` for `tiles_only` / `mucin`. Named so a consumer of a
+# structure kind never has to re-derive "does this protein have a fold", which is the kind of second
+# definition that drifts silently (a tile window is not the outward-facing region; a mucin was never
+# folded here).
+STRUCTURE_KINDS_WITH_A_FOLD = frozenset({"assembled", "single-pass"})
+
 # The paper's published Group B count (Kathad et al. 2024, D-040 / F-003). A SOURCE CONSTANT served
 # by the API so the surface derives it rather than typing it (D-062 Constraint-A). It never changes;
 # the DERIVED count (n_fit_positives = 12) is what the roster produced and is stored per run.
@@ -404,12 +425,108 @@ def coverage_payload(engine: Any) -> dict[str, Any]:
     folded = _folded_accessions(engine)
     failed = _failed_accessions(engine)
     projected = [_coverage_row(r, folded, failed) for r in rows]
+    _attach_census_sibling(engine, projected)
     return {
         "coverage": coverage(rows),
         "population_key": COVERAGE_POPULATION_KEY,
+        "census_sibling_key": CENSUS_SIBLING_KEY,
         "failed": sum(1 for r in projected if r["fold_status"] == "failed"),
         "rows": projected,
     }
+
+
+# ⚠⚠ THE POPULATION THIS FIELD BELONGS TO, NAMED IN THE PAYLOAD (D-016 / D-135). A JSON consumer
+# that finds `structure_kind: "assembled"` on a coverage row and no statement of which population it
+# describes will read it as the cohort's own fold — which is the precise mistake the field exists to
+# prevent. So it says so, on the wire, beside the value.
+CENSUS_SIBLING_KEY = {"kind": "CROSS_POPULATION_FACT", "text": (
+    "Present only on a cohort row that did NOT fold here, and only when that accession has a "
+    "representative in the CENSUS (D-087 / D-118). It states that a different measurement of the "
+    "same protein exists — a different span definition (D-081) — and it is NEVER the cohort's own "
+    "fold: `fold_status` stays `failed` or `not_folded` (D-043) and `coverage` is untouched. "
+    "⚠ It deliberately carries NO `analysis_id`: 75 of the 82 cohort accessions also appear in the "
+    "census, so an id here is one careless render away from putting a census fold under a cohort "
+    "target's own link. Consumers address the census row by ACCESSION, which /api/census/{id} has "
+    "resolved since D-118."
+)}
+
+
+def _attach_census_sibling(engine: Any, rows: list[dict[str, Any]]) -> None:
+    """Name the CENSUS representative of a cohort row that did not fold here (D-135).
+
+    ⚠⚠ THE DIRECTION IS THE ONLY NEW THING. ``_attach_cohort_fold`` already tells a census row that
+    a cohort fold of the same accession exists; this tells a cohort row the same about the census.
+    **IGF2R is the case that asked for it:** the cohort attempted it and died of CUDA OOM, and since
+    **D-134** the census representative of `P11717` is finally visible as an **assembled** parent
+    rather than mis-served as single-pass. Two measurements of one protein by one model, and the
+    coverage table could describe only one of them — in a paragraph, in a table cell.
+
+    ⚠⚠ NO ``analysis_id``, AND THAT IS THE POINT rather than an omission. See
+    ``tests/test_no_census_leak_on_tranche_zero.py``: 75 of the 82 cohort accessions are also census
+    rows, and a census id reaching a cohort surface is a *named stop condition* — the row's Target
+    link would then open a fold measured under a different span definition (D-081) with nothing on
+    screen saying so. A field that does not exist cannot be rendered by mistake; the surface links
+    by **accession**, which the census detail route resolves (D-118).
+
+    ⚠ ONE representative rule, not a second one. ``choose_census_representative`` is the same
+    function ``list_census`` and ``resolve_census_accession`` use, so this cannot come to disagree
+    with the census page it points at — including *"never a tile as the protein"* (D-118).
+
+    ⚠ SCOPED QUERY, not the whole census. ``list_census(engine)`` is the 7.1 MB build; coverage is a
+    hot page and asks about a handful of accessions, so the read is narrowed to them. The
+    REPRESENTATIVE RULE is still shared — it is the *query* that is narrowed, never the definition.
+
+    ⚠ A folded cohort row is skipped entirely. Where the cohort has its own measurement, the census
+    is not the interesting fact and a note there would be noise on 60-odd rows.
+
+    ⚠ Additive and non-load-bearing: a failure here costs the note and nothing else. Coverage is
+    the honest-denominator page and must render without it (the ``_attach_cohort_fold`` posture).
+    """
+    wanted = [
+        r["accession"] for r in rows
+        if r.get("accession") and r.get("fold_status") != "folded"
+    ]
+    if not wanted:
+        return
+    try:
+        with Session(engine) as session:
+            census = session.scalars(
+                select(ProteinAnalysis)
+                # ⚠ `> COHORT_TRANCHE`, the POSITIVE census form — never `!=`, which excludes a
+                # NULL-tranche row under three-valued logic and makes it invisible on both surfaces.
+                .where(ProteinAnalysis.cohort_tranche > COHORT_TRANCHE)
+                .where(ProteinAnalysis.input_value.in_(wanted))
+            ).all()
+    except Exception:                      # noqa: BLE001
+        return
+    by_acc: dict[str, list[ProteinAnalysis]] = {}
+    for row in census:
+        by_acc.setdefault(row.input_value, []).append(row)
+    for row in rows:
+        group = by_acc.get(row.get("accession"))
+        if not group:
+            continue
+        picked = choose_census_representative(group)
+        # ⚠ A tile is a window, not a protein (D-118). `choose_census_representative` already
+        # refuses to return one as the representative; the guard states the requirement anyway,
+        # because a caller inheriting that rule silently is how it stops holding.
+        if picked is None or is_census_tile_row(picked[0]):
+            continue
+        _, kind = picked
+        row["census_sibling"] = {
+            "structure_kind": kind,
+            "structure_kind_label": STRUCTURE_KIND_LABEL[kind],
+            # ⚠⚠ SERVED, NOT RE-DERIVED ON THE SURFACE. `tiles_only` and `mucin` are NOT folded
+            # proteins (see `apply_structure_kind`), and a surface deciding for itself which kinds
+            # count as a structure is a second definition of "folded" one edit from disagreeing
+            # with the census page it links to. The bridge is only honest where a structure exists.
+            "folded": kind in STRUCTURE_KINDS_WITH_A_FOLD,
+            # ⚠ the same note the census card carries, so "assembled" is never bare here either
+            "assembler_note": (
+                "assembled by pLDDT overlap, not superimposed; seam not solved"
+                if kind == "assembled" else None
+            ),
+        }
 
 
 # ── ranking (D-062): the persisted scorer result (F-004), latest VALID run only ─
@@ -1150,6 +1267,43 @@ def census_projection(row: ProteinAnalysis) -> dict[str, Any]:
     }
 
 
+def census_structure_kinds(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One ``{kind, label, n}`` per structure kind PRESENT in ``rows`` (D-135).
+
+    ⚠⚠ WHY THE ORDER IS IN THE PAYLOAD. The consumers are `/coverage`'s second-population strip
+    and the Story's cold strip, and **Constraint A** (D-050 / D-051) bars them from typing a count
+    — but a component that typed its own list of kinds to iterate would decide, in JSX, which
+    categories exist. It would then quietly stop showing a kind the census acquires later, which is
+    the same class of failure as a hardcoded count and harder to see. So the ORDER ships with the
+    counts and the surface iterates what it is given.
+
+    ⚠ The order is not a ranking, and there is nothing here to rank: the two folded kinds come
+    first because they are what a reader came for, then the two absences, then the unrecorded rows.
+    D-079 dec 1 bars scoring a census row and this orders categories, not proteins.
+
+    ⚠ A kind with no rows gets **no entry**, so a surface cannot print `assembled 0` as though the
+    census had been asked and answered zero — which is exactly what the D-133 chips truthfully
+    showed for all 45 assembled parents before **D-134** repaired the identity check. A category
+    that is absent from the data is absent from the payload; a category that is present states its
+    own count.
+
+    ⚠ The LABEL is the API's own (`STRUCTURE_KIND_LABEL`, plus the stated absence for a row with no
+    kind), so the strip cannot come to spell a category differently from the column it links to.
+    """
+    n: dict[str, int] = {}
+    labels: dict[str, str] = {}
+    for r in rows:
+        kind = r.get("structure_kind") or "none"
+        n[kind] = n.get(kind, 0) + 1
+        if kind not in labels and r.get("structure_kind_label"):
+            labels[kind] = r["structure_kind_label"]
+    return [
+        {"kind": k, "label": labels.get(k, STRUCTURE_KIND_NOT_RECORDED_LABEL), "n": n[k]}
+        for k in STRUCTURE_KIND_ORDER
+        if k in n
+    ]
+
+
 def census_summary(engine: Any) -> dict[str, Any]:
     """The census in four numbers, for the cold-open Story (`D-051` decision 1).
 
@@ -1166,6 +1320,11 @@ def census_summary(engine: Any) -> dict[str, Any]:
 
     ⚠ Every count states its key, in the payload, so the Story cannot print a number whose
     denominator a reader has to guess.
+
+    ⚠ D-135 adds ``structure_kinds`` — the per-kind breakdown, reduced from the SAME rows, so
+    `/coverage`'s second-population strip and the Story's cold strip can state how the census folds
+    were produced without downloading the 7.1 MB list to count them. Method-note item 2: prefer the
+    breakdown to the total. It is **not** a second coverage denominator and carries no fraction.
     """
     rows = list_census(engine)
     folded = [r for r in rows if r.get("folded") is not False and r.get("mean_plddt") is not None]
@@ -1174,11 +1333,20 @@ def census_summary(engine: Any) -> dict[str, Any]:
         "manifest_rows": len(rows),
         "folded": len(folded),
         "max_mean_plddt": max(plddts) if plddts else None,
+        "structure_kinds": census_structure_kinds(rows),
         "keys": {
             "manifest_rows": "every census protein row after D-118 identity (one per accession), folded or not (D-087)",
             "folded": ("census proteins with a parent or single-pass structure and a mean pLDDT "
                        "(tile windows are not proteins; D-118)"),
             "max_mean_plddt": "the highest mean pLDDT among those parent/single-pass folds",
+            "structure_kinds": (
+                "how each census protein's representative structure was PRODUCED (D-118 / D-133), "
+                "counted over the same census rows as `manifest_rows` — one entry per kind present, "
+                "in payload order, each carrying the API's own label. ⚠ These are census ROWS, "
+                "never D-132's 45 assembled parent JOBS, and this is a breakdown of a DIFFERENT "
+                "population from the cohort's 82 (D-081): it is not coverage of anything and has "
+                "no denominator in common with /api/coverage."
+            ),
         },
     }
 
