@@ -285,20 +285,31 @@ def test_d130_is_the_next_free_decision_id():
     in-flight id it was deliberately not taking**, read off ``gh pr list
     --state open`` rather than assumed. #261 then squash-merged at ``68fe0228``,
     this assertion reddened **exactly as both branches' comments predicted**, and
-    the merge inserted 137 beside 138. ⚠ **Four collisions, four resolutions by
+    the merge inserted 137 beside 138.     ⚠ **Four collisions, four resolutions by
     ADDING.** A ``>=`` would make each of them go away and would also end the
     guard's ability to tell a spent id from a free one, which is the only thing
     it does. A stray ``### D-139`` still fails.
+
+    ⚠ **Widened again at D-139 — to ``[132, 133, 134, 135, 136, 137, 138, 139]``**
+    — and this one breaks the run: it is **sequential, not a collision**. D-139
+    (the ADC Pipeline programme fields) was cut from ``dd06e9c`` with D-138 already
+    merged and no other PR open, so 139 was genuinely free. ⚠ The widening is still
+    by enumeration with the entry **named**, because "free at cut time" is exactly
+    what the previous four branches each believed too. A stray ``### D-140`` fails.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138], (
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138, 139], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137 and D-138; found {ids[-8:]}"
+        f"D-137, D-138 and D-139; found {ids[-9:]}"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 must be the /method contents-rail entry, not some other entry that "
         "took the number"
+    )
+    assert re.search(r"^### D-139 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
+        "D-139 must be the ADC pipeline programme-fields entry, not some other entry "
+        "that took the number"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 must be the ADC cancer-type entry, not some other entry that "

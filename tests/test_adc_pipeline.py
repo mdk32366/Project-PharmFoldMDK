@@ -40,7 +40,20 @@ def _envelope(**overrides):
     return base
 
 
+FIXTURE_CITATION = "Fixture J Onc 2026;1:1 (fixture carcinoma); NCT00000000"
+FIXTURE_CONDITIONS_SOURCE = (
+    "this row's own source_citation from data/adc_reference_mapping.csv "
+    "(CURATED 2026-07-27), quoted whole; no registry record on 2026-09-08"
+)
+
+
 def _minimal_pipeline_row(adc_id="fixture-pipeline"):
+    """A row that passes every D-124 + D-139 structural check.
+
+    ⚠ `cancer_type` is a LIST audited against `conditions_verbatim` on the same row
+    (D-139 decision 4) and `description` is audited against its own source
+    (decision 5), so the three cannot be built the way the scalar fields are.
+    """
     return {
         "id": _envelope(value=adc_id, confidence="derived"),
         "name": _envelope(value=adc_id),
@@ -48,7 +61,20 @@ def _minimal_pipeline_row(adc_id="fixture-pipeline"):
         "uniprot_accession": _envelope(value="P00000"),
         "development_stage": _envelope(value="clinical"),
         "phase": _envelope(value="Phase 1"),
-        "source_citation": _envelope(value="fixture citation"),
+        "source_citation": _envelope(value=FIXTURE_CITATION),
+        "cancer_type": _envelope(
+            value=["Fixture carcinoma"], source=FIXTURE_CONDITIONS_SOURCE
+        ),
+        "conditions_verbatim": _envelope(
+            value=FIXTURE_CITATION, source=FIXTURE_CONDITIONS_SOURCE
+        ),
+        "description": _envelope(
+            value="Fixture Bio — a fixture-directed ADC.",
+            source=(
+                "this row's source_citation in data/adc_reference_mapping.csv "
+                "(CURATED 2026-07-27) names Fixture Bio as the sponsor"
+            ),
+        ),
     }
 
 
@@ -60,6 +86,11 @@ def _minimal_pipeline(rows=None):
         "completeness": _envelope(value="floor_not_census"),
         "mapping_sourced_as_of": _envelope(value="2026-07-27"),
         "catalog_assembled_as_of": _envelope(value="2026-09-05", confidence="derived"),
+        "conditions_reviewed_as_of": _envelope(value="2026-09-08"),
+        "registry_artifact": _envelope(
+            value="data/adcs/artifacts/ctgov.pipeline.2026-09-08.json",
+            confidence="derived",
+        ),
         "pipeline": rows if rows is not None else [_minimal_pipeline_row()],
     }
 
@@ -82,6 +113,7 @@ def test_committed_pipeline_every_field_is_an_envelope():
     for name in (
         "catalog_id", "schema_version", "scope", "completeness",
         "mapping_sourced_as_of", "catalog_assembled_as_of",
+        "conditions_reviewed_as_of", "registry_artifact",
     ):
         assert set(data[name].keys()) == set(FIELD_KEYS)
         assert data[name]["confidence"] in CONFIDENCES
@@ -90,7 +122,11 @@ def test_committed_pipeline_every_field_is_an_envelope():
         for name, field in row.items():
             assert set(field.keys()) == set(FIELD_KEYS), name
             assert field["confidence"] in CONFIDENCES, name
-            assert field["value"] not in (None, "")
+            # D-139: `cancer_type` and `description` may be a null NAMED ABSENCE, so
+            # "not empty" is the wrong bar for them. They have their own suite in
+            # tests/test_d139_pipeline_programme.py.
+            if name not in ("cancer_type", "description"):
+                assert field["value"] not in (None, ""), name
             assert field["source"] and field["as_of"]
 
 

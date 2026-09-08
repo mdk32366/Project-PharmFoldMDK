@@ -409,13 +409,24 @@ def test_d129_is_the_next_free_decision_id():
     # collisions, four resolutions by ADDING.** The temptation each time is a `>=`, and a
     # `>=` would end the guard's ability to tell a spent id from a free one — which is the
     # only thing it does. A stray `### D-139` still reddens.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138], (
+    #
+    # ⚠ Widened again at **D-139** — to `[130, 132, 133, 134, 135, 136, 137, 138, 139]` —
+    # the same way, and this one is the first SEQUENTIAL widening since D-134. D-139 (the
+    # ADC Pipeline programme fields) was cut from `dd06e9c` with D-138 already merged and
+    # `gh pr list --state open` empty, so 139 was free rather than deliberately stepped
+    # around; the id is still named below rather than admitted by a `>=`. A stray
+    # `### D-140` still reddens.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138, 139], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137 and D-138; found {ids[-9:]}"
+        f"D-137, D-138 and D-139; found {ids[-10:]}"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 is the recorded successor id; it must be the /method contents-rail "
         "entry, not some other entry that took the number"
+    )
+    assert re.search(r"^### D-139 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
+        "D-139 is the recorded successor id; it must be the ADC pipeline "
+        "programme-fields entry, not some other entry that took the number"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 is the recorded successor id; it must be the ADC cancer-type entry, "
