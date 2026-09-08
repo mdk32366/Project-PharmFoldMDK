@@ -262,21 +262,35 @@ def test_d130_is_the_next_free_decision_id():
 
     ⚠ **Widened again at D-136 — to ``[132, 133, 134, 135, 136]`` — the same
     way.** D-136 fills the ADC Approved Cancer type column from the FDA label;
-    it is named below, so a stray ``### D-137`` still fails. ⚠ **This is the
-    two-branch collision the guard exists for, and it resolved by ADDING rather
-    than loosening:** D-135 and D-136 were in flight together, each widened this
-    list to exclude the other, and the merge carries **both** ids and **both**
-    named-entry assertions instead of relaxing either to a ``>=``.
+    it is named below. ⚠ **This is the two-branch collision the guard exists
+    for, and it resolved by ADDING rather than loosening:** D-135 and D-136 were
+    in flight together, each widened this list to exclude the other, and the
+    merge carries **both** ids and **both** named-entry assertions instead of
+    relaxing either to a ``>=``.
+
+    ⚠ **Widened again at D-137 — to ``[132, 133, 134, 135, 136, 137]``** — the
+    third live two-branch collision in a row. D-137 (the census sortable
+    **Cost** column) was written while #260 (D-136) was still open, so it landed
+    as ``[…, 135, 137]`` with 136 named as the in-flight id it was deliberately
+    not taking (F-065's class, avoided by reading the open-PR list rather than
+    assuming). #260 then merged, this assertion reddened **exactly as its own
+    comment predicted**, and the rebase inserted 136 beside 137. **The redness
+    was the guard working**; both ids are carried, neither claim is weakened, and
+    a stray ``### D-138`` still fails rather than slipping under a ``>=``.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136], (
-        f"D-130's successors must be exactly D-132, D-133, D-134, D-135 and D-136; "
-        f"found {ids[-6:]}"
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137], (
+        f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136 and "
+        f"D-137; found {ids[-7:]}"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 must be the ADC cancer-type entry, not some other entry that "
         "took the number"
+    )
+    assert re.search(r"^### D-137 — The census gains a sortable Cost column", LOG, re.M), (
+        "D-137 must be the census sortable-Cost-column entry, not some other entry "
+        "that took the number"
     )
     assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
         "D-134 must be the stitched-parent census-identity entry, not some "
