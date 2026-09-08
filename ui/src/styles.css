@@ -706,6 +706,16 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 }
 .adcs-index th { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
 .adcs-inn, .adcs-acc { color: var(--muted); font-size: 0.82rem; margin-top: 0.15rem; }
+/* D-136 — tumour types from the FDA label. A list, because most rows have
+   more than one and a comma-joined sentence reads as a single claim. */
+.adcs-cancer-types { margin: 0; padding-left: 1.05rem; }
+.adcs-cancer-types li { margin-bottom: 0.1rem; }
+.adc-label-indications > summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; }
+.label-verbatim {
+  margin: 0.45rem 0 0; padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--line); background: var(--panel);
+  font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap;
+}
 
 .baseball-card {
   background: var(--panel);

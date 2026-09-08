@@ -3,12 +3,12 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { listAdcs, listPipelineAdcs } from '../api.js'
 import {
   APPROVED_SHELF,
-  CANCER_TYPE_ABSENT_COPY,
   DEFAULT_SORT,
   INDEX_COLUMNS,
   PHASE_VOCAB,
   PIPELINE_INDEX_COLUMNS,
   PIPELINE_SHELF,
+  cancerTypeAbsenceCopy,
   filterPipelineByPhase,
   flattenCatalog,
   flattenPipeline,
@@ -21,7 +21,10 @@ import Term from './Term.jsx'
 // D-122 / ADC-B — sortable Approved index over the D-119 FDA-approved catalog.
 // D-124 / ADC-C-B — Approved | Pipeline shelves on the same /adcs page.
 // Default sort is name ascending: a reader-chosen order, not a ranking.
-// Cancer type is the named v1 absence on Approved only (D-119 decision 8).
+// D-136 — Cancer type on Approved lists the tumour types FDA's own label states,
+// audited in the catalog loader against that row's stored label text. A row that
+// states none renders its own absence source. Pipeline carries no indication at
+// all (D-124 schema; no Spec authorised one).
 // Pipeline phase filter is the Architect closed vocab — nothing else.
 
 function ApprovedShelf({ catalog }) {
@@ -42,6 +45,7 @@ function ApprovedShelf({ catalog }) {
   const completeness = headerValue(catalog, 'completeness')
   const approvalsAsOf = headerValue(catalog, 'approvals_reconciled_as_of')
   const antigenAsOf = headerValue(catalog, 'antigen_mapping_reviewed_as_of')
+  const indicationsAsOf = headerValue(catalog, 'indications_reviewed_as_of')
   const exclusions = headerValue(catalog, 'named_exclusions')
 
   return (
@@ -61,7 +65,18 @@ function ApprovedShelf({ catalog }) {
         {completeness ? <> Completeness: <code>{completeness}</code>.</> : null}
         {approvalsAsOf ? <> Approvals reconciled as of {approvalsAsOf}.</> : null}
         {antigenAsOf ? <> Antigen mapping reviewed as of {antigenAsOf}.</> : null}
+        {indicationsAsOf ? <> Label indications reviewed as of {indicationsAsOf}.</> : null}
       </p>
+
+      {indicationsAsOf ? (
+        <p className="note">
+          Cancer type is the tumour type named in FDA's own section 1 INDICATIONS
+          AND USAGE text for the label in force on {indicationsAsOf} — not the
+          original approval's indication, and never a tissue-staining survey
+          (D-136). Stage, line of therapy and biomarker qualifiers are not
+          dropped; they stay in the label text on each ADC's card.
+        </p>
+      ) : null}
 
       {Array.isArray(exclusions) && exclusions.length > 0 && (
         <section className="adcs-exclusions">
@@ -105,7 +120,17 @@ function ApprovedShelf({ catalog }) {
                 <Link to={`/adcs/${r.id}`}>{r.name}</Link>
                 {r.inn ? <div className="adcs-inn">{r.inn}</div> : null}
               </td>
-              <td className="absent-reason">{CANCER_TYPE_ABSENT_COPY}</td>
+              <td>
+                {r.cancer_types.length > 0 ? (
+                  <ul className="adcs-cancer-types">
+                    {r.cancer_types.map((t) => <li key={t}>{t}</li>)}
+                  </ul>
+                ) : (
+                  <span className="absent-reason">
+                    {cancerTypeAbsenceCopy(r.cancer_type_field)}
+                  </span>
+                )}
+              </td>
               <td>
                 <span>{r.protein}</span>
                 {r.accession ? <div className="mono adcs-acc">{r.accession}</div> : null}
