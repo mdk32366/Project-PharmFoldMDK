@@ -587,9 +587,29 @@ So the rule is not "be careful" — it is:
     **D-136** is held by the in-flight ADC Approved-Cancer-type work,
     [PR #260](https://github.com/mdk32366/Project-PharmFoldMDK/pull/260). Both were read from the
     open-PR list rather than inferred, so **137** is the next free id and the sequence stays
-    contiguous. This branch is rebased onto `e7f2d82`. ⚠ If #260 lands first, the two successor
-    enumerations need `136` inserted beside `137` — a one-line edit in each, and the
-    enumeration reddening is the intended behaviour, not a break.
+    contiguous — no gap, and nothing assumed.
+  - **⚠⚠ And the prediction this entry made about its own guards came true, which is the point of
+    recording it.** The paragraph above originally ended *"If #260 lands first, the two successor
+    enumerations need `136` inserted beside `137` — the enumeration reddening is the intended
+    behaviour, not a break."* **#260 merged to `main` at `1b0251b` (2026-09-08 20:49Z), 30 minutes
+    after this branch was pushed.** On rebase, three guards reddened and every one of them was the
+    right guard firing:
+    1. **D-129 / D-130's successor enumerations** conflicted — resolved by carrying **both** ids
+       (`[…, 135, 136, 137]`) and **both** named-entry assertions. **Neither was relaxed to a
+       `>=` to make the conflict go away**, which is the same resolution D-136 itself recorded
+       when it collided with D-135 an hour earlier. Three live two-branch collisions in a row,
+       all resolved by adding.
+    2. **`test_d136_entry_exists_in_the_living_log`** asserted `### D-137` did **not** exist —
+       D-136's own next-id-is-free guard, working exactly as written. Widened here to *name*
+       D-137 as the recorded successor and bar `### D-138`.
+    3. **⚠ And one real defect in this file's own tests, found by D-136's entry rather than by
+       running anything.** `_d137_entry()` bounded the slice at `### D-135` because D-135 was the
+       entry below when it was written. D-136 merged **between** them, so the slice silently grew
+       to include a whole unrelated entry — after which every `in entry` assertion would have
+       passed on **D-136's prose**. It now bounds at the next `^### ` heading, *whatever it is*.
+       **D-136's entry records the identical defect in its own suite** (it had bounded itself by
+       `D-134`), which is the only reason this one was looked for: a hidden merge-order dependency
+       in a test whose job is to check the record is the record checking the wrong thing.
 - **Amended by:** —
 
 ---
