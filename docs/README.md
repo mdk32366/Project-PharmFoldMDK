@@ -405,7 +405,7 @@ So the rule is not "be careful" — it is:
   `### D-140 — The ADC Pipeline shelf gets a cancer type and a maker of its own…` and widens the
   next-free guards to bar `### D-141`. Taking 140 here would be the two-branch collision the guards
   exist for, resolved in the *wrong* direction — so **141 is taken and 140 is named as in-flight**,
-  exactly the way D-138 skipped 137 while #261 was open. ⚠ **The four next-free guards below carry
+  exactly the way D-138 skipped 137 while #261 was open. ⚠ **The next-free guards below carry
   BOTH ids** — 139 by name, 141 by name, 140 named as the id this branch is deliberately not
   taking, and a bare `### D-142` barred. **Never a `>=`:** if #263 merges first, the enumerations
   redden **by design** and the rebase inserts 140 beside 141, which is the guard working rather than
@@ -570,10 +570,14 @@ So the rule is not "be careful" — it is:
 - **Consequences.** `scripts/land_d139_confidence_kabsch.py` (new),
   `tests/test_d141_land_confidence_kabsch.py` (new), `.gitignore` (`confidence_kabsch/`),
   `ARCHITECTURE.md` (the Served-path policy row gains the D-141 delivery clause and the lander in
-  its artefact column), and the **four** next-free guards —
+  its artefact column), and the **five** next-free guards —
   `tests/test_d129_phase5_named_refuse_spec.py`, `tests/test_d130_residual_rmsd_spec.py`,
-  `tests/test_d136_cancer_type.py` and `tests/test_d139_served_path_flip.py` — widened **by
-  enumeration** to carry `D-141`, to name `D-140` as #263's in-flight id, and to bar `### D-142`.
+  `tests/test_d136_cancer_type.py`, `tests/test_d139_served_path_flip.py` and
+  `tests/test_d140_pipeline_programme.py` — widened **by enumeration** to carry `D-140` **and**
+  `D-141` by name and to bar `### D-142`. ⚠ **Four when this entry was written, five after the
+  rebase:** #263 merged mid-flight and brought a fifth copy of the guard with it, which is worth
+  recording because the count is now the thing most likely to be stale in this paragraph — the
+  authority is `grep -rn '### D-14' tests/`, not this list.
   `docs/Test_Plan.md` gains the D-141 addendum (**T-1219–T-1224**) and T-1218's next-free clause is
   **amended in place** rather than replaced (D-129-C).
   ⚠ **No production module changes.** `app/served_path_policy.py`, `app/reads.py`,

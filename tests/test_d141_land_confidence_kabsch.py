@@ -590,12 +590,21 @@ def test_the_log_entry_exists_and_leads_the_log():
     assert "10.0 å" in lowered, "the unmoved gate must be named"
 
 
-def test_the_log_entry_records_why_140_was_not_taken():
-    """⚠ #263 spends D-140 on an unmerged branch. Skipping it is D-138's precedent."""
+def test_the_log_entry_records_why_140_was_not_taken_and_that_263_then_merged():
+    """⚠ #263 held D-140 on an unmerged branch, so 141 was taken (D-138's precedent).
+
+    #263 then merged mid-flight at `578f5ac`. The entry must carry **both** readings:
+    the original one, and the amendment recording that the predicted red arrived.
+    D-129-C — a superseded claim never stands alone, and is never quietly deleted.
+    """
     lowered = _flat(_d141_entry()).lower()
     assert "d-140" in lowered and "263" in lowered
     assert "gh pr list --state open" in lowered, "the id must be checked, not assumed"
-    assert "\n### D-140" not in LOG, "D-140 belongs to #263 and is not spent here"
+    assert "amended in place" in lowered, "the mid-flight merge must be recorded"
+    assert "578f5ac" in lowered, "the merge commit must be named, not alluded to"
+    # And the tree agrees with the entry: 140 is now written, 141 is this one, 142 is free.
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", LOG, re.M)
+    assert "\n### D-142" not in LOG, "D-142 is the next free integer"
 
 
 def test_the_log_entry_states_the_blocker_rather_than_implying_a_land_happened():
