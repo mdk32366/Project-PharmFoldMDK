@@ -37,7 +37,12 @@ from app.phase5_named_refuse import phase5_fate
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
 
-from core.hold48 import HOLD48_KIND_PARENT, HOLD48_KIND_TILE, is_mucin
+from core.hold48 import (
+    HOLD48_KIND_TILE,
+    is_mucin,
+    is_parent_kind,
+    is_stitched_artifact_path,
+)
 from core.manifest import ManifestRow, build_manifest, coverage
 from core.queue import FAILED
 from db.models import JobRecord, ProteinAnalysis, RankingResult, RankingRun, TargetScore
@@ -178,12 +183,12 @@ def detail_projection(row: ProteinAnalysis) -> dict[str, Any]:
     # ⚠ D-118: /target/:id is a primary-key lookup (tranche-exempt). A stitched census
     # parent typed as /target/2817 must still carry the assembler flag so 3Dmol cannot
     # present winner-tile pLDDT as one forward pass.
-    pdb_name = Path(row.pdb_path).name if row.pdb_path else ""
+    # ⚠ D-134: one rule, `is_assembled_parent_row`. This used to compare the meta tag to
+    # the bare string `parent`, which the live volume does not use — so `/api/target/2817`
+    # answered `assembled: false` for a stitched parent and 3Dmol was free to present
+    # winner-tile pLDDT as one forward pass, the exact thing this flag exists to prevent.
     out["hold48_kind"] = meta.get("hold48_kind")
-    out["assembled"] = bool(
-        pdb_name == "stitched.pdb"
-        or (meta.get("hold48_kind") == HOLD48_KIND_PARENT and row.pdb_path)
-    )
+    out["assembled"] = is_assembled_parent_row(row)
     return out
 
 
@@ -620,7 +625,34 @@ def is_census_tile_row(row: ProteinAnalysis) -> bool:
 
 
 def is_census_parent_row(row: ProteinAnalysis) -> bool:
-    return _hold48_kind(row) == HOLD48_KIND_PARENT
+    """A parent is the whole protein — whichever tag the volume happens to carry (D-134).
+
+    ⚠⚠ THIS FUNCTION WAS `_hold48_kind(row) == HOLD48_KIND_PARENT` AND THAT IS THE D-134
+    DEFECT. Ops persisted `parent_stitched`, a string the repo never held, so on Fly this
+    returned `False` for **all 45** assembled parents: they fell through
+    `choose_census_representative` into the `ordinary` branch and were served as
+    `single-pass`, and the D-133 fold-type chips truthfully reported **0 assembled**.
+    Measured 2026-09-08 on `https://pharmfoldmdk.fly.dev/api/census`.
+
+    Two independent signals, because one of them already drifted once:
+    the meta tag (any spelling in `HOLD48_PARENT_KINDS`), **or** a stored `pdb_path` whose
+    basename is the one `write_stitched` writes. ⚠ A tile is disqualified first — a window
+    is never the protein (D-118), and that precedence is what keeps the second, looser
+    signal safe to add.
+    """
+    if is_census_tile_row(row):
+        return False
+    return is_parent_kind(_hold48_kind(row)) or is_stitched_artifact_path(row.pdb_path)
+
+
+def is_assembled_parent_row(row: ProteinAnalysis) -> bool:
+    """A parent that actually has a structure on disk — the one `assembled` rule (D-134).
+
+    ⚠ THE single definition. `detail_projection`, `download_stem_for_row` and
+    `census_detail`'s fallback each carried their own copy keyed on the bare string
+    `parent`, so a fix in one would have left the others reporting the old answer.
+    """
+    return is_census_parent_row(row) and bool(row.pdb_path)
 
 
 def _is_spare_tile(row: ProteinAnalysis) -> bool:
@@ -636,6 +668,12 @@ def choose_census_representative(
 
     Spare tile ids 3693/3695/3696 never win. When a tile is the only complete cover
     (tiles-only parent), the *parent* row is returned, not the tile.
+
+    ⚠⚠ D-134: `parents` is empty when `is_census_parent_row` does not recognise the tag
+    ops wrote, and an empty `parents` does not fail — the row keeps falling to `ordinary`
+    and comes back a perfectly plausible **single-pass** protein. That silence is why the
+    defect survived D-118, D-120, D-132 and D-133: nothing on any surface distinguishes
+    *this protein was folded in one pass* from *we failed to notice it was assembled*.
     """
     if not group:
         return None
@@ -645,7 +683,7 @@ def choose_census_representative(
     if not usable_tiles:
         # last resort: a spare may be the only complete cover — still return the PARENT
         usable_tiles = [r for r in tiles if r.pdb_path]
-    assembled = [r for r in parents if r.pdb_path]
+    assembled = [r for r in parents if is_assembled_parent_row(r)]
     if assembled:
         return min(assembled, key=lambda r: r.id), "assembled"
     if parents and usable_tiles:
@@ -662,7 +700,7 @@ def choose_census_representative(
         return min(ordinary, key=lambda r: r.id), "single-pass"
     if non_tile_folded:
         row = min(non_tile_folded, key=lambda r: r.id)
-        return row, "assembled" if is_census_parent_row(row) else "single-pass"
+        return row, "assembled" if is_assembled_parent_row(row) else "single-pass"
     return None
 
 
@@ -815,10 +853,10 @@ def download_stem_for_row(
     tile_n: Optional[int] = None,
 ) -> str:
     """Honest download basename: stitched / tileN / spare{id} / structure."""
-    pdb_name = Path(row.pdb_path).name if row.pdb_path else ""
-    if pdb_name == "stitched.pdb" or (
-        _hold48_kind(row) == HOLD48_KIND_PARENT and row.pdb_path
-    ):
+    # ⚠ D-134: same one rule as the `assembled` flag. Keyed on the bare string `parent`,
+    # this named a live stitched parent's download `structure.pdb` — an assembled artifact
+    # downloaded under the filename of a single forward pass.
+    if is_assembled_parent_row(row):
         return "stitched"
     if is_census_tile_row(row):
         if role == "spare" or row.id in HOLD48_SPARE_TILE_IDS:
@@ -1381,7 +1419,8 @@ def get_census_detail(
         ).all()
         picked = choose_census_representative(list(siblings))
         kind = picked[1] if picked and picked[0].id == row.id else (
-            "assembled" if is_census_parent_row(row) and row.pdb_path
+            # ⚠ D-134: `is_assembled_parent_row`, the same rule the representative used.
+            "assembled" if is_assembled_parent_row(row)
             else "single-pass" if row.pdb_path else "tiles_only"
         )
         out = apply_structure_kind(census_projection(row), row, kind)

@@ -15,14 +15,13 @@ It attaches a block to the census detail response `/api/census/{analysis_id}` al
 """
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.features import FEATURE_NAMES
-from core.hold48 import HOLD48_KIND_PARENT, HOLD48_KIND_TILE
+from core.hold48 import HOLD48_KIND_TILE, is_parent_kind, is_stitched_artifact_path
 from core.structural_profile import assembly_profile_payload, profile_payload
 from db.models import ProteinAnalysis, ProteinFeatures
 
@@ -82,17 +81,24 @@ PROFILE_STATUSES = (
 
 
 def _incommensurable_assembly(row: ProteinAnalysis) -> bool:
-    """Assembled parent or tile window — not a single-pass measurement (D-120 / D-109)."""
+    """Assembled parent or tile window — not a single-pass measurement (D-120 / D-109).
+
+    ⚠⚠ D-134, and this was the second live symptom of the same one-string test. All 45
+    live parents came back `refused_features_incomplete` on 2026-09-08 — an absence
+    describing a *fold whose features could not be extracted*, when the true category is
+    `refused_assembled_incommensurable`: the profile bar is calibrated on single-pass
+    folds and an assembly is not one. Both are refusals, so nothing looked wrong; they
+    name different causes, which is the whole point of keeping the causes distinct.
+    """
     meta = row.meta or {}
     kind = meta.get("hold48_kind")
     if kind == HOLD48_KIND_TILE:
         return True
     if meta.get("parent_job_id") is not None and meta.get("tile_start") is not None:
         return True
-    pdb_name = Path(row.pdb_path).name if row.pdb_path else ""
-    if pdb_name == "stitched.pdb":
+    if is_stitched_artifact_path(row.pdb_path):
         return True
-    return bool(kind == HOLD48_KIND_PARENT and row.pdb_path)
+    return bool(is_parent_kind(kind) and row.pdb_path)
 
 
 def census_profile_statuses(engine: Any) -> dict[int, str]:
