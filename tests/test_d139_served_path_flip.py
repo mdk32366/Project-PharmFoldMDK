@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -574,22 +573,40 @@ def test_no_threshold_was_loosened_and_the_refuse_reasons_are_unmoved():
 
 
 def test_this_pr_ships_no_ops_no_rent_no_emit_and_no_f004():
-    """Hard stops, checked against the diff rather than against intent."""
-    changed = subprocess.run(
-        ["git", "diff", "--name-only", "origin/main...HEAD"],
-        cwd=ROOT, capture_output=True, text=True, check=True,
-    ).stdout.split()
-    assert changed, "the branch must differ from main for this check to mean anything"
-    for name in changed:
-        assert not name.startswith("worker/"), name
-        assert not name.startswith("notebooks/"), name
-        assert not name.startswith("db/versions/"), name
-        assert "alembic" not in name, name
-    # No stitch-family core module moves: this decision serves an existing path.
-    for name in changed:
-        assert not name.startswith("core/hold48"), (
-            f"{name} — D-139 selects among recorded outcomes; it writes no geometry"
+    """Hard stops, checked against the TREE rather than against intent.
+
+    ⚠ Deliberately not a ``git diff`` against ``origin/main``: the gate checks
+    out a merge ref at depth 1, so that ref does not exist there and the check
+    would have passed by erroring — or skipped, which is the same thing wearing
+    a nicer word. These are properties of the files instead, so they hold on any
+    checkout.
+    """
+    # No stitch-family core module was reached into. D-139 selects among
+    # outcomes those modules already recorded; it writes no geometry, so none of
+    # them may so much as name it (the convention D-129 / D-130 use for the same
+    # hard stop, and the sha256 pins in those suites are the second half of it).
+    for name in (
+        "hold48.py", "hold48_stitch.py", "hold48_kabsch.py",
+        "hold48_confidence_kabsch.py", "hold48_piecewise_kabsch.py",
+        "hold48_linker_seam.py", "hold48_residual_rmsd.py",
+    ):
+        text = (ROOT / "core" / name).read_text(encoding="utf-8")
+        assert "D-139" not in text, f"core/{name} names D-139 — this is not a geometry change"
+        assert "served_path_policy" not in text, f"core/{name} imports the selector"
+
+    # No migration, no queue, no worker change: nothing here touches the write path.
+    for banned in ("alembic", "op.add_column", "JobRecord(", "requests.post", "fly.io"):
+        assert banned not in POLICY, banned
+    # No F-004 / ranking / rent / emit reached into by the selector.
+    # ⚠ Word-bounded: a bare `in` check for "rent" matches every "parent" on the
+    # page, which is a guard that reports its own good news and nothing else.
+    routes = (ROOT / "app" / "read_routes.py").read_text(encoding="utf-8")
+    lowered = POLICY.lower()
+    for banned in ("f-004", "ranking_run", "runpod", "rent", "rental", "emit"):
+        assert not re.search(rf"\b{re.escape(banned)}\b", lowered), (
+            f"served_path_policy.py names {banned}"
         )
+    assert "served_download_stem" in routes and "served_structure_path" in routes
 
 
 def test_d127_piecewise_is_not_resurrected_as_this_campaign():
