@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { bandFor } from '../plddt.js'
 import { plural } from '../plural.js'
 import { normalizeQuery, filterRows } from '../searchRows.js'
+import { KIND_ORDER, kindCounts, resolveKind } from '../structureKinds.js'
 import HpaAttribution from './HpaAttribution.jsx'
 
 // The census surface (D-087). Searchable, sortable, and deliberately UNRANKED.
@@ -123,7 +124,11 @@ export const STRUCTURE_LEGEND = [
 
 // ⚠ The order the fold-type chips appear in, and it is NOT a ranking — the two folded kinds first
 // because they are what a reader came for, then the two absences, then the unrecorded rows.
-export const KIND_ORDER = ['assembled', 'single-pass', 'tiles_only', 'mucin', 'none']
+// ⚠⚠ MOVED to `../structureKinds.js` at D-135 and re-exported here, because `/coverage`'s
+// second-population strip reads the same vocabulary and a second copy of this order is how two
+// pages come to state one population in two orders. Re-exported rather than relocated silently:
+// existing callers and tests import `KIND_ORDER` from this module.
+export { KIND_ORDER }
 
 // ⚠ The four statuses, rendered as words rather than as a token. The three REFUSAL causes stay
 // distinct — pooling 1,225 + 58 + 10 into one "n/a" would lose the reason, and an absence is a
@@ -219,7 +224,13 @@ export { normalizeQuery, filterRows }
 // So the cap is announced, the full count stays visible, and there is a control to lift it.
 const PAGE = 200
 
-export default function CensusTable({ rows, onSelect }) {
+// ⚠⚠ `kindFilter` / `onKindFilter` ARE OPTIONAL, and the default stays uncontrolled (D-135).
+// `/census` now keeps the fold-type filter in the QUERY STRING so `?structure=assembled` is a
+// shareable address, which means the state has to be able to live above this component. But the
+// table is also rendered on its own (in tests, and anywhere a caller has rows and no router), and a
+// component that only works inside a URL is a component with a hidden dependency. So: controlled
+// when a caller passes the pair, self-managed otherwise, and the SAME code path renders both.
+export default function CensusTable({ rows, onSelect, kindFilter: controlledKind, onKindFilter }) {
   const [query, setQuery] = useState('')
   // ⚠⚠ DEFAULT SORT IS STILL ACCESSION. D-102 licenses a sort the READER chooses; it does not
   // license the page arriving already ordered. A default stained-% sort would be the ranking the
@@ -230,7 +241,7 @@ export default function CensusTable({ rows, onSelect }) {
   const [excludeCritical, setExcludeCritical] = useState(false)
   // ⚠ D-133 am. 1: the fold-type filter, 'all' by default. A default of 'assembled' would be the
   // page arriving having chosen, which is the same bar the default SORT answers to (D-102).
-  const [kindFilter, setKindFilter] = useState('all')
+  const [ownKind, setOwnKind] = useState('all')
 
   const lensed = useMemo(() => withLens(rows, lens), [rows, lens])
 
@@ -238,20 +249,19 @@ export default function CensusTable({ rows, onSelect }) {
   // LABEL is the API's (`assembled (provisional)`, `tiles only`, …) so the filter cannot come to
   // spell a category differently from the column it filters. A kind absent from the data has no
   // chip: a control that can only empty the table is a broken control.
-  const kinds = useMemo(() => {
-    const n = new Map()
-    const labels = new Map()
-    for (const r of rows) {
-      const k = r.structure_kind ?? 'none'
-      n.set(k, (n.get(k) ?? 0) + 1)
-      if (!labels.has(k) && r.structure_kind_label) labels.set(k, r.structure_kind_label)
-    }
-    return KIND_ORDER.filter((k) => n.has(k)).map((k) => ({
-      key: k,
-      n: n.get(k),
-      label: labels.get(k) ?? 'not recorded',
-    }))
-  }, [rows])
+  // ⚠ D-135: the derivation moved to `../structureKinds.js` so the /coverage strip reads one rule.
+  const kinds = useMemo(() => kindCounts(rows), [rows])
+
+  // ⚠⚠ RESOLVED AGAINST THE ROWS, AND IT FALLS CLOSED (D-135). A controlled value arrives from the
+  // URL, so it can be a typo or a stale bookmark; selecting it anyway would draw an EMPTY table
+  // under a chip nobody pressed, which a reader cannot distinguish from "the census holds none of
+  // these". Resolution needs the kinds actually present, which is why it happens HERE and not in
+  // the caller — the caller does not have the rows yet when the URL is read.
+  const kindFilter = resolveKind(controlledKind ?? ownKind, kinds)
+  const chooseKind = (key) => {
+    setOwnKind(key)
+    onKindFilter?.(key)
+  }
 
   const shown = useMemo(() => {
     const col = COLUMNS.find((c) => c.key === sort.key) ?? COLUMNS[0]
@@ -337,7 +347,7 @@ export default function CensusTable({ rows, onSelect }) {
             type="button"
             className={`chip${kindFilter === 'all' ? ' chip-on' : ''}`}
             aria-pressed={kindFilter === 'all'}
-            onClick={() => setKindFilter('all')}
+            onClick={() => chooseKind('all')}
           >
             all {rows.length.toLocaleString()}
           </button>
@@ -347,7 +357,7 @@ export default function CensusTable({ rows, onSelect }) {
               type="button"
               className={`chip${kindFilter === k.key ? ' chip-on' : ''}`}
               aria-pressed={kindFilter === k.key}
-              onClick={() => setKindFilter(k.key)}
+              onClick={() => chooseKind(k.key)}
             >
               {k.label} {k.n.toLocaleString()}
             </button>
