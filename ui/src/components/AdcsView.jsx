@@ -149,6 +149,33 @@ function ApprovedShelf({ catalog }) {
   )
 }
 
+/**
+ * D-139 — a named absence in a TABLE CELL, which is not the same problem as a
+ * named absence on a card.
+ *
+ * ⚠ The first render of this shelf put each absence envelope's whole source —
+ * ~300 characters naming the query and what it returned — straight into the
+ * `<td>`. Five of ten rows are absent on cancer type and six on description, so
+ * the table became two columns of paragraphs with the sourced rows lost between
+ * them. That is **D-135's defect exactly** (`coverageNote()` returned 209
+ * characters of prose into a `<td>`, "correct, and unreadable"), and it is fixed
+ * the way D-135 fixed it: short in the cell, the full text one step away.
+ *
+ * ⚠ What is NOT done here: replacing the row's own source with a page-wide
+ * sentence. D-136 decision 6 exists because one sentence that covers every
+ * absent row cannot be wrong and therefore says nothing. The summary is a
+ * LABEL for the disclosure; the row's own words are inside it, in the DOM,
+ * unabridged — and on the baseball card they are not collapsed at all.
+ */
+function AbsenceCell({ field, fallback, summary }) {
+  return (
+    <details className="absent-why">
+      <summary className="absent-reason">{summary}</summary>
+      <p className="absent-reason absent-why-body">{absenceCopy(field, fallback)}</p>
+    </details>
+  )
+}
+
 function PipelineShelf({ catalog }) {
   const [sort, setSort] = useState(DEFAULT_SORT)
   const [phase, setPhase] = useState('all')
@@ -270,9 +297,11 @@ function PipelineShelf({ catalog }) {
                       {r.cancer_types.map((t) => <li key={t}>{t}</li>)}
                     </ul>
                   ) : (
-                    <span className="absent-reason">
-                      {absenceCopy(r.cancer_type_field, PIPELINE_CANCER_TYPE_ABSENT_COPY)}
-                    </span>
+                    <AbsenceCell
+                      field={r.cancer_type_field}
+                      fallback={PIPELINE_CANCER_TYPE_ABSENT_COPY}
+                      summary="none stated — why"
+                    />
                   )}
                 </td>
                 <td>{r.phase}</td>
@@ -284,9 +313,11 @@ function PipelineShelf({ catalog }) {
                   {r.description ? (
                     <span>{r.description}</span>
                   ) : (
-                    <span className="absent-reason">
-                      {absenceCopy(r.description_field, PIPELINE_DESCRIPTION_ABSENT_COPY)}
-                    </span>
+                    <AbsenceCell
+                      field={r.description_field}
+                      fallback={PIPELINE_DESCRIPTION_ABSENT_COPY}
+                      summary="no maker named — why"
+                    />
                   )}
                 </td>
               </tr>

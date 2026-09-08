@@ -303,12 +303,38 @@ describe('AdcsView — D-124 Pipeline shelf', () => {
     expect(screen.getByText('Glioblastoma')).toBeInTheDocument()
     expect(container.textContent).toMatch(/Daiichi Sankyo\/Merck/)
     expect(container.textContent).toMatch(/Eli Lilly and Company/)
-    // ⚠ The two rows that state neither say WHICH lookup came back empty, in their
+    // ⚠ The rows that state neither say WHICH lookup came back empty, in their
     // own words — never a blank, and never the page-wide fallback (D-139).
     expect(container.textContent).toMatch(/query.intr=ch10D7-MMAE retrieved 2026-09-08 returned 0 studies/)
     expect(container.textContent).toMatch(/no maker named for ch10D7-MMAE/)
     expect(screen.queryAllByText(PIPELINE_CANCER_TYPE_ABSENT_COPY)).toHaveLength(0)
     expect(screen.queryAllByText(PIPELINE_DESCRIPTION_ABSENT_COPY)).toHaveLength(0)
+  })
+
+  it('D-139 — an absent cell is a short label with the row\'s own source inside it', async () => {
+    // ⚠ D-135's defect, not re-shipped. Five of ten committed rows are absent on
+    // cancer type and six on description; putting each ~300-character source
+    // straight into a `<td>` made the table two columns of prose. The label is
+    // short, and the row's own words are in the DOM inside the disclosure —
+    // shortening must not become replacing (D-136 decision 6).
+    renderIndex('/adcs?shelf=pipeline')
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    const table = screen.getByRole('table')
+
+    const summaries = [...table.querySelectorAll('details.absent-why > summary')]
+    expect(summaries.length).toBeGreaterThan(0)
+    for (const summary of summaries) {
+      expect(summary.textContent.length).toBeLessThan(40)
+    }
+    expect(within(table).getAllByText('none stated — why').length).toBe(2)
+    expect(within(table).getAllByText('no maker named — why').length).toBe(1)
+
+    // ⚠ The full source is not lost, it is one step away — and it is the ROW's,
+    // not a sentence the page made up.
+    const bodies = [...table.querySelectorAll('details.absent-why .absent-why-body')]
+      .map((p) => p.textContent)
+    expect(bodies.some((t) => /query.intr=ch10D7-MMAE .* returned 0 studies/.test(t))).toBe(true)
+    expect(bodies.some((t) => /query.intr=LY3076226 .* returned 0 studies/.test(t))).toBe(true)
   })
 
   it('D-139 — the pipeline shelf says these are trials, not FDA indications', async () => {

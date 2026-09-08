@@ -478,6 +478,20 @@ disqualifying.**
    none — carrying the description, the tumour list, and the registry/citation text it was
    reduced from. Default sort stays **name ascending**: a filled column is not a licence to
    arrive having chosen an axis.
+   ⚠⚠ **A named absence in a `<td>` is not the same problem as a named absence on a card, and
+   the first render of this shelf got it wrong.** Rendering each absence envelope's whole source
+   inline — the honest thing on the card — turned two of five columns into paragraphs, because
+   **five of ten** rows are absent on cancer type and **six** on description. That is
+   **D-135's defect reproduced one surface along** (`coverageNote()` returned *"209 characters of
+   two-population prose in a table cell — correct, and unreadable in a `<td>`"*), and it is fixed
+   the way D-135 fixed it: **short in the cell, the full text one step away.** The index cell is a
+   `<details>` whose summary is a four-word label and whose body is **the row's own source,
+   unabridged and in the DOM**; the card does not collapse it at all. ⚠ **Shortening must not
+   become replacing:** D-136 decision 6 refuses a page-wide absence sentence precisely because one
+   sentence covering every absent row cannot be wrong, and the summary here is a label for the
+   disclosure rather than the claim. ⚠ Recorded because it was only visible in a **rendered** page
+   — every test was green while the table was unreadable, which is the class of defect a test
+   suite is worst at.
 9. **The registry read happened once, into a committed artefact (D-029).**
    `scripts/fetch_pipeline_ctgov.py` wrote
    [`data/adcs/artifacts/ctgov.pipeline.2026-09-08.json`](../data/adcs/artifacts/ctgov.pipeline.2026-09-08.json)
