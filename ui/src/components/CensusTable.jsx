@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { bandFor } from '../plddt.js'
+import { plural } from '../plural.js'
 import { normalizeQuery, filterRows } from '../searchRows.js'
 import HpaAttribution from './HpaAttribution.jsx'
 
@@ -15,7 +16,9 @@ import HpaAttribution from './HpaAttribution.jsx'
 // these spans are one loop of several (F-037); a reader scanning the table would otherwise see
 // 1,557 spans that look like ectodomains and never learn otherwise.
 
-const COLUMNS = [
+// ⚠ EXPORTED so a test can pin a key rather than infer the column set from rendered text. A
+// column that quietly leaves this array takes its sort with it and the table still renders.
+export const COLUMNS = [
   { key: 'accession', label: 'Accession', numeric: false },
   { key: 'gene', label: 'Gene', numeric: false },
   { key: 'label', label: 'Protein', numeric: false },
@@ -23,6 +26,17 @@ const COLUMNS = [
   // opaque to everyone else, and the owner spent a long while resolving it.
   { key: 'span_aa', label: 'Span (aa = amino acids)', numeric: true },
   { key: 'topology', label: 'Topology', numeric: false },
+  // ⚠⚠ HOW THE FOLD WAS PRODUCED, AND SORTABLE (D-133). The kind was rendered as a badge in the
+  // accession cell and was the one row property the table could NOT sort by — while the paragraph
+  // above it claimed a sort on every column (D-087). The badge moved here rather than being
+  // copied: one place to read it, one header to click.
+  // ⚠ Sorts on `structure_kind`, the API's CATEGORY, never on `structure_kind_label` — the label
+  // is prose that already changed once ('assembled' → 'assembled (provisional)') and a copy edit
+  // must not silently re-order the table.
+  // ⚠ `numeric: false` on purpose, and it is the same ruling as Profile: four kinds with no
+  // magnitude sort into GROUPS. Ascending happens to put `assembled` first; that is alphabetical
+  // happenstance and not a suitability order, and nothing here ranks a census row.
+  { key: 'structure_kind', label: 'Structure (single pass or assembled from tiles)', numeric: false },
   { key: 'mean_plddt', label: 'pLDDT', numeric: true },
   { key: 'tranche', label: 'Tranche', numeric: true },
   // ⚠⚠ A STATUS, NOT A VALUE, AND THAT IS RULING 2. This table sorts on every column (D-087), so a
@@ -141,6 +155,7 @@ export default function CensusTable({ rows, onSelect }) {
   const [showAll, setShowAll] = useState(false)
   const [lens, setLens] = useState('best_panel')
   const [excludeCritical, setExcludeCritical] = useState(false)
+  const [assembledOnly, setAssembledOnly] = useState(false)
 
   const lensed = useMemo(() => withLens(rows, lens), [rows, lens])
 
@@ -149,10 +164,13 @@ export default function CensusTable({ rows, onSelect }) {
     // ⚠ the critical-tissue exclusion is an INDEPENDENT criterion on its own edge — a filter, never
     // a subtraction from the tumour figure. D-093 ruling 4: nothing divides.
     const base = excludeCritical ? lensed.filter((r) => r.critical_n === 0) : lensed
-    return filterRows(base, query)
+    // ⚠ D-133: the same shape — an independent criterion on its own edge. It narrows the list and
+    // subtracts from no figure, and it is a CATEGORY filter, so it orders nothing.
+    const kinded = assembledOnly ? base.filter((r) => r.structure_kind === 'assembled') : base
+    return filterRows(kinded, query)
       .slice()
       .sort((a, b) => compare(a, b, col.key, col.numeric, sort.dir))
-  }, [lensed, query, sort, excludeCritical])
+  }, [lensed, query, sort, excludeCritical, assembledOnly])
 
   const declared = rows.find((r) => r.staining)?.staining
   // ⚠ counted, not assumed: the table holds two populations and each count states which
@@ -163,6 +181,9 @@ export default function CensusTable({ rows, onSelect }) {
     setSort((s) => ({ key, dir: s.key === key && s.dir === 'asc' ? 'desc' : 'asc' }))
 
   const intermittent = rows.filter((r) => r.topology === 'intermittent').length
+  // ⚠ D-133: a count of census ACCESSIONS whose representative is an assembled parent. It is not
+  // the 45 assembled parent JOBS of D-132 and must never be printed as that figure.
+  const assembled = rows.filter((r) => r.structure_kind === 'assembled').length
   const capped = !showAll && shown.length > PAGE
   const visible = capped ? shown.slice(0, PAGE) : shown
 
@@ -195,6 +216,29 @@ export default function CensusTable({ rows, onSelect }) {
           onChange={(e) => setQuery(e.target.value)}
         />
       </label>
+
+      {/* ⚠⚠ THE ASSEMBLED FILTER (D-133), and the caveat rides WITH it. Narrowing to the
+          seam-spliced proteins must not read as promoting them: an assembly is several tile folds
+          glued by pLDDT overlap, so the control says so where it is clicked rather than in fine
+          print elsewhere. ⚠ Rendered only when the list actually holds one — a checkbox that can
+          only empty the table is a broken control, and the count states its own denominator. */}
+      {assembled > 0 && (
+        <label className="census-kind-filter">
+          <input
+            type="checkbox"
+            checked={assembledOnly}
+            onChange={(e) => setAssembledOnly(e.target.checked)}
+          />{' '}
+          Show only the <strong>{assembled.toLocaleString()}</strong>{' '}
+          {plural(assembled, 'protein')} <strong>assembled from tiles</strong> — of{' '}
+          {rows.length.toLocaleString()} listed
+          <span className="caveat">
+            {' '}⚠ assembled by pLDDT overlap, not superimposed. The seam is not solved, so
+            &ldquo;assembled&rdquo; is provisional — it says how the structure was made, never how
+            good it is.
+          </span>
+        </label>
+      )}
 
       {/* ⚠⚠ THE LENS CONTROL. D-102's condition is "state what it is", and this is where it is
           stated. The control is not a preference — it changes what the Stained % column MEANS, so
@@ -333,14 +377,9 @@ export default function CensusTable({ rows, onSelect }) {
                         onClick={() => onSelect?.(r)}>
                     {r.accession}
                   </Link>
-                  {r.structure_kind_label && (
-                    <span
-                      className={`badge badge-kind badge-kind-${r.structure_kind || 'unknown'}`}
-                      title={r.assembler_note || undefined}
-                    >
-                      {r.structure_kind_label}
-                    </span>
-                  )}
+                  {/* ⚠ D-133: the structure-kind badge MOVED to its own sortable column. It is not
+                      also drawn here — two spellings of one fact, only one of them sortable, is
+                      how a surface teaches a reader to distrust it. */}
                 </td>
                 <td>{r.gene ?? <span className="unknown">unknown</span>}</td>
                 <td>{r.label ?? <span className="unknown">unknown</span>}</td>
@@ -376,6 +415,33 @@ export default function CensusTable({ rows, onSelect }) {
                     </span>
                   )}
                 </td>
+
+                {/* ⚠⚠ HOW THE FOLD WAS PRODUCED (D-133), in the column that sorts on it. The label
+                    is the API's (`assembled (provisional)`, `single-pass`, `tiles only`,
+                    `mucin — not folded`) so the surface never re-spells a category it is served,
+                    and the assembler note rides in the tooltip.
+                    ⚠⚠ AND A MISSING KIND IS SAID, NOT ASSUMED. Never-folded manifest rows carry
+                    no kind (only the 3 mucins do), and a blank cell here would read as
+                    "single-pass" — a fold that was never performed. It is a stated absence
+                    instead, the same rule the topology column's final branch learned. */}
+                <td className="kind-cell">
+                  {r.structure_kind_label ? (
+                    <span
+                      className={`badge badge-kind badge-kind-${r.structure_kind || 'unknown'}`}
+                      title={r.assembler_note || undefined}
+                    >
+                      {r.structure_kind_label}
+                    </span>
+                  ) : (
+                    <span
+                      className="unknown"
+                      title="no structure kind on this row — a blank is a missing field, never an implied single-pass fold"
+                    >
+                      not recorded
+                    </span>
+                  )}
+                </td>
+
                 <td className="num" style={{ color: band.color }}>
                   {r.mean_plddt != null ? r.mean_plddt.toFixed(1) : <span className="unknown">not measured</span>}
                 </td>
