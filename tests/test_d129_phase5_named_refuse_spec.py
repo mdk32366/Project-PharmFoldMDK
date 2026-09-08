@@ -95,7 +95,17 @@ D128_LINKER_SEAM_SHA256 = "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9e
 # only** — the by-content guard below is again left untouched, and
 # `tests/test_d129_c_must_hunt_supersession.py` adds a second content guard
 # that goes red if the rule is ever satisfied by deleting the sentence.
-METHOD_SHA256 = "4c250063b83978b854b43ea9748b0287ac22f0dacf1b4c832680138113a1e380"
+#
+# ⚠ Re-pinned again at **D-132** (`4c250063…` → below). The failure message asks
+# for a decision entry behind any Method edit outside the labelling BUILD, and
+# `### D-132` is that entry: the inventory amend adds a scope paragraph saying
+# "the 27" is the RUN POPULATION, not the volume, because the volume measured
+# **45** on 2026-09-08. **Additive, and additive in the safest direction** — it
+# adds a limit on what the OPS numbers cover and restates none of them. Every
+# by-content guard below is again left untouched, so a softened 0-of-7, a
+# deleted refuse class, or a run silently re-scoped onto 45 parents still fails
+# with a reason rather than on a digest.
+METHOD_SHA256 = "219409f619c9d13e94945cd5dcb641bc41e1c312f38e0be77ea848756b9904dd"
 
 MODULE_PINS = {
     "core/hold48_kabsch.py": D125_KABSCH_SHA256,
@@ -350,8 +360,19 @@ def test_d129_is_the_next_free_decision_id():
     # successor is enumerated rather than admitted by a `>=`, so a stray
     # `### D-131` still reddens, and D-130 must be THIS Spec's successor
     # heading rather than any entry that happens to take the number.
-    assert [i for i in ids if i > 129] == [130], (
-        f"D-129's only successor must be D-130; found {ids[-3:]}"
+    #
+    # ⚠ Widened again at **D-132** — from `[130]` to `[130, 132]` — and again by
+    # enumeration, not by a `>=`. Spending D-132 reddened the previous form BY
+    # DESIGN; that is the guard working. ⚠ 131 is deliberately ABSENT from this
+    # list and must stay absent: it is spent, but as the suffix half of the
+    # `### D-130-B / D-131` heading, so it never appears as its own `### D-1NN`.
+    # A bare `### D-131` would be a real collision and still reddens here.
+    assert [i for i in ids if i > 129] == [130, 132], (
+        f"D-129's successors must be exactly D-130 and D-132; found {ids[-3:]}"
+    )
+    assert re.search(r"^### D-132 — Assemble-inventory amend", LOG, re.M), (
+        "D-132 is the recorded successor id; it must be the inventory-amend "
+        "entry, not some other entry that took the number"
     )
     assert re.search(r"^### D-130 — Phase 4 residual-RMSD hunt", LOG, re.M), (
         "D-130 is the recorded successor id; it must be the residual-RMSD "

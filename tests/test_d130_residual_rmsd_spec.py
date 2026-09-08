@@ -69,7 +69,14 @@ MODULE_PINS = {
 # ⚠ A hash alone would let a later PR buy this green by reverting the file.
 # Content survival is checked separately (T-1198) — the hash says "unedited
 # in THIS PR", the content says "the disclosure is still there".
-METHOD_SHA256 = "4c250063b83978b854b43ea9748b0287ac22f0dacf1b4c832680138113a1e380"
+#
+# ⚠ Re-pinned at **D-132** (`4c250063…` → below), the inventory amend, which is
+# the decision entry behind the edit. It appends one scope paragraph: the Phase 4
+# figures above were measured on the **27**-parent Wave1+Wave2 slice and describe
+# only it, while the volume measured **45** assembled parents on 2026-09-08. No
+# OPS number is restated, re-scoped, or softened, and the content guards below
+# are untouched — the digest moved, the disclosure did not.
+METHOD_SHA256 = "219409f619c9d13e94945cd5dcb641bc41e1c312f38e0be77ea848756b9904dd"
 
 
 def _flat(text: str) -> str:
@@ -229,10 +236,22 @@ def test_d130_is_the_next_free_decision_id():
     named-refuse GO (2026-09-05 ~22:32 PT via Emma) authorised **B**, so
     ``### D-130-B`` is *required* and enumerated with ``{-A, -B}``. A second
     ``### D-130-A`` or ``### D-130-B`` fails on the count.
+
+    ⚠ **Widened at D-132 — from "130 is the newest id" to "132 is the only id
+    above it" — rather than loosened.** Spending D-132 reddened the ``max``
+    form BY DESIGN: the guard did its job. The successor is enumerated, so a
+    stray ``### D-131`` or ``### D-133`` still reddens, and D-132 must be the
+    inventory-amend entry rather than any entry that took the number.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert max(ids) == 130, f"D-130 must be the newest id; found {ids[-3:]}"
+    assert [i for i in ids if i > 130] == [132], (
+        f"D-130's only successor must be D-132; found {ids[-3:]}"
+    )
+    assert re.search(r"^### D-132 — Assemble-inventory amend", LOG, re.M), (
+        "D-132 must be the inventory-amend entry, not some other entry that "
+        "took the number"
+    )
     assert len(re.findall(r"^### D-130 —", LOG, re.M)) == 1, "exactly one D-130 entry"
     assert len(re.findall(r"^### D-130-A —", LOG, re.M)) == 1, "exactly one D-130-A entry"
     assert len(re.findall(r"^### D-130-B", LOG, re.M)) == 1, "exactly one D-130-B entry"

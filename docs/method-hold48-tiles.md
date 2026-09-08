@@ -547,6 +547,26 @@ After this sign + label:
 
 **Never claim 27/27 PASS.** Never claim the seams are solved.
 
+### ⚠ "The 27" is the run population, not the volume (D-132 amend, 2026-09-08)
+
+Everything above was measured on the **2026-09-05 Wave1+Wave2 closeout
+slice** — **27** parents, Wave1 PASS **10** + Wave2 PASS **17**. Those
+figures describe that slice and nothing else, and they are not restated
+here.
+
+A **read-only** Fly DB query on **2026-09-08** (parent jobs with tile
+children **and** a non-null `protein_analyses.pdb_path`, path shape
+`/data/artifacts/{parent_job_id}/structure.pdb` with `pae.json.gz` beside
+it) counted **45** unique assembled parents on the volume: the **27**
+above **plus 18** more. ⚠ Those 18 are **not** a new persist — they
+already carried a stored structure path at inventory time; the
+2026-09-05 closeout simply counted the wave, not the volume. The figure
+is recorded here **as handed** by owner ops; this file ran no query.
+
+⚠ **None of the OPS runs above touched those 18.** No D-127, D-128 or
+Phase 4 number is claimed for them. **Never claim 45/45 PASS** either.
+The rental stays **CLOSED** (D-118) — a recount is not a card.
+
 ### What we are not doing next
 
 There is **no residual-RMSD-v2** and **no fifth stitching algorithm** in
