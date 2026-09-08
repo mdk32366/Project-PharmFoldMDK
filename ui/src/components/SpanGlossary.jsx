@@ -24,7 +24,8 @@ export default function SpanGlossary() {
   )
   return (
     <section className="span-glossary">
-      <h3>Which parts of a protein count as reachable — and which do not</h3>
+      {/* D-138: an id, so the /method contents rail can reach this section. */}
+      <h3 id="reachable-spans">Which parts of a protein count as reachable — and which do not</h3>
 
       <p className="note">
         A protein’s topology is described by UniProt with a small controlled vocabulary. The
