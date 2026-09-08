@@ -147,6 +147,19 @@ def _slice(text: str, start: str, end: str | None, label: str) -> str:
     return text[i:j]
 
 
+def _h3(text: str, heading: str, label: str) -> str:
+    """The opening ``<h3 …>`` tag for a heading, WHATEVER attributes it carries.
+
+    ⚠ These markers were bare ``<h3>`` literals until **D-138** gave every Method
+    heading the ``id`` its contents rail links to, which reddened them all at once.
+    The section's identity is its **heading text**; the tag's attributes are not, so
+    the marker is read back out of the file rather than spelt here a second time.
+    """
+    match = re.search(rf"<h3\b[^>]*>{re.escape(heading)}", text)
+    assert match is not None, f"{label}: no <h3> heading starting {heading!r}"
+    return match.group(0)
+
+
 def d129b_method_sections() -> tuple[tuple[str, str], ...]:
     """The D-129-B section ALONE on each Method surface.
 
@@ -167,8 +180,12 @@ def d129b_method_sections() -> tuple[tuple[str, str], ...]:
         (
             _slice(
                 METHOD_NOTE,
-                "<h3>What we now call the eight joins we could not hold",
-                "<h3>What it does today</h3>",
+                _h3(
+                    METHOD_NOTE,
+                    "What we now call the eight joins we could not hold",
+                    "MethodNote.jsx",
+                ),
+                _h3(METHOD_NOTE, "What it does today</h3>", "MethodNote.jsx"),
                 "MethodNote.jsx",
             ),
             "MethodNote.jsx (D-129-B addendum)",

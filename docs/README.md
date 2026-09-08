@@ -379,6 +379,140 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-138 — `/method` gets a contents rail that is READ OFF ITS OWN HEADINGS: fourteen sections and 7,389 words with no way in is a page that is scrolled, not read
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — **UI only**. No route, no API, no payload field, no migration, no backfill,
+  no ops, no rent, no emit, no Fly write, no F-004, no Kabsch flip, no RMSD-v2, no threshold move,
+  no served-path flip. Rental stays **CLOSED** (D-118). ⚠ **Not one word of the Method prose
+  changes** — the sections keep their text, their order, their `data-testid`s and their claims;
+  they gain an `id` and a link that points at it.
+- **Ship id:** spends **`D-138`**, and **`D-137` is deliberately skipped**, not free. Verified before
+  claiming the integer, on `main` at tip `1b0251b` (D-136): `grep -n '^### D-1[34][0-9]'
+  docs/README.md` returns `D-136` as the highest entry, and `gh pr list --state open` returns
+  **[#261](https://github.com/mdk32366/Project-PharmFoldMDK/pull/261)** — *"D-137: census sortable
+  Cost column"*, branch `cursor/d137-census-cost-column-78bb`, still open at 2026-09-08 20:51 UTC —
+  which has already spent 137 on a branch that has not merged. Taking 137 here would be exactly the
+  collision the next-free guards exist to catch, so this entry takes 138 and leaves 137 to that PR.
+  ⚠ **Consequence for whoever merges second:** the two next-free-id guards below are widened here to
+  `…, 136, 138` and will conflict with #261's `…, 136, 137`. **Resolve by carrying both ids and both
+  named-entry assertions** — the way D-135 and D-136 resolved the same two-branch collision — and
+  **never** by relaxing the enumeration to a `>=`.
+  ⚠ **#261 merged first** — `68fe0228` on `main`, 2026-09-08, after this PR opened — and that is
+  exactly the resolution taken: `origin/main` was merged into this branch and both guards now
+  enumerate `…, 135, 136, **137**, 138` with a named-entry assertion for each. **Nothing was
+  loosened**, so a stray `### D-139` still reddens both. ⚠ **A THIRD guard turned up in the merge
+  and is widened the same way:** `tests/test_d136_cancer_type.py::test_d136_entry_exists_in_the_living_log`
+  asserted `### D-138` was absent — D-137 added that line, predicting in its own docstring that
+  spending 138 would redden it, and it did. It now names D-138 as the `/method` rail and bars
+  `### D-139`. ⚠ **The gap this closes is real, not clerical:** had any of the three relaxed to a
+  `>=` to make the conflict go away, the collision guard would have stopped being able to tell a
+  spent id from a free one — which is the whole thing it exists to do, and the reason D-135/D-136
+  wrote the resolution down the first time. **Four live collisions now, four resolutions by adding.**
+- **Context, and how the gap is known (D-016).** Matt GO 2026-09-08 via Trinity, read against the
+  tree at `1b0251b` rather than recalled:
+  1. **The page is fourteen sections long and has no contents.** Rendered and counted rather than
+     estimated — `getByTestId('method-body')` holds **7,389 words** under **14** `h2`/`h3` headings
+     (twelve in `MethodNote.jsx`, plus one each from `SpanGlossary` and `Glossary`), out of an
+     867-line component. Nothing on the page told a reader those fourteen sections existed.
+  2. **Seven of the twelve are consecutive stitch-path addenda.** D-121, D-125-B, D-126-B, D-127-B,
+     D-128-B, D-129-B and D-130-B / D-131 run without a break from line 51 to line 827 of the file.
+     ⚠ **This is the honesty debt eating its own disclosure.** Each of those sections was ruled
+     *mandatory* by its own Spec §7, each states a negative result the project refuses to bury —
+     *0 of 3*, *0 of 7*, *0 of 2*, *the seams are not scientifically solved* — and the newest of them
+     starts nine-tenths of the way down. A disclosure that must be scrolled past six other
+     disclosures to reach is filed, not published.
+  3. **The Story already fixed this for itself.** **D-135** decision B.2 gave `/` a beat contents
+     with `<section id=…>` anchors for eleven paragraphs. `/method` is the longer page and did not
+     get one.
+- **Decision.**
+  1. **⚠⚠ The rail is DERIVED from the rendered headings, never listed.** `MethodToc.jsx` reads
+     `h2[id], h3[id]` out of the mounted method body and builds one entry per heading found, in
+     document order. **A contents list typed in a component is a second copy of the section names**,
+     and this page has grown a section per stitch path since D-121 — the copy would eventually name
+     a section the page does not have. Deriving makes a ghost entry **impossible by construction**,
+     which is the same move D-051 made when it rendered the architecture diagram from a committed
+     model instead of drawing it.
+  2. **The entry text IS the heading text.** No short labels. A trimmed label reads better in a
+     14rem rail and is one more string free to drift from the section it names; the `(D-127-B)` tail
+     a reader is scanning for is exactly the part a shortener would cut. A test asserts
+     `link.textContent === heading.textContent.trim()`.
+  3. **The one direction it CAN be wrong is closed by a test.** Deriving cannot invent a section,
+     but it can silently **drop** one: a heading that loses its `id` just stops appearing. So the
+     suite asserts the rail's hrefs equal the body's `h2`/`h3` ids **in document order**, and that
+     no such heading carries an empty id. ⚠ Without that second assertion the derived rail is a
+     guard that reports only its own good news.
+  4. **Real anchors, on real headings.** Each of the fourteen headings gains a stable `id`
+     (`where-the-deep-learning-runs`, `hold-48-tiles-and-assembler`, `kabsch-path-restitch`,
+     `overlap-confidence-kabsch`, `piecewise-domain-kabsch`, `linker-seam-honesty`,
+     `phase-5-named-refuse`, `phase-4-named-refuse`, `non-goals`, …), so `/method#phase-4-named-refuse`
+     is an address a Spec or a PR can cite. The click handler smooth-scrolls **when
+     `scrollIntoView` exists** and otherwise does nothing, letting the `href` fragment do the work —
+     the link is never JavaScript-only.
+  5. **Sticky left column on desktop; stacked and collapsible below 860px.** The rail is a grid
+     sibling of `.prose`, which keeps its measure. Narrow screens get one column with the rail above
+     the prose in a `<details open>` with its own `max-height` scroll, so a fourteen-entry list
+     cannot push the reading itself off the first screen.
+  6. **Active-section highlight, guarded and optional.** An `IntersectionObserver` over the headings
+     marks the entry being read. ⚠ It is feature-detected off `defaultView` and simply does not run
+     where the API is absent (jsdom, older browsers); the rail stays a working set of links. It was
+     cheap, so it shipped — the GO said not required if it complicated, and it did not.
+  7. **The rail is navigation and carries no claims.** It renders headings and nothing else: no
+     counts, no PASS/REFUSE rollups, no Å figures, no F-004. A test asserts those strings are absent
+     from the nav. ⚠ A contents list is the most tempting place in this project to put a summary,
+     and a summary of these sections is the thing every one of them was written to prevent.
+  8. **One labelled `nav`, for D-135's reason.** `aria-label="Method contents"`. Two unnamed
+     navigation landmarks are indistinguishable to a screen reader, and the site nav is a contract.
+  9. **Two Python suites stop bounding Method sections by a bare `<h3>` literal.**
+     `test_d128_b_five_path.py` and `test_d129_b_named_refuse_labels.py` slice the D-128-B and
+     D-129-B addenda out of `MethodNote.jsx` by `str.find("<h3>…")`, and adding the `id` reddened
+     **twenty** of their assertions at once. ⚠ **They were not re-typed with the new attribute** —
+     each grew an `_h3()` helper that finds `<h3\b[^>]*>` + the heading **text** and hands the tag
+     it actually found to the existing `_slice`. A section's identity is its heading text; its tag's
+     attribute list is not. Re-spelling the attributes would have re-armed the same trip for the next
+     one, which is the hidden literal dependency **D-136 amendment 1** already had to unpick once.
+- **⚠ What this does NOT do.**
+  - **Not** a content change. No section is added, removed, renamed, re-ordered, re-scoped or
+    softened; the mandatory §7 addenda and every negation in them are byte-identical, and the
+    existing 18 `MethodNote.test.jsx` assertions still pass unchanged.
+  - **Not** a summary surface. The rail restates nothing. **Never claim the seams are solved**, and
+    the served structure is still the **assembler**.
+  - **Not** a route, **not** an API field, **not** ops, **not** rent, **not** F-004, **not** a
+    Kabsch flip, and **not** a gate move: the **10.0 Å** gate, **W = 32**, **D-126 best experimental
+    callable** and **rental CLOSED** all stand exactly as ruled.
+  - **Not** a hand-kept list, which is the whole point of decision 1, and **not** a `>=` in either
+    next-free guard, which is the whole point of the ship-id note.
+- **Deep-learning justification.** `/method` is where this project states what the network did and,
+  at much greater length, what it did not. Every one of those refusals — the pLDDT winner-tile
+  assembler is *not* Kabsch, the joins are *not* scientifically solved, D-127 recovered *0 of 3*,
+  D-128 *0 of 7*, Phase 4 *0 of 2*, ten of the twenty-seven are *accept-refuse* — is a claim about
+  the model's output that only does its work if a reader reaches it. Seven consecutive addenda had
+  made the newest and most negative of them the hardest to find, and *"where the deep learning runs"*
+  (D-051) — the entry a reader arrives for — sat above six sections of stitch-path post-mortem with
+  nothing pointing at it. Making those statements **navigable** is the same category of work as
+  making them **true**: no inference runs here, no threshold moves, and the rail cannot name a
+  section the network's story does not have, because it is not allowed to name one the page does not
+  render.
+- **Consequences.** `ui/src/components/MethodToc.jsx` (new), `ui/src/components/MethodNote.jsx`
+  (rail + body wrapper + `id` on twelve headings; ⚠ the body is re-indented one level under the new
+  grid wrapper — read the diff with `git diff -w`), `ui/src/components/Glossary.jsx` and
+  `ui/src/components/SpanGlossary.jsx` (one `id` each), `ui/src/styles.css` (`.method-layout` /
+  `.method-toc`), `ui/src/components/MethodNote.toc.test.jsx` (new),
+  `tests/test_d138_method_contents_rail.py` (new — the file-level half: every Method `h2`/`h3`
+  carries an `id`, and the rail component lists none of them), `tests/test_d128_b_five_path.py` and
+  `tests/test_d129_b_named_refuse_labels.py` (`_h3()` instead of `<h3>` literals),
+  `tests/test_d129_phase5_named_refuse_spec.py`, `tests/test_d130_residual_rmsd_spec.py` and
+  `tests/test_d136_cancer_type.py` (the three next-free guards, widened **by enumeration / by name**
+  to admit `D-137` **and** `D-138`), and `ARCHITECTURE.md`.
+- **Cite:** D-135 dec B.2 (the Story's beat contents with real `id` anchors — this is that move on
+  the longer page) and D-135's labelled-`nav` rule · D-051 (a surface rendered from its subject
+  rather than drawn beside it, pinned by a test) · D-050 / D-051 Constraint A (derived, never typed)
+  · D-033 (clarity over decoration) · D-028 §9 (non-goals are commitments — `#non-goals` is now
+  linkable) · D-055 (the glossary block this rail can finally reach) · D-121 / D-125-B / D-126-B /
+  D-127-B / D-128-B / D-129-B / D-130-B / D-131 (the seven mandatory addenda, untouched) · D-136
+  am. 1 (stop bounding a section by a literal a later attribute breaks) · D-118 (rental CLOSED) ·
+  D-016 (provenance) · Matt GO 2026-09-08 via Trinity, on tip `1b0251b`.
+
 ### D-137 — The census gains a sortable Cost column: what a protein costs to FOLD becomes visible without becoming a filter, a feature, or a verdict
 
 - **Date:** 2026-09-08

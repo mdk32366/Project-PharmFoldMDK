@@ -355,6 +355,15 @@ def test_d136_entry_exists_in_the_living_log():
     working. D-137 was authored while this PR (#260) was still open and took 137
     deliberately, leaving 136 to it, so the ids are contiguous and neither was
     assumed free. A bare `### D-138` still reddens here.
+
+    ⚠ **Widened again at D-138 — to "138 is the `/method` contents rail and 139
+    does not exist"** — the same way, and the fourth live two-branch collision in
+    a row. D-138 (#262) was opened at tip `1b0251b` while #261 (D-137) was still
+    open and took 138 deliberately, leaving 137 to it — read off the open-PR list,
+    not assumed. #261 then squash-merged at `68fe0228` and this assertion reddened
+    **exactly as the comment above predicted it would**. ⚠ **The successor is
+    named, never admitted by a `>=`:** an entry that merely *takes* 138 still
+    fails, and a bare `### D-139` still reddens.
     """
     log = DOCS_README.read_text(encoding="utf-8")
     assert "\n### D-136 —" in log
@@ -362,7 +371,11 @@ def test_d136_entry_exists_in_the_living_log():
         "D-137 is the recorded successor id; it must be the census sortable-Cost-column "
         "entry, not some other entry that took the number"
     )
-    assert "\n### D-138" not in log
+    assert re.search(r"^### D-138 — `/method` gets a contents rail", log, re.M), (
+        "D-138 is the recorded successor id; it must be the /method contents-rail "
+        "entry, not some other entry that took the number"
+    )
+    assert "\n### D-139" not in log
 
 
 def test_every_entry_slice_in_this_suite_is_anchored_to_a_line_start():

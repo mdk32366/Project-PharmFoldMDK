@@ -7,7 +7,9 @@ export default function Glossary() {
   const terms = Object.keys(GLOSSARY).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
   return (
     <section className="glossary">
-      <h3>Glossary — every term on one page</h3>
+      {/* D-138: an id, so the /method contents rail can reach the block a reader scrolls past
+          everything else to find. */}
+      <h3 id="glossary">Glossary — every term on one page</h3>
       <dl>
         {terms.map((name) => (
           <div className="glossary-entry" key={name}>

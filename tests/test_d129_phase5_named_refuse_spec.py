@@ -398,9 +398,24 @@ def test_d129_is_the_next_free_decision_id():
     # **exactly as its own comment predicted**, and the rebase inserted 136 beside 137.
     # **The redness was the guard working. Both ids are carried and neither claim is
     # weakened** — a stray `### D-138` still reddens rather than slipping under a `>=`.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137], (
-        f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136 "
-        f"and D-137; found {ids[-8:]}"
+    #
+    # ⚠ Widened again at **D-138** — to `[130, 132, 133, 134, 135, 136, 137, 138]` — the
+    # same way, and for the FOURTH consecutive live collision. D-138 is the `/method`
+    # contents rail (#262), opened at tip `1b0251b` while #261 (D-137) was still open, so
+    # it landed here as `[…, 136, 138]` with **137 named as the in-flight id it was
+    # deliberately not taking** — read off `gh pr list --state open`, not assumed. #261
+    # then squash-merged at `68fe0228`, this assertion reddened **exactly as both
+    # branches' comments predicted**, and the merge inserted 137 beside 138. ⚠ **Four
+    # collisions, four resolutions by ADDING.** The temptation each time is a `>=`, and a
+    # `>=` would end the guard's ability to tell a spent id from a free one — which is the
+    # only thing it does. A stray `### D-139` still reddens.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138], (
+        f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
+        f"D-137 and D-138; found {ids[-9:]}"
+    )
+    assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
+        "D-138 is the recorded successor id; it must be the /method contents-rail "
+        "entry, not some other entry that took the number"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 is the recorded successor id; it must be the ADC cancer-type entry, "

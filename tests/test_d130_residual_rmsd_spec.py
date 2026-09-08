@@ -277,12 +277,28 @@ def test_d130_is_the_next_free_decision_id():
     comment predicted**, and the rebase inserted 136 beside 137. **The redness
     was the guard working**; both ids are carried, neither claim is weakened, and
     a stray ``### D-138`` still fails rather than slipping under a ``>=``.
+
+    ⚠ **Widened again at D-138 — to ``[132, 133, 134, 135, 136, 137, 138]``** —
+    the FOURTH live collision in a row, same resolution. D-138 (the ``/method``
+    contents rail, #262) was opened at tip ``1b0251b`` while #261 (D-137) was
+    still open, so it landed as ``[…, 136, 138]`` with **137 named as the
+    in-flight id it was deliberately not taking**, read off ``gh pr list
+    --state open`` rather than assumed. #261 then squash-merged at ``68fe0228``,
+    this assertion reddened **exactly as both branches' comments predicted**, and
+    the merge inserted 137 beside 138. ⚠ **Four collisions, four resolutions by
+    ADDING.** A ``>=`` would make each of them go away and would also end the
+    guard's ability to tell a spent id from a free one, which is the only thing
+    it does. A stray ``### D-139`` still fails.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137], (
-        f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136 and "
-        f"D-137; found {ids[-7:]}"
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138], (
+        f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
+        f"D-137 and D-138; found {ids[-8:]}"
+    )
+    assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
+        "D-138 must be the /method contents-rail entry, not some other entry that "
+        "took the number"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 must be the ADC cancer-type entry, not some other entry that "
