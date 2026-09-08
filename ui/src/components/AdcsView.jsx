@@ -27,7 +27,7 @@ import Term from './Term.jsx'
 // D-136 — Cancer type on Approved lists the tumour types FDA's own label states,
 // audited in the catalog loader against that row's stored label text. A row that
 // states none renders its own absence source.
-// D-139 — Pipeline gets Cancer type and Description of its own, from the trial
+// D-140 — Pipeline gets Cancer type and Description of its own, from the trial
 // registry / the row's citation and never from an FDA label. ⚠ Same column name
 // on the two shelves, different authority behind it, so each shelf states which
 // one it is rather than letting the reader assume a pipeline row is approved.
@@ -150,7 +150,7 @@ function ApprovedShelf({ catalog }) {
 }
 
 /**
- * D-139 — a named absence in a TABLE CELL, which is not the same problem as a
+ * D-140 — a named absence in a TABLE CELL, which is not the same problem as a
  * named absence on a card.
  *
  * ⚠ The first render of this shelf put each absence envelope's whole source —
@@ -228,7 +228,7 @@ function PipelineShelf({ catalog }) {
           own citation states — <strong>not</strong> an FDA indication, because none
           of these agents has one. Description names the sponsor or maker behind the
           programme. Where a row states neither, it says which lookup came back
-          empty rather than showing a blank (D-139).
+          empty rather than showing a blank (D-140).
         </p>
       ) : null}
 

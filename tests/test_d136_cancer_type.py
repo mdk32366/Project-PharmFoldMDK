@@ -394,13 +394,21 @@ def test_d136_entry_exists_in_the_living_log():
     named, never admitted by a `>=`:** an entry that merely *takes* 138 still
     fails, and a bare `### D-139` still reddens.
 
-    ⚠ **Widened again at D-139 — to "139 is the pipeline programme fields and 140
-    does not exist"** — the same way. Unlike the previous four, this one was **not**
-    a collision: D-139 was cut from `dd06e9c` with D-138 already merged and no other
-    PR open, so `### D-139` was free rather than deliberately stepped around. ⚠ The
-    id is still **named**, not admitted by a `>=` — and D-139 is the entry that
-    amends this very suite's D-136 decision 8, so an entry that merely *takes* 139
-    would leave that amendment pointing at nothing (the D-062 failure mode).
+    ⚠ **Widened again at D-139 — to "139 is the served-path flip"** — the same way,
+    and the fifth time this guard has been widened rather than relaxed. D-139 hands
+    the recorded D-126 PASS seventeen the confidence-Kabsch structure and leaves
+    everyone else on the assembler.
+
+    ⚠⚠ **Widened again at D-140 — to "140 is the pipeline programme fields and 141
+    does not exist" — and this widening is the record of a DUPLICATE, not a
+    successor.** Two branches cut from `dd06e9c` each read `gh pr list --state open`,
+    each found no `D-1NN` spender, and each wrote `### D-139`: the served-path flip
+    and the ADC Pipeline programme fields. They could not see each other because the
+    pipeline branch was not yet an open PR. The served-path work merged first
+    (`1e9777c`) and assigned the loser in its commit message — *"Pipeline #263 takes
+    D-140."* ⚠ **D-140 is the entry that amends this very suite's D-136 decision 8**,
+    so an entry that merely *takes* 140 would leave that amendment pointing at
+    nothing (the D-062 failure mode). Both ids are named; `### D-141` still reddens.
     """
     log = DOCS_README.read_text(encoding="utf-8")
     assert "\n### D-136 —" in log
@@ -412,11 +420,15 @@ def test_d136_entry_exists_in_the_living_log():
         "D-138 is the recorded successor id; it must be the /method contents-rail "
         "entry, not some other entry that took the number"
     )
-    assert re.search(r"^### D-139 — The ADC Pipeline shelf gets a cancer type", log, re.M), (
-        "D-139 is the recorded successor id; it must be the pipeline programme-fields "
+    assert re.search(r"^### D-139 — The served PDB stops being a constant", log, re.M), (
+        "D-139 is the recorded successor id; it must be the served-path flip entry, "
+        "not some other entry that took the number"
+    )
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", log, re.M), (
+        "D-140 is the recorded successor id; it must be the pipeline programme-fields "
         "entry, not some other entry that took the number"
     )
-    assert "\n### D-140" not in log
+    assert "\n### D-141" not in log
 
 
 def test_every_entry_slice_in_this_suite_is_anchored_to_a_line_start():

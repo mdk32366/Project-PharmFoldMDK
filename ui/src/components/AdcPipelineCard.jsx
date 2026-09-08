@@ -16,7 +16,7 @@ import Term from './Term.jsx'
 // Consumes GET /api/adcs/pipeline/{id}. Unknown id is not a guessed row.
 // No DAR / efficacy fields — those are not in the A contract.
 //
-// D-139 — the card gains the same two envelopes the Pipeline index reads, so the
+// D-140 — the card gains the same two envelopes the Pipeline index reads, so the
 // two surfaces cannot disagree, plus the registry / citation text the tumour list
 // was reduced from. ⚠ The section is "Programme", never "Indication": these agents
 // are not approved and have no indication to state.
@@ -32,7 +32,7 @@ const TARGET = [
 ]
 
 /**
- * D-139 — a field the payload does not carry at all. `ProvenanceField` renders
+ * D-140 — a field the payload does not carry at all. `ProvenanceField` renders
  * nothing for a non-envelope, which here would be a silent gap where a clinical
  * claim belongs. The loader requires all three programme fields, so reaching this
  * is a contract breach — and it says so rather than vanishing.
@@ -77,7 +77,7 @@ function descriptionValue(value, field) {
 }
 
 /**
- * D-139 — the registry Conditions (or the citation quoted whole) that the tumour
+ * D-140 — the registry Conditions (or the citation quoted whole) that the tumour
  * list above was reduced from. This is what makes the reduction auditable by the
  * reader rather than taken on trust, so it is a peer field and not a tooltip.
  * Collapsed because it is long, not because it is secondary.
@@ -158,7 +158,7 @@ export default function AdcPipelineCard({ id }) {
         </dl>
       </section>
 
-      {/* D-139 — a section of its own, not a line under Target. The antigen is a
+      {/* D-140 — a section of its own, not a line under Target. The antigen is a
           reviewed protein assignment; the cancer type is what a trial registry
           records this agent as being studied in. Rendering them as one block is
           how a target and a disease claim get confused (D-093). */}
@@ -209,7 +209,7 @@ export default function AdcPipelineCard({ id }) {
           treatment recommendation. The cancer type is what the trial registry
           or this row's citation records the agent as being <em>studied in</em>
           {' '}— never an FDA indication, and every entry has to appear in the
-          text quoted above it or the catalog refuses to load (D-139).
+          text quoted above it or the catalog refuses to load (D-140).
         </p>
       ) : null}
 

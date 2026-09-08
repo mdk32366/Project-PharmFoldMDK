@@ -1,4 +1,4 @@
-# ADC catalogs (D-119 / ADC-A, D-124 / ADC-C-A, D-136, D-139)
+# ADC catalogs (D-119 / ADC-A, D-124 / ADC-C-A, D-136, D-140)
 
 Three sibling files. Do **not** merge them.
 
@@ -71,13 +71,13 @@ Other rules the loader enforces:
 - A missing indication is a **named absence** — `value: null` with a `source`
   naming the query that came back without text. Never a blank.
 - Pipeline rows carry **no FDA label field**. They have programme fields of
-  their own, from the trial registry — see below (**D-139**).
+  their own, from the trial registry — see below (**D-140**).
 
 ⚠ The label is the one **in force on the retrieval date**, not the ORIG-AP
 indication. Several v1 labels are newer than `approvals_reconciled_as_of`, and
 their indication sets have grown since first approval.
 
-## Pipeline cancer type + description (D-139) — a different authority, on purpose
+## Pipeline cancer type + description (D-140) — a different authority, on purpose
 
 The Pipeline shelf has the same two questions and **cannot** use the same answer:
 none of these agents has an FDA label, so `label.json` is not an option here.
@@ -144,7 +144,7 @@ When Emma runs the watch, the useful output is:
 - **D-136:** an SPL whose `version` / `effective_time` has moved past the one
   cited in a row's `cancer_type.source`, which means the **indication set may
   have changed** even though approval identity has not.
-- **D-139:** a ClinicalTrials.gov record named in a pipeline row whose
+- **D-140:** a ClinicalTrials.gov record named in a pipeline row whose
   `overallStatus` or `conditions` have moved since 2026-09-08, or a pipeline
   agent that now has a trial where the artefact recorded **0 studies**. ⚠ A
   status change is **not** a licence to edit `phase` or `development_stage`:

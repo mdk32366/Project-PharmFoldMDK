@@ -1,4 +1,4 @@
-"""D-139 — the ADC Pipeline Cancer type / Description columns, and the guards behind them.
+"""D-140 — the ADC Pipeline Cancer type / Description columns, and the guards behind them.
 
 Hermetic: the committed catalog, the committed registry artefact, and tmp fixtures.
 **No network.** The ClinicalTrials.gov reads happened once, in
@@ -13,7 +13,7 @@ The tests this suite exists for, each written so it can go red:
   cannot pass a substring test.
 * :func:`test_an_hpa_staining_source_is_refused` — a staining / association-map join
   reddens, naming D-093.
-* :func:`test_an_fda_indication_authority_is_refused_on_a_pipeline_row` — D-139's own
+* :func:`test_an_fda_indication_authority_is_refused_on_a_pipeline_row` — D-140's own
   refusal: an investigational row that cites an FDA label has promoted itself.
 * :func:`test_a_sponsor_that_appears_in_no_source_is_refused` — the description's maker
   is audited, not trusted.
@@ -119,7 +119,7 @@ def test_the_reportable_fill_counts():
     assert len(desc_filled) == 4
     assert len(desc_absent) == 6
     # ⚠ The four that gained a maker are exactly the four with a trial in the
-    # registry. No patent assignee was looked up: that is not an authority D-139
+    # registry. No patent assignee was looked up: that is not an authority D-140
     # admits, and inventing one would be the failure this whole suite is about.
     assert [r["id"]["value"] for r in desc_filled] == [
         "ifinatamab-deruxtecan",
@@ -296,7 +296,7 @@ def test_the_artefact_is_a_committed_file_and_no_test_reaches_the_network():
     assert "urllib.request" in fetcher
     for path in sorted((ROOT / "tests").glob("*.py")) + [ROOT / "core" / "adc_catalog.py"]:
         body = path.read_text(encoding="utf-8")
-        assert "fetch_pipeline_ctgov" not in body or path.name == "test_d139_pipeline_programme.py"
+        assert "fetch_pipeline_ctgov" not in body or path.name == "test_d140_pipeline_programme.py"
 
 
 # ------------------------------------------------------- the guards, going red
@@ -370,7 +370,7 @@ def test_every_staining_flavoured_source_is_refused(tmp_path, source):
     ],
 )
 def test_an_fda_indication_authority_is_refused_on_a_pipeline_row(tmp_path, source):
-    """⚠⚠ D-139's OWN refusal, and the one D-136 could not have written.
+    """⚠⚠ D-140's OWN refusal, and the one D-136 could not have written.
 
     On the Approved shelf an FDA label is *the* authority. Here it is disqualifying:
     none of these agents is approved, so a row that cites a drug label has either
@@ -388,7 +388,7 @@ def test_an_uncited_cancer_type_is_refused(tmp_path):
     row["cancer_type"] = _envelope(
         value=["Fixture carcinoma"], source="everyone knows this one is for that"
     )
-    with pytest.raises(CatalogError, match="no D-139 authority"):
+    with pytest.raises(CatalogError, match="no D-140 authority"):
         load_pipeline(_write(tmp_path / "p.json", _minimal_pipeline([row])))
 
 
@@ -437,7 +437,7 @@ def test_only_reviewed_confidence_is_allowed_for_a_pipeline_cancer_type(tmp_path
 
 
 def test_a_cancer_type_with_no_stored_text_to_audit_against_is_refused(tmp_path):
-    """D-139 decision 4's corollary — the hole the strict rule closes.
+    """D-140 decision 4's corollary — the hole the strict rule closes.
 
     Null the anchor, keep a plausible dated source, and the category would be
     unfalsifiable. Refused, not downgraded.
@@ -489,7 +489,7 @@ def test_a_blank_cancer_type_with_no_stated_reason_is_refused(tmp_path):
 
     row = _minimal_pipeline_row()
     row["cancer_type"] = _envelope(value=None, source="none found")
-    with pytest.raises(CatalogError, match="no D-139 authority"):
+    with pytest.raises(CatalogError, match="no D-140 authority"):
         load_pipeline(_write(tmp_path / "p.json", _minimal_pipeline([row])))
 
 
@@ -617,7 +617,7 @@ def test_committed_makers_match_the_registry_lead_sponsor():
 
 
 def test_the_approved_shelf_is_untouched_by_this_change():
-    """⚠ D-136 filled Approved from the FDA label; D-139 must not have moved a byte.
+    """⚠ D-136 filled Approved from the FDA label; D-140 must not have moved a byte.
 
     Read as a property of the committed file rather than trusted to the diff: every
     approved row still carries the label pair, and no pipeline field leaked in.
@@ -665,7 +665,7 @@ def test_no_pipeline_row_was_promoted_to_approved(tmp_path):
 # ------------------------------------------------------------- the log leads it
 
 
-def test_d139_entry_exists_in_the_living_log():
+def test_d140_entry_exists_in_the_living_log():
     """The check is the HEADING, not a citation of it (D-062 / method-note item 7).
 
     PR #90 named D-062 in its title and shipped no `### D-062`; thirteen later
@@ -674,9 +674,13 @@ def test_d139_entry_exists_in_the_living_log():
     (D-136 amendment 1).
     """
     log = DOCS_README.read_text(encoding="utf-8")
-    assert re.search(r"^### D-139 — The ADC Pipeline shelf gets a cancer type", log, re.M)
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", log, re.M)
+    assert len(re.findall(r"^### D-140 —", log, re.M)) == 1
+    # ⚠ Exactly one. This entry shipped as `### D-139` and collided with the
+    # served-path flip, which merged first; the renumber has to leave no twin behind.
     assert len(re.findall(r"^### D-139 —", log, re.M)) == 1
-    assert "\n### D-140" not in log
+    assert re.search(r"^### D-139 — The served PDB stops being a constant", log, re.M)
+    assert "\n### D-141" not in log
 
 
 def test_the_log_entry_records_the_counts_it_reports():
@@ -687,14 +691,14 @@ def test_the_log_entry_records_the_counts_it_reports():
     merged between them. That defect is not re-imported here.
     """
     log = DOCS_README.read_text(encoding="utf-8")
-    rest = log.split("\n### D-139 —", 1)[1]
+    rest = log.split("\n### D-140 —", 1)[1]
     next_heading = re.search(r"\n### D-\d", rest)
     entry = rest[: next_heading.start()] if next_heading else rest
     assert "5 of 10" in entry
     assert "4 of 10" in entry
     assert "D-093" in entry
     assert "D-136 decision 8" in entry
-    # The slice really is only D-139's own entry.
+    # The slice really is only D-140's own entry.
     assert "contents rail" not in entry
 
 
@@ -702,7 +706,7 @@ def test_the_log_records_that_d136_decision_8_was_amended_not_ignored():
     """⚠⚠ A reversal has to be written down where the reversed rule lives.
 
     D-136 decision 8 says the pipeline schema admits no indication field, and a test
-    in its suite enforced that. D-139 changes it. The failure mode being guarded is
+    in its suite enforced that. D-140 changes it. The failure mode being guarded is
     the silent one: change the code, redden the old test, edit the old test, and leave
     the log claiming the opposite of what ships.
     """
@@ -711,4 +715,4 @@ def test_the_log_records_that_d136_decision_8_was_amended_not_ignored():
     d135 = re.search(r"^### D-135 —", log, re.M)
     assert d136 and d135
     entry = log[d136.start(): d135.start()]
-    assert "D-139" in entry, "D-136's own entry must record that D-139 amended it"
+    assert "D-140" in entry, "D-136's own entry must record that D-140 amended it"

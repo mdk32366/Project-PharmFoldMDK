@@ -76,7 +76,16 @@ MODULE_PINS = {
 # only it, while the volume measured **45** assembled parents on 2026-09-08. No
 # OPS number is restated, re-scoped, or softened, and the content guards below
 # are untouched — the digest moved, the disclosure did not.
-METHOD_SHA256 = "219409f619c9d13e94945cd5dcb641bc41e1c312f38e0be77ea848756b9904dd"
+# ⚠ Re-pinned at **D-139** (`219409f6…` → below), the served-path flip, which is
+# the decision entry behind this edit — exactly what the pin demands. The Method
+# file gains an **Addendum D-139** and, on each earlier "served is still the
+# assembler" sentence, an in-place scope marker naming D-139 (D-129-C's rule: a
+# claim a later decision narrowed never stands alone). ⚠ **Additive and in the
+# safe direction:** no OPS figure is restated, re-scoped or softened, no refuse
+# class is dropped, and every parent this file's earlier sections are about is
+# named as EXCLUDED from the flip. The by-content guards below are untouched —
+# the digest moved, the disclosure did not.
+METHOD_SHA256 = "e40035aeacdcd68814a9d891a9b50ac6028c39b42190b04e600614a6030cb7a9"
 
 
 def _flat(text: str) -> str:
@@ -290,26 +299,44 @@ def test_d130_is_the_next_free_decision_id():
     guard's ability to tell a spent id from a free one, which is the only thing
     it does. A stray ``### D-139`` still fails.
 
-    ⚠ **Widened again at D-139 — to ``[132, 133, 134, 135, 136, 137, 138, 139]``**
-    — and this one breaks the run: it is **sequential, not a collision**. D-139
-    (the ADC Pipeline programme fields) was cut from ``dd06e9c`` with D-138 already
-    merged and no other PR open, so 139 was genuinely free. ⚠ The widening is still
-    by enumeration with the entry **named**, because "free at cut time" is exactly
-    what the previous four branches each believed too. A stray ``### D-140`` fails.
+    ⚠ **Widened again at D-139 — to ``[132, …, 138, 139]``** — the fifth pass,
+    same resolution. D-139 flips the served PDB to D-126 for the recorded PASS
+    seventeen. ⚠ It read ``gh pr list --state open`` at tip ``dd06e9c``, got #222,
+    #200 and #197, none of which spends a ``D-1NN`` id, and concluded 139 was free.
+
+    ⚠⚠ **Widened again at D-140 — to ``[132, …, 139, 140]`` — and the conclusion
+    above turned out to be wrong, which is the finding.** The ADC Pipeline
+    programme-fields branch (#263) was cut from the same ``dd06e9c``, ran the same
+    open-PR check, reached the same answer, and took the same 139: **two entries
+    titled ``### D-139``**, invisible to each other because #263 was not yet an
+    open PR when the other branch looked. The served-path work merged first
+    (``1e9777c``) and named the resolution in its own commit message — *"Pipeline
+    #263 takes D-140."* — so 139 stays with the entry that merged holding it and
+    #263 renumbered. ⚠ **An open-PR check proves no PUBLISHED branch spent the id;
+    it cannot prove no unpublished one did.** This enumeration is what caught it.
+    Both ids are named below and ``### D-141`` is barred by name.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138, 139], (
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138, 139, 140], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138 and D-139; found {ids[-9:]}"
+        f"D-137, D-138, D-139 and D-140; found {ids[-10:]}"
+    )
+    assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
+        "D-139 must be the served-path flip entry, not some other entry that "
+        "took the number"
+    )
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
+        "D-140 must be the ADC pipeline programme-fields entry, not some other entry "
+        "that took the number"
+    )
+    assert "\n### D-141" not in LOG, (
+        "D-141 is the next free integer and must stay unspent until an entry claims "
+        "it by name here"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 must be the /method contents-rail entry, not some other entry that "
         "took the number"
-    )
-    assert re.search(r"^### D-139 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
-        "D-139 must be the ADC pipeline programme-fields entry, not some other entry "
-        "that took the number"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 must be the ADC cancer-type entry, not some other entry that "

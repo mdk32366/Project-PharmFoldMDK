@@ -127,7 +127,7 @@ export const PHASE_VOCAB = [
   'Other',
 ]
 
-// D-139 — the Pipeline index gains Cancer type and Description. ⚠ They are NOT
+// D-140 — the Pipeline index gains Cancer type and Description. ⚠ They are NOT
 // the Approved shelf's columns wearing a different hat: an investigational agent
 // has no FDA indication, so these read the trial registry's Conditions and lead
 // sponsor (or the row's own citation) and the catalog loader refuses an FDA label
@@ -141,12 +141,12 @@ export const PIPELINE_INDEX_COLUMNS = [
   { key: 'description', label: 'Description' },
 ]
 
-// D-139 — fallbacks only. A row whose envelope is a named absence renders that
+// D-140 — fallbacks only. A row whose envelope is a named absence renders that
 // envelope's own source, which says what was read and what came back empty.
 export const PIPELINE_CANCER_TYPE_ABSENT_COPY =
-  'no tumour type stated in the trial-registry or citation text this catalog holds for this row (D-139)'
+  'no tumour type stated in the trial-registry or citation text this catalog holds for this row (D-140)'
 export const PIPELINE_DESCRIPTION_ABSENT_COPY =
-  'no maker named in the trial-registry or citation text this catalog holds for this row (D-139)'
+  'no maker named in the trial-registry or citation text this catalog holds for this row (D-140)'
 
 export const PIPELINE_SHELF = 'pipeline'
 export const APPROVED_SHELF = 'approved'

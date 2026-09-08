@@ -805,10 +805,10 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
    more than one and a comma-joined sentence reads as a single claim. */
 .adcs-cancer-types { margin: 0; padding-left: 1.05rem; }
 .adcs-cancer-types li { margin-bottom: 0.1rem; }
-/* D-139 — the Pipeline Description column is a sentence, not a token. Capped so
+/* D-140 — the Pipeline Description column is a sentence, not a token. Capped so
    one long programme line cannot squeeze the sortable columns beside it. */
 .adcs-description { max-width: 24rem; font-size: 0.88rem; line-height: 1.45; }
-/* D-139 — a named absence in a table cell: the label is short so the table stays
+/* D-140 — a named absence in a table cell: the label is short so the table stays
    scannable, the row's OWN source is inside the disclosure (never a page-wide
    sentence, D-136 decision 6). Same shape as the card's verbatim disclosure. */
 .absent-why > summary { cursor: pointer; font-size: 0.85rem; }

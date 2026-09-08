@@ -170,6 +170,60 @@ def read_confidence_kabsch_path(
     }
 
 
+def confidence_kabsch_success_pdb_path(
+    artifact_root: Path | str | None,
+    *,
+    parent_analysis_id: int,
+    parent_job_id: Optional[int] = None,
+    assembler_pdb_path: Optional[str] = None,
+    meta: Optional[dict[str, Any]] = None,
+) -> Optional[Path]:
+    """The D-126 ``stitched.pdb`` for this parent, or ``None`` (D-139).
+
+    ⚠ Fail-closed and read-only, exactly like ``read_confidence_kabsch_path``:
+    a leftover ``stitched.pdb`` beside a refused ``provenance.json`` is **not**
+    a success and is never returned. This names an existing file; it copies
+    nothing, writes nothing, and invents no path.
+    """
+    root = Path(artifact_root) if artifact_root is not None else default_artifact_root()
+    ids = lookup_parent_ids(
+        parent_analysis_id=parent_analysis_id,
+        parent_job_id=parent_job_id,
+        meta=meta,
+    )
+    found = find_confidence_kabsch_dir(root, ids, assembler_pdb_path=assembler_pdb_path)
+    if found is None:
+        return None
+    prov_path = found / "provenance.json"
+    if not prov_path.is_file():
+        return None
+    try:
+        provenance = json.loads(prov_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(provenance, dict) or not provenance.get("accepted"):
+        return None
+    pdb = found / "stitched.pdb"
+    return pdb if pdb.is_file() else None
+
+
+def confidence_kabsch_sibling_path(
+    served_pdb_path: str | Path,
+    name: str,
+) -> Optional[Path]:
+    """A named sibling of a served D-126 PDB (``stitched_plddt.json`` …), or ``None``.
+
+    ⚠ The D-126 tree runs its own ``winning_tile``, so its residue selection —
+    and therefore its pLDDT array — may differ from the assembler's. Serving
+    D-126 coordinates coloured by assembler confidence would be an incoherence
+    this decision invented, so the sibling travels with the PDB. It falls back
+    independently: a missing sibling returns ``None`` and the caller keeps the
+    assembler's, rather than 404ing a parent that has one.
+    """
+    sibling = Path(served_pdb_path).parent / name
+    return sibling if sibling.is_file() else None
+
+
 def triple_path_payload(
     artifact_root: Path | str | None,
     *,
@@ -234,6 +288,8 @@ __all__ = (
     "CONFIDENCE_KABSCH_PERSIST_STEM_PREFIX",
     "assembler_path_block",
     "confidence_kabsch_persist_stem",
+    "confidence_kabsch_sibling_path",
+    "confidence_kabsch_success_pdb_path",
     "empty_confidence_kabsch_block",
     "find_confidence_kabsch_dir",
     "project_confidence_seam",

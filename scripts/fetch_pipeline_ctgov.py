@@ -1,4 +1,4 @@
-"""D-139 — fetch the ClinicalTrials.gov material behind the pipeline catalog, ONCE.
+"""D-140 — fetch the ClinicalTrials.gov material behind the pipeline catalog, ONCE.
 
 ⚠ **Ops lane, never the gate.** This is the only thing in the repo that talks to
 ClinicalTrials.gov. It writes a dated artefact
@@ -171,7 +171,7 @@ def main() -> int:
         "endpoint": API,
         "api": "ClinicalTrials.gov REST API v2",
         "note": (
-            "D-139 — raw registry material behind data/adcs/adcs.pipeline.v1.json, "
+            "D-140 — raw registry material behind data/adcs/adcs.pipeline.v1.json, "
             "fetched once on the retrieval date by scripts/fetch_pipeline_ctgov.py. "
             "Nothing in tests/ or core/ makes a network call; they read this file. "
             "A lookup of kind 'searched' that matched nothing is a recorded negative "

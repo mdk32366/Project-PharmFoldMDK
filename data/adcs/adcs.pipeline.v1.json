@@ -37,13 +37,13 @@
   },
   "conditions_reviewed_as_of": {
     "value": "2026-09-08",
-    "source": "D-139: the day the pipeline programme fields were sourced — ClinicalTrials.gov REST API v2 reads plus a re-read of every row's own source_citation. Distinct from mapping_sourced_as_of (2026-07-27) and catalog_assembled_as_of (2026-09-05): three questions, three days, never collapsed (D-119 decision 5).",
+    "source": "D-140: the day the pipeline programme fields were sourced — ClinicalTrials.gov REST API v2 reads plus a re-read of every row's own source_citation. Distinct from mapping_sourced_as_of (2026-07-27) and catalog_assembled_as_of (2026-09-05): three questions, three days, never collapsed (D-119 decision 5).",
     "as_of": "2026-09-08",
     "confidence": "reviewed"
   },
   "registry_artifact": {
     "value": "data/adcs/artifacts/ctgov.pipeline.2026-09-08.json",
-    "source": "D-139: the raw ClinicalTrials.gov REST API v2 records and the negative lookups behind this file's cancer_type / conditions_verbatim / description, written once by scripts/fetch_pipeline_ctgov.py on 2026-09-08. Nothing under tests/ or core/ makes a network call (D-029).",
+    "source": "D-140: the raw ClinicalTrials.gov REST API v2 records and the negative lookups behind this file's cancer_type / conditions_verbatim / description, written once by scripts/fetch_pipeline_ctgov.py on 2026-09-08. Nothing under tests/ or core/ makes a network call (D-029).",
     "as_of": "2026-09-08",
     "confidence": "derived"
   },
@@ -300,7 +300,7 @@
       },
       "cancer_type": {
         "value": null,
-        "source": "ClinicalTrials.gov REST API v2 NCT02529553 retrieved 2026-09-08 states its Conditions as 'Advanced Cancer' and 'Metastatic Cancer', stored verbatim on this row. Neither names a tumour: this is an all-comers phase 1 in advanced or metastatic disease, and reducing it to a tumour type would be a guess (D-139 decision 5).",
+        "source": "ClinicalTrials.gov REST API v2 NCT02529553 retrieved 2026-09-08 states its Conditions as 'Advanced Cancer' and 'Metastatic Cancer', stored verbatim on this row. Neither names a tumour: this is an all-comers phase 1 in advanced or metastatic disease, and reducing it to a tumour type would be a guess (D-140 decision 5).",
         "as_of": "2026-09-08",
         "confidence": "reviewed"
       },
@@ -370,7 +370,7 @@
       },
       "description": {
         "value": null,
-        "source": "no maker is nameable from either authority D-139 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=ch10D7-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=ch10D7-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
         "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
@@ -426,13 +426,13 @@
       },
       "cancer_type": {
         "value": null,
-        "source": "this row's conditions_verbatim — its own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole — names three abstracts and no tumour, and ClinicalTrials.gov REST API v2 query.intr=RGX-019-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json). A tumour type for a MERTK-directed preclinical conjugate would be a guess (D-139 decision 5).",
+        "source": "this row's conditions_verbatim — its own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole — names three abstracts and no tumour, and ClinicalTrials.gov REST API v2 query.intr=RGX-019-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json). A tumour type for a MERTK-directed preclinical conjugate would be a guess (D-140 decision 5).",
         "as_of": "2026-09-08",
         "confidence": "reviewed"
       },
       "description": {
         "value": null,
-        "source": "no maker is nameable from either authority D-139 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=RGX-019-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=RGX-019-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
         "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
@@ -496,7 +496,7 @@
       },
       "description": {
         "value": null,
-        "source": "no maker is nameable from either authority D-139 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=19G4-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=19G4-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
         "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
@@ -558,7 +558,7 @@
       },
       "description": {
         "value": null,
-        "source": "no maker is nameable from either authority D-139 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=4D11-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=4D11-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
         "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
@@ -620,7 +620,7 @@
       },
       "description": {
         "value": null,
-        "source": "no maker is nameable from either authority D-139 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=anti-UPK1B ADC retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=anti-UPK1B ADC retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
         "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
@@ -682,7 +682,7 @@
       },
       "description": {
         "value": null,
-        "source": "no maker is nameable from either authority D-139 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=anti-CDH11 immunoconjugate retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=anti-CDH11 immunoconjugate retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
         "as_of": "2026-09-08",
         "confidence": "reviewed"
       }

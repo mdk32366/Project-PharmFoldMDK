@@ -3,7 +3,7 @@
   "retrieved_as_of": "2026-09-08",
   "endpoint": "https://clinicaltrials.gov/api/v2/studies",
   "api": "ClinicalTrials.gov REST API v2",
-  "note": "D-139 — raw registry material behind data/adcs/adcs.pipeline.v1.json, fetched once on the retrieval date by scripts/fetch_pipeline_ctgov.py. Nothing in tests/ or core/ makes a network call; they read this file. A lookup of kind 'searched' that matched nothing is a recorded negative result, not a gap.",
+  "note": "D-140 — raw registry material behind data/adcs/adcs.pipeline.v1.json, fetched once on the retrieval date by scripts/fetch_pipeline_ctgov.py. Nothing in tests/ or core/ makes a network call; they read this file. A lookup of kind 'searched' that matched nothing is a recorded negative result, not a gap.",
   "lookups": [
     {
       "row_id": "ifinatamab-deruxtecan",

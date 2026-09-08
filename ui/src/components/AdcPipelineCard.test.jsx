@@ -101,10 +101,10 @@ describe('AdcPipelineCard — D-124 baseball card', () => {
     expect(container.textContent).toMatch(/clinical/)
     expect(container.textContent).toMatch(/source:/)
     expect(container.textContent).toMatch(/as of 2026-07-27/)
-    // ⚠ D-139 amended this line. It used to assert no tumour string appeared at
+    // ⚠ D-140 amended this line. It used to assert no tumour string appeared at
     // all, which was right while the pipeline schema admitted none. The claim that
     // survives is the one that mattered: this card must not present an APPROVED
-    // indication, and must not borrow the FDA label surface (D-139 decision 6).
+    // indication, and must not borrow the FDA label surface (D-140 decision 6).
     expect(container.textContent).not.toMatch(/urothelial/i)
     expect(container.textContent).not.toMatch(/INDICATIONS AND USAGE/i)
     expect(container.textContent).not.toMatch(/FDA label indications/i)
@@ -115,7 +115,7 @@ describe('AdcPipelineCard — D-124 baseball card', () => {
     )
   })
 
-  it('D-139 — the card shows cancer type, description, and the text they came from', async () => {
+  it('D-140 — the card shows cancer type, description, and the text they came from', async () => {
     getPipelineAdc.mockResolvedValue(IFINA)
     const { container } = renderCard()
     await waitFor(() => expect(container.textContent).toMatch(/ifinatamab deruxtecan/))
@@ -131,7 +131,7 @@ describe('AdcPipelineCard — D-124 baseball card', () => {
     expect(container.textContent).not.toMatch(/proteinatlas|quasi.H|staining/i)
   })
 
-  it('D-139 — a row with neither states which lookup came back empty, not a blank', async () => {
+  it('D-140 — a row with neither states which lookup came back empty, not a blank', async () => {
     getPipelineAdc.mockResolvedValue(CH10D7)
     const { container } = renderCard('ch10d7-mmae')
     await waitFor(() => expect(container.textContent).toMatch(/ch10D7-MMAE/))
@@ -144,7 +144,7 @@ describe('AdcPipelineCard — D-124 baseball card', () => {
     expect(programme.textContent).not.toMatch(/not in this payload/)
   })
 
-  it('D-139 — a payload missing a programme envelope says so instead of vanishing', async () => {
+  it('D-140 — a payload missing a programme envelope says so instead of vanishing', async () => {
     const { cancer_type: _ct, ...withoutCancerType } = IFINA
     getPipelineAdc.mockResolvedValue(withoutCancerType)
     const { container } = renderCard()

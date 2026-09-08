@@ -42,7 +42,7 @@ const row = (id, brand, antigen, accession, cancerTypes = null) => ({
   }),
 })
 
-// D-139 — `cancerTypes` / `description` default to a NAMED ABSENCE, because that
+// D-140 — `cancerTypes` / `description` default to a NAMED ABSENCE, because that
 // is the shape of half the committed shelf and the shape a test can get wrong
 // quietly. Each absence carries its own source, which is what the cell renders.
 const pipeRow = (id, name, antigen, accession, phase, stage = 'clinical', extra = {}) => ({
@@ -107,7 +107,7 @@ const PIPELINE = {
     }),
     // ⚠ One clinical row with NO tumour type on purpose: the mixed case is the one
     // that can go quietly wrong, and it is the only way to see that an absent row
-    // trails the sort instead of leading it (D-139 / D-087).
+    // trails the sort instead of leading it (D-140 / D-087).
     pipeRow('ly3076226', 'LY3076226', 'FGFR3', 'P22607', 'Phase 1', 'clinical', {
       conditions: 'Advanced Cancer; Metastatic Cancer',
       description: 'Eli Lilly and Company — an FGFR3-directed conjugate.',
@@ -293,7 +293,7 @@ describe('AdcsView — D-124 Pipeline shelf', () => {
     expect(screen.getByText(/no row in this file matches that phase/)).toBeInTheDocument()
   })
 
-  it('D-139 — the Pipeline index carries Cancer type and Description columns', async () => {
+  it('D-140 — the Pipeline index carries Cancer type and Description columns', async () => {
     const { container } = renderIndex('/adcs?shelf=pipeline')
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     for (const label of ['Name', 'Cancer type', 'Phase', 'Protein', 'Description']) {
@@ -304,14 +304,14 @@ describe('AdcsView — D-124 Pipeline shelf', () => {
     expect(container.textContent).toMatch(/Daiichi Sankyo\/Merck/)
     expect(container.textContent).toMatch(/Eli Lilly and Company/)
     // ⚠ The rows that state neither say WHICH lookup came back empty, in their
-    // own words — never a blank, and never the page-wide fallback (D-139).
+    // own words — never a blank, and never the page-wide fallback (D-140).
     expect(container.textContent).toMatch(/query.intr=ch10D7-MMAE retrieved 2026-09-08 returned 0 studies/)
     expect(container.textContent).toMatch(/no maker named for ch10D7-MMAE/)
     expect(screen.queryAllByText(PIPELINE_CANCER_TYPE_ABSENT_COPY)).toHaveLength(0)
     expect(screen.queryAllByText(PIPELINE_DESCRIPTION_ABSENT_COPY)).toHaveLength(0)
   })
 
-  it('D-139 — an absent cell is a short label with the row\'s own source inside it', async () => {
+  it('D-140 — an absent cell is a short label with the row\'s own source inside it', async () => {
     // ⚠ D-135's defect, not re-shipped. Five of ten committed rows are absent on
     // cancer type and six on description; putting each ~300-character source
     // straight into a `<td>` made the table two columns of prose. The label is
@@ -337,7 +337,7 @@ describe('AdcsView — D-124 Pipeline shelf', () => {
     expect(bodies.some((t) => /query.intr=LY3076226 .* returned 0 studies/.test(t))).toBe(true)
   })
 
-  it('D-139 — the pipeline shelf says these are trials, not FDA indications', async () => {
+  it('D-140 — the pipeline shelf says these are trials, not FDA indications', async () => {
     const { container } = renderIndex('/adcs?shelf=pipeline')
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     expect(container.textContent).toMatch(/studied in/)
@@ -349,7 +349,7 @@ describe('AdcsView — D-124 Pipeline shelf', () => {
     expect(screen.getByRole('table').textContent).not.toMatch(/INDICATIONS AND USAGE/i)
   })
 
-  it('D-139 — sorting by cancer type trails the absent rows in BOTH directions', async () => {
+  it('D-140 — sorting by cancer type trails the absent rows in BOTH directions', async () => {
     renderIndex('/adcs?shelf=pipeline')
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     const header = screen.getByRole('columnheader', { name: /Cancer type/ })

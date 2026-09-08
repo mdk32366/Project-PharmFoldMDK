@@ -105,7 +105,16 @@ D128_LINKER_SEAM_SHA256 = "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9e
 # by-content guard below is again left untouched, so a softened 0-of-7, a
 # deleted refuse class, or a run silently re-scoped onto 45 parents still fails
 # with a reason rather than on a digest.
-METHOD_SHA256 = "219409f619c9d13e94945cd5dcb641bc41e1c312f38e0be77ea848756b9904dd"
+# ⚠ Re-pinned at **D-139** (`219409f6…` → below), the served-path flip, which is
+# the decision entry behind this edit — exactly what the pin demands. The Method
+# file gains an **Addendum D-139** and, on each earlier "served is still the
+# assembler" sentence, an in-place scope marker naming D-139 (D-129-C's rule: a
+# claim a later decision narrowed never stands alone). ⚠ **Additive and in the
+# safe direction:** no OPS figure is restated, re-scoped or softened, no refuse
+# class is dropped, and every parent this file's earlier sections are about is
+# named as EXCLUDED from the flip. The by-content guards below are untouched —
+# the digest moved, the disclosure did not.
+METHOD_SHA256 = "e40035aeacdcd68814a9d891a9b50ac6028c39b42190b04e600614a6030cb7a9"
 
 MODULE_PINS = {
     "core/hold48_kabsch.py": D125_KABSCH_SHA256,
@@ -410,23 +419,46 @@ def test_d129_is_the_next_free_decision_id():
     # `>=` would end the guard's ability to tell a spent id from a free one — which is the
     # only thing it does. A stray `### D-139` still reddens.
     #
-    # ⚠ Widened again at **D-139** — to `[130, 132, 133, 134, 135, 136, 137, 138, 139]` —
-    # the same way, and this one is the first SEQUENTIAL widening since D-134. D-139 (the
-    # ADC Pipeline programme fields) was cut from `dd06e9c` with D-138 already merged and
-    # `gh pr list --state open` empty, so 139 was free rather than deliberately stepped
-    # around; the id is still named below rather than admitted by a `>=`. A stray
-    # `### D-140` still reddens.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138, 139], (
+    # ⚠ Widened again at **D-139** — to `[…, 137, 138, 139]` — by enumeration, for the FIFTH
+    # time. D-139 is the served-path flip: the recorded D-126 PASS seventeen are handed the
+    # confidence-Kabsch structure, everyone else keeps the assembler. ⚠ Unlike the previous
+    # four this was NOT a live collision at the time it was written: `gh pr list --state open`
+    # at tip `dd06e9c` returned #222, #200 and #197, **none of which spends a `D-1NN` id**, so
+    # 139 looked free and was taken without displacing anyone.
+    #
+    # ⚠⚠ **Widened again at D-140 — to `[…, 138, 139, 140]` — and this is the FIFTH LIVE
+    # COLLISION, discovered the hard way.** The ADC Pipeline programme-fields branch (#263) was
+    # ALSO cut from `dd06e9c`, ALSO read the open-PR list, ALSO found no `D-1NN` spender, and
+    # ALSO took 139 — the two branches were invisible to each other because **#263 had not been
+    # opened yet when the served-path branch looked**, so an open-PR check cannot see a branch
+    # that exists only locally. Both entries were literally titled `### D-139`. The served-path
+    # work merged first at `1e9777c` and its own commit message assigned the loser: *"Pipeline
+    # #263 takes D-140."* ⚠ **139 stays with the entry that merged holding it; #263 renumbered
+    # to 140 rather than either side keeping a duplicate.** Both ids are named below, and a
+    # bare `### D-141` still reddens.
+    #
+    # ⚠ The lesson this collision adds to the previous four: **`gh pr list --state open` is a
+    # weaker check than it reads as.** It proves no *published* branch has spent the id. It
+    # cannot prove no *unpublished* one has. The enumeration is what actually caught this.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138, 139, 140], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138 and D-139; found {ids[-10:]}"
+        f"D-137, D-138, D-139 and D-140; found {ids[-11:]}"
+    )
+    assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
+        "D-139 is the recorded successor id; it must be the served-path flip entry, "
+        "not some other entry that took the number"
+    )
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
+        "D-140 is the recorded successor id; it must be the ADC pipeline "
+        "programme-fields entry, not some other entry that took the number"
+    )
+    assert "\n### D-141" not in LOG, (
+        "D-141 is the next free integer and must stay unspent until an entry claims it "
+        "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 is the recorded successor id; it must be the /method contents-rail "
         "entry, not some other entry that took the number"
-    )
-    assert re.search(r"^### D-139 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
-        "D-139 is the recorded successor id; it must be the ADC pipeline "
-        "programme-fields entry, not some other entry that took the number"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 is the recorded successor id; it must be the ADC cancer-type entry, "

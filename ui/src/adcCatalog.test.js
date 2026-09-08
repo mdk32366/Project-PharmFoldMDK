@@ -142,7 +142,7 @@ describe('adcCatalog pipeline flatten (D-124)', () => {
     ])
   })
 
-  it('D-139 — pipeline rows carry a cancer-type sort key and a description', () => {
+  it('D-140 — pipeline rows carry a cancer-type sort key and a description', () => {
     const flat = flattenPipelineRow(ifina)
     expect(flat.cancer_types).toEqual(['Small-cell lung cancer'])
     expect(flat.cancer_type).toBe('Small-cell lung cancer')
@@ -152,7 +152,7 @@ describe('adcCatalog pipeline flatten (D-124)', () => {
     ])
   })
 
-  it('D-139 — a named absence sorts as null, never as the empty string', () => {
+  it('D-140 — a named absence sorts as null, never as the empty string', () => {
     const flat = flattenPipelineRow(phase1)
     // ⚠ `null`, not `''`. An empty string would sort as the alphabetically-first
     // real value instead of trailing as a category (D-087).

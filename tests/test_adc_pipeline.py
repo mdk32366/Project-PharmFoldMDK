@@ -48,10 +48,10 @@ FIXTURE_CONDITIONS_SOURCE = (
 
 
 def _minimal_pipeline_row(adc_id="fixture-pipeline"):
-    """A row that passes every D-124 + D-139 structural check.
+    """A row that passes every D-124 + D-140 structural check.
 
     ⚠ `cancer_type` is a LIST audited against `conditions_verbatim` on the same row
-    (D-139 decision 4) and `description` is audited against its own source
+    (D-140 decision 4) and `description` is audited against its own source
     (decision 5), so the three cannot be built the way the scalar fields are.
     """
     return {
@@ -122,9 +122,9 @@ def test_committed_pipeline_every_field_is_an_envelope():
         for name, field in row.items():
             assert set(field.keys()) == set(FIELD_KEYS), name
             assert field["confidence"] in CONFIDENCES, name
-            # D-139: `cancer_type` and `description` may be a null NAMED ABSENCE, so
+            # D-140: `cancer_type` and `description` may be a null NAMED ABSENCE, so
             # "not empty" is the wrong bar for them. They have their own suite in
-            # tests/test_d139_pipeline_programme.py.
+            # tests/test_d140_pipeline_programme.py.
             if name not in ("cancer_type", "description"):
                 assert field["value"] not in (None, ""), name
             assert field["source"] and field["as_of"]
