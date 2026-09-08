@@ -375,6 +375,138 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-134 — Stitched parents were invisible to every reader: the census identity check accepts the tag ops actually wrote, and gains a second signal so the next drift cannot hide
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — **read-path only**. No API route added, no ops, no rent, no emit,
+  no Fly write, no migration, no F-004 ingest, no Kabsch flip, no re-count of D-132.
+- **⚠⚠ The defect, and how it is known (D-016).** Matt reported that the **D-133 fold-type
+  chips show `assembled (provisional) · 0`** the day D-133 deployed. Measured against the
+  live deployment on **2026-09-08**, read-only, `GET https://pharmfoldmdk.fly.dev/api/census`
+  (3,467 rows):
+
+  | histogram | live value |
+  |---|---|
+  | `structure_kind` | `single-pass: 3463`, `mucin: 3`, `null: 1` — **0 assembled** |
+  | `hold48_kind` | `null: 3422`, **`parent_stitched: 45`** |
+
+  and per-row, `GET /api/census/2817` → `hold48_kind='parent_stitched'`,
+  `structure_kind='single-pass'` (Q9P273); identically for **2929** (Q9UMZ3) and **3356**
+  (P11717, IGF2R). The 45 analysis ids carrying `parent_stitched` are **exactly**
+  `ASSEMBLED_PARENT_IDS` — D-132's measured inventory — and they are 45 **distinct
+  accessions**, verified by set comparison against the frozenset in `app/reads.py`.
+- **Root cause, read at tip `8e53af5`.** `core/hold48.py` defines
+  `HOLD48_KIND_PARENT = "parent"`; `app/reads.py` had
+  `is_census_parent_row(row) = _hold48_kind(row) == HOLD48_KIND_PARENT`. Ops
+  `write_stitched` persisted **`parent_stitched`**, a string that occurred **zero times in
+  the repository** — grepped, not recalled. So `choose_census_representative` built an
+  **empty** `parents` list for every real parent on the volume, and the assembled branch
+  was never reached.
+- **⚠⚠ The chips were not wrong. They were right about a wrong input, and that is the
+  finding.** `assembled · 0` is the honest rendering of a census in which nothing was
+  recognised as assembled. A surface that reports its input faithfully cannot tell you the
+  input is a lie — which is why *"the number rendered"* is not evidence the number is true,
+  and why D-016 asks for the query whose answer could disqualify you rather than the one
+  that confirms the feature shipped.
+- **⚠ Why it survived D-118, D-120, D-132 and D-133 with nothing objecting.** An
+  unrecognised parent does not raise, go `null`, or go absent. It falls through to the
+  `ordinary` branch of the same function and returns a completely plausible **single-pass**
+  protein — carrying the parent's own real pLDDT and the parent's own real span, because
+  the row *is* the parent. **No surface anywhere distinguishes *folded in one forward pass*
+  from *we failed to notice this was assembled*.** That is the `F-052` shape at data-tag
+  scale: one vocabulary, a writer and a reader that never had to agree, and no test that
+  they did. Every hold-48 decision since D-118 was reasoned about assembled parents while
+  the live surfaces served all 45 of them as single-pass folds.
+- **⚠ A second live symptom of the same one-string test.** All 45 also came back
+  `profile_status: refused_features_incomplete` (measured in the same `/api/census` read).
+  Both that and the correct `refused_assembled_incommensurable` are refusals, so nothing
+  looked broken — but they name **different causes**: *features could not be extracted from
+  this fold* versus *the profile bar is calibrated on single-pass folds and an assembly is
+  not one* (D-120). Keeping refusal causes distinct is `F-025`'s ruling, and pooling them
+  is exactly what this bug did by accident.
+- **Decision.**
+  1. **A named frozenset replaces the single string.** `core/hold48.py` gains
+     `HOLD48_KIND_PARENT_STITCHED = "parent_stitched"` and
+     `HOLD48_PARENT_KINDS = {parent, parent_stitched}`, read through `is_parent_kind()`.
+     ⚠ The **write** path is untouched: `emit_tile_jobs` still writes exactly
+     `HOLD48_KIND_PARENT`. Widening the reader is not licence to mint a second write
+     spelling — and a test asserts the writer did not move, because "fix it in the writer"
+     would do nothing for the 45 rows already on the volume.
+  2. **A second, independent signal: the artifact name.** A stored `pdb_path` whose
+     **basename** is `stitched.pdb` — the name this repo's own `write_stitched` produces —
+     also identifies an assembled parent. Belt and suspenders: the meta string has drifted
+     once and a tag is a convention, whereas the artifact name is written by code in this
+     repo. ⚠ **Basename of a path already stored on the row.** No path is constructed,
+     guessed, or probed (D-034 §2a), and no path shape is invented — the live parents are
+     `/data/artifacts/{parent_job_id}/structure.pdb`, so this signal does **not** catch
+     them and the meta tag has to be accepted on its own merit. The fallback is for the
+     *next* drift, not this one.
+  3. **One rule, called from every place that had its own copy.** `is_census_parent_row`
+     (identity) and `is_assembled_parent_row` (identity **and** a structure on disk) are
+     the only definitions. `detail_projection`'s `assembled` flag,
+     `download_stem_for_row`, `choose_census_representative` and `census_detail`'s
+     fallback each carried a private one-string test; on Fly the first answered `false`
+     for a stitched parent — freeing the viewer to present winner-tile pLDDT as one
+     forward pass, the exact thing that flag exists to prevent — and the second named the
+     download `structure.pdb`. `app/census_profile_read.py::_incommensurable_assembly`
+     joins the same vocabulary.
+  4. **A tile is disqualified first, and that precedence is what makes signal 2 safe.**
+     `is_census_parent_row` returns `False` for any tile row before either parent signal is
+     consulted, so a window can never be promoted to the protein by an artifact name
+     (D-118). Tiles stay tiles; the tiles-only parent is still the row, not a tile.
+  5. **⚠ Read-path only — the Fly DB is not rewritten in this PR.** The existing volume
+     tags must work **as they are**. A fix that requires 45 live rows to be migrated is not
+     deployed until somebody migrates them, and migrating them is an ops act with its own
+     failure modes, not something a PR can discharge. No migration, no backfill script, no
+     Fly write.
+- **⚠ What this does NOT do.**
+  - **Not** a seam claim and **not** a promotion. `assembled` still reads **assembled
+    (provisional)** and still carries *assembled by pLDDT overlap, not superimposed; seam
+    not solved*. The served path stays the assembler; the 10.0 Å gate stays; **D-126**
+    stays the best experimental path; the D-127 / D-128 / D-130 OPS disclosures stand.
+  - **Not** F-004 ingest and **not** a ranking. **D-109 ruling 7 stands** — the assembled
+    parents stay out of the ranking set. Nothing here scores a census row.
+  - **Not** a re-count. D-132's inventory is unchanged: **45** unique assembled parents
+    measured 2026-09-08, with the **27** as the 2026-09-05 wave slice inside it. ⚠ What
+    the chips will now show is a count of census **rows** represented by an assembled
+    parent. On today's volume those two numbers coincide at 45 because the 45 parent ids
+    are 45 distinct accessions — a **measured coincidence, not an identity**, and it must
+    not be reported as though the chip were counting parent jobs.
+  - **Not** ops. Rental stays **CLOSED** (D-118, pod Terminated): no rent, no emit, no
+    Deploy, no GPU, no Fly write, no touch on the mucin ceiling — the 3 mucins stay
+    `out_of_class` and a test pins it.
+  - **Not** a UI change. `CensusTable.jsx` is untouched; D-133's chips already compute
+    `structure_kind === 'assembled'` correctly and simply had nothing to count.
+- **Deep-learning justification.** The load-bearing claim of the whole hold-48 arc is that
+  a protein too long for one ESMFold pass can be folded as overlapping tile windows and
+  reassembled. Judging that claim requires being able to **separate the multi-pass
+  population from the single-pass one** — and for as long as this bug stood, the platform
+  served every one of the 45 multi-pass structures as though it were a single forward pass,
+  with the assembler caveat suppressed and the provisional label withheld. This is not a
+  cosmetic filter fix: it restores the distinction the network's own output depends on
+  being read correctly. It adds no network, no inference, no threshold, and no training.
+- **Consequences.** `core/hold48.py` (new constants + `is_parent_kind` /
+  `is_stitched_artifact_path`), `app/reads.py` (`is_census_parent_row`,
+  new `is_assembled_parent_row`, three call sites de-duplicated),
+  `app/census_profile_read.py`, `tests/test_d134_stitched_parent_identity.py` (new),
+  `ARCHITECTURE.md`, and the two next-free-id guards in
+  `tests/test_d129_phase5_named_refuse_spec.py` / `tests/test_d130_residual_rmsd_spec.py`,
+  **widened by enumeration** to admit `D-134` — spending the id reddened them by design,
+  which is the collision guard working. A tripwire reddens if the live tag leaves the
+  string table, if the writer starts emitting a second spelling, if a tile can be promoted
+  by an artifact name, or if this entry stops existing (method-note item 7: **the check is
+  the entry, not the reference to it**).
+- **Cite:** D-111 (`hold48_kind` vocabulary, the mucin ceiling, the tile/parent split) ·
+  D-116 (`stitch_readiness`) · D-118 (census identity: one row per accession, a tile is a
+  window not a protein) · D-120 (assembly review; an assembly is incommensurable with the
+  single-pass profile bar) · D-132 (the measured 45 / the 27 wave slice) · D-133 + am. 1
+  (the Structure column and the fold-type chips that reported the zero) · D-109 ruling 7
+  (assembled stays out of F-004) · D-034 §2a (no path is reconstructed) · F-052 (the
+  convention every caller obeyed except the one nobody revisited) · F-025 (refusal causes
+  stay distinct) · D-016 (provenance: `/api/census` and `/api/census/{2817,2929,3356}`,
+  read 2026-09-08) · Matt defect report 2026-09-08 · tip `8e53af5` (D-133) read directly
+  for the pre-fix state of `is_census_parent_row`.
+
 ### D-133 — Census gains a sortable Structure column: seam-assembled and single-pass become a category the reader can group by, and the kind badge moves there
 
 - **Date:** 2026-09-08
