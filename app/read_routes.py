@@ -60,19 +60,33 @@ def get_analysis(analysis_id: int, engine: Any = Depends(get_engine)) -> dict:
 
 
 @read_router.get("/analyses/{analysis_id}/structure")
-def get_structure(analysis_id: int, engine: Any = Depends(get_engine)) -> FileResponse:
-    """Stream the PDB at the row's **stored** ``pdb_path`` as ``text/plain`` (D-034 decision 2).
-    404 — never 500 — when the id is unknown or the fold has no structure. The path is the
-    stored absolute one; no client value reaches the filesystem (§2a, traversal defence)."""
-    pdb_path = reads.get_structure_path(engine, analysis_id)
+def get_structure(
+    analysis_id: int,
+    engine: Any = Depends(get_engine),
+    artifact_root: str = Depends(get_artifact_root),
+) -> FileResponse:
+    """Stream the PDB for the path actually **served** as ``text/plain`` (D-034 dec 2 / D-139).
+    404 — never 500 — when the id is unknown or the fold has no structure.
+
+    ⚠ **D-139.** The default is still the row's stored ``pdb_path``. A parent flips to its
+    D-126 ``confidence_kabsch/{parent}/stitched.pdb`` only when it is in the recorded PASS
+    seventeen **and** that tree is on disk **and** accepted **and** carries the file — four
+    yeses, fail-closed to the assembler otherwise, and the download stem says which path
+    produced the bytes. Both candidates are absolute paths the server resolved: no client
+    value reaches the filesystem (§2a, traversal defence)."""
+    pdb_path = reads.served_structure_path(engine, analysis_id, artifact_root=artifact_root)
     if not pdb_path or not Path(pdb_path).is_file():
         raise HTTPException(status_code=404, detail="no structure for this analysis")
-    stem = reads.download_stem(engine, analysis_id)
+    stem = reads.served_download_stem(engine, analysis_id, artifact_root=artifact_root)
     return FileResponse(pdb_path, media_type="text/plain", filename=f"{stem}.pdb")
 
 
 @read_router.get("/analyses/{analysis_id}/pae")
-def get_pae(analysis_id: int, engine: Any = Depends(get_engine)) -> FileResponse:
+def get_pae(
+    analysis_id: int,
+    engine: Any = Depends(get_engine),
+    artifact_root: str = Depends(get_artifact_root),
+) -> FileResponse:
     """Stream the stored PAE matrix. 404 — never 500 — when the id is unknown or carries no PAE.
 
     ⚠⚠ 2,692 of 2,771 rows have NO PAE and that is `F-042`, not a fault here. A 404 from this route
@@ -81,8 +95,12 @@ def get_pae(analysis_id: int, engine: Any = Depends(get_engine)) -> FileResponse
 
     ⚠ The path is the row's STORED path; no client value reaches the filesystem. Read-only: this
     route opens a file and returns it, and touches nothing.
+
+    ⚠ **D-139:** for a parent whose served structure flipped to D-126, the PAE beside THAT
+    structure is returned instead, falling back to the stored one when the sibling tree does
+    not carry it. A served pose and a PAE from a different pose would be a new incoherence.
     """
-    pae_path = reads.get_pae_path(engine, analysis_id)
+    pae_path = reads.served_pae_path(engine, analysis_id, artifact_root=artifact_root)
     if not pae_path:
         raise HTTPException(
             status_code=404,
@@ -94,7 +112,7 @@ def get_pae(analysis_id: int, engine: Any = Depends(get_engine)) -> FileResponse
         # ⚠ a stored path that does not resolve is a DIFFERENT failure from no path at all
         raise HTTPException(status_code=404,
                             detail="this analysis records a PAE path that does not resolve")
-    stem = reads.download_stem(engine, analysis_id)
+    stem = reads.served_download_stem(engine, analysis_id, artifact_root=artifact_root)
     filename = (
         f"{stem}_pae.json.gz" if pae_path.endswith(".gz") else f"{stem}_pae.json"
     )
@@ -102,13 +120,21 @@ def get_pae(analysis_id: int, engine: Any = Depends(get_engine)) -> FileResponse
 
 
 @read_router.get("/analyses/{analysis_id}/plddt")
-def get_plddt(analysis_id: int, engine: Any = Depends(get_engine)) -> JSONResponse:
+def get_plddt(
+    analysis_id: int,
+    engine: Any = Depends(get_engine),
+    artifact_root: str = Depends(get_artifact_root),
+) -> JSONResponse:
     """The per-residue pLDDT array that colours the viewer (D-034 decision 3). 404 when the id
-    is unknown or the structure — and so its sibling ``plddt.json`` — does not exist."""
-    plddt_path = reads.get_plddt_path(engine, analysis_id)
+    is unknown or the structure — and so its sibling ``plddt.json`` — does not exist.
+
+    ⚠ **D-139:** for a parent whose served structure flipped to D-126, the pLDDT beside THAT
+    structure colours the viewer. The D-126 tree runs its own ``winning_tile``, so serving
+    assembler confidence over D-126 coordinates would mis-colour the pose."""
+    plddt_path = reads.served_plddt_path(engine, analysis_id, artifact_root=artifact_root)
     if not plddt_path or not Path(plddt_path).is_file():
         raise HTTPException(status_code=404, detail="no plddt for this analysis")
-    stem = reads.download_stem(engine, analysis_id)
+    stem = reads.served_download_stem(engine, analysis_id, artifact_root=artifact_root)
     filename = "stitched_plddt.json" if stem == "stitched" else (
         f"{stem}_plddt.json" if stem != "structure" else "plddt.json"
     )
