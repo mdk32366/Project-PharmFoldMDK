@@ -440,9 +440,22 @@ def test_d129_is_the_next_free_decision_id():
     # ⚠ The lesson this collision adds to the previous four: **`gh pr list --state open` is a
     # weaker check than it reads as.** It proves no *published* branch has spent the id. It
     # cannot prove no *unpublished* one has. The enumeration is what actually caught this.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138, 139, 140], (
+    #
+    # ⚠ Widened again at **D-141** — to `[…, 139, 140, 141]` — by enumeration, for the SIXTH
+    # time, and this is the fifth collision RESOLVED CLEANLY because the previous one had just
+    # been. The lander branch was cut from `1e9777c` and read the open-PR list, which by then
+    # DID show #263 holding 140, so it took 141 and named 140 as in-flight — D-138's precedent,
+    # applied with the benefit of the very lesson the D-140 comment above records. #263 then
+    # merged at `578f5ac` while the lander branch was still open, this assertion reddened
+    # **exactly as that branch's own comment predicted it would**, and the rebase inserted 140
+    # beside 141. ⚠⚠ **Six widenings, six resolutions by ADDING.** Not one of them was made to
+    # go away with a `>=`, and a `>=` would have hidden every collision above rather than
+    # catching it. All three ids are named below; a bare `### D-142` still reddens.
+    assert [i for i in ids if i > 129] == [
+        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141
+    ], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139 and D-140; found {ids[-11:]}"
+        f"D-137, D-138, D-139, D-140 and D-141; found {ids[-12:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 is the recorded successor id; it must be the served-path flip entry, "
@@ -452,8 +465,12 @@ def test_d129_is_the_next_free_decision_id():
         "D-140 is the recorded successor id; it must be the ADC pipeline "
         "programme-fields entry, not some other entry that took the number"
     )
-    assert "\n### D-141" not in LOG, (
-        "D-141 is the next free integer and must stay unspent until an entry claims it "
+    assert re.search(r"^### D-141 — The gate had nothing to answer with", LOG, re.M), (
+        "D-141 is the recorded successor id; it must be the confidence-Kabsch lander "
+        "entry, not some other entry that took the number"
+    )
+    assert "\n### D-142" not in LOG, (
+        "D-142 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

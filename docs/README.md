@@ -379,6 +379,229 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-141 — The gate had nothing to answer with: a script lands the EXISTING D-126 OPS trees onto the serving volume so D-139's flip can be true of something — and the disqualifying fact is that it did not run here, because no Fly credential reached this build
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — **one ops script, its tests, a runbook, and a `.gitignore` line**. Phase 6a
+  of the **`D-0043`** stitch honest-endpoint roadmap — the *delivery* half of D-139, not a new
+  decision about which path is served. **No new route, no payload field, no UI change, no migration,
+  no backfill, no DB write.** ⚠ **No ops ran in this PR either**, and the reason is named below
+  rather than left as an absence a reader has to notice. Rental stays **CLOSED** (D-118). ⚠ **No
+  threshold moves:** the **10.0 Å** refuse gate and the three refuse reasons (`overlap_ca_lt_3` /
+  `rmsd_gt_10` / `singular_covariance`) are byte-identical, and **no Kabsch is re-run** — the trees
+  this script moves were computed by the D-126-A OPS run and are carried across unchanged. ⚠ **No
+  F-004, no rent, no emit, no GPU, no re-fold, no D-127 revival, and no parent outside the recorded
+  seventeen.**
+- **Ship id:** spends **`D-141`**, and **`D-140` is deliberately skipped, not free.** Verified before
+  claiming the integer rather than assumed, on `main` at tip `1e9777c` (D-139,
+  [#262](https://github.com/mdk32366/Project-PharmFoldMDK/pull/262) then
+  [D-139](https://github.com/mdk32366/Project-PharmFoldMDK/commit/1e9777c)):
+  `grep -n '^### D-1[34][0-9]' docs/README.md` returns **`D-139`** as the highest written entry, and
+  `gh pr list --state open` returns **four** PRs — **[#263](https://github.com/mdk32366/Project-PharmFoldMDK/pull/263)**
+  *"D-140: ADC Pipeline cancer type + description, from the trial registry"*, branch
+  `cursor/d-139-pipeline-cancer-type-description-dd51`, DRAFT, opened 2026-09-08T22:25:53Z, plus
+  #222, #200 and #197. ⚠ **#263 has already spent 140 on a branch that has not merged**, and this
+  was checked in its *diff*, not inferred from its title: `gh pr diff 263` adds
+  `### D-140 — The ADC Pipeline shelf gets a cancer type and a maker of its own…` and widens the
+  next-free guards to bar `### D-141`. Taking 140 here would be the two-branch collision the guards
+  exist for, resolved in the *wrong* direction — so **141 is taken and 140 is named as in-flight**,
+  exactly the way D-138 skipped 137 while #261 was open. ⚠ **The next-free guards below carry
+  BOTH ids** — 139 by name, 141 by name, 140 named as the id this branch is deliberately not
+  taking, and a bare `### D-142` barred. **Never a `>=`:** if #263 merges first, the enumerations
+  redden **by design** and the rebase inserts 140 beside 141, which is the guard working rather than
+  a false alarm. This is the sixth pass through that resolution and the rule has not moved.
+  - ⚠⚠ **AMENDED IN PLACE, same day, before this PR was reviewed — #263 MERGED mid-flight, and the
+    paragraph above is left standing rather than rewritten (D-129-C: a superseded claim never stands
+    alone).** #263 merged to `main` at **`578f5ac`** at 2026-09-08T23:22:49Z, while this branch was
+    open. **Everything above stayed true and one thing changed:** 140 is no longer *in flight*, it is
+    *spent by a written entry*, so the four guard enumerations reddened **exactly as the sentence
+    above predicted they would**, and the rebase onto `578f5ac` **ADDED 140 beside 141** — final
+    form `[…, 138, 139, 140, 141]`, with `### D-140` now asserted as the pipeline programme-fields
+    entry by name and `### D-142` still barred. **Nothing was relaxed to a `>=`.** ⚠ The predicted
+    red arriving on schedule is the strongest evidence this log has that the guard is doing work
+    rather than describing it. ⚠ **And #263 carried a finding this entry should not take credit for
+    avoiding:** #263 and D-139 were *both* cut from `dd06e9c`, both ran `gh pr list --state open`,
+    both found no `D-1NN` spender, and both wrote `### D-139` — invisible to each other because
+    #263 was not yet published. This branch got the easy version of that problem only because it
+    looked *after* #263 was open. **An open-PR check proves no PUBLISHED branch spent the id and
+    cannot prove no unpublished one did**; the enumeration is what actually catches it.
+  ⚠ **Effect on the `docs/RESERVED.md` citation invariant: the hole GREW by one, and that is
+  recorded rather than smoothed over.** Every previous pass could say *the hole moved*, because the
+  entry resolved the integer the last guard had barred; this one cannot, because the integer this
+  entry spent (141) is not the one it bars (142). Measured with the `docs/RESERVED.md` §*"How to run
+  the check"* command, **re-run after the rebase** rather than left at its pre-rebase reading:
+  `origin/main` at **`578f5ac`** reports **`['D-131', 'F-067']`**; this branch reports
+  **`['D-131', 'D-142', 'F-067']`**. **`D-142` is the one addition** — the integer the guards bar by
+  name, a forward reference that **announces its own absence**, which is the distinction
+  `RESERVED.md` exists to draw from the D-062 defect. `D-131` (the suffix half of
+  `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched.
+  - ⚠ **Superseded reading, kept because a number that changed silently is a number nobody can
+    check:** before the rebase this paragraph reported `origin/main` at `1e9777c` as
+    `['D-131', 'D-140', 'F-067']` and this branch as `['D-131', 'D-140', 'D-142', 'F-067']` — a hole
+    of four, with `D-140` unresolved because #263 had not landed. #263 landing resolved `D-140` on
+    both sides, exactly as that reading said it would, leaving three.
+- **⚠⚠ The disqualifying fact, first: this PR lands nothing. The live count is still eligible 17 /
+  flipped 0.** D-139 shipped a four-yes gate and stated its own embarrassing number — seventeen
+  parents *eligible*, **zero** *flipped*, every one of them resolving to the assembler under
+  `no_confidence_kabsch_artifacts`. That number has not changed, and **nothing in this PR changes
+  it.** The BUILD GO asked for the land to be executed *if credentials were present*; they are not.
+  Measured on this build rather than assumed: `env | grep -iE 'FLY|TOKEN|API_KEY|SECRET'` returns
+  **nothing**, and `which fly flyctl` returns **nothing** — there is no Fly API token, no
+  `flyctl`/`fly` binary, and therefore no route to the `pharmfoldmdk` machine or its `artifacts`
+  volume from here. ⚠ **The source root is equally out of reach**, and that is the larger blocker:
+  the D-126-A OPS output lives under an ops `out_root` on a box this build has never had, and
+  `find / -type d -name confidence_kabsch` on this machine returns **nothing outside the fixtures
+  these tests create under `tmp_path`**. So the honest deliverable is the *instrument plus the
+  runbook*, and the count it would change is stated as still-unchanged. ⚠ **A script that can land
+  the trees is not a landing**, and an entry that described one would be the D-062 shape with a
+  shell command instead of a citation.
+- **Context, and what is actually blocking (D-016).** Matt **BUILD GO** 2026-09-08 ~4:04 PM PT via
+  Emma; model pin **`D-0037`** (claude-opus-5, thinking, high; never Auto). The failing condition is
+  known precisely, because D-139 named its four yeses separately instead of returning a bare false:
+  the live reason on all seventeen is **`no_confidence_kabsch_artifacts`**, which is condition **(b)
+  — a `confidence_kabsch/{parent}/` tree on disk — and *only* condition (b). (a) is satisfied by
+  construction (the allowlist is enumerated in code), and (c)/(d) were already decided by the
+  D-126-A run. **So the fix is a file copy, and it is the whole fix.** ⚠ That is worth stating
+  plainly because the tempting misreading is that the seams need more work; they do not, and no
+  amount of work here would make them solved.
+- **Decision.**
+  1. **One script, `scripts/land_d139_confidence_kabsch.py`, and it copies. That is all it does.**
+     `--source-out-root` → `--dest-artifact-root`, reading
+     `{out_root}/confidence_kabsch/{parent}/` and writing
+     `{ARTIFACT_ROOT}/confidence_kabsch/{parent}/`. It imports no fold, no queue, no ORM and no
+     geometry — the import list is **enumerated in a test**, so "it computes nothing" is a checked
+     property rather than a claim in a docstring.
+  2. **⚠⚠ The allowlist is IMPORTED, never retyped, and a non-member is a hard refuse.** The set is
+     `app.served_path_policy.D126_SERVED_PASS_SUBSET`. A second copy of the seventeen inside an ops
+     script is precisely the D-062 shape — a written list free to drift from the one the serving
+     code consults — so a test additionally asserts the script types **no parent id of its own**.
+     ⚠ The refusal fires **even when a perfect accepted tree is sitting in the source root**: D-139's
+     whole point is that artifacts alone never flip a parent, and a lander that quietly widened the
+     set would be that hard stop defeated by its own delivery mechanism. The test for it uses
+     **3394** — one of the only two parents D-126 OPS ever recovered, and still barred, by Phase 4
+     `rmsd_gt_10` recorded later. It is the parent a careless implementation flips.
+  3. **A refused or incomplete run never lands, under D-139's OWN vocabulary.** `accepted: false` →
+     `confidence_kabsch_refused`; accepted with no `stitched.pdb` → `no_confidence_kabsch_success_pdb`;
+     an absent tree → `no_source_tree`; unparseable provenance → `unreadable_provenance`. ⚠ Three of
+     those five words are the served-path gate's own, imported from it, because a parent this script
+     skips and a parent the gate declines must not be described in two vocabularies. **An absent tree
+     is not a refusal** and the two never share a word.
+  4. **The destination is computed by D-126's own code and checked against its own guard.**
+     `confidence_kabsch_out_dir` builds the path; `refuse_sibling_overwrite` is then handed the two
+     directories it must never become — the assembler's `{root}/{parent}/` and D-125's
+     `{root}/kabsch/{parent}/`. Both are **imported, not re-derived**, so a layout change cannot
+     leave this script writing to yesterday's path. A test creates a real `stitched.pdb` in each and
+     asserts, byte-for-byte, that a completed land left both untouched.
+  5. **⚠ `provenance.json` is written LAST, and the ordering is the fail-closed property.** Every
+     D-126 reader keys *presence* on `provenance.json`/`seams.jsonl` and *success* on `accepted`
+     plus `stitched.pdb`. An interrupted copy that had already written an accepting provenance
+     beside a missing or half-written PDB would read as landed-and-broken. Writing the structure
+     first, the seams next and the provenance last means **every partial state of that directory
+     reads as *not yet landed*, never as *landed wrong***; each file also lands through a temporary
+     name and one `os.replace`, so no reader sees a half-written file. Proved by a test that kills
+     the copy midway and asserts the destination still resolves to `assembler`.
+  6. **⚠ "Landed" is VERIFIED through the shipped resolver, and the flipped count is read off the
+     destination.** After each copy the script calls `resolve_served_path` — the production
+     selector, imported — and **refuses to report a land that did not flip**. The run's summary
+     count then re-reads the gate across the whole allowlist, so it reports **what is true on the
+     volume**, including parents an earlier run landed, rather than counting its own successful
+     copies. A true number answering the wrong question is the failure D-016 names, and a re-run
+     that landed one parent onto sixteen already there would report exactly that.
+  7. **Only five named files travel, and the rest are reported left behind.** `provenance.json`,
+     `stitched.pdb`, `seams.jsonl`, `stitched_plddt.json`, `stitched_pae.json`. The pLDDT and PAE
+     siblings are **not optional politeness** — D-126 runs its own `winning_tile`, so colouring its
+     coordinates with the assembler's confidence would be a new incoherence (D-139 decision 5). The
+     `tileN_transformed.pdb` intermediates stay on the ops box: a serving volume is not an ops root.
+  8. **The trees never enter git, and the belt has a brace.** D-139's
+     `test_no_confidence_kabsch_tree_is_committed_so_nothing_flips_here` is the assertion; this PR
+     adds `confidence_kabsch/` to `.gitignore` so one unscoped `git add -A` on a box holding both a
+     checkout and a landed tree cannot redden it. **Landing is a volume operation.** ⚠ Every fixture
+     in the new suite writes under `tmp_path`, and the suite restates D-139's guard so a future
+     fixture that forgets cannot pass here and fail there.
+  9. **The land itself is a RUNBOOK, not automation.** `fly ssh console` / `fly sftp` into
+     `pharmfoldmdk`, `/data/artifacts`, four steps, written out in the PR body. ⚠ Nothing in this
+     repository runs `fly`, deploys, or touches the volume; the operator does, with the source root
+     named on the command line. A script that reached the volume by itself would be a deploy-time
+     side effect of a merge, which is the auto-flip hard stop wearing a different hat.
+- **⚠ What this does NOT do.**
+  - **Not** a land. **Not** a claim that any parent flipped. The live figure this entry may claim is
+    **eligible 17 / flipped 0**, unchanged, and it is stated in the PR body too.
+  - **Not** a threshold move. 10.0 Å stands, the three refuse reasons stand, and **not one seam is
+    re-measured** — every RMSD, `n_ca_eff` and accept/refuse in a landed tree was decided by
+    D-126-A and is copied byte-for-byte.
+  - **Not** an auto-flip, and **not** a widening of the seventeen. The allowlist is the authority; a
+    tree in the source root for any other parent is refused, including an accepted one.
+  - **Not** a re-run of the OPS pass. No GPU, no rent, no emit, no pod, no re-fold, no
+    `write_confidence_kabsch_restitch`. The D-126 writer is never imported, and a test asserts it.
+  - **Not** F-004, **not** ranking, **not** a migration, **not** a route or payload change, **not**
+    D-127 piecewise resurrected, and **not** a claim about the 18 parents outside the 27.
+  - **Not** a claim that anything is fixed. **Never claim 27/27 PASS. Never claim the seams are
+    solved.** A served D-126 structure is a recorded outcome, not a solved join.
+- **⚠ Revert proof, and the two false greens it caught (A-016 / F-050's class).** Every guard above
+  was reverted deliberately and watched to see *where* it reddened, rather than trusted because the
+  suite was green. Four reverts, and **two of them exposed a guard that did not bite**:
+  1. **Allowlist refusal removed** → 3 red, including the non-PASS refusal and the CLI exit code.
+     ✅ Bit at the assertion.
+  2. **`provenance.json` written FIRST** → red, but **at collection, from a module-level `assert`**,
+     which meant the interrupted-copy test never ran and the ordering property was being proved by
+     the wrong thing. ⚠ Worse, `assert` **vanishes under `python -O`** (D-082's rule: no `assert`
+     does guard work), so the pin was a comment that usually runs. **Fixed:** the two import-time
+     pins now `raise RuntimeError`, and the revert re-run with the pin *also* disabled reddens
+     `test_an_interrupted_copy_leaves_a_tree_that_does_not_flip` — the test that actually asserts
+     the property.
+  3. **Post-copy gate verification removed** → red at the verification test. ✅
+  4. **The `.gitignore` rule deleted** → **34 passed. The guard did not bite at all.** The check read
+     the whole file, and the *comment* above the rule contains the string `confidence_kabsch/`, so
+     deleting the rule left the assertion satisfied by prose describing it. That is **F-044's shape**
+     — *a reference that resolves, to the wrong thing* — and it is the exact failure this log keeps
+     recording. **Fixed:** the check now parses non-comment rule lines only, and the same revert
+     reddens it.
+  ⚠ **Two of four is not a good hit rate, and it is written down rather than rounded off.** A green
+  suite is evidence about the tests, not about the code, until each guard has been shown to fail.
+- **Deep-learning justification.** D-139 made ESMFold's per-residue confidence load-bearing for the
+  first time — the D-126 fit is weighted by pLDDT (floor 50, ε = 1e-3, trim the highest-residual
+  decile, cap 5 rounds), and for seventeen parents that fit was to decide which coordinates the
+  system hands out. ⚠ **It decided nothing, because the bytes were not there**, so the network's
+  confidence signal was load-bearing in code and inert in production: every one of the seventeen
+  served the fixed winner-tile assembly anyway. This PR is the step that makes the difference
+  observable rather than notional. ⚠ And it keeps the honesty running the same direction: the
+  script refuses to land a tree the confidence-weighted fit **rejected**, so the same signal governs
+  what is withheld as governs what is served.
+- **Consequences.** `scripts/land_d139_confidence_kabsch.py` (new),
+  `tests/test_d141_land_confidence_kabsch.py` (new), `.gitignore` (`confidence_kabsch/`),
+  `ARCHITECTURE.md` (the Served-path policy row gains the D-141 delivery clause and the lander in
+  its artefact column), and the **five** next-free guards —
+  `tests/test_d129_phase5_named_refuse_spec.py`, `tests/test_d130_residual_rmsd_spec.py`,
+  `tests/test_d136_cancer_type.py`, `tests/test_d139_served_path_flip.py` and
+  `tests/test_d140_pipeline_programme.py` — widened **by enumeration** to carry `D-140` **and**
+  `D-141` by name and to bar `### D-142`. ⚠ **Four when this entry was written, five after the
+  rebase:** #263 merged mid-flight and brought a fifth copy of the guard with it, which is worth
+  recording because the count is now the thing most likely to be stale in this paragraph — the
+  authority is `grep -rn '### D-14' tests/`, not this list.
+  `docs/Test_Plan.md` gains the D-141 addendum (**T-1219–T-1224**) and T-1218's next-free clause is
+  **amended in place** rather than replaced (D-129-C).
+  ⚠ **No production module changes.** `app/served_path_policy.py`, `app/reads.py`,
+  `app/read_routes.py`, `app/confidence_kabsch_path_read.py` and every `core/hold48_*` module are
+  untouched, which is the point: the gate was never the defect.
+- **Cite:** **`D-0043` stitch honest-endpoint, Phase 6a** — Matt BUILD GO 2026-09-08 ~4:04 PM PT via
+  Emma. ⚠ **Vault `D-0043` is external numbering, NOT a project decision id**, and is cited by name
+  for the reason `docs/RESERVED.md` gives. ⚠ **The Spec named in the GO —
+  `Sessions/Trinity/2026-09-08-d139-ops-land-confidence-kabsch-spec@0.0.md` — is an Obsidian vault
+  path and no vault file is on disk here**, so this entry quotes the GO's own text and does not
+  paraphrase a document it cannot read; where the two could differ, **the log governs** ·
+  **`D-0037`** model pin (claude-opus-5, thinking, high; never Auto) · **D-139** (the four-yes gate,
+  the seventeen, the named refusals and the `flipped = 0` this PR does not yet change) · D-126 /
+  D-126-A (the run whose trees are moved, and its 10.0 Å gate) · D-126-B (the reader whose
+  presence/success keys dictate the copy order) · D-125 (the `kabsch/` tree the destination guard
+  refuses) · D-129 / D-129-B (the accept-refuse ten, unmoved) · D-130-B / D-131 (Phase 4, closed,
+  and 3394 still barred) · D-138 (skipping an id an open branch has spent — the precedent this
+  entry follows for 140) · D-118 (rental CLOSED) · D-031 / DEP-001…004 (the `artifacts` Fly volume
+  and `ARTIFACT_ROOT=/data/artifacts` the runbook targets) · D-062 / method-note item 7 (the entry
+  is the check) · **D-016** (provenance — and the disqualifying fact, *no land ran and flipped is
+  still 0*, is stated first).
+
+---
+
 ### D-140 — The ADC Pipeline shelf gets a cancer type and a maker of its own, from the trial registry rather than a label it does not have — and the FDA authority that fills the Approved column is *disqualifying* here
 
 - **Date:** 2026-09-08

@@ -265,3 +265,10 @@ data/control/rb_local/*/plddt.json
 # T5 local fold archive (Matt GO 2026-09-02). Never commit PDBs/PAE.
 data/artifacts/
 
+# ⚠ D-141 — landed D-126 stitch trees, anywhere in the tree. `scripts/land_d139_confidence_kabsch.py`
+# is run on an ops box against a checkout, so a `confidence_kabsch/` directory can appear beside this
+# repo's files with nobody intending it. D-139's `test_no_confidence_kabsch_tree_is_committed_so_
+# nothing_flips_here` is the assertion; this is the safety catch that keeps one unscoped `git add -A`
+# from reddening it. Landing is a VOLUME operation — these bytes belong on the Fly mount, not in git.
+confidence_kabsch/
+
