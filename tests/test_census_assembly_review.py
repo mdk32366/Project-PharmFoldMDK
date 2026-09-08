@@ -3,7 +3,11 @@
 An assembled parent card carries kind + readiness + tile table (chosen vs spare)
 + PAE yes/no + stitched.* / tileN.* downloads. Spare 3693 is not a second protein.
 A structural profile on an assembly is refused_assembled_incommensurable.
-The 27 ids are disclosed, not ingested into F-004.
+The inventory ids are disclosed, not ingested into F-004.
+
+⚠ D-132 amends the inventory the card serves: the live count is the measured **45**
+assembled parents (2026-09-08), and the **27** Wave1+Wave2 parents are a dated slice
+inside it rather than the whole. Both counts ship; neither may stand for the other.
 """
 from __future__ import annotations
 
@@ -14,8 +18,11 @@ from sqlalchemy.orm import Session
 
 from app.census_profile_read import census_profile_block
 from app.reads import (
+    ADDITIONAL_ASSEMBLED_PARENT_IDS,
+    ASSEMBLED_PARENT_IDS,
     HOLD48_PREFERRED_TILE_IDS,
     HOLD48_SPARE_TILE_IDS,
+    IGF2R_COHORT_JOB_ID,
     WAVE1_WAVE2_STITCHED_PARENT_IDS,
     assign_tile_roles,
     download_stem,
@@ -212,3 +219,89 @@ def test_the_twenty_seven_are_not_ingested_into_the_scorer():
     # ranking_payload must not iterate the inventory into target_scores
     ranking_fn = reads[reads.index("def ranking_payload"): reads.index("def ranking_payload") + 2500]
     assert "WAVE1_WAVE2_STITCHED_PARENT_IDS" not in ranking_fn
+    # ⚠ D-132 — the inventory grew from 27 to 45 and the D-109 bar has to grow with it.
+    # A wider disclosure is the easiest place for an ingest to arrive unnoticed.
+    for name in ("ASSEMBLED_PARENT_IDS", "ADDITIONAL_ASSEMBLED_PARENT_IDS"):
+        assert name not in scorer
+        assert name not in fit
+        assert name not in ranking_fn
+
+
+# ⚠⚠ D-132 — THE REGRESSION TRIPWIRE, API SIDE.
+#
+# The 27 was never wrong about Wave1+Wave2; it was wrong as an answer to "how many parents
+# are assembled?", and the payload gave a reader no way to tell those two questions apart.
+# These assertions must be able to go red in BOTH directions: if the served count drifts
+# back to 27, and if the 27 is deleted rather than demoted to the dated slice it is.
+def test_live_inventory_is_the_measured_forty_five_not_the_wave_slice():
+    eng = _engine()
+    _seed_q9p273(eng)
+    inv = get_census_detail(eng, 2817)["assembly_review"]["inventory"]
+
+    assert inv["unique_stitched_parents_n"] == 45
+    # ⚠ the named failure: a live count of 27 is the defect this entry exists to fix
+    assert inv["unique_stitched_parents_n"] != 27
+    assert len(inv["parent_ids"]) == 45
+    assert len(set(inv["parent_ids"])) == 45, "unique means unique"
+
+    # the breakdown, not the total (D-016 / method note item 2)
+    assert inv["wave1_wave2_closeout_n"] == 27
+    assert inv["wave1_pass"] == 10
+    assert inv["wave2_pass"] == 17
+    assert inv["wave1_pass"] + inv["wave2_pass"] == inv["wave1_wave2_closeout_n"]
+    assert inv["additional_assembled_n"] == 18
+    assert (
+        inv["wave1_wave2_closeout_n"] + inv["additional_assembled_n"]
+        == inv["unique_stitched_parents_n"]
+    )
+
+    # every count names how it is known, and the two dates do not collapse into one
+    assert inv["measured_on"] == "2026-09-08"
+    assert inv["wave1_wave2_measured_on"] == "2026-09-05"
+    assert inv["measured_on"] != inv["wave1_wave2_measured_on"]
+    assert "pdb_path" in inv["source"]
+
+
+def test_the_two_id_sets_are_disjoint_and_the_union_is_the_served_list():
+    assert len(WAVE1_WAVE2_STITCHED_PARENT_IDS) == 27
+    assert len(ADDITIONAL_ASSEMBLED_PARENT_IDS) == 18
+    assert not (WAVE1_WAVE2_STITCHED_PARENT_IDS & ADDITIONAL_ASSEMBLED_PARENT_IDS)
+    assert ASSEMBLED_PARENT_IDS == (
+        WAVE1_WAVE2_STITCHED_PARENT_IDS | ADDITIONAL_ASSEMBLED_PARENT_IDS
+    )
+    assert len(ASSEMBLED_PARENT_IDS) == 45
+    # the 18 as handed by owner ops, id for id — a count alone cannot catch a wrong member
+    assert ADDITIONAL_ASSEMBLED_PARENT_IDS == frozenset({
+        2837, 2920, 2959, 2973, 2974, 3020, 3067, 3082, 3086,
+        3094, 3120, 3124, 3131, 3209, 3237, 3356, 3420, 3559,
+    })
+    # ⚠ D-081 — IGF2R census parent 3356 joins the assembled inventory; cohort job 57 is a
+    # different population and does not appear in either set.
+    assert 3356 in ADDITIONAL_ASSEMBLED_PARENT_IDS
+    assert 3356 not in WAVE1_WAVE2_STITCHED_PARENT_IDS
+    assert IGF2R_COHORT_JOB_ID not in ASSEMBLED_PARENT_IDS
+
+
+def test_the_card_reports_both_memberships_separately():
+    """A parent can be assembled and outside the wave slice. One flag cannot say that."""
+    eng = _engine()
+    _seed_q9p273(eng)
+    review = get_census_detail(eng, 2817)["assembly_review"]
+    assert review["in_wave1_wave2_inventory"] is True
+    assert review["in_assembled_inventory"] is True
+    assert 3356 not in WAVE1_WAVE2_STITCHED_PARENT_IDS
+    assert 3356 in ASSEMBLED_PARENT_IDS
+
+
+def test_d132_entry_exists_before_the_code_claims_it():
+    """Living-doc rule, and the D-062 defect: check the ENTRY, never a reference to it."""
+    log = Path("docs/README.md").read_text(encoding="utf-8")
+    assert "### D-132 — Assemble-inventory amend" in log
+    # the entry has to carry the provenance the surfaces are now citing
+    entry = log[log.index("### D-132"): log.index("### D-130-B")]
+    assert "2026-09-08" in entry
+    assert "pdb_path" in entry
+    assert "read-only" in entry
+    # and it must not quietly re-open what the amend explicitly leaves closed
+    assert "D-109" in entry
+    assert "D-118" in entry
