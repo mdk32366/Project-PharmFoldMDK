@@ -88,9 +88,13 @@ export function flattenAdc(row) {
  * than reading one page-wide sentence that cannot be wrong (D-136 decision 6).
  * Falls back to the shared copy only when the row carries no source at all.
  */
-export function cancerTypeAbsenceCopy(field) {
+export function absenceCopy(field, fallback) {
   const source = isEnvelope(field) ? field.source : null
-  return typeof source === 'string' && source.trim() ? source : CANCER_TYPE_ABSENT_COPY
+  return typeof source === 'string' && source.trim() ? source : fallback
+}
+
+export function cancerTypeAbsenceCopy(field) {
+  return absenceCopy(field, CANCER_TYPE_ABSENT_COPY)
 }
 
 export function flattenCatalog(catalog) {
@@ -123,11 +127,26 @@ export const PHASE_VOCAB = [
   'Other',
 ]
 
+// D-139 — the Pipeline index gains Cancer type and Description. ⚠ They are NOT
+// the Approved shelf's columns wearing a different hat: an investigational agent
+// has no FDA indication, so these read the trial registry's Conditions and lead
+// sponsor (or the row's own citation) and the catalog loader refuses an FDA label
+// authority on a pipeline row. Description trails the table because it is a
+// sentence; the sortable short columns stay left of it.
 export const PIPELINE_INDEX_COLUMNS = [
   { key: 'name', label: 'Name' },
+  { key: 'cancer_type', label: 'Cancer type' },
   { key: 'phase', label: 'Phase' },
   { key: 'protein', label: 'Protein' },
+  { key: 'description', label: 'Description' },
 ]
+
+// D-139 — fallbacks only. A row whose envelope is a named absence renders that
+// envelope's own source, which says what was read and what came back empty.
+export const PIPELINE_CANCER_TYPE_ABSENT_COPY =
+  'no tumour type stated in the trial-registry or citation text this catalog holds for this row (D-139)'
+export const PIPELINE_DESCRIPTION_ABSENT_COPY =
+  'no maker named in the trial-registry or citation text this catalog holds for this row (D-139)'
 
 export const PIPELINE_SHELF = 'pipeline'
 export const APPROVED_SHELF = 'approved'
@@ -142,6 +161,14 @@ export function flattenPipelineRow(row) {
     stage: fieldValue(row.development_stage),
     phase: fieldValue(row.phase),
     citation: fieldValue(row.source_citation),
+    // ⚠ `null`, not `''`, for both — `sortRows` holds absent rows out as a
+    // trailing cluster, and an empty string would sort them as the
+    // alphabetically-first real value (the `?? 0` mistake in a costume, D-087).
+    cancer_type: cancerTypeSortKey(row),
+    cancer_types: cancerTypes(row),
+    cancer_type_field: row.cancer_type ?? null,
+    description: fieldValue(row.description) || null,
+    description_field: row.description ?? null,
     row,
   }
 }

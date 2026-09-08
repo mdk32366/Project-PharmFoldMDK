@@ -6,8 +6,11 @@ import {
   DEFAULT_SORT,
   INDEX_COLUMNS,
   PHASE_VOCAB,
+  PIPELINE_CANCER_TYPE_ABSENT_COPY,
+  PIPELINE_DESCRIPTION_ABSENT_COPY,
   PIPELINE_INDEX_COLUMNS,
   PIPELINE_SHELF,
+  absenceCopy,
   cancerTypeAbsenceCopy,
   filterPipelineByPhase,
   flattenCatalog,
@@ -23,8 +26,11 @@ import Term from './Term.jsx'
 // Default sort is name ascending: a reader-chosen order, not a ranking.
 // D-136 — Cancer type on Approved lists the tumour types FDA's own label states,
 // audited in the catalog loader against that row's stored label text. A row that
-// states none renders its own absence source. Pipeline carries no indication at
-// all (D-124 schema; no Spec authorised one).
+// states none renders its own absence source.
+// D-139 — Pipeline gets Cancer type and Description of its own, from the trial
+// registry / the row's citation and never from an FDA label. ⚠ Same column name
+// on the two shelves, different authority behind it, so each shelf states which
+// one it is rather than letting the reader assume a pipeline row is approved.
 // Pipeline phase filter is the Architect closed vocab — nothing else.
 
 function ApprovedShelf({ catalog }) {
@@ -167,6 +173,7 @@ function PipelineShelf({ catalog }) {
   const completeness = headerValue(catalog, 'completeness')
   const assembledAsOf = headerValue(catalog, 'catalog_assembled_as_of')
   const mappingAsOf = headerValue(catalog, 'mapping_sourced_as_of')
+  const conditionsAsOf = headerValue(catalog, 'conditions_reviewed_as_of')
 
   return (
     <div className="adcs-pipeline">
@@ -184,7 +191,19 @@ function PipelineShelf({ catalog }) {
         {scope ? <> Scope: <code>{scope}</code>.</> : null}
         {completeness ? <> Completeness: <code>{completeness}</code>.</> : null}
         {mappingAsOf ? <> Mapping sourced as of {mappingAsOf}.</> : null}
+        {conditionsAsOf ? <> Programme fields reviewed as of {conditionsAsOf}.</> : null}
       </p>
+
+      {conditionsAsOf ? (
+        <p className="note">
+          Cancer type here is what the trial registry records this investigational
+          agent as being <em>studied in</em> on {conditionsAsOf}, or what this row's
+          own citation states — <strong>not</strong> an FDA indication, because none
+          of these agents has one. Description names the sponsor or maker behind the
+          programme. Where a row states neither, it says which lookup came back
+          empty rather than showing a blank (D-139).
+        </p>
+      ) : null}
 
       <div className="list-controls">
         <label htmlFor="adc-phase-filter">Phase</label>
@@ -245,10 +264,30 @@ function PipelineShelf({ catalog }) {
                   <Link to={`/adcs/pipeline/${r.id}`}>{r.name}</Link>
                   {r.stage ? <div className="adcs-inn">{r.stage}</div> : null}
                 </td>
+                <td>
+                  {r.cancer_types.length > 0 ? (
+                    <ul className="adcs-cancer-types">
+                      {r.cancer_types.map((t) => <li key={t}>{t}</li>)}
+                    </ul>
+                  ) : (
+                    <span className="absent-reason">
+                      {absenceCopy(r.cancer_type_field, PIPELINE_CANCER_TYPE_ABSENT_COPY)}
+                    </span>
+                  )}
+                </td>
                 <td>{r.phase}</td>
                 <td>
                   <span>{r.protein}</span>
                   {r.accession ? <div className="mono adcs-acc">{r.accession}</div> : null}
+                </td>
+                <td className="adcs-description">
+                  {r.description ? (
+                    <span>{r.description}</span>
+                  ) : (
+                    <span className="absent-reason">
+                      {absenceCopy(r.description_field, PIPELINE_DESCRIPTION_ABSENT_COPY)}
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}

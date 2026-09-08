@@ -805,6 +805,9 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
    more than one and a comma-joined sentence reads as a single claim. */
 .adcs-cancer-types { margin: 0; padding-left: 1.05rem; }
 .adcs-cancer-types li { margin-bottom: 0.1rem; }
+/* D-139 — the Pipeline Description column is a sentence, not a token. Capped so
+   one long programme line cannot squeeze the sortable columns beside it. */
+.adcs-description { max-width: 24rem; font-size: 0.88rem; line-height: 1.45; }
 .adc-label-indications > summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; }
 .label-verbatim {
   margin: 0.45rem 0 0; padding: 0.5rem 0.7rem;
