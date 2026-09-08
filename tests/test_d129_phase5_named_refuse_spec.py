@@ -367,12 +367,21 @@ def test_d129_is_the_next_free_decision_id():
     # list and must stay absent: it is spent, but as the suffix half of the
     # `### D-130-B / D-131` heading, so it never appears as its own `### D-1NN`.
     # A bare `### D-131` would be a real collision and still reddens here.
-    assert [i for i in ids if i > 129] == [130, 132], (
-        f"D-129's successors must be exactly D-130 and D-132; found {ids[-3:]}"
+    #
+    # ⚠ Widened again at **D-133** — from `[130, 132]` to `[130, 132, 133]` — and
+    # again by enumeration. Spending D-133 (the census sortable Structure column)
+    # reddened the previous form BY DESIGN; the successor is named below rather
+    # than admitted by a `>=`, so a stray `### D-134` still reddens.
+    assert [i for i in ids if i > 129] == [130, 132, 133], (
+        f"D-129's successors must be exactly D-130, D-132 and D-133; found {ids[-4:]}"
     )
     assert re.search(r"^### D-132 — Assemble-inventory amend", LOG, re.M), (
         "D-132 is the recorded successor id; it must be the inventory-amend "
         "entry, not some other entry that took the number"
+    )
+    assert re.search(r"^### D-133 — Census gains a sortable Structure column", LOG, re.M), (
+        "D-133 is the recorded successor id; it must be the census "
+        "sortable-Structure-column entry, not some other entry that took it"
     )
     assert re.search(r"^### D-130 — Phase 4 residual-RMSD hunt", LOG, re.M), (
         "D-130 is the recorded successor id; it must be the residual-RMSD "

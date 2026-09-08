@@ -87,6 +87,9 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   font-size: 0.92rem;
 }
 .badge-kind { margin-left: 0.4rem; font-size: 0.72rem; }
+/* ⚠ D-133: in the census Structure column the badge IS the cell, so it starts at the cell edge —
+   the 0.4rem above exists for the badge that trails a protein name on the detail card. */
+.census-table .kind-cell .badge-kind { margin-left: 0; }
 .viewer-wrap { position: relative; width: 100%; height: 480px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #0b1020; }
 .viewer { position: absolute; inset: 0; width: 100%; height: 100%; }
 .viewer-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
@@ -315,6 +318,43 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   border: 1px solid #2d3748; border-radius: 6px; font-size: 0.95rem;
 }
 .census-search input:focus { outline: 2px solid #4299e1; outline-offset: 1px; }
+
+/* ⚠ D-133 + am. 1: the fold-type filter. Chips, so one click isolates the seam-spliced proteins.
+   The caveat gets its own full-size line rather than a tooltip — narrowing to the assemblies must
+   not read as promoting them. */
+.census-kind-filter {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+  margin-top: 0.7rem; font-size: 0.88rem;
+}
+.kind-filter-legend {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin-right: 0.2rem;
+}
+.chip {
+  padding: 0.15rem 0.6rem; border-radius: 999px;
+  background: #0f1620; color: #cbd5e0;
+  border: 1px solid #2d3748; font: inherit; font-size: 0.84rem; cursor: pointer;
+}
+.chip:hover { color: #e2e8f0; background: #1a2431; }
+/* ⚠ toned by SELECTION, never by quality: the active chip is brighter because it is the one in
+   force, not because its category is better. */
+.chip-on { color: #e2e8f0; border-color: #4299e1; background: #1a2431; }
+.census-kind-filter .caveat { flex-basis: 100%; margin: 0.1rem 0 0; }
+
+/* ⚠ D-133 am. 1: the badge legend, directly above the header row whose words it defines. A
+   definition list rather than prose — one line per category, so it reads as a key and not a wall. */
+.census-legend { margin: 0.6rem 0 0.5rem; font-size: 0.86rem; }
+.census-legend h4 {
+  margin: 0.5rem 0 0.25rem; font-size: 0.78rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted);
+}
+.legend-list { margin: 0; }
+.legend-row { display: grid; grid-template-columns: 13rem 1fr; gap: 0.5rem; padding: 0.12rem 0; }
+.legend-row dt { color: #e2e8f0; font-weight: 600; }
+.legend-row dd { margin: 0; color: #b9c4cc; line-height: 1.5; }
+@media (max-width: 720px) {
+  .legend-row { grid-template-columns: 1fr; gap: 0; }
+}
 
 .census-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 /* ⚠ Sticky header: the list is thousands of rows and a header that scrolls away turns every
