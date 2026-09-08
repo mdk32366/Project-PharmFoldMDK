@@ -379,6 +379,203 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-137 — The census gains a sortable Cost column: what a protein costs to FOLD becomes visible without becoming a filter, a feature, or a verdict
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — **read-payload + UI only**. No new route. No ops, no rent, no emit, no
+  Fly write, no migration, no backfill, no F-004 ingest, no scorer change, no new feature, no
+  ranking, no Kabsch flip. Rental stays **CLOSED** (D-118).
+- **Context, and how the gap is known (D-016).** Matt GO 2026-09-08 via Trinity (Emma relay), on
+  `main` at tip `ebd7b83` (D-134). `core/foldability.py` has held the cost instrument since
+  **D-077** decision 6 — `envelope(span_aa) -> local | rental | over_ceiling` against
+  `core.manifest.LOCAL_CEILING` — and **nothing on any served surface reads it.** Checked by
+  enumeration rather than recalled: `grep -rn "foldability" --include=*.py --include=*.jsx`
+  over the tree returns the module, its tests, `core/census.py`, `scripts/census_cost.py`,
+  `scripts/census_spans.py` and nine `docs/` files — and **zero** occurrences under `app/` or
+  `ui/`. The one derived cost fact a reader *can* see today is second-hand and only on the
+  never-folded rows: `core/census_unfolded.py`'s `above_local_ceiling` / `ceiling_unmeasured`
+  reasons, which exist only *because* those proteins were not folded. **A census of 3,467
+  proteins states its span and says nothing about what that span costs**, so the strongest
+  honest claim this project owns — *"M of these folds are reproducible by any reader with a
+  consumer 8 GB card and no cloud spend"* (D-077's licensed claim ✅ Reproducibility) — is
+  unreadable from the surface that holds the data.
+- **The measurement, before the decision (D-016, and the breakdown rather than the total).**
+  Over `data/census/census_manifest.v7.csv` — 3,467 rows, read 2026-09-08 by
+  `csv.DictReader` + `core.foldability.envelope`: **`local` 2,691 · `rental` 349 ·
+  `over_ceiling` 427 · blank `span_aa` 0.**
+  ⚠⚠ **The total hides the finding, so it is split by whether the protein was actually folded**
+  (method-note item 2). Against `data/census/census_features.v1.jsonl` (**2,690** accessions):
+  **all 2,690 folded census proteins are `local`** — every census fold in the artifact sits
+  inside the measured local envelope — and the **777** never-folded rows are `over_ceiling`
+  **427** · `rental` **349** · `local` **1**. *That* is the shape of D-077's licensed ✅
+  Reproducibility claim, and it is much stronger than the 2,691: the census's folds are not
+  *mostly* locally reproducible, they are **all** locally reproducible, because the ones that
+  were not affordable were never folded.
+  ⚠⚠ **AND THE CROSS-CHECK IS EXACT FOR ONE CATEGORY AND NOT THE OTHER — the not-exact half is
+  the interesting one, and the first version of this paragraph got it wrong.** Against
+  `core/census_unfolded.py`'s recorded reasons: `ceiling_unmeasured` **349** = `rental` **349**,
+  exactly; but `above_local_ceiling` **424** ≠ `over_ceiling` **427**. The gap is the **3
+  mucins**, whose recorded reason is `mucin_out_of_class` (**D-111** — never ESMFold) while
+  their spans are over-ceiling anyway: **a row can be refused for a reason that is not its
+  cost**, and a cost column must not be read as the reason a protein is missing. The 777th row,
+  `reason_unrecorded` **1** — `P55073`/`DIO3`, 237 aa — is costed **`local`**: it should have
+  folded, it did not, and **nothing records why**. ⚠ This entry first said *"349 and 427
+  reconcile exactly"*; `test_the_split_reconciles_with_the_never_folded_reasons` reddened at
+  `424 == 427` and the claim was corrected before the PR was filed. The reconciliation is kept
+  as a **test**, not a sentence, for exactly that reason — it is the query whose answer could
+  disqualify the axis, and it did disqualify the first wording of it.
+- **Decision — A. The cost envelope is projected onto census rows, by a supplier of its own.**
+  1. **New `app/census_cost_read.py`**, composed at the `/api/census` route — the same shape as
+     `census_profile_read.py`, for a related reason: `core.foldability` is a **compute-budget**
+     instrument and **feature 1's** step function (see B), and the module that projects census
+     rows must not become the place a budget and a ranking meet. `app/reads.py` does not import
+     it; the route does.
+  2. **Five fields per row.** `cost` (the CATEGORY, which is what the column sorts on),
+     `cost_label` (the displayed term, owned server-side), `cost_note` (that category's meaning),
+     `cost_axis` (the refusal statement below), `cost_recipe` (`core.foldability.describe()` —
+     the ceiling **and** the int8 / chunk-64 recipe it was measured under, D-077 dec 3).
+     ⚠ Sorting on the CATEGORY and never on the label is **D-133**'s lesson taken as read:
+     `structure_kind_label` changed once already, and a copy edit must not re-order a table.
+  3. **⚠⚠ THE FOURTH OUTCOME IS A NAMED ABSENCE, NEVER A PRICE.** `envelope()` **raises** on a
+     missing span by design — *"quietly bucketing an unmeasured target as affordable is how a
+     cost estimate becomes a fiction"* (D-024) — and a read route serving thousands of rows may
+     not raise. So the absence is named `span_unrecorded` and is **never** `local`. Anything that
+     is not a positive whole number of residues takes it, including `0`: a zero-length span is
+     not a free fold, it is a measurement that did not happen, which is the reading
+     `core/census.py::categorise` already gives it.
+  4. **⚠ And `span_unrecorded` is deliberately NOT `core.census.NO_TOPOLOGY`.** That word means
+     *fetched successfully, and the protein has no numeric ECD span* — a claim about the
+     **protein**, and `core/census.py` states in terms that it "REQUIRES A SUCCESSFUL FETCH".
+     Reading a database row whose `meta` carries no `span_aa`, nothing on the read path attests
+     a topology fetch ever happened, so borrowing that word would assert a fact we do not have.
+     Two ignorances, two words — the same rule that keeps `unresolved` apart from `fetch_failed`.
+- **Decision — B. The three refusals D-077 decision 1 pre-registered, and where each one bites
+  here.** They are reproduced rather than cited because this is the surface that could break
+  them, and D-074 holds that an instrument which can be misused carries its own limits.
+  1. **⚠⚠ IT IS A COST / TRACTABILITY AXIS AND IT IS NOT SUITABILITY** (refusal 2). The column
+     header reads *Cost to fold (compute — not suitability)* and the legend leads with the axis
+     statement **in the same visual frame as the column** — full size, not fine print, because a
+     caveat set smaller than the datum it qualifies is a caveat the page has decided the reader
+     may skip. ⚠ **The badges are neutral by decision, not by palette:** green-for-`local` /
+     red-for-`over_ceiling` would say *good* and *bad* about a protein on a **cost** axis, in the
+     same frame as a sentence denying it. They differ in hue-as-class (cool → warm, cheap → dear)
+     at one weight, the same rule the Profile column follows for refusals. **An expensive protein
+     is not a worse target; it is a dearer fold.**
+  2. **⚠⚠ IT MUST NOT FILTER THE CENSUS** (refusal 3) — the one this PR is nearest to breaking,
+     and the reason it is refused twice over. **D-133 am. 1 shipped fold-type chips**, so a
+     `local` / `rental` / `over ceiling` chip set is now the obvious next control, and it is
+     exactly the one D-077 forbids: *"A comprehensive census that silently drops the targets it
+     cannot afford to fold is a census of our budget, not of the surfaceome — and it would bias
+     the census by length, i.e. by feature 1."* **A sortable column and a legend are the whole
+     licensed surface.** Enforced structurally rather than editorially: `apply_cost` has **no
+     predicate argument, no threshold, and no branch that can drop a row**, so there is nothing
+     to filter with; a test counts rows in against rows out through the live route on a fixture
+     that includes an unmeasured span; and a test reads `CensusTable.jsx` and fails on a cost
+     chip, a cost checkbox, or a cost term inside `filterRows` / `KIND_ORDER`.
+  3. **⚠ IT MUST NOT BECOME A FEATURE** (refusal 1). Local-foldability is a monotone step
+     function of ECD length, which is **feature 1** of the pre-registered six (**D-027**) — tier
+     was assigned *by* length and precision *by* tier, so length / tier / precision /
+     foldability are four names for one partition on this cohort, the **F-008** confound
+     **D-075** dec 6 declines to resolve. `tests/test_foldability.py` already asserts
+     `core/scorer.py` and `core/features.py` import neither `core.foldability` nor `core.census`;
+     `app/census_cost_read.py` **joins that guard** in this PR, so a scorer reaching for a
+     compute budget reddens rather than being caught in review.
+  4. **⚠ It is orthogonal to Structure, and the legend says so where the confusion would happen.**
+     `over_ceiling` is about a **single-pass** fold length; `assembled` is about **how a
+     structure was made** (D-118 / D-133). A protein assembled from tiles is *still* over the
+     single-pass ceiling — the two columns can and do disagree, and neither is wrong. The
+     `over ceiling` legend entry states that in words. **Nothing here promotes `assembled` out
+     of provisional, the served path stays the assembler, and D-109 ruling 7 is untouched.**
+  5. **⚠⚠ `rental` NEVER TRAVELS BARE.** Rental for the hold-48 remainder **closed 2026-09-05 PT
+     (pod Terminated)** (D-118), and `core/census_unfolded.py` already refuses the words *"waiting
+     on rented capacity"* for exactly this reason. A bare `rental` badge on 349 rows would
+     re-open that false claim in a new place, one column along. So the served `cost_note` for
+     `rental` carries the closure, the badge tooltip **is** that note, and the legend prints it:
+     **a cost CLASS, never a queue position** — what the fold would have cost, not a fold that is
+     being waited on.
+- **Decision — C. The legend is read off the wire, and the sort has an order rather than an
+  alphabet.**
+  1. **Every term and every meaning in the cost legend comes from the rows.**
+     `app/census_cost_read.py` owns `COST_LABEL` and `COST_MEANING`; `CensusTable.jsx` renders
+     what it is served. So the page cannot come to define `rental` differently from the module
+     that assigns it — a strictly stronger version of D-133 am. 1, where `STRUCTURE_LEGEND`'s
+     meanings are typed in the component and only the *term* is the API's. ⚠ A category no row
+     wears gets **no entry**, the same wall D-133 am. 1 built for topology.
+  2. **`costBadgeKey(r)` is the single rule**, exported, asked by both the cell and the legend —
+     because a nested ternary is not a thing another surface can interrogate, which is why the
+     topology column went six entries without a legend until D-133 am. 1 extracted one.
+     ⚠ **It keeps three absences apart:** `span_unrecorded` (the server looked, there is no
+     span), `not_served` (the row carries **no cost field at all** — a missing FIELD, and
+     rendering it as `span_unrecorded` would assert something about the protein only the server
+     can say), and an unknown verdict (a word this page has never heard of, rendered verbatim
+     rather than coerced into one we understand).
+  3. **⚠ The column declares an `order`, and that is a COST order.** The census sorts on
+     **every** column (**D-087**), so a new column arrives sortable or it arrives as the badge
+     D-133 had to go back and fix. `numeric: false` stays true
+     of the cell — there is no magnitude in it — but a cost genuinely has one, and alphabetical
+     would file `over_ceiling` *between* `local` and `rental`, ordering nothing a reader asked
+     for. So `COLUMNS` carries `order: COST_ORDER` (`local` → `rental` → `over_ceiling`,
+     cheapest first) and `compare` maps a value to its index. ⚠⚠ **A value outside that order is
+     a NULL and sorts LAST in both directions** — the rule a missing pLDDT already gets. Putting
+     `span_unrecorded` at the end of the array instead would make an **absence the dearest row**
+     on one descending click, which is the same defect as bucketing it as affordable, wearing the
+     opposite sign.
+  4. **⚠ Default order stays accession (D-102).** A sort the *reader* chooses is a lens; a page
+     arriving ordered by our own compute budget is the most misreadable default this table could
+     have — the same bar D-102 answered for the staining lens and D-133 for Structure.
+- **Deep-learning justification.** Neutral to the DL core by construction, and the neutrality is
+  the point of half this entry. No weights, no inference, no training data, no change to the fold
+  recipe, and — refusal 1 — **no seventh feature**: the ESMFold ranking's six inputs (D-027) are
+  untouched and the new supplier is inside the structural wall that keeps a compute budget out of
+  `core/scorer.py`. What it *does* serve is the honesty the neural claim rests on: `ARCHITECTURE`
+  §1 requires the network do load-bearing work, and D-077's licensed ✅ **Reproducibility** claim
+  — *these folds are reproducible on a consumer card with no cloud spend* — has been unreadable
+  from the surface that holds the spans. A reader can now sort 3,467 census proteins by what
+  reproducing our own results would cost them, which is a statement about the *pipeline's* reach
+  and never about a protein's merit.
+- **Consequences.**
+  - **Payload, measured rather than waved through (D-016).** `app/reads.py` records the census
+    list at **7.1 MB uncompressed / 825 KB gzipped / ~4.8 s**. Encoding all five fields for the
+    3,467 manifest spans adds **2,732,206 bytes (2.67 MB, 788 B/row) uncompressed and 18,064
+    bytes (17.6 KB) gzipped at level 9** — measured 2026-09-08 with `json.dumps` +
+    `gzip.compress(…, 9)` over `cost_block()` for every manifest span. That is a **~37% rise in
+    bytes the reader never sees and a ~2.1% rise in bytes that actually travel**, because gzip
+    collapses a string repeated 3,467 times to almost nothing. ⚠ The client-side parse cost of
+    the extra 2.67 MB is **not measured** and is not claimed to be zero.
+  - **⚠ The alternative was considered and rejected, and not on weight.** Typing the axis
+    statement and the meanings into `CensusTable.jsx` would save 1.26 MB uncompressed — and it
+    would put a **second copy of D-077's refusal in the one file where someone adding a cost
+    chip would be working**, and the measured ceiling (440 / 630 / int8 / chunk 64) in a file
+    `core/manifest.py` keeps one constant specifically to keep it out of. The
+    page-level-declaration-on-every-row shape is the one `app/census_staining_read.py` already
+    uses for HPA attribution, which this table picks up with `rows.find((r) => r.staining)`.
+  - **Not shipped here, and named rather than left as a silence:** the census **detail** card
+    (`/census/{id}`) does not gain a cost block in this PR, so D-069's every-surface-self-
+    sufficient obligation is discharged for the list and **owed** for the card. The `/coverage`
+    census strip (D-135) gains nothing. `census_summary` is untouched — it reduces
+    `list_census(engine)` from `app/reads.py`, which the route stamps *after* calling, so the
+    Story's four numbers cannot acquire a cost total by accident. ⚠ **No cost SPLIT is served
+    anywhere**: `core.foldability.split` and `core.census.census_split` stay batch-tool surfaces,
+    because a served `2,691 / 349 / 427` on a page is a headline and a headline about our budget
+    beside an unscored census is the thing refusal 2 is about.
+  - **Files:** new `app/census_cost_read.py`; `app/read_routes.py` (`list_census` composition);
+    `ui/src/components/CensusTable.jsx` (`COST_ORDER`, `costBadgeKey`, the `cost` column, the
+    cost legend, `sortValue`/`compare`); `ui/src/styles.css`; new
+    `tests/test_d137_census_cost_column.py` and
+    `ui/src/components/CensusTable.cost.test.jsx`; `ARCHITECTURE.md` census-surface row;
+    the D-129 / D-130 successor enumerations widened to include **137**.
+  - **⚠ Numbering provenance (F-065's class, avoided by checking rather than by assuming).**
+    Next-free-on-tip at `ebd7b83` was **D-135**, which [PR #259](https://github.com/mdk32366/Project-PharmFoldMDK/pull/259)
+    already held and which merged to `main` at `e7f2d82` while this work was in progress;
+    **D-136** is held by the in-flight ADC Approved-Cancer-type work,
+    [PR #260](https://github.com/mdk32366/Project-PharmFoldMDK/pull/260). Both were read from the
+    open-PR list rather than inferred, so **137** is the next free id and the sequence stays
+    contiguous. This branch is rebased onto `e7f2d82`. ⚠ If #260 lands first, the two successor
+    enumerations need `136` inserted beside `137` — a one-line edit in each, and the
+    enumeration reddening is the intended behaviour, not a break.
+- **Amended by:** —
+
+---
 ### D-136 — The ADC Approved Cancer type column becomes real from the FDA label itself: a reviewed tumour-type list that must be checkable against the official indications text stored beside it
 
 - **Date:** 2026-09-08
