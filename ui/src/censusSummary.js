@@ -87,10 +87,27 @@ export const CENSUS = {
       rows: 776,
       inArtifact: 0,
       complete: 728,
+      // ⚠⚠ D-132 — TWO DATES, AND THEY MEAN DIFFERENT THINGS. `uniqueAssembledParents`
+      // is the LIVE count of parents assembled on the Fly volume, measured 2026-09-08 by
+      // a read-only DB query (parent jobs with tile children and a non-null
+      // protein_analyses.pdb_path), handed here as recorded — the UI did not run it.
+      // `wave1Wave2Parents` is the 2026-09-05 owner closeout SLICE inside that count:
+      // Wave1 PASS 10 + Wave2 PASS 17. It was never the volume, and this page rendered
+      // it as though it were for three days. Keep both, render both, and never let the
+      // 27 stand alone as the live inventory.
+      // ⚠ The 18 additional parents already had pdb_path at inventory time — not a fresh
+      // persist, and not restitched by any OPS run (those ran on the 27).
+      // ⚠ The rental is still CLOSED (D-118) and the pod is still Terminated. An amended
+      // inventory is not a re-opened rental.
       closeout: {
         measuredOn: '2026-09-05',
         artifact: 'owner closeout (D-117 / D-118)',
-        uniqueStitchedParents: 27,
+        uniqueAssembledParents: 45,
+        inventoryAmendedOn: '2026-09-08',
+        inventoryArtifact:
+          'read-only Fly DB query (parent jobs with tile children and pdb_path set)',
+        wave1Wave2Parents: 27,
+        additionalAssembledParents: 18,
         wave1Pass: 10,
         wave2Pass: 17,
         mucins: 3,

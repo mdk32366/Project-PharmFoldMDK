@@ -114,12 +114,18 @@ export default function CensusView() {
               {t.tranche === 5 && t.closeout && (
                 <>
                   {' '}— ⚠ <strong>{t.complete.toLocaleString()} oneshot folds</strong>; tiles
-                  complete; <strong>{t.closeout.uniqueStitchedParents} unique stitched
-                  parents</strong> (Wave1 PASS {t.closeout.wave1Pass} + Wave2 PASS{' '}
-                  {t.closeout.wave2Pass}); {t.closeout.mucins} mucins out of class. Rental
-                  closed {t.closeout.measuredOn} ({t.closeout.artifact}); pod Terminated.
-                  The 728 oneshot folds are not in the artifact above, which has not been
-                  re-parsed.
+                  complete; <strong>{t.closeout.uniqueAssembledParents} unique assembled
+                  parents</strong> on the volume, measured {t.closeout.inventoryAmendedOn}{' '}
+                  ({t.closeout.inventoryArtifact}). Of those, the{' '}
+                  {t.closeout.measuredOn} owner closeout slice is{' '}
+                  {t.closeout.wave1Wave2Parents} (Wave1 PASS {t.closeout.wave1Pass} +
+                  Wave2 PASS {t.closeout.wave2Pass}), and{' '}
+                  {t.closeout.additionalAssembledParents} are additional assembled parents
+                  that were already on the volume and simply were not counted by that
+                  slice; {t.closeout.mucins} mucins out of class. Rental closed{' '}
+                  {t.closeout.measuredOn} ({t.closeout.artifact}); pod Terminated — the
+                  amended inventory is a recount, not a re-opened rental. The 728 oneshot
+                  folds are not in the artifact above, which has not been re-parsed.
                 </>
               )}
               {t.absent?.length > 0 && (

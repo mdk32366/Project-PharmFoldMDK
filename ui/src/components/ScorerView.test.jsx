@@ -65,8 +65,26 @@ describe('ScorerView', () => {
     // the excluded set with its reasons
     expect(t).toMatch(/CXCR5 — below_floor/)
     expect(t).toMatch(/MSLN — held_out/)
-    expect(t).toMatch(/27 unique stitched parents/)
+    expect(t).toMatch(/45 unique assembled parents/)
     expect(t).toMatch(/not in this ranking \(D-109\)/)
+  })
+
+  // ⚠⚠ D-132 — the D-109 one-liner names a COUNT, and the count was stale by 18. The ruling
+  // is unchanged; only the number it discloses moved. This reddens if the disclosure drifts
+  // back to 27, and equally if the 45 is ever presented as what Wave1+Wave2 produced.
+  it('discloses 45 assembled parents as out of the ranking, with 27 named as the wave slice', async () => {
+    getRanking.mockResolvedValue(RANKING)
+    getCoverage.mockResolvedValue(COVERAGE)
+    const { findByTestId } = renderView()
+    const note = (await findByTestId('scorer-assembly-note')).textContent.replace(/\s+/g, ' ')
+    expect(note).toMatch(/45 unique assembled parents/)
+    expect(note).toMatch(/not in this ranking \(D-109\)/)
+    // ⚠ REDDENS ON REGRESSION: 27 may never be the disclosed live count again …
+    expect(note).not.toMatch(/27 unique/)
+    // … and it may never disappear either — Wave1+Wave2 were 27, not 45
+    expect(note).toMatch(/Wave1\+Wave2 closeout slice is 27/)
+    expect(note).toMatch(/Wave1 PASS 10 \+ Wave2 PASS 17/)
+    expect(note).toMatch(/2026-09-08/)
   })
 
   it('does NOT hardcode any live literal — every number derives from the payload', async () => {

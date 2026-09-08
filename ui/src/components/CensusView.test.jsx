@@ -258,7 +258,7 @@ describe('D-094 amendment 1 — census figures carry their provenance', () => {
   it('F2b: tranche 5 names the 2026-09-05 closeout, not 48 held', () => {
     const t = text()
     expect(t).toContain('728')
-    expect(t).toMatch(/27 unique stitched parents/)
+    expect(t).toMatch(/45 unique assembled parents/)
     expect(t).toMatch(/Wave1 PASS 10/)
     expect(t).toMatch(/Wave2 PASS 17/)
     expect(t).toMatch(/pod Terminated/)
@@ -280,5 +280,51 @@ describe('D-094 amendment 1 — census figures carry their provenance', () => {
   it('U7: a reader cannot conclude 776 tranche-5 structures exist', () => {
     // ⚠ 776 is 728 folded plus 48 HELD. Rendered bare beside "proteins" it asserts 776 structures.
     expect(text()).not.toMatch(/776\s*proteins/)
+  })
+})
+
+// ⚠⚠ D-132 — THE REGRESSION TRIPWIRE. This page advertised 27 as the live unique count while
+// the volume held 45, and nothing objected, because the wave slice and the volume were the
+// same sentence. These assertions separate them and must be able to go red in BOTH
+// directions: if the live count silently returns to 27, and if the 27 is quietly deleted
+// instead of demoted to the dated historical slice it actually is.
+describe('D-132 — the live assembled count is 45; the 27 is the historical wave slice', () => {
+  const text = () => render(<CensusView />).container.textContent.replace(/\s+/g, ' ')
+
+  it('the source literal is the measured 45, and it splits into 27 + 18', () => {
+    const c = CENSUS.tranches.find((x) => x.tranche === 5).closeout
+    expect(c.uniqueAssembledParents).toBe(45)
+    expect(c.wave1Wave2Parents).toBe(27)
+    expect(c.additionalAssembledParents).toBe(18)
+    expect(c.wave1Pass + c.wave2Pass).toBe(c.wave1Wave2Parents)
+    expect(c.wave1Wave2Parents + c.additionalAssembledParents).toBe(c.uniqueAssembledParents)
+    // ⚠ the retired key must not come back — it is the one that carried 27 as the live count
+    expect(c.uniqueStitchedParents).toBeUndefined()
+  })
+
+  it('renders 45 as the live count and 27 only as the dated closeout slice', () => {
+    const t = text()
+    expect(t).toMatch(/45 unique assembled parents/)
+    // ⚠ REDDENS ON REGRESSION: no count of unique parents may read as 27 again
+    expect(t).not.toMatch(/27 unique/)
+    // ⚠ and the 27 stays disclosed — demoted, not deleted
+    expect(t).toMatch(/2026-09-05 owner closeout slice is 27/)
+    expect(t).toMatch(/18 are additional assembled parents/)
+  })
+
+  it('names the date and the artifact the 45 was measured from (D-016)', () => {
+    const t = text()
+    expect(t).toMatch(/45 unique assembled parents[^.]{0,140}2026-09-08/)
+    expect(t).toMatch(/read-only Fly DB query/)
+  })
+
+  it('an amended inventory still reads as a closed rental (D-118)', () => {
+    const t = text()
+    expect(t).toMatch(/Rental closed/)
+    expect(t).toMatch(/pod Terminated/)
+    expect(t).toMatch(/a recount, not a re-opened rental/)
+    // ⚠ a recount is not an invitation to rent, deploy or emit
+    expect(t).not.toMatch(/Deploy/)
+    expect(t).not.toMatch(/rent a (clean )?card/i)
   })
 })
