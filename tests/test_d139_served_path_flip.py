@@ -719,7 +719,15 @@ def test_d139_entry_exists_in_the_living_log():
         "D-140 is the recorded successor id; it must be the ADC pipeline "
         "programme-fields entry, not some other entry that took the number"
     )
-    assert "\n### D-141" not in LOG, "D-141 is the next free integer"
+    # ⚠ Widened again at D-141 by ADDING, never by a `>=`. D-141 lands the D-126 OPS
+    # trees on the volume so this decision's gate has bytes to answer with; it took
+    # 141 because #263 already held 140, and #263 then merged at `578f5ac` — which
+    # reddened this assertion by design and put both ids here rather than either out.
+    assert re.search(r"^### D-141 — The gate had nothing to answer with", LOG, re.M), (
+        "D-141 must be the confidence-Kabsch lander entry, not some other entry "
+        "that took the number"
+    )
+    assert "\n### D-142" not in LOG, "D-142 is the next free integer"
 
 
 def test_the_entry_records_the_subset_its_provenance_and_the_zero():

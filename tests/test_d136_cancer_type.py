@@ -409,6 +409,16 @@ def test_d136_entry_exists_in_the_living_log():
     D-140."* ⚠ **D-140 is the entry that amends this very suite's D-136 decision 8**,
     so an entry that merely *takes* 140 would leave that amendment pointing at
     nothing (the D-062 failure mode). Both ids are named; `### D-141` still reddens.
+
+    ⚠ **Widened again at D-141 — to "141 is the confidence-Kabsch lander and 142
+    does not exist"** — the sixth widening, and the duplicate above resolving one
+    branch later. D-141 lands the D-126 OPS trees on the serving volume so D-139's
+    gate has bytes to answer with. Cut from `1e9777c`, it ran the open-PR check
+    **after** #263 was published, saw 140 held, and took 141 rather than a second
+    duplicate — the D-138 precedent, applied with the benefit of the lesson the
+    paragraph above records. #263 merged at `578f5ac` while it was open, this
+    assertion reddened by design, and the rebase inserted 140 beside 141. **All
+    three ids are named;** `### D-142` still reddens.
     """
     log = DOCS_README.read_text(encoding="utf-8")
     assert "\n### D-136 —" in log
@@ -428,7 +438,11 @@ def test_d136_entry_exists_in_the_living_log():
         "D-140 is the recorded successor id; it must be the pipeline programme-fields "
         "entry, not some other entry that took the number"
     )
-    assert "\n### D-141" not in log
+    assert re.search(r"^### D-141 — The gate had nothing to answer with", log, re.M), (
+        "D-141 is the recorded successor id; it must be the confidence-Kabsch lander "
+        "entry, not some other entry that took the number"
+    )
+    assert "\n### D-142" not in log
 
 
 def test_every_entry_slice_in_this_suite_is_anchored_to_a_line_start():
