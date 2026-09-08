@@ -31,8 +31,13 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
+from app.confidence_kabsch_path_read import confidence_kabsch_sibling_path
 from app.linker_seam_path_read import five_path_payload, seam_note_for_five
 from app.phase5_named_refuse import phase5_fate
+from app.served_path_policy import (
+    SERVED_CONFIDENCE_KABSCH,
+    resolve_served_path,
+)
 
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session
@@ -295,6 +300,125 @@ def get_plddt_path(engine: Any, analysis_id: int) -> Optional[str]:
     if stitched.is_file():
         return str(stitched)
     return str(classic)
+
+
+# ── D-139: which path's bytes we actually hand out, per parent ──────────────────
+#
+# ⚠ Everything below is SELECTION, over paths the readers above already resolve.
+# It writes nothing, copies nothing, and moves no threshold. The default is still
+# the assembler: a parent flips only by allowlist + gate (app/served_path_policy).
+
+def _job_id_for(session: Session, analysis_id: int) -> Optional[int]:
+    """The job id for an analysis row, or ``None``. Production numbering does not
+    guarantee job id == analysis id, so the served-path gate is offered both."""
+    return session.scalar(
+        select(JobRecord.id).where(JobRecord.analysis_id == analysis_id)
+    )
+
+
+def served_path_block(
+    engine: Any,
+    analysis_id: int,
+    *,
+    artifact_root: Optional[Path | str] = None,
+) -> Optional[dict[str, Any]]:
+    """The D-139 served-path decision for one analysis id, or ``None`` if unknown.
+
+    ⚠ Fail-closed at every step: an unknown id, a row with no ``pdb_path``, a
+    parent outside the recorded 17, an absent or refused D-126 tree, or a
+    missing ``stitched.pdb`` all resolve to the assembler under a named reason.
+    """
+    with Session(engine) as s:
+        row = s.get(ProteinAnalysis, analysis_id)
+        if row is None:
+            return None
+        job_id = _job_id_for(s, analysis_id)
+        meta = row.meta
+        pdb_path = row.pdb_path
+    return resolve_served_path(
+        artifact_root,
+        parent_analysis_id=analysis_id,
+        parent_job_id=job_id,
+        assembler_pdb_path=pdb_path,
+        meta=meta,
+    )
+
+
+def served_structure_path(
+    engine: Any,
+    analysis_id: int,
+    *,
+    artifact_root: Optional[Path | str] = None,
+) -> Optional[str]:
+    """The PDB actually served for this id (D-139), or ``None`` → 404.
+
+    Identical to ``get_structure_path`` for every parent the gate does not
+    clear, which today is every parent in this repository: no
+    ``confidence_kabsch/`` tree is committed here.
+    """
+    block = served_path_block(engine, analysis_id, artifact_root=artifact_root)
+    if block is None:
+        return None
+    return block.get("served_pdb_path") or get_structure_path(engine, analysis_id)
+
+
+def served_plddt_path(
+    engine: Any,
+    analysis_id: int,
+    *,
+    artifact_root: Optional[Path | str] = None,
+) -> Optional[str]:
+    """pLDDT for the path actually served (D-139), falling back to the assembler's.
+
+    ⚠ The D-126 tree runs its own ``winning_tile``, so its pLDDT array can
+    differ from the assembler's; colouring served D-126 coordinates with
+    assembler confidence would be an incoherence. The fallback is independent
+    and fail-closed — a flipped parent whose tree carries no
+    ``stitched_plddt.json`` keeps the assembler's rather than 404ing.
+    """
+    block = served_path_block(engine, analysis_id, artifact_root=artifact_root)
+    if block is not None and block.get("served") == SERVED_CONFIDENCE_KABSCH:
+        sibling = confidence_kabsch_sibling_path(
+            block["served_pdb_path"], "stitched_plddt.json"
+        )
+        if sibling is not None:
+            return str(sibling)
+    return get_plddt_path(engine, analysis_id)
+
+
+def served_pae_path(
+    engine: Any,
+    analysis_id: int,
+    *,
+    artifact_root: Optional[Path | str] = None,
+) -> Optional[str]:
+    """PAE for the path actually served (D-139), falling back to the stored one."""
+    block = served_path_block(engine, analysis_id, artifact_root=artifact_root)
+    if block is not None and block.get("served") == SERVED_CONFIDENCE_KABSCH:
+        sibling = confidence_kabsch_sibling_path(
+            block["served_pdb_path"], "stitched_pae.json"
+        )
+        if sibling is not None:
+            return str(sibling)
+    return get_pae_path(engine, analysis_id)
+
+
+def served_download_stem(
+    engine: Any,
+    analysis_id: int,
+    *,
+    artifact_root: Optional[Path | str] = None,
+) -> str:
+    """The download stem for the path actually served (D-139).
+
+    ⚠ A flipped parent downloads as ``stitched_confidence_kabsch``, never
+    ``stitched``. Two files with one name and different coordinates is a bug
+    that outlives the browser tab it started in.
+    """
+    block = served_path_block(engine, analysis_id, artifact_root=artifact_root)
+    if block is not None and block.get("served") == SERVED_CONFIDENCE_KABSCH:
+        return str(block["download_stem"])
+    return download_stem(engine, analysis_id)
 
 
 # ── coverage (D-038): the manifest is the source of 82, the DB is the fold join ─
@@ -1115,6 +1239,23 @@ def assembly_review(
         "assembler": five_path["assembler"],
         "kabsch": five_path["kabsch"],
     }
+    # D-139 — which of those five is actually handed out for THIS parent. ⚠ The
+    # D-126 block is passed in rather than re-read, so the card and the download
+    # route cannot disagree about what is on disk. `default_served` is left
+    # exactly as the path readers set it (assembler True, the rest False): the
+    # default genuinely is still the assembler, and the flip is a per-parent
+    # exception granted by allowlist + gate. The resolved answer rides on a
+    # separate `served` key so no earlier decision's meaning is rewritten.
+    served = resolve_served_path(
+        artifact_root,
+        parent_analysis_id=parent.id,
+        parent_job_id=parent_job_id,
+        assembler_pdb_path=parent.pdb_path,
+        meta=parent.meta,
+        confidence_kabsch=five_path["confidence_kabsch"],
+    )
+    for name, block in five_path.items():
+        block["served"] = served["served"] == name
     return {
         "parent_analysis_id": parent.id,
         "parent_job_id": parent_job_id,
@@ -1189,6 +1330,10 @@ def assembly_review(
         "triple_path": triple_path,
         "four_path": four_path,
         "five_path": five_path,
+        # D-139 — the served path, named per parent with the reason it is that
+        # one. A surface showing "assembler" without the reason cannot tell
+        # "never eligible" from "the run refused it".
+        "served_path": served,
         # D-129-B — the Phase 5 fate, keyed by parent job id. A label, never a
         # metric: it rewrites no seam row and reads no artifact tree. The
         # accept-refuse block arrives carrying the D-128 OPS rollup, because

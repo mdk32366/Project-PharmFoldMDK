@@ -105,7 +105,10 @@ export default function MethodNote() {
             The assembler path above is still the <strong>default served
             structure</strong>. A later GO wrote a second, sibling tree of
             files under <code>kabsch/{'{parent}'}</code>. This page does not
-            swap that tree in as &quot;the&quot; structure.
+            swap that tree in as &quot;the&quot; structure. ⚠{' '}
+            <strong>Scoped by D-139:</strong> the one swap since signed
+            serves the <strong>D-126</strong> structure, to seventeen
+            parents, and never this tree.
           </p>
           <p>
             <strong>What Kabsch does.</strong> After the tiles are already
@@ -146,9 +149,12 @@ export default function MethodNote() {
           <p>
             The assembler path above is still the <strong>default served
             structure</strong>. A later GO wrote a third, sibling tree of
-            files under <code>confidence_kabsch/{'{parent}'}</code>. This
-            page does not swap that tree in as &quot;the&quot; structure.
-            The D-125 Kabsch-path files stay a separate population.
+            files under <code>confidence_kabsch/{'{parent}'}</code>. ⚠{' '}
+            <strong>D-139 is the GO that swaps this one in</strong> — for
+            the <strong>seventeen</strong> parents carrying a recorded
+            PASS and no later named refuse, and for no one else. Every
+            other parent keeps the assembler. The D-125 Kabsch-path files
+            stay a separate population.
           </p>
           <p>
             <strong>What overlap-confidence Kabsch does.</strong> After
@@ -210,7 +216,10 @@ export default function MethodNote() {
               <strong>Assembler</strong> — pick the winner tile by{' '}
               <Term name="pLDDT">pLDDT</Term> at each residue. This is
               the <strong>default served</strong> structure, and it stays
-              that way until Matt says otherwise.
+              that way until Matt says otherwise. ⚠ Matt said otherwise at{' '}
+              <strong>D-139</strong>, for <strong>seventeen</strong>{' '}
+              parents only; every parent this section is about still gets
+              this path.
             </li>
             <li>
               <strong>D-125 Kabsch</strong> — one unweighted rigid move
@@ -261,7 +270,9 @@ export default function MethodNote() {
           </p>
           <p>
             <strong>What piecewise Kabsch does not do.</strong> It does
-            not replace the assembler, and the served PDB is still the
+            not replace the assembler, and — for every parent, D-139
+            included, which serves <strong>D-126</strong> and never this
+            path — the served PDB is still the
             assembler one. It does not overwrite the D-125 or D-126
             files. It does not make the long chain one ESMFold pass. It
             does not fill empty pair-confidence (PAE) between tiles. It
@@ -347,7 +358,10 @@ export default function MethodNote() {
             the linker gate, add a trim loop, or invent a blend.{' '}
             <strong>No threshold moved because of this run.</strong>{' '}
             Nothing here flips the served path either: the{' '}
-            <strong>default served structure is still the assembler</strong>,
+            <strong>default served structure is still the assembler</strong>, ⚠{' '}
+            <strong>scoped by D-139</strong>, which flipped the recorded
+            PASS <strong>seventeen</strong> onto D-126 and{' '}
+            <strong>excluded every parent this section is about</strong>,
             and only a Matt GO can change that — never a pass count. And
             17 accepted parents are <strong>17 recorded outcomes</strong>,
             not 17 solved joins. A seam that was recorded is not a seam
@@ -359,7 +373,8 @@ export default function MethodNote() {
             <code>kabsch/{'{parent}'}</code> vs{' '}
             <code>confidence_kabsch/{'{parent}'}</code> vs{' '}
             <code>piecewise_kabsch/{'{parent}'}</code>) so they cannot be
-            read as one population. The served download is still the
+            read as one population. For the parents this section is about
+            the served download is still the
             assembler <code>stitched</code> one.
           </p>
           <p className="note">
@@ -385,7 +400,9 @@ export default function MethodNote() {
               <strong>Assembler</strong> — pick the winner tile by{' '}
               <Term name="pLDDT">pLDDT</Term> at each residue. The{' '}
               <strong>default served</strong> structure, until Matt says
-              otherwise.
+              otherwise. ⚠ Matt said otherwise at <strong>D-139</strong>,
+              for <strong>seventeen</strong> parents only; every parent
+              this section is about still gets this path.
             </li>
             <li>
               <strong>D-125 Kabsch</strong> — one unweighted rigid move on
@@ -465,7 +482,9 @@ export default function MethodNote() {
           </p>
           <p>
             <strong>What linker / seam honesty does not do.</strong> It
-            does not replace the assembler, and the served PDB is still the
+            does not replace the assembler, and — for every parent, D-139
+            included, which serves <strong>D-126</strong> and never this
+            path — the served PDB is still the
             assembler one. It does not overwrite the D-125, D-126, or
             D-127 files. It does not make the long chain one ESMFold pass.
             It does not fill empty pair-confidence (PAE) between tiles. It
@@ -584,7 +603,10 @@ export default function MethodNote() {
           <p>
             <strong>No threshold moved because of this run.</strong>{' '}
             Nothing here flips the served path either: the{' '}
-            <strong>default served structure is still the assembler</strong>,
+            <strong>default served structure is still the assembler</strong>, ⚠{' '}
+            <strong>scoped by D-139</strong>, which flipped the recorded
+            PASS <strong>seventeen</strong> onto D-126 and{' '}
+            <strong>excluded every parent this section is about</strong>,
             and only a Matt GO can change that — never a pass count.{' '}
             <strong>3432 stays accept-refuse</strong>: not a success target
             of this path, not re-opened, and not counted as a D-128 miss.
@@ -599,7 +621,8 @@ export default function MethodNote() {
             <code>confidence_kabsch/{'{parent}'}</code> vs{' '}
             <code>piecewise_kabsch/{'{parent}'}</code> vs{' '}
             <code>linker_seam/{'{parent}'}</code>) so they cannot be read as
-            one population. The served download is still the assembler{' '}
+            one population. For the parents this section is about the
+            served download is still the assembler{' '}
             <code>stitched</code> one.
           </p>
           <p className="note">
@@ -698,7 +721,13 @@ export default function MethodNote() {
             <strong>W = 32</strong> or ε = 1e-3, and not changing which
             structure the site serves: the <strong>served</strong>{' '}
             structure is still the <strong>assembler</strong> (the
-            winner-tile method), as it has been all along.{' '}
+            winner-tile method), as it has been all along. ⚠{' '}
+            <strong>Scoped by D-139:</strong> the site later did change
+            which structure it serves — for the recorded PASS{' '}
+            <strong>seventeen</strong>, by allowlist, onto the existing
+            D-126 path. <strong>All eight parents named in this section
+            are excluded from it</strong> and keep the assembler with their
+            accept-refuse label intact.{' '}
             <strong>D-126 remains the best experimental path until proven
             otherwise</strong> and stays <strong>callable</strong>. Both
             the <strong>D-127</strong> and the <strong>D-128</strong>{' '}
@@ -728,7 +757,13 @@ export default function MethodNote() {
             <strong>Not run, not queried, and not re-measured here.</strong>{' '}
             Freeze unchanged: served = <strong>assembler</strong>; gate{' '}
             <strong>10.0 Å</strong>; <strong>D-126</strong> best
-            experimental callable; no RMSD-v2; no F-004; no auto-flip.
+            experimental callable; no RMSD-v2; no F-004; no auto-flip. ⚠{' '}
+            <strong>Amended in scope by D-139:</strong> served ={' '}
+            <strong>assembler</strong> still holds for <strong>3272</strong>{' '}
+            and <strong>3394</strong> — both accept-refuse, both excluded
+            from the flip by name — but the recorded PASS seventeen are now
+            served <strong>D-126</strong>. The rest of the freeze stands,{' '}
+            <strong>still including no auto-flip</strong>.
           </p>
           <p>
             <strong>What we ran.</strong> Phase 4 tried a{' '}
@@ -815,7 +850,12 @@ export default function MethodNote() {
             <strong>no residual-RMSD-v2</strong> and no fifth stitching
             algorithm in this section. We are not loosening the{' '}
             <strong>10.0 Å</strong> gate, not flipping served off the{' '}
-            <strong>assembler</strong>, and not entering the ranking.
+            <strong>assembler</strong>, and not entering the ranking. ⚠{' '}
+            <strong>Scoped by D-139:</strong> served was later flipped off
+            the assembler for the recorded PASS{' '}
+            <strong>seventeen only</strong>, onto the{' '}
+            <strong>existing</strong> D-126 path — still no sixth
+            algorithm, no gate move, and no F-004.
             <strong> D-126 remains the best experimental path until proven
             otherwise</strong> and stays callable. D-127, D-128, Phase 5
             labels, and this Phase 4 OPS disclosure <strong>all stay on the
@@ -830,6 +870,134 @@ export default function MethodNote() {
             out_root <code>residual_rmsd_ops_2026-09-05</code>. Owner-facing
             addendum: <code>docs/method-hold48-tiles.md</code> (D-130-B /
             D-131).
+          </p>
+        </div>
+
+        {/* ⚠ D-139 — the first decision that changes which BYTES leave the server.
+            Everything above was written while the answer was "the assembler" for all
+            27. It is now "the assembler, unless this parent is one of the recorded
+            seventeen". The gate is an allowlist, never a pass count, and the count
+            that would embarrass this section — flipped = 0 here — is stated in it. */}
+        <h3 id="served-path-d126">Which structure you are actually handed (D-139)</h3>
+        <div data-testid="served-path-addendum">
+          <p className="note">
+            Ruled by <strong>Matt BUILD GO 2026-09-08 ~2:57 PM PT via
+            Emma</strong> — Phase 6 of the <code>D-0043</code> stitch
+            honest-endpoint roadmap. ⚠ Vault <code>D-0043</code> is external
+            numbering, <strong>not</strong> a project decision id. This
+            section ships <strong>no ops run</strong>, no re-measurement,
+            and <strong>no threshold move</strong>.
+          </p>
+          <p>
+            Every section above was written while the answer to{' '}
+            <em>&quot;which of these paths do I actually download?&quot;</em>{' '}
+            was the same for all 27 parents: <strong>the assembler</strong>.
+            Four alternative fits ran beside it and none of them could
+            change the file. That is no longer true — for{' '}
+            <strong>seventeen</strong> parents.
+          </p>
+          <p>
+            <strong>The rule, in one sentence.</strong> If a parent is one
+            of the <strong>seventeen</strong> that carry a recorded{' '}
+            <strong>PASS</strong> and <strong>no later named refuse</strong>,
+            the site hands you its <strong>D-126 overlap-confidence
+            Kabsch</strong> structure. <strong>Every other parent — and
+            every parent outside the 27 — is handed the
+            assembler.</strong>
+          </p>
+          <p data-testid="served-path-seventeen">
+            <strong>The seventeen:</strong> 2817, 2917, 2929, 3027, 3097,
+            3153, 3188, 3217, 3320, 3379, 3404, 3454, 3469, 3516, 3541,
+            3569, 3575. That is the <strong>17 PASS</strong> list from the
+            Phase 4 inventory above, unchanged and not recomputed here. The
+            other <strong>ten</strong> are the accept-refuse ten — the
+            Phase 5 eight (2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432)
+            plus Phase 4&apos;s 3272 and 3394 — and they keep the assembler{' '}
+            <strong>and</strong> keep their labels.
+          </p>
+          <p>
+            <strong>⚠ Why seventeen and not twenty-four.</strong>{' '}
+            D-126&apos;s <strong>own</strong> run refused only{' '}
+            <strong>three</strong> of the 27 (2939, 3272, 3432), which
+            leaves 24. Seven of those 24 were later measured as{' '}
+            <strong>refused by a different path</strong>: six on D-128{' '}
+            <code>seam_jump_gt_10</code>, and 3394 on Phase 4{' '}
+            <code>rmsd_gt_10</code> (floor ≈ <strong>4.77 Å</strong>,
+            achieved ≈ <strong>13.77 Å</strong>).{' '}
+            <strong>24 − 7 = 17.</strong> Serving a D-126 pose for a parent
+            D-128 measured as <code>seam_jump_gt_10</code> would mean
+            handing out a structure we hold a recorded measurement{' '}
+            <strong>against</strong>. The 24 is named here because it is the
+            number the next reader will reach for first, and it is the wrong
+            one.
+          </p>
+          <p>
+            <strong>It takes four yeses, and any one missing means
+            assembler.</strong> (1) the parent is in the seventeen; (2) a{' '}
+            <code>confidence_kabsch/{'{parent}'}</code> tree is on disk;
+            (3) that tree&apos;s provenance says the run{' '}
+            <strong>accepted</strong> this parent; (4){' '}
+            <code>stitched.pdb</code> is actually in it.{' '}
+            <strong>Artifacts alone can never flip a parent</strong> — a
+            tree appearing on disk, a PR merging, or a pass count improving
+            are none of them authority, and there is{' '}
+            <strong>no auto-flip</strong>. When a parent is not flipped the
+            review card says <strong>which</strong> of the four failed:{' '}
+            <code>not_in_pass_subset</code>,{' '}
+            <code>no_confidence_kabsch_artifacts</code>,{' '}
+            <code>confidence_kabsch_refused</code>, or{' '}
+            <code>no_confidence_kabsch_success_pdb</code>.
+            &quot;Assembler&quot; without the reason cannot tell{' '}
+            <em>never eligible</em> from <em>the run refused it</em>.
+          </p>
+          <p data-testid="served-path-zero-flipped">
+            <strong>⚠ Right now, in this repository, that count is
+            ZERO.</strong> No <code>confidence_kabsch/</code> tree is
+            committed here — the D-126 OPS output lives under an ops{' '}
+            <code>out_root</code> on the volume and was never checked in. So{' '}
+            <strong>seventeen parents are eligible and zero are
+            flipped</strong>: every one resolves to the assembler with the
+            reason <code>no_confidence_kabsch_artifacts</code>. That is the
+            fail-closed branch working, and it is stated here because it is
+            the number that would otherwise embarrass this page.
+          </p>
+          <p>
+            <strong>What comes with the bytes.</strong> The{' '}
+            <Term name="pLDDT">pLDDT</Term> and PAE beside a served D-126
+            structure come from the <strong>same</strong> tree. D-126 runs
+            its own winner-tile pass, so its residue picks — and its
+            confidence array — can differ from the assembler&apos;s;
+            colouring D-126 coordinates with assembler confidence would be a
+            new dishonesty invented by this change. Each falls back on its
+            own if the tree does not carry it. And a flipped parent
+            downloads as <code>stitched_confidence_kabsch.pdb</code>, never{' '}
+            <code>stitched.pdb</code>: two files with one name and different
+            coordinates is a bug that outlives the tab.
+          </p>
+          <p>
+            <strong>What this does not do.</strong>{' '}
+            <strong>No threshold moved</strong> — the{' '}
+            <strong>10.0 Å</strong> refuse gate and the three refuse reasons
+            are untouched, and nothing here was re-run, re-fit or
+            re-measured. There is <strong>no auto-flip</strong>, no sixth
+            algorithm, <strong>no D-127 piecewise revival</strong>, no
+            RMSD-v2, no linker-v2, and no F-004. The accept-refuse ten stay
+            accept-refuse; <strong>3432 is not re-opened</strong>; the
+            Phase 4 hunt stays <strong>closed</strong>; the rental stays{' '}
+            <strong>CLOSED</strong>. No claim of any kind is made about the
+            18 parents outside the 27 — no OPS run ever touched them, and
+            none is eligible.
+          </p>
+          <p>
+            <strong>And a served D-126 structure is a recorded outcome, not
+            a solved join.</strong> Seventeen served parents are{' '}
+            <strong>seventeen recorded outcomes</strong>.{' '}
+            <strong>Never claim 27/27 PASS.</strong> Never claim the seams
+            are solved.
+          </p>
+          <p className="note">
+            Owner-facing addendum:{' '}
+            <code>docs/method-hold48-tiles.md</code> (D-139).
           </p>
         </div>
 

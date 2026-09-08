@@ -379,6 +379,156 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-139 — The served PDB stops being a constant: for the seventeen parents that carry a recorded PASS and no later named refuse, the D-126 confidence-Kabsch structure becomes what we hand out — by allowlist and gate, never by merge
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — **serving policy + read-payload + disclosure**. Phase 6 of the
+  **`D-0043` stitch honest-endpoint** roadmap. No new route. No ops run, no rent, no emit, no Fly
+  write, no migration, no backfill, no F-004 ingest. Rental stays **CLOSED** (D-118). ⚠ **No
+  threshold moves:** the **10.0 Å** refuse gate and the three refuse reasons
+  (`overlap_ca_lt_3` / `rmsd_gt_10` / `singular_covariance`) are byte-identical. ⚠ **D-127
+  piecewise is not resurrected**, and no sixth stitch algorithm is written.
+- **Ship id:** spends **`D-139`**. Verified before claiming the integer rather than assumed, on
+  `main` at tip `dd06e9c` (D-138, [#262](https://github.com/mdk32366/Project-PharmFoldMDK/pull/262)):
+  `grep -n '^### D-1[34][0-9]' docs/README.md` returns **`D-138`** as the highest entry, and
+  `gh pr list --state open` returns **three** PRs — #222 (`docs/registers-and-f067`), #200
+  (`data/rb-regate384-first-ten`) and #197 (`feat/f062-blackwell-ceiling-climb`) — **none of which
+  spends a `D-1NN` id**. So **139 is free and 140 is the next free integer**, and the brief's
+  "D-140 candidate" was one ahead of the tree. ⚠ **The three next-free guards below carry BOTH
+  ids:** they are widened by enumeration to admit `D-139` **and** to bar a bare `### D-140`. This is
+  the fifth pass through that resolution and the rule has not moved — **never** a `>=`, because a
+  `>=` is precisely the change that would end the guard's ability to tell a spent id from a free
+  one.
+  ⚠ **Effect on the `docs/RESERVED.md` citation invariant: none — the hole moved, it did not grow.**
+  Run before and after: `origin/main` at `dd06e9c` reported `['D-131', 'D-139', 'F-067']`; this
+  branch reports `['D-131', 'D-140', 'F-067']`. **D-139 resolved** (it now has a `### ` entry) and
+  **D-140 took its place**, because the next-free guards cite the barred integer by name — the same
+  forward reference D-138 left behind when it barred 139, and the reason `RESERVED.md` distinguishes
+  a reference that announces its own absence from the D-062 defect. `D-131` (the suffix half of
+  `### D-130-B / D-131`) and `F-067` (open in #222) are both pre-existing and untouched here.
+- **Context, and how the PASS subset is known (D-016).** Matt **BUILD GO** 2026-09-08 ~2:57 PM PT
+  via Emma. ⚠ **The subset was enumerated off the tree at `dd06e9c`, not recalled**, and the
+  enumeration is the load-bearing part of this entry:
+  1. **The recorded label list is on disk and it is enumerated, not derived.**
+     `docs/method-hold48-tiles.md` §*"Inventory on the 27 (no silent holes)"* (lines 539–547) names
+     **17 PASS** by parent job id — 2817, 2917, 2929, 3027, 3097, 3153, 3188, 3217, 3320, 3379,
+     3404, 3454, 3469, 3516, 3541, 3569, 3575 — against **10 accept-refuse**: the Phase 5 eight
+     (2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432) plus Phase 4's 3272 and 3394.
+  2. **That list reconciles with the code constants, which is why it is trusted.**
+     `set(app.reads.WAVE1_WAVE2_STITCHED_PARENT_IDS) - set(app.phase5_named_refuse.ACCEPT_REFUSE_TEN)`
+     returns those **same seventeen ids**, and `WAVE1_WAVE2_STITCHED_PARENT_IDS ==
+     core.hold48_kabsch.KABSCH_RESTITCH_PARENT_IDS == core.hold48_confidence_kabsch.CONFIDENCE_RESTITCH_PARENT_IDS`
+     (27). Two independent on-disk records agreeing parent-for-parent is the artefact behind the
+     number; a test re-runs both halves so the agreement cannot rot.
+  3. **⚠ D-126's OWN pass count is 24, and 24 is NOT the subset that flips.** `docs/SPEC-piecewise-domain-kabsch.md`
+     §3 records D-126 refusing **three** of the 27 (2939, 3272, 3432), which leaves 24. But **seven**
+     of those 24 later drew a *named refuse from a different path* — six on D-128
+     `seam_jump_gt_10` (`n_d126_pass_d128_refuse` = 6, `app/phase5_named_refuse.D128_OPS_ROLLUP`)
+     and 3394 on Phase 4 `rmsd_gt_10` (floor ≈ 4.77 Å, achieved ≈ 13.77 Å,
+     `PHASE4_OPS_ROLLUP`). **24 − 7 = 17.** Serving a D-126 pose for a parent D-128 measured as
+     `seam_jump_gt_10` would hand out bytes we have a recorded measurement against, and
+     `phase5_fate()` **already ships `served_path: "assembler"` for all ten** — flipping them would
+     put two live surfaces in direct contradiction. So the gate is *PASS **and** no later named
+     refuse*, and both readings are written here because the 24 is the number a future session will
+     reach for first.
+  4. **⚠⚠ There is no `confidence_kabsch/` tree in this repository, and that is stated up front.**
+     `find /workspace -type d -name confidence_kabsch` returns **nothing**; the D-126 OPS output was
+     never committed (it lives under an ops `out_root` on the volume). **So this PR flips the served
+     bytes for ZERO parents as it stands** — seventeen are *eligible*, and every one of them
+     resolves to `assembler` with reason `no_confidence_kabsch_artifacts` until the tree is on disk
+     beside them. That is not a defect being papered over: it is the fail-closed branch being the
+     only branch CI can reach, and the count that would embarrass this entry — *flipped = 0* — is
+     the one printed first.
+- **Decision.**
+  1. **One resolver, `app/served_path_policy.py`, and it is the only thing that may answer
+     "which path is served".** It holds no geometry, no threshold and no transform — it reads the
+     D-126 block another module already projected and returns a named outcome. Splitting the
+     question across the route and the review card is how the two would drift apart.
+  2. **⚠ The flip requires FOUR independent yeses, and any one missing falls back to assembler.**
+     (a) the parent is in `D126_SERVED_PASS_SUBSET`; (b) a `confidence_kabsch/{parent}/` tree is on
+     disk; (c) its `provenance.json` says `accepted: true`; (d) `stitched.pdb` is actually in that
+     directory. **Artifacts alone can never flip a parent** — that is the auto-flip hard stop, and
+     it is a test, not a comment.
+  3. **The refusal is a NAMED reason, never a bare false.** `not_in_pass_subset` ·
+     `no_confidence_kabsch_artifacts` · `confidence_kabsch_refused` ·
+     `no_confidence_kabsch_success_pdb`. A surface that shows "assembler" without the reason cannot
+     distinguish *this parent was never eligible* from *the run refused it*, which is the
+     distinction the whole Phase 4/5 vocabulary exists to keep.
+  4. **⚠ The allowlist is asserted against its two sources at import time**, not merely written
+     down. `served_path_policy` recomputes `WAVE1_WAVE2 − ACCEPT_REFUSE_TEN` and asserts equality
+     with the seventeen; a test additionally parses the ids back out of
+     `docs/method-hold48-tiles.md`. A typed list that agrees with nothing is exactly the shape of
+     the D-062 defect.
+  5. **pLDDT and PAE travel with the PDB, or nothing moves.** The D-126 tree runs its own
+     `winning_tile`, so its residue selection — and therefore its pLDDT array — can differ from the
+     assembler's. Serving D-126 coordinates coloured by assembler confidence would be a *new*
+     incoherence invented by this PR. So `/plddt` and `/pae` resolve through the same resolver, and
+     fall back **independently and fail-closed** to the assembler sibling when the D-126 tree does
+     not carry them.
+  6. **The download filename says which path produced it.** A flipped parent downloads as
+     `stitched_confidence_kabsch.pdb`, never `stitched.pdb`. Two files with one name and different
+     coordinates is a bug that outlives the browser tab it started in.
+  7. **`default_served` stays `True` on the assembler block and `False` everywhere else, and a NEW
+     `served` key carries the resolved answer.** The default genuinely is still the assembler — the
+     flip is an exception granted per parent by allowlist and gate. Overloading `default_served`
+     would have silently rewritten what four earlier decisions' tests assert.
+  8. **Method and UI name the served path PER PARENT, and never the word "solved".** The review
+     card gets a served-path row with the reason; `/method` gets a §*"Which structure you are
+     actually handed (D-139)"* addendum carrying the seventeen, the four-yes gate, the *flipped = 0
+     here* figure, and the standing refusal. **A served D-126 pose is a recorded outcome, not a
+     solved join** — the same sentence D-127-B, D-128-B and D-130-B already carry, said about the
+     one surface that hands out bytes.
+- **⚠ What this does NOT do.**
+  - **Not** a threshold move. 10.0 Å stands; the three refuse reasons stand; nothing was re-fit,
+    re-run or re-measured, and this PR performs **no** ops.
+  - **Not** an auto-flip — **no auto-flip**, in the freeze's own words. No parent flips because a
+    tree appeared, because a PR merged, or because a count improved. **Never a pass count** — the
+    allowlist is the authority and it is enumerated.
+  - **Not** a promotion of the ten. All ten accept-refuse parents keep **assembler** and keep their
+    labels; `phase5_fate()` is untouched, the Phase 4 hunt stays **closed**, and 3432 is **not
+    re-opened**.
+  - **Not** D-127 piecewise resurrected, **not** a sixth algorithm, **not** RMSD-v2, **not** a
+    linker-v2, **not** F-004 ingest, **not** rent, **not** emit, and **not** a claim about the 18
+    parents outside the 27 — **no** OPS run ever touched them and none is eligible here.
+  - **Not** a claim that anything is fixed. **Never claim 27/27 PASS. Never claim the seams are
+    solved.**
+- **Deep-learning justification.** Until now every stitch-path decision has been a *disclosure*: the
+  network's tiles were assembled by a pLDDT winner-tile rule, four alternative fits were run beside
+  it, and the page said so. The bytes a reader downloaded were the assembler's in all 27 cases, so
+  the four experiments were literally unable to change the artefact — which makes "D-126 is the best
+  experimental path" a sentence with nothing behind it. This decision is the first time a *measured*
+  per-residue-confidence result changes what the system hands out: ESMFold's pLDDT is what weights
+  the D-126 fit (floor 50, ε = 1e-3, trim the highest-residual decile, cap 5 rounds), so the
+  structure served for those seventeen is chosen **by the network's own confidence signal** rather
+  than by a fixed rule. ⚠ And the honesty runs the same direction: the ten parents where that signal
+  did **not** clear a gate keep the assembler and keep their refuse label, so the confidence output
+  is load-bearing for accepting *and* for refusing.
+- **Consequences.** `app/served_path_policy.py` (new), `app/reads.py` (`served_structure_path`,
+  `served_plddt_path`, `served_pae_path`, `served_path_block`, and `assembly_review` gains
+  `served_path` + a `served` key per path block), `app/read_routes.py` (the three artefact routes
+  resolve through the policy and carry the artifact-root dependency),
+  `app/confidence_kabsch_path_read.py` (`confidence_kabsch_success_pdb_path`),
+  `ui/src/components/AssemblyReview.jsx` (served-path row + named reason),
+  `ui/src/components/MethodNote.jsx` (the D-139 addendum + its `id`, for D-138's rail),
+  `docs/method-hold48-tiles.md` (the matching addendum, and the D-127/D-128/Phase-4 "served is
+  still the assembler" sentences gain an in-place D-139 scope marker rather than being deleted —
+  D-129-C's rule that a superseded claim never stands alone),
+  `tests/test_d139_served_path_flip.py` (new), `tests/test_d129_phase5_named_refuse_spec.py`,
+  `tests/test_d130_residual_rmsd_spec.py` and `tests/test_d136_cancer_type.py` (the three next-free
+  guards, widened by name to carry `D-139` and bar `D-140`), `docs/Test_Plan.md`, and
+  `ARCHITECTURE.md`.
+- **Cite:** **`D-0043` stitch honest-endpoint, Phase 6** — Matt BUILD GO 2026-09-08 ~2:57 PM PT via
+  Emma. ⚠ **Vault `D-0043` is external numbering, NOT a project decision id**, and is cited by name
+  for the reason `docs/RESERVED.md` gives · **`D-0037`** model pin (claude-opus-5, thinking, high;
+  never Auto) · D-126 / D-126-A / D-126-B (the path being served, its 10.0 Å gate and its
+  triple-path reader) · D-125 (the 27-parent restitch inventory) · D-127-B and D-128-B (the OPS
+  rollups that subtract seven from the 24) · D-129 / D-129-B (the accept-refuse ten, and
+  `served_path: "assembler"` as an already-shipped answer) · D-129-C (a superseded claim never
+  stands alone) · D-130-B / D-131 (Phase 4, closed) · D-132 (27 is a slice of 45, and the 18 are
+  claimed for nothing) · D-138 (the `/method` rail this addendum must register with) · D-118
+  (rental CLOSED) · D-062 / method-note item 7 (the entry is the check) · **D-016** (provenance —
+  and the disqualifying count, *flipped = 0*, is stated first).
+
 ### D-138 — `/method` gets a contents rail that is READ OFF ITS OWN HEADINGS: fourteen sections and 7,389 words with no way in is a page that is scrolled, not read
 
 - **Date:** 2026-09-08
