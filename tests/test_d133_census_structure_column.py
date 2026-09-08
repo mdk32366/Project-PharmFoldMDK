@@ -39,6 +39,11 @@ ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
 CENSUS_TABLE = (ROOT / "ui" / "src" / "components" / "CensusTable.jsx").read_text(
     encoding="utf-8"
 )
+# ⚠ D-135 moved the kind ORDER and the chip DERIVATION into a shared module, because /coverage's
+# second-population strip reads the same vocabulary and a second copy of the order is how two pages
+# come to state one population in two orders. The guarantees below are unchanged; they are asserted
+# at the file that now holds them, which is the point of reading the source rather than recalling it.
+STRUCTURE_KINDS = (ROOT / "ui" / "src" / "structureKinds.js").read_text(encoding="utf-8")
 UI_TEST = ROOT / "ui" / "src" / "components" / "CensusTable.structure.test.jsx"
 
 
@@ -156,11 +161,20 @@ def test_the_gpi_acronym_is_spelt_out_once_and_reaches_the_tooltip():
 
 
 def test_the_fold_type_chips_default_to_all_and_state_their_own_counts():
-    """A page arriving pre-narrowed has chosen for the reader — D-102's bar, one control along."""
+    """A page arriving pre-narrowed has chosen for the reader — D-102's bar, one control along.
+
+    ⚠ Re-POINTED at D-135, not relaxed. `KIND_ORDER` and the label derivation moved to
+    `ui/src/structureKinds.js` so `/coverage` reads one vocabulary; each assertion below still
+    demands the same property, at the file that now owns it. ⚠ And `CensusTable` must still
+    RE-EXPORT the order — existing callers and tests import it from there, and a silent relocation
+    is how a guard comes to check a file nobody imports.
+    """
     assert "useState('all')" in CENSUS_TABLE
-    assert "export const KIND_ORDER" in CENSUS_TABLE
+    assert "export const KIND_ORDER" in STRUCTURE_KINDS
+    assert "export { KIND_ORDER }" in CENSUS_TABLE
     # ⚠ labels read off the rows, never typed beside the filter
-    assert "labels.get(k) ?? 'not recorded'" in CENSUS_TABLE
+    assert "labels.get(k) ?? KIND_NOT_RECORDED_LABEL" in STRUCTURE_KINDS
+    assert "KIND_NOT_RECORDED_LABEL = 'not recorded'" in STRUCTURE_KINDS
     # ⚠ a control whose only option is 'all' is not a control
     assert "kinds.length > 1 &&" in CENSUS_TABLE
     assert 'aria-pressed={kindFilter' in CENSUS_TABLE

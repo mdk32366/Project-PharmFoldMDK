@@ -44,7 +44,10 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <Link to="/" className="brand"><h1>PharmFoldMDK</h1></Link>
-        <nav className="app-nav">
+        {/* ⚠ D-135: LABELLED, because the page can now hold two navigation landmarks — the Story
+            grew a beat contents of its own. Two unnamed `nav` regions are indistinguishable to a
+            screen reader, and the site nav is the one that is a contract. */}
+        <nav className="app-nav" aria-label="Site">
           <NavLink to="/" end>Story</NavLink>
           <NavLink to="/targets">Targets</NavLink>
           <NavLink to="/coverage">Coverage</NavLink>

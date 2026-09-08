@@ -374,15 +374,23 @@ def test_d129_is_the_next_free_decision_id():
     # than admitted by a `>=`, so a stray `### D-134` still reddens.
     #
     # ⚠ Widened again at **D-134** — to `[130, 132, 133, 134]` — same way. D-134 is
-    # the stitched-parent census-identity fix; it is named below, so a stray
-    # `### D-135` still reddens rather than being admitted by a `>=`.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134], (
-        f"D-129's successors must be exactly D-130, D-132, D-133 and D-134; "
-        f"found {ids[-5:]}"
+    # the stitched-parent census-identity fix; it is named below.
+    #
+    # ⚠ Widened again at **D-135** — to `[130, 132, 133, 134, 135]` — and again by
+    # enumeration. Spending D-135 (Coverage dual population + Story consumability)
+    # reddened the previous form BY DESIGN; the successor is named below, so a stray
+    # `### D-136` still reddens instead of being admitted by a `>=`.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135], (
+        f"D-129's successors must be exactly D-130, D-132, D-133, D-134 and D-135; "
+        f"found {ids[-6:]}"
     )
     assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
         "D-134 is the recorded successor id; it must be the stitched-parent "
         "census-identity entry, not some other entry that took it"
+    )
+    assert re.search(r"^### D-135 — Coverage gains a SECOND population", LOG, re.M), (
+        "D-135 is the recorded successor id; it must be the Coverage "
+        "dual-population / Story entry, not some other entry that took it"
     )
     assert re.search(r"^### D-132 — Assemble-inventory amend", LOG, re.M), (
         "D-132 is the recorded successor id; it must be the inventory-amend "

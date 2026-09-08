@@ -375,6 +375,153 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-135 — Coverage gains a SECOND population instead of a bigger number, the IGF2R failure gets a bridge instead of a paragraph, and the Story becomes skimmable
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — **UI + read-payload only**. No new route. No ops, no rent, no emit, no
+  Fly write, no migration, no backfill, no F-004 ingest, no Kabsch flip, no RMSD-v2, no promotion
+  of `assembled` out of provisional. Rental stays **CLOSED** (D-118).
+- **Context, and how the gap is known (D-016).** Matt GO 2026-09-08 via Trinity, tracker
+  [issue #258](https://github.com/mdk32366/Project-PharmFoldMDK/issues/258), on `main` at tip
+  `ebd7b83` (D-134). Three complaints, read against the tree rather than recalled:
+  1. **`/coverage` tells the truth about one population and is silent about the other.**
+     `CoverageLine.jsx` states the D-024 partition over the Kathad-82 and nothing on the page
+     mentions that this project has since folded a census an order of magnitude larger. A reader
+     who arrives at *"the honest denominator"* learns the cohort's shape and leaves believing it
+     is the whole of the work.
+  2. **The IGF2R row answers with a paragraph.** `coverageNote()` returned 209 characters of
+     two-population prose in a table cell — correct, and unreadable in a `<td>` between a tier
+     and a fold status. Meanwhile **D-134** has just made that accession's census representative
+     visible as `assembled` for the first time, so the thing the paragraph gestures at is now a
+     page with an address.
+  3. **The Story is eleven paragraphs with no way in.** No table of contents, no summary strip,
+     one CTA, and — since **D-126**/**D-132**/**D-133**/**D-134** — no mention at all of the
+     hold-48 tiling arc that produced the assembled structures. The cold-open stopped describing
+     the application again, which is the same defect its own beat-2b comment already records
+     against an earlier version of itself.
+- **Decision — A. `/coverage` shows two populations and never one number pretending to be the
+  other.**
+  1. **The headline does not move.** `CoverageLine` keeps its math, its 82-row partition, its
+     three-valued fold column, and its `ranked ∧ folded of denominator` headline over the
+     **cohort** denominator alone (**D-024** amendment §3). ⚠ **A census count may never enter
+     that sentence.** The whole failure mode D-024 exists to prevent is a denominator that grows
+     with how much work has happened, and *"2,7xx folded"* beside *"of 82"* would be the most
+     flattering version of it this project could ship. A test asserts the headline is still the
+     cohort intersection when the census strip is on screen and carrying much larger numbers.
+  2. **The second strip is labelled a DIFFERENT POPULATION, not more coverage.** New
+     `CensusPopulationStrip.jsx`, rendered *below* the coverage line: the census is a different
+     span definition (**D-081**), unscored and unranked (**D-079** dec 1), and **not comparable**
+     to the 82. It states that in words before it states any count.
+  3. **Its counts are API-derived, and there is no typed N in the JSX (Constraint A / D-050).**
+     `census_summary()` gains **`structure_kinds`** — one `{kind, label, n}` per kind **present**,
+     in a payload-supplied order — reduced from the same `list_census(engine)` rows the route
+     already builds, so the strip, the D-133 chips and the census table cannot come to disagree
+     about one population. The label is the API's (`assembled (provisional)`, `tiles only`,
+     `mucin — not folded`), never re-spelt on the surface, and the strip iterates the payload
+     rather than a list of kinds typed in the component.
+  4. **Each chip deep-links `/census?structure=<kind>`.** A count a reader cannot open is a claim
+     they have to take on trust; a count that opens the filtered list is a claim they can check.
+  5. **IGF2R gets a bridge, and the cohort row stays FAILED.** For any cohort row that did not
+     fold *here* and whose accession has an **assembled** census representative, the note becomes
+     one short sentence plus a chip linking **`/census/<accession>`**. ⚠ The Fold column still
+     reads **failed**; the tier, the reason and the disposition are untouched. The bridge says
+     *a different measurement of this protein exists*, which is exactly what `_attach_cohort_fold`
+     says in the opposite direction, and never *the cohort fold succeeded*.
+  6. **⚠⚠ The sibling payload carries NO `analysis_id`, and that is the load-bearing half.**
+     `_attach_census_sibling()` attaches `structure_kind` / `structure_kind_label` /
+     `assembler_note` and deliberately no id. The link is built from the **accession**, which the
+     census detail route has resolved since **D-118**. This is not tidiness: 75 of the 82 cohort
+     accessions also live in the census (`tests/test_no_census_leak_on_tranche_zero.py`, measured),
+     and the failure that file exists to prevent is a census `analysis_id` landing under a cohort
+     row's Target link — coverage then pointing at a fold measured under a different span
+     definition. **An id that is not in the payload cannot be rendered by mistake**, and a test
+     asserts both the absence in the payload and that no cohort Target link ever carries one.
+  7. **`?structure=` sync on the census chips.** `CensusView` reads `?structure=<kind>` into the
+     D-133 filter on load and writes the chip selection back to the query string, so
+     `/census?structure=assembled` is a shareable address rather than three clicks of setup. Absent
+     → **all**; a kind the loaded rows do not hold → **falls closed to all**, never an empty table
+     under a chip nobody pressed. The **assembled caveat still renders** when assembled is in
+     force, whether it arrived by click or by URL — D-133's *"the caveat arrives with the act"*
+     does not weaken because the act was a link.
+  8. **No fourth cohort `fold_status`.** D-043's three values stand. The census sibling is a
+     *note*, not a status, and inventing `folded_elsewhere` would put a census fact inside the
+     cohort's own vocabulary.
+- **Decision — B. The Story becomes skimmable and stops omitting the tiling arc.**
+  1. **A cold strip of three live chips** above the narrative: cohort **ranked & folded** (the same
+     `disposition === 'ranked' && fold_status === 'folded'` rule `CoverageLine` uses — one rule,
+     read from `/api/coverage`), census **folded**, and the **assembled** row count read out of
+     `structure_kinds`. All three derived; **no fold count is baked into copy** (Constraint A /
+     D-050), and a test drives the mock counts to different values and asserts the render moves.
+  2. **A beat table of contents with in-page anchors** — cohort fold → census widen → hold-48
+     assemble → features & scorer → the open question. Each beat becomes a `<section id=…>` so the
+     anchors resolve to real targets rather than to nothing.
+  3. **A new hold-48 beat, after the census widen**, stating plainly: the long spans were folded as
+     **overlapping tiles and joined by per-residue confidence**; the served join is the
+     **assembler**, not Kabsch; **D-126** is the best experimental path **among those tried**;
+     **D-132** is the inventory; the seams are **recorded, not solved** (D-133 / D-134); the
+     assembled structures are **provisional**; rented capacity is **CLOSED**; and none of this
+     enters **F-004**. ⚠ Six decisions' worth of caution, and it earns its place because the
+     alternative shipped for three weeks: a Story that showed the folds and never said how the
+     longest of them were made.
+  4. **The CTA splits** — `/targets` **and** `/census?structure=assembled`. One button at the end
+     of a page that now describes two populations sends every reader to one of them.
+  5. **No warning glyph in the narrative prose.** The existing tripwire is respected: the new
+     caution rides in sentences, and the chips and the TOC are not `.story p`.
+- **⚠ What this does NOT do.**
+  - **Not** a second denominator. There is exactly one cohort denominator, it is the manifest's
+    82, and the census strip states a **population**, never a coverage fraction. ⚠ The Spec's own
+    instruction was to **stop and ask the Architect** rather than invent one; nothing here needed
+    one, and none is defined.
+  - **Not** a promotion. `assembled` stays **provisional**; the served path stays the
+    **assembler**; the **10.0 Å** gate stays; **D-109 ruling 7** stands and no assembled parent
+    enters the ranking set. A deep link is not an endorsement, and a chip is not a rank
+    (**D-079**).
+  - **Not** a re-count. **D-132**'s **45** unique assembled parent jobs are untouched and are a
+    different object from the count of census **rows** whose representative is assembled — the
+    two coincide today only because those parent ids happen to be distinct accessions, which
+    **D-134** already records as a measured coincidence. No surface prints one as the other.
+  - **Not** an F-004 change, **not** rent, **not** a Kabsch flip, **not** Phase 6/7, **not**
+    RMSD-v2, **not** a Fly write, and **not** a new route: `census_summary` and `coverage_payload`
+    gain fields on payloads that already exist.
+  - **Not** a hardcoded fact. The counts the Spec quotes as of 2026-09-08 are **context** and
+    appear nowhere in the UI; every number on both surfaces comes off the wire.
+- **Deep-learning justification.** Both halves make the network's output **auditable by
+  population**, which is the one thing this project's honesty rules keep turning out to need. The
+  cohort is 82 proteins somebody else's paper chose; the census is every human surface protein we
+  could define a boundary for; and the assembled subset is several ESMFold forward passes glued by
+  the model's own per-residue confidence rather than one pass over the whole span. Those are three
+  different products of the same network with three different failure modes, and until now
+  `/coverage` showed the first, `/census` showed the second, and the third was reachable only by
+  sorting a 2,700-row table. The IGF2R bridge is the sharpest case: a CUDA OOM on the whole chain
+  and a tiled assembly of the same accession are **two measurements of one protein by one model**,
+  and a reader who cannot see both cannot judge either. No network runs here, no inference moves,
+  no threshold changes.
+- **Consequences.** `app/reads.py` (`census_summary` gains `structure_kinds`;
+  `_attach_census_sibling` + `coverage_payload`), `ui/src/api.js` (unchanged — the summary supplier
+  already exists), `ui/src/structureKinds.js` (new — the kind order, shared so the strip and the
+  chips read one list), `ui/src/components/CensusPopulationStrip.jsx` (new),
+  `ui/src/components/CoverageView.jsx`, `ui/src/components/CensusTable.jsx` (controlled filter),
+  `ui/src/components/CensusView.jsx` (`?structure=` sync), `ui/src/components/Story.jsx`,
+  `ui/src/styles.css`, `ARCHITECTURE.md`, and five test files:
+  `tests/test_d135_coverage_dual_population.py`,
+  `ui/src/components/CoverageView.dual.test.jsx`,
+  `ui/src/components/CensusView.structureurl.test.jsx`,
+  `ui/src/components/Story.d135.test.jsx`, plus the two next-free-id guards in
+  `tests/test_d129_phase5_named_refuse_spec.py` and `tests/test_d130_residual_rmsd_spec.py`,
+  which are **widened by enumeration** to admit `D-135` — spending the id reddened them by design,
+  which is the collision guard working rather than a false alarm.
+- **Cite:** D-024 + am. §3 (the honest denominator; the headline is the intersection and nothing
+  else) · D-050 / D-051 Constraint A (derived, never literal) · D-066 (CoverageLine claims the
+  partition, never the ranking's reach) · D-043 (three-valued fold status, unchanged) · D-081
+  (the two populations are measured under different span definitions) · D-079 dec 1 + am. 1
+  (unscored by construction; a category groups, a value ranks) · D-102 (a page must not arrive
+  having chosen — which is why absent `?structure=` means *all*) · D-118 (census identity; the
+  detail route resolves an accession) · D-120 (assembly review; IGF2R two-population copy) ·
+  D-126 (best experimental path so far) · D-132 (inventory 45 / wave slice 27) · D-133 + am. 1
+  (the Structure column, the fold-type chips, the legend this strip's labels come from) · D-134
+  (the assembled representatives this PR can finally link to) · D-109 ruling 7 (no F-004 ingest) ·
+  D-016 (provenance) · Matt GO 2026-09-08 via Trinity, issue #258, on tip `ebd7b83`.
+
 ### D-134 — Stitched parents were invisible to every reader: the census identity check accepts the tag ops actually wrote, and gains a second signal so the next drift cannot hide
 
 - **Date:** 2026-09-08

@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render as rtlRender, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import CensusView from './CensusView.jsx'
 import { CENSUS, CENSUS_LIMITS } from '../censusSummary.js'
+
+// ⚠ D-135: a ROUTER WRAPPER, and not one assertion below changed. `CensusBrowser` now keeps the
+// fold-type filter in the query string (`/census?structure=assembled` is an address), so the page
+// reads `useSearchParams` and needs the router context it has always had in `App.jsx`. Wrapping is
+// the whole edit — nothing here was re-scoped, loosened or removed to accommodate it.
+const render = (ui) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>)
 
 // ⚠⚠ THE POINT OF THIS PAGE IS WHAT IT DOES NOT SHOW. D-079 dec 1 bars scoring any census row, and
 // "a census row appearing on a tranche-zero surface" is a named stop condition. So the assertions

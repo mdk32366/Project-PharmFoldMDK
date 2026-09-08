@@ -62,7 +62,11 @@ describe('App — five-surface nav (D-051)', () => {
   it('the nav exposes five destinations', async () => {
     renderAt('/')
     // Scope to the <nav> — the Story body also links to /coverage etc.; the nav is the contract.
-    const nav = screen.getByRole('navigation')
+    // ⚠ D-135: scoped BY NAME, not by "the only navigation on the page". The Story grew a beat
+    // contents of its own, so an unqualified `getByRole('navigation')` now finds two — and the
+    // remedy is that both landmarks are named, which is the accessibility fix as well as the fix
+    // here. The assertion is unchanged: these six links belong to the SITE nav.
+    const nav = screen.getByRole('navigation', { name: 'Site' })
     for (const name of ['Story', 'Targets', 'Coverage', 'Method', 'About ADCs']) {
       expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
     }
