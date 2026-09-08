@@ -52,6 +52,79 @@ export const COLUMNS = [
   { key: 'critical_n', label: 'Critical tissue', numeric: true },
 ]
 
+// ⚠⚠ ONE FUNCTION DECIDES WHICH TOPOLOGY BADGE A ROW WEARS (D-133 am. 1). It used to be a nested
+// ternary inside the JSX, which is not a thing another part of the surface can ask a question of —
+// so a legend could not know which categories the table is actually showing without re-deriving
+// them, and a re-derivation is a second definition waiting to disagree with the first.
+export function topologyBadgeKey(r) {
+  if (r.folded === false) return r.cohort_fold ? 'not_folded_here' : 'not_folded'
+  if (r.topology === 'intermittent') return 'intermittent'
+  if (r.topology === 'no_accepted_segment') return 'gpi'
+  if (r.topology === 'contiguous') return 'contiguous'
+  // ⚠ anything else is NOT contiguous — see the badge below. `unknown` means nobody derived it;
+  // anything else means it was derived against a manifest that has since moved.
+  return r.topology === 'unknown' ? 'not_derived' : 'derivation_stale'
+}
+
+// ⚠⚠ THE ACRONYM, SPELT OUT (owner ruling, 2026-09-08). "GPI-anchored" is four letters that mean
+// nothing to a reader who does not already know them, and the badge said only that. The expansion
+// lives HERE, once, and both the badge tooltip and the legend read it — a second copy is how a
+// tooltip and a legend come to define the same word differently.
+export const GPI_EXPANSION = 'glycosylphosphatidylinositol'
+export const GPI_MEANING =
+  `GPI-anchored — held on the outside of the cell by a ${GPI_EXPANSION} lipid anchor instead of by `
+  + 'crossing the membrane, so the whole mature chain is outward-facing. UniProt records no '
+  + 'topological domains for these BY DESIGN, so the absence is a different molecular architecture '
+  + '— not missing data, and not an intermittent surface.'
+
+// ⚠⚠ THE TOPOLOGY LEGEND (D-133 am. 1). The column has said `contiguous` / `intermittent (7)` /
+// `GPI / no segment` / `not derived` / `derivation out of date` since D-087 and defined none of
+// them on the page. Every one of those is a category with a cause, and a badge whose cause is only
+// in a tooltip is a badge most readers meet as jargon.
+// ⚠ `always: true` for the three standing categories; the rest appear only when a row actually
+// wears the badge — a legend that explains absent categories is the wall the owner ruled against.
+export const TOPOLOGY_LEGEND = [
+  { key: 'contiguous', term: 'contiguous', always: true,
+    meaning: 'the outward-facing part is one unbroken stretch, and that whole stretch is what was '
+      + 'folded.' },
+  { key: 'intermittent', term: 'intermittent (n)', always: true,
+    meaning: 'the outward-facing part arrives in n separate segments. Only the LARGEST of them was '
+      + 'folded; the others were left out, and the row says how many amino acids that was.' },
+  { key: 'gpi', term: 'GPI / no segment', always: true, meaning: GPI_MEANING },
+  { key: 'not_derived', term: 'not derived',
+    meaning: 'the segment derivation has not been run for this protein. Nothing about its shape is '
+      + 'claimed here.' },
+  { key: 'derivation_stale', term: 'derivation out of date',
+    meaning: 'the segments were derived against an older manifest than the file on disk, so the '
+      + 'stale numbers are withheld rather than shown.' },
+  { key: 'not_folded', term: 'NOT FOLDED / NOT FOLDED HERE',
+    meaning: 'no structure was produced for this protein in the census. NOT FOLDED HERE means it '
+      + 'was folded among the 82 ranked targets and not here — the row says which of the three '
+      + 'reasons applies.' },
+]
+
+// ⚠ The Structure column's four kinds, defined in the same block (D-133 am. 1). The TERM is the
+// API's own label, read off the rows — this list carries the meaning and never a second spelling.
+export const STRUCTURE_LEGEND = [
+  { kind: 'assembled',
+    meaning: 'several folds of overlapping tile windows, joined where they overlap by per-residue '
+      + 'confidence. ⚠ Not superimposed, and the seam is not solved — so it stays provisional.' },
+  { kind: 'single-pass',
+    meaning: 'one fold of the whole outward-facing span in a single pass — no tiles, no seam.' },
+  { kind: 'tiles_only',
+    meaning: 'tile folds exist for this protein and have not been assembled into a parent '
+      + 'structure. A tile window is not the outward-facing region.' },
+  { kind: 'mucin',
+    meaning: 'out of class for this pipeline and never folded here.' },
+  { kind: 'none', term: 'not recorded',
+    meaning: 'no structure kind is recorded on the row. A blank is a missing field, never an '
+      + 'implied single pass.' },
+]
+
+// ⚠ The order the fold-type chips appear in, and it is NOT a ranking — the two folded kinds first
+// because they are what a reader came for, then the two absences, then the unrecorded rows.
+export const KIND_ORDER = ['assembled', 'single-pass', 'tiles_only', 'mucin', 'none']
+
 // ⚠ The four statuses, rendered as words rather than as a token. The three REFUSAL causes stay
 // distinct — pooling 1,225 + 58 + 10 into one "n/a" would lose the reason, and an absence is a
 // category with a cause.
@@ -155,9 +228,30 @@ export default function CensusTable({ rows, onSelect }) {
   const [showAll, setShowAll] = useState(false)
   const [lens, setLens] = useState('best_panel')
   const [excludeCritical, setExcludeCritical] = useState(false)
-  const [assembledOnly, setAssembledOnly] = useState(false)
+  // ⚠ D-133 am. 1: the fold-type filter, 'all' by default. A default of 'assembled' would be the
+  // page arriving having chosen, which is the same bar the default SORT answers to (D-102).
+  const [kindFilter, setKindFilter] = useState('all')
 
   const lensed = useMemo(() => withLens(rows, lens), [rows, lens])
+
+  // ⚠⚠ THE CHIPS ARE DERIVED FROM THE ROWS, not typed. Each chip carries its own count, and the
+  // LABEL is the API's (`assembled (provisional)`, `tiles only`, …) so the filter cannot come to
+  // spell a category differently from the column it filters. A kind absent from the data has no
+  // chip: a control that can only empty the table is a broken control.
+  const kinds = useMemo(() => {
+    const n = new Map()
+    const labels = new Map()
+    for (const r of rows) {
+      const k = r.structure_kind ?? 'none'
+      n.set(k, (n.get(k) ?? 0) + 1)
+      if (!labels.has(k) && r.structure_kind_label) labels.set(k, r.structure_kind_label)
+    }
+    return KIND_ORDER.filter((k) => n.has(k)).map((k) => ({
+      key: k,
+      n: n.get(k),
+      label: labels.get(k) ?? 'not recorded',
+    }))
+  }, [rows])
 
   const shown = useMemo(() => {
     const col = COLUMNS.find((c) => c.key === sort.key) ?? COLUMNS[0]
@@ -166,11 +260,13 @@ export default function CensusTable({ rows, onSelect }) {
     const base = excludeCritical ? lensed.filter((r) => r.critical_n === 0) : lensed
     // ⚠ D-133: the same shape — an independent criterion on its own edge. It narrows the list and
     // subtracts from no figure, and it is a CATEGORY filter, so it orders nothing.
-    const kinded = assembledOnly ? base.filter((r) => r.structure_kind === 'assembled') : base
+    const kinded = kindFilter === 'all'
+      ? base
+      : base.filter((r) => (r.structure_kind ?? 'none') === kindFilter)
     return filterRows(kinded, query)
       .slice()
       .sort((a, b) => compare(a, b, col.key, col.numeric, sort.dir))
-  }, [lensed, query, sort, excludeCritical, assembledOnly])
+  }, [lensed, query, sort, excludeCritical, kindFilter])
 
   const declared = rows.find((r) => r.staining)?.staining
   // ⚠ counted, not assumed: the table holds two populations and each count states which
@@ -184,6 +280,17 @@ export default function CensusTable({ rows, onSelect }) {
   // ⚠ D-133: a count of census ACCESSIONS whose representative is an assembled parent. It is not
   // the 45 assembled parent JOBS of D-132 and must never be printed as that figure.
   const assembled = rows.filter((r) => r.structure_kind === 'assembled').length
+  // ⚠ D-133 am. 1: the legend explains what the table SHOWS. A badge the rows never wear is not
+  // explained — `always` marks the three categories that are properties of the census itself.
+  const badgesPresent = new Set(rows.map(topologyBadgeKey))
+  const topologyLegend = TOPOLOGY_LEGEND.filter((t) => t.always || (
+    t.key === 'not_folded'
+      ? badgesPresent.has('not_folded') || badgesPresent.has('not_folded_here')
+      : badgesPresent.has(t.key)
+  ))
+  const structureLegend = STRUCTURE_LEGEND
+    .map((s) => ({ ...s, chip: kinds.find((k) => k.key === s.kind) }))
+    .filter((s) => s.chip)
   const capped = !showAll && shown.length > PAGE
   const visible = capped ? shown.slice(0, PAGE) : shown
 
@@ -217,27 +324,46 @@ export default function CensusTable({ rows, onSelect }) {
         />
       </label>
 
-      {/* ⚠⚠ THE ASSEMBLED FILTER (D-133), and the caveat rides WITH it. Narrowing to the
-          seam-spliced proteins must not read as promoting them: an assembly is several tile folds
-          glued by pLDDT overlap, so the control says so where it is clicked rather than in fine
-          print elsewhere. ⚠ Rendered only when the list actually holds one — a checkbox that can
-          only empty the table is a broken control, and the count states its own denominator. */}
-      {assembled > 0 && (
-        <label className="census-kind-filter">
-          <input
-            type="checkbox"
-            checked={assembledOnly}
-            onChange={(e) => setAssembledOnly(e.target.checked)}
-          />{' '}
-          Show only the <strong>{assembled.toLocaleString()}</strong>{' '}
-          {plural(assembled, 'protein')} <strong>assembled from tiles</strong> — of{' '}
-          {rows.length.toLocaleString()} listed
-          <span className="caveat">
-            {' '}⚠ assembled by pLDDT overlap, not superimposed. The seam is not solved, so
-            &ldquo;assembled&rdquo; is provisional — it says how the structure was made, never how
-            good it is.
-          </span>
-        </label>
+      {/* ⚠⚠ THE FOLD-TYPE FILTER (D-133, required by the owner follow-up 2026-09-08). Chips rather
+          than a hunt through 2,700 badges: one click gets the seam-spliced proteins on their own.
+          ⚠ It is a CATEGORY filter — it narrows the list and orders nothing, and 'all' is the
+          default because a page arriving pre-narrowed has chosen for the reader.
+          ⚠ Each chip states its own count, and the labels come off the rows rather than being
+          typed here, so the filter cannot spell a kind differently from the column it filters. */}
+      {kinds.length > 1 && (
+        <div className="census-kind-filter" role="group" aria-label="Filter by fold type">
+          <span className="kind-filter-legend">Fold type</span>
+          <button
+            type="button"
+            className={`chip${kindFilter === 'all' ? ' chip-on' : ''}`}
+            aria-pressed={kindFilter === 'all'}
+            onClick={() => setKindFilter('all')}
+          >
+            all {rows.length.toLocaleString()}
+          </button>
+          {kinds.map((k) => (
+            <button
+              key={k.key}
+              type="button"
+              className={`chip${kindFilter === k.key ? ' chip-on' : ''}`}
+              aria-pressed={kindFilter === k.key}
+              onClick={() => setKindFilter(k.key)}
+            >
+              {k.label} {k.n.toLocaleString()}
+            </button>
+          ))}
+          {/* ⚠⚠ THE CAVEAT ARRIVES WITH THE ACT. Narrowing to the assemblies must not read as
+              promoting them, so the moment the reader is looking at nothing but assemblies the
+              surface says what an assembly is. The legend below carries it unconditionally. */}
+          {kindFilter === 'assembled' && (
+            <p className="caveat">
+              ⚠ These {assembled.toLocaleString()} {plural(assembled, 'protein')} are{' '}
+              <strong>assembled from tiles</strong>: joined by pLDDT overlap, not superimposed. The
+              seam is not solved, so &ldquo;assembled&rdquo; is provisional — it says how the
+              structure was made, never how good it is.
+            </p>
+          )}
+        </div>
       )}
 
       {/* ⚠⚠ THE LENS CONTROL. D-102's condition is "state what it is", and this is where it is
@@ -344,6 +470,39 @@ export default function CensusTable({ rows, onSelect }) {
         </p>
       )}
 
+      {/* ⚠⚠ THE LEGEND (D-133 am. 1), and it sits HERE — against the header row the words appear
+          in, not in a glossary elsewhere on the site. Every one of these badges is a category with
+          a cause, and until now the page printed the category and kept the cause in a tooltip.
+          ⚠ Same spirit as the staining lens block above: state what a word means where it is read.
+          ⚠ It lists only the badges these rows actually wear (plus the three standing topology
+          categories), because a legend for absent categories is the wall it must not become. */}
+      <div className="census-legend">
+        {structureLegend.length > 0 && (
+          <>
+            <h4>What the Structure column says</h4>
+            <dl className="legend-list">
+              {structureLegend.map((s) => (
+                <div className="legend-row" key={s.kind}>
+                  {/* ⚠ the TERM is the API's own label wherever there is one — this block defines
+                      the categories and never re-spells them. */}
+                  <dt>{s.term ?? s.chip.label}</dt>
+                  <dd>{s.meaning}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
+        <h4>What the Topology column says</h4>
+        <dl className="legend-list">
+          {topologyLegend.map((t) => (
+            <div className="legend-row" key={t.key}>
+              <dt>{t.term}</dt>
+              <dd>{t.meaning}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
       <table>
         <thead>
           <tr>
@@ -364,6 +523,9 @@ export default function CensusTable({ rows, onSelect }) {
         <tbody>
           {visible.map((r) => {
             const band = bandFor(r.mean_plddt)
+            // ⚠ D-133 am. 1: the SAME function the legend asks, so the badge a row wears and the
+            // entry that explains it can never come from two different rules.
+            const topo = topologyBadgeKey(r)
             return (
               <tr key={r.id ?? r.accession} className={r.folded === false ? 'row-unfolded' : undefined}>
                 <td>
@@ -392,26 +554,30 @@ export default function CensusTable({ rows, onSelect }) {
                   {/* ⚠ The row carries the same three-way distinction as the card. A tooltip saying
                       "waiting on rented capacity" over a protein whose fold exists is the same
                       false claim, just smaller and harder to notice. */}
-                  {r.folded === false ? (
+                  {topo === 'not_folded' || topo === 'not_folded_here' ? (
                     <span className="badge badge-unfolded" title={notFoldedTitle(r)}>
-                      {r.cohort_fold ? 'NOT FOLDED HERE' : 'NOT FOLDED'}
+                      {topo === 'not_folded_here' ? 'NOT FOLDED HERE' : 'NOT FOLDED'}
                     </span>
-                  ) : r.topology === 'intermittent' ? (
+                  ) : topo === 'intermittent' ? (
                     <span className="badge badge-intermittent" title={`${r.segment_count} extracellular segments; ${r.discarded_aa} aa not folded`}>
                       intermittent ({r.segment_count})
                     </span>
-                  ) : r.topology === 'no_accepted_segment' ? (
-                    <span className="badge" title="GPI-anchored: no topological domains by design">
+                  ) : topo === 'gpi' ? (
+                    // ⚠⚠ THE TOOLTIP SPELLS THE ACRONYM (owner ruling 2026-09-08). It read
+                    // "GPI-anchored: no topological domains by design" — four letters explaining
+                    // four letters. It now carries the expansion, from the same constant the
+                    // legend reads.
+                    <span className="badge" title={GPI_MEANING}>
                       GPI / no segment
                     </span>
-                  ) : r.topology === 'contiguous' ? (
+                  ) : topo === 'contiguous' ? (
                     <span className="badge badge-contiguous">contiguous</span>
                   ) : (
                     // ⚠ Anything else is NOT contiguous. The final branch used to swallow
                     // 'unknown' and every derivation verdict into the benign label — a default
                     // that asserts the safe case is how a surface states something nobody measured.
                     <span className="badge badge-unknown" title={r.derivation_note ?? undefined}>
-                      {r.topology === 'unknown' ? 'not derived' : 'derivation out of date'}
+                      {topo === 'not_derived' ? 'not derived' : 'derivation out of date'}
                     </span>
                   )}
                 </td>

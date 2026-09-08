@@ -166,15 +166,20 @@ describe('stale derivation', () => {
     scored: false }
 
   // ⚠ The old final branch labelled ANYTHING that was not intermittent/GPI as "contiguous".
+  // ⚠⚠ SCOPED TO THE TABLE BODY AT D-133 am. 1, and the guarantee is unchanged. The page now
+  // carries a legend that DEFINES `contiguous` above the header row, so a page-wide
+  // `queryByText('contiguous')` finds the definition and says nothing about what any ROW is
+  // labelled. The claim was always about the row; the query had been standing in for it.
   it('never labels a stale row contiguous', () => {
-    render(<CensusTable rows={[STALE]} />)
-    expect(screen.queryByText('contiguous')).not.toBeInTheDocument()
-    expect(screen.getByText(/derivation out of date/i)).toBeInTheDocument()
+    const { container } = render(<CensusTable rows={[STALE]} />)
+    const body = within(container.querySelector('tbody'))
+    expect(body.queryByText('contiguous')).not.toBeInTheDocument()
+    expect(body.getByText(/derivation out of date/i)).toBeInTheDocument()
   })
 
   it('distinguishes "not derived" from "derived against the wrong manifest"', () => {
-    render(<CensusTable rows={[{ ...STALE, topology: 'unknown' }]} />)
-    expect(screen.getByText(/not derived/i)).toBeInTheDocument()
+    const { container } = render(<CensusTable rows={[{ ...STALE, topology: 'unknown' }]} />)
+    expect(within(container.querySelector('tbody')).getByText(/not derived/i)).toBeInTheDocument()
   })
 
   // ⚠⚠ Withheld, not missing — and never the stale numbers.

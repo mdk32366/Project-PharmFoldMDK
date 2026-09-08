@@ -111,12 +111,84 @@ def test_a_row_with_no_kind_states_the_absence():
     assert "never an implied single-pass fold" in CENSUS_TABLE
 
 
-def test_the_assembled_filter_carries_the_assembler_caveat():
+def test_the_fold_type_filter_carries_the_assembler_caveat():
     """Narrowing to the seam-spliced proteins must not read as promoting them."""
     plain = _plain(CENSUS_TABLE)
     assert "assembled from tiles" in plain
     assert "not superimposed" in plain
     assert "seam is not solved" in plain
+
+
+# ------------------------------------------------- D-133 am. 1: legend + chips
+
+
+def test_one_rule_decides_the_topology_badge():
+    """⚠⚠ The legend and the cell must not derive the badge separately. A nested ternary in the
+    JSX is not a thing another surface can ask a question of, which is why no legend existed."""
+    assert "export function topologyBadgeKey" in CENSUS_TABLE
+    # the cell asks it rather than re-testing r.topology itself
+    assert "const topo = topologyBadgeKey(r)" in CENSUS_TABLE
+    assert "r.topology === 'contiguous' ?" not in CENSUS_TABLE
+    # and so does the legend's presence filter
+    assert "rows.map(topologyBadgeKey)" in CENSUS_TABLE
+
+
+def test_the_legend_defines_the_badges_the_column_prints():
+    """The column has printed these words since D-087 and defined none of them."""
+    plain = _plain(CENSUS_TABLE)
+    assert "export const topology_legend".lower() in plain
+    for term in ("contiguous", "intermittent (n)", "gpi / no segment", "not derived",
+                 "derivation out of date", "not folded / not folded here"):
+        assert term in plain, term
+
+
+def test_the_gpi_acronym_is_spelt_out_once_and_reaches_the_tooltip():
+    """⚠⚠ The owner's ruling: four letters must not be explained with the same four letters.
+    ⚠ ONE constant — a second copy is how a tooltip and a legend define one word differently."""
+    assert CENSUS_TABLE.count("'glycosylphosphatidylinositol'") == 1
+    assert "title={GPI_MEANING}" in CENSUS_TABLE
+    plain = _plain(CENSUS_TABLE)
+    assert "by design" in plain
+    assert "not missing data" in plain
+    # ⚠ the old tooltip explained GPI with GPI. It must not survive as a TOOLTIP — the comment
+    # quoting it is the record of what was replaced, which is the opposite of the defect.
+    assert 'title="GPI-anchored: no topological domains by design"' not in CENSUS_TABLE
+
+
+def test_the_fold_type_chips_default_to_all_and_state_their_own_counts():
+    """A page arriving pre-narrowed has chosen for the reader — D-102's bar, one control along."""
+    assert "useState('all')" in CENSUS_TABLE
+    assert "export const KIND_ORDER" in CENSUS_TABLE
+    # ⚠ labels read off the rows, never typed beside the filter
+    assert "labels.get(k) ?? 'not recorded'" in CENSUS_TABLE
+    # ⚠ a control whose only option is 'all' is not a control
+    assert "kinds.length > 1 &&" in CENSUS_TABLE
+    assert 'aria-pressed={kindFilter' in CENSUS_TABLE
+
+
+def test_the_amendment_entry_exists_and_names_the_citation_finding():
+    """⚠⚠ The D-081 citation for the GPI by-design claim resolves to an entry that never mentions
+    GPI. The amendment must REPORT that rather than propagate it — and must not erase the existing
+    citations, because a citation removed is a finding erased."""
+    assert re.search(r"^#### D-133 amendment 1 —", LOG, re.M), "the amendment must be defined"
+    entry = _plain(_d133_entry())
+    assert "f-025" in entry, "the real authority for the by-design category"
+    assert "6,836 characters" in entry, "the measurement, not a recollection"
+    assert "left in place and named here" in entry
+    # and the parent's out-list is not quietly re-opened by the amendment
+    for phrase in ("no rent", "no emit", "no fly write"):
+        assert phrase in entry, phrase
+
+
+def test_the_by_design_claim_is_not_attributed_to_d081_on_the_surface():
+    """⚠ D-081 is the span-definition freeze: 0 occurrences of 'GPI', 0 of 'anchor'. The legend
+    states the claim in plain words with no id attached rather than repeating the mis-citation."""
+    i = LOG.index("### D-081 —")
+    d081 = LOG[i: LOG.index("\n### ", i + 10)]
+    assert "GPI" not in d081 and "anchor" not in d081.lower(), (
+        "if D-081 ever gains the GPI rule, amend D-133 am. 1 rather than quietly re-citing it"
+    )
+    assert "D-081" not in CENSUS_TABLE
 
 
 def test_the_ui_kinds_are_the_api_kinds():

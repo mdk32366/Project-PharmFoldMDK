@@ -8,7 +8,7 @@
 import { fireEvent, render as rtlRender, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import CensusTable, { COLUMNS } from './CensusTable.jsx'
+import CensusTable, { COLUMNS, topologyBadgeKey } from './CensusTable.jsx'
 
 const render = (ui) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>)
 
@@ -93,11 +93,14 @@ describe('D-133 — the census sorts on structure kind', () => {
 })
 
 describe('D-133 — the cell says what the kind is, and says when it has none', () => {
+  // ⚠ scoped to the body: the legend and the fold-type chips carry the same labels by design, so a
+  // page-wide count would measure the legend rather than the rows.
   it('renders the API label rather than a word of its own', () => {
-    render(<CensusTable rows={ROWS} />)
-    expect(screen.getAllByText('assembled (provisional)').length).toBe(2)
-    expect(screen.getAllByText('single-pass').length).toBe(2)
-    expect(screen.getByText('tiles only')).toBeInTheDocument()
+    const { container } = render(<CensusTable rows={ROWS} />)
+    const body = within(container.querySelector('tbody'))
+    expect(body.getAllByText('assembled (provisional)').length).toBe(2)
+    expect(body.getAllByText('single-pass').length).toBe(2)
+    expect(body.getByText('tiles only')).toBeInTheDocument()
   })
 
   it('carries the assembler note in the badge tooltip, so "assembled" is never bare', () => {
@@ -140,33 +143,155 @@ describe('D-133 — the cell says what the kind is, and says when it has none', 
   })
 })
 
-describe('D-133 — the assembled-only filter', () => {
-  it('offers the filter with its own count and narrows to the assembled rows', () => {
+// ── the fold-type filter (D-133 am. 1: bonus → required by the owner follow-up) ─────
+describe('D-133 am. 1 — the fold-type chips', () => {
+  const chip = (re) => screen.getByRole('button', { name: re })
+
+  it('offers one chip per kind present, each with its own count, defaulting to all', () => {
     render(<CensusTable rows={ROWS} />)
-    const box = screen.getByRole('checkbox', { name: /assembled from tiles/ })
-    expect(screen.getByText(/Show only the/).textContent).toMatch(/2 proteins/)
-    fireEvent.click(box)
+    expect(chip(/^all 5$/)).toHaveAttribute('aria-pressed', 'true')
+    expect(chip(/assembled \(provisional\) 2/)).toBeInTheDocument()
+    expect(chip(/single-pass 2/)).toBeInTheDocument()
+    expect(chip(/tiles only 1/)).toBeInTheDocument()
+  })
+
+  // ⚠⚠ MATT'S ASK: the stitched proteins on their own, without hunting badges.
+  it('narrows to the assembled rows on one click, and back again', () => {
+    render(<CensusTable rows={ROWS} />)
+    fireEvent.click(chip(/assembled \(provisional\) 2/))
     expect(accessions()).toEqual(['Q00002', 'Q00004'])
+    expect(chip(/assembled \(provisional\) 2/)).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(chip(/^all 5$/))
+    expect(accessions()).toHaveLength(5)
   })
 
-  it('prints the assembler caveat beside the control, not in a tooltip', () => {
+  it('filters on the other kinds too, not only on assembled', () => {
     render(<CensusTable rows={ROWS} />)
-    expect(screen.getByText(/not superimposed/)).toBeInTheDocument()
-    expect(screen.getByText(/seam is not solved/)).toBeInTheDocument()
+    fireEvent.click(chip(/tiles only 1/))
+    expect(accessions()).toEqual(['Q00003'])
   })
 
-  // ⚠ a control that can only empty the table is a broken control
-  it('does not offer the filter when nothing in the list is assembled', () => {
+  // ⚠ D-102's bar, one control along: a page arriving pre-narrowed has chosen for the reader.
+  it('does not arrive filtered', () => {
+    render(<CensusTable rows={ROWS} />)
+    expect(accessions()).toHaveLength(5)
+  })
+
+  // ⚠⚠ THE CAVEAT ARRIVES WITH THE ACT. Isolating the assemblies must not read as promoting them.
+  it('states what an assembly is once the reader is looking at nothing else', () => {
+    render(<CensusTable rows={ROWS} />)
+    fireEvent.click(chip(/assembled \(provisional\) 2/))
+    const caveat = screen.getByText(/not superimposed/)
+    expect(caveat.textContent).toMatch(/seam is not solved/)
+    expect(caveat.textContent).toMatch(/provisional/)
+    // ⚠ census ROWS, never D-132's 45 assembled parent JOBS — a different object.
+    expect(caveat.textContent).toMatch(/2 proteins/)
+    expect(caveat.textContent).not.toMatch(/45/)
+  })
+
+  // ⚠ a control whose only option is 'all' is not a control
+  it('does not render the chip row when every row is the same kind', () => {
     render(<CensusTable rows={[ROWS[0], ROWS[4]]} />)
-    expect(screen.queryByRole('checkbox', { name: /assembled from tiles/ })).toBeNull()
+    expect(screen.queryByRole('group', { name: /fold type/i })).toBeNull()
+  })
+})
+
+// ── the badge legend (D-133 am. 1, owner follow-up 2026-09-08) ──────────────────────
+//
+// ⚠⚠ The column has printed `contiguous` / `intermittent (7)` / `GPI / no segment` since D-087 and
+// defined none of them. A badge whose cause lives only in a tooltip is jargon to most readers.
+describe('D-133 am. 1 — the topology legend', () => {
+  const LEGEND_ROWS = [
+    { ...ROWS[0], id: 11, accession: 'Q10001', topology: 'contiguous' },
+    { ...ROWS[0], id: 12, accession: 'Q10002', topology: 'intermittent', segment_count: 7,
+      discarded_aa: 558 },
+    { ...ROWS[0], id: 13, accession: 'Q10003', topology: 'no_accepted_segment' },
+  ]
+
+  it('defines the three standing topology categories in plain words', () => {
+    const { container } = render(<CensusTable rows={LEGEND_ROWS} />)
+    const legend = container.querySelector('.census-legend')
+    expect(legend.textContent).toMatch(/one unbroken stretch/)
+    expect(legend.textContent).toMatch(/Only the LARGEST of them was folded/)
+    expect(legend.textContent).toMatch(/no topological domains for these BY DESIGN/)
   })
 
-  // ⚠⚠ THE COUNT STATES ITS OWN DENOMINATOR, and it counts census ROWS. D-132's 45 is a count of
-  // assembled parent JOBS — a different object, and printing it here would be a false provenance.
-  it('states the count against the rows it holds, never against the D-132 parent inventory', () => {
-    render(<CensusTable rows={ROWS} />)
-    const t = screen.getByText(/Show only the/).textContent
-    expect(t).toMatch(/of 5 listed/)
-    expect(t).not.toMatch(/45/)
+  // ⚠⚠ THE OWNER'S RULING: four letters must not be explained with the same four letters.
+  it('spells the GPI acronym out', () => {
+    const { container } = render(<CensusTable rows={LEGEND_ROWS} />)
+    expect(container.querySelector('.census-legend').textContent)
+      .toMatch(/glycosylphosphatidylinositol/)
+  })
+
+  // ⚠ by design ≠ missing. The census holds 125 of these and they are a different architecture.
+  it('says the GPI absence is by design and not missing data', () => {
+    const { container } = render(<CensusTable rows={LEGEND_ROWS} />)
+    const t = container.querySelector('.census-legend').textContent
+    expect(t).toMatch(/BY DESIGN/)
+    expect(t).toMatch(/not missing data/)
+  })
+
+  it('puts the same spelt-out meaning on the GPI badge tooltip, not just in the legend', () => {
+    const { container } = render(<CensusTable rows={LEGEND_ROWS} />)
+    const badge = [...container.querySelectorAll('tbody .badge')]
+      .find((b) => /GPI \/ no segment/.test(b.textContent))
+    expect(badge.getAttribute('title')).toMatch(/glycosylphosphatidylinositol/)
+    expect(badge.getAttribute('title')).toMatch(/BY DESIGN/)
+  })
+
+  // ⚠ readable, not a wall: a legend entry for a badge no row wears explains nothing.
+  it('explains the derivation badges only when a row actually wears one', () => {
+    const { container, unmount } = render(<CensusTable rows={LEGEND_ROWS} />)
+    expect(container.querySelector('.census-legend').textContent)
+      .not.toMatch(/derived against an older manifest/)
+    unmount()
+    const stale = render(<CensusTable rows={[{ ...LEGEND_ROWS[0], topology: 'derivation_stale' }]} />)
+    expect(stale.container.querySelector('.census-legend').textContent)
+      .toMatch(/derived against an older manifest/)
+  })
+
+  it('explains NOT FOLDED only when the list holds a never-folded row', () => {
+    const { container, unmount } = render(<CensusTable rows={LEGEND_ROWS} />)
+    expect(container.querySelector('.census-legend').textContent).not.toMatch(/NOT FOLDED HERE/)
+    unmount()
+    const mixed = render(<CensusTable rows={[
+      LEGEND_ROWS[0],
+      { id: null, accession: 'P04626', gene: 'ERBB2', label: 'erbB-2', folded: false,
+        not_folded_copy: 'not folded — above the local ceiling' },
+    ]} />)
+    expect(mixed.container.querySelector('.census-legend').textContent).toMatch(/NOT FOLDED HERE/)
+  })
+
+  // ⚠ the legend defines the NEW column too, and 'tiles only' / 'mucin' are opaque without it
+  it('defines the structure kinds that are present, and not the ones that are absent', () => {
+    const { container } = render(<CensusTable rows={ROWS} />)
+    const t = container.querySelector('.census-legend').textContent
+    expect(t).toMatch(/joined where they overlap by per-residue confidence/)
+    expect(t).toMatch(/A tile window is not the outward-facing region/)
+    expect(t).not.toMatch(/out of class for this pipeline/)   // no mucin row in this fixture
+  })
+
+  it('keeps the assembler caveat in the legend unconditionally, not only under the filter', () => {
+    const { container } = render(<CensusTable rows={ROWS} />)
+    const t = container.querySelector('.census-legend').textContent
+    expect(t).toMatch(/Not superimposed, and the seam is not solved/)
+    expect(t).toMatch(/provisional/)
+  })
+})
+
+// ⚠⚠ ONE RULE DECIDES THE BADGE, so the legend cannot explain a category the cell never renders.
+describe('D-133 am. 1 — topologyBadgeKey is the single rule', () => {
+  it('agrees with the badge the row wears, case by case', () => {
+    expect(topologyBadgeKey({ topology: 'contiguous' })).toBe('contiguous')
+    expect(topologyBadgeKey({ topology: 'intermittent' })).toBe('intermittent')
+    expect(topologyBadgeKey({ topology: 'no_accepted_segment' })).toBe('gpi')
+    expect(topologyBadgeKey({ topology: 'unknown' })).toBe('not_derived')
+    expect(topologyBadgeKey({ topology: 'derivation_stale' })).toBe('derivation_stale')
+    // ⚠ null is NOT 'not derived': nothing recorded a verdict, so it takes the stale branch the
+    // cell takes, rather than the benign one.
+    expect(topologyBadgeKey({ topology: null })).toBe('derivation_stale')
+    expect(topologyBadgeKey({ folded: false })).toBe('not_folded')
+    expect(topologyBadgeKey({ folded: false, cohort_fold: { mean_plddt: 70 } }))
+      .toBe('not_folded_here')
   })
 })

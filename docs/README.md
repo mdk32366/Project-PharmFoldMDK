@@ -466,8 +466,93 @@ So the rule is not "be careful" — it is:
   (unscored by construction; a category groups, a value ranks) · D-102 (a reader-chosen sort is a
   lens; default order is not the page's to choose) · D-118 (`structure_kind` identity, one row per
   accession, assembler-not-Kabsch) · D-109 ruling 7 (assembled stays out of F-004) · D-132
-  (inventory 45 / wave slice 27) · D-016 (provenance) · Matt GO 2026-09-08 · tip `e11c7fb`
+  (inventory 45 / wave slice 27) ·   D-016 (provenance) · Matt GO 2026-09-08 · tip `e11c7fb`
   (D-132) read directly for the current state of `COLUMNS` and the badge.
+
+#### D-133 amendment 1 — the badge legend the census never had, the fold-type filter promoted from bonus to required, and the acronym that explained itself with itself
+
+- **Date:** 2026-09-08 · **Status:** accepted on the owner follow-up GO of the same day, into the
+  **same PR** (explicitly not a second one). UI only. No API change, no ops, no rent, no emit, no
+  Fly write, no F-004, rental stays **CLOSED**.
+- **What the follow-up asked, in its own terms.** A **topology legend** near the Topology column
+  defining `contiguous`, `intermittent`, `GPI / no segment` — *with the acronym expanded* — and the
+  derivation badges *if shown*; the Structure column **stays mandatory**; the assembled filter is
+  **promoted from bonus to required** as a chip or control so the stitched proteins can be had
+  *"without hunting badges"*; and the **GPI badge tooltip must spell glycosylphosphatidylinositol**
+  rather than repeating the four letters. Default sort still accession.
+- **Decision.**
+  1. **`topologyBadgeKey(r)` is extracted and exported, and that is the load-bearing change.** The
+     column's badge was a nested ternary inside the JSX — correct, and **unaskable**: a legend
+     could not find out which categories the table actually renders without re-deriving them, and
+     a re-derivation is a second definition waiting to disagree with the first. The cell and the
+     legend now ask **one** function. ⚠ The refactor is faithful, including the branch nobody
+     states out loud: `topology: null` on a folded row takes the **stale** branch, not the benign
+     one, exactly as the shipped ternary did.
+  2. **The legend sits directly above the header row**, not in a site glossary — the same principle
+     as the staining-lens block (**D-102**): state what a word means where it is read. One line per
+     category, a definition list rather than prose, because the follow-up asked for *readable, not
+     a wall*.
+  3. **It explains what these rows actually show.** The three standing topology categories are
+     always defined; `not derived`, `derivation out of date` and `NOT FOLDED / NOT FOLDED HERE`
+     appear **only when a row wears the badge** (the follow-up's *"if shown"*). The Structure kinds
+     are defined the same way, and the **term** is the API's own label wherever there is one — the
+     legend supplies meanings, never a second spelling.
+  4. **The GPI expansion is one constant** (`GPI_EXPANSION` / `GPI_MEANING`), read by both the
+     badge `title` and the legend entry. The tooltip previously read *"GPI-anchored: no topological
+     domains by design"* — four letters explained with the same four letters. Two copies of an
+     expansion is how a tooltip and a legend come to define one word differently.
+  5. **The filter is required, and it becomes fold-type CHIPS rather than one checkbox.** `all` ·
+     `assembled (provisional)` · `single-pass` · `tiles only` · `mucin — not folded` ·
+     `not recorded`, each with **its own count**, each label read off the rows. It answers the ask
+     directly (one click isolates the assemblies) and it also serves the neighbouring question the
+     checkbox could not — *which proteins have tiles and no assembly yet*. ⚠ Default is **`all`**:
+     a page arriving pre-narrowed has chosen for the reader, which is D-102's bar one control
+     along. ⚠ The chip row is **absent** when the list holds only one kind — a control whose only
+     option is *all* is not a control.
+  6. **The assembler caveat now arrives with the act.** It renders when the `assembled` chip is in
+     force — the moment the reader is looking at nothing but assemblies — and it stands
+     **unconditionally** in the legend. `assembled` stays **provisional**; the seam is not solved.
+- **⚠ A provenance finding, and it is reported rather than propagated (D-016).** The claim *"UniProt
+  has no topological domains for GPI-anchored proteins **by design**"* is cited across this repo —
+  and in the follow-up itself — as **(D-081)**. **D-081 does not contain it.** Measured by reading
+  the entry, not by recalling it: D-081's body is **6,836 characters** and contains **0**
+  occurrences of `GPI`, **0** of `anchor`, and **1** of `topolog` — it is the *span-definition
+  freeze* for the 82, correctly cited for that and only that. The category actually comes from
+  **`F-025`** (`no_topology` reported an absence that was five different things), whose table row 3
+  reads *"GPI-anchored: no topology **by design** … 125"*. So: the legend states the claim **in
+  plain words with no id attached**, this amendment cites **F-025** as the authority, and the
+  existing `(D-081)` citations in **F-037** and **D-087** are **left in place and named here**
+  rather than quietly corrected — a citation removed is a finding erased. ⚠ This spends **no** `F-`
+  id and does **not** repair the `F-` or `D-` next-free pointers; both stay the owner's.
+- **⚠ Two existing assertions were SCOPED, and the reason is recorded rather than absorbed.**
+  `CensusTable.test.jsx` asserted page-wide that the word `contiguous` appears nowhere for a stale
+  row, and that `not derived` appears. A page that now **defines** those words satisfies neither
+  query for the reason the tests were written. Both are re-scoped to `tbody` — the claim was always
+  about what a **row** is labelled, and the page-wide query had been standing in for it. ⚠ Scoped,
+  never deleted: the guarantee is identical and still reddens if the stale branch goes back to
+  labelling a row `contiguous`.
+- **⚠ What this does NOT do.** Not a Method surface change and not a Spec §7 obligation. Not F-004
+  ingest (**D-109 ruling 7** untouched). Not a ranking — a chip narrows and orders nothing, and the
+  default sort is still **accession**. Not a seam claim. Not a re-count: **D-132**'s 45 parents and
+  the 27-wave slice inside it are unchanged, and the chip counts are census **rows**, a different
+  object, with a test asserting `45` never appears beside them. No rent, no emit, no Deploy, no
+  GPU, no `hold48_*.py` edit, no Fly write.
+- **Deep-learning justification.** Both halves serve auditing the network's output rather than
+  decorating it. The chips isolate the **multi-pass** population — the structures ESMFold produced
+  as several tile folds glued by per-residue confidence — from the single-pass ones, which is the
+  comparison the hold-48 tiling result lives or dies by. The legend states what the categories
+  around those structures mean, including the one that is **not** a measurement failure at all
+  (**GPI**: 125 census proteins whose missing topology is a different molecular architecture). No
+  network, no inference, no threshold moves.
+- **Consequences.** `ui/src/components/CensusTable.jsx`, `ui/src/styles.css`,
+  `ui/src/components/CensusTable.structure.test.jsx`, `ui/src/components/CensusTable.test.jsx`
+  (two scoped assertions), `tests/test_d133_census_structure_column.py`, `ARCHITECTURE.md`.
+- **Cite:** the parent `D-133` · D-087 (the badges this legend defines) · D-102 (state the lens
+  where it is read; the reader chooses, the page does not arrive chosen) · **F-025** (the
+  `no_topology` conflation and the by-design GPI category, 125 proteins) · F-037 (`span_aa` is the
+  largest segment — the `intermittent` wording) · D-081 (span-definition freeze, cited for that and
+  **not** for the GPI claim) · D-118 / D-132 / D-109 ruling 7 (all unchanged) · D-016 · owner
+  follow-up GO 2026-09-08.
 
 ### D-132 — Assemble-inventory amend: the live unique assembled-parent count is 45, and the Wave1+Wave2 27 becomes a named historical slice inside it
 
