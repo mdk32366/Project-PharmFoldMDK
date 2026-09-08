@@ -35,6 +35,18 @@
     "as_of": "2026-09-05",
     "confidence": "derived"
   },
+  "conditions_reviewed_as_of": {
+    "value": "2026-09-08",
+    "source": "D-140: the day the pipeline programme fields were sourced — ClinicalTrials.gov REST API v2 reads plus a re-read of every row's own source_citation. Distinct from mapping_sourced_as_of (2026-07-27) and catalog_assembled_as_of (2026-09-05): three questions, three days, never collapsed (D-119 decision 5).",
+    "as_of": "2026-09-08",
+    "confidence": "reviewed"
+  },
+  "registry_artifact": {
+    "value": "data/adcs/artifacts/ctgov.pipeline.2026-09-08.json",
+    "source": "D-140: the raw ClinicalTrials.gov REST API v2 records and the negative lookups behind this file's cancer_type / conditions_verbatim / description, written once by scripts/fetch_pipeline_ctgov.py on 2026-09-08. Nothing under tests/ or core/ makes a network call (D-029).",
+    "as_of": "2026-09-08",
+    "confidence": "derived"
+  },
   "pipeline": [
     {
       "id": {
@@ -77,6 +89,26 @@
         "value": "Lancet Oncol 2026 IDeate-PanTumor01 ph1/2; JCO IDeate-Lung01 ph2; Daiichi Sankyo/Merck BLA Priority Review 2026-04-13, PDUFA 2026-10-10 (not approved as of retrieval)",
         "source": "data/adc_reference_mapping.csv source_citation on the ifinatamab deruxtecan row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "Extensive-stage Small-cell Lung Cancer",
+        "source": "ClinicalTrials.gov REST API v2 GET https://clinicaltrials.gov/api/v2/studies/NCT05280470 retrieved 2026-09-08, protocolSection.conditionsModule.conditions as returned (raw record stored in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json). NCT05280470 is the record whose registry acronym IDeate-Lung01 equals the trial this row's source_citation already named, and its interventions name Ifinatamab Deruxtecan (I-DXd). The citation's other trial, IDeate-PanTumor01, matched no registry acronym on that date and contributed nothing to this text.",
+        "as_of": "2026-09-08",
+        "confidence": "official"
+      },
+      "cancer_type": {
+        "value": [
+          "Small-cell lung cancer"
+        ],
+        "source": "reviewed reduction of this row's conditions_verbatim (ClinicalTrials.gov REST API v2 NCT05280470 Conditions, retrieved 2026-09-08). The token names the tumour only; the extensive-stage qualifier is not dropped, it stays in the stored text.",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": "Daiichi Sankyo/Merck — I-DXd, a CD276-directed ADC; IDeate-Lung01 (NCT05280470) in small-cell lung cancer.",
+        "source": "ClinicalTrials.gov REST API v2 GET https://clinicaltrials.gov/api/v2/studies/NCT05280470 retrieved 2026-09-08 gives leadSponsor.name = Daiichi Sankyo (stored in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json); this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) reads 'Daiichi Sankyo/Merck', which is the maker string quoted here.",
+        "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
     },
@@ -122,6 +154,34 @@
         "source": "data/adc_reference_mapping.csv source_citation on the ladiratuzumab vedotin row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
         "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "Triple Negative Breast Neoplasms; Small Cell Lung Cancer; Non-small Cell Lung Cancer, Squamous; Non-small Cell Lung Cancer, Non-squamous; Head and Neck Squamous Cell Carcinoma; Esophageal Squamous Cell Carcinoma; Gastric Adenocarcinoma; Gastroesophageal Junction Adenocarcinoma; Prostate Cancer; Melanoma",
+        "source": "ClinicalTrials.gov REST API v2 GET https://clinicaltrials.gov/api/v2/studies/NCT03310957 and https://clinicaltrials.gov/api/v2/studies/NCT04032704 retrieved 2026-09-08, protocolSection.conditionsModule.conditions as returned, joined with '; ' in that record order (raw records stored in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json). Both ids are read off this row's own source_citation, and both records' interventions name ladiratuzumab vedotin.",
+        "as_of": "2026-09-08",
+        "confidence": "official"
+      },
+      "cancer_type": {
+        "value": [
+          "Triple negative breast neoplasms",
+          "Small cell lung cancer",
+          "Non-small cell lung cancer",
+          "Head and neck squamous cell carcinoma",
+          "Esophageal squamous cell carcinoma",
+          "Gastric adenocarcinoma",
+          "Gastroesophageal junction adenocarcinoma",
+          "Prostate cancer",
+          "Melanoma"
+        ],
+        "source": "reviewed reduction of this row's conditions_verbatim (ClinicalTrials.gov REST API v2 NCT03310957 and NCT04032704 Conditions, retrieved 2026-09-08). The registry's own awkward wording is kept wherever reducing it further would produce a string neither record states; the squamous / non-squamous split stays in the stored text.",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": "Seagen — SGN-LIV1A, a SLC39A6-directed ADC in NCT03310957 and NCT04032704; discontinued from clinical development per this row's citation.",
+        "source": "ClinicalTrials.gov REST API v2 GET https://clinicaltrials.gov/api/v2/studies/NCT03310957 retrieved 2026-09-08 gives leadSponsor.name = Seagen Inc. (stored in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json); the agent code SGN-LIV1A and the discontinuation are this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
       }
     },
     {
@@ -165,6 +225,27 @@
         "value": "ABT-414 / Depatux-M; INTELLANCE-1 phase 3, glioblastoma",
         "source": "data/adc_reference_mapping.csv source_citation on the depatuxizumab mafodotin row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "Glioblastoma; Gliosarcoma",
+        "source": "ClinicalTrials.gov REST API v2 GET https://clinicaltrials.gov/api/v2/studies/NCT02573324 retrieved 2026-09-08, protocolSection.conditionsModule.conditions as returned (raw record stored in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json). The record's registry acronym Intellance1 matches the INTELLANCE-1 phase 3 this row's source_citation already named, and its interventions name Depatuxizumab mafodotin.",
+        "as_of": "2026-09-08",
+        "confidence": "official"
+      },
+      "cancer_type": {
+        "value": [
+          "Glioblastoma",
+          "Gliosarcoma"
+        ],
+        "source": "reviewed reduction of this row's conditions_verbatim (ClinicalTrials.gov REST API v2 NCT02573324 Conditions, retrieved 2026-09-08). This row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) independently reads 'glioblastoma'; gliosarcoma is the registry record's own second condition and is not in that citation.",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": "AbbVie — ABT-414, an EGFR-directed ADC; INTELLANCE-1 (NCT02573324) phase 3 in newly diagnosed glioblastoma.",
+        "source": "ClinicalTrials.gov REST API v2 GET https://clinicaltrials.gov/api/v2/studies/NCT02573324 retrieved 2026-09-08 gives leadSponsor.name = AbbVie (stored in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json); the agent code ABT-414 and the INTELLANCE-1 phase 3 framing are this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27).",
+        "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
     },
@@ -210,6 +291,24 @@
         "source": "data/adc_reference_mapping.csv source_citation on the LY3076226 row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
         "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "Advanced Cancer; Metastatic Cancer",
+        "source": "ClinicalTrials.gov REST API v2 GET https://clinicaltrials.gov/api/v2/studies/NCT02529553 retrieved 2026-09-08, protocolSection.conditionsModule.conditions as returned (raw record stored in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json). The id is read off this row's own source_citation and the record's interventions name LY3076226.",
+        "as_of": "2026-09-08",
+        "confidence": "official"
+      },
+      "cancer_type": {
+        "value": null,
+        "source": "ClinicalTrials.gov REST API v2 NCT02529553 retrieved 2026-09-08 states its Conditions as 'Advanced Cancer' and 'Metastatic Cancer', stored verbatim on this row. Neither names a tumour: this is an all-comers phase 1 in advanced or metastatic disease, and reducing it to a tumour type would be a guess (D-140 decision 5).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": "Eli Lilly and Company — an FGFR3-directed ADC; phase 1 all-comers study NCT02529553 in advanced or metastatic cancer.",
+        "source": "ClinicalTrials.gov REST API v2 GET https://clinicaltrials.gov/api/v2/studies/NCT02529553 retrieved 2026-09-08 gives leadSponsor.name = Eli Lilly and Company (stored in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json); this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) reads 'Eli Lilly phase 1, NCT02529553'.",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
       }
     },
     {
@@ -253,6 +352,26 @@
         "value": "Theranostics 2022;12(15):6915; JCO 2023;41:e15012 (TNBC); US12371507B2. NB same antibody also used as an 89-Zr imaging conjugate - only the MMAE arm qualifies",
         "source": "data/adc_reference_mapping.csv source_citation on the ch10D7-MMAE row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "Theranostics 2022;12(15):6915; JCO 2023;41:e15012 (TNBC); US12371507B2. NB same antibody also used as an 89-Zr imaging conjugate - only the MMAE arm qualifies",
+        "source": "this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole. No registry record exists to supply Conditions: ClinicalTrials.gov REST API v2 query.intr=ch10D7-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "TNBC"
+        ],
+        "source": "reviewed reduction of this row's conditions_verbatim — its own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole — whose JCO 2023;41:e15012 entry states TNBC for this conjugate. ClinicalTrials.gov REST API v2 query.intr=ch10D7-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json), so the citation is the whole of what is known here.",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": null,
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=ch10D7-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
     },
@@ -298,6 +417,24 @@
         "source": "data/adc_reference_mapping.csv source_citation on the RGX-019-MMAE row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
         "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "Cancer Res 2026;86(8):2024; JCO 2023;41:e15103; Blood 2023;142(Suppl 1):5955",
+        "source": "this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole. No registry record exists to supply Conditions: ClinicalTrials.gov REST API v2 query.intr=RGX-019-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": null,
+        "source": "this row's conditions_verbatim — its own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole — names three abstracts and no tumour, and ClinicalTrials.gov REST API v2 query.intr=RGX-019-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json). A tumour type for a MERTK-directed preclinical conjugate would be a guess (D-140 decision 5).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": null,
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=RGX-019-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
       }
     },
     {
@@ -341,6 +478,26 @@
         "value": "ScienceDirect S1936523324001086 (HNSCC); PMC8941813 (anti-CD98hc-DM1, TNBC); WO2017214458A2",
         "source": "data/adc_reference_mapping.csv source_citation on the 19G4-MMAE row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "ScienceDirect S1936523324001086 (HNSCC); PMC8941813 (anti-CD98hc-DM1, TNBC); WO2017214458A2",
+        "source": "this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole. No registry record exists to supply Conditions: ClinicalTrials.gov REST API v2 query.intr=19G4-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": [
+          "HNSCC"
+        ],
+        "source": "reviewed reduction of this row's conditions_verbatim — its own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole. Only HNSCC is taken: the citation's other tumour token, TNBC, belongs to the anti-CD98hc-DM1 conjugate named beside this one, not to 19G4-MMAE. ClinicalTrials.gov REST API v2 query.intr=19G4-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": null,
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=19G4-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
     },
@@ -386,6 +543,24 @@
         "source": "data/adc_reference_mapping.csv source_citation on the 4D11-MMAE row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
         "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "US9127053; US9688748; US11548943 (activatable anti-Jagged DM4). NB 4D11 is JAG1/JAG2 cross-reactive - binds JAG1, not family precedent",
+        "source": "this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole. No registry record exists to supply Conditions: ClinicalTrials.gov REST API v2 query.intr=4D11-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": null,
+        "source": "this row's conditions_verbatim — its own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole — is three patents and a cross-reactivity note, and states no tumour; ClinicalTrials.gov REST API v2 query.intr=4D11-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": null,
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=4D11-MMAE retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
       }
     },
     {
@@ -430,6 +605,24 @@
         "source": "data/adc_reference_mapping.csv source_citation on the anti-UPK1B ADC row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
         "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "WO2017112829A1 - target-specific antibodies AND ADCs; no named clinical agent found (owner ruling 2026-07-27: counts)",
+        "source": "this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole. No registry record exists to supply Conditions: ClinicalTrials.gov REST API v2 query.intr=anti-UPK1B ADC retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": null,
+        "source": "this row's conditions_verbatim — its own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole — is one patent family and records that no named clinical agent was found, so it states no tumour; ClinicalTrials.gov REST API v2 query.intr=anti-UPK1B ADC retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": null,
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=anti-UPK1B ADC retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
       }
     },
     {
@@ -473,6 +666,24 @@
         "value": "US12522657 - anti-CDH11 antibodies and immunoconjugates; no named clinical agent found (owner ruling 2026-07-27: counts)",
         "source": "data/adc_reference_mapping.csv source_citation on the anti-CDH11 immunoconjugate row (CURATED 2026-07-27)",
         "as_of": "2026-07-27",
+        "confidence": "reviewed"
+      },
+      "conditions_verbatim": {
+        "value": "US12522657 - anti-CDH11 antibodies and immunoconjugates; no named clinical agent found (owner ruling 2026-07-27: counts)",
+        "source": "this row's own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole. No registry record exists to supply Conditions: ClinicalTrials.gov REST API v2 query.intr=anti-CDH11 immunoconjugate retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "cancer_type": {
+        "value": null,
+        "source": "this row's conditions_verbatim — its own source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27), quoted whole — is one patent and records that no named clinical agent was found, so it states no tumour; ClinicalTrials.gov REST API v2 query.intr=anti-CDH11 immunoconjugate retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
+        "confidence": "reviewed"
+      },
+      "description": {
+        "value": null,
+        "source": "no maker is nameable from either authority D-140 admits: this row's source_citation from data/adc_reference_mapping.csv (CURATED 2026-07-27) names literature and patents but no sponsor or assignee, and ClinicalTrials.gov REST API v2 query.intr=anti-CDH11 immunoconjugate retrieved 2026-09-08 returned 0 studies (the negative lookup is recorded in data/adcs/artifacts/ctgov.pipeline.2026-09-08.json).",
+        "as_of": "2026-09-08",
         "confidence": "reviewed"
       }
     }

@@ -1,0 +1,206 @@
+{
+  "artifact_id": "ctgov.pipeline",
+  "retrieved_as_of": "2026-09-08",
+  "endpoint": "https://clinicaltrials.gov/api/v2/studies",
+  "api": "ClinicalTrials.gov REST API v2",
+  "note": "D-140 — raw registry material behind data/adcs/adcs.pipeline.v1.json, fetched once on the retrieval date by scripts/fetch_pipeline_ctgov.py. Nothing in tests/ or core/ makes a network call; they read this file. A lookup of kind 'searched' that matched nothing is a recorded negative result, not a gap.",
+  "lookups": [
+    {
+      "row_id": "ifinatamab-deruxtecan",
+      "kind": "acronym",
+      "query": "IDeate-Lung01",
+      "why": "acronym named in this row's source_citation; registry resolved it",
+      "matched": [
+        "NCT05280470"
+      ]
+    },
+    {
+      "row_id": "ifinatamab-deruxtecan",
+      "kind": "acronym",
+      "query": "IDeate-PanTumor01",
+      "why": "acronym named in this row's source_citation; registry resolved it",
+      "matched": []
+    },
+    {
+      "row_id": "ladiratuzumab-vedotin",
+      "kind": "nct",
+      "query": "NCT03310957",
+      "why": "id read off this row's own source_citation",
+      "matched": [
+        "NCT03310957"
+      ]
+    },
+    {
+      "row_id": "ladiratuzumab-vedotin",
+      "kind": "nct",
+      "query": "NCT04032704",
+      "why": "id read off this row's own source_citation",
+      "matched": [
+        "NCT04032704"
+      ]
+    },
+    {
+      "row_id": "depatuxizumab-mafodotin",
+      "kind": "acronym",
+      "query": "INTELLANCE-1",
+      "why": "acronym named in this row's source_citation; registry resolved it",
+      "matched": [
+        "NCT02573324"
+      ]
+    },
+    {
+      "row_id": "ly3076226",
+      "kind": "nct",
+      "query": "NCT02529553",
+      "why": "id read off this row's own source_citation",
+      "matched": [
+        "NCT02529553"
+      ]
+    },
+    {
+      "row_id": "ch10d7-mmae",
+      "kind": "searched",
+      "query": "ch10D7-MMAE",
+      "why": "no trial named on disk; queried so the absence is a SEARCHED one",
+      "matched": []
+    },
+    {
+      "row_id": "rgx-019-mmae",
+      "kind": "searched",
+      "query": "RGX-019-MMAE",
+      "why": "no trial named on disk; queried so the absence is a SEARCHED one",
+      "matched": []
+    },
+    {
+      "row_id": "19g4-mmae",
+      "kind": "searched",
+      "query": "19G4-MMAE",
+      "why": "no trial named on disk; queried so the absence is a SEARCHED one",
+      "matched": []
+    },
+    {
+      "row_id": "4d11-mmae",
+      "kind": "searched",
+      "query": "4D11-MMAE",
+      "why": "no trial named on disk; queried so the absence is a SEARCHED one",
+      "matched": []
+    },
+    {
+      "row_id": "anti-upk1b-adc",
+      "kind": "searched",
+      "query": "anti-UPK1B ADC",
+      "why": "no trial named on disk; queried so the absence is a SEARCHED one",
+      "matched": []
+    },
+    {
+      "row_id": "anti-cdh11-immunoconjugate",
+      "kind": "searched",
+      "query": "anti-CDH11 immunoconjugate",
+      "why": "no trial named on disk; queried so the absence is a SEARCHED one",
+      "matched": []
+    }
+  ],
+  "studies": {
+    "NCT02529553": {
+      "nct_id": "NCT02529553",
+      "acronym": null,
+      "brief_title": "A Study of LY3076226 in Participants With Advanced or Metastatic Cancer",
+      "organization": "Eli Lilly and Company",
+      "lead_sponsor": "Eli Lilly and Company",
+      "overall_status": "COMPLETED",
+      "phases": [
+        "PHASE1"
+      ],
+      "conditions": [
+        "Advanced Cancer",
+        "Metastatic Cancer"
+      ],
+      "interventions": [
+        "LY3076226"
+      ]
+    },
+    "NCT02573324": {
+      "nct_id": "NCT02573324",
+      "acronym": "Intellance1",
+      "brief_title": "A Study of ABT-414 in Participants With Newly Diagnosed Glioblastoma (GBM) With Epidermal Growth Factor Receptor (EGFR) Amplification",
+      "organization": "AbbVie",
+      "lead_sponsor": "AbbVie",
+      "overall_status": "COMPLETED",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Glioblastoma",
+        "Gliosarcoma"
+      ],
+      "interventions": [
+        "Temozolomide",
+        "Depatuxizumab mafodotin",
+        "Radiation",
+        "Placebo for ABT-414"
+      ]
+    },
+    "NCT03310957": {
+      "nct_id": "NCT03310957",
+      "acronym": null,
+      "brief_title": "Safety and Efficacy of SGN-LIV1A Plus Pembrolizumab for Patients With Locally-Advanced or Metastatic Triple-Negative Breast Cancer",
+      "organization": "Seagen Inc.",
+      "lead_sponsor": "Seagen Inc.",
+      "overall_status": "COMPLETED",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "conditions": [
+        "Triple Negative Breast Neoplasms"
+      ],
+      "interventions": [
+        "ladiratuzumab vedotin",
+        "Pembrolizumab"
+      ]
+    },
+    "NCT04032704": {
+      "nct_id": "NCT04032704",
+      "acronym": null,
+      "brief_title": "A Study of Ladiratuzumab Vedotin in Advanced Solid Tumors",
+      "organization": "Seagen Inc.",
+      "lead_sponsor": "Seagen Inc.",
+      "overall_status": "TERMINATED",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Small Cell Lung Cancer",
+        "Non-small Cell Lung Cancer, Squamous",
+        "Non-small Cell Lung Cancer, Non-squamous",
+        "Head and Neck Squamous Cell Carcinoma",
+        "Esophageal Squamous Cell Carcinoma",
+        "Gastric Adenocarcinoma",
+        "Gastroesophageal Junction Adenocarcinoma",
+        "Prostate Cancer",
+        "Melanoma"
+      ],
+      "interventions": [
+        "ladiratuzumab vedotin",
+        "pembrolizumab"
+      ]
+    },
+    "NCT05280470": {
+      "nct_id": "NCT05280470",
+      "acronym": "IDeate-Lung01",
+      "brief_title": "Ifinatamab Deruxtecan (I-DXd) in Subjects With Pretreated Extensive-Stage Small Cell Lung Cancer (ES-SCLC)",
+      "organization": "Daiichi Sankyo",
+      "lead_sponsor": "Daiichi Sankyo",
+      "overall_status": "ACTIVE_NOT_RECRUITING",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Extensive-stage Small-cell Lung Cancer"
+      ],
+      "interventions": [
+        "Ifinatamab Deruxtecan (I-DXd)"
+      ]
+    }
+  }
+}

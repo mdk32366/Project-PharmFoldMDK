@@ -27,6 +27,7 @@ from core.adc_catalog import (
     CATALOG_V1,
     FIELD_KEYS,
     INDICATION_AUTHORITIES,
+    PIPELINE_CANCER_TYPE_CONFIDENCES,
     PIPELINE_FIELDS,
     STAINING_SOURCE_TOKENS,
     CatalogError,
@@ -317,25 +318,53 @@ def test_verbatim_text_may_not_claim_official_for_a_human_summary(tmp_path):
         load_catalog(_write(tmp_path / "c.json", _minimal_catalog([row])))
 
 
-# ----------------------------------------------------- the pipeline stays clean
+# ------------------------------- the pipeline keeps the FDA label out (D-139 am.)
 
 
-def test_the_pipeline_schema_admits_no_indication():
-    """D-136 decision 8 / task rule 6: filling Approved is not licence for Pipeline."""
-    assert "cancer_type" not in PIPELINE_FIELDS
+def test_the_pipeline_schema_admits_no_fda_label_field():
+    """⚠ **Amended at D-139, and the amendment is where the teeth moved.**
+
+    D-136 decision 8 held the pipeline schema shut entirely: *"filling Approved is
+    not licence for Pipeline."* That was right while no Spec authorised a pipeline
+    programme field, and it said so — *"a later GO"*. **D-139 is that GO**, so the
+    first form of this test (``"cancer_type" not in PIPELINE_FIELDS``) reddened BY
+    DESIGN when D-139 landed. It was **not** deleted: what D-136 actually needed to
+    protect is that a pipeline row may not carry an **FDA label**, and that is
+    asserted here and enforced in the loader's own source check below.
+    """
     assert "label_indications_verbatim" not in PIPELINE_FIELDS
+    # D-139 amends the other half: the pipeline now has a cancer type of its own,
+    # from the trial registry, on its own stricter confidence vocab.
+    assert "cancer_type" in PIPELINE_FIELDS
+    assert PIPELINE_CANCER_TYPE_CONFIDENCES == ("reviewed",)
+    assert "official" in CANCER_TYPE_CONFIDENCES
     for row in load_pipeline()["pipeline"]:
-        assert "cancer_type" not in row
         assert "label_indications_verbatim" not in row
 
 
-def test_a_cancer_type_on_a_pipeline_row_is_refused(tmp_path):
-    """An investigational agent has no FDA indication to name. Adding one reddens."""
+def test_a_label_indications_field_on_a_pipeline_row_is_refused(tmp_path):
+    """The half of D-136 decision 8 that D-139 does not touch."""
+    raw = json.loads((ROOT / "data" / "adcs" / "adcs.pipeline.v1.json").read_text("utf-8"))
+    raw["pipeline"][0]["label_indications_verbatim"] = _envelope(
+        value=FIXTURE_LABEL_TEXT, source=FIXTURE_LABEL_SOURCE, confidence="official"
+    )
+    with pytest.raises(CatalogError, match="extra keys"):
+        load_pipeline(_write(tmp_path / "p.json", raw))
+
+
+def test_an_fda_label_source_on_a_pipeline_cancer_type_is_refused(tmp_path):
+    """⚠⚠ The D-136 refusal, relocated rather than retired.
+
+    An investigational agent has no FDA indication, so citing one for its cancer
+    type is a promotion to approved performed in a source string. Before D-139 the
+    schema made this unreachable; now the field exists, so the loader has to refuse
+    the *source* — and this test is the reason the relocation is not a loosening.
+    """
     raw = json.loads((ROOT / "data" / "adcs" / "adcs.pipeline.v1.json").read_text("utf-8"))
     raw["pipeline"][0]["cancer_type"] = _envelope(
         value=["Fixture carcinoma"], source=FIXTURE_LABEL_SOURCE
     )
-    with pytest.raises(CatalogError, match="extra keys"):
+    with pytest.raises(CatalogError, match="FDA label authority"):
         load_pipeline(_write(tmp_path / "p.json", raw))
 
 
@@ -365,13 +394,21 @@ def test_d136_entry_exists_in_the_living_log():
     named, never admitted by a `>=`:** an entry that merely *takes* 138 still
     fails, and a bare `### D-139` still reddens.
 
-    ⚠ **Widened again at D-139 — to "139 is the served-path flip and 140 does not
-    exist"** — the same way, and the fifth time this guard has been widened rather
-    than relaxed. D-139 hands the recorded D-126 PASS seventeen the
-    confidence-Kabsch structure and leaves everyone else on the assembler. ⚠ It was
-    **not** a live collision: at tip `dd06e9c` the three open PRs (#222, #200, #197)
-    spend no `D-1NN` id, so 139 was free — read off `gh pr list --state open`, not
-    assumed. **Both ids are carried:** 139 by name, and `### D-140` barred.
+    ⚠ **Widened again at D-139 — to "139 is the served-path flip"** — the same way,
+    and the fifth time this guard has been widened rather than relaxed. D-139 hands
+    the recorded D-126 PASS seventeen the confidence-Kabsch structure and leaves
+    everyone else on the assembler.
+
+    ⚠⚠ **Widened again at D-140 — to "140 is the pipeline programme fields and 141
+    does not exist" — and this widening is the record of a DUPLICATE, not a
+    successor.** Two branches cut from `dd06e9c` each read `gh pr list --state open`,
+    each found no `D-1NN` spender, and each wrote `### D-139`: the served-path flip
+    and the ADC Pipeline programme fields. They could not see each other because the
+    pipeline branch was not yet an open PR. The served-path work merged first
+    (`1e9777c`) and assigned the loser in its commit message — *"Pipeline #263 takes
+    D-140."* ⚠ **D-140 is the entry that amends this very suite's D-136 decision 8**,
+    so an entry that merely *takes* 140 would leave that amendment pointing at
+    nothing (the D-062 failure mode). Both ids are named; `### D-141` still reddens.
     """
     log = DOCS_README.read_text(encoding="utf-8")
     assert "\n### D-136 —" in log
@@ -387,7 +424,11 @@ def test_d136_entry_exists_in_the_living_log():
         "D-139 is the recorded successor id; it must be the served-path flip entry, "
         "not some other entry that took the number"
     )
-    assert "\n### D-140" not in log
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", log, re.M), (
+        "D-140 is the recorded successor id; it must be the pipeline programme-fields "
+        "entry, not some other entry that took the number"
+    )
+    assert "\n### D-141" not in log
 
 
 def test_every_entry_slice_in_this_suite_is_anchored_to_a_line_start():

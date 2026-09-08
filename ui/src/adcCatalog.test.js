@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   CANCER_TYPE_ABSENT_COPY,
   PHASE_VOCAB,
+  PIPELINE_CANCER_TYPE_ABSENT_COPY,
+  PIPELINE_DESCRIPTION_ABSENT_COPY,
+  PIPELINE_INDEX_COLUMNS,
+  absenceCopy,
   cancerTypeAbsenceCopy,
   cancerTypes,
   filterPipelineByPhase,
@@ -102,12 +106,29 @@ describe('adcCatalog pipeline flatten (D-124)', () => {
     development_stage: env('clinical', { confidence: 'reviewed' }),
     phase: env('BLA/NDA submitted', { confidence: 'reviewed' }),
     source_citation: env('PDUFA 2026-10-10', { confidence: 'reviewed' }),
+    cancer_type: env(['Small-cell lung cancer'], { confidence: 'reviewed' }),
+    conditions_verbatim: env('Extensive-stage Small-cell Lung Cancer', { confidence: 'official' }),
+    description: env('Daiichi Sankyo/Merck — I-DXd, a CD276-directed conjugate.', {
+      confidence: 'reviewed',
+    }),
   }
   const phase1 = {
     ...ifina,
     id: env('ly3076226', { confidence: 'derived' }),
     name: env('LY3076226', { confidence: 'reviewed' }),
     phase: env('Phase 1', { confidence: 'reviewed' }),
+    cancer_type: {
+      value: null,
+      source: 'NCT02529553 Conditions name no tumour, 2026-09-08',
+      as_of: '2026-09-08',
+      confidence: 'reviewed',
+    },
+    description: {
+      value: null,
+      source: 'no maker named, 2026-09-08',
+      as_of: '2026-09-08',
+      confidence: 'reviewed',
+    },
   }
 
   it('unwraps pipeline envelopes and keeps the closed phase token', () => {
@@ -119,6 +140,33 @@ describe('adcCatalog pipeline flatten (D-124)', () => {
     expect(PHASE_VOCAB).toEqual([
       'Phase 1', 'Phase 1/2', 'Phase 2', 'Phase 3', 'BLA/NDA submitted', 'Other',
     ])
+  })
+
+  it('D-140 — pipeline rows carry a cancer-type sort key and a description', () => {
+    const flat = flattenPipelineRow(ifina)
+    expect(flat.cancer_types).toEqual(['Small-cell lung cancer'])
+    expect(flat.cancer_type).toBe('Small-cell lung cancer')
+    expect(flat.description).toBe('Daiichi Sankyo/Merck — I-DXd, a CD276-directed conjugate.')
+    expect(PIPELINE_INDEX_COLUMNS.map((c) => c.key)).toEqual([
+      'name', 'cancer_type', 'phase', 'protein', 'description',
+    ])
+  })
+
+  it('D-140 — a named absence sorts as null, never as the empty string', () => {
+    const flat = flattenPipelineRow(phase1)
+    // ⚠ `null`, not `''`. An empty string would sort as the alphabetically-first
+    // real value instead of trailing as a category (D-087).
+    expect(flat.cancer_type).toBeNull()
+    expect(flat.description).toBeNull()
+    expect(flat.cancer_types).toEqual([])
+    // The cell renders the envelope's OWN source, not the page-wide fallback.
+    expect(absenceCopy(flat.cancer_type_field, PIPELINE_CANCER_TYPE_ABSENT_COPY))
+      .toMatch(/NCT02529553 Conditions name no tumour/)
+    expect(absenceCopy(flat.description_field, PIPELINE_DESCRIPTION_ABSENT_COPY))
+      .toMatch(/no maker named/)
+    // …and falls back only when there is no envelope at all.
+    expect(absenceCopy(null, PIPELINE_DESCRIPTION_ABSENT_COPY))
+      .toBe(PIPELINE_DESCRIPTION_ABSENT_COPY)
   })
 
   it('filters by phase and treats all as the unfiltered set', () => {

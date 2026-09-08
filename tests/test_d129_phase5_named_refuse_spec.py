@@ -422,21 +422,38 @@ def test_d129_is_the_next_free_decision_id():
     # ⚠ Widened again at **D-139** — to `[…, 137, 138, 139]` — by enumeration, for the FIFTH
     # time. D-139 is the served-path flip: the recorded D-126 PASS seventeen are handed the
     # confidence-Kabsch structure, everyone else keeps the assembler. ⚠ Unlike the previous
-    # four this was NOT a live collision: `gh pr list --state open` at tip `dd06e9c` returned
-    # #222, #200 and #197, **none of which spends a `D-1NN` id**, so 139 was free and taken
-    # without displacing anyone. The brief that ordered this work called it a "D-140
-    # candidate"; the tree said 139, and the tree won. **Both ids are carried below** — 139 is
-    # named as the entry that took it, and a bare `### D-140` still reddens.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138, 139], (
+    # four this was NOT a live collision at the time it was written: `gh pr list --state open`
+    # at tip `dd06e9c` returned #222, #200 and #197, **none of which spends a `D-1NN` id**, so
+    # 139 looked free and was taken without displacing anyone.
+    #
+    # ⚠⚠ **Widened again at D-140 — to `[…, 138, 139, 140]` — and this is the FIFTH LIVE
+    # COLLISION, discovered the hard way.** The ADC Pipeline programme-fields branch (#263) was
+    # ALSO cut from `dd06e9c`, ALSO read the open-PR list, ALSO found no `D-1NN` spender, and
+    # ALSO took 139 — the two branches were invisible to each other because **#263 had not been
+    # opened yet when the served-path branch looked**, so an open-PR check cannot see a branch
+    # that exists only locally. Both entries were literally titled `### D-139`. The served-path
+    # work merged first at `1e9777c` and its own commit message assigned the loser: *"Pipeline
+    # #263 takes D-140."* ⚠ **139 stays with the entry that merged holding it; #263 renumbered
+    # to 140 rather than either side keeping a duplicate.** Both ids are named below, and a
+    # bare `### D-141` still reddens.
+    #
+    # ⚠ The lesson this collision adds to the previous four: **`gh pr list --state open` is a
+    # weaker check than it reads as.** It proves no *published* branch has spent the id. It
+    # cannot prove no *unpublished* one has. The enumeration is what actually caught this.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138, 139, 140], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138 and D-139; found {ids[-10:]}"
+        f"D-137, D-138, D-139 and D-140; found {ids[-11:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 is the recorded successor id; it must be the served-path flip entry, "
         "not some other entry that took the number"
     )
-    assert "\n### D-140" not in LOG, (
-        "D-140 is the next free integer and must stay unspent until an entry claims it "
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
+        "D-140 is the recorded successor id; it must be the ADC pipeline "
+        "programme-fields entry, not some other entry that took the number"
+    )
+    assert "\n### D-141" not in LOG, (
+        "D-141 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

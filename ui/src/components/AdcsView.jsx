@@ -6,8 +6,11 @@ import {
   DEFAULT_SORT,
   INDEX_COLUMNS,
   PHASE_VOCAB,
+  PIPELINE_CANCER_TYPE_ABSENT_COPY,
+  PIPELINE_DESCRIPTION_ABSENT_COPY,
   PIPELINE_INDEX_COLUMNS,
   PIPELINE_SHELF,
+  absenceCopy,
   cancerTypeAbsenceCopy,
   filterPipelineByPhase,
   flattenCatalog,
@@ -23,8 +26,11 @@ import Term from './Term.jsx'
 // Default sort is name ascending: a reader-chosen order, not a ranking.
 // D-136 — Cancer type on Approved lists the tumour types FDA's own label states,
 // audited in the catalog loader against that row's stored label text. A row that
-// states none renders its own absence source. Pipeline carries no indication at
-// all (D-124 schema; no Spec authorised one).
+// states none renders its own absence source.
+// D-140 — Pipeline gets Cancer type and Description of its own, from the trial
+// registry / the row's citation and never from an FDA label. ⚠ Same column name
+// on the two shelves, different authority behind it, so each shelf states which
+// one it is rather than letting the reader assume a pipeline row is approved.
 // Pipeline phase filter is the Architect closed vocab — nothing else.
 
 function ApprovedShelf({ catalog }) {
@@ -143,6 +149,33 @@ function ApprovedShelf({ catalog }) {
   )
 }
 
+/**
+ * D-140 — a named absence in a TABLE CELL, which is not the same problem as a
+ * named absence on a card.
+ *
+ * ⚠ The first render of this shelf put each absence envelope's whole source —
+ * ~300 characters naming the query and what it returned — straight into the
+ * `<td>`. Five of ten rows are absent on cancer type and six on description, so
+ * the table became two columns of paragraphs with the sourced rows lost between
+ * them. That is **D-135's defect exactly** (`coverageNote()` returned 209
+ * characters of prose into a `<td>`, "correct, and unreadable"), and it is fixed
+ * the way D-135 fixed it: short in the cell, the full text one step away.
+ *
+ * ⚠ What is NOT done here: replacing the row's own source with a page-wide
+ * sentence. D-136 decision 6 exists because one sentence that covers every
+ * absent row cannot be wrong and therefore says nothing. The summary is a
+ * LABEL for the disclosure; the row's own words are inside it, in the DOM,
+ * unabridged — and on the baseball card they are not collapsed at all.
+ */
+function AbsenceCell({ field, fallback, summary }) {
+  return (
+    <details className="absent-why">
+      <summary className="absent-reason">{summary}</summary>
+      <p className="absent-reason absent-why-body">{absenceCopy(field, fallback)}</p>
+    </details>
+  )
+}
+
 function PipelineShelf({ catalog }) {
   const [sort, setSort] = useState(DEFAULT_SORT)
   const [phase, setPhase] = useState('all')
@@ -167,6 +200,7 @@ function PipelineShelf({ catalog }) {
   const completeness = headerValue(catalog, 'completeness')
   const assembledAsOf = headerValue(catalog, 'catalog_assembled_as_of')
   const mappingAsOf = headerValue(catalog, 'mapping_sourced_as_of')
+  const conditionsAsOf = headerValue(catalog, 'conditions_reviewed_as_of')
 
   return (
     <div className="adcs-pipeline">
@@ -184,7 +218,19 @@ function PipelineShelf({ catalog }) {
         {scope ? <> Scope: <code>{scope}</code>.</> : null}
         {completeness ? <> Completeness: <code>{completeness}</code>.</> : null}
         {mappingAsOf ? <> Mapping sourced as of {mappingAsOf}.</> : null}
+        {conditionsAsOf ? <> Programme fields reviewed as of {conditionsAsOf}.</> : null}
       </p>
+
+      {conditionsAsOf ? (
+        <p className="note">
+          Cancer type here is what the trial registry records this investigational
+          agent as being <em>studied in</em> on {conditionsAsOf}, or what this row's
+          own citation states — <strong>not</strong> an FDA indication, because none
+          of these agents has one. Description names the sponsor or maker behind the
+          programme. Where a row states neither, it says which lookup came back
+          empty rather than showing a blank (D-140).
+        </p>
+      ) : null}
 
       <div className="list-controls">
         <label htmlFor="adc-phase-filter">Phase</label>
@@ -245,10 +291,34 @@ function PipelineShelf({ catalog }) {
                   <Link to={`/adcs/pipeline/${r.id}`}>{r.name}</Link>
                   {r.stage ? <div className="adcs-inn">{r.stage}</div> : null}
                 </td>
+                <td>
+                  {r.cancer_types.length > 0 ? (
+                    <ul className="adcs-cancer-types">
+                      {r.cancer_types.map((t) => <li key={t}>{t}</li>)}
+                    </ul>
+                  ) : (
+                    <AbsenceCell
+                      field={r.cancer_type_field}
+                      fallback={PIPELINE_CANCER_TYPE_ABSENT_COPY}
+                      summary="none stated — why"
+                    />
+                  )}
+                </td>
                 <td>{r.phase}</td>
                 <td>
                   <span>{r.protein}</span>
                   {r.accession ? <div className="mono adcs-acc">{r.accession}</div> : null}
+                </td>
+                <td className="adcs-description">
+                  {r.description ? (
+                    <span>{r.description}</span>
+                  ) : (
+                    <AbsenceCell
+                      field={r.description_field}
+                      fallback={PIPELINE_DESCRIPTION_ABSENT_COPY}
+                      summary="no maker named — why"
+                    />
+                  )}
                 </td>
               </tr>
             ))}

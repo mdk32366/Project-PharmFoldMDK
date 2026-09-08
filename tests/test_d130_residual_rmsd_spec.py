@@ -294,33 +294,44 @@ def test_d130_is_the_next_free_decision_id():
     in-flight id it was deliberately not taking**, read off ``gh pr list
     --state open`` rather than assumed. #261 then squash-merged at ``68fe0228``,
     this assertion reddened **exactly as both branches' comments predicted**, and
-    the merge inserted 137 beside 138. ⚠ **Four collisions, four resolutions by
+    the merge inserted 137 beside 138.     ⚠ **Four collisions, four resolutions by
     ADDING.** A ``>=`` would make each of them go away and would also end the
     guard's ability to tell a spent id from a free one, which is the only thing
     it does. A stray ``### D-139`` still fails.
 
     ⚠ **Widened again at D-139 — to ``[132, …, 138, 139]``** — the fifth pass,
     same resolution. D-139 flips the served PDB to D-126 for the recorded PASS
-    seventeen. ⚠ **This one was NOT a collision:** ``gh pr list --state open``
-    at tip ``dd06e9c`` returned #222, #200 and #197, none of which spends a
-    ``D-1NN`` id, so 139 was genuinely free — checked rather than assumed, which
-    is the same discipline the four collisions above needed. **Both ids are
-    carried:** 139 is named below as the entry that took it, and ``### D-140``
-    is barred by name so the next entry must claim it here rather than slip
-    under a ``>=``.
+    seventeen. ⚠ It read ``gh pr list --state open`` at tip ``dd06e9c``, got #222,
+    #200 and #197, none of which spends a ``D-1NN`` id, and concluded 139 was free.
+
+    ⚠⚠ **Widened again at D-140 — to ``[132, …, 139, 140]`` — and the conclusion
+    above turned out to be wrong, which is the finding.** The ADC Pipeline
+    programme-fields branch (#263) was cut from the same ``dd06e9c``, ran the same
+    open-PR check, reached the same answer, and took the same 139: **two entries
+    titled ``### D-139``**, invisible to each other because #263 was not yet an
+    open PR when the other branch looked. The served-path work merged first
+    (``1e9777c``) and named the resolution in its own commit message — *"Pipeline
+    #263 takes D-140."* — so 139 stays with the entry that merged holding it and
+    #263 renumbered. ⚠ **An open-PR check proves no PUBLISHED branch spent the id;
+    it cannot prove no unpublished one did.** This enumeration is what caught it.
+    Both ids are named below and ``### D-141`` is barred by name.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138, 139], (
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138, 139, 140], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138 and D-139; found {ids[-9:]}"
+        f"D-137, D-138, D-139 and D-140; found {ids[-10:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "
         "took the number"
     )
-    assert "\n### D-140" not in LOG, (
-        "D-140 is the next free integer and must stay unspent until an entry claims "
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
+        "D-140 must be the ADC pipeline programme-fields entry, not some other entry "
+        "that took the number"
+    )
+    assert "\n### D-141" not in LOG, (
+        "D-141 is the next free integer and must stay unspent until an entry claims "
         "it by name here"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

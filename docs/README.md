@@ -379,6 +379,260 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-140 — The ADC Pipeline shelf gets a cancer type and a maker of its own, from the trial registry rather than a label it does not have — and the FDA authority that fills the Approved column is *disqualifying* here
+
+- **Date:** 2026-09-08
+- **Status:** Accepted as the **pipeline programme-fields GO** (Matt BUILD GO 2026-09-08 via
+  Emma / CoS). Catalog + validator + `/adcs?shelf=pipeline` index + pipeline baseball card.
+  ⚠ **Pipeline shelf only.** ⚠ **The Approved shelf is not touched** — D-136 filled it from
+  FDA SPL §1 and not a byte of `adcs.v1.json` moves here. ⚠ **No HPA / census staining join**
+  (D-093). ⚠ **No new API route** — the existing `GET /api/adcs/pipeline` and
+  `GET /api/adcs/pipeline/{id}` serve the file as-is, so `system-model.json` is unchanged.
+  ⚠ **No live network in CI** (D-029). ⚠ **No promotion of a pipeline row to approved**, no
+  invented NCT, no efficacy / DAR / ORR, no F-004, no rent / GPU / Fly write; rental stays
+  **CLOSED** (D-118).
+- **Ship id:** spends **`D-140`**. ⚠⚠ **It was written as `D-139`, and that was a duplicate —
+  the fifth live collision in a row and the first one an open-PR check could not have caught.**
+  Recorded rather than quietly renumbered, because the *way* it happened is the finding.
+  - **What was checked, and it was not enough.** Cut from `main` at tip `dd06e9c` (D-138):
+    `grep -n '^### D-1[34][0-9] ' docs/README.md` returned `D-138` as the highest entry, and
+    `gh pr list --state open` returned no PR spending a `D-1NN` id. The honest conclusion from
+    those two queries was *"139 is free"* — and this entry said so.
+  - **What was true.** The **served-path flip** branch was cut from the *same* `dd06e9c`, ran the
+    *same* two checks, reached the *same* conclusion, and also wrote `### D-139`. Neither branch
+    could see the other: ⚠ **`gh pr list --state open` proves that no *published* branch has
+    spent an id; it cannot prove that no *unpublished* one has**, and at the moment each looked,
+    the other was still local. Two branches, two identical headings, both correctly reasoned.
+  - **How it resolved.** The served-path work merged first at **`1e9777c`** and named the loser
+    in its own commit message — *"Pipeline #263 takes D-140."* **139 stays with the entry that
+    merged holding it**; this one renumbered wholesale (heading, log body, `ARCHITECTURE.md`,
+    the ship index, every `source` string in `adcs.pipeline.v1.json`, the loader's error text,
+    the UI comments, and `tests/test_d139_pipeline_programme.py` → `test_d140_…`), so no
+    citation of "D-140" points at the other decision and no duplicate `### D-139` survives.
+  - ⚠ **The three next-free guards now carry BOTH ids with BOTH named-entry assertions**
+    (`tests/test_d129_*`, `tests/test_d130_*`, `tests/test_d136_*`), widened by enumeration and
+    **never** relaxed to a `>=`. That enumeration is what caught this: the merge produced two
+    `### D-139` headings and the guards reddened immediately. A `>=` would have merged a
+    duplicate id in silence, which is precisely the failure the whole mechanism exists for.
+- **Cite:** D-124 (the pipeline catalog, its closed phase vocab and its `floor_not_census`
+  completeness) · **D-136 decision 8** (*"The pipeline shelf is untouched… so 'fill it there
+  too' reddens rather than merging investigational indications no Spec authorised"*) — **this
+  is the Spec that authorises it, and this entry amends that clause rather than stepping around
+  it** · D-136 decision 2 (the substring audit, imported wholesale) · D-119 decision 2 (closed
+  confidence set; a bare string is not data) · D-119 decision 5 (dates never collapsed) ·
+  D-119 decision 8 (no invented science) · D-093 + amendment 1 (HPA IHC is **staining**) ·
+  D-087 (an absent value is a category, never a low sort key) · D-029 (a live third-party call
+  must not redden the gate) · D-016 (every claim names how it is known)
+- **Relates:** `D-119` · `D-122` · `D-124` · `D-136` · `D-029` · `D-093` · `D-087` ·
+  ship index [`decisions.md`](decisions.md)
+
+#### Context — the two columns the Pipeline shelf never had, and why the Approved recipe does not transfer
+
+D-124 shipped `/adcs?shelf=pipeline` with identity, target, stage and phase. A reader looking at
+those ten rows can see **what protein** each conjugate goes after and **how far along** it is, and
+cannot see the two things they came to the page for: **which cancer** it is aimed at, and **who is
+making it**. D-136 then filled exactly those columns on the Approved shelf and, in decision 8,
+explicitly declined to do the same here — correctly, because at that moment no Spec authorised it.
+
+⚠ **The obvious move is to copy D-136 across, and it is wrong.** D-136's authority is FDA's own §1
+INDICATIONS AND USAGE text, and **none of these ten agents has one.** Six are preclinical or
+patent-stage; the most advanced has a PDUFA date and no approval. Reusing `label.json` here would
+mean one of two things — that we found somebody else's label, or that we wrote one — and both
+render as a perfectly plausible cell. So the authority has to change with the shelf, and the
+guard has to change with it: **on Approved an FDA label is *the* source; here it is
+disqualifying.**
+
+#### Decision
+
+1. **Three envelopes per pipeline row, not two.** The reduction, the evidence for it, and the
+   maker ship together in the D-119 `{value, source, as_of, confidence}` shape:
+   - **`cancer_type`** — a **list** of tumour types, or `null` for a named absence.
+   - **`conditions_verbatim`** — the text that list was reduced from, stored on the row.
+   - **`description`** — `maker — one line`, or `null` for a named absence.
+   ⚠ Nothing else is admitted. `PIPELINE_FIELDS` set-equality still refuses an extra key, and
+   `label_indications_verbatim` specifically stays refused (that half of D-136 decision 8 stands).
+2. **The anchor text has two legitimate shapes, and the loader can tell them apart.**
+   `conditions_verbatim` is either the **registry's own Conditions as returned** (`official` —
+   and then its source must name an `NCT________` record), or **this row's curated citation
+   quoted whole** (`reviewed`). ⚠⚠ **A `reviewed` anchor is checked against the citation already
+   on disk**: it must be a literal (case/punctuation-folded) substring of the row's own
+   `source_citation`, or `load_pipeline` raises. Without that, rule 4 would be theatre — a row
+   could type its evidence and then pass the substring test against the evidence it typed.
+3. **`reviewed` is the only confidence a pipeline cancer type may carry — stricter than D-136,
+   deliberately.** An approved row may say `official` because FDA published the words. Nobody
+   official has published a tumour type for an investigational agent; a registry publishes what a
+   sponsor is **enrolling**, which is a different claim. `official` and `derived` both raise.
+   Same for `description`: naming a maker and a programme in one line is a human read.
+4. **⚠⚠ The load-bearing rule, imported from D-136 decision 2 without softening: every token must
+   be a literal substring of the `conditions_verbatim` on its own row.** A tumour typed from
+   memory does not fail review — it fails the gate. And a non-null `cancer_type` **requires**
+   stored text to audit against, so there is no "trust me" path here either.
+5. **Missing stays a named absence, and the absence has to have been *looked for*.** `value: null`
+   is admissible only with a `source` that says what was read and what came back — and for every
+   row with no trial, that source quotes the registry query that returned **0 studies**, recorded
+   in the dated artefact. ⚠ **This is where D-140 differs most from D-136 in practice:** D-136's
+   absence branch had *no live subject* and was fixture-tested only. Here **five rows** carry a
+   named absence on `cancer_type` and **six** on `description`. The branch is the common case,
+   not the edge case.
+6. **⚠⚠ An FDA indication authority on a pipeline row is REFUSED.** `api.fda.gov`,
+   `accessdata.fda.gov`, `Drugs@FDA`, `drugsfda`, `drug/label.json` and the phrase
+   *indications and usage* all raise `CatalogError` in a pipeline `source`. This is not
+   belt-and-braces: promoting pipeline → approved is out of scope, and a source string is the
+   quietest available back door into it. The D-136 test that used to prove this by schema
+   (*"a `cancer_type` key on a pipeline row reddens"*) is **relocated, not retired** — it now
+   proves it by source, and it is still red-verified.
+7. **The D-093 denylist reads `source`, never `value`, exactly as at D-136.** HPA / staining /
+   `pathology.tsv` / `/api/associations` / the census may not fill this column. Scanning the
+   *value* would be the bug D-136 already found and recorded: real text says *staining* for
+   honest reasons.
+8. **Index and card consume the same three envelopes.** `flattenPipelineRow` returns
+   `cancer_type` as a joined sort key when present and **`null`** when absent, so `sortRows`
+   puts sourced rows in alphabetical categories and absent rows in the trailing cluster (D-087 —
+   `null`, never `''`, which would sort an absence as the alphabetically-first real category).
+   The card gains a **Programme** section — ⚠ **not "Indication"**, because these agents have
+   none — carrying the description, the tumour list, and the registry/citation text it was
+   reduced from. Default sort stays **name ascending**: a filled column is not a licence to
+   arrive having chosen an axis.
+   ⚠⚠ **A named absence in a `<td>` is not the same problem as a named absence on a card, and
+   the first render of this shelf got it wrong.** Rendering each absence envelope's whole source
+   inline — the honest thing on the card — turned two of five columns into paragraphs, because
+   **five of ten** rows are absent on cancer type and **six** on description. That is
+   **D-135's defect reproduced one surface along** (`coverageNote()` returned *"209 characters of
+   two-population prose in a table cell — correct, and unreadable in a `<td>`"*), and it is fixed
+   the way D-135 fixed it: **short in the cell, the full text one step away.** The index cell is a
+   `<details>` whose summary is a four-word label and whose body is **the row's own source,
+   unabridged and in the DOM**; the card does not collapse it at all. ⚠ **Shortening must not
+   become replacing:** D-136 decision 6 refuses a page-wide absence sentence precisely because one
+   sentence covering every absent row cannot be wrong, and the summary here is a label for the
+   disclosure rather than the claim. ⚠ Recorded because it was only visible in a **rendered** page
+   — every test was green while the table was unreadable, which is the class of defect a test
+   suite is worst at.
+9. **The registry read happened once, into a committed artefact (D-029).**
+   `scripts/fetch_pipeline_ctgov.py` wrote
+   [`data/adcs/artifacts/ctgov.pipeline.2026-09-08.json`](../data/adcs/artifacts/ctgov.pipeline.2026-09-08.json)
+   and is the only thing in the repo that talks to ClinicalTrials.gov. Nothing under `tests/` or
+   `core/` imports it. The file gains a header date `conditions_reviewed_as_of` = **2026-09-08**
+   beside `mapping_sourced_as_of` (2026-07-27) and `catalog_assembled_as_of` (2026-09-05) —
+   **three questions, three days, never collapsed** — and a `registry_artifact` pointer so the
+   tests find the raw records by reading the file rather than by hardcoding a path.
+
+#### Provenance (D-016) — how the ten rows are known, including the lookups that failed
+
+**12 lookups, 5 studies, 7 recorded negatives**, all in the dated artefact:
+
+- **3 by id** — `NCT03310957`, `NCT04032704` (ladiratuzumab vedotin) and `NCT02529553`
+  (LY3076226) were **already in those rows' own citations**. Nothing was discovered.
+- **3 by acronym** — the citations name `IDeate-Lung01`, `IDeate-PanTumor01` and `INTELLANCE-1`
+  with no id, and the registry resolved two of them: `NCT05280470` and `NCT02573324`.
+- **6 by intervention name** — the preclinical / patent rows, queried so that their emptiness is
+  a **searched** absence rather than an unexamined one. All six returned **0 studies**.
+
+**⚠ The query that could have disqualified the fill, run first.** A record matched by *acronym* is
+not guaranteed to be this drug's, and if it were not, the conditions would be another programme's
+and the cell would look perfectly plausible. So every matched record's own `interventions` must
+name the row's agent: `NCT05280470` → *Ifinatamab Deruxtecan (I-DXd)*, `NCT02573324` →
+*Depatuxizumab mafodotin*, `NCT03310957` / `NCT04032704` → *ladiratuzumab vedotin*, `NCT02529553`
+→ *LY3076226*. All four hold, and `test_each_matched_record_names_this_rows_own_drug` re-runs the
+check on every test run rather than trusting this paragraph.
+
+**⚠ A lookup that FAILED, and the data is different because of it.** `IDeate-PanTumor01` is named
+in ifinatamab deruxtecan's citation and matched **no registry acronym** on 2026-09-08. There *is* a
+pan-tumour study of that agent findable by drug name — and adopting it would have been the script
+**choosing** which trial a citation meant. The matcher takes **exact acronym equality with no title
+fallback** for that reason, so this row's cancer type comes from IDeate-Lung01 alone, its source
+says so, and the empty match is on disk. The honest cell is the narrower one.
+
+**⚠ One row where the registry states conditions and they are still not a tumour type.**
+`NCT02529553`'s Conditions are *Advanced Cancer* and *Metastatic Cancer*. Both are stored
+verbatim, and `cancer_type` is a **named absence** anyway: an all-comers phase 1 has no tumour to
+name, and reducing it to one would be the guess this whole entry is built to refuse. A file where
+"text exists" implied "a category can be extracted" would have produced a confident, wrong cell
+here.
+
+**⚠ A tumour token that was deliberately NOT taken.** 19G4-MMAE's citation contains two tumour
+strings, `HNSCC` and `TNBC` — and the `TNBC` belongs to the **anti-CD98hc-DM1** conjugate named
+beside it, not to 19G4-MMAE. It would have passed the substring audit, because the audit checks
+that a string is *in the text*, not that it is *about this agent*. Only `HNSCC` is taken, and the
+row's source records the refusal. **This is the audit's blind spot, named rather than left for a
+reader to find.**
+
+**⚠ Makers: the registry's `leadSponsor`, and no patent assignee.** Four rows gained one —
+Daiichi Sankyo (+ the citation's own *Daiichi Sankyo/Merck*), Seagen Inc., AbbVie, Eli Lilly and
+Company. The six patent / preclinical rows have assignees on their patents, and **none was looked
+up**: a patent assignee is not one of the two authorities this decision admits, and reaching for a
+third source to avoid writing six absences is how a fill target starts driving the data. The maker
+is audited mechanically anyway — `load_pipeline` requires the text before the em dash to appear in
+the field's own source, and a test re-derives it from the raw record.
+
+#### Result
+
+**`cancer_type`: 5 of 10** rows sourced (**14** tokens), **5** named absences. **`description`:
+4 of 10** rows sourced, **6** named absences. Every one of the 14 tokens passes the rule-4 audit
+against its own row's stored text, and the gate re-runs that audit on every test run, so this is
+not a claim about a one-time check. The five absences are `ly3076226`, `rgx-019-mmae`,
+`4d11-mmae`, `anti-upk1b-adc`, `anti-cdh11-immunoconjugate`; the six sourced makers' absences are
+the same five plus `ch10d7-mmae` and `19g4-mmae` minus `ly3076226`.
+
+⚠ **The total is reported as a breakdown on purpose** (method-note item 2). "Ten rows gained two
+columns" is true and would hide that half the shelf gained a **named absence** — which is the
+correct outcome for six preclinical rows and one all-comers basket, and would be a fabrication if
+it were anything else.
+
+#### Deep-learning justification
+
+Neutral to the weights, and load-bearing for the comparison the graded core exists to make. The
+neural deliverable is ESMFold (D-003) plus the scorer (D-041 / F-004), and `P-001` asks whether a
+**structure-derived** ranking of targets agrees with anything clinical. The Approved shelf gave
+that question a labelled set of 15. This adds ten **investigational** targets whose clinical claim
+is *what a sponsor is enrolling*, which is a genuinely different and weaker kind of evidence than
+an approval — and the schema now says so in the confidence vocabulary itself (`reviewed` only, and
+`official` refused) rather than in a caption. The failure mode D-093 named is still the sharpest
+one on this surface: fill a clinical column from **HPA staining** and then validate a structural
+axis against an expression threshold dressed as a clinical fact. Rules 4, 6 and 7 make that
+specific confusion a `CatalogError` instead of a code-review habit.
+
+#### Consequences
+
+- Tests that must be able to go red, all verified by mutating the committed file: a tumour token
+  absent from its row's stored text (**the invented-string test**); a plausible tumour borrowed
+  from another row on the same shelf; an HPA / staining / associations source (**the D-093 join
+  test**); an **FDA label authority** on a pipeline row (**D-140's own test**); `official` or
+  `derived` confidence on a pipeline cancer type; an undated or unattributed source; a `reviewed`
+  anchor that is not a quote of the row's citation; an `official` anchor naming no record; a
+  `null` with no stated reason; a blank description; a description with no maker half or over the
+  240-character cap; a maker that appears in no source (**the invented-maker test**).
+- **`ARCHITECTURE.md`** gains the pipeline programme fields, the registry authority, the artefact
+  and the refusal on its ADC-catalog row. **No route changes**, so `system-model.json` is
+  unchanged (D-051 fires on route sets, and this diff adds none).
+- **`tests/test_d136_cancer_type.py` changes, and the change is a reversal that is written down.**
+  `test_the_pipeline_schema_admits_no_indication` reddened **by design** when this landed. It was
+  not deleted: it now asserts the half of D-136 decision 8 that stands (`label_indications_verbatim`
+  is still refused on a pipeline row) *and* that `cancer_type` is now admitted on its own stricter
+  vocabulary. D-136's entry carries an **Amended by** line pointing here.
+- `data/adcs/README.md` gains the pipeline section and the third date; the pipeline file joins the
+  material Emma's weekly watch can drift against (SPL for Approved, registry status / conditions
+  for Pipeline) — still a **hook**, still not a gate.
+- Follow-ups **not** taken here: no `indication` key is admitted (it stays on the invented-science
+  denylist, so the data must land in these named, audited fields); no efficacy / DAR / ORR arrives
+  with the tumour type; no patent-assignee lookup; no NCT id is added to `access.v1.json`'s
+  `named_nct_ids_from_pipeline` (that field is D-124's, and widening it is a separate decision);
+  no row is promoted; no phase or development stage is re-read from the registry, even where the
+  registry now disagrees with the 2026-07-27 curation.
+
+#### Assumptions refused
+
+- That an investigational agent has an indication, or that the word may be used for one.
+- That the Approved shelf's FDA authority transfers to the Pipeline shelf because the column has
+  the same name.
+- That a memory of "this one is the lung one" is a source.
+- That a trial acronym in a citation may be resolved to *whichever* study looks right.
+- That a tumour string appearing in a citation is a tumour string **about this agent** (19G4).
+- That registry Conditions text existing means a tumour type can be extracted from it (LY3076226).
+- That a patent assignee is close enough to a sponsor to fill the column and avoid an absence.
+- That six named absences are a worse outcome than six plausible guesses.
+- **Amended by:** —
+
+---
 ### D-139 — The served PDB stops being a constant: for the seventeen parents that carry a recorded PASS and no later named refuse, the D-126 confidence-Kabsch structure becomes what we hand out — by allowlist and gate, never by merge
 
 - **Date:** 2026-09-08
@@ -1141,6 +1395,18 @@ of against a second expression measurement.
   `tests/test_d136_cancer_type.py` also stopped bounding this entry by the named neighbour
   `D-134` and now bounds it by the **next heading, whatever it is** — the same hidden
   merge-order dependency, caught in D-136's own suite.
+
+- **⚠ Amended by [`D-140`](#d-140--the-adc-pipeline-shelf-gets-a-cancer-type-and-a-maker-of-its-own-from-the-trial-registry-rather-than-a-label-it-does-not-have--and-the-fda-authority-that-fills-the-approved-column-is-disqualifying-here)
+  — decision 8 only.** *"The pipeline shelf is untouched… so 'fill it there too' reddens rather
+  than merging investigational indications no Spec authorised"* named the missing thing precisely:
+  a **Spec**. D-140 is that Spec, and it fills the Pipeline shelf from the **trial registry** —
+  not from a label, which those agents do not have. ⚠ **What D-140 does NOT do is loosen this
+  clause into nothing:** `label_indications_verbatim` is still refused on a pipeline row, an FDA
+  indication authority in a pipeline `source` now raises `CatalogError` by name, and the
+  D-136-era test that proved the refusal by schema was **relocated to prove it by source** rather
+  than deleted. ⚠ Everything else in this entry — the 15-of-15 Approved fill, the substring audit,
+  the D-093 source denylist, the three Approved dates — is **untouched by D-140**, which does not
+  move a byte of `adcs.v1.json`.
 
 ### D-135 — Coverage gains a SECOND population instead of a bigger number, the IGF2R failure gets a bridge instead of a paragraph, and the Story becomes skimmable
 

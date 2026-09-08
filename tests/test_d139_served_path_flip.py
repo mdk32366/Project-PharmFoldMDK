@@ -701,10 +701,25 @@ def _d139_entry() -> str:
 
 
 def test_d139_entry_exists_in_the_living_log():
-    """⚠ The check is the `### D-139` HEADING, never a citation of it (D-062 / item 7)."""
+    """⚠ The check is the `### D-139` HEADING, never a citation of it (D-062 / item 7).
+
+    ⚠⚠ **Widened at D-140 — by naming the successor, not by dropping the bar.**
+    ``"### D-140" not in LOG`` reddened BY DESIGN when the ADC Pipeline
+    programme-fields entry landed, and that redness is the whole point: **that entry
+    was written as `### D-139` too.** Both branches were cut from ``dd06e9c``, both
+    read ``gh pr list --state open``, both found no ``D-1NN`` spender, and neither
+    could see the other because the pipeline branch was still local when this one
+    looked. This work merged first and its commit message assigned the resolution
+    (*"Pipeline #263 takes D-140."*), so 139 stays here and 140 is now spent — by a
+    named entry, asserted below. A bare ``### D-141`` still reddens.
+    """
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M)
     assert len(re.findall(r"^### D-139", LOG, re.M)) == 1, "exactly one D-139 entry"
-    assert "\n### D-140" not in LOG, "D-140 is the next free integer"
+    assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", LOG, re.M), (
+        "D-140 is the recorded successor id; it must be the ADC pipeline "
+        "programme-fields entry, not some other entry that took the number"
+    )
+    assert "\n### D-141" not in LOG, "D-141 is the next free integer"
 
 
 def test_the_entry_records_the_subset_its_provenance_and_the_zero():

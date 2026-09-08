@@ -5,7 +5,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { CANCER_TYPE_ABSENT_COPY, PHASE_VOCAB } from '../adcCatalog.js'
+import {
+  CANCER_TYPE_ABSENT_COPY,
+  PHASE_VOCAB,
+  PIPELINE_CANCER_TYPE_ABSENT_COPY,
+  PIPELINE_DESCRIPTION_ABSENT_COPY,
+} from '../adcCatalog.js'
 
 vi.mock('../api.js', () => ({
   listAdcs: vi.fn(),
@@ -37,7 +42,10 @@ const row = (id, brand, antigen, accession, cancerTypes = null) => ({
   }),
 })
 
-const pipeRow = (id, name, antigen, accession, phase, stage = 'clinical') => ({
+// D-140 — `cancerTypes` / `description` default to a NAMED ABSENCE, because that
+// is the shape of half the committed shelf and the shape a test can get wrong
+// quietly. Each absence carries its own source, which is what the cell renders.
+const pipeRow = (id, name, antigen, accession, phase, stage = 'clinical', extra = {}) => ({
   id: env(id, { confidence: 'derived' }),
   name: env(name, { confidence: 'reviewed' }),
   antigen: env(antigen, { confidence: 'reviewed' }),
@@ -45,6 +53,23 @@ const pipeRow = (id, name, antigen, accession, phase, stage = 'clinical') => ({
   development_stage: env(stage, { confidence: 'reviewed' }),
   phase: env(phase, { confidence: 'reviewed' }),
   source_citation: env('fixture citation', { confidence: 'reviewed' }),
+  cancer_type: extra.cancerTypes
+    ? env(extra.cancerTypes, { confidence: 'reviewed' })
+    : {
+      value: null,
+      source: `ClinicalTrials.gov query.intr=${name} retrieved 2026-09-08 returned 0 studies`,
+      as_of: '2026-09-08',
+      confidence: 'reviewed',
+    },
+  conditions_verbatim: env(extra.conditions ?? 'fixture citation', { confidence: 'reviewed' }),
+  description: extra.description
+    ? env(extra.description, { confidence: 'reviewed' })
+    : {
+      value: null,
+      source: `no maker named for ${name} on 2026-09-08`,
+      as_of: '2026-09-08',
+      confidence: 'reviewed',
+    },
 })
 
 const CATALOG = {
@@ -72,10 +97,27 @@ const PIPELINE = {
   completeness: env('floor_not_census', { confidence: 'reviewed' }),
   mapping_sourced_as_of: env('2026-07-27', { confidence: 'reviewed' }),
   catalog_assembled_as_of: env('2026-09-05', { confidence: 'derived' }),
+  conditions_reviewed_as_of: env('2026-09-08', { confidence: 'reviewed' }),
+  registry_artifact: env('data/adcs/artifacts/ctgov.pipeline.2026-09-08.json', { confidence: 'derived' }),
   pipeline: [
-    pipeRow('ifinatamab-deruxtecan', 'ifinatamab deruxtecan', 'CD276', 'Q5ZPR3', 'BLA/NDA submitted'),
-    pipeRow('ly3076226', 'LY3076226', 'FGFR3', 'P22607', 'Phase 1'),
-    pipeRow('depatuxizumab-mafodotin', 'depatuxizumab mafodotin', 'EGFR', 'P00533', 'Phase 3'),
+    pipeRow('ifinatamab-deruxtecan', 'ifinatamab deruxtecan', 'CD276', 'Q5ZPR3', 'BLA/NDA submitted', 'clinical', {
+      cancerTypes: ['Small-cell lung cancer'],
+      conditions: 'Extensive-stage Small-cell Lung Cancer',
+      description: 'Daiichi Sankyo/Merck — I-DXd, a CD276-directed conjugate.',
+    }),
+    // ⚠ One clinical row with NO tumour type on purpose: the mixed case is the one
+    // that can go quietly wrong, and it is the only way to see that an absent row
+    // trails the sort instead of leading it (D-140 / D-087).
+    pipeRow('ly3076226', 'LY3076226', 'FGFR3', 'P22607', 'Phase 1', 'clinical', {
+      conditions: 'Advanced Cancer; Metastatic Cancer',
+      description: 'Eli Lilly and Company — an FGFR3-directed conjugate.',
+    }),
+    pipeRow('depatuxizumab-mafodotin', 'depatuxizumab mafodotin', 'EGFR', 'P00533', 'Phase 3', 'clinical', {
+      cancerTypes: ['Glioblastoma'],
+      conditions: 'Glioblastoma; Gliosarcoma',
+      description: 'AbbVie — ABT-414, an EGFR-directed conjugate.',
+    }),
+    // ⚠ And one row absent on BOTH new columns — the preclinical shape.
     pipeRow('ch10d7-mmae', 'ch10D7-MMAE', 'CDCP1', 'Q9H5V8', 'Other', 'preclinical'),
   ],
 }
@@ -249,6 +291,83 @@ describe('AdcsView — D-124 Pipeline shelf', () => {
     fireEvent.change(filter, { target: { value: 'Phase 2' } })
     expect(screen.queryByRole('table')).toBeNull()
     expect(screen.getByText(/no row in this file matches that phase/)).toBeInTheDocument()
+  })
+
+  it('D-140 — the Pipeline index carries Cancer type and Description columns', async () => {
+    const { container } = renderIndex('/adcs?shelf=pipeline')
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    for (const label of ['Name', 'Cancer type', 'Phase', 'Protein', 'Description']) {
+      expect(screen.getByRole('columnheader', { name: new RegExp(label) })).toBeInTheDocument()
+    }
+    expect(screen.getByText('Small-cell lung cancer')).toBeInTheDocument()
+    expect(screen.getByText('Glioblastoma')).toBeInTheDocument()
+    expect(container.textContent).toMatch(/Daiichi Sankyo\/Merck/)
+    expect(container.textContent).toMatch(/Eli Lilly and Company/)
+    // ⚠ The rows that state neither say WHICH lookup came back empty, in their
+    // own words — never a blank, and never the page-wide fallback (D-140).
+    expect(container.textContent).toMatch(/query.intr=ch10D7-MMAE retrieved 2026-09-08 returned 0 studies/)
+    expect(container.textContent).toMatch(/no maker named for ch10D7-MMAE/)
+    expect(screen.queryAllByText(PIPELINE_CANCER_TYPE_ABSENT_COPY)).toHaveLength(0)
+    expect(screen.queryAllByText(PIPELINE_DESCRIPTION_ABSENT_COPY)).toHaveLength(0)
+  })
+
+  it('D-140 — an absent cell is a short label with the row\'s own source inside it', async () => {
+    // ⚠ D-135's defect, not re-shipped. Five of ten committed rows are absent on
+    // cancer type and six on description; putting each ~300-character source
+    // straight into a `<td>` made the table two columns of prose. The label is
+    // short, and the row's own words are in the DOM inside the disclosure —
+    // shortening must not become replacing (D-136 decision 6).
+    renderIndex('/adcs?shelf=pipeline')
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    const table = screen.getByRole('table')
+
+    const summaries = [...table.querySelectorAll('details.absent-why > summary')]
+    expect(summaries.length).toBeGreaterThan(0)
+    for (const summary of summaries) {
+      expect(summary.textContent.length).toBeLessThan(40)
+    }
+    expect(within(table).getAllByText('none stated — why').length).toBe(2)
+    expect(within(table).getAllByText('no maker named — why').length).toBe(1)
+
+    // ⚠ The full source is not lost, it is one step away — and it is the ROW's,
+    // not a sentence the page made up.
+    const bodies = [...table.querySelectorAll('details.absent-why .absent-why-body')]
+      .map((p) => p.textContent)
+    expect(bodies.some((t) => /query.intr=ch10D7-MMAE .* returned 0 studies/.test(t))).toBe(true)
+    expect(bodies.some((t) => /query.intr=LY3076226 .* returned 0 studies/.test(t))).toBe(true)
+  })
+
+  it('D-140 — the pipeline shelf says these are trials, not FDA indications', async () => {
+    const { container } = renderIndex('/adcs?shelf=pipeline')
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    expect(container.textContent).toMatch(/studied in/)
+    expect(container.textContent).toMatch(/not an FDA indication/)
+    expect(container.textContent).toMatch(/Programme fields reviewed as of 2026-09-08/)
+    // ⚠ Scoped to the TABLE: no staining-derived value may reach a cell (D-093).
+    expect(screen.getByRole('table').textContent)
+      .not.toMatch(/quasi H-score|proteinatlas|staining/i)
+    expect(screen.getByRole('table').textContent).not.toMatch(/INDICATIONS AND USAGE/i)
+  })
+
+  it('D-140 — sorting by cancer type trails the absent rows in BOTH directions', async () => {
+    renderIndex('/adcs?shelf=pipeline')
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    const header = screen.getByRole('columnheader', { name: /Cancer type/ })
+    const button = within(header).getByRole('button')
+
+    fireEvent.click(button)
+    let names = bodyFirstCells()
+    expect(names[0]).toMatch(/depatuxizumab mafodotin/)
+    expect(names[1]).toMatch(/ifinatamab deruxtecan/)
+    // The two absent rows are a CATEGORY, not the alphabetically-first value.
+    expect(names.slice(2).join(' ')).toMatch(/LY3076226/)
+    expect(names.slice(2).join(' ')).toMatch(/ch10D7-MMAE/)
+
+    fireEvent.click(button)
+    names = bodyFirstCells()
+    expect(names[0]).toMatch(/ifinatamab deruxtecan/)
+    expect(names.slice(2).join(' ')).toMatch(/LY3076226/)
+    expect(names.slice(2).join(' ')).toMatch(/ch10D7-MMAE/)
   })
 
   it('Access panel surfaces the A disclaimer and named NCT ids', async () => {
