@@ -289,12 +289,30 @@ def test_d130_is_the_next_free_decision_id():
     ADDING.** A ``>=`` would make each of them go away and would also end the
     guard's ability to tell a spent id from a free one, which is the only thing
     it does. A stray ``### D-139`` still fails.
+
+    ⚠ **Widened again at D-139 — to ``[132, …, 138, 139]``** — the fifth pass,
+    same resolution. D-139 flips the served PDB to D-126 for the recorded PASS
+    seventeen. ⚠ **This one was NOT a collision:** ``gh pr list --state open``
+    at tip ``dd06e9c`` returned #222, #200 and #197, none of which spends a
+    ``D-1NN`` id, so 139 was genuinely free — checked rather than assumed, which
+    is the same discipline the four collisions above needed. **Both ids are
+    carried:** 139 is named below as the entry that took it, and ``### D-140``
+    is barred by name so the next entry must claim it here rather than slip
+    under a ``>=``.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138], (
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138, 139], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137 and D-138; found {ids[-8:]}"
+        f"D-137, D-138 and D-139; found {ids[-9:]}"
+    )
+    assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
+        "D-139 must be the served-path flip entry, not some other entry that "
+        "took the number"
+    )
+    assert "\n### D-140" not in LOG, (
+        "D-140 is the next free integer and must stay unspent until an entry claims "
+        "it by name here"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 must be the /method contents-rail entry, not some other entry that "

@@ -409,9 +409,26 @@ def test_d129_is_the_next_free_decision_id():
     # collisions, four resolutions by ADDING.** The temptation each time is a `>=`, and a
     # `>=` would end the guard's ability to tell a spent id from a free one — which is the
     # only thing it does. A stray `### D-139` still reddens.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138], (
+    #
+    # ⚠ Widened again at **D-139** — to `[…, 137, 138, 139]` — by enumeration, for the FIFTH
+    # time. D-139 is the served-path flip: the recorded D-126 PASS seventeen are handed the
+    # confidence-Kabsch structure, everyone else keeps the assembler. ⚠ Unlike the previous
+    # four this was NOT a live collision: `gh pr list --state open` at tip `dd06e9c` returned
+    # #222, #200 and #197, **none of which spends a `D-1NN` id**, so 139 was free and taken
+    # without displacing anyone. The brief that ordered this work called it a "D-140
+    # candidate"; the tree said 139, and the tree won. **Both ids are carried below** — 139 is
+    # named as the entry that took it, and a bare `### D-140` still reddens.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138, 139], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137 and D-138; found {ids[-9:]}"
+        f"D-137, D-138 and D-139; found {ids[-10:]}"
+    )
+    assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
+        "D-139 is the recorded successor id; it must be the served-path flip entry, "
+        "not some other entry that took the number"
+    )
+    assert "\n### D-140" not in LOG, (
+        "D-140 is the next free integer and must stay unspent until an entry claims it "
+        "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 is the recorded successor id; it must be the /method contents-rail "
