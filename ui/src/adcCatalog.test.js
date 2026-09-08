@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   CANCER_TYPE_ABSENT_COPY,
   PHASE_VOCAB,
+  cancerTypeAbsenceCopy,
+  cancerTypes,
   filterPipelineByPhase,
   flattenAdc,
   flattenCatalog,
@@ -28,15 +30,12 @@ const padcev = {
 }
 
 describe('adcCatalog flatten (D-122)', () => {
-  it('unwraps envelopes and leaves cancer_type null', () => {
+  it('unwraps envelopes', () => {
     const flat = flattenAdc(padcev)
     expect(flat.id).toBe('enfortumab-vedotin')
     expect(flat.name).toBe('PADCEV')
     expect(flat.protein).toBe('NECTIN4')
     expect(flat.accession).toBe('Q96NY8')
-    expect(flat.cancer_type).toBeNull()
-    expect(CANCER_TYPE_ABSENT_COPY).toMatch(/not in catalog v1/)
-    expect(CANCER_TYPE_ABSENT_COPY).not.toMatch(/urothelial|breast|myeloma/i)
   })
 
   it('does not treat a bare string as an envelope', () => {
@@ -53,6 +52,44 @@ describe('adcCatalog flatten (D-122)', () => {
     expect(flattenCatalog(catalog)).toHaveLength(2)
     expect(headerValue(catalog, 'scope')).toBe('fda_approved_only')
     expect(flattenCatalog({})).toHaveLength(0)
+  })
+})
+
+describe('adcCatalog cancer type (D-136)', () => {
+  const withTypes = (value, extras = {}) => ({
+    ...padcev,
+    cancer_type: env(value, { confidence: 'reviewed', ...extras }),
+  })
+
+  it('reads the tumour types off the envelope as a real sort key', () => {
+    const flat = flattenAdc(withTypes(['Urothelial cancer', 'Muscle invasive bladder cancer']))
+    expect(flat.cancer_types).toEqual(['Urothelial cancer', 'Muscle invasive bladder cancer'])
+    expect(flat.cancer_type).toBe('Urothelial cancer; Muscle invasive bladder cancer')
+  })
+
+  it('⚠ an absent cancer type sorts as null, never as an empty string', () => {
+    // '' would sort ahead of every real category — the `?? 0` mistake in a
+    // different costume. `sortRows` only trails a row it can see is absent.
+    const flat = flattenAdc(withTypes(null))
+    expect(flat.cancer_type).toBeNull()
+    expect(flat.cancer_types).toEqual([])
+    expect(flattenAdc(padcev).cancer_type).toBeNull()
+  })
+
+  it('an absent row renders its OWN source, not one page-wide sentence', () => {
+    const source = 'openFDA SPL label.json for FIXTURE returned no indications_and_usage'
+    expect(cancerTypeAbsenceCopy(env(null, { source }))).toBe(source)
+  })
+
+  it('falls back to the shared copy only when there is no source at all', () => {
+    expect(cancerTypeAbsenceCopy(null)).toBe(CANCER_TYPE_ABSENT_COPY)
+    expect(cancerTypeAbsenceCopy(env(null, { source: '  ' }))).toBe(CANCER_TYPE_ABSENT_COPY)
+    expect(CANCER_TYPE_ABSENT_COPY).not.toMatch(/urothelial|breast|myeloma/i)
+  })
+
+  it('a bare string is not a tumour-type list', () => {
+    expect(cancerTypes(withTypes('Urothelial cancer'))).toEqual([])
+    expect(cancerTypes({ ...padcev, cancer_type: ['Urothelial cancer'] })).toEqual([])
   })
 })
 

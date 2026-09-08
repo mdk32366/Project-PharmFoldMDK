@@ -35,10 +35,34 @@ def _envelope(**overrides):
     return base
 
 
+FIXTURE_LABEL_TEXT = (
+    "1 INDICATIONS AND USAGE FIXTURE is indicated for the treatment of adult "
+    "patients with fixture carcinoma."
+)
+FIXTURE_LABEL_SOURCE = (
+    'openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:'
+    '"FIXTURE" retrieved 2026-09-08; results[0].indications_and_usage'
+)
+
+
 def _minimal_row(adc_id="fixture-adc"):
+    """A row that passes every D-119 + D-136 structural check.
+
+    ⚠ `cancer_type` is a LIST audited against `label_indications_verbatim` on the
+    same row (D-136 decision 2), so the two cannot be built by the scalar
+    comprehension the other fields use.
+    """
     return {name: _envelope(value=f"{adc_id}-{name}" if name != "id" else adc_id)
             for name in ADC_FIELDS} | {
         "marketing_status": _envelope(value="Prescription", confidence="official"),
+        "cancer_type": _envelope(
+            value=["Fixture carcinoma"], source=FIXTURE_LABEL_SOURCE
+        ),
+        "label_indications_verbatim": _envelope(
+            value=FIXTURE_LABEL_TEXT,
+            source=FIXTURE_LABEL_SOURCE,
+            confidence="official",
+        ),
     }
 
 
@@ -50,6 +74,7 @@ def _minimal_catalog(rows=None):
         "completeness": _envelope(value="floor_not_census"),
         "approvals_reconciled_as_of": _envelope(value="2026-09-05", confidence="official"),
         "antigen_mapping_reviewed_as_of": _envelope(value="2026-09-05"),
+        "indications_reviewed_as_of": _envelope(value="2026-09-08"),
         "emma_watch": _envelope(value="documented_hook_not_built"),
         "named_exclusions": _envelope(value=[{"id": "pipeline_and_right_to_try", "reason": "ADC-C"}]),
         "adcs": rows if rows is not None else [_minimal_row()],
@@ -67,7 +92,7 @@ def test_committed_catalog_every_field_is_an_envelope():
     for name in (
         "catalog_id", "schema_version", "scope", "completeness",
         "approvals_reconciled_as_of", "antigen_mapping_reviewed_as_of",
-        "emma_watch", "named_exclusions",
+        "indications_reviewed_as_of", "emma_watch", "named_exclusions",
     ):
         assert set(data[name].keys()) == set(FIELD_KEYS)
         assert data[name]["confidence"] in CONFIDENCES
@@ -76,7 +101,10 @@ def test_committed_catalog_every_field_is_an_envelope():
         for name, field in row.items():
             assert set(field.keys()) == set(FIELD_KEYS), name
             assert field["confidence"] in CONFIDENCES, name
-            assert field["value"] not in (None, "")
+            # D-136: `cancer_type` may be a null NAMED ABSENCE, so "not empty" is
+            # the wrong bar for it. It has its own suite in test_d136_cancer_type.
+            if name != "cancer_type":
+                assert field["value"] not in (None, ""), name
             assert field["source"] and field["as_of"]
 
 

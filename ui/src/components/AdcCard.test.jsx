@@ -35,6 +35,17 @@ const PADCEV = {
     source: 'data/adc_reference_mapping.csv 2026-07-27',
     as_of: '2026-07-27',
   }),
+  cancer_type: env(['Urothelial cancer', 'Muscle invasive bladder cancer'], {
+    confidence: 'reviewed',
+    source: 'reviewed reduction of FDA label section 1; openFDA label.json 2026-09-08',
+    as_of: '2026-09-08',
+  }),
+  label_indications_verbatim: env(
+    '1 INDICATIONS AND USAGE PADCEV, in combination with pembrolizumab, is indicated '
+    + 'for the treatment of adult patients with muscle invasive bladder cancer (MIBC) '
+    + 'and locally advanced or metastatic urothelial cancer (la/mUC).',
+    { source: 'openFDA SPL label.json 2026-09-08', as_of: '2026-09-08' },
+  ),
 }
 
 const renderCard = (id = 'enfortumab-vedotin') =>
@@ -65,9 +76,44 @@ describe('AdcCard — D-122 baseball card', () => {
     expect(container.textContent).toMatch(/official/)
     expect(container.textContent).toMatch(/reviewed/)
     expect(container.textContent).toMatch(/derived/)
-    expect(container.textContent).toMatch(CANCER_TYPE_ABSENT_COPY)
-    expect(container.textContent).not.toMatch(/urothelial/i)
     expect(container.textContent.toLowerCase()).not.toMatch(/\bdar\b|\bic50\b|\borr\b/)
+  })
+
+  it('D-136 — renders the tumour types and the label text they were reduced from', async () => {
+    getAdc.mockResolvedValue(PADCEV)
+    const { container } = renderCard()
+    await waitFor(() => expect(container.textContent).toMatch(/PADCEV/))
+    expect(screen.getByText('Urothelial cancer')).toBeTruthy()
+    expect(screen.getByText('Muscle invasive bladder cancer')).toBeTruthy()
+    // ⚠ The list is only trustworthy if the reader can check it. The official
+    // text ships on the same card, with its own source / as_of / confidence.
+    expect(container.textContent).toMatch(/1 INDICATIONS AND USAGE PADCEV/)
+    expect(container.textContent).toMatch(/as of 2026-09-08/)
+    expect(container.textContent).not.toMatch(CANCER_TYPE_ABSENT_COPY)
+  })
+
+  it('D-136 — a row whose cancer type is a named absence shows that row\'s own reason', async () => {
+    const source = 'openFDA SPL label.json for FIXTURE 2026-09-08 returned no indications_and_usage'
+    getAdc.mockResolvedValue({
+      ...PADCEV,
+      cancer_type: env(null, { confidence: 'reviewed', source, as_of: '2026-09-08' }),
+      label_indications_verbatim: env(null, { source, as_of: '2026-09-08' }),
+    })
+    const { container } = renderCard()
+    await waitFor(() => expect(container.textContent).toMatch(/PADCEV/))
+    expect(container.textContent).toMatch(/returned no indications_and_usage/)
+    // The absence is stated, and no tumour type is guessed in its place.
+    expect(container.textContent).not.toMatch(/Urothelial cancer/)
+  })
+
+  it('D-136 — a payload missing the field entirely says so rather than rendering nothing', async () => {
+    const { cancer_type, label_indications_verbatim, ...withoutIndication } = PADCEV
+    getAdc.mockResolvedValue(withoutIndication)
+    const { container } = renderCard()
+    await waitFor(() => expect(container.textContent).toMatch(/PADCEV/))
+    expect(container.textContent).toMatch(/Cancer type/)
+    expect(container.textContent).toMatch(/not in this payload/)
+    expect(container.textContent).not.toMatch(/urothelial/i)
   })
 
   it('unknown id is not a 200-with-a-guess', async () => {

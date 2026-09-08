@@ -253,11 +253,22 @@ def test_d130_is_the_next_free_decision_id():
     ⚠ **Widened again at D-134 — to ``[132, 133, 134]`` — the same way.** D-134
     is the stitched-parent census-identity fix; it is named below, so a stray
     ``### D-135`` still fails rather than slipping under a ``>=``.
+
+    ⚠ **Widened again at D-136 — to ``[132, 133, 134, 136]`` — the same way.**
+    D-136 fills the ADC Approved Cancer type column from the FDA label; it is
+    named below, so a stray ``### D-137`` still fails. ⚠ **135 is deliberately
+    ABSENT and must stay absent on this branch** — it is spent by the in-flight
+    D-135 Coverage dual-pop work, which is not in this diff.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134], (
-        f"D-130's successors must be exactly D-132, D-133 and D-134; found {ids[-4:]}"
+    assert [i for i in ids if i > 130] == [132, 133, 134, 136], (
+        f"D-130's successors must be exactly D-132, D-133, D-134 and D-136; "
+        f"found {ids[-5:]}"
+    )
+    assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
+        "D-136 must be the ADC cancer-type entry, not some other entry that "
+        "took the number"
     )
     assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
         "D-134 must be the stitched-parent census-identity entry, not some "
