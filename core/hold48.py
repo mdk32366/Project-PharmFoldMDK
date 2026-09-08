@@ -53,9 +53,50 @@ IGF2R_SPAN_AA = 2264
 
 OUT_OF_CLASS = "out_of_class"
 HOLD48_KIND_PARENT = "parent"
+# ⚠⚠ D-134. `emit_tile_jobs` writes `parent`; ops `write_stitched` on the live volume
+# wrote **`parent_stitched`** on all 45 assembled parents, and that spelling was never in
+# this table. Every read keyed on the single string above therefore missed every real
+# parent on Fly — measured 2026-09-08: `/api/census` returned 45 rows with
+# `hold48_kind=parent_stitched` and `structure_kind=single-pass`, so the D-133 fold-type
+# chips showed **0 assembled**. A read path must accept the tags the volume actually
+# carries; the write path is unchanged.
+HOLD48_KIND_PARENT_STITCHED = "parent_stitched"
 HOLD48_KIND_TILE = "tile"
 
+#: Every meta spelling that means *this row is the whole protein, not a window*.
+#: ⚠ Read-side vocabulary. `emit_tile_jobs` still writes exactly `HOLD48_KIND_PARENT`
+#: — widening the reader is not licence to mint a second write spelling.
+HOLD48_PARENT_KINDS: frozenset[str] = frozenset({
+    HOLD48_KIND_PARENT,
+    HOLD48_KIND_PARENT_STITCHED,
+})
+
+#: What `write_stitched` names the assembled structure it writes. The second, independent
+#: signal that a row is an assembled parent (D-134 decision 2) — a meta string can drift
+#: again, an artifact basename is written by this repo's own stitcher.
+STITCHED_PDB_BASENAME = "stitched.pdb"
+
 CENSUS_TRANCHE = 5
+
+
+def is_parent_kind(kind: Optional[str]) -> bool:
+    """True for any recorded spelling of *hold-48 parent* (D-134).
+
+    ⚠ Membership in a named set, never `== HOLD48_KIND_PARENT`. The single-string
+    comparison is the D-134 defect itself.
+    """
+    return kind in HOLD48_PARENT_KINDS
+
+
+def is_stitched_artifact_path(pdb_path: Optional[str]) -> bool:
+    """True when a stored PDB path is one `write_stitched` produced.
+
+    ⚠ Basename only, and only of a path already stored on the row — no path is
+    constructed, guessed, or probed here (D-034 §2a).
+    """
+    if not pdb_path:
+        return False
+    return Path(str(pdb_path)).name == STITCHED_PDB_BASENAME
 
 
 class OneShotRentalForbidden(ValueError):
