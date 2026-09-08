@@ -558,6 +558,23 @@ So the rule is not "be careful" — it is:
     anywhere**: `core.foldability.split` and `core.census.census_split` stay batch-tool surfaces,
     because a served `2,691 / 349 / 427` on a page is a headline and a headline about our budget
     beside an unscored census is the thing refusal 2 is about.
+  - **⚠ Proven by revert, not by reading (A-017 clause (a) — a guard nobody has seen go red is a
+    guard nobody should trust). Each of the six was applied to the tree, run, and reverted on
+    2026-09-08; every one fails **by name**:**
+    1. `from app.census_cost_read import cost_for_span` added to `core/scorer.py` →
+       `test_the_cost_supplier_is_not_reachable_from_the_scorer_or_the_features`.
+    2. `cost_for_span` returning `LOCAL` instead of `SPAN_UNRECORDED` for an absent span →
+       **16** failures, including the live-route ones — the absence is checked at the supplier,
+       through `apply_cost`, and through `GET /api/census`.
+    3. `apply_cost` growing an `only_local: bool = False` parameter →
+       `test_apply_cost_has_no_predicate_to_filter_with`.
+    4. A `costFilter` state plus a `.filter((r) => r.cost === costFilter)` step in the component's
+       narrowing pipeline → `test_the_component_has_no_cost_filter_of_any_kind`.
+    5. `span_unrecorded` appended to `COST_ORDER` → **two** component tests, one of them
+       *"sorts the unrecorded span LAST in both directions, never first when reversed"* — so the
+       absence-as-dearest-row defect is caught by a render, not only by a source read.
+    6. The `cost` entry removed from `COLUMNS` → `test_cost_is_a_real_columns_entry…`, which is
+       the tripwire D-133 needed and did not have.
   - **Files:** new `app/census_cost_read.py`; `app/read_routes.py` (`list_census` composition);
     `ui/src/components/CensusTable.jsx` (`COST_ORDER`, `costBadgeKey`, the `cost` column, the
     cost legend, `sortValue`/`compare`); `ui/src/styles.css`; new
