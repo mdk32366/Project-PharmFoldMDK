@@ -105,7 +105,16 @@ D128_LINKER_SEAM_SHA256 = "c270f8711040471a9080a23ab4c1e167a0cc2eedf546c3481cd9e
 # by-content guard below is again left untouched, so a softened 0-of-7, a
 # deleted refuse class, or a run silently re-scoped onto 45 parents still fails
 # with a reason rather than on a digest.
-METHOD_SHA256 = "219409f619c9d13e94945cd5dcb641bc41e1c312f38e0be77ea848756b9904dd"
+# ⚠ Re-pinned at **D-139** (`219409f6…` → below), the served-path flip, which is
+# the decision entry behind this edit — exactly what the pin demands. The Method
+# file gains an **Addendum D-139** and, on each earlier "served is still the
+# assembler" sentence, an in-place scope marker naming D-139 (D-129-C's rule: a
+# claim a later decision narrowed never stands alone). ⚠ **Additive and in the
+# safe direction:** no OPS figure is restated, re-scoped or softened, no refuse
+# class is dropped, and every parent this file's earlier sections are about is
+# named as EXCLUDED from the flip. The by-content guards below are untouched —
+# the digest moved, the disclosure did not.
+METHOD_SHA256 = "e40035aeacdcd68814a9d891a9b50ac6028c39b42190b04e600614a6030cb7a9"
 
 MODULE_PINS = {
     "core/hold48_kabsch.py": D125_KABSCH_SHA256,

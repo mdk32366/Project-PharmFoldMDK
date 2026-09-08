@@ -76,7 +76,16 @@ MODULE_PINS = {
 # only it, while the volume measured **45** assembled parents on 2026-09-08. No
 # OPS number is restated, re-scoped, or softened, and the content guards below
 # are untouched — the digest moved, the disclosure did not.
-METHOD_SHA256 = "219409f619c9d13e94945cd5dcb641bc41e1c312f38e0be77ea848756b9904dd"
+# ⚠ Re-pinned at **D-139** (`219409f6…` → below), the served-path flip, which is
+# the decision entry behind this edit — exactly what the pin demands. The Method
+# file gains an **Addendum D-139** and, on each earlier "served is still the
+# assembler" sentence, an in-place scope marker naming D-139 (D-129-C's rule: a
+# claim a later decision narrowed never stands alone). ⚠ **Additive and in the
+# safe direction:** no OPS figure is restated, re-scoped or softened, no refuse
+# class is dropped, and every parent this file's earlier sections are about is
+# named as EXCLUDED from the flip. The by-content guards below are untouched —
+# the digest moved, the disclosure did not.
+METHOD_SHA256 = "e40035aeacdcd68814a9d891a9b50ac6028c39b42190b04e600614a6030cb7a9"
 
 
 def _flat(text: str) -> str:
