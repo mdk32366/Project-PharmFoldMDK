@@ -1,4 +1,4 @@
-"""D-119 / D-124 / D-136 — ADC catalogs are dated JSON contracts.
+"""D-119 / D-124 / D-136 / D-139 — ADC catalogs are dated JSON contracts.
 
 Pure and fixture-testable (no network, no DB, no GPU). The live openFDA queries
 dated ``data/adcs/adcs.v1.json``; they do not run here. Weekly Drugs@FDA watch
@@ -13,6 +13,16 @@ SPL §1 INDICATIONS AND USAGE text. Each row carries the reviewed tumour-type li
 :func:`_check_cancer_type_field` refuses any category that is not a literal
 substring of that row's own stored text. ⚠ HPA / census staining may never reach
 this column (D-093: staining is not an FDA indication).
+
+**D-139** gives the pipeline shelf its own ``cancer_type`` and ``description``,
+and it does **not** reuse D-136's machinery. An investigational agent has no FDA
+indication to name, so the authority is the **trial registry** the row's own
+citation already pointed at (ClinicalTrials.gov Conditions and lead sponsor) or
+that citation's own body — and :func:`_check_pipeline_condition_source` **refuses
+an FDA label authority here**, because borrowing one would promote a pipeline row
+to approved through the source string. The substring audit is the same shape as
+D-136's: every tumour token must be a literal substring of the
+``conditions_verbatim`` text stored on the same row.
 
 This is **not** ``core.adc_reference``. That file is the scorer's Group B/C
 instrument. ``adcs.v1.json`` is the approved-drug roster ADC-B (D-122) consumes.
@@ -91,6 +101,8 @@ STAINING_SOURCE_TOKENS = (
     "census",
 )
 # D-124 pipeline rows: identity + reviewed target + closed stage/phase. No invent.
+# D-139 adds the three programme fields — and they are the ONLY three. An
+# investigational row still carries no DAR / efficacy / FDA-label field.
 PIPELINE_FIELDS = (
     "id",
     "name",
@@ -99,6 +111,9 @@ PIPELINE_FIELDS = (
     "development_stage",
     "phase",
     "source_citation",
+    "cancer_type",
+    "conditions_verbatim",
+    "description",
 )
 PIPELINE_HEADER_FIELDS = (
     "catalog_id",
@@ -107,7 +122,40 @@ PIPELINE_HEADER_FIELDS = (
     "completeness",
     "mapping_sourced_as_of",
     "catalog_assembled_as_of",
+    "conditions_reviewed_as_of",
+    "registry_artifact",
 )
+PIPELINE_CONDITIONS_FIELD = "conditions_verbatim"
+PIPELINE_DESCRIPTION_FIELD = "description"
+# D-139 decision 3 — a pipeline tumour type is a human read of registry or citation
+# text, every time. `official` is refused (this row has no FDA anything) and so is
+# `derived` (a tumour type cannot be computed from a slug, D-136 decision 5).
+PIPELINE_CANCER_TYPE_CONFIDENCES = ("reviewed",)
+# The verbatim anchor is either the registry's own Conditions as returned
+# (`official`) or this row's curated on-disk citation quoted whole (`reviewed`).
+PIPELINE_CONDITIONS_CONFIDENCES = ("official", "reviewed")
+PIPELINE_DESCRIPTION_CONFIDENCES = ("reviewed",)
+# The two authorities D-139 admits, and nothing else.
+PIPELINE_CONDITION_AUTHORITIES = (
+    "clinicaltrials.gov",
+    "data/adc_reference_mapping.csv",
+    "source_citation",
+)
+# ⚠ An FDA indication authority on a PIPELINE row is refused, not accepted as a
+# stronger source: these agents are not approved, and a source string is not the
+# place to promote one (D-139 decision 6).
+FDA_LABEL_AUTHORITY_TOKENS = (
+    "api.fda.gov",
+    "accessdata.fda.gov",
+    "drugs@fda",
+    "drugsfda",
+    "drug/label.json",
+    "indications and usage",
+)
+NCT_ID_PATTERN = re.compile(r"NCT\d{8}")
+# A description is a maker and one line, not a paragraph.
+PIPELINE_DESCRIPTION_SEPARATOR = " — "
+PIPELINE_DESCRIPTION_MAX_CHARS = 240
 # Architect D-124 phase pin — reject all others.
 PHASE_VOCAB = (
     "Phase 1",
@@ -278,6 +326,178 @@ def _check_cancer_type_field(label: str, obj: Any, verbatim: Any) -> None:
             )
 
 
+def _check_pipeline_condition_source(label: str, source: str) -> None:
+    """A pipeline programme claim is registry text or citation text — or nothing.
+
+    Two refusals, and they close different holes. The D-093 denylist is the same
+    one D-136 uses: staining is not what a trial is enrolling. The FDA-authority
+    refusal is D-139's own: an investigational row that cites a drug label has
+    either found somebody else's approval or invented one.
+    """
+    lowered = source.lower()
+    for token in STAINING_SOURCE_TOKENS:
+        if token in lowered:
+            raise CatalogError(
+                f"{label} source names {token!r}: HPA / staining is not what a trial "
+                "enrols or what a citation states (D-093). A pipeline cancer type may "
+                "not be joined from IHC, the derived association map, or the census."
+            )
+    for token in FDA_LABEL_AUTHORITY_TOKENS:
+        if token in lowered:
+            raise CatalogError(
+                f"{label} source names the FDA label authority {token!r}: this row is "
+                "investigational and has no FDA indication (D-139 decision 6). Citing "
+                "one here would promote a pipeline row to approved in a source string."
+            )
+    if not any(auth in lowered for auth in PIPELINE_CONDITION_AUTHORITIES):
+        raise CatalogError(
+            f"{label} source names no D-139 authority {PIPELINE_CONDITION_AUTHORITIES}"
+        )
+    if not re.search(r"\d{4}-\d{2}-\d{2}", source):
+        raise CatalogError(f"{label} source carries no ISO retrieval / curation date")
+
+
+def _check_pipeline_conditions_field(label: str, obj: Any, citation: Any) -> None:
+    """``conditions_verbatim``: the text a tumour type may be audited against.
+
+    ``official`` means the registry's own Conditions as returned, and the source must
+    name the record. ``reviewed`` means this row's curated citation quoted whole — so
+    the loader checks it really is a quote, rather than trusting the word.
+    """
+    if not _is_field(obj):
+        raise CatalogError(f"{label} is not a {{value, source, as_of, confidence}} field")
+    if obj["confidence"] not in PIPELINE_CONDITIONS_CONFIDENCES:
+        raise CatalogError(
+            f"{label} confidence {obj['confidence']!r} is not in "
+            f"{PIPELINE_CONDITIONS_CONFIDENCES}"
+        )
+    if not obj["source"] or not obj["as_of"]:
+        raise CatalogError(f"{label} is missing source or as_of")
+    _check_pipeline_condition_source(label, obj["source"])
+    value = obj["value"]
+    if value is None:
+        return
+    if not isinstance(value, str) or not value.strip():
+        raise CatalogError(f"{label} value must be the stored text, or null")
+    if obj["confidence"] == "official":
+        if not NCT_ID_PATTERN.search(obj["source"]):
+            raise CatalogError(
+                f"{label} claims 'official' but its source names no NCT record: only a "
+                "registry record returns Conditions text (D-139 decision 2)"
+            )
+        return
+    # `reviewed` — it must actually be a quote of the citation already on this row.
+    citation_value = citation.get("value") if isinstance(citation, dict) else None
+    if not citation_value or _normalise_indication_text(value) not in _normalise_indication_text(
+        str(citation_value)
+    ):
+        raise CatalogError(
+            f"{label} is 'reviewed' but is not a literal quote of this row's own "
+            "source_citation: a verbatim anchor nobody can check against something "
+            "already on disk is the invented text this field exists to refuse "
+            "(D-139 decision 2)"
+        )
+
+
+def _check_pipeline_cancer_type_field(label: str, obj: Any, conditions: Any) -> None:
+    """``cancer_type`` on a pipeline row: audited against that row's own stored text.
+
+    ⚠⚠ The load-bearing check, D-136's rule imported wholesale (D-139 decision 4).
+    A tumour typed from memory does not fail review — it fails here.
+    """
+    if not _is_field(obj):
+        raise CatalogError(f"{label} is not a {{value, source, as_of, confidence}} field")
+    if obj["confidence"] not in PIPELINE_CANCER_TYPE_CONFIDENCES:
+        raise CatalogError(
+            f"{label} confidence {obj['confidence']!r} is not in "
+            f"{PIPELINE_CANCER_TYPE_CONFIDENCES}: reducing registry or citation text to "
+            "a tumour type is a human read, and an investigational agent has no "
+            "official indication to inherit one from (D-139 decision 3)"
+        )
+    if not obj["source"] or not obj["as_of"]:
+        raise CatalogError(f"{label} is missing source or as_of")
+    _check_pipeline_condition_source(label, obj["source"])
+
+    value = obj["value"]
+    if value is None:
+        # A named absence: the source above already had to say what was read and
+        # came back without a tumour type (D-139 decision 5).
+        return
+    if not isinstance(value, list) or not value:
+        raise CatalogError(
+            f"{label} value must be a non-empty list of tumour types, or null for a "
+            "named absence — a bare string is not data (D-119 decision 2)"
+        )
+    if any(not isinstance(t, str) or not t.strip() for t in value):
+        raise CatalogError(f"{label} value has an empty or non-string tumour type")
+    if len({t.strip().lower() for t in value}) != len(value):
+        raise CatalogError(f"{label} value repeats a tumour type")
+
+    conditions_value = conditions.get("value") if isinstance(conditions, dict) else None
+    if not conditions_value:
+        raise CatalogError(
+            f"{label} carries tumour types but {PIPELINE_CONDITIONS_FIELD} on the same "
+            "row has no stored text to audit them against (D-139 decision 4)"
+        )
+    haystack = _normalise_indication_text(str(conditions_value))
+    for token in value:
+        if _normalise_indication_text(token) not in haystack:
+            raise CatalogError(
+                f"{label} tumour type {token!r} is not in this row's "
+                f"{PIPELINE_CONDITIONS_FIELD} text: a tumour this row's own registry "
+                "record and citation do not state (D-139 decision 4)"
+            )
+
+
+def _check_pipeline_description_field(label: str, obj: Any) -> None:
+    """``description``: who is making it, then one line — or a named absence.
+
+    The maker is the load-bearing half, so it is audited the only way a file-local
+    check can audit it: the text before the em dash must appear in the source string,
+    which is where the registry's ``leadSponsor`` / the citation's own wording is
+    quoted (D-139 decision 5).
+    """
+    if not _is_field(obj):
+        raise CatalogError(f"{label} is not a {{value, source, as_of, confidence}} field")
+    if obj["confidence"] not in PIPELINE_DESCRIPTION_CONFIDENCES:
+        raise CatalogError(
+            f"{label} confidence {obj['confidence']!r} is not in "
+            f"{PIPELINE_DESCRIPTION_CONFIDENCES}: a one-line programme summary is a "
+            "human read (D-139 decision 5)"
+        )
+    if not obj["source"] or not obj["as_of"]:
+        raise CatalogError(f"{label} is missing source or as_of")
+    _check_pipeline_condition_source(label, obj["source"])
+
+    value = obj["value"]
+    if value is None:
+        return
+    if not isinstance(value, str) or not value.strip():
+        raise CatalogError(
+            f"{label} value must be a maker and one line, or null for a named absence "
+            "— a blank that looks like data is refused (D-139 decision 5)"
+        )
+    if len(value) > PIPELINE_DESCRIPTION_MAX_CHARS:
+        raise CatalogError(
+            f"{label} value is {len(value)} characters: a programme one-liner is capped "
+            f"at {PIPELINE_DESCRIPTION_MAX_CHARS} (D-139 decision 5)"
+        )
+    if PIPELINE_DESCRIPTION_SEPARATOR not in value:
+        raise CatalogError(
+            f"{label} value must read 'maker{PIPELINE_DESCRIPTION_SEPARATOR}one line': "
+            "the maker is the half this field exists for, and it has to be separable "
+            "to be audited (D-139 decision 5)"
+        )
+    maker, _, line = value.partition(PIPELINE_DESCRIPTION_SEPARATOR)
+    if not maker.strip() or not line.strip():
+        raise CatalogError(f"{label} value is missing either the maker or the one line")
+    if _normalise_indication_text(maker) not in _normalise_indication_text(obj["source"]):
+        raise CatalogError(
+            f"{label} maker {maker!r} does not appear in this field's own source: a "
+            "sponsor named from memory is exactly the guess D-139 decision 5 refuses"
+        )
+
+
 def _walk_forbidden_keys(obj: Any, trail: str = "") -> None:
     if isinstance(obj, dict):
         for k, v in obj.items():
@@ -388,7 +608,26 @@ def load_pipeline(path: Any = PIPELINE_V1, approved_path: Any = CATALOG_V1) -> d
         for name in PIPELINE_FIELDS:
             if name not in row:
                 raise CatalogError(f"pipeline[{i}] is missing {name}")
+            if name in (
+                CANCER_TYPE_FIELD,
+                PIPELINE_CONDITIONS_FIELD,
+                PIPELINE_DESCRIPTION_FIELD,
+            ):
+                continue
             _check_field(f"pipeline[{i}].{name}", row[name])
+        _check_pipeline_conditions_field(
+            f"pipeline[{i}].{PIPELINE_CONDITIONS_FIELD}",
+            row[PIPELINE_CONDITIONS_FIELD],
+            row["source_citation"],
+        )
+        _check_pipeline_cancer_type_field(
+            f"pipeline[{i}].{CANCER_TYPE_FIELD}",
+            row[CANCER_TYPE_FIELD],
+            row[PIPELINE_CONDITIONS_FIELD],
+        )
+        _check_pipeline_description_field(
+            f"pipeline[{i}].{PIPELINE_DESCRIPTION_FIELD}", row[PIPELINE_DESCRIPTION_FIELD]
+        )
         extra = set(row) - set(PIPELINE_FIELDS)
         if extra:
             raise CatalogError(f"pipeline[{i}] has extra keys {sorted(extra)}")
