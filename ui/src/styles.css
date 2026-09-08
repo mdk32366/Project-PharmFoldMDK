@@ -163,6 +163,30 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .cohort-table .not-folded { color: var(--muted); }
 .cohort-table .note-cell { color: var(--muted); font-size: 0.82rem; }
 
+/* ⚠⚠ D-135 — the SECOND population on /coverage, and it is styled to be told apart rather than to
+   compete. It sits below the coverage line in the page's ordinary panel treatment, and its figures
+   are DELIBERATELY smaller than `.coverage-headline`: the one number this page leads with is the
+   cohort's `ranked ∧ folded` intersection (D-024), and a larger census figure beside it would
+   overstate the cohort by typography alone. No accent colour, no emphasis — a different population,
+   not a better result. */
+.census-population { margin-top: 1.2rem; }
+.census-population h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+.census-population-bar { font-size: 0.88rem; color: #b9c4cc; margin: 0 0 0.7rem; }
+.census-population-figures { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 0 0 0.8rem; }
+.census-population-figures > div { min-width: 11rem; }
+.census-population-figures dt { font-size: 1.15rem; font-weight: 700; color: #cbd5e0; font-variant-numeric: tabular-nums; }
+.census-population-figures dd { margin: 0.1rem 0 0; color: var(--muted); font-size: 0.84rem; max-width: 18rem; }
+.census-population-kinds-lede { font-size: 0.84rem; color: var(--muted); margin: 0 0 0.35rem; }
+.census-population-kinds { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0; margin: 0; }
+/* ⚠ the chips here are LINKS, not toggles, so nothing is ever drawn as `chip-on`: none of them is
+   in force on this page and a selected-looking chip would imply this page had filtered something. */
+.census-population-kinds .chip { text-decoration: none; display: inline-block; }
+
+/* ⚠ D-135: the census bridge on a cohort row that did not fold here. Muted and inline — it is a
+   note, never a status, and the Fold column still says `failed`. */
+.cohort-table .chip-census-sibling { text-decoration: none; font-size: 0.78rem; white-space: nowrap; }
+.cohort-table .census-sibling-note { display: block; margin-top: 0.15rem; font-size: 0.78rem; }
+
 /* D-048 §3.1 provenance — three labelled groups (weights / recipe / environment) */
 .prov-group { margin: 0.4rem 0 0.9rem; }
 .prov-group h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
@@ -202,6 +226,29 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 /* D-051 Story (cold-open) */
 .story h1 { line-height: 1.2; }
 .story-cta a { font-weight: 600; }
+
+/* ⚠ D-135: the CTA splits, so the two links need to sit apart rather than run together as one
+   sentence — the page describes two populations and neither is offered as the better one. */
+.story-cta { display: flex; flex-wrap: wrap; gap: 1.4rem; }
+
+/* ⚠⚠ D-135 — the cold strip. Three counts, each labelled with the population it belongs to. The
+   figures are all the same size ON PURPOSE: a larger census number would read as a bigger result,
+   and it is a different population measured under a different span rule (D-081), not more of the
+   cohort. Nothing here is ordered by size or by merit. */
+.story-cold-strip {
+  display: flex; flex-wrap: wrap; gap: 1.6rem;
+  margin: 1.2rem 0 1.4rem; padding: 0.9rem 1rem;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--panel);
+}
+.story-cold-strip > div { flex: 1 1 13rem; min-width: 12rem; }
+.story-cold-strip dt { font-size: 1.7rem; font-weight: 700; color: #e2e8f0; font-variant-numeric: tabular-nums; }
+.story-cold-strip dd { margin: 0.15rem 0 0; color: #b9c4cc; font-size: 0.87rem; line-height: 1.45; }
+
+/* ⚠ D-135: the beat contents. An ordered list because the beats are a sequence — the argument runs
+   cohort → census → tiles → fit → the open question, and skimming out of order loses it. */
+.story-toc { margin: 0 0 1.6rem; }
+.story-toc ol { margin: 0.3rem 0 0; padding-left: 1.3rem; color: var(--muted); }
+.story-toc li { margin: 0.15rem 0; font-size: 0.92rem; }
 
 /* D-051 architecture diagram — rendered from system-model.json */
 .arch-diagram { margin: 1rem 0 1.5rem; }

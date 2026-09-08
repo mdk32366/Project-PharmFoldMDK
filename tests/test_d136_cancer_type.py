@@ -17,6 +17,7 @@ The two tests this suite exists for:
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -47,8 +48,6 @@ DOCS_README = ROOT / "docs" / "README.md"
 
 def _normalise(text):
     """The loader's own normalisation, restated so the test does not inherit a bug."""
-    import re
-
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", text.lower())).strip()
 
 
@@ -355,9 +354,54 @@ def test_d136_entry_exists_in_the_living_log():
     assert "\n### D-137" not in log
 
 
-def test_the_log_entry_records_the_count_it_reports():
+def test_every_entry_slice_in_this_suite_is_anchored_to_a_line_start():
+    """⚠⚠ D-136 amendment 1 — the fix is in the SLICING, not in the prose.
+
+    A first draft of this test asserted the opposite: that no entry may quote a
+    ``### D-NNN`` token mid-line. **That was a misdiagnosis, and it failed against
+    ~130 pre-existing occurrences.** Quoting a heading inline is this log's
+    established evidence-of-provenance habit — method-note item 7 asks an entry to
+    show it confirmed the heading exists, and entries do that by naming it. A guard
+    that condemned the practice would have been a rule invented here and back-dated
+    over the whole history.
+
+    What is actually wrong is locating an entry with an **unanchored** index lookup,
+    which cannot tell a heading from a citation of one. So the property worth pinning
+    is that a slice returns exactly one entry: D-136's own text, with its neighbour's
+    kept out.
+    """
     log = DOCS_README.read_text(encoding="utf-8")
-    entry = log.split("\n### D-136 —", 1)[1].split("\n### D-134", 1)[0]
+
+    # Anchored, the way the helpers now do it.
+    d136 = re.search(r"^### D-136 —", log, re.M)
+    d135 = re.search(r"^### D-135 —", log, re.M)
+    assert d136 and d135
+    # Newest-first: D-136 is above D-135, and neither slice reaches the other.
+    assert d136.start() < d135.start()
+    assert "Coverage gains a SECOND population" not in log[d136.start(): d135.start()]
+
+    # Unanchored, the way they used to: this PR's own entry cites D-135's heading as
+    # evidence, so a bare index lookup lands INSIDE D-136 rather than on D-135.
+    assert log.index("### D-135") < d135.start(), (
+        "this assertion documents WHY the helpers are anchored; if it ever fails, the "
+        "citation was removed and the anchoring is no longer load-bearing here"
+    )
+
+
+def test_the_log_entry_records_the_count_it_reports():
+    """⚠ Bounded by the NEXT heading, whatever it is — not by a named neighbour.
+
+    The first draft ended the slice at ``\\n### D-134``, which was D-136's
+    neighbour on a branch cut before D-135 merged. That is a hidden dependency
+    on merge order: D-135 landing between them silently widened the slice, so
+    the assertions below would have started passing on someone else's entry.
+    """
+    log = DOCS_README.read_text(encoding="utf-8")
+    rest = log.split("\n### D-136 —", 1)[1]
+    next_heading = re.search(r"\n### D-\d", rest)
+    entry = rest[: next_heading.start()] if next_heading else rest
     assert "15 of 15" in entry
     assert "D-093" in entry
     assert "D-122 decision 3" in entry
+    # The slice really is only D-136's own entry.
+    assert "Coverage gains a SECOND population" not in entry

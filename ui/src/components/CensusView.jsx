@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { CENSUS, CENSUS_LIMITS } from '../censusSummary.js'
 import { listCensus } from '../api.js'
 import CensusTable from './CensusTable.jsx'
@@ -229,9 +230,32 @@ export default function CensusView() {
 
 // The browsable list (D-087). ⚠ Loads on mount; an error is stated, never rendered as an empty
 // table — "nothing matched" and "the request failed" must not look the same.
+//
+// ⚠⚠ THE FOLD-TYPE FILTER LIVES IN THE QUERY STRING (D-135). `/census?structure=assembled` has to
+// be an ADDRESS: `/coverage`'s second-population strip and the Story's CTA both link straight at the
+// assembled proteins, and a link that lands on an unfiltered table and asks the reader to find the
+// chip is a link that has not arrived. The URL is the state — one place, so the chip and the address
+// bar cannot disagree, and the back button works because it always did.
+//
+// ⚠ ABSENT MEANS `all`, which is D-102's bar restated: the page does not arrive having chosen. An
+// UNRECOGNISED kind also means `all`, and it falls closed inside `CensusTable` where the rows are
+// — see `resolveKind`. Writing `?structure=all` into the URL would be noise, so the parameter is
+// DELETED when the reader goes back to all rather than set to a word.
 function CensusBrowser() {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
+  const [params, setParams] = useSearchParams()
+  const structure = params.get('structure')
+
+  const setStructure = (key) => {
+    const next = new URLSearchParams(params)
+    if (key === 'all') next.delete('structure')
+    else next.set('structure', key)
+    // ⚠ `replace`: choosing a chip is refining one view, not navigating to a new page. Pushing a
+    // history entry per chip would make the back button undo filter clicks one at a time before it
+    // returned the reader to wherever they came from.
+    setParams(next, { replace: true })
+  }
 
   useEffect(() => {
     let live = true
@@ -258,7 +282,7 @@ function CensusBrowser() {
       {/* ⚠ No inline panel any more — each protein has its own page (`/census/:id`), which the
           accession links to. A panel AND a page would be two surfaces describing one protein,
           free to drift apart. */}
-      <CensusTable rows={rows} />
+      <CensusTable rows={rows} kindFilter={structure ?? 'all'} onKindFilter={setStructure} />
     </>
   )
 }

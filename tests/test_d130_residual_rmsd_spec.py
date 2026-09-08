@@ -251,20 +251,28 @@ def test_d130_is_the_next_free_decision_id():
     ``### D-134`` fails too.
 
     ⚠ **Widened again at D-134 — to ``[132, 133, 134]`` — the same way.** D-134
-    is the stitched-parent census-identity fix; it is named below, so a stray
-    ``### D-135`` still fails rather than slipping under a ``>=``.
+    is the stitched-parent census-identity fix; it is named below.
 
-    ⚠ **Widened again at D-136 — to ``[132, 133, 134, 136]`` — the same way.**
-    D-136 fills the ADC Approved Cancer type column from the FDA label; it is
-    named below, so a stray ``### D-137`` still fails. ⚠ **135 is deliberately
-    ABSENT and must stay absent on this branch** — it is spent by the in-flight
-    D-135 Coverage dual-pop work, which is not in this diff.
+    ⚠ **Widened again at D-135 — to ``[132, 133, 134, 135]`` — and again by
+    enumeration rather than by a ``>=``.** Spending D-135 reddened the previous
+    form BY DESIGN: that is the collision guard working, not a false alarm.
+    D-135 is the Coverage dual-population / Story-consumability entry, named
+    below so an entry that merely *takes* the number still fails, and a stray
+    ``### D-136`` fails too.
+
+    ⚠ **Widened again at D-136 — to ``[132, 133, 134, 135, 136]`` — the same
+    way.** D-136 fills the ADC Approved Cancer type column from the FDA label;
+    it is named below, so a stray ``### D-137`` still fails. ⚠ **This is the
+    two-branch collision the guard exists for, and it resolved by ADDING rather
+    than loosening:** D-135 and D-136 were in flight together, each widened this
+    list to exclude the other, and the merge carries **both** ids and **both**
+    named-entry assertions instead of relaxing either to a ``>=``.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 136], (
-        f"D-130's successors must be exactly D-132, D-133, D-134 and D-136; "
-        f"found {ids[-5:]}"
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136], (
+        f"D-130's successors must be exactly D-132, D-133, D-134, D-135 and D-136; "
+        f"found {ids[-6:]}"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 must be the ADC cancer-type entry, not some other entry that "
@@ -272,6 +280,10 @@ def test_d130_is_the_next_free_decision_id():
     )
     assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
         "D-134 must be the stitched-parent census-identity entry, not some "
+        "other entry that took the number"
+    )
+    assert re.search(r"^### D-135 — Coverage gains a SECOND population", LOG, re.M), (
+        "D-135 must be the Coverage dual-population / Story entry, not some "
         "other entry that took the number"
     )
     assert re.search(r"^### D-132 — Assemble-inventory amend", LOG, re.M), (
