@@ -102,6 +102,22 @@ def _slice(text: str, start_marker: str, end_marker: str, label: str) -> str:
     return text[start:end]
 
 
+def _h3(text: str, heading: str, label: str) -> str:
+    """The opening ``<h3 …>`` tag for a heading, WHATEVER attributes it carries.
+
+    ⚠ Every marker below was a ``"<h3>Linker / seam honesty…"`` literal until
+    **D-138**, which gave each heading the ``id`` its contents rail links to and
+    reddened all of them at once. The section's identity is its **heading text**;
+    the tag's attribute list is not, and typing the attributes in here would only
+    re-arm the same trip for the next attribute. So the marker is read back out of
+    the file instead of being spelt a second time — the same move D-136 amendment 1
+    made when it stopped bounding an entry by its named neighbour.
+    """
+    match = re.search(rf"<h3\b[^>]*>{re.escape(heading)}", text)
+    assert match is not None, f"{label}: no <h3> heading starting {heading!r}"
+    return match.group(0)
+
+
 def d128_method_sections() -> tuple[tuple[str, str], ...]:
     """The D-128-B addendum ALONE, on both surfaces.
 
@@ -130,8 +146,16 @@ def d128_method_sections() -> tuple[tuple[str, str], ...]:
         (
             _slice(
                 METHOD_NOTE,
-                "<h3>Linker / seam honesty, and the five-step stitch-path train",
-                "<h3>What we now call the eight joins we could not hold",
+                _h3(
+                    METHOD_NOTE,
+                    "Linker / seam honesty, and the five-step stitch-path train",
+                    "MethodNote.jsx",
+                ),
+                _h3(
+                    METHOD_NOTE,
+                    "What we now call the eight joins we could not hold",
+                    "MethodNote.jsx",
+                ),
                 "MethodNote.jsx",
             ),
             "MethodNote.jsx (D-128-B addendum)",
@@ -1218,13 +1242,13 @@ def test_method_addendum_does_not_gut_the_four_earlier_sections():
     ):
         assert heading in METHOD_MD, heading
     for heading in (
-        "<h3>Kabsch-path restitch",
-        "<h3>Overlap-confidence Kabsch",
-        "<h3>Piecewise / domain-aware Kabsch",
-        "<h3>Linker / seam honesty",
-        "<h3>Long proteins: tiles, glue, and a winner-tile assembler (D-121)</h3>",
+        "Kabsch-path restitch",
+        "Overlap-confidence Kabsch",
+        "Piecewise / domain-aware Kabsch",
+        "Linker / seam honesty",
+        "Long proteins: tiles, glue, and a winner-tile assembler (D-121)</h3>",
     ):
-        assert heading in METHOD_NOTE, heading
+        _h3(METHOD_NOTE, heading, "MethodNote.jsx")
     for testid in (
         "hold48-explainer",
         "kabsch-method-addendum",
