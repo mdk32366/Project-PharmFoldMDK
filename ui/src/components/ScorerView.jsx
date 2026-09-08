@@ -102,8 +102,13 @@ function FullResult({ ranking, coverage, partial }) {
   return (
     <div className="scorer">
       <h2>The scorer result</h2>
+      {/* ⚠ D-132 — the count moved from 27 to 45; the RULING did not move. These parents
+          are disclosed here and are not in the fit, the persist path, or the table. The
+          27 stays named as the 2026-09-05 wave slice inside the 45 so this line cannot be
+          read as "Wave1+Wave2 were 45 all along". */}
       <p className="note scorer-assembly-note" data-testid="scorer-assembly-note">
-        The 27 unique stitched parents (Wave1 PASS 10 + Wave2 PASS 17) are not in
+        The 45 unique assembled parents (measured 2026-09-08; of them the 2026-09-05
+        Wave1+Wave2 closeout slice is 27 — Wave1 PASS 10 + Wave2 PASS 17) are not in
         this ranking (D-109).
       </p>
       {partial && (

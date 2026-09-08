@@ -26,7 +26,11 @@ from app.reads import (
 )
 from db.models import Base, ProteinAnalysis
 
-# 27 unique Wave1+Wave2 stitched parents (D-117 inventory) + IGF2R 3356 if distinct.
+# The 27 Wave1+Wave2 stitched parents (D-117 inventory) + IGF2R 3356 if distinct.
+# ⚠ D-132: 27 is the 2026-09-05 WAVE SLICE, not the volume — the measured assembled
+# inventory is 45. This fixture is deliberately still the wave slice: what it proves is
+# that tile cardinality does not inflate a per-accession row count, and that property is
+# independent of how many parents exist. It is a fixture size, not a claim about Fly.
 WAVE_PARENTS = ["Q9P273"] + [f"A{i:05d}" for i in range(1, 27)]
 assert len(WAVE_PARENTS) == 27
 IGF2R = "P11717"
@@ -159,7 +163,11 @@ def test_spare_tiles_are_not_a_second_protein():
 
 
 def test_twenty_seven_parents_plus_igf2r_are_not_inflated_by_tiles():
-    """The closed-out inventory is 27 unique + IGF2R 3356 — not 27 plus every tile."""
+    """The seeded wave slice is 27 parents + IGF2R 3356 — not 27 plus every tile.
+
+    ⚠ D-132: not an assertion that the live inventory is 27. The measured assembled
+    inventory is 45; this seed is a fixture that isolates tile-inflation.
+    """
     eng = _engine()
     _seed_inventory(eng)
     rows = list_census(eng)

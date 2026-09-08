@@ -815,14 +815,25 @@ export default function AssemblyReview({ review }) {
           <dt>spare tile ids</dt>
           <dd>{(review.spare_tile_ids || []).join(', ') || 'none'}</dd>
         </div>
+        {/* ⚠ D-132 — TWO MEMBERSHIPS, AND A PARENT CAN BE IN ONE AND NOT THE OTHER. The
+            assembled inventory is the measured 45 on the volume; the Wave1+Wave2 row is
+            the 2026-09-05 closeout slice of 27 inside it. Collapsing them is exactly how
+            the 27 came to be rendered as the live count. */}
         <div>
-          <dt>in Wave1+Wave2 inventory of 27</dt>
+          <dt>in assembled inventory of 45 (measured 2026-09-08)</dt>
+          <dd>{review.in_assembled_inventory ? 'yes' : 'no'}</dd>
+        </div>
+        <div>
+          <dt>in Wave1+Wave2 closeout slice of 27 (2026-09-05)</dt>
           <dd>{review.in_wave1_wave2_inventory ? 'yes' : 'no'}</dd>
         </div>
       </dl>
       <p className="note">
-        The 27 unique stitched parents are not in the{' '}
-        <Link to="/scorer">F-004 ranking</Link> (D-109).
+        The 45 unique assembled parents — the 2026-09-05 Wave1+Wave2 slice of 27 plus 18
+        that were already on the volume — are not in the{' '}
+        <Link to="/scorer">F-004 ranking</Link> (D-109). The stitch-path OPS runs
+        (D-127 / D-128 / D-130) were run on the 27; none of their numbers describe
+        the other 18.
       </p>
     </section>
   )

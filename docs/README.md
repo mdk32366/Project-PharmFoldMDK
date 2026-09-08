@@ -375,6 +375,91 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-132 — Assemble-inventory amend: the live unique assembled-parent count is 45, and the Wave1+Wave2 27 becomes a named historical slice inside it
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — API + UI + Method honesty amend only. No ops, no rent, no
+  emit, no F-004 ingest, no Kabsch flip, no Fly write from this PR.
+- **Context.** Every live surface has been saying **27 unique** stitched parents. That
+  number entered the code as `WAVE1_WAVE2_STITCHED_PARENT_IDS` in `app/reads.py` under
+  the **D-117 / D-120** hardcoded closeout inventory, dated **2026-09-05 PT** and
+  explicitly *not re-queried on Fly* at the time. It is a **Wave1 PASS 10 + Wave2 PASS
+  17** slice, and it was correct about that slice. ⚠ It was never a measurement of what
+  is assembled on the volume, and the surfaces did not say so — they rendered it as the
+  live inventory. That is the F-049 shape again: a sentence keeping its wording while
+  the world moves under it.
+- **The measurement, and how it is known (D-016).** Owner ops (Emma laptop, **read-only**
+  Fly DB through the proxy, **2026-09-08**) counted parent jobs that have tile children
+  **and** a non-null `protein_analyses.pdb_path`, path shape
+  `/data/artifacts/{parent_job_id}/structure.pdb` with `pae.json.gz` beside it. That
+  query returns **45**. ⚠ **This PR did not run it.** The figure is handed to the repo
+  **as recorded**, exactly as the D-127 / D-128 / D-130 OPS numbers were; nothing here
+  queried, re-measured, or wrote to Fly. If a later session wants to re-derive it, the
+  disqualifying query is the one above — a parent with tiles and **no** `pdb_path` is
+  the row that would drop the count, and it is the row to look for.
+- **The breakdown, not the total (method note item 2).** 45 = the **27** Wave1+Wave2
+  closeout parents **+ 18** additional parents. The 18 parent job ids are 2837, 2920,
+  2959, 2973, 2974, 3020, 3067, 3082, 3086, 3094, 3120, 3124, 3131, 3209, 3237, 3356,
+  3420, 3559 (accessions O75096, O75445, P09848, P11717, P17927, P46531, Q58EX2,
+  Q86XX4, Q8TDX9, Q8TEM1, Q8WXG9, Q92673, Q96JQ0, Q96PZ7, Q9H251, Q9NYQ8, Q9NZR2,
+  Q9Y493). The two sets are disjoint; the union is 45.
+- **⚠ What the 18 are NOT.** They are **not** a fresh Fly persist from today. They
+  **already had `pdb_path` set at inventory time** — the 2026-09-05 closeout simply did
+  not count them, because it counted the wave slice rather than the volume. A separate
+  laptop `write_stitched` batch ran on **2026-09-08** (18/18 PASS, off-block PAE
+  null-only) under `C:\Users\mdk32\artifacts\hold48_stitch_18_2026-09-08\`. That batch
+  is **local proof only**. It did not need to invent Fly paths — the paths were already
+  there — and it is **not** the persist event that put these parents on the volume. Do
+  not later cite it as one.
+- **Decision.**
+  1. `app/reads.py` keeps `WAVE1_WAVE2_STITCHED_PARENT_IDS` (27) **unchanged** as the
+     historical wave slice, and adds `ADDITIONAL_ASSEMBLED_PARENT_IDS` (the 18, dated)
+     plus their union `ASSEMBLED_PARENT_IDS` (45). Explicit dated frozensets, not a live
+     query: a live count would be **new runtime behaviour** on a surface whose figures
+     are frozen literals with a provenance date (D-053 dec 5 / D-094 am. 1), and it
+     would silently change with no commit to attribute it to.
+  2. `assembly_review().inventory` reports `unique_stitched_parents_n` = **45** with
+     `measured_on` = 2026-09-08 and its source string, and keeps `wave1_pass` 10 /
+     `wave2_pass` 17 / `wave1_wave2_closeout_n` 27 / `wave1_wave2_measured_on`
+     2026-09-05 beside it. Both id lists ship. The card gains
+     `in_assembled_inventory` and keeps `in_wave1_wave2_inventory`.
+  3. `/census` tranche-5 closeout, `/scorer`, and the assembled review card say **45
+     unique assembled parents** and name the 27 as the 2026-09-05 wave slice within
+     them. Rental stays **CLOSED**; pod stays **Terminated**.
+- **⚠ What this does NOT do.**
+  - **Not** a claim that Wave1+Wave2 alone were 45. They were 27 and the surfaces say so.
+  - **Not** F-004 / ranking ingest. **D-109 ruling 7 stands** — the count in the scorer
+    one-liner moves from 27 to 45 and the parents stay **out** of the ranking set.
+  - **Not** a seam claim. Seams are **not** scientifically solved; served path stays the
+    **assembler**; the **10.0 Å** gate stays; **D-126** stays the best experimental path.
+  - **Not** a re-scope of the OPS runs. D-127 / D-128 / D-130 ran on the **27** and their
+    numbers stay stated on the 27 — the additive Method wording says so rather than
+    implying 45 were ever restitched. **Never claim 27/27 PASS**, and never claim 45/45.
+  - **Not** a rental re-open (**D-118**), not a Deploy, not an emit, not a RunPod action,
+    not a Fly machine change, not a Reset, and not a touch on the mucin ceiling. The **3**
+    mucins (Q8WXI7, Q9UKN1, Q685J3) stay `out_of_class`.
+  - **Not** a change to **D-081**: IGF2R P11717 census parent **3356** is one of the 18
+    on the census/assembly side, and cohort job **57** is still the CUDA-OOM row. Two
+    populations, neither substituted.
+- **Deep-learning justification.** Neutral-to-positive on the DL core, and honest about
+  which direction. It adds no network and changes no inference: every one of the 45 is
+  still an overlap of ESMFold tile passes chosen by per-residue pLDDT, not a new forward
+  pass. What it protects is the *denominator* — the count of structures the network
+  actually produced on the volume — which is the number a reader uses to judge the
+  tiling result at all. Under-reporting it by 18 understated the network's output; the
+  fix is to state it and to keep it out of the pre-registered ranking, so the scorer's
+  fit population is unchanged and F-004 stays comparable to itself.
+- **Consequences.** Touches `app/reads.py`, `ui/src/censusSummary.js`, `CensusView.jsx`,
+  `ScorerView.jsx`, `AssemblyReview.jsx`, `MethodNote.jsx`,
+  `docs/method-hold48-tiles.md`, `docs/GUIDE-renting-hold48.md`, `ARCHITECTURE.md`, and
+  the hold-48 tests. A regression tripwire reddens if a live-inventory surface goes back
+  to 27. ⚠ The next session that re-queries Fly and gets something other than 45 should
+  amend **this** entry with the new query output rather than editing the literal quietly.
+- **Cite:** D-117 / D-120 closeout inventory (27, 2026-09-05, not re-queried on Fly) ·
+  D-118 rental CLOSED · D-109 ruling 7 (not ranking-eligible) · D-081 two-population ·
+  D-016 provenance · D-131 / D-130-B tip `97b523b` (#254) · owner ops read-only Fly DB
+  query 2026-09-08 (Emma laptop, handed as recorded).
+
 ### D-130-B / D-131 — Phase 4 residual-RMSD OPS disclosure + named refuse labels for 3272 / 3394
 
 - **Status:** accepted as the **Method + UI labelling PR** discharging D-130

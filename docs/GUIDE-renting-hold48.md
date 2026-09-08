@@ -16,6 +16,14 @@
 > ≈ 88.76 Å is a measured caveat, not solved. `stitch_readiness` before any re-stitch.
 > RunPod remaining ~$10.25 (owner figure; re-glance before any new rent).
 >
+> **⚠ Inventory amend (D-132, 2026-09-08).** The **27 unique** above is the Wave1+Wave2
+> closeout **slice**, not the volume. A **read-only** Fly DB query on 2026-09-08 (parent
+> jobs with tile children and `protein_analyses.pdb_path` set) counted **45** unique
+> assembled parents: the 27 **plus 18** that already carried a stored structure path and
+> were not counted by the wave slice. Handed here as recorded — this file ran no query,
+> and the 18 are **not** a new persist. ⚠ **The rental stays CLOSED.** A recount is not a
+> card: still do not Deploy, do not emit, do not rent.
+>
 > Everything below the next heading is **historical** and must not be followed unless Matt
 > re-opens rental.
 

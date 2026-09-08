@@ -50,12 +50,54 @@ HOLD48_PREFERRED_TILE_IDS = frozenset({3673, 3674, 3675})
 
 # 27 unique Wave1+Wave2 stitched parents (D-117 / D-120 inventory). Owner closeout
 # 2026-09-05 PT — not re-queried on Fly in the D-120 PR.
+#
+# ⚠ D-132: THIS IS A WAVE SLICE, NOT THE VOLUME. It is correct about Wave1 PASS 10 +
+# Wave2 PASS 17 and it is kept verbatim for that. It is NOT the count of parents that
+# are assembled on the Fly volume, and no surface may render it as one.
 WAVE1_WAVE2_STITCHED_PARENT_IDS = frozenset({
     2929, 2938, 2939, 3179, 3188, 3190, 3217, 3321, 3541, 3569,
     2817, 2917, 3027, 3097, 3153, 3272, 3320, 3368, 3379, 3394,
     3404, 3432, 3454, 3469, 3516, 3566, 3575,
 })
 assert len(WAVE1_WAVE2_STITCHED_PARENT_IDS) == 27
+
+# D-132 — the 18 parents the 2026-09-05 wave slice did not count. Parent job ids;
+# accessions O75096, O75445, P09848, P11717, P17927, P46531, Q58EX2, Q86XX4, Q8TDX9,
+# Q8TEM1, Q8WXG9, Q92673, Q96JQ0, Q96PZ7, Q9H251, Q9NYQ8, Q9NZR2, Q9Y493.
+#
+# ⚠ These already carried `pdb_path` at inventory time. They are not a fresh persist —
+# the 2026-09-08 laptop `write_stitched` batch (18/18 PASS, off-block PAE null-only) is
+# LOCAL PROOF under C:\Users\mdk32\artifacts\hold48_stitch_18_2026-09-08\, not the Fly
+# write event, and must never be cited as one.
+#
+# ⚠ 3356 is IGF2R P11717 on the CENSUS side. Cohort job 57 is still the CUDA-OOM row —
+# two populations, neither substituted (D-081).
+ADDITIONAL_ASSEMBLED_PARENT_IDS = frozenset({
+    3020, 3131, 3082, 3356, 3420, 3120, 3559, 3086, 3237,
+    2974, 3209, 2973, 3067, 2920, 3094, 2837, 2959, 3124,
+})
+assert len(ADDITIONAL_ASSEMBLED_PARENT_IDS) == 18
+assert not (ADDITIONAL_ASSEMBLED_PARENT_IDS & WAVE1_WAVE2_STITCHED_PARENT_IDS)
+
+# D-132 — the MEASURED assembled inventory: parent jobs with tile children AND a non-null
+# ``protein_analyses.pdb_path`` (path shape /data/artifacts/{parent_job_id}/structure.pdb
+# with pae.json.gz beside it). Owner ops read the live Fly DB read-only through the proxy
+# on 2026-09-08 and counted 45; the figure is handed here AS RECORDED and this module did
+# not run the query.
+#
+# A frozenset and a date, deliberately — not a live COUNT(*). Every figure on these
+# surfaces is a frozen literal carrying the date it was measured (D-053 dec 5 / D-094
+# amendment 1), so a number that moves without a commit would be unattributable. When the
+# volume changes, this set and ``ASSEMBLED_INVENTORY_MEASURED_ON`` move in the same commit
+# that records the new query output, or they are wrong.
+ASSEMBLED_PARENT_IDS = WAVE1_WAVE2_STITCHED_PARENT_IDS | ADDITIONAL_ASSEMBLED_PARENT_IDS
+assert len(ASSEMBLED_PARENT_IDS) == 45
+ASSEMBLED_INVENTORY_MEASURED_ON = "2026-09-08"
+ASSEMBLED_INVENTORY_SOURCE = (
+    "read-only Fly DB query 2026-09-08 — parent jobs with tile children and "
+    "protein_analyses.pdb_path set; handed to the repo as recorded, not re-run here"
+)
+WAVE1_WAVE2_CLOSEOUT_MEASURED_ON = "2026-09-05"
 
 IGF2R_ACCESSION = "P11717"
 IGF2R_COHORT_JOB_ID = 57
@@ -923,11 +965,34 @@ def assembly_review(
         "parent_job_id": parent_job_id,
         "hold48_kind": _hold48_kind(parent),
         "in_wave1_wave2_inventory": parent.id in WAVE1_WAVE2_STITCHED_PARENT_IDS,
+        # D-132 — membership in the measured 45. Checked against BOTH ids because
+        # production numbering does not guarantee job id == analysis id (same reason the
+        # spare-tile ids are checked both ways above), and the 18 arrived as job ids.
+        "in_assembled_inventory": (
+            parent.id in ASSEMBLED_PARENT_IDS
+            or (parent_job_id is not None and parent_job_id in ASSEMBLED_PARENT_IDS)
+        ),
+        # ⚠ D-132. The live figure is 45 — parents assembled on the volume, measured
+        # 2026-09-08. The 27 is the 2026-09-05 Wave1+Wave2 closeout slice INSIDE that 45
+        # and is disclosed as such; it is never the live count. Both breakdowns ship, so
+        # a reader gets the split rather than a total (D-016 / method note item 2).
         "inventory": {
-            "unique_stitched_parents_n": 27,
+            "unique_stitched_parents_n": 45,
+            "measured_on": ASSEMBLED_INVENTORY_MEASURED_ON,
+            "source": ASSEMBLED_INVENTORY_SOURCE,
+            "wave1_wave2_closeout_n": 27,
+            "wave1_wave2_measured_on": WAVE1_WAVE2_CLOSEOUT_MEASURED_ON,
             "wave1_pass": 10,
             "wave2_pass": 17,
-            "parent_ids": sorted(WAVE1_WAVE2_STITCHED_PARENT_IDS),
+            "additional_assembled_n": 18,
+            "additional_note": (
+                "18 additional assembled parents already on volume at inventory time "
+                "(measured 2026-09-08) — not a fresh persist, and not restitched by any "
+                "D-127 / D-128 / D-130 OPS run, all of which ran on the 27"
+            ),
+            "parent_ids": sorted(ASSEMBLED_PARENT_IDS),
+            "wave1_wave2_parent_ids": sorted(WAVE1_WAVE2_STITCHED_PARENT_IDS),
+            "additional_parent_ids": sorted(ADDITIONAL_ASSEMBLED_PARENT_IDS),
         },
         "readiness": readiness,
         "tiles": tile_rows,

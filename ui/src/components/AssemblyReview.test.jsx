@@ -8,6 +8,7 @@ const REVIEW = {
   parent_job_id: 2817,
   hold48_kind: 'parent',
   in_wave1_wave2_inventory: true,
+  in_assembled_inventory: true,
   assembler_note: 'assembled by pLDDT overlap, not superimposed; seam not solved',
   seam_note: 'IGF2R ≈ 88.76 Å is a measured caveat, not a solved structure. Seams are not scientifically solved. Kabsch-path artifacts are not on disk for this parent.',
   dual_path: {
@@ -764,6 +765,44 @@ describe('AssemblyReview', () => {
     )
     expect(queryByTestId('phase5-fate')).toBeNull()
     expect(queryByTestId('phase5-ops-rollup')).toBeNull()
+  })
+})
+
+// ⚠⚠ D-132 — the card carried ONE membership row ("in Wave1+Wave2 inventory of 27") and a
+// note counting the same 27, so a parent assembled on the volume but outside the wave slice
+// had no way to show as assembled at all. Two rows now, and the note counts the 45.
+describe('D-132 — assembled inventory of 45 vs the Wave1+Wave2 slice of 27', () => {
+  const renderCard = (review) => render(
+    <MemoryRouter><AssemblyReview review={review} /></MemoryRouter>,
+  ).container.textContent.replace(/\s+/g, ' ')
+
+  it('shows both memberships and counts 45 out of the ranking, never 27', () => {
+    const t = renderCard(REVIEW)
+    expect(t).toMatch(/in assembled inventory of 45 \(measured 2026-09-08\)\s*yes/)
+    expect(t).toMatch(/in Wave1\+Wave2 closeout slice of 27 \(2026-09-05\)\s*yes/)
+    expect(t).toMatch(/45 unique assembled parents/)
+    expect(t).toMatch(/F-004 ranking/)
+    // ⚠ REDDENS ON REGRESSION: the disclosure may not go back to counting 27
+    expect(t).not.toMatch(/27 unique/)
+  })
+
+  it('a parent in the 45 but outside the wave slice reads yes/no, not assembled-and-unknown', () => {
+    const t = renderCard({
+      ...REVIEW,
+      parent_analysis_id: 3356,
+      parent_job_id: 3356,
+      in_wave1_wave2_inventory: false,
+      in_assembled_inventory: true,
+    })
+    expect(t).toMatch(/in assembled inventory of 45 \(measured 2026-09-08\)\s*yes/)
+    expect(t).toMatch(/in Wave1\+Wave2 closeout slice of 27 \(2026-09-05\)\s*no/)
+  })
+
+  it('does not let the amended count imply the OPS runs covered 45 or the seams are solved', () => {
+    const t = renderCard(REVIEW)
+    expect(t).toMatch(/OPS runs \(D-127 \/ D-128 \/ D-130\) were run on the 27/)
+    expect(t).toMatch(/none of their numbers describe the other 18/)
+    expect(t).not.toMatch(/seams solved|superimposed holoprotein|45\/45/)
   })
 })
 

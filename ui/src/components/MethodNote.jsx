@@ -782,6 +782,27 @@ export default function MethodNote() {
           <strong>Never claim 27/27 PASS.</strong> Never claim the seams
           are solved.
         </p>
+        {/* ⚠ D-132 — ADDITIVE ONLY. Every OPS number above was measured on the 27
+            and stays stated on the 27. This paragraph exists so "the 27" is not
+            read as the whole volume, which is how the stale live count survived. */}
+        <p data-testid="d132-inventory-scope">
+          <strong>⚠ &quot;The 27&quot; here is the run population, not the
+          volume.</strong> These OPS numbers were measured on the{' '}
+          <strong>2026-09-05</strong> Wave1+Wave2 closeout slice —{' '}
+          <strong>27</strong> parents, Wave1 PASS <strong>10</strong> +
+          Wave2 PASS <strong>17</strong> — and they describe that slice and
+          nothing else. A read-only Fly DB query on{' '}
+          <strong>2026-09-08</strong> counted{' '}
+          <strong>45</strong> unique assembled parents on the volume: the{' '}
+          <strong>27</strong> plus <strong>18</strong> that already carried
+          a stored structure path and were simply not counted by the wave
+          slice. ⚠ <strong>Those 18 were never restitched here.</strong> No
+          D-127, D-128 or Phase 4 figure on this page was run on them, none
+          is claimed for them, and <strong>45/45 PASS</strong> is not a
+          thing anyone may say. The rental stays{' '}
+          <strong>CLOSED</strong> (<strong>D-118</strong>); a recount is
+          not a card.
+        </p>
         <p>
           <strong>What we are not doing next.</strong> There is{' '}
           <strong>no residual-RMSD-v2</strong> and no fifth stitching
