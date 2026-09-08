@@ -375,6 +375,100 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-133 — Census gains a sortable Structure column: seam-assembled and single-pass become a category the reader can group by, and the kind badge moves there
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — census UI surface only. No API change (the fields have been served
+  since **D-118**), no ops, no rent, no emit, no Fly write, no F-004 ingest, no Kabsch flip.
+- **Context, and how the gap is known (D-016).** Matt GO 2026-09-08: the census table must let
+  him **sort on which proteins were seam-spliced** — assembled from tiles — rather than scan
+  2,700 rows for a badge. Read at tip `e11c7fb`: `app/reads.py` `apply_structure_kind` stamps
+  `structure_kind` (`assembled` | `single-pass` | `tiles_only` | `mucin`) and
+  `structure_kind_label` on every census row, and `CensusTable.jsx` rendered
+  `structure_kind_label` as a `badge badge-kind` **inside the accession cell** — visible, and
+  **not in `COLUMNS`**. So the one identity D-118 exists to serve was the only row property the
+  table could not sort by, while the surface claims (**D-087**) that it sorts on every column.
+  ⚠ That is a claim outliving its code, the F-049 shape at UI scale: nothing was false in the
+  badge, and the sentence above it had quietly stopped being true.
+- **Decision.**
+  1. `COLUMNS` gains `{ key: 'structure_kind', label: 'Structure (single pass or assembled from
+     tiles)', numeric: false }`, sixth, immediately after **Topology** — the two columns answer
+     neighbouring questions (*what shape was folded* / *how the fold was produced*) and the
+     `pLDDT` → `Tranche` → `Profile` run stays intact. `COLUMNS` is **exported** so a test can
+     pin the key rather than infer it from rendered text.
+  2. **The sort is on `structure_kind`, never on the label.** The category string is the stable
+     thing; `structure_kind_label` is prose that has already changed once (`assembled` →
+     `assembled (provisional)`) and will change again. Sorting the label would silently re-order
+     the table on a copy edit.
+  3. **`numeric: false`, and that is the same ruling as Profile (D-079 am. 1 ruling 2).** A
+     category sorts into **groups**; it orders nothing by suitability. Ascending puts
+     `assembled` first, which is what Matt asked for, and that ordering is alphabetical
+     happenstance rather than a claim — the four kinds have no magnitude and the column offers
+     none.
+  4. **The badge MOVES rather than being copied.** One place to read the kind, one header to
+     click. The same `badge badge-kind badge-kind-{kind}` markup and the same
+     `assembler_note` tooltip now render in the Structure cell; the accession cell goes back to
+     holding only the link. Duplicating it would have given the reader two spellings of one
+     fact and a header that sorts only one of them.
+  5. **A row with no kind renders a stated absence, never `single-pass`.** 777-odd never-folded
+     manifest rows carry `structure_kind: null` (`core/census_unfolded.py` stamps a kind only
+     for the 3 mucins), and legacy/fixture rows may carry none at all. Those cells read **not
+     recorded** with a title saying a blank is a missing field and not an implied single pass —
+     the same rule as the topology column's final branch, which used to swallow `unknown` into
+     the benign label. `compare`'s existing null-last rule keeps them out of the way in **both**
+     sort directions.
+  6. **Default sort stays accession (D-102 / D-079).** A reader-chosen sort is a lens; a page
+     that arrives pre-grouped by structure kind would be the census choosing, which is the bar.
+  7. **Bonus filter, on the same terms.** A single checkbox — *only the N proteins assembled
+     from tiles* — beside the search box, with the assembler caveat printed next to it, and
+     rendered **only when at least one assembled row is present** (the `declared &&` pattern the
+     critical-tissue checkbox already uses). It is an independent criterion on its own edge, it
+     subtracts from nothing, and the counts under it keep reporting what is on screen.
+- **⚠ What this does NOT do.**
+  - **Not** a claim that seams are solved. `assembled` still reads **assembled (provisional)**
+    and still carries *assembled by pLDDT overlap, not superimposed; seam not solved*. The
+    served path stays the **assembler**; the **10.0 Å** gate stays; **D-126** stays the best
+    experimental path; the D-127 / D-128 / D-130 OPS disclosures stand untouched.
+  - **Not** F-004 ingest and **not** a ranking. **D-109 ruling 7 stands** — the assembled
+    parents stay out of the ranking set, and a sortable category is not a rank (**D-079**).
+    Nothing here scores a census row.
+  - **Not** an API change. `structure_kind` / `structure_kind_label` / `assembler_note` are
+    already on the wire; this PR reads fields it did not add and adds no route.
+  - **Not** a re-count. The inventory stays **D-132**'s: **45** unique assembled parents,
+    measured 2026-09-08 and handed to the repo as recorded, with the **27** as the 2026-09-05
+    wave slice inside it. ⚠ The number of rows the Structure column shows as `assembled` is a
+    count of **census accessions represented by an assembled parent**, which is not the same
+    object as the 45 parent jobs and must not be reported as it.
+  - **Not** ops: no rent (**D-118** rental stays CLOSED, pod Terminated), no emit, no Deploy,
+    no GPU, no `hold48_*.py` edit, no Fly write, and no touch on the mucin ceiling.
+  - **Not** a Method obligation. No Spec §7 duty attaches to a census column, so
+    `MethodNote.jsx` and `docs/method-hold48-tiles.md` are deliberately unchanged; the served
+    UI shape is recorded in `ARCHITECTURE.md` instead.
+- **Deep-learning justification.** The column makes the **provenance of the network's output**
+  sortable. Every `assembled` row is several ESMFold forward passes over overlapping tile
+  windows, glued by per-residue pLDDT; every `single-pass` row is one forward pass over the
+  whole span. Those are different products of the same model with different failure modes, and
+  until now a reader could not separate the two populations without opening 2,700 pages. Judging
+  the tiling result — the load-bearing DL claim of the hold-48 work — starts with being able to
+  see which structures it produced. It adds no network, no inference and no threshold: the kind
+  is read from a field the API already derives.
+- **Consequences.** Touches `ui/src/components/CensusTable.jsx` (exported `COLUMNS`, the new
+  column, the moved badge, the filter), `ui/src/styles.css`,
+  `ui/src/components/CensusTable.structure.test.jsx` (new),
+  `tests/test_d133_census_structure_column.py` (new), and `ARCHITECTURE.md`. The two next-free-id
+  guards in `tests/test_d129_phase5_named_refuse_spec.py` and
+  `tests/test_d130_residual_rmsd_spec.py` are **widened by enumeration** to admit `D-133` —
+  spending the id reddened them by design, which is the collision guard working. A tripwire
+  reddens if the key leaves `COLUMNS`, if the column becomes `numeric`, if the default sort stops
+  being accession, or if this entry stops existing (method-note item 7: **the check is the entry,
+  not the reference to it**).
+- **Cite:** D-087 (searchable / sortable census, sorts on every column) · D-079 + am. 1 ruling 2
+  (unscored by construction; a category groups, a value ranks) · D-102 (a reader-chosen sort is a
+  lens; default order is not the page's to choose) · D-118 (`structure_kind` identity, one row per
+  accession, assembler-not-Kabsch) · D-109 ruling 7 (assembled stays out of F-004) · D-132
+  (inventory 45 / wave slice 27) · D-016 (provenance) · Matt GO 2026-09-08 · tip `e11c7fb`
+  (D-132) read directly for the current state of `COLUMNS` and the badge.
+
 ### D-132 — Assemble-inventory amend: the live unique assembled-parent count is 45, and the Wave1+Wave2 27 becomes a named historical slice inside it
 
 - **Date:** 2026-09-08
