@@ -9,8 +9,25 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
+// ⚠⚠ D-135 — THE CENSUS SUMMARY NOW RESOLVES, AND THAT IS A TIGHTENING. It was a bare `vi.fn()`
+// returning `undefined`, so `s.census` was falsy and the Story's census beat NEVER RENDERED under
+// this tripwire. The measurement covered nine paragraphs of a page that ships eleven — and D-135
+// adds the two densest of all, the hold-48 tiling beat, which would have escaped the ceiling
+// entirely. A readability guard that cannot see the hardest prose on the page is a guard measuring
+// the easy half. ⚠ The ceiling is UNCHANGED at 12.5 and the measured value went DOWN (11.94 → 11.06
+// over 1,977 words / 103 sentences), because the new beats are deliberately short-sentenced. Had it
+// gone up, the copy was the thing to fix — re-calibrating a ceiling to admit new prose is how a
+// tripwire becomes a decoration.
 vi.mock('../api.js', () => ({
-  getCensusSummary: vi.fn(),
+  getCensusSummary: vi.fn().mockResolvedValue({
+    manifest_rows: 3467,
+    folded: 2690,
+    max_mean_plddt: 89.25,
+    structure_kinds: [
+      { kind: 'assembled', label: 'assembled (provisional)', n: 45 },
+      { kind: 'single-pass', label: 'single-pass', n: 2645 },
+    ],
+  }),
   listAnalyses: vi.fn().mockResolvedValue([{ id: 1, gene: 'NECTIN4', mean_plddt: 77.26 }]),
   getCoverage: vi.fn().mockResolvedValue({ coverage: { denominator: 1 }, rows: [{ disposition: 'ranked', fold_status: 'folded', gene: 'NECTIN4' }] }),
   getAssociations: vi.fn().mockResolvedValue({ source: 'the source paper', method: 'quasi H-score', cutoff: 150, pair_count: 1, targets_covered: 1, cohort_size: 1, unmatched_symbols: [], associations: { NECTIN4: [{ cancer: 'Lung', qh_score: 200 }] } }),
@@ -54,6 +71,10 @@ async function renderedProse() {
   for (const el of [<Story />, <AdcContext />]) {
     const { container, unmount } = render(<MemoryRouter>{el}</MemoryRouter>)
     await waitFor(() => expect(container.textContent.length).toBeGreaterThan(50))
+    // ⚠ D-135: wait for the ASYNC beats too. The 50-character gate above is met by the headline
+    // alone, so the measurement could complete before the fetched beats mounted — and a tripwire
+    // that races the copy it measures reports whichever half arrived first.
+    await waitFor(() => expect(container.textContent.length).toBeGreaterThan(1500))
     text += ' ' + container.textContent
     unmount()
   }
@@ -65,6 +86,12 @@ async function renderedProse() {
 // margin (D-049: pin to the observed value, not an aspiration). This is a REGRESSION tripwire, not a
 // clarity proof (see D-056) — it reddens if the copy drifts back toward density. The mixed prose
 // carries peer-level ML copy that is deliberately not simplified, so ~12 is the honest floor here.
+//
+// ⚠ D-135 re-measured, and the CEILING DID NOT MOVE. With the census and hold-48 beats now inside
+// the measurement (see the mock above), the grade is 11.06 over 1,977 words / 103 sentences — lower
+// than the 2026-07-26 calibration, because the new beats are written in short sentences on purpose.
+// The 12.5 is left exactly where it was: it is the pin, and lowering it to the new reading would
+// re-calibrate a tripwire on the strength of one good day.
 const CEILING = 12.5
 
 beforeEach(() => vi.clearAllMocks())

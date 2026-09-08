@@ -17,6 +17,30 @@ import Term from './Term.jsx'
 // attempted) stay distinct and neither carries a hardcoded reason; the per-target reason is derived on
 // /coverage. (The prior copy hardcoded "hardware ceiling" for the failed group — wrong: IGF2R's
 // tier_reason is whole_sequence_fold, and "ceiling" describes the over_local_ceiling not_folded set.)
+//
+// ⚠⚠ D-135 — SKIMMABLE, AND NO LONGER SILENT ABOUT THE TILING. Three changes, each answering a
+// complaint about this page rather than decorating it: a COLD STRIP of three derived counts above the
+// prose (a reader who reads one thing reads the strip); a BEAT TOC with in-page anchors, so eleven
+// paragraphs have a way in; and a HOLD-48 BEAT after the census widen, because the page showed the
+// folds and never said how the longest of them were made — the same defect the beat-2b comment below
+// already records against an earlier version of this file, one arc further along.
+// ⚠ Constraint A holds throughout: the strip's counts come off `/api/coverage` and
+// `/api/census/summary`, the assembled figure out of the payload's own `structure_kinds` breakdown,
+// and no fold count is written into copy anywhere on this page.
+
+// ⚠⚠ THE BEATS ARE DATA, so the TOC and the sections cannot disagree about what this page holds. A
+// hand-written list of links beside hand-written `id` attributes is two lists, and the failure is
+// silent: a renamed section leaves an anchor pointing at nothing and nothing renders red.
+// ⚠ The census beats are conditional — they render only when the census summary loaded, and the TOC
+// drops them in the same breath, because a contents entry that scrolls nowhere is worse than none.
+const BEATS = [
+  { id: 'beat-cohort', label: 'We folded a cohort ourselves' },
+  { id: 'beat-census', label: 'Then we asked it of everything else', needsCensus: true },
+  { id: 'beat-hold48', label: 'The longest proteins: folded in tiles, joined at seams', needsCensus: true },
+  { id: 'beat-scorer', label: 'What the fit found, and what carried it' },
+  { id: 'beat-open', label: 'The question that is still open' },
+]
+
 export default function Story() {
   const [s, setS] = useState(null)
   useEffect(() => {
@@ -41,14 +65,73 @@ export default function Story() {
           failed: rows.filter((r) => r.fold_status === 'failed').map((r) => r.gene),
           excluded: rows.filter((r) => r.fold_status === 'not_folded').map((r) => r.gene),
           census,
+          // ⚠⚠ READ OUT OF THE PAYLOAD'S OWN BREAKDOWN, never counted here and never typed. The
+          // summary serves one entry per structure kind PRESENT (D-135), so an absent kind is
+          // `undefined` and the chip simply does not render — it is never printed as `assembled 0`,
+          // which is precisely what the census truthfully showed for all 45 assembled parents
+          // before D-134 repaired the identity check. A zero here would read as a finding.
+          assembled: (census?.structure_kinds ?? []).find((k) => k.kind === 'assembled')?.n ?? null,
         })
       })
       .catch(() => setS(null))
   }, [])
 
+  // ⚠ A beat is in the contents only if it is on the page. Both are decided from one list.
+  const beats = BEATS.filter((b) => !b.needsCensus || s?.census)
+
   return (
     <div className="prose story">
       <h1>We folded a cohort of ADC targets with ESMFold — and the interface is honest about what came out.</h1>
+
+      {/* ⚠⚠ THE COLD STRIP (D-135). A reader who reads exactly one thing on this site reads this,
+          so all three figures are DERIVED and each states its own population. The cohort count uses
+          the same `ranked ∧ folded` rule as `CoverageLine` — the honest denominator's intersection,
+          not the folded total (D-024) — and the two census figures are a DIFFERENT population under
+          a different span definition (D-081), which is why they are labelled rather than summed.
+          ⚠ Not a `p`, and not prose: the narrative's caution rides in sentences, and a strip of
+          counts is a table of numbers, which is where this project puts its caveats in cells. */}
+      {s && (
+        <dl className="story-cold-strip">
+          <div>
+            <dt>{s.rankedFolded}</dt>
+            <dd>
+              cohort targets <strong>ranked and folded</strong> — the honest denominator&rsquo;s own
+              intersection, on <Link to="/coverage">Coverage</Link>
+            </dd>
+          </div>
+          {s.census && (
+            <div>
+              <dt>{s.census.folded.toLocaleString()}</dt>
+              <dd>
+                proteins folded in the <strong>wider census</strong> — a different population,
+                measured under a different span rule
+              </dd>
+            </div>
+          )}
+          {s.assembled != null && (
+            <div>
+              <dt>{s.assembled.toLocaleString()}</dt>
+              <dd>
+                of those were too long to fold in one pass, so they were{' '}
+                <strong>built from overlapping tiles</strong> and are provisional —{' '}
+                <Link to="/census?structure=assembled">see them</Link>
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      {/* ⚠ The way in. Eleven paragraphs with no contents is a page most readers sample at random
+          and leave; the anchors resolve because the ids and these links come off one list. */}
+      <nav className="story-toc" aria-label="What this page covers">
+        <ol>
+          {beats.map((b) => (
+            <li key={b.id}><a href={`#${b.id}`}>{b.label}</a></li>
+          ))}
+        </ol>
+      </nav>
+
+      <section id="beat-cohort">
       <p>
         <strong>The question:</strong> if we rank these cancer targets by their 3D shape — shapes we
         folded ourselves — do we get a different answer than ranking them by how strongly they appear
@@ -87,6 +170,8 @@ export default function Story() {
           it. See <Link to="/coverage">Coverage</Link> for the honest denominator.
         </p>
       )}
+      </section>
+
       {/* ⚠⚠ BEAT 2b — THE CENSUS (owner ruling, 2026-08-21: it lands, and it lands HERE).
           The Story described an 82-target study and told a reader this project had folded 79
           proteins. It has folded 2,769. That was a faithful account of the application on
@@ -97,6 +182,7 @@ export default function Story() {
           ⚠ Derived, never literal (D-050 / Constraint A) — from /api/census/summary, which exists
           because /api/census is 7.1 MB and this is the cold-open. */}
       {s?.census && (
+        <section id="beat-census">
         <p>
           <strong>Then we asked it of everything else.</strong> The cohort is 82 proteins chosen by
           somebody else&rsquo;s paper, so it cannot tell us whether the result is a property of{' '}
@@ -110,8 +196,49 @@ export default function Story() {
           is an interpretation, and nothing here ranks a census protein against a cohort target.{' '}
           <Link to="/census">Browse the census →</Link>
         </p>
+        </section>
       )}
 
+      {/* ⚠⚠ BEAT 2c — THE HOLD-48 TILING (D-135), AND ITS ABSENCE WAS THE DEFECT. This page has
+          described a fold count since the census landed and never once said that the longest spans
+          could not be folded in one pass at all. Three weeks of tiling, six stitch algorithms, a
+          rental that opened and closed, and a reader of the cold-open would have inferred one
+          forward pass per protein — which is the same shape as beat 2b's own recorded lapse, one arc
+          further along: the page stopped describing the application and nothing objected.
+          ⚠ Every hedge here is load-bearing and none is optional. `provisional` (D-133 / D-134), the
+          served join is the ASSEMBLER and not Kabsch (D-118 / D-121), D-126 is the best path AMONG
+          THOSE TRIED and not a solution (D-127 / D-128 OPS), the seams are RECORDED and not solved
+          (D-129 accept-refuse), rented capacity is CLOSED (D-118), and none of it enters the ranking
+          (D-109 ruling 7). Any one of them dropped turns this beat into the overstatement the whole
+          arc has spent six decisions refusing to make.
+          ⚠ Short sentences on purpose — D-056's ceiling is measured over this page, and this is the
+          densest material on it. No count is written into this copy (Constraint A). */}
+      {s?.census && (
+        <section id="beat-hold48">
+        <p>
+          <strong>Some proteins were too long to fold in one go.</strong> The model has a limit on how
+          much sequence it can take at once. The longest outward-facing spans are past it. So we cut
+          each of those spans into <strong>overlapping tiles</strong>, folded every tile on its own,
+          and joined the pieces where they overlap — keeping, at each shared position, whichever tile
+          the model was more confident about. That is a real answer to a real limit, and it is{' '}
+          <strong>not the same thing as folding the whole span</strong>. We are careful to say which
+          proteins came out this way, and <Link to="/census?structure=assembled">the census marks
+          every one of them</Link>.
+        </p>
+        <p>
+          <strong>The joins are recorded, not solved.</strong> Where two tiles meet, the backbone can
+          jump. We measured that jump at every seam, we tried five further ways of closing it, and we
+          publish what each one did — including the one that worked best so far, which still did not
+          repair most of the seams it was pointed at. So these structures stay marked{' '}
+          <strong>provisional</strong>: the label says how the structure was made, never how good it
+          is. They are <strong>not in the ranking</strong>, and the rented hardware that folded the
+          tiles is <strong>closed</strong>. <Link to="/method">The Method page</Link> walks through
+          the tiles, the glue and every seam we could not close.
+        </p>
+        </section>
+      )}
+
+      <section id="beat-scorer">
       {/* Beat 3 — fixed before any result, dated (decision refs are constants, not live statistics) */}
       <p>
         <strong>Fixed before any result, and dated:</strong> the six shape-and-confidence features
@@ -169,7 +296,9 @@ export default function Story() {
         {/* ⚠ Both edges or neither (D-093 decision 5): the tumour panel alone is the flattering half. */}
         <strong>It is an expression measurement, not a claim that the protein drives the disease.</strong>
       </p>
+      </section>
 
+      <section id="beat-open">
       {/* Beat 6 — what is open (ends on the question, not a claim) */}
       <p>
         <strong>So the real question is still open.</strong> That confidence could be reading genuine
@@ -198,9 +327,17 @@ export default function Story() {
         exists and has run — the ranking is real, at reduced scope, on the{' '}
         <Link to="/scorer">Scorer</Link> page, not a stand-in.
       </p>
+      </section>
 
+      {/* ⚠⚠ THE CTA SPLITS (D-135), because the page now describes two populations and one button
+          sent every reader to one of them. The second link lands on the assembled proteins with the
+          census filter already applied (`?structure=assembled`) — the caveat renders there with the
+          chip, so a reader arriving by this link meets "provisional" at the same moment they meet
+          the list. ⚠ Two doors, not a recommendation: neither population is offered as the better
+          one, and nothing here is ranked (D-079). */}
       <p className="story-cta">
         <Link to="/targets">See the folded targets →</Link>
+        <Link to="/census?structure=assembled">See the tile-assembled proteins →</Link>
       </p>
     </div>
   )
