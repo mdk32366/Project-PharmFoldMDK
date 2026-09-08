@@ -364,6 +364,14 @@ def test_d136_entry_exists_in_the_living_log():
     **exactly as the comment above predicted it would**. ⚠ **The successor is
     named, never admitted by a `>=`:** an entry that merely *takes* 138 still
     fails, and a bare `### D-139` still reddens.
+
+    ⚠ **Widened again at D-139 — to "139 is the served-path flip and 140 does not
+    exist"** — the same way, and the fifth time this guard has been widened rather
+    than relaxed. D-139 hands the recorded D-126 PASS seventeen the
+    confidence-Kabsch structure and leaves everyone else on the assembler. ⚠ It was
+    **not** a live collision: at tip `dd06e9c` the three open PRs (#222, #200, #197)
+    spend no `D-1NN` id, so 139 was free — read off `gh pr list --state open`, not
+    assumed. **Both ids are carried:** 139 by name, and `### D-140` barred.
     """
     log = DOCS_README.read_text(encoding="utf-8")
     assert "\n### D-136 —" in log
@@ -375,7 +383,11 @@ def test_d136_entry_exists_in_the_living_log():
         "D-138 is the recorded successor id; it must be the /method contents-rail "
         "entry, not some other entry that took the number"
     )
-    assert "\n### D-139" not in log
+    assert re.search(r"^### D-139 — The served PDB stops being a constant", log, re.M), (
+        "D-139 is the recorded successor id; it must be the served-path flip entry, "
+        "not some other entry that took the number"
+    )
+    assert "\n### D-140" not in log
 
 
 def test_every_entry_slice_in_this_suite_is_anchored_to_a_line_start():

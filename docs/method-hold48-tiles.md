@@ -71,7 +71,10 @@ There is no button that heals the join.
 The assembler path above is still the **default served structure**. A
 later GO (**D-125-A**) wrote a second, sibling tree of files under
 `kabsch/{parent}/`. This page does not swap that tree in as "the"
-structure.
+structure. ⚠ **Scoped by D-139:** the assembler is still the default and
+still what the **D-125 Kabsch-path** tree is measured against — the one
+swap that has since been signed hands out the **D-126** structure, and
+only for the recorded PASS seventeen. See the D-139 addendum below.
 
 **What Kabsch does.** After the tiles are already folded by ESMFold,
 Kabsch is a math move. It rotates and slides one tile so the shared
@@ -101,6 +104,11 @@ D-125-A wrote a second sibling tree under `kabsch/{parent}/`.
 D-126-A wrote a **third** sibling tree under
 `confidence_kabsch/{parent}/`. This page does not swap either tree
 in as "the" structure. A later Matt GO would have to name that swap.
+⚠ **That GO has since arrived, and it is D-139** — for the **seventeen**
+parents carrying a recorded PASS and no later named refuse, the
+`confidence_kabsch/{parent}/` structure **is** what the site hands out.
+Every other parent keeps the assembler. The swap is by allowlist and
+gate, never automatic; the D-139 addendum below is the whole of it.
 
 **What overlap-confidence Kabsch does.** After the tiles are already
 folded by ESMFold, this third path is still a math move. It rotates
@@ -146,6 +154,8 @@ different moves, and only the first one is served.
 
 1. **Assembler** — pick the winner tile by pLDDT at each residue. This is
    the **default served** structure and stays that way until a Matt swap GO.
+   ⚠ **The swap GO arrived at D-139** and moved exactly seventeen parents
+   onto path 3; every parent this section is about still gets path 1.
 2. **D-125 Kabsch** — one unweighted rigid move on the glue Cα, then the
    same assembler.
 3. **D-126 confidence** — one weighted / trimmed rigid move on the same
@@ -182,7 +192,8 @@ disagreement multi-rigid exists to expose — the D-126 lie surface wearing
 new clothes.
 
 **What piecewise Kabsch does not do.** It does not replace the assembler;
-the served PDB is still the assembler one. It does not overwrite the
+the served PDB is still the assembler one — for **every** parent, including
+after D-139, which serves **D-126** and never this path. It does not overwrite the
 D-125 `kabsch/{parent}/` or D-126 `confidence_kabsch/{parent}/` files. It
 does not make the long chain one ESMFold pass. It does not fill empty
 pair-confidence (PAE) between tiles. It does not put these chains into the
@@ -240,7 +251,10 @@ nerve, and it is **not** a reason to raise the 10.0 Å gate, relax the
 linker gate, add a trim loop, or invent a blend. No threshold moved
 because of this run. Nothing here flips the served path either: the
 **default served structure is still the assembler**, and only a Matt GO
-can change that — never a pass count.
+can change that — never a pass count. ⚠ **Scoped by D-139:** that Matt GO
+has since arrived and flipped the recorded PASS **seventeen** onto D-126.
+It changed nothing here — **all ten** parents D-127 refused, these three
+included, are excluded from it by name and keep the assembler.
 
 And 17 accepted parents are **17 recorded outcomes**, not 17 solved
 joins. A seam that was recorded is not a seam that was solved.
@@ -271,6 +285,8 @@ other four.
 
 1. **Assembler** — pick the winner tile by pLDDT at each residue. This is
    the **default served** structure and stays that way until a Matt swap GO.
+   ⚠ **The swap GO arrived at D-139** and moved exactly seventeen parents
+   onto path 3; every parent this section is about still gets path 1.
 2. **D-125 Kabsch** — one unweighted rigid move on the glue Cα, then the
    same assembler.
 3. **D-126 confidence** — one weighted / trimmed rigid move on the same
@@ -320,7 +336,8 @@ them. A mean jump would hide the single seam that flies apart, and an
 absence, never `0.00 Å`, and an **unknown jump is not honest**.
 
 **What linker / seam honesty does not do.** It does not replace the
-assembler; the served PDB is still the assembler one. It does not
+assembler; the served PDB is still the assembler one — for **every**
+parent, including after D-139, which serves **D-126** and never this path. It does not
 overwrite the D-125 `kabsch/{parent}/`, D-126
 `confidence_kabsch/{parent}/`, or D-127 `piecewise_kabsch/{parent}/`
 files. It does not make the long chain one ESMFold pass. It does not fill
@@ -405,7 +422,11 @@ deliverable was the measurement, and the measurement came out negative.**
 
 **No threshold moved because of this run.** Nothing here flips the served
 path either: the **default served structure is still the assembler**, and
-only a Matt GO can change that — never a pass count. **3432 stays
+only a Matt GO can change that — never a pass count. ⚠ **Scoped by
+D-139:** that Matt GO has since arrived and flipped the recorded PASS
+**seventeen** onto D-126. **None of these seven is in it** — a parent
+D-128 measured as `seam_jump_gt_10` is precisely a parent whose D-126 pose
+we hold a measurement against, so all seven keep the assembler. **3432 stays
 accept-refuse** (signed triage): it is not a success target of this path,
 not re-opened, and not counted as a D-128 miss.
 
@@ -417,7 +438,10 @@ When the fifth tree is on disk, the review card names **five** paths with
 five persist stems (`stitched` vs `kabsch/{parent}` vs
 `confidence_kabsch/{parent}` vs `piecewise_kabsch/{parent}` vs
 `linker_seam/{parent}`) so they cannot be read as one population. The
-served download is still the assembler `stitched` one.
+served download is still the assembler `stitched` one **for the parents
+this section is about**. ⚠ **D-139** changed that for the recorded PASS
+seventeen only, and their download is named `stitched_confidence_kabsch`
+so the two files can never be confused.
 
 ## Addendum D-129-B — what we now call the eight joins we could not hold
 
@@ -484,7 +508,11 @@ algorithm**. We are not loosening the **10.0 Å** limit that decides
 whether a join counts as honest, we are not moving **W = 32** or
 ε = 1e-3, and we are not changing which structure the site serves: the
 **served** structure is still the **assembler** (the winner-tile method),
-as it has been all along. **D-126 remains the best experimental path
+as it has been all along. ⚠ **Scoped by D-139:** the site later did change
+which structure it serves — for the recorded PASS **seventeen**, and by
+allowlist, not by a new algorithm. **All eight parents named in this
+section are excluded from it** and keep the assembler with their
+accept-refuse label intact. **D-126 remains the best experimental path
 until proven otherwise**, and stays **callable**. Both the **D-127** and
 the **D-128** failed rescues **stay disclosed** above — neither replaces
 nor softens the other.
@@ -501,7 +529,12 @@ ran, queried, or re-derived it.
 Ruled by **Matt SIGNED Phase 4 named-refuse** (2026-09-05 ~22:32 PT) after
 D-130-A OPS at tip `932292d`. Freeze unchanged: served = **assembler**;
 gate **10.0 Å**; **D-126** best experimental callable; no RMSD-v2; no
-F-004; no auto-flip.
+F-004; no auto-flip. ⚠ **Amended in scope by D-139:** `served =
+assembler` still holds for **3272 and 3394** — both are accept-refuse and
+both are excluded from the flip by name — but it is no longer the whole
+picture, because the recorded PASS seventeen are now served **D-126**.
+The rest of the freeze stands untouched: **10.0 Å**, no RMSD-v2, no
+F-004, **and still no auto-flip**.
 
 ### Phase 4 OPS (as recorded)
 
@@ -571,7 +604,10 @@ The rental stays **CLOSED** (D-118) — a recount is not a card.
 
 There is **no residual-RMSD-v2** and **no fifth stitching algorithm** in
 this addendum. We are not loosening the **10.0 Å** gate, not flipping
-served off **assembler**, and not entering F-004. **D-126** remains the
+served off **assembler**, and not entering F-004. ⚠ **Scoped by D-139:**
+served was later flipped off the assembler — for the recorded PASS
+**seventeen only**, onto the **existing** D-126 path. Still no sixth
+algorithm, still no gate move, still no F-004. **D-126** remains the
 best experimental path until proven otherwise. D-127, D-128, and this
 Phase 4 OPS disclosure **all stay on the page** — none softens another.
 
@@ -580,6 +616,99 @@ Phase 4 OPS disclosure **all stay on the page** — none softens another.
 Matt SIGNED Phase 4 named-refuse 2026-09-05 ~22:32 PT. Architect support
 on file. OPS tip `932292d` / out_root `residual_rmsd_ops_2026-09-05`.
 This addendum ships **no** new ops run and **no** Fly POST by itself.
+
+## Addendum D-139 — which structure you are actually handed
+
+Ruled by **Matt BUILD GO 2026-09-08 ~2:57 PM PT via Emma** — Phase 6 of
+the `D-0043` stitch honest-endpoint roadmap. ⚠ Vault `D-0043` is external
+numbering, **not** a project decision id.
+
+Everything above this section was written while the answer to *"which of
+these paths do I actually download?"* was the same for all 27 parents:
+**the assembler**. Four alternative fits ran beside it and none of them
+could change the file. That is no longer true, for **seventeen** parents.
+
+### The rule, in one sentence
+
+If a parent is one of the **seventeen** that carry a recorded **PASS**
+and **no later named refuse**, the site hands you its **D-126
+overlap-confidence Kabsch** structure. **Every other parent — and every
+parent outside the 27 — is handed the assembler.**
+
+### The seventeen
+
+2817, 2917, 2929, 3027, 3097, 3153, 3188, 3217, 3320, 3379, 3404, 3454,
+3469, 3516, 3541, 3569, 3575.
+
+That is the **17 PASS** list from *"Inventory on the 27"* above, unchanged
+and not recomputed here. The other **ten** are the accept-refuse ten — the
+Phase 5 eight (2938, 2939, 3179, 3190, 3321, 3368, 3566, 3432) plus Phase 4's
+3272 and 3394 — and they keep the assembler **and** keep their labels.
+
+### ⚠ Why seventeen and not twenty-four
+
+D-126's **own** run refused only **three** of the 27 (2939, 3272, 3432),
+which leaves 24. Seven of those 24 were later measured as **refused by a
+different path**: six on D-128 `seam_jump_gt_10`, and 3394 on Phase 4
+`rmsd_gt_10` (floor ≈ 4.77 Å, achieved ≈ 13.77 Å). **24 − 7 = 17.**
+
+Serving a D-126 pose for a parent D-128 measured as `seam_jump_gt_10`
+would mean handing out a structure we hold a recorded measurement
+**against**. So the gate is *PASS **and** no later named refuse*. The 24
+is written here because it is the number the next reader will reach for
+first, and it is the wrong one.
+
+### It takes four yeses, and any one missing means assembler
+
+1. the parent is in the seventeen;
+2. a `confidence_kabsch/{parent}/` tree is on disk;
+3. that tree's provenance says the run **accepted** this parent;
+4. `stitched.pdb` is actually in it.
+
+**Artifacts alone can never flip a parent.** A tree appearing on disk, a
+PR merging, or a pass count improving are none of them authority — the
+seventeen are, and they are written out. When a parent is not flipped,
+the page says **which** of the four failed: `not_in_pass_subset`,
+`no_confidence_kabsch_artifacts`, `confidence_kabsch_refused`, or
+`no_confidence_kabsch_success_pdb`. "Assembler" without the reason cannot
+tell *never eligible* from *the run refused it*.
+
+### ⚠ Right now, in this repository, that count is ZERO
+
+There is **no** `confidence_kabsch/` tree committed to this repository —
+the D-126 OPS output lives under an ops `out_root` on the volume and was
+never checked in. So **seventeen parents are eligible and zero are
+flipped**: every one of them resolves to the assembler with the reason
+`no_confidence_kabsch_artifacts`. That is the fail-closed branch working,
+and it is stated first because it is the number that would otherwise
+embarrass this page.
+
+### What comes with the bytes
+
+The **pLDDT** and **PAE** beside a served D-126 structure come from the
+**same** tree. D-126 runs its own winner-tile pass, so its residue picks —
+and its confidence array — can differ from the assembler's; colouring
+D-126 coordinates with assembler confidence would be a new dishonesty
+invented by this change. Each falls back on its own if the tree does not
+carry it. And a flipped parent downloads as
+**`stitched_confidence_kabsch.pdb`**, never `stitched.pdb`: two files with
+one name and different coordinates is a bug that outlives the tab.
+
+### What this does not do
+
+**No threshold moved.** The **10.0 Å** refuse gate and the three refuse
+reasons are untouched, and nothing here was re-run, re-fit or
+re-measured — this addendum ships **no** ops run and **no** Fly POST.
+There is **no auto-flip**, **no sixth algorithm**, **no D-127 piecewise
+revival**, **no RMSD-v2**, **no linker-v2**, and **no F-004**. The
+accept-refuse ten stay accept-refuse; **3432 is not re-opened**; the
+Phase 4 hunt stays **closed**; the rental stays **CLOSED**. No claim of
+any kind is made about the 18 parents outside the 27 — no OPS run ever
+touched them, and none is eligible.
+
+**And a served D-126 structure is a recorded outcome, not a solved
+join.** Seventeen served parents are **seventeen recorded outcomes**.
+**Never claim 27/27 PASS. Never claim the seams are solved.**
 
 ## The rental is CLOSED
 
@@ -592,8 +721,10 @@ to rent another card. Do not Deploy. Do not emit.
 ## What this file is not
 
 - Not a licence to call the joins scientifically solved, or to treat a
-  Kabsch-path, D-126-path, D-127-path, or D-128-path file as the default
-  served PDB.
+  Kabsch-path, D-127-path, or D-128-path file as the default served PDB.
+  ⚠ **The D-126 path is served for the seventeen named in the D-139
+  addendum, and for no one else** — that is an allowlist, not a default,
+  and it is not a claim that those seventeen are solved.
 - Not a licence to run a live restitch of the 27, or to re-open rental.
   The D-127 and D-128 ops figures above were **handed to this file as
   recorded**; nothing here ran, queried, or re-measured them.

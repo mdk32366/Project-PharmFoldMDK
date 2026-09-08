@@ -88,7 +88,9 @@ function DualPathHonesty({ dualPath, triplePath, fourPath, fivePath }) {
             <code>{d128.persist_stem || 'linker_seam/{parent}'}</code>
           </>
         ) : null}
-        . The assembler PDB remains the default served structure. Seams are{' '}
+        . The assembler PDB remains the <em>default</em> served structure;
+        which path is actually served for <em>this</em> parent is resolved
+        below under <strong>D-139</strong>. Seams are{' '}
         <strong>not scientifically solved</strong>.
       </p>
       <dl className="assembly-prov">
@@ -243,8 +245,10 @@ function DualPathHonesty({ dualPath, triplePath, fourPath, fivePath }) {
             <code>seams.jsonl</code>. Weighted RMSD, full-overlap RMSD,
             max Cα jump, n_ca_eff, and trim rounds are absences when
             missing — not a solved seam. A refuse is a recorded
-            outcome, not a &quot;fixed&quot; badge. This path is never
-            the default served PDB.
+            outcome, not a &quot;fixed&quot; badge. This path is never the{' '}
+            <em>default</em> served PDB — under <strong>D-139</strong> it is
+            served only to the recorded PASS seventeen, and only when this
+            tree is on disk and accepted. See the served-path block below.
           </p>
           {d126Seams.length === 0 ? (
             <p className="note" data-testid="d126-seams-empty">
@@ -306,7 +310,9 @@ function DualPathHonesty({ dualPath, triplePath, fourPath, fivePath }) {
             Missing values are absences, not zeros: on a
             refuse-before-transform there is nothing to measure. A refuse
             is a recorded outcome, not a &quot;fixed&quot; badge. This
-            path is never the default served PDB.
+            path is never the default served PDB, and{' '}
+            <strong>D-139 did not change that</strong> — the one flip it
+            signed serves D-126, never this path.
           </p>
           {d127Seams.length === 0 ? (
             <p className="note" data-testid="d127-seams-empty">
@@ -481,7 +487,8 @@ function DualPathHonesty({ dualPath, triplePath, fourPath, fivePath }) {
             absences, not zeros: on a refuse-before-transform there is
             nothing to measure. A refuse is a recorded outcome, not a
             &quot;fixed&quot; badge. This path is never the default
-            served PDB.
+            served PDB, and <strong>D-139 did not change that</strong> —
+            the one flip it signed serves D-126, never this path.
           </p>
           {d128Seams.length === 0 ? (
             <p className="note" data-testid="d128-seams-empty">
@@ -539,12 +546,74 @@ function DualPathHonesty({ dualPath, triplePath, fourPath, fivePath }) {
             {d128.success_pdb_on_disk
               ? 'A D-128-path stitched.pdb is on disk for this parent and every seam ended inside the gate. It is still not the served structure.'
               : 'No D-128-path stitched.pdb is presented as an honest result for this parent. A dishonest or unknown seam never carries one, and no assembler / D-125 / D-126 / D-127 file stands in for it.'}{' '}
-            The assembler PDB remains the default served structure, and{' '}
+            The assembler PDB remains the <em>default</em> served
+            structure — see the <strong>D-139</strong> block below for what
+            this parent is actually handed — and{' '}
             <strong>a seam that was recorded is not a seam that was
             solved</strong>.
           </p>
         </div>
       ) : null}
+    </div>
+  )
+}
+
+// D-139 — which path's bytes this parent is actually handed.
+//
+// ⚠ The reason is NOT optional. "Assembler" on its own cannot tell a reader
+// that this parent was never eligible from that its D-126 run refused, and
+// that distinction is the whole Phase 4 / Phase 5 vocabulary. So the named
+// reason renders in the same block as the answer, and the block is only
+// omitted when the payload carries no served-path decision at all.
+const SERVED_PATH_NAMES = {
+  assembler: 'Assembler (winner-tile)',
+  confidence_kabsch: 'D-126 overlap-confidence Kabsch',
+}
+
+function ServedPath({ served }) {
+  if (!served || !served.served) return null
+  const flipped = served.served === 'confidence_kabsch'
+  return (
+    <div className="served-path" data-testid="served-path">
+      <h4>Which structure this parent is served (D-139)</h4>
+      <dl className="assembly-prov">
+        <div>
+          <dt>served path</dt>
+          <dd data-testid="served-path-name">
+            <strong>{SERVED_PATH_NAMES[served.served] || served.served}</strong>
+          </dd>
+        </div>
+        <div>
+          <dt>persist stem</dt>
+          <dd><code>{served.persist_stem || '—'}</code></dd>
+        </div>
+        <div>
+          <dt>in the recorded PASS {served.pass_subset_n ?? 17}</dt>
+          <dd data-testid="served-path-eligible">
+            {served.eligible ? 'yes' : 'no'}
+          </dd>
+        </div>
+        <div>
+          <dt>flipped off assembler</dt>
+          <dd data-testid="served-path-flipped">{flipped ? 'yes' : 'no'}</dd>
+        </div>
+        {served.not_flipped_reason ? (
+          <div>
+            <dt>reason</dt>
+            <dd className="mono" data-testid="served-path-reason">
+              {served.not_flipped_reason}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+      <p className="note" data-testid="served-path-note">
+        {flipped
+          ? 'This parent is in the recorded D-126 PASS subset and its confidence-Kabsch tree is on disk and accepted, so that structure is what the download returns — as stitched_confidence_kabsch.pdb, never stitched.pdb.'
+          : served.not_flipped_note}{' '}
+        The gate is an allowlist plus four checks, never a pass count, and
+        there is no auto-flip. <strong>A served structure is a recorded
+        outcome, not a solved seam.</strong>
+      </p>
     </div>
   )
 }
@@ -796,6 +865,8 @@ export default function AssemblyReview({ review }) {
         fourPath={review.four_path}
         fivePath={review.five_path}
       />
+
+      <ServedPath served={review.served_path} />
 
       <Phase5Fate fate={review.phase5_fate} />
 
