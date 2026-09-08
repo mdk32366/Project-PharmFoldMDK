@@ -372,8 +372,17 @@ def test_d129_is_the_next_free_decision_id():
     # again by enumeration. Spending D-133 (the census sortable Structure column)
     # reddened the previous form BY DESIGN; the successor is named below rather
     # than admitted by a `>=`, so a stray `### D-134` still reddens.
-    assert [i for i in ids if i > 129] == [130, 132, 133], (
-        f"D-129's successors must be exactly D-130, D-132 and D-133; found {ids[-4:]}"
+    #
+    # ⚠ Widened again at **D-134** — to `[130, 132, 133, 134]` — same way. D-134 is
+    # the stitched-parent census-identity fix; it is named below, so a stray
+    # `### D-135` still reddens rather than being admitted by a `>=`.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134], (
+        f"D-129's successors must be exactly D-130, D-132, D-133 and D-134; "
+        f"found {ids[-5:]}"
+    )
+    assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
+        "D-134 is the recorded successor id; it must be the stitched-parent "
+        "census-identity entry, not some other entry that took it"
     )
     assert re.search(r"^### D-132 — Assemble-inventory amend", LOG, re.M), (
         "D-132 is the recorded successor id; it must be the inventory-amend "

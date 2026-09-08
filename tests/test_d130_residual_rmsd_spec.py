@@ -249,11 +249,19 @@ def test_d130_is_the_next_free_decision_id():
     D-133 is the census sortable-Structure-column entry, named here so an
     entry that merely *takes* the number still fails, and a stray
     ``### D-134`` fails too.
+
+    ⚠ **Widened again at D-134 — to ``[132, 133, 134]`` — the same way.** D-134
+    is the stitched-parent census-identity fix; it is named below, so a stray
+    ``### D-135`` still fails rather than slipping under a ``>=``.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133], (
-        f"D-130's successors must be exactly D-132 and D-133; found {ids[-3:]}"
+    assert [i for i in ids if i > 130] == [132, 133, 134], (
+        f"D-130's successors must be exactly D-132, D-133 and D-134; found {ids[-4:]}"
+    )
+    assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
+        "D-134 must be the stitched-parent census-identity entry, not some "
+        "other entry that took the number"
     )
     assert re.search(r"^### D-132 — Assemble-inventory amend", LOG, re.M), (
         "D-132 must be the inventory-amend entry, not some other entry that "
