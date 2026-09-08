@@ -262,7 +262,11 @@
 >   (**D-119**). ADC-B pages consume it (**D-122**). **D-124 / ADC-C-A** adds
 >   sibling files `adcs.pipeline.v1.json` + `access.v1.json` — not merged into
 >   `adcs.v1.json`. **D-124 / ADC-C-B** consumes those siblings on `/adcs`.
->   Weekly Drugs@FDA watch is Emma's ops lane; not built here.
+>   **D-136** fills the Approved **Cancer type** column from openFDA
+>   `label.json` §1 INDICATIONS AND USAGE (a `reviewed` tumour-type list beside
+>   the `official` verbatim text it was reduced from, audited by substring; a
+>   third date `indications_reviewed_as_of`; ⚠ never an HPA / staining join,
+>   D-093). Weekly Drugs@FDA watch is Emma's ops lane; not built here.
 > - The planning docs in this folder (TDD, DB plan, UI plan, test plan, checklist) — the
 >   *original* intent. Where a decision below diverges from them, **this log wins**.
 
@@ -374,6 +378,251 @@ So the rule is not "be careful" — it is:
 ---
 
 ## Log (newest first)
+
+### D-136 — The ADC Approved Cancer type column becomes real from the FDA label itself: a reviewed tumour-type list that must be checkable against the official indications text stored beside it
+
+- **Date:** 2026-09-08
+- **Status:** Accepted as the **cancer-type fill GO** (Matt GO 2026-09-08 via Emma relay).
+  Catalog + validator + `/adcs` index + baseball card. ⚠ **Approved shelf only.**
+  ⚠ **No pipeline row gains an indication** (D-124 schema does not allow one and no Spec
+  says so). ⚠ **No HPA / census staining join** (D-093). ⚠ **No new API route** — the
+  existing `GET /api/adcs` and `GET /api/adcs/{adc_id}` serve the file as-is.
+  ⚠ **No ranking, no F-004, no Fly / GPU ops; rental stays CLOSED.**
+  ⚠ **Does not amend** D-119's approval identity, the two existing freshness dates,
+  the antigen / accession confidences, D-122's default sort, or the `D-` next-free pointer.
+- **Ship id:** spends `D-136`. `D-134` is on `main` (`ebd7b83`); `D-135` is Kaylee's
+  in-flight Coverage dual-pop + Story work and is **not** in this diff. Verified before
+  claiming the integer: `grep -n '^### D-13[456]' docs/README.md` at `ebd7b83` returns
+  `D-134` and `D-133` only, and a repo-wide search for `D-135` / `D-136` matched nothing
+  but two test comments using `### D-135` as a deliberately-absent heading. ⚠ **D-135 has
+  since merged — see amendment 1**, which is also where citing that heading here turned out
+  to matter.
+- **Cite:** D-122 decision 3 (*"A later GO that adds a reviewed indication envelope can
+  fill the column; this one must not"*) — **this is that GO** · D-119 decision 8 (v1 carries
+  no indication *"unless a later GO cites a named label section"* — the named section is
+  **SPL §1 INDICATIONS AND USAGE**) · D-119 decision 2 (closed confidence set) · D-119
+  decision 5 (dates never collapsed) · D-029 (openFDA is authority for what FDA says; a
+  live FDA call must not redden the gate) · D-093 + amendment 1 (HPA IHC is **staining**,
+  never an FDA indication) · D-016 (every claim names how it is known)
+- **Relates:** `D-119` · `D-122` · `D-124` · `D-029` · `D-093` · `D-053` ·
+  ship index [`decisions.md`](decisions.md)
+
+#### Context — what the column was, and why it could stop being an absence
+
+D-122 shipped the `/adcs` Approved index with the Spec's three sort axes, and the middle one
+was a **named absence** on every row: *"not in catalog v1 — indication is not an ADC-A field
+(D-119)."* That was the correct call at the time, and D-122 said so in the entry itself: it
+refused to type PADCEV → urothelial from memory, refused to join HPA's 20 cancer types onto
+a drug card, and left the fill to a later GO **that cites a source**.
+
+The absence copy was honest but it was also load-bearing dead weight: fifteen identical cells,
+and a "sort by cancer type" that could only ever be a same-category sort.
+
+⚠ **What changed is not our confidence — it is that a source was actually queried.** openFDA
+serves a **second** endpoint this project had never used: `/drug/label.json`, the Structured
+Product Label, whose `indications_and_usage` array is **FDA's own §1 INDICATIONS AND USAGE
+text for the currently marketed label**. D-119 used `/drug/drugsfda.json` (approval identity)
+and correctly recorded that it has no indication field for this project's purposes. It does
+not. The label endpoint does.
+
+#### Decision
+
+1. **Two new envelopes per approved row, not one.** The reduction and the evidence for it
+   ship together, in the D-119 `{value, source, as_of, confidence}` shape:
+   - **`cancer_type`** — `value` is a **list** of short tumour-type labels (or `null` for a
+     named absence). Confidence **`reviewed`**: reducing label prose to a category is a human
+     read, exactly the D-029 seam that keeps `antigen` at `reviewed`.
+   - **`label_indications_verbatim`** — `value` is the **complete** `indications_and_usage`
+     text **as openFDA returned it**, unedited. Confidence **`official`**.
+   ⚠ **The verbatim field is not decoration and not a tooltip.** It is what makes the
+   reviewed list falsifiable by a reader and by CI, and it is the reason this entry can
+   claim the column is *sourced* rather than *asserted*.
+2. **⚠⚠ The load-bearing rule: every category must be a literal substring of the official
+   text stored on its own row.** `core.adc_catalog` normalises both sides (lowercase,
+   non-alphanumerics → single spaces) and **raises `CatalogError`** if any `cancer_type`
+   token is not found in that row's `label_indications_verbatim`. *A cancer type typed from
+   memory does not fail review — it fails the gate*, because "urothelial" for a drug whose
+   stored label text does not contain the word cannot pass a substring test. This is the
+   check that makes D-122's *"do not type PADCEV → urothelial from memory"* mechanical
+   instead of aspirational.
+   ⚠ **Corollary, and it is deliberately strict: no category may ship without stored
+   official text to audit it against.** A non-null `cancer_type` **requires** a non-null
+   `label_indications_verbatim` on the same row. The looser rule — *let a `reviewed`
+   secondary-sourced category stand where no FDA text exists* — was considered and
+   **refused**, because it reopens the exact hole rule 2 closes: set the verbatim field to
+   `null`, write a plausible dated source, and type anything. If a future GO needs a
+   secondary-sourced indication with no FDA label behind it, that GO amends this clause
+   with its own reasoning rather than inheriting a gap.
+3. **The token names the tumour, never the stage, line, or biomarker.** KADCYLA's label
+   carries metastatic **and** early breast cancer; both reduce to `Breast cancer`. ENHERTU's
+   HER2-positive / HER2-low / HER2-ultralow breast indications likewise. Qualifiers are not
+   dropped — they stay in the verbatim field, which is the whole point of storing it.
+   ⚠ Where the label itself uses a compound the reduction may **not** split, the compound
+   stays whole: ELAHERE is `Epithelial ovarian, fallopian tube, or primary peritoneal cancer`
+   as one token, because splitting it into three would produce two strings ("epithelial
+   ovarian cancer", "fallopian tube cancer") that **FDA's text does not contain** — and rule 2
+   would correctly refuse them. The awkward token is the honest one.
+4. **A third date, never collapsed.** The header gains
+   `indications_reviewed_as_of` = **2026-09-08**, beside D-119's
+   `approvals_reconciled_as_of` (2026-09-05) and `antigen_mapping_reviewed_as_of`. Three
+   different questions were asked on three different days against two different endpoints;
+   one "updated" stamp would overstate the weakest (D-119 decision 5, D-029).
+5. **A closed authority list, and a named refusal.** `cancer_type.source` must name an FDA
+   indication authority (`api.fda.gov/drug/label.json`, `accessdata.fda.gov`, `Drugs@FDA`,
+   `drugsfda`) **or**, for a `reviewed` fallback, a named secondary source with a date.
+   ⚠ It may **never** contain an HPA / staining token — `proteinatlas`, `pathology.tsv`,
+   `normal_tissue.tsv`, `staining`, `IHC`, `quasi-H`, `/api/associations`, `cancer_associations`
+   — and `CatalogError` names D-093 when it does. ⚠ `derived` is refused for this field
+   outright: a cancer type may not be computed from a slug the way an id or an INN can.
+   ⚠ **The denylist fired on this PR's own first draft, and that is recorded rather than
+   smoothed over.** Each row's `cancer_type.source` originally ended with the reassuring
+   sentence *"Not an HPA / census staining join (D-093: staining is not an FDA
+   indication)"* — and all 15 rows raised `CatalogError`, because a substring denylist
+   cannot tell a **citation** from a **disclaimer**. The fix was to delete the prose, not
+   to weaken the check: a guard that has to be relaxed to accommodate a comforting
+   sentence is worth less than the sentence cost. ⚠ Note also that the denylist is applied
+   to `source` and **never** to `value` — EMRELIS's and ENHERTU's official label text
+   genuinely contain the word *staining* (`strong (3+) staining`, `IHC 0 with membrane
+   staining`), which is FDA describing a companion-diagnostic threshold. Scanning the
+   verbatim value would have rejected two true labels for quoting FDA correctly.
+6. **Missing stays a named absence, never a blank.** `cancer_type.value` may be `null`
+   **only** when `source` states which query came back without indication text, and `as_of`
+   dates it. ⚠ **The absence branch has no live subject in this file** — all 15 rows
+   resolved — so it is exercised **by fixture only**, and this entry says so rather than
+   letting a reader infer the branch was tested against real data.
+7. **Index and card consume the same field (D-122 decision 4).** `flattenAdc` returns
+   `cancer_type` as a real joined sort key when present and `null` when absent, so
+   `sortRows` puts sourced rows in alphabetical categories and absent rows in the trailing
+   cluster — the D-087 rule, not `?? 0`. The card renders the reviewed list **and** the
+   official verbatim text beneath it. Default sort stays **name ascending** (D-122
+   decision 2): a filled column is not a licence to arrive having chosen an axis.
+8. **The pipeline shelf is untouched.** `PIPELINE_FIELDS` set-equality already refuses an
+   extra key; a test now names `cancer_type` specifically, so "fill it there too" reddens
+   rather than merging investigational indications no Spec authorised.
+9. **The live query stays out of the gate (D-029).** The 15 label reads happened in this
+   session and **dated the file**; every test loads the file. No network in CI, and no
+   watcher is built here — the label endpoint joins Emma's documented ops lane in
+   [`../data/adcs/README.md`](../data/adcs/README.md).
+
+#### Provenance (D-016) — how all 15 rows are known
+
+`GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:"<BRAND>"&limit=5`,
+retrieved **2026-09-08**, `results[0].indications_and_usage`. Every brand returned
+`meta.results.total = 1` and HTTP 200.
+
+**⚠ The query that could have disqualified the whole entry, run first:** a label record is
+matched by *brand name*, so nothing guarantees it belongs to the application D-119 recorded.
+For all **15** rows `results[0].openfda.application_number` **equals** the catalog row's
+`application_number.value` — MYLOTARG `BLA761060`, ADCETRIS `BLA125388`, KADCYLA
+`BLA125427`, BESPONSA `BLA761040`, POLIVY `BLA761121`, PADCEV `BLA761137`, ENHERTU
+`BLA761139`, TRODELVY `BLA761115`, BLENREP `BLA761440`, ZYNLONTA `BLA761196`, TIVDAK
+`BLA761208`, ELAHERE `BLA761310`, DATROWAY `BLA761394`, EMRELIS `BLA761384`, DECNUPAZ
+`BLA761460`. Had one mismatched, that row's indication would have been another drug's, and
+the cell would have looked perfectly plausible. Each row's `source` string carries its own
+SPL `set_id`, `version` and `effective_time`, so the exact label revision is nameable later.
+
+**⚠ The label is the CURRENT label, not the ORIG-AP indication.** `effective_time` runs from
+**2025-07-14** (ELAHERE) to **2026-08-24** (POLIVY) — several are *newer* than
+`approvals_reconciled_as_of`. PADCEV's 2026-08-04 label carries a muscle-invasive bladder
+cancer neoadjuvant/adjuvant indication alongside la/mUC; DATROWAY's carries three. So
+`cancer_type` answers **"what is this drug indicated for on the label in force on
+2026-09-08"** — not "what was it first approved for". That is why the field has its own date
+and why a stale review count was refused in the first place (D-029).
+
+**⚠ A corroboration that is deliberately NOT promoted to `official`.** All 15 labels name
+their own target in §1 — *"a CD33-directed antibody"*, *"a Nectin-4-directed antibody"*,
+*"a c-Met-directed antibody"*, KADCYLA's *"HER2-targeted antibody"* — and all **15 agree**
+with D-119's reviewed `antigen`. That is a real independent check on the D-029 seam and it
+passed. It does **not** move `antigen` or `uniprot_accession` off `reviewed`: the label names
+a protein *descriptor*, never a gene symbol and never a UniProt accession, and the
+symbol→accession step is still a human join. Recording the corroboration without taking the
+promotion is the point.
+
+#### Result
+
+**15 of 15** approved rows gained a sourced `cancer_type`; **0** remain a named absence.
+Token counts per row: ADCETRIS 6 · ENHERTU 4 · ZYNLONTA 3 · POLIVY / PADCEV / DATROWAY 2 ·
+the other nine 1, for **28** tokens in all. Every one of the 28 passes the rule-2 audit against its
+own row's stored official text — the gate re-runs that audit on every test run, so this
+sentence is not a promise about a one-time check.
+
+#### Deep-learning justification
+
+Neutral to the weights, and load-bearing for the comparison the graded core exists to make.
+The neural deliverable is ESMFold (D-003) plus the scorer (D-041 / F-004); `P-001`'s question
+is whether a **structure-derived** ranking of targets agrees with anything clinical. The
+sharpest failure mode on this surface is the one D-093 named: filling a clinical column from
+**HPA staining** and then validating a structural axis against an expression threshold
+dressed as an FDA fact. Rule 2 and rule 5 make that specific confusion a `CatalogError`
+rather than a code-review habit — the clinical column is now **FDA's own indication text or
+nothing**, and the model's structural claims stay comparable against a labelled set instead
+of against a second expression measurement.
+
+#### Consequences
+
+- Tests that must be able to go red: a bare `cancer_type` string instead of an envelope; a
+  `cancer_type` token absent from its row's verbatim text (**the invented-string test** —
+  `"Urothelial cancer"` on ENHERTU reddens); an HPA / staining / associations token in the
+  source (**the D-093 join test**); `derived` confidence on `cancer_type`; a `null` value
+  with no stated absence reason; a `cancer_type` key on a pipeline row; the index rendering
+  a category no envelope carries; the card and the index disagreeing.
+- `ARCHITECTURE.md` ADC-catalog row gains the second openFDA endpoint, the two new fields,
+  the third date, and the substring audit. No route changes, so `system-model.json` is
+  unchanged (D-051 fires on route sets, and this diff adds none).
+- `CANCER_TYPE_ABSENT_COPY` stops being a page-wide constant and becomes a **fallback** for
+  a row whose envelope is a named absence. D-122's index/card agreement survives.
+- Follow-ups **not** taken here: no `indication` key is admitted (it stays on the
+  invented-science denylist, so the data must land in these named, audited fields); no
+  ORR / PFS / OS / DAR arrives with it; no per-indication accelerated-approval flag; no
+  pipeline indications; Emma's watch is still not a gate.
+
+#### Assumptions refused
+
+- That a memory of "PADCEV is for bladder cancer" is a source.
+- That HPA's 20 cancer types, or `/api/associations`, may fill an FDA indication column.
+- That a short category reduced from label prose is `official` because the prose is.
+- That storing the verbatim text is redundant once a human has read it.
+- That the current label's indication set is the original approval's.
+- That the label's `CD33-directed` phrasing promotes `antigen` off `reviewed`.
+- That filling Approved licenses filling Pipeline.
+
+#### D-136 amendment 1 — D-135 landed first; the id guards carry both, and a heading quoted in prose broke a merged test
+
+- **Date:** 2026-09-08 · **Status:** accepted
+- ⚠ **A sub-entry, not a new integer** (the `D-093 amendment 1` / `D-099 amendment 1`
+  precedent). The next free top-level integer is unchanged.
+- **D-135 squash-merged to `main` at `e7f2d825`** while this branch was open, so the
+  "spent integers" paragraph above — accurate when written against `ebd7b83` — describes a
+  tip that has moved. `origin/main` was merged in; **both** ids now coexist in the
+  `next_free_decision_id` guards (`[130, 132, 133, 134, 135, 136]` in
+  `tests/test_d129_phase5_named_refuse_spec.py`, `[132, 133, 134, 135, 136]` in
+  `tests/test_d130_residual_rmsd_spec.py`), each with its **own** named-entry assertion.
+  ⚠ **Widened by ADDING, never by relaxing to a `>=`.** Two branches each widened the list
+  to exclude the other; that conflict is the guard doing its job, and the resolution has to
+  keep both teeth rather than file them down.
+- ⚠⚠ **The finding worth keeping: an entry can break a neighbour's test by describing it
+  accurately.** The ship-id paragraph above cites `### D-135` as evidence the integer was
+  unspent. On merge, three of **D-135's own** tests failed. Neither entry was wrong:
+  `_d135_entry()` located its entry with an **unanchored** `LOG.index` on that heading text,
+  which matched *this* entry's citation — D-136 sits above D-135 in a newest-first log — and
+  sliced D-136's prose into D-135's assertions. Fixed where the defect is: the helper now
+  requires the heading to **start its own line** (`re.search` with `re.M` and a `^` anchor).
+  `tests/test_census_assembly_review.py`, which sliced D-132 the same unanchored way, is
+  anchored too. ⚠ The citations themselves stay.
+- ⚠ **A rule this amendment tried to invent, and withdrew.** The first fix went the other
+  way: forbid quoting a `### D-NNN` token in prose, and guard it with a test. That test
+  **failed against ~130 pre-existing occurrences** — because quoting a heading is this log's
+  own evidence habit, the thing method-note item 7 asks for (*show that you confirmed the
+  heading exists*). The guard would have been a rule written here and back-dated across the
+  whole history to make one merge conflict tidy. ⚠ **The prose was idiomatic; the helper was
+  wrong.** Recorded because the wrong fix passed its own test on the first run and still
+  would have been wrong.
+- ⚠ **This changed no D-136 behaviour.** The substring audit, the D-093 source denylist
+  (still reading `source`, never `value`), the 15-of-15 result, the refusal to touch the
+  pipeline schema, rental CLOSED and no-F-004 all stand exactly as ruled above. A test in
+  `tests/test_d136_cancer_type.py` also stopped bounding this entry by the named neighbour
+  `D-134` and now bounds it by the **next heading, whatever it is** — the same hidden
+  merge-order dependency, caught in D-136's own suite.
 
 ### D-135 — Coverage gains a SECOND population instead of a bigger number, the IGF2R failure gets a bridge instead of a paragraph, and the Story becomes skimmable
 

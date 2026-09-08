@@ -598,8 +598,16 @@ def test_the_story_cta_offers_both_populations_without_preferring_one():
 
 def _d135_entry() -> str:
     """The D-135 entry only — the log is 24k lines and a substring match anywhere in it proves
-    nothing about the entry that is supposed to carry the claim."""
-    start = LOG.index("### D-135")
+    nothing about the entry that is supposed to carry the claim.
+
+    ⚠ **Anchored at a line start (D-136 amendment 1).** The unanchored ``LOG.index("### D-135")``
+    this replaces also matched the id written *inside another entry's prose* — D-136 cited this
+    heading as evidence the integer was unspent, and because D-136 sits above D-135 in a
+    newest-first log, three assertions below silently began reading D-136's text. An entry can
+    break a neighbour's test by describing it accurately; the fix is to require the heading to
+    start its own line.
+    """
+    start = re.search(r"^### D-135", LOG, re.M).start()
     return LOG[start: LOG.index("\n### ", start + 1)]
 
 

@@ -11,6 +11,7 @@ inside it rather than the whole. Both counts ship; neither may stand for the oth
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from sqlalchemy import create_engine, select
@@ -298,7 +299,11 @@ def test_d132_entry_exists_before_the_code_claims_it():
     log = Path("docs/README.md").read_text(encoding="utf-8")
     assert "### D-132 — Assemble-inventory amend" in log
     # the entry has to carry the provenance the surfaces are now citing
-    entry = log[log.index("### D-132"): log.index("### D-130-B")]
+    # ⚠ Anchored (D-136 amendment 1): an unanchored lookup also matches the id written
+    # inside another entry's prose, where the log routinely cites headings as evidence.
+    entry = log[
+        re.search(r"^### D-132", log, re.M).start(): re.search(r"^### D-130-B", log, re.M).start()
+    ]
     assert "2026-09-08" in entry
     assert "pdb_path" in entry
     assert "read-only" in entry

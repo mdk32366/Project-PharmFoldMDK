@@ -22,12 +22,19 @@ const env = (value, extras = {}) => ({
   confidence: extras.confidence ?? 'official',
 })
 
-const row = (id, brand, antigen, accession) => ({
+const row = (id, brand, antigen, accession, cancerTypes = null) => ({
   id: env(id, { confidence: 'derived' }),
   inn: env(id.replace(/-/g, ' '), { confidence: 'derived' }),
   brand_name: env(brand),
   antigen: env(antigen, { confidence: 'reviewed' }),
   uniprot_accession: env(accession, { confidence: 'reviewed' }),
+  cancer_type: env(cancerTypes, {
+    confidence: 'reviewed',
+    as_of: '2026-09-08',
+    source: cancerTypes
+      ? `reviewed reduction of FDA label section 1 for ${brand}; openFDA label.json 2026-09-08`
+      : `openFDA label.json for ${brand} 2026-09-08 returned no indications_and_usage`,
+  }),
 })
 
 const pipeRow = (id, name, antigen, accession, phase, stage = 'clinical') => ({
@@ -45,14 +52,18 @@ const CATALOG = {
   completeness: env('floor_not_census', { confidence: 'reviewed' }),
   approvals_reconciled_as_of: env('2026-09-05'),
   antigen_mapping_reviewed_as_of: env('2026-09-05', { confidence: 'reviewed' }),
+  indications_reviewed_as_of: env('2026-09-08', { confidence: 'reviewed' }),
   named_exclusions: env([
     { id: 'ifinatamab-deruxtecan', reason: 'not approved; ADC-C / mapping PDUFA' },
     { id: 'pipeline_and_right_to_try', reason: 'ADC-C' },
   ], { confidence: 'reviewed' }),
   adcs: [
-    row('enfortumab-vedotin', 'PADCEV', 'NECTIN4', 'Q96NY8'),
+    row('enfortumab-vedotin', 'PADCEV', 'NECTIN4', 'Q96NY8', ['Urothelial cancer']),
+    // ⚠ One row with NO label indication on purpose: the mixed case is the one
+    // that can go quietly wrong, and it is the only way to see that an absent
+    // row trails the sort instead of leading it (D-136 / D-087).
     row('ado-trastuzumab-emtansine', 'KADCYLA', 'ERBB2', 'P04626'),
-    row('fam-trastuzumab-deruxtecan', 'ENHERTU', 'ERBB2', 'P04626'),
+    row('fam-trastuzumab-deruxtecan', 'ENHERTU', 'ERBB2', 'P04626', ['Breast cancer']),
   ],
 }
 
@@ -118,13 +129,42 @@ describe('AdcsView — D-122 index', () => {
     expect(listPipelineAdcs).not.toHaveBeenCalled()
   })
 
-  it('shows the named cancer-type absence and does not invent an indication', async () => {
+  it('D-136 — lists the tumour types the payload carries, and names the absence on the row that has none', async () => {
     const { container } = renderIndex()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-    const absences = screen.getAllByText(CANCER_TYPE_ABSENT_COPY)
-    expect(absences.length).toBe(3)
-    expect(container.textContent).not.toMatch(/urothelial|breast cancer|multiple myeloma/i)
-    expect(container.textContent).not.toMatch(/quasi H-score/)
+    expect(screen.getByText('Urothelial cancer')).toBeInTheDocument()
+    expect(screen.getByText('Breast cancer')).toBeInTheDocument()
+    // KADCYLA's row states no indication, and says so in its own words.
+    expect(container.textContent).toMatch(/KADCYLA 2026-09-08 returned no indications_and_usage/)
+    // ⚠ Nothing invented for the row that has none, and no staining anywhere.
+    expect(screen.queryAllByText(CANCER_TYPE_ABSENT_COPY)).toHaveLength(0)
+    expect(container.textContent).not.toMatch(/multiple myeloma/i)
+    // ⚠ Scoped to the TABLE, not the page. The lede legitimately says the
+    // column is "never a tissue-staining survey"; what must never appear is a
+    // staining-derived value in a cell (D-093).
+    expect(screen.getByRole('table').textContent)
+      .not.toMatch(/quasi H-score|proteinatlas|staining/i)
+  })
+
+  it('D-136 — sorting by cancer type gives real categories, and the absent row trails BOTH ways', async () => {
+    renderIndex()
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: /Cancer type/ }))
+    // ascending: Breast < Urothelial, and the row with no indication is last —
+    // a category off the axis, not the alphabetically-first one.
+    expect(bodyFirstCells()).toEqual([
+      expect.stringMatching(/ENHERTU/),
+      expect.stringMatching(/PADCEV/),
+      expect.stringMatching(/KADCYLA/),
+    ])
+
+    fireEvent.click(screen.getByRole('button', { name: /Cancer type/ }))
+    expect(bodyFirstCells()).toEqual([
+      expect.stringMatching(/PADCEV/),
+      expect.stringMatching(/ENHERTU/),
+      expect.stringMatching(/KADCYLA/),
+    ])
   })
 
   it('sorts by name and by protein', async () => {

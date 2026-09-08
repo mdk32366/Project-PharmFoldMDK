@@ -380,9 +380,21 @@ def test_d129_is_the_next_free_decision_id():
     # enumeration. Spending D-135 (Coverage dual population + Story consumability)
     # reddened the previous form BY DESIGN; the successor is named below, so a stray
     # `### D-136` still reddens instead of being admitted by a `>=`.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135], (
-        f"D-129's successors must be exactly D-130, D-132, D-133, D-134 and D-135; "
-        f"found {ids[-6:]}"
+    #
+    # ⚠ Widened again at **D-136** — to `[130, 132, 133, 134, 135, 136]` — and again
+    # by enumeration. D-136 fills the ADC Approved Cancer type column from the FDA
+    # label; it is named below, so a stray `### D-137` still reddens. ⚠ **This is the
+    # two-branch collision the guard is for, and it resolved by ADDING rather than
+    # loosening:** D-135 and D-136 were in flight together, each widened this list to
+    # exclude the other, and the merge carries **both** ids and **both** named-entry
+    # assertions. Neither was relaxed to a `>=` to make the conflict go away.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136], (
+        f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135 and "
+        f"D-136; found {ids[-7:]}"
+    )
+    assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
+        "D-136 is the recorded successor id; it must be the ADC cancer-type entry, "
+        "not some other entry that took the number"
     )
     assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
         "D-134 is the recorded successor id; it must be the stitched-parent "

@@ -4,13 +4,18 @@
 // A bare string is not data. This module unwraps envelopes for SORT KEYS only;
 // the rendered surfaces still show the full envelope.
 //
-// ⚠ Cancer type is NOT a v1 field (D-119 decision 8). The Spec asked the index
-// to sort name / cancer type / protein, so the column exists as an honest
-// absence — never a guessed indication, never an HPA join (D-093: staining ≠
-// FDA indication).
+// D-136 — cancer type is now a v1 field, filled from FDA's own SPL §1
+// INDICATIONS AND USAGE text and audited in `core/adc_catalog.py` against the
+// official text stored on the same row. So the column carries real categories
+// where the label states them. What has NOT changed: nothing here invents a
+// tumour type, and nothing here joins HPA / census staining (D-093: staining ≠
+// FDA indication). A row whose envelope is a named absence renders that
+// absence's own source — never a blank, never a guess.
 
+// D-136 — the fallback for a row whose `cancer_type` envelope is a named
+// absence and carries no source of its own. Before D-136 this was every row.
 export const CANCER_TYPE_ABSENT_COPY =
-  'not in catalog v1 — indication is not an ADC-A field (D-119)'
+  'not stated on the FDA label text this catalog holds for this row (D-136)'
 
 export const DEFAULT_SORT = { key: 'name', dir: 'asc' }
 
@@ -37,8 +42,30 @@ export function fieldValue(field) {
 }
 
 /**
- * One index row. `cancer_type` is null so `sortRows` holds every row in the
- * absent cluster — a same-category sort, not a fabricated indication.
+ * The tumour types on one row, as a list. `[]` when the envelope is a named
+ * absence — never a placeholder string masquerading as a category.
+ */
+export function cancerTypes(row) {
+  const value = fieldValue(row?.cancer_type)
+  return Array.isArray(value) ? value.filter((t) => typeof t === 'string' && t.trim()) : []
+}
+
+/**
+ * The `cancer_type` sort key: the tumour types joined, or `null` when absent.
+ *
+ * ⚠ `null`, not `''`. `sortRows` holds absent-valued rows out as a trailing
+ * cluster in both directions; an empty string would sort them as the
+ * alphabetically-first real category, which is the `?? 0` mistake in a
+ * different costume (D-087).
+ */
+export function cancerTypeSortKey(row) {
+  const types = cancerTypes(row)
+  return types.length ? types.join('; ') : null
+}
+
+/**
+ * One index row. `cancer_type` is a real sort key where the FDA label states a
+ * tumour type (D-136) and `null` where it does not.
  */
 export function flattenAdc(row) {
   if (!row) return null
@@ -48,9 +75,22 @@ export function flattenAdc(row) {
     inn: fieldValue(row.inn),
     protein: fieldValue(row.antigen),
     accession: fieldValue(row.uniprot_accession),
-    cancer_type: null,
+    cancer_type: cancerTypeSortKey(row),
+    cancer_types: cancerTypes(row),
+    cancer_type_field: row.cancer_type ?? null,
     row,
   }
+}
+
+/**
+ * What to render where a row states no tumour type: the envelope's OWN source,
+ * so the reader learns which query came back without indication text rather
+ * than reading one page-wide sentence that cannot be wrong (D-136 decision 6).
+ * Falls back to the shared copy only when the row carries no source at all.
+ */
+export function cancerTypeAbsenceCopy(field) {
+  const source = isEnvelope(field) ? field.source : null
+  return typeof source === 'string' && source.trim() ? source : CANCER_TYPE_ABSENT_COPY
 }
 
 export function flattenCatalog(catalog) {
