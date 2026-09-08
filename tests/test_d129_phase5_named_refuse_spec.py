@@ -383,22 +383,35 @@ def test_d129_is_the_next_free_decision_id():
     #
     # ⚠ Widened again at **D-136** — to `[130, 132, 133, 134, 135, 136]` — and again
     # by enumeration. D-136 fills the ADC Approved Cancer type column from the FDA
-    # label; it is named below, so a stray `### D-137` still reddens. ⚠ **This is the
-    # two-branch collision the guard is for, and it resolved by ADDING rather than
-    # loosening:** D-135 and D-136 were in flight together, each widened this list to
-    # exclude the other, and the merge carries **both** ids and **both** named-entry
-    # assertions. Neither was relaxed to a `>=` to make the conflict go away.
+    # label; it is named below. ⚠ **This is the two-branch collision the guard is for,
+    # and it resolved by ADDING rather than loosening:** D-135 and D-136 were in flight
+    # together, each widened this list to exclude the other, and the merge carries
+    # **both** ids and **both** named-entry assertions. Neither was relaxed to a `>=`
+    # to make the conflict go away.
     #
-    # ⚠ Widened again at **D-138** — to `[130, 132, 133, 134, 135, 136, 138]` — and again
-    # by enumeration. D-138 is the `/method` contents rail; it is named below. ⚠ **137 is
-    # deliberately ABSENT and must stay absent until #261 merges:** it is spent on the
-    # in-flight census Cost column branch (`cursor/d137-census-cost-column-78bb`), which
-    # widens this same list to `…, 136, 137` and will conflict here. Resolve by carrying
-    # BOTH ids and BOTH named-entry assertions — the D-135 / D-136 resolution — and never
-    # by a `>=`. Until then a bare `### D-137` in this log is a real collision and reddens.
-    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 138], (
-        f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136 and "
-        f"D-138; found {ids[-8:]}"
+    # ⚠ Widened again at **D-137** — to `[130, 132, 133, 134, 135, 136, 137]` — the same
+    # way, and for the third time it was a live two-branch collision rather than a
+    # sequential one. D-137 is the census sortable **Cost** column. It was written while
+    # #260 (D-136) was still open, so it landed here as `[…, 135, 137]` with 136 named as
+    # the in-flight id it was deliberately not taking (F-065's class, avoided by reading
+    # the open-PR list rather than assuming). #260 then merged, this assertion reddened
+    # **exactly as its own comment predicted**, and the rebase inserted 136 beside 137.
+    # **The redness was the guard working. Both ids are carried and neither claim is
+    # weakened** — a stray `### D-138` still reddens rather than slipping under a `>=`.
+    #
+    # ⚠ Widened again at **D-138** — to `[130, 132, 133, 134, 135, 136, 137, 138]` — the
+    # same way, and for the FOURTH consecutive live collision. D-138 is the `/method`
+    # contents rail (#262), opened at tip `1b0251b` while #261 (D-137) was still open, so
+    # it landed here as `[…, 136, 138]` with **137 named as the in-flight id it was
+    # deliberately not taking** — read off `gh pr list --state open`, not assumed. #261
+    # then squash-merged at `68fe0228`, this assertion reddened **exactly as both
+    # branches' comments predicted**, and the merge inserted 137 beside 138. ⚠ **Four
+    # collisions, four resolutions by ADDING.** The temptation each time is a `>=`, and a
+    # `>=` would end the guard's ability to tell a spent id from a free one — which is the
+    # only thing it does. A stray `### D-139` still reddens.
+    assert [i for i in ids if i > 129] == [130, 132, 133, 134, 135, 136, 137, 138], (
+        f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
+        f"D-137 and D-138; found {ids[-9:]}"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 is the recorded successor id; it must be the /method contents-rail "
@@ -407,6 +420,10 @@ def test_d129_is_the_next_free_decision_id():
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 is the recorded successor id; it must be the ADC cancer-type entry, "
         "not some other entry that took the number"
+    )
+    assert re.search(r"^### D-137 — The census gains a sortable Cost column", LOG, re.M), (
+        "D-137 is the recorded successor id; it must be the census sortable-Cost-column "
+        "entry, not some other entry that took it"
     )
     assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
         "D-134 is the recorded successor id; it must be the stitched-parent "

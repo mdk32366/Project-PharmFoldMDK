@@ -216,7 +216,19 @@ def list_census(engine: Any = Depends(get_engine)) -> list[dict]:
         # stated category back into the absent value it was written to replace.
         if r.get("folded") is not False:
             r["profile_status"] = statuses.get(r.get("id"))
-    return rows
+    # ⚠⚠ A COST AXIS, AND IT IS NOT SUITABILITY (D-077 dec 1 refusal 2). Composed at the route
+    # from its own supplier — the same shape as the profile status above, for a related reason:
+    # `core.foldability` is a compute-budget instrument, and the file that projects census rows
+    # must not become the place a budget and a ranking meet.
+    # ⚠⚠ EVERY ROW IS STAMPED AND EVERY ROW IS RETURNED. Refusal 3 bars filtering the census by
+    # what we can afford to fold — a census missing its unaffordable rows is a census of our
+    # budget, biased by length, i.e. by feature 1. `apply_cost` has no predicate to do it with.
+    # ⚠ Not guarded here by an `assert`: `assert` vanishes under `python -O`, so a guard written
+    # as one is a comment that occasionally runs (D-082's ruling). The non-filtering property is
+    # structural instead — `apply_cost` has no predicate — and a route-level test counts the rows
+    # in against the rows out on a fixture that includes an unmeasured span.
+    from app.census_cost_read import apply_cost
+    return apply_cost(rows)
 
 
 @read_router.get("/census/summary")

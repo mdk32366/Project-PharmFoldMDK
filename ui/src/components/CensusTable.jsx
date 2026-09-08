@@ -17,6 +17,15 @@ import HpaAttribution from './HpaAttribution.jsx'
 // these spans are one loop of several (F-037); a reader scanning the table would otherwise see
 // 1,557 spans that look like ectodomains and never learn otherwise.
 
+// ⚠⚠ THE COST ORDER, AND IT IS A COST ORDER (D-137). Cheapest compute first — the order the
+// API's `COST_ORDER` declares, mirrored here because the sort has to run before any row has been
+// fetched. It orders nothing by suitability, and `span_unrecorded` is **not in it**: an
+// unrecorded span has no place in a cost order, so it falls to the null branch and sorts LAST in
+// both directions rather than becoming the dearest row on one click.
+// ⚠ DECLARED ABOVE `COLUMNS` because `COLUMNS` reads it at module evaluation. A `const` below it
+// would be in scope and uninitialised — a TDZ throw at import, not a lint warning.
+export const COST_ORDER = ['local', 'rental', 'over_ceiling']
+
 // ⚠ EXPORTED so a test can pin a key rather than infer the column set from rendered text. A
 // column that quietly leaves this array takes its sort with it and the table still renders.
 export const COLUMNS = [
@@ -38,6 +47,19 @@ export const COLUMNS = [
   // magnitude sort into GROUPS. Ascending happens to put `assembled` first; that is alphabetical
   // happenstance and not a suitability order, and nothing here ranks a census row.
   { key: 'structure_kind', label: 'Structure (single pass or assembled from tiles)', numeric: false },
+  // ⚠⚠ WHAT THIS PROTEIN COSTS TO FOLD, AND THE HEADER SAYS SO IN THE HEADER (D-137). The axis
+  // is `core.foldability`'s envelope against the measured ceiling — a **cost / tractability**
+  // reading and **not** a suitability one, which D-077 dec 1 refusal 2 requires be stated in the
+  // same visual frame. The header carries the short form; the legend below carries the long one.
+  // ⚠⚠ SORTABLE, AND THAT IS THE WHOLE LICENSED SURFACE. Refusal 3 bars filtering the census by
+  // cost, so there are deliberately NO cost chips beside the fold-type chips — see the comment on
+  // the chip row. A header click groups the rows; it removes none of them.
+  // ⚠ `order` rather than `numeric`: a cost HAS a magnitude (local is cheaper than rental is
+  // cheaper than over-ceiling) and alphabetical would file `over_ceiling` between them, which
+  // orders nothing a reader asked for. The order is CHEAPEST-FIRST COMPUTE COST and it ranks no
+  // protein — `span_unrecorded` is absent from it on purpose and sorts last both ways.
+  { key: 'cost', label: 'Cost to fold (compute — not suitability)', numeric: false,
+    order: COST_ORDER },
   { key: 'mean_plddt', label: 'pLDDT', numeric: true },
   { key: 'tranche', label: 'Tranche', numeric: true },
   // ⚠⚠ A STATUS, NOT A VALUE, AND THAT IS RULING 2. This table sorts on every column (D-087), so a
@@ -130,6 +152,23 @@ export const STRUCTURE_LEGEND = [
 // existing callers and tests import `KIND_ORDER` from this module.
 export { KIND_ORDER }
 
+// ⚠⚠ ONE RULE DECIDES THE COST BADGE (D-137), the same shape as `topologyBadgeKey`. The legend
+// asks it too, so the badge a row wears and the entry that explains it cannot come from two
+// rules — which is the defect D-133 am. 1 had to extract a nested ternary to fix.
+//
+// ⚠⚠ THREE ABSENCES, AND THEY ARE NOT THE SAME ABSENCE:
+//   `span_unrecorded` — the API looked, and the row carries no span. A named absence.
+//   `not_served`      — the API sent no cost verdict at all. A missing FIELD, not a missing span,
+//                       and rendering it as `span_unrecorded` would assert something about the
+//                       protein that only the server is in a position to say.
+//   an unknown word   — a category this page has never heard of. Rendered verbatim rather than
+//                       coerced into one of ours: a vocabulary that grew on the server must not
+//                       arrive here silently relabelled as something already understood.
+export function costBadgeKey(r) {
+  if (!r.cost) return 'not_served'
+  return COST_ORDER.includes(r.cost) || r.cost === 'span_unrecorded' ? r.cost : 'unknown_verdict'
+}
+
 // ⚠ The four statuses, rendered as words rather than as a token. The three REFUSAL causes stay
 // distinct — pooling 1,225 + 58 + 10 into one "n/a" would lose the reason, and an absence is a
 // category with a cause.
@@ -195,15 +234,28 @@ export function notFoldedTitle(r) {
   return r.not_folded_copy
 }
 
+// ⚠⚠ D-137: a column may declare an explicit `order`, and a value outside it is a NULL. The Cost
+// column is the case: `local` / `rental` / `over_ceiling` have a real magnitude that alphabetical
+// order scrambles, while `span_unrecorded` has no place in a cost order at all. Putting it at the
+// end of the array instead would make it the dearest row on a descending click — an absence
+// rendered as the worst value, which is precisely what the null rule below exists to prevent.
+function sortValue(r, col) {
+  if (!col.order) return r[col.key]
+  const i = col.order.indexOf(r[col.key])
+  return i < 0 ? null : i
+}
+
 // ⚠ null sorts LAST in both directions. A missing pLDDT is not a low one, and letting it float to
 // the top of an ascending sort would put unmeasured rows where the worst rows belong.
-function compare(a, b, key, numeric, dir) {
-  const av = a[key]
-  const bv = b[key]
+function compare(a, b, col, dir) {
+  const av = sortValue(a, col)
+  const bv = sortValue(b, col)
   if (av == null && bv == null) return 0
   if (av == null) return 1
   if (bv == null) return -1
-  const c = numeric ? av - bv : String(av).localeCompare(String(bv))
+  // ⚠ an `order` index is a number, so it compares like one — `numeric: false` stays true of the
+  // COLUMN (there is no magnitude in the cell) while the rank it maps to sorts arithmetically.
+  const c = (col.numeric || col.order) ? av - bv : String(av).localeCompare(String(bv))
   return dir === 'asc' ? c : -c
 }
 
@@ -273,9 +325,12 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
     const kinded = kindFilter === 'all'
       ? base
       : base.filter((r) => (r.structure_kind ?? 'none') === kindFilter)
+    // ⚠⚠ D-137: `kinded` is the LAST filter, and there is no cost filter after it. D-077 dec 1
+    // refusal 3 bars narrowing the census by what we can afford to fold, so the cost axis
+    // contributes to the SORT and to nothing else.
     return filterRows(kinded, query)
       .slice()
-      .sort((a, b) => compare(a, b, col.key, col.numeric, sort.dir))
+      .sort((a, b) => compare(a, b, col, sort.dir))
   }, [lensed, query, sort, excludeCritical, kindFilter])
 
   const declared = rows.find((r) => r.staining)?.staining
@@ -301,6 +356,31 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
   const structureLegend = STRUCTURE_LEGEND
     .map((s) => ({ ...s, chip: kinds.find((k) => k.key === s.kind) }))
     .filter((s) => s.chip)
+  // ⚠⚠ D-137: THE COST LEGEND IS READ OFF THE ROWS, NOT TYPED HERE. `app/census_cost_read.py`
+  // owns every term (`COST_LABEL`) and every meaning (`COST_MEANING`), so this page cannot come
+  // to define `rental` differently from the module that assigns it — and `rental` in particular
+  // MUST arrive carrying its closure, because a bare `rental` badge reads as a live queue
+  // position and that copy is refused elsewhere in the tree.
+  // ⚠ A category no row wears gets no entry — the same wall D-133 am. 1 built for topology: a
+  // legend that explains absent categories is a wall the owner ruled against.
+  const costLegend = useMemo(() => {
+    const seen = new Map()
+    for (const r of rows) {
+      const key = costBadgeKey(r)
+      if (key === 'not_served' || seen.has(key) || !r.cost_note) continue
+      seen.set(key, { key, term: r.cost_label ?? r.cost, meaning: r.cost_note })
+    }
+    return [...COST_ORDER, 'span_unrecorded', 'unknown_verdict']
+      .filter((k) => seen.has(k))
+      .map((k) => seen.get(k))
+  }, [rows])
+  // ⚠⚠ THE AXIS STATEMENT AND THE CEILING RECIPE COME OFF THE WIRE TOO, and both are required
+  // rather than decorative. The axis is D-077 dec 1 refusal 2's own words — a cost class sitting
+  // beside a census of ADC targets is an invitation to read cheap as good unless the frame says
+  // otherwise. The recipe carries the measured numbers, and a copy typed here would be a second
+  // ceiling: the same span is affordable at int8 and not at fp16 (D-050 / D-077 dec 3).
+  const costAxis = rows.find((r) => r.cost_axis)?.cost_axis
+  const costRecipe = rows.find((r) => r.cost_recipe)?.cost_recipe
   const capped = !showAll && shown.length > PAGE
   const visible = capped ? shown.slice(0, PAGE) : shown
 
@@ -339,7 +419,13 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
           ⚠ It is a CATEGORY filter — it narrows the list and orders nothing, and 'all' is the
           default because a page arriving pre-narrowed has chosen for the reader.
           ⚠ Each chip states its own count, and the labels come off the rows rather than being
-          typed here, so the filter cannot spell a kind differently from the column it filters. */}
+          typed here, so the filter cannot spell a kind differently from the column it filters.
+          ⚠⚠ AND THERE IS NO COST CHIP ROW BESIDE THIS ONE, ON PURPOSE (D-137 / D-077 dec 1
+          refusal 3). Once fold type has chips, a `local` / `rental` / `over ceiling` chip set is
+          the obvious next control — and it is exactly the one that is refused: a census that
+          hides the rows it cannot afford to fold is a census of **our budget**, biased by span
+          length, which is **feature 1** of the pre-registered six. Cost gets a sortable column
+          and a legend; it never gets to remove a row. */}
       {kinds.length > 1 && (
         <div className="census-kind-filter" role="group" aria-label="Filter by fold type">
           <span className="kind-filter-legend">Fold type</span>
@@ -487,6 +573,31 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
           ⚠ It lists only the badges these rows actually wear (plus the three standing topology
           categories), because a legend for absent categories is the wall it must not become. */}
       <div className="census-legend">
+        {/* ⚠⚠ THE COST AXIS, IN THE SAME VISUAL FRAME AS THE COLUMN (D-137 / D-077 dec 1
+            refusal 2). It leads the legend deliberately: `local` beside a census of ADC targets
+            reads as *good* to anyone who has not been told otherwise, and being told in a tooltip
+            is not being told. The recipe rides with it because a cost claim without its recipe is
+            not checkable, and both strings are the API's rather than this file's. */}
+        {(costAxis || costLegend.length > 0) && (
+          <>
+            <h4>What the Cost column says — and what it does not</h4>
+            {costAxis && <p className="cost-axis">⚠ {costAxis}</p>}
+            {costRecipe && (
+              <p className="cost-recipe">
+                <strong>Measured at:</strong> {costRecipe}
+              </p>
+            )}
+            <dl className="legend-list">
+              {costLegend.map((c) => (
+                <div className="legend-row" key={c.key}>
+                  {/* ⚠ the TERM is the API's, exactly as in the Structure block above */}
+                  <dt>{c.term}</dt>
+                  <dd>{c.meaning}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
         {structureLegend.length > 0 && (
           <>
             <h4>What the Structure column says</h4>
@@ -536,6 +647,8 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
             // ⚠ D-133 am. 1: the SAME function the legend asks, so the badge a row wears and the
             // entry that explains it can never come from two different rules.
             const topo = topologyBadgeKey(r)
+            // ⚠ D-137: same discipline, same reason.
+            const costKey = costBadgeKey(r)
             return (
               <tr key={r.id ?? r.accession} className={r.folded === false ? 'row-unfolded' : undefined}>
                 <td>
@@ -614,6 +727,35 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                       title="no structure kind on this row — a blank is a missing field, never an implied single-pass fold"
                     >
                       not recorded
+                    </span>
+                  )}
+                </td>
+
+                {/* ⚠⚠ WHAT THIS PROTEIN COSTS TO FOLD (D-137), in the column that sorts on it.
+                    A COST class and never a verdict on the protein — the header says so, and the
+                    legend above the table says so at length rather than in a tooltip.
+                    ⚠⚠ `rental` NEVER TRAVELS BARE. The tooltip is the API's `cost_note`, which
+                    carries the closure (rental for the hold-48 remainder closed 2026-09-05, pod
+                    Terminated) — because a bare `rental` badge reads as a queue position, which
+                    is the same false claim `core/census_unfolded.py` already refuses in words.
+                    ⚠⚠ AND TWO ABSENCES STAY TWO. `not recorded` is a missing FIELD on the row;
+                    `span not recorded` is the server saying it looked and found no span. Neither
+                    is `local`: an unmeasured target counted as affordable is how a cost estimate
+                    becomes a fiction (D-024). */}
+                <td className="cost-cell">
+                  {costKey === 'not_served' ? (
+                    <span
+                      className="unknown"
+                      title="no cost verdict on this row — a blank is a missing field, never an implied local fold"
+                    >
+                      not recorded
+                    </span>
+                  ) : (
+                    <span
+                      className={`badge badge-cost badge-cost-${costKey}`}
+                      title={r.cost_note || undefined}
+                    >
+                      {r.cost_label ?? r.cost}
                     </span>
                   )}
                 </td>

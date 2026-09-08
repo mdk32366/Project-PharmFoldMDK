@@ -262,25 +262,39 @@ def test_d130_is_the_next_free_decision_id():
 
     ⚠ **Widened again at D-136 — to ``[132, 133, 134, 135, 136]`` — the same
     way.** D-136 fills the ADC Approved Cancer type column from the FDA label;
-    it is named below, so a stray ``### D-137`` still fails. ⚠ **This is the
-    two-branch collision the guard exists for, and it resolved by ADDING rather
-    than loosening:** D-135 and D-136 were in flight together, each widened this
-    list to exclude the other, and the merge carries **both** ids and **both**
-    named-entry assertions instead of relaxing either to a ``>=``.
+    it is named below. ⚠ **This is the two-branch collision the guard exists
+    for, and it resolved by ADDING rather than loosening:** D-135 and D-136 were
+    in flight together, each widened this list to exclude the other, and the
+    merge carries **both** ids and **both** named-entry assertions instead of
+    relaxing either to a ``>=``.
 
-    ⚠ **Widened again at D-138 — to ``[132, 133, 134, 135, 136, 138]`` — the same
-    way.** D-138 is the ``/method`` contents rail, named below. ⚠ **137 is
-    deliberately ABSENT and must stay absent until #261 merges:** it is spent on
-    the in-flight census Cost column branch, which widens this same list to
-    ``…, 136, 137`` and will conflict here. Resolve by carrying **both** ids and
-    **both** named-entry assertions, never by a ``>=``; until then a bare
-    ``### D-137`` in this log is a real collision and fails.
+    ⚠ **Widened again at D-137 — to ``[132, 133, 134, 135, 136, 137]``** — the
+    third live two-branch collision in a row. D-137 (the census sortable
+    **Cost** column) was written while #260 (D-136) was still open, so it landed
+    as ``[…, 135, 137]`` with 136 named as the in-flight id it was deliberately
+    not taking (F-065's class, avoided by reading the open-PR list rather than
+    assuming). #260 then merged, this assertion reddened **exactly as its own
+    comment predicted**, and the rebase inserted 136 beside 137. **The redness
+    was the guard working**; both ids are carried, neither claim is weakened, and
+    a stray ``### D-138`` still fails rather than slipping under a ``>=``.
+
+    ⚠ **Widened again at D-138 — to ``[132, 133, 134, 135, 136, 137, 138]``** —
+    the FOURTH live collision in a row, same resolution. D-138 (the ``/method``
+    contents rail, #262) was opened at tip ``1b0251b`` while #261 (D-137) was
+    still open, so it landed as ``[…, 136, 138]`` with **137 named as the
+    in-flight id it was deliberately not taking**, read off ``gh pr list
+    --state open`` rather than assumed. #261 then squash-merged at ``68fe0228``,
+    this assertion reddened **exactly as both branches' comments predicted**, and
+    the merge inserted 137 beside 138. ⚠ **Four collisions, four resolutions by
+    ADDING.** A ``>=`` would make each of them go away and would also end the
+    guard's ability to tell a spent id from a free one, which is the only thing
+    it does. A stray ``### D-139`` still fails.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 138], (
-        f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136 and "
-        f"D-138; found {ids[-7:]}"
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 137, 138], (
+        f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
+        f"D-137 and D-138; found {ids[-8:]}"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 must be the /method contents-rail entry, not some other entry that "
@@ -289,6 +303,10 @@ def test_d130_is_the_next_free_decision_id():
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 must be the ADC cancer-type entry, not some other entry that "
         "took the number"
+    )
+    assert re.search(r"^### D-137 — The census gains a sortable Cost column", LOG, re.M), (
+        "D-137 must be the census sortable-Cost-column entry, not some other entry "
+        "that took the number"
     )
     assert re.search(r"^### D-134 — Stitched parents were invisible", LOG, re.M), (
         "D-134 must be the stitched-parent census-identity entry, not some "

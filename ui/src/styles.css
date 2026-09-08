@@ -474,6 +474,24 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
    error would tell the reader the fold went wrong when nothing did. */
 .badge-intermittent { color: #f6ad55; border-color: #7b341e; }
 .badge-unknown { color: #a0aec0; border-style: dashed; }
+/* ⚠⚠ D-137 — THE COST BADGES ARE NEUTRAL ON PURPOSE, and that is a decision rather than a
+   palette. Green-for-local / red-for-over-ceiling would say *good* and *bad* about a protein on a
+   **cost** axis, which is the confusion D-077 dec 1 refusal 2 refuses in the very sentence the
+   legend prints. They differ only in HUE-AS-CLASS (cool → warm, cheap → dear) at the same
+   weight, the same rule the Profile column follows for refusals: an expensive protein is not a
+   worse target, it is a dearer fold. */
+.badge-cost { color: #cbd5e0; }
+.badge-cost-local { color: #90cdf4; border-color: #2c5282; }
+.badge-cost-rental { color: #d6bcfa; border-color: #553c9a; }
+.badge-cost-over_ceiling { color: #fbd38d; border-color: #744210; }
+/* ⚠ dashed, like every other stated absence in this table — an unrecorded span is not a price */
+.badge-cost-span_unrecorded { color: #a0aec0; border-style: dashed; }
+.badge-cost-unknown_verdict { color: #a0aec0; border-style: dashed; }
+.census-table .cost-cell .badge { margin-left: 0; }
+/* ⚠ D-137: the axis statement is FULL SIZE, not fine print. A caveat set smaller than the datum
+   it qualifies is a caveat the page has decided the reader may skip. */
+.census-legend .cost-axis { margin: 0.15rem 0 0.3rem; color: #e2e8f0; line-height: 1.5; }
+.census-legend .cost-recipe { margin: 0 0 0.35rem; color: #b9c4cc; }
 
 .census-detail { border-left: 3px solid #4299e1; }
 .census-detail .close { float: right; }
