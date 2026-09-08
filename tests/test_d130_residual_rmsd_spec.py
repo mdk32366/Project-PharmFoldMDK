@@ -267,12 +267,24 @@ def test_d130_is_the_next_free_decision_id():
     than loosening:** D-135 and D-136 were in flight together, each widened this
     list to exclude the other, and the merge carries **both** ids and **both**
     named-entry assertions instead of relaxing either to a ``>=``.
+
+    ⚠ **Widened again at D-138 — to ``[132, 133, 134, 135, 136, 138]`` — the same
+    way.** D-138 is the ``/method`` contents rail, named below. ⚠ **137 is
+    deliberately ABSENT and must stay absent until #261 merges:** it is spent on
+    the in-flight census Cost column branch, which widens this same list to
+    ``…, 136, 137`` and will conflict here. Resolve by carrying **both** ids and
+    **both** named-entry assertions, never by a ``>=``; until then a bare
+    ``### D-137`` in this log is a real collision and fails.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
-    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136], (
-        f"D-130's successors must be exactly D-132, D-133, D-134, D-135 and D-136; "
-        f"found {ids[-6:]}"
+    assert [i for i in ids if i > 130] == [132, 133, 134, 135, 136, 138], (
+        f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136 and "
+        f"D-138; found {ids[-7:]}"
+    )
+    assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
+        "D-138 must be the /method contents-rail entry, not some other entry that "
+        "took the number"
     )
     assert re.search(r"^### D-136 — The ADC Approved Cancer type column", LOG, re.M), (
         "D-136 must be the ADC cancer-type entry, not some other entry that "
