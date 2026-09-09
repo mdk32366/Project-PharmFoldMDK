@@ -769,7 +769,11 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                   ) : topo === 'tiles_only' ? (
                     // ⚠⚠ D-150: NOT the `badge-unfolded` class and NOT the fold verdict. Tiles are
                     // on disk; what is absent is the assembled parent, and the badge says which.
-                    <span className="badge badge-kind-tiles_only"
+                    // ⚠ The class is `badge-tiles-only` and NOT a kind class. D-133's guard proves
+                    // the Structure column's badge is drawn exactly once by counting its class
+                    // name in this file's source, so a near-miss spelling here would read as a
+                    // second copy of a badge this is not. The guard is right; the name changed.
+                    <span className="badge badge-tiles-only"
                           title="tile folds exist and were never joined into a parent — a tile window is not the outward-facing region">
                       {structureServedLabel(r)}
                     </span>
@@ -807,13 +811,16 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                     ⚠ Axis C is rendered only for an assembled parent — a single-pass fold has no
                     seam, and printing `n/a` about one would invent a question nobody asked. */}
                 <td className="status-cell">
-                  {/* ⚠ `badge-unfolded` is the never-folded STYLE, so it is scoped to a recorded
-                      `folded === false` rather than to the axis — the same `=== false` discipline
-                      the axis itself keeps. A legacy row that never carried the field must not be
-                      dressed as a denial. */}
+                  {/* ⚠⚠ `badge-unfolded` IS THE NEVER-FOLDED STYLE, so it needs BOTH conditions and
+                      neither alone is enough. Axis A alone would dress a legacy row that never
+                      carried `folded` as a denial; `folded === false` alone would dress a
+                      `tiles_only` row as one, which is the very claim this entry exists to stop —
+                      those rows are served `folded: false` while their tiles sit on disk. The
+                      style follows the claim, and the claim is *no structure, and we recorded
+                      that*. */}
                   <span
                     className={`badge badge-status badge-status-${statusA}${
-                      r.folded === false ? ' badge-unfolded' : ''}`}
+                      statusA === STRUCTURE_NONE && r.folded === false ? ' badge-unfolded' : ''}`}
                     title={statusA === STRUCTURE_NONE ? notFoldedTitle(r) : (r.assembler_note || undefined)}
                   >
                     {structureServedLabel(r)}
