@@ -33,6 +33,20 @@ export default function Confidence({ meanPlddt, plddt, caveat, assembled = false
         <span className="plddt-num">{meanPlddt != null ? meanPlddt.toFixed(2) : '—'}</span>
         <span className="band-label" style={{ color: band.color }}>{band.label}</span>
       </div>
+      {/* ⚠⚠ THE DISCLOSURE SITS WITH THE NUMBER, NOT ONLY ON THE VIEWER (D-150). A reader who
+          scrolls past a failed 3Dmol frame — or reads this panel on a narrow screen where the
+          viewer is far above it — meets a confident-looking mean with nothing saying what it is
+          the confidence OF. For an assembly it is the winner tile's self-report at each residue,
+          stitched across a seam that is not solved, so it does not describe one continuous
+          model the way a single-pass mean does. */}
+      {assembled && (
+        <p className="caveat assembled-disclosure">
+          ⚠ <strong>This mean is over an assembled chain, not one ESMFold pass.</strong> Each
+          residue&rsquo;s value is the winner tile&rsquo;s, joined by pLDDT overlap and{' '}
+          <strong>not</strong> superimposed — seams are <strong>not scientifically solved</strong>,
+          so the structure is <strong>provisional</strong> and this number does not certify it.
+        </p>
+      )}
       {note && <p className="caveat">⚠ {note}</p>}
       <PlddtSpread plddt={plddt} />{/* D-048 §3.4: the spread the mean hides, beside the mean. */}
       <p className="self-report">

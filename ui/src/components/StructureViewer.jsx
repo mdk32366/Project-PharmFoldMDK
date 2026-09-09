@@ -6,7 +6,11 @@ import { colorFor } from '../plddt.js'
 // the /plddt ARRAY (D-039) — NEVER the PDB B-factor column, whose 0–100-vs-0–1 scale is unverified
 // (S-001 cost real confusion on exactly that rescaling). 3Dmol is dynamically imported so it is a
 // separate chunk loaded only on the target view, keeping the list page light.
-export default function StructureViewer({ id, assembled = false }) {
+// ⚠ `seamNote` (D-150) is THIS parent's own `assembler_note`, passed in rather than typed here.
+// The standing IGF2R sentence below is a cohort-level disclosure and names the protein it was
+// measured on; without a per-parent line beside it, a reader of any other assembly is left with
+// one number that was never about their protein.
+export default function StructureViewer({ id, assembled = false, seamNote = null }) {
   const ref = useRef(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -58,8 +62,13 @@ export default function StructureViewer({ id, assembled = false }) {
     <aside className="assembler-banner" data-testid="assembler-banner">
       <strong>Assembled chain — not a single ESMFold pass.</strong> pLDDT here is the
       assembler winner-tile per residue, <strong>not Kabsch</strong> superposition.
-      Seams are <strong>not scientifically solved</strong>. The IGF2R seam ≈ 88.76 Å
+      Seams are <strong>not scientifically solved</strong>, so what is drawn here is{' '}
+      <strong>provisional</strong>. The IGF2R seam ≈ 88.76 Å
       is a measured caveat, not a solved structure. Not ranking-eligible (D-109).
+      {/* ⚠⚠ D-150: the ≈ 88.76 Å above was measured on IGF2R and is named as such. It is NOT a
+          figure for the protein on this page, and a reader who takes it for one has been misled
+          by a true number. This parent's own recorded note goes here, or nothing does. */}
+      {seamNote && <> <span className="seam-note">⚠ This parent: {seamNote}.</span></>}
     </aside>
   ) : null
 

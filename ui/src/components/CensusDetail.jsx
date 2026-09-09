@@ -1,4 +1,5 @@
 import { bandFor } from '../plddt.js'
+import { scoreState, seamState, structureServedLabel } from '../structureStatus.js'
 import StructuralProfile from './StructuralProfile.jsx'
 import ClinicalEdges from './ClinicalEdges.jsx'
 import SurfaceCheck from './SurfaceCheck.jsx'
@@ -171,6 +172,10 @@ function Associations({ assoc }) {
 export default function CensusDetail({ detail, onClose, embedded = false }) {
   if (!detail) return null
   const band = bandFor(detail.mean_plddt)
+  // ⚠ D-150: the card asks the same two rules the census list asks, so one protein cannot carry
+  // one seam story on the table and another on its own page.
+  const score = scoreState(detail)
+  const seam = seamState(detail)
   return (
     <section className="census-detail panel">
       {/* ⚠ Only when there is somewhere to close TO. On the protein page the panel IS the page,
@@ -202,19 +207,40 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
         </>
       )}
 
+      {/* ⚠⚠ THREE ORTHOGONAL LINES, NEVER ONE VERDICT (D-150). This block used to lead with
+              `structure_kind_label ?? (folded === false ? 'NOT FOLDED' : 'Folded')` — a single
+          expression answering three unrelated questions, and answering two of them by omission.
+          `Folded` was true of a single-pass fold, of a provisional assembly whose seam is not
+          solved, and of a parent the D-139 gate refused to flip; the word could not be wrong,
+          which is why nothing ever caught it being misleading.
+          ⚠ FAT2 (`Q9NYQ8`) is the witness that turned this from tidiness into a defect:
+          `folded: true` · `assembled (provisional)` · `scored: false` · `served_path.solved:
+          false`. Four statuses under one word. */}
       <h4>Status</h4>
       <ul className="status-list">
-        <li>
-          {detail.structure_kind_label
-            ?? (detail.folded === false ? 'NOT FOLDED' : 'Folded')}
+        {/* AXIS A — what structure is actually served. Never a bare `Folded`. */}
+        <li className="status-structure">
+          <strong>Structure:</strong> {structureServedLabel(detail)}
           {detail.tranche != null ? ` — tranche ${detail.tranche}` : ''}
         </li>
-        {detail.structure_kind === 'assembled' && (
-          <li className="caveat">
-            Assembled by pLDDT overlap, not superimposed. Seam not solved (IGF2R ≈ 88.76 Å
-            is a measured caveat, not a solved structure).
+        {/* AXIS C — the seam, and only for an assembled parent. ⚠ The note is THIS parent's
+            `assembler_note`. The card previously printed the IGF2R ≈ 88.76 Å figure inline on
+            every assembly, which handed a reader of FAT2 a measurement taken on a different
+            protein — a true number in a place that makes it a false implication. */}
+        {seam.label && (
+          <li className="caveat status-seam">
+            <strong>Seam:</strong> {seam.label}.{seam.note ? ` ${seam.note}.` : ''}{' '}
+            {seam.servedPath?.not_flipped_note ?? seam.servedPath?.served_note ?? ''}
           </li>
         )}
+        {/* AXIS B — scored and ranked, or not. ⚠ It sits with the other two rather than at the
+            bottom of the list: it is a status, not a footnote, and the whole defect this block
+            repairs was three statuses being read off one. */}
+        <li className="caveat status-unscored">
+          ⚠ <strong>{score.label}.</strong> {score.reason}
+          {' '}⚠ This is a statement about scoring, <strong>not</strong> about whether a structure
+          exists — the Structure line above is the only line that answers that.
+        </li>
         <li>
           Span {detail.span_aa} aa (amino acids; residues {detail.span_start}–{detail.span_end} of{' '}
           {detail.full_length})
@@ -226,10 +252,6 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
             {detail.mean_plddt != null ? detail.mean_plddt.toFixed(2) : 'not measured'}
           </strong>{' '}
           — {band.label}
-        </li>
-        {/* ⚠ Stated on the row, not left to the absence of a score field to imply. */}
-        <li className="caveat">
-          ⚠ <strong>Not scored and not ranked.</strong> {detail.not_scored_reason}
         </li>
       </ul>
 

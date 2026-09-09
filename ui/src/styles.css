@@ -553,6 +553,40 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .badge-cost-span_unrecorded { color: #a0aec0; border-style: dashed; }
 .badge-cost-unknown_verdict { color: #a0aec0; border-style: dashed; }
 .census-table .cost-cell .badge { margin-left: 0; }
+
+/* ⚠⚠ D-150 — THE THREE STATUS CHIPS, AND THEY ARE NOT COLOUR-CODED GOOD-TO-BAD. Green for a
+   served structure and red for a missing one would say *this protein is better* on an axis that
+   reports what is on disk — the same confusion the cost badges above are neutral to avoid, and a
+   stronger version of it, because a fold verdict is the one a reader is most likely to mistake
+   for a verdict on the target. The chips differ by HUE-AS-CLASS at one weight.
+   ⚠ They stack rather than wrap inline: three chips on one line read as one compound label, which
+   is precisely the conflation this column exists to undo. */
+.census-table .status-cell { min-width: 15rem; }
+.census-table .status-cell .badge {
+  display: block; margin: 0 0 0.18rem; width: fit-content; white-space: normal;
+}
+.badge-status-assembled_served { color: #d6bcfa; border-color: #553c9a; }
+.badge-status-oneshot { color: #90cdf4; border-color: #2c5282; }
+.badge-status-tiles_only { color: #fbd38d; border-color: #744210; }
+/* ⚠ `badge-unfolded` supplies the never-folded tone on top of this, and only where the claim
+   holds — see the cell. This rule is the neutral base, not the denial. */
+.badge-status-none { color: #a0aec0; }
+/* ⚠ Deliberately the QUIETEST of the three, and still always drawn. Axis B is true of every
+   census row, so shouting it would train a reader to stop seeing it — but removing it is how
+   "no score" comes to be inferred from "no number". */
+.badge-status-unscored { color: #a0aec0; border-style: dashed; }
+.badge-status-seam { color: #fbd38d; border-color: #744210; }
+/* ⚠ The tiles badge in the Topology column. NOT `badge-kind-*`: D-133's guard counts that class
+   name to prove the kind badge is drawn once, and this is a different badge. */
+.badge-tiles-only { color: #fbd38d; border-color: #744210; }
+/* ⚠ Full size, like the cost axis above and for the same reason: the sentence that says the three
+   statuses are three questions is not fine print about the column, it IS the column. */
+.census-legend .status-axis { margin: 0.15rem 0 0.3rem; color: #e2e8f0; line-height: 1.5; }
+.census-legend .status-unscored,
+.census-legend .status-seam { margin: 0.35rem 0; color: #b9c4cc; line-height: 1.5; }
+/* ⚠ The card's three status lines. The structure line leads at full weight; the seam and unscored
+   lines are caveats and already carry `.caveat`. */
+.status-list .status-structure { color: #e2e8f0; }
 /* ⚠ D-137: the axis statement is FULL SIZE, not fine print. A caveat set smaller than the datum
    it qualifies is a caveat the page has decided the reader may skip. */
 .census-legend .cost-axis { margin: 0.15rem 0 0.3rem; color: #e2e8f0; line-height: 1.5; }

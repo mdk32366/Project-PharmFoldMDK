@@ -4,6 +4,10 @@ import { bandFor } from '../plddt.js'
 import { plural } from '../plural.js'
 import { normalizeQuery, filterRows } from '../searchRows.js'
 import { KIND_ORDER, kindCounts, resolveKind } from '../structureKinds.js'
+import {
+  STRUCTURE_NONE, STRUCTURE_TILES_ONLY, STRUCTURE_SERVED_ORDER, STATUS_AXIS_NOTE,
+  scoreState, seamState, statusLegend, structureServed, structureServedLabel,
+} from '../structureStatus.js'
 import HpaAttribution from './HpaAttribution.jsx'
 
 // The census surface (D-087). Searchable, sortable, and deliberately UNRANKED.
@@ -36,6 +40,21 @@ export const COLUMNS = [
   // opaque to everyone else, and the owner spent a long while resolving it.
   { key: 'span_aa', label: 'Span (aa = amino acids)', numeric: true },
   { key: 'topology', label: 'Topology', numeric: false },
+  // ⚠⚠ THREE QUESTIONS, THREE CHIPS, ONE COLUMN (D-150). Before this the row answered *is there a
+  // structure* only sideways — through a `NOT FOLDED` badge in the Topology column — and answered
+  // *was it scored* and *is the seam solved* nowhere at all. A reader scanning the list met one
+  // word and had no way to tell which of the three it was about. FAT2 (`Q9NYQ8`) is the witness:
+  // `folded: true`, `assembled (provisional)`, `scored: false`, seam not solved — four statuses
+  // that a single fold verdict cannot carry.
+  // ⚠ Sorts on `status_structure` — axis A's CATEGORY, derived once by `withStatusAxes` so the
+  // sort and the chip cannot come from two derivations. Axes B and C are deliberately NOT
+  // sortable: axis B is `false` for every census row (D-079 dec 1), so a sort on it would order
+  // nothing while implying there was something to order.
+  // ⚠ `order: STRUCTURE_SERVED_ORDER` for the same reason Cost declares one — the categories
+  // group, and alphabetical would file `assembled_served` and `none` next to each other. It is a
+  // GROUPING and not a ranking; nothing here scores a census row.
+  { key: 'status_structure', label: 'Status (structure · score · seam)', numeric: false,
+    order: STRUCTURE_SERVED_ORDER },
   // ⚠⚠ HOW THE FOLD WAS PRODUCED, AND SORTABLE (D-133). The kind was rendered as a badge in the
   // accession cell and was the one row property the table could NOT sort by — while the paragraph
   // above it claimed a sort on every column (D-087). The badge moved here rather than being
@@ -80,6 +99,14 @@ export const COLUMNS = [
 // so a legend could not know which categories the table is actually showing without re-deriving
 // them, and a re-derivation is a second definition waiting to disagree with the first.
 export function topologyBadgeKey(r) {
+  // ⚠⚠ TILES ARE NOT A MISSING FOLD (D-150), AND THIS BRANCH RUNS FIRST FOR THAT REASON. A
+  // `tiles_only` row is served `folded: false` because no PARENT was assembled — but tile
+  // structures are on disk and the payload says so in `structure_kind`, so the fold branch below
+  // printed **NOT FOLDED** over a protein whose own API story is that it has folds. It is the
+  // named forbidden case: never `NOT FOLDED` where tiles are the API's answer.
+  // ⚠ It still gets no topology word: `topology` is null on these rows, and the honest badge is
+  // the one axis A already supplies — *tiles only, parent not assembled*.
+  if (structureServed(r) === STRUCTURE_TILES_ONLY) return 'tiles_only'
   if (r.folded === false) return r.cohort_fold ? 'not_folded_here' : 'not_folded'
   if (r.topology === 'intermittent') return 'intermittent'
   if (r.topology === 'no_accepted_segment') return 'gpi'
@@ -124,6 +151,11 @@ export const TOPOLOGY_LEGEND = [
     meaning: 'no structure was produced for this protein in the census. NOT FOLDED HERE means it '
       + 'was folded among the 82 ranked targets and not here — the row says which of the three '
       + 'reasons applies.' },
+  // ⚠ D-150: the badge a tiles row wears instead of the fold verdict it used to wear.
+  { key: 'tiles_only', term: 'Tiles only — parent not assembled',
+    meaning: 'tile folds exist for this protein and were never joined into a parent, so no '
+      + 'topology is derived for a span nothing was assembled over. ⚠ It is NOT "not folded": '
+      + 'structures are on disk, and a tile window is not the outward-facing region.' },
 ]
 
 // ⚠ The Structure column's four kinds, defined in the same block (D-133 am. 1). The TERM is the
@@ -216,6 +248,13 @@ export function withLens(rows, lens) {
   })
 }
 
+// ⚠⚠ AXIS A DERIVED ONTO THE ROW SO THE EXISTING SORT CAN SEE IT (D-150), exactly the shape
+// `withLens` uses for `stained_pct`. Derived HERE and once: a cell that computed its own category
+// while `compare` sorted on another would order the table by a rule the reader cannot see.
+export function withStatusAxes(rows) {
+  return rows.map((r) => ({ ...r, status_structure: structureServed(r) }))
+}
+
 // ⚠⚠ THREE OUTCOMES, NOT ONE. "Waiting on rented capacity" was shown for 29 proteins whose fold
 // ALREADY EXISTS among the ranked 82 — same span, rental hardware — and for IGF2R, which was tried
 // there and died of CUDA OOM. A queue position, an existing result and a failed attempt are three
@@ -295,7 +334,9 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
   // page arriving having chosen, which is the same bar the default SORT answers to (D-102).
   const [ownKind, setOwnKind] = useState('all')
 
-  const lensed = useMemo(() => withLens(rows, lens), [rows, lens])
+  // ⚠ D-150 rides on the same derivation pass — one map, so a row can never carry a lens value
+  // from one render and a status axis from another.
+  const lensed = useMemo(() => withStatusAxes(withLens(rows, lens)), [rows, lens])
 
   // ⚠⚠ THE CHIPS ARE DERIVED FROM THE ROWS, not typed. Each chip carries its own count, and the
   // LABEL is the API's (`assembled (provisional)`, `tiles only`, …) so the filter cannot come to
@@ -356,6 +397,9 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
   const structureLegend = STRUCTURE_LEGEND
     .map((s) => ({ ...s, chip: kinds.find((k) => k.key === s.kind) }))
     .filter((s) => s.chip)
+  // ⚠ D-150: same rule, same file as the chips it explains — one entry per axis-A category a row
+  // actually wears. The two unconditional sentences (axes B and C) are separate, below.
+  const statusLegendRows = statusLegend(rows)
   // ⚠⚠ D-137: THE COST LEGEND IS READ OFF THE ROWS, NOT TYPED HERE. `app/census_cost_read.py`
   // owns every term (`COST_LABEL`) and every meaning (`COST_MEANING`), so this page cannot come
   // to define `rental` differently from the module that assigns it — and `rental` in particular
@@ -598,6 +642,38 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
             </dl>
           </>
         )}
+        {/* ⚠⚠ THE THREE AXES, NAMED BEFORE THE CATEGORIES (D-150). The categories below are
+            axis A only, and a reader who meets them without the frame will do exactly what the
+            old single badge invited: treat "a structure is served" as "this protein is done". */}
+        <h4>What the Status column says — three questions, not one</h4>
+        <p className="status-axis">⚠ {STATUS_AXIS_NOTE}</p>
+        {statusLegendRows.length > 0 && (
+          <dl className="legend-list">
+            {statusLegendRows.map((s) => (
+              <div className="legend-row" key={s.key}>
+                <dt>{s.term}</dt>
+                <dd>{s.meaning}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {/* ⚠ Unconditional, both of them. Axis B is true of every census row and axis C's warning
+            is about a class of artefact — printing either only "when relevant" is how a surface
+            teaches a reader that its silence is a clean bill of health. */}
+        <p className="status-unscored">
+          <strong>Not scored, not ranked</strong> is on every row in this census, and it is not a
+          fold verdict: D-079 decision 1 bars scoring a census row, so a protein with a perfectly
+          good structure is still unscored. ⚠ <strong>&ldquo;Not scored&rdquo; never means
+          &ldquo;no structure&rdquo;</strong>, and no absence of a number here should be read as
+          a fold that failed.
+        </p>
+        <p className="status-seam">
+          ⚠ <strong>An assembled parent is not a solved seam.</strong> Assemblies are joined where
+          tiles overlap by per-residue confidence, rather than superimposed, so the artefact is{' '}
+          <strong>provisional</strong>. Seams are <strong>not scientifically solved</strong>. The
+          seam line for a given protein comes from that protein&rsquo;s own record; open its page
+          for the served-path detail, which this list does not carry.
+        </p>
         {structureLegend.length > 0 && (
           <>
             <h4>What the Structure column says</h4>
@@ -649,6 +725,11 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
             const topo = topologyBadgeKey(r)
             // ⚠ D-137: same discipline, same reason.
             const costKey = costBadgeKey(r)
+            // ⚠ D-150: same discipline again — the cell asks the exported rules rather than
+            // re-deriving them, so the legend, the sort and the chip cannot disagree.
+            const statusA = r.status_structure ?? structureServed(r)
+            const score = scoreState(r)
+            const seam = seamState(r)
             return (
               <tr key={r.id ?? r.accession} className={r.folded === false ? 'row-unfolded' : undefined}>
                 <td>
@@ -678,8 +759,23 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                       "waiting on rented capacity" over a protein whose fold exists is the same
                       false claim, just smaller and harder to notice. */}
                   {topo === 'not_folded' || topo === 'not_folded_here' ? (
+                    // ⚠ D-150: the WORD comes from `structureServedLabel`, the same rule the
+                    // status column's axis-A chip asks. It is one rule rendered in two places —
+                    // never two spellings — which is the discipline the badge/legend pair already
+                    // follows. `NOT FOLDED` / `NOT FOLDED HERE` are unchanged for these rows.
                     <span className="badge badge-unfolded" title={notFoldedTitle(r)}>
-                      {topo === 'not_folded_here' ? 'NOT FOLDED HERE' : 'NOT FOLDED'}
+                      {structureServedLabel(r)}
+                    </span>
+                  ) : topo === 'tiles_only' ? (
+                    // ⚠⚠ D-150: NOT the `badge-unfolded` class and NOT the fold verdict. Tiles are
+                    // on disk; what is absent is the assembled parent, and the badge says which.
+                    // ⚠ The class is `badge-tiles-only` and NOT a kind class. D-133's guard proves
+                    // the Structure column's badge is drawn exactly once by counting its class
+                    // name in this file's source, so a near-miss spelling here would read as a
+                    // second copy of a badge this is not. The guard is right; the name changed.
+                    <span className="badge badge-tiles-only"
+                          title="tile folds exist and were never joined into a parent — a tile window is not the outward-facing region">
+                      {structureServedLabel(r)}
                     </span>
                   ) : topo === 'intermittent' ? (
                     <span className="badge badge-intermittent" title={`${r.segment_count} extracellular segments; ${r.discarded_aa} aa not folded`}>
@@ -701,6 +797,48 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                     // that asserts the safe case is how a surface states something nobody measured.
                     <span className="badge badge-unknown" title={r.derivation_note ?? undefined}>
                       {topo === 'not_derived' ? 'not derived' : 'derivation out of date'}
+                    </span>
+                  )}
+                </td>
+
+                {/* ⚠⚠ THE THREE STATUS AXES (D-150), each as its own chip, in the order a reader
+                    asks them: is there a structure · was it scored · is its seam solved.
+                    ⚠⚠ THEY ARE NOT COLLAPSED WHEN THEY AGREE. Axis B says the same thing on all
+                    3,467 census rows (D-079 dec 1), which is precisely why it is printed: a status
+                    that only appears when it is bad teaches a reader that silence means fine, and
+                    then "no score" has to be inferred from "no number", which reads as a failed
+                    fold.
+                    ⚠ Axis C is rendered only for an assembled parent — a single-pass fold has no
+                    seam, and printing `n/a` about one would invent a question nobody asked. */}
+                <td className="status-cell">
+                  {/* ⚠⚠ `badge-unfolded` IS THE NEVER-FOLDED STYLE, so it needs BOTH conditions and
+                      neither alone is enough. Axis A alone would dress a legacy row that never
+                      carried `folded` as a denial; `folded === false` alone would dress a
+                      `tiles_only` row as one, which is the very claim this entry exists to stop —
+                      those rows are served `folded: false` while their tiles sit on disk. The
+                      style follows the claim, and the claim is *no structure, and we recorded
+                      that*. */}
+                  <span
+                    className={`badge badge-status badge-status-${statusA}${
+                      statusA === STRUCTURE_NONE && r.folded === false ? ' badge-unfolded' : ''}`}
+                    title={statusA === STRUCTURE_NONE ? notFoldedTitle(r) : (r.assembler_note || undefined)}
+                  >
+                    {structureServedLabel(r)}
+                  </span>
+                  {/* ⚠ The reason travels with the status, as it does on the card. `scoreState`
+                      supplies a named fallback: one live row carries `not_scored_reason: null`,
+                      and `Not scored, not ranked. null` is how an absence becomes a typo. */}
+                  <span className="badge badge-status badge-status-unscored" title={score.reason}>
+                    {score.label}
+                  </span>
+                  {/* ⚠⚠ `assembly_review` IS NOT ON THE LIST PAYLOAD — measured 2026-09-09, the
+                      `/api/census` row carries 34 keys and that is not one of them. So axis C
+                      resolves to `artifacts_absent` here for most rows and says *not on this
+                      payload* rather than falling to `n/a`, which would read as "this assembly has
+                      no seam question". The card fetches the review and answers it properly. */}
+                  {seam.label && (
+                    <span className="badge badge-status badge-status-seam" title={seam.note || undefined}>
+                      {seam.label}
                     </span>
                   )}
                 </td>

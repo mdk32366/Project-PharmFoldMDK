@@ -24,10 +24,28 @@ describe('bandFor — boundary contract (re-homed from the D-046 smoke test)', (
     expect(bandFor(81.4).label).toBe('Confident backbone')
   })
 
-  it('maps null / undefined / NaN to the not-folded band, never a value band', () => {
-    expect(bandFor(null).label).toBe('not folded')
-    expect(bandFor(undefined).label).toBe('not folded')
-    expect(bandFor(NaN).label).toBe('not folded')
+  // ⚠⚠ THE WORDING FLIPPED AT D-150, AND THE RULE IT ENCODES IS STRONGER FOR IT. This sentinel
+  // said `not folded`, and `bandFor` returns it for EVERY absent value — including a per-residue
+  // gap inside a structure that is on disk and rendering, and a folded protein whose `plddt.json`
+  // failed to load. None of `bandFor`'s three callers (the confidence headline, the per-residue
+  // plot, the 3Dmol colour function) is in a position to know whether a fold exists, and two of
+  // them only run when one does. A missing NUMBER was being reported as a missing STRUCTURE.
+  // ⚠ The band now says only what it knows. Whether a protein was folded is `structureStatus.js`
+  // axis A's question, answered from `folded` / `structure_kind` on rows that carry them.
+  it('maps null / undefined / NaN to the no-pLDDT band, never a value band', () => {
+    expect(bandFor(null).label).toBe('no pLDDT')
+    expect(bandFor(undefined).label).toBe('no pLDDT')
+    expect(bandFor(NaN).label).toBe('no pLDDT')
+  })
+
+  // ⚠⚠ THE NEGATIVE IS PINNED SEPARATELY, because the positive above would pass on any new wording
+  // — including a re-introduction of a fold claim under a different phrase. The sentinel must not
+  // make a statement about folding at all.
+  it('says nothing about folding in the absent-value band (D-150)', () => {
+    for (const v of [null, undefined, NaN]) {
+      expect(bandFor(v).label).not.toMatch(/fold/i)
+      expect(bandFor(v).label).not.toMatch(/no structure/i)
+    }
   })
 
   it('lands each boundary value in the correct band (first `>= min` wins, high→low)', () => {
