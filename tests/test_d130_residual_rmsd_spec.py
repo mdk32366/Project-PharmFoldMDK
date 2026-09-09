@@ -347,6 +347,11 @@ def test_d130_is_the_next_free_decision_id():
     # enumeration reddened **by design** the moment an entry claimed it. D-147 adds the
     # `ecd_intermittent` disclosure to the census structural ranking rows and touches nothing this
     # suite measures. A bare `### D-148` still reddens.
+    # ⚠⚠ Widened again at **D-150** — to `[…, 147, 149, 150]` — by enumeration, for the
+    # TENTH time, and never by a `>=`. Spending 150 reddened the previous form BY DESIGN; that is
+    # the collision guard working, and it is the only reason this file had to be opened by an
+    # entry about census status chips. **148 stays absent** — the trafficking hold is unchanged,
+    # so a bare `### D-148` is still a real collision and still reddens here.
     # ⚠⚠ Widened again at **D-149** — to `[…, 146, 147, 149]` — by enumeration, for the NINTH
     # time, and never by a `>=`. Spending 149 reddened the previous form BY DESIGN; that is the
     # collision guard working.
@@ -358,7 +363,8 @@ def test_d130_is_the_next_free_decision_id():
     # list distinguishes them in prose, because an unexplained gap in an enumerated set reads as an
     # oversight to the next reader.**
     assert [i for i in ids if i > 130] == [
-        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149
+        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149,
+        150
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
         f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144, D-145, D-146 and D-147 — "
@@ -366,7 +372,8 @@ def test_d130_is_the_next_free_decision_id():
         f"entry is the holder that wrote it, so it is ADDED here beside 143; ⚠ 145 was "
         f"reserved the same way and is ADDED beside 144 by the image-permanence entry; "
         f"⚠ 146 the same way again, ADDED by the Track B live-route copy entry; ⚠ 147 the "
-        f"same way once more, ADDED by the census `ecd_intermittent` entry; "
+        f"same way once more, ADDED by the census `ecd_intermittent` entry; ⚠ 150 by the "
+            f"census structure-status honesty entry; "
         f"found {ids[-15:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (

@@ -787,19 +787,23 @@ def test_the_log_entry_exists_exactly_once_and_leads_the_log():
     message naming this decision does not discharge the living-documentation rule."""
     assert LOG.count("\n### D-147 —") == 1
     assert LOG.index("\n### D-147") < LOG.index("\n### D-146")
-    # ⚠⚠ MOVED AT `D-149`, NEVER DELETED, AND THE RULE IS WHAT IS KEPT. This asserted that D-147 was
-    # the FIRST heading under `## Log (newest first)` — true for exactly as long as D-147 was the
-    # newest entry, which is not a property of D-147 at all. The rule the log actually has is
-    # **newest first**, so the assertion becomes: D-149 leads, and **D-147 is immediately below it
-    # with nothing between them**. That still catches an entry appended in the wrong place, which is
-    # the only thing the original form ever caught, and it no longer expires the moment anything
-    # newer lands.
-    assert re.search(r"^## Log \(newest first\)\s*\n\s*### D-149 —", LOG, re.M), (
-        "the newest entry does not lead the log")
-    between = LOG[LOG.index("\n### D-149"):LOG.index("\n### D-147")]
-    assert not re.search(r"^### (?!D-149\b)", between[1:], re.M), (
-        "an entry was inserted between D-149 and D-147 — the log is ordered newest first, so a "
-        "heading landing there is either out of order or an id nobody accounted for")
+    # ⚠⚠ MOVED AT `D-149`, MOVED AGAIN AT `D-150`, NEVER DELETED — AND THE SECOND MOVE IS THE ONE
+    # WORTH READING. D-149 rewrote this from *"D-147 is the first heading"* to *"D-149 leads and
+    # D-147 sits immediately below it"*, which repaired one expiry by writing in another: the new
+    # form named a specific newest entry, so it went red the moment D-150 landed, for a reason that
+    # has nothing to do with D-147.
+    # ⚠ So the assertion now names NO leader. The rule the log actually has is **newest first**,
+    # and what this file is entitled to check is that D-147 is where it belongs relative to its own
+    # neighbours — plus that *whatever* leads the log is a `### D-` heading and not prose. That
+    # still catches an entry appended in the wrong place, which is the only thing either earlier
+    # form ever caught, and it no longer expires on someone else's land.
+    assert re.search(r"^## Log \(newest first\)\s*\n\s*### D-\d{3} — ", LOG, re.M), (
+        "the log does not open with a decision heading")
+    between = LOG[LOG.index("\n### D-148", 0) if "\n### D-148" in LOG else LOG.index("\n### D-149"):
+                  LOG.index("\n### D-147")]
+    assert not re.search(r"^### D-14[0-6]\b", between, re.M), (
+        "an older entry was inserted above D-147 — the log is ordered newest first, so a heading "
+        "landing there is either out of order or an id nobody accounted for")
 
 
 def test_the_entry_leads_with_the_disqualifying_fact_about_its_own_surface():
@@ -919,24 +923,28 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
         "D-148 is cited in order to bar it, so it must be a RESERVED row or the citation "
         "invariant has a hole indistinguishable from D-062's"
     )
-    # ⚠⚠ FLIPPED IN PLACE AT `D-149`, NEVER DELETED — the same repair `D-147` made of this same
-    # assertion, and for the same reason. The RULE this encodes is *the pointer moves in the SAME
-    # commit that spends the integer*, and the rule is what is kept; only the value moves.
-    # ⚠⚠ AND IT MOVES TO **150**, SKIPPING 148, WHICH IS THE PART WORTH READING. `D-149` spent 149
-    # and deliberately SKIPPED 148, which is now a HOLD for the trafficking Spec. A reserved integer
-    # is not a free one — that is `RESERVED.md`'s whole purpose — so "next free" is 150 while 148
-    # keeps a row of its own. Three assertions where there was one: the pointer names 150, and it
-    # names neither 147 nor 148, so a future land that forgets to move it reddens here rather than
-    # drifting (this file has recorded that drift three times, once by thirty-six integers).
-    assert "Next free `D-` integer: **`D-150`**" in RESERVED, (
+    # ⚠⚠ FLIPPED IN PLACE AT `D-150`, NEVER DELETED — the fourth time this same assertion has been
+    # moved rather than removed, and the RULE it encodes is what is kept: *the pointer moves in the
+    # SAME commit that spends the integer*. Only the value moves.
+    # ⚠⚠ AND IT MOVES TO **151**, STILL SKIPPING 148. `D-150` spent 150 (the census structure-status
+    # honesty surface); 148 is still a HOLD for the trafficking Spec, and a reserved integer is not
+    # a free one — that is `RESERVED.md`'s whole purpose. Four assertions where there was one: the
+    # pointer names 151, and it names none of 147, 148 or 150, so a future land that forgets to
+    # move it reddens here rather than drifting (this file has recorded that drift three times,
+    # once by thirty-six integers).
+    assert "Next free `D-` integer: **`D-151`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
     )
+    assert "Next free `D-` integer: **`D-150`**" not in RESERVED, (
+        "the pointer still names a SPENT integer — D-150 was spent by the census structure-status "
+        "honesty surface, and naming it would hand a used number to the next writer"
+    )
     assert "Next free `D-` integer: **`D-148`**" not in RESERVED, (
-        "the pointer still names 148, which D-149 converted into a trafficking HOLD — it would "
-        "hand a reserved integer to the next writer"
+        "the pointer still names 148, which D-149 converted into a trafficking HOLD — a hold is "
+        "not a free integer, and handing it to the next writer is what this file exists to prevent"
     )
     assert "Next free `D-` integer: **`D-147`**" not in RESERVED, (
-        "the pointer still names a SPENT integer"
+        "the pointer still names a SPENT integer — it would hand 147 to the next writer"
     )
 
 

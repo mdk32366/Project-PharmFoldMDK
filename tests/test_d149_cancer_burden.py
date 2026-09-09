@@ -725,16 +725,26 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 149 in ids, "this entry did not claim its own integer"
-    assert 148 not in ids and 150 not in ids
+    assert 148 not in ids
+    # ⚠⚠ THE 150 BAR BECAME A NAME AT `D-150`, WHICH IS THE RESOLUTION THIS LOG HAS NOW USED
+    # THIRTEEN TIMES. `### D-150` (census structure-status honesty) claimed the integer this entry
+    # had barred, so the bar is not deleted and is not relaxed to a `>=` — it becomes the stronger
+    # statement that 150 is SPENT and named, and the bar moves one integer along to 151.
+    assert 150 in ids, (
+        "D-150 was spent by the census structure-status honesty surface; this assertion barred it "
+        "and must now NAME it — never delete a bar, and never relax one to a `>=`")
+    assert 151 not in ids
     # the two entries this one is built beside, NAMED so a rename cannot pass silently
     assert re.search(r"^### D-146 — Track B stops denying the surface it is served on", LOG, re.M)
     assert re.search(r"^### D-147 — The census rank stops presenting a loop as an ectodomain",
                      LOG, re.M)
+    assert re.search(r"^### D-150 — The census surface stops answering three questions with one word",
+                     LOG, re.M)
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-150" not in LOG, (
-        "D-150 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-151" not in LOG, (
+        "D-151 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
 
@@ -756,11 +766,25 @@ def test_the_reserved_map_holds_148_bars_150_and_the_pointer_skips_the_hold():
     assert not re.search(r"^\| ~~\*\*D-148\*\*~~", RESERVED, re.M), (
         "the D-148 marker is struck through; that breaks this suite's lookup instead of "
         "satisfying it")
+    # ⚠⚠ THE 150 ROW SURVIVES ITS OWN SPENDING, AND MARKER-SAFE IS WHY THIS LOOKUP STILL WORKS.
+    # `D-150` was written on 2026-09-09 and its row was RETIRED IN PLACE — ✅ WRITTEN recorded
+    # inside the cell, the original reservation text kept as provenance (D-129-C), and the literal
+    # `| **D-150** |` marker deliberately NOT struck to `~~**D-150**~~`. Striking it would have
+    # broken this line rather than satisfied it, which is the trap the D-142 / D-145 / D-146 /
+    # D-147 rows each record of themselves, and which the 150 row now records of itself too.
     assert re.search(r"^\| \*\*D-150\*\*", RESERVED, re.M), (
-        "D-150 is cited in order to bar it, so it must be a RESERVED row")
+        "D-150 is cited here, so it must remain a RESERVED row — retiring a row by deleting or "
+        "striking it opens a citation hole indistinguishable from D-062's")
+    row150 = next(ln for ln in RESERVED.splitlines() if ln.startswith("| **D-150**"))
+    assert "WRITTEN" in row150, "the 150 row does not record that the integer was spent"
+    assert "Original reservation text" in row150, (
+        "the original reservation is provenance and is kept, not replaced (D-129-C)")
+    assert re.search(r"^\| \*\*D-151\*\*", RESERVED, re.M), (
+        "the bar moved to 151, so 151 must be a RESERVED row")
     # ⚠⚠ THE POINTER MOVES IN THE SAME COMMIT THAT SPENDS THE INTEGER, AND IT SKIPS THE HOLD.
     # A reserved integer is not a free one — that is this file's whole purpose.
-    assert "Next free `D-` integer: **`D-150`**" in RESERVED
+    assert "Next free `D-` integer: **`D-151`**" in RESERVED
+    assert "Next free `D-` integer: **`D-150`**" not in RESERVED
     assert "Next free `D-` integer: **`D-148`**" not in RESERVED
     assert "Next free `D-` integer: **`D-147`**" not in RESERVED
 

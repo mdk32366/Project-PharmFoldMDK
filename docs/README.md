@@ -379,6 +379,239 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-150 — The census surface stops answering three questions with one word: *structure served* · *scored* · *seam* become three orthogonal status lines on the list and on the card — and the disqualifying fact is that the word doing all three jobs, **`Folded`**, **cannot be wrong**, which is why nothing ever caught it
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **a display decision on the census list, the census card and the pLDDT
+  band sentinel.** ⚠ **No API field is added or renamed, no migration runs, no route changes, no
+  `--load` runs, no Fly write happens, no GPU runs, nothing is re-folded, no tile is emitted, no
+  Kabsch or seam polish is performed, no parent is flipped, the **10.0 Å** gate does not move, the
+  D-139 allowlist and the D-126 PASS subset of 17 are not touched, `structural_score` does not
+  move for any row, the ranking formula gains no factor, and no seam is claimed solved.** `D-079`
+  dec 1, `D-109` ruling 7, `D-118`, `D-133 am. 1`, `D-139` and `F-037` are cited and **none of
+  them is amended**.
+
+**⚠⚠ THE DISQUALIFYING FACT, FIRST, AND IT IS AN EPISTEMIC ONE RATHER THAN A COUNT.** The census
+card's Status block led with a single expression:
+
+```
+detail.structure_kind_label ?? (detail.folded === false ? 'NOT FOLDED' : 'Folded')
+```
+
+**`Folded` is true of a single-pass fold, true of a provisional assembly whose seam is not solved,
+and true of a parent the D-139 gate refused to flip.** It is not a wrong word. **It is a word that
+cannot be wrong** — and that is precisely why no assertion about its correctness would ever have
+failed, why it survived D-118, D-120, D-132, D-133, D-134 and D-139, and why it is worse than a
+false claim. A reader who met it learned that *something* was true and could not tell which of
+three things.
+
+**The witness is FAT2.** `GET https://pharmfoldmdk.fly.dev/api/census/Q9NYQ8`, read live
+2026-09-09, answers **four different statuses in one payload**:
+
+| field | value | which question it answers |
+|---|---|---|
+| `folded` | `true` | is a structure served |
+| `structure_kind` / `structure_kind_label` | `assembled` / `assembled (provisional)` | *what kind* of structure |
+| `hold48_kind` | `parent_stitched` | how it was produced |
+| `scored` | `scored: false` (`not_scored_reason`: *D-079 decision 1 — no census row is scored*) | was it scored |
+| `assembler_note` | *assembled by pLDDT overlap, not superimposed; seam not solved* | is its seam solved |
+| `assembly_review.served_path` | `flipped: false`, `solved: false`, `not_flipped_reason: not_in_pass_subset` | which path's bytes are served |
+
+**Four statuses. One word.** And the same conflation ran the other way: a `tiles_only` row is
+served `folded: false` because no *parent* was assembled — its tile structures are on disk — and
+the surface printed **NOT FOLDED** over it, which is not ambiguous but flatly false.
+
+**⚠⚠ THE SHARPEST INSTANCE, AND IT IS NOT ON EITHER OF THOSE SURFACES.** `plddt.js` returned a
+sentinel band labelled **`not folded`** for *every* absent pLDDT value. `bandFor` has three
+callers: the confidence headline, the per-residue plot, and `colorFor` — **which 3Dmol calls once
+per residue of a structure that is on disk and being drawn**. So a missing *number* was reported
+as a missing *structure*, inside the rendering of the structure. **None of the three callers is in
+a position to know whether a fold exists, and two of them only run when one does.**
+
+- **⚠ BUILD step 0 — the API gap audit, run rather than assumed (D-016).** Both payloads read live
+  2026-09-09 and compared key-by-key:
+  - `GET /api/census?limit=5000` returns **3,467 rows of 34 keys each**. Axis A's drivers are all
+    present (`folded`, `structure_kind`, `structure_kind_label`, `hold48_kind`, `mean_plddt`) and
+    so are axis B's (`scored`, `not_scored_reason`). ⚠ **`assembly_review` is NOT among the 34,
+    and neither is `assembler_note`.**
+  - `GET /api/census/Q9NYQ8` carries both, and `assembly_review` holds 18 keys including
+    `assembler_note`, `seam_note` and `served_path`.
+  - **So axis C is detail-only in v1, and that is a measured licence rather than a shortcut.** The
+    list answers A and B fully, renders `structure_kind_label` (which already carries
+    *(provisional)*), and states axis C as **`artifacts_absent` — *seam artefacts not on this
+    payload*** rather than falling to `n/a`. ⚠ **The distinction is the whole point: `n/a` would
+    read as *this assembly has no seam question*, and an absent measurement is not a solved seam.**
+  - **⚠ No schema migration was needed and none was written.** The audit is what establishes that,
+    and it is recorded because the alternative — adding a field — would have been the expensive
+    wrong answer taken for want of a query.
+- **⚠ Provenance (D-016) — the census population, measured not recalled.** Over the same
+  `?limit=5000` read, the four axis-A categories partition the census as **`oneshot` 3,418 ·
+  `assembled_served` 45 · `none` 4 · `tiles_only` 0**, summing to **3,467**. ⚠ The sum is stated
+  because a four-way breakdown that does not reconcile with the population is how a fifth silent
+  category hides. The four `none` rows are the **3 mucins** (`Q685J3`, `Q8WXI7`, `Q9UKN1` —
+  `structure_kind: mucin`, `folded: false`) and **`P55073` / DIO3**, which carries `structure_kind:
+  null`, `topology: null` **and `not_scored_reason: null`**. ⚠⚠ **That last null is why axis B has
+  a named fallback rather than rendering the field**: the honest line for DIO3 would otherwise have
+  been *"Not scored, not ranked. null"*.
+  - **⚠ `tiles_only` has ZERO live rows today**, and the branch is built and pinned anyway. It is
+    in the payload vocabulary (`app/reads.py`'s `STRUCTURE_KIND_ORDER`), in `CensusProteinView`'s
+    `unfoldedCopy`, and in D-133's own fixtures — **the category is live in the code even where it
+    is empty in the data**, and it is the case whose old rendering was not merely ambiguous but
+    false. Recording the zero is the point: *a branch with no live row is a branch nobody would
+    notice breaking*.
+  - `scored` is **`false` on all 3,467** rows. No other value occurs.
+
+**⚠⚠ THE RULE THIS ENTRY ESTABLISHES — THREE ORTHOGONAL AXES, ONE MODULE.**
+`ui/src/structureStatus.js` is the single source for all three, and every surface *asks* it rather
+than re-deriving. That is D-133 am. 1's `topologyBadgeKey` discipline applied to a harder case:
+**the census list and the census card are served different payloads**, so a re-derivation in two
+components is how one protein comes to carry two structure statuses on two pages of one site.
+
+**Axis A — what structure is served.** `none` · `tiles_only` · `oneshot` · `assembled_served`.
+⚠ **Branch order IS the rule and is pinned as such**, not as an output:
+
+1. **`tiles_only` first, ahead of the `folded === false` denial.** Tiles are on disk and the
+   payload says so; reading the denial first is what produced the false NOT FOLDED.
+2. **Then `folded === false`.** An explicit denial outranks any kind label — the mucins take this
+   branch, correctly, since their own label reads *mucin — not folded*.
+3. **`assembled` only when nothing has denied a structure.** A kind saying `assembled` beside a
+   `folded: false` is a contradiction, and **the honest reading of a contradiction is the weaker
+   claim, never the stronger one.**
+4. Everything else is one forward pass.
+
+⚠⚠ **`=== false`, NEVER `!r.folded`.** Legacy rows predate the field entirely. This is not a new
+caution: `CensusTable`'s folded count has read `!== false` since the field arrived and
+`CensusProteinView` gated its never-folded card the same way — **a missing field is not a recorded
+`false`**, and this axis inherits that ruling rather than re-litigating it.
+
+**Axis B — scored.** Always **`Not scored, not ranked`** plus `not_scored_reason`. ⚠⚠ **It is
+constant across the whole census, and it is printed anyway.** A status that appears only when
+something is wrong teaches a reader that silence means fine — after which *no score* has to be
+inferred from *no number*, **which reads as a fold that failed**. That inference is the defect
+running in the opposite direction, and it is why axis B is a line rather than an omission.
+
+**Axis C — the seam.** `provisional_assembler` · `pass_path_served` · `artifacts_absent` · `n/a`,
+and **only when axis A is `assembled_served`** — a single-pass fold has no seam, and answering
+`n/a` about one invents a question nobody asked. ⚠ `pass_path_served` is read off **D-139's own
+`served_path.flipped`**, never re-derived from a pass count (D-139: *the allowlist is the
+authority, never a pass count*) — **and even then the copy refuses the word *solved***, because
+`served_path.solved` is `false` for every parent including a flipped one.
+
+**⚠⚠ WHAT THE SURFACE MUST NOT SAY — the durable half of this decision, because the next person to
+write a census surface will never have met FAT2.**
+
+- **Never a bare `Folded`** as the whole status of anything. `assembled_served` renders the API's
+  own `structure_kind_label` (prefixed *Structure served — *, so the same string does not appear
+  twice in one row); with the label absent it falls back to copy that still carries
+  **provisional**, so an assembly whose label failed to arrive cannot become the one assembly on
+  the site that reads as finished.
+- **Never `NOT FOLDED` where tiles are the API's story.** The `tiles_only` badge is
+  *Tiles only — parent not assembled*, and the D-118 viewer withholding is preserved by a third
+  render branch rather than lost with the gate that used to imply it.
+- **Never fold language or "no structure" language to mean unscored.** Axis B is about a decision
+  (D-079 dec 1); axis A is about an artefact. Pinned as a negative assertion over every fixture.
+- **Never another protein's measurement as this protein's status.** The card printed *"Seam not
+  solved (IGF2R ≈ 88.76 Å is a measured caveat, not a solved structure)"* inline on **every**
+  assembly, so a reader of FAT2 was handed a figure measured on IGF2R as part of FAT2's own
+  record. **A true number in the wrong place is a false implication.** The per-parent sentence is
+  `assembler_note`, which the payload already carried and nothing was reading. ⚠ The figure is
+  **not** banned from the project: `MethodNote`, `PlddtExplainer` and the viewer banner each name
+  IGF2R beside it, which is a cohort-level disclosure and **stays** — the viewer now carries this
+  parent's own note *alongside* it.
+- **And NOT FOLDED is not softened where it is true.** The never-folded card keeps its heading,
+  its three D-118 outcomes (*folded among the 82* / *attempted there and failed* / *neither*) and
+  its reason tooltips, and `NOT FOLDED HERE` still distinguishes the first. The list row still
+  wears the never-folded style — **but only where both the axis says `none` and `folded` is a
+  recorded `false`**, which is a repair the vitest fixture found rather than one this entry
+  predicted: `folded === false` alone was still dressing a `tiles_only` row as a denial.
+
+- **⚠ Deep learning position (the Prime Directive, ARCHITECTURE §1).** This entry **trains
+  nothing, folds nothing, and moves no pLDDT value** — and that is the correct answer for it. What
+  it repairs is the legibility of the network's *own output*: ESMFold's per-residue self-report is
+  the load-bearing number on this surface, and it was being displayed under a word that merged the
+  model's product with a scoring decision and an assembly artefact. ⚠⚠ **The `bandFor` sentinel is
+  the case that makes this more than presentation:** the model's confidence array is coloured onto
+  the structure residue by residue, and a gap in that array was being rendered as *the protein was
+  not folded* — **a statement about the model's output being reported as a statement about whether
+  the model ran.** Making the network's output legible beside the network's caveats is the
+  defensible version of the directive, rather than *"a model ran"*.
+
+- **Ship id: spends `D-150`, which `docs/RESERVED.md` held as the next free integer and which
+  `D-149` barred by name.** Checked before claiming it, on `main` at tip
+  **`6f9613caa29c7039f43cace34d92a6e2e151e30b`** (D-149 /
+  [#273](https://github.com/mdk32366/Project-PharmFoldMDK/pull/273)):
+  `rg -n '^### D-1(4|5)' docs/README.md` returns **140–147 and 149**, with **no 148 and no 150**;
+  the `RESERVED.md` row for 150 reads *"Nothing yet — the next free `D-` integer, barred by name in
+  `tests/test_d149_cancer_burden.py`"*, and the pointer reads
+  **`Next free `D-` integer: **`D-150`**`**. ⚠ **This is the fifth reserved integer to be SPENT
+  rather than skipped**, and the resolution is the one this log has now used thirteen times: **the
+  guards that barred `### D-150` now NAME this entry, and `### D-151` takes the bar. Nothing was
+  relaxed to a `>=` and no bar was deleted** — each became a *name*.
+  - **⚠ `### D-148` is untouched and stays a HOLD** for the trafficking Spec (owner instruction,
+    2026-09-09). The pointer skips it again, because **a reserved integer is not a free one** —
+    which is `RESERVED.md`'s whole purpose.
+  - **The `D-150` RESERVED row is RETIRED MARKER-SAFE, not struck and not deleted**, on the
+    `D-142` / `D-145` / `D-146` / `D-147` precedent and for the same mechanical reason:
+    `tests/test_d149_cancer_burden.py` locates it with `re.search(r"^\| \*\*D-150\*\*", …)`, so
+    striking the marker to `~~**D-150**~~` would **break another entry's guard instead of
+    satisfying it**. The row records ✅ **WRITTEN** inside the cell and keeps its original
+    reservation text as provenance (D-129-C). A new `| **D-151** |` row is added, because this
+    entry cites 151 in order to bar it, and the pointer moves in the same commit.
+  - **The citation invariant, measured on this branch rather than predicted.** `RESERVED.md`'s own
+    command returns **`['D-131', 'F-067']`** — unchanged from `main`, both pre-existing (`D-131` is
+    the suffix half of `### D-130-B / D-131`; `F-067` is open in #222). ⚠ **The known failure mode
+    was checked for specifically:** `D-145` recorded that its first draft opened a hole at `D-146`
+    by barring an integer with no row, and `D-146` / `D-147` / `D-149` each recorded checking for
+    the identical hole one integer along. It opens again at `D-151` here if the row is forgotten.
+    It was not.
+
+- **Revert proof (`A-016`: any red proves the assertion bites; `A-017`: the path must be entered).**
+  Six reverts, each applied on its own, run, and read **at the assertion** rather than at a
+  collection error. ⚠⚠ **Two of the reds below were NOT predicted by this entry's first draft, and
+  both are recorded rather than tidied away (D-129-C).**
+  - **Restore the bare-`Folded` fallback** on the card's Status line (axis A left in the module, so
+    the code is still reachable — `A-017`) → **red** at
+    `test_the_card_no_longer_falls_back_to_a_bare_folded`,
+    `test_no_surface_prints_a_bare_folded_as_a_status_word`, and in vitest at *cannot be read as
+    NOT FOLDED, and cannot be read as finished*.
+  - **Put the `folded === false` denial back ahead of the tiles branch** in `structureServed` →
+    **red** at `test_the_tiles_branch_runs_before_the_folded_denial` and at the vitest case *never
+    reads a tiles_only row as not folded* — ⚠ **and also at
+    `test_the_never_folded_badge_needs_both_the_axis_and_the_recorded_false`, which was not
+    predicted**: the two are coupled, because the badge's style condition reads the axis.
+  - **Revert the pLDDT sentinel to `'not folded'`** → **red** at
+    `test_the_absent_plddt_band_says_nothing_about_folding` and at both `plddt.bands.test.js`
+    cases, including the negative one that fires on *any* re-introduced fold word rather than on
+    the old string.
+  - **Delete the `status_structure` entry from `COLUMNS`**, leaving the cell rendering → **red** at
+    `test_the_status_column_is_a_real_columns_entry` and at the vitest *offers the status column as
+    a real sortable header*. ⚠ The cell still drew three chips, which is exactly D-133's finding
+    restated: **a badge that cannot be sorted is not the same feature as a column, and nothing goes
+    red about it** unless something reads `COLUMNS`.
+  - **Put the inline IGF2R sentence back on the card** → **red** at
+    `test_the_card_does_not_paste_igf2rs_angstroms_onto_every_assembly` and at the vitest *quotes
+    this parent's own seam note*.
+  - **Drop the unconditional unscored chip** so it renders only when `folded === false` → **red**
+    at the vitest *carries the unscored chip on a folded row as well as an unfolded one*. ⚠⚠ **This
+    revert passed every Python guard**, which is the honest limit of a source-reading suite: it can
+    see that a constant is declared and cannot see which rows a component chose to render it on.
+    **Recorded as a residual, not repaired by a second framework** (D-074 dec 3).
+
+**Ship:** `ui/src/structureStatus.js` (new) + `ui/src/plddt.js` + `ui/src/components/CensusTable.jsx`
++ `ui/src/components/CensusDetail.jsx` + `ui/src/components/CensusProteinView.jsx` +
+`ui/src/components/Confidence.jsx` + `ui/src/components/StructureViewer.jsx` + `ui/src/styles.css`;
+`ui/src/components/CensusStatus.d150.test.jsx` (new) + `tests/test_d150_structure_status_honesty.py`
+(new) + flipped assertions in `ui/src/plddt.bands.test.js` and
+`ui/src/components/CensusProteinView.test.jsx`.
+**Relied on by:** `D-079` dec 1 · `D-109` ruling 7 · `D-118` · `D-133 am. 1` · `D-139` · `F-037`.
+**Assumptions relied on:** none new. ⚠ **And one explicitly REFUSED:** that a status word which is
+never false is therefore informative. **`Folded` was true every time it was printed, and it is the
+reason this entry exists.**
+
+⚠ **`### D-148` remains a `RESERVED.md` hold** (trafficking Spec) and is cited here only to bar it.
+⚠ **`### D-151` is barred by name** and has a row; the next-free pointer moved to **`D-151`** in
+this same commit, **skipping 148 because a reserved integer is not a free one**.
+
 ### D-149 — The project gets a cancer burden surface of its own, from SEER official aggregates: which cancers kill the most people in the US, on a route and a page that join to no protein and no score — and the disqualifying fact is that asking SEER for *"Both Sexes"* breast cancer returns the **MALE** figure, a rate 72× too small, announced only in a response key nothing was reading
 
 - **Date:** 2026-09-09
