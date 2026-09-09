@@ -34,7 +34,12 @@ import Provenance from './Provenance.jsx'
 //
 // ⚠ THREE STATES: a fold exists in the ranked 82 · it was attempted there and failed · neither.
 export function unfoldedCopy(detail) {
-  if (detail.folded !== false) return null
+  // ⚠⚠ THE TILES BRANCH RUNS AHEAD OF THE `folded` GATE (D-150), and it is the same ordering
+  // defect `structureServed` repairs one level along. This function returned `null` for anything
+  // not `folded === false`, so the tiles copy was reachable only through a fold DENIAL — and the
+  // page's tiles card, which is gated on axis A rather than on `folded`, would have rendered two
+  // empty paragraphs for a tiles row whose flag ever disagreed. **A tiles row's copy is a fact
+  // about its tiles, not about a fold verdict**, so it does not ask the verdict first.
   if (detail.structure_kind === 'tiles_only') {
     return {
       bar: 'Tiles exist for this protein; they have not been assembled into a parent '
@@ -43,6 +48,7 @@ export function unfoldedCopy(detail) {
         + '1,656-aa window cannot be read as the ectodomain (D-118).',
     }
   }
+  if (detail.folded !== false) return null
   if (detail.structure_kind === 'mucin') {
     return {
       bar: 'Mucin — out of class; never ESMFold. Rental is closed (pod Terminated).',
@@ -173,11 +179,19 @@ export default function CensusProteinView({ id }) {
         {/* ⚠ D-150: the word is axis A's, so the top of the page and the Status block at the
             bottom of it cannot spell one protein's structure two ways. The assembled suffix comes
             from this parent's own `assembler_note` where there is one, rather than from a
-            sentence typed here. */}
-        <p className="structure-kind-badge" title={detail.assembler_note || undefined}>
-          {structureServedLabel(detail)}
-          {seam.label ? ` — ${seam.note ?? seam.label}` : null}
-        </p>
+            sentence typed here.
+            ⚠⚠ SUPPRESSED WHEN AXIS A IS `none`, and a screenshot is what caught it. This badge was
+            gated on `structure_kind_label` before, so a never-folded row — which has no label —
+            never reached it. Reading axis A unconditionally put a bare `NOT FOLDED` line directly
+            above the census bar and the full NOT FOLDED card, giving `P55073` **three** of them
+            stacked. The card below is the statement; a third copy in a smaller font is noise, and
+            noise is how a reader learns to skim the thing that matters. */}
+        {structureA !== STRUCTURE_NONE && (
+          <p className="structure-kind-badge" title={detail.assembler_note || undefined}>
+            {structureServedLabel(detail)}
+            {seam.label ? ` — ${seam.note ?? seam.label}` : null}
+          </p>
+        )}
         <Igf2rTwoPopulation copy={detail.igf2r_two_population} />
         <p className="census-bar">
           {/* ⚠ The bar asserted "this protein WAS FOLDED" on every card, including the ones that

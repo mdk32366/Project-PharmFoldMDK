@@ -614,6 +614,32 @@ write a census surface will never have met FAT2.**
   - **Revert 3's second red is the negative assertion**, which fires on *any* re-introduced fold
     word rather than on the old string — so restoring the sentinel under a new phrasing reddens too.
 
+- **⚠⚠ AND ONE DEFECT NO REVERT COULD HAVE FOUND, BECAUSE THIS BUILD SHIPPED IT.** The whole
+  surface was rendered against the **live** API — `vite` with `/api` proxied to
+  `pharmfoldmdk.fly.dev`, so the real 3,467-row list and the real `Q9NYQ8` payload drove it — and
+  the census card for **`P55073` / DIO3** came back carrying **`NOT FOLDED` three times**: once as
+  a bare unstyled line under the aliases, once in the census bar, and once as the card's own
+  heading. The header's structure line had been gated on `structure_kind_label`, which a
+  never-folded row does not carry, so **it was never reached before this entry**; reading axis A
+  unconditionally reached it for the first time. It is suppressed when axis A is `none` — the card
+  below is the statement — and pinned by *says the fold verdict once, not three times*.
+  ⚠ **Both suites were green across that defect, and stayed green while it was on screen.** A
+  status the surface repeats three times is not caught by any assertion that the status is
+  *correct*, which every assertion in this entry is. **It was found by looking at the page.**
+  - ⚠ The same session confirmed the four cases that matter against live data:
+    `Q9NYQ8` renders *Structure served — assembled (provisional) — tranche 5* / *Seam not solved —
+    provisional assembler …* / *Not scored, not ranked*, with **no `NOT FOLDED` and no bare
+    `Folded` anywhere on the page or its row**; `Q8WXI7` (MUC16) still wears **NOT FOLDED** beside
+    *Not scored, not ranked*; `P55073` keeps its whole card.
+  - ⚠⚠ **AND A FIXTURE IN THIS REPOSITORY IS OUT OF DATE, WHICH THE SAME LOOK REVEALED.**
+    `CensusTable.unfolded.test.jsx` and `CensusTable.cohortfold.test.jsx` use **HER2 / `P04626` as
+    the never-folded protein** — the owner's original D-024 case. **Live, `P04626` is
+    `folded: true`, `structure_kind: single-pass`, `mean_plddt: 73.94`.** It has been folded since.
+    The fixtures are not wrong as *fixtures* — they exercise the never-folded branch, which is
+    still real for four other accessions — but **the census no longer contains the row they are
+    named after**, and a reader of those files would conclude otherwise. Recorded, not repaired
+    here: renaming them is a change to D-024's own witness and is not this entry's to make.
+
 **Ship:** `ui/src/structureStatus.js` (new) + `ui/src/plddt.js` + `ui/src/components/CensusTable.jsx`
 + `ui/src/components/CensusDetail.jsx` + `ui/src/components/CensusProteinView.jsx` +
 `ui/src/components/Confidence.jsx` + `ui/src/components/StructureViewer.jsx` + `ui/src/styles.css`;
