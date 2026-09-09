@@ -325,8 +325,14 @@ in a compensated Volume+DB transaction, `/complete` enforcing done-ordering serv
 The **deployment arc** (DEP-001…004) then wired the Fly serving tier: a Docker image — **two-stage
 since DEP-006** (a `node:20-slim` stage compiles the React bundle; **Node never enters the runtime
 stage**) — whose runtime tier is `app/` + `core/` + `db/` + `data/` (the cohort CSVs the D-038
-coverage route computes from), the hash-locked lock, **no `worker/`/CUDA** (DEP-001, enforced by an
-image-contents test that also pins the two-stage shape), a `fly.toml`, and a `deploy` job that runs `flyctl deploy --app pharmfoldmdk`
+coverage route computes from) plus **exactly two named scripts and never the directory**
+(`scripts/census_ingest_features.py`; and, since **D-145**, `scripts/census_structural_rank.py` —
+so the D-144 loader lands at **`/srv/scripts/census_structural_rank.py`** on the machine and reads
+its population from **`/srv/data/census/census_manifest.v7.csv`**, already shipped by `COPY data/`
+and therefore never re-copied; ⚠ `/srv/data` is the IMAGE, distinct from the Fly Volume at
+`/data/artifacts`), the hash-locked lock, **no `worker/`/CUDA** (DEP-001, enforced by an
+image-contents test that also pins the two-stage shape, both `COPY` lines by name, and the
+matching `.dockerignore` negations), a `fly.toml`, and a `deploy` job that runs `flyctl deploy --app pharmfoldmdk`
 behind a doc-only guard on the job (DEP-002) with an app-scoped `FLY_API_TOKEN` (DEP-003). A green
 deploy means **the transport API is up and the queue accepts work — not** that any fold has run
 (DEP-004); the worker is hand-started on the GPU box. The UI was ruled **React**, superseding
@@ -866,7 +872,10 @@ Primary entities (full column detail in [`docs/Database_Plan_v2_Postgres.md`](do
   indexes and performs no `ALTER`, no backfill and no `DROP` on `ranking_runs` /
   `target_scores` / `ranking_results`. Written offline by `scripts/census_structural_rank.py`
   (idempotent replace: the previous `valid` run becomes `superseded`, naming its replacement, in
-  the same transaction); served read-only by `app/census_structural_read.py` at
+  the same transaction) — ⚠ **D-145: that loader is BAKED INTO THE IMAGE** at
+  `/srv/scripts/census_structural_rank.py`, so *offline* means "on the machine, where the
+  `DATABASE_URL` already is", not "on whoever's laptop last had the file"; served read-only by
+  `app/census_structural_read.py` at
   `GET /api/census-structural-ranking`. ⚠ **`STRUCTURAL_ONLY — not HPA-weighted; not ADC-ready`
   rides on the payload header and on every row.**
 - **`analysis_embeddings`** — `vector(384)` + HNSW cosine index for semantic search
@@ -1295,7 +1304,9 @@ Project-PharmFoldMDK/
 │                            #   census_structural_rank.py (D-144 census structural rank loader:
 │                            #     population from the committed manifest, fold half from
 │                            #     protein_analyses, idempotent replace of the one VALID run.
-│                            #     Needs DATABASE_URL; touches no scorer table),
+│                            #     Needs DATABASE_URL; touches no scorer table.
+│                            #     D-145: ONE of the two scripts IN the image, at
+│                            #     /srv/scripts/ — never COPY scripts/),
 │                            #   intersection_check.py (D-073 pre-fit denominators A-I; owner-run
 │                            #   against the LIVE deployment, stdlib only, not gated),
 │                            #   attention_control.py (D-075 dec 3 popularity-matched control:
@@ -1310,8 +1321,11 @@ Project-PharmFoldMDK/
 │                            #   the whole pipeline on one target; imports real core/+worker/, NOT
 │                            #   gated, NOT in the image (excluded via .dockerignore)
 ├── .github/workflows/       # CI: test + postgres gates → Fly deploy job (D-005/DEP-002)
-├── Dockerfile               # serving-tier image: runtime tier only, no worker/CUDA (DEP-001)
-├── .dockerignore            # keeps worker/, venv, tests, docs out of the build context (DEP-001)
+├── Dockerfile               # serving-tier image: runtime tier only, no worker/CUDA (DEP-001);
+│                            #   two NAMED scripts, never COPY scripts/ (D-145)
+├── .dockerignore            # keeps worker/, venv, tests, docs out of the build context (DEP-001);
+│                            #   excludes scripts/ and re-includes exactly the two named files —
+│                            #   a COPY with no matching `!` line fails the BUILD (D-145)
 ├── fly.toml                 # Fly serving-tier config: app pharmfoldmdk, always-on, Volume mount
 ├── alembic.ini              # migration config; URL from $DATABASE_URL (direct conn, D-014)
 ├── pytest.ini               # pythonpath=. so tests import core/ and db/ (PR A)
