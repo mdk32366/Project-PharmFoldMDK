@@ -164,6 +164,7 @@ export default function CancerBurdenView() {
                 <th>#</th>
                 <th>Cancer site (SEER)</th>
                 <th>Rate per 100,000</th>
+                <th>Rate is over</th>
                 <th>{active.key === 'mortality' ? 'Deaths' : 'New cases'}</th>
                 <th>Counted in</th>
                 <th>Period</th>
@@ -188,6 +189,13 @@ export default function CancerBurdenView() {
                     )}
                   </td>
                   <td className="mono">{formatRate(r.rate_per_100k)}</td>
+                  {/* ⚠⚠ WHAT THE "PER 100,000" IS OVER. A sex-specific rate is per 100,000 of THAT
+                      SEX: Breast (female) at 132.53 is per 100,000 women while Lung at 47.17 is per
+                      100,000 people. Both are published that way and ranking them together is the
+                      standard convention — but the denominators differ, and it shows in this data:
+                      by rate, female-only Corpus and Uterus outranks Melanoma of the Skin; by count
+                      they reverse. Naming it per row makes the comparison a reader's choice. */}
+                  <td className="col-secondary">{r.rate_denominator_label}</td>
                   <td className="mono">{formatCount(r.observed_count)}</td>
                   {/* ⚠ PER ROW, never a column header: the two statistics have different
                       denominators and a header would let one row's population be read onto another. */}
@@ -220,6 +228,10 @@ export default function CancerBurdenView() {
                 {meta.count_population_key?.seer_registries?.text}
               </li>
               <li><strong>Skin.</strong> {meta.skin_exclusion}</li>
+              <li data-testid="burden-rate-denominator">
+                <strong>&ldquo;Per 100,000&rdquo; is not one quantity.</strong>{' '}
+                {meta.population_key?.rate_denominator?.text}
+              </li>
               {substituted.length > 0 && (
                 <li data-testid="burden-sex-substitution">
                   <strong>Sex is read from the source&rsquo;s answer, not from our question.</strong>{' '}

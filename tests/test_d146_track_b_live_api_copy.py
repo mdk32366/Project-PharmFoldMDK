@@ -536,9 +536,22 @@ def test_the_reserved_row_is_retired_marker_safe_and_147_has_a_row():
     # integer*, and that rule is what is kept: it now asserts **`D-148`**, and it asserts that 147
     # is no longer the pointer — so a future land that forgets to move it reddens here rather than
     # drifting, which this file has recorded happening three times, once by thirty-six integers.
-    assert "Next free `D-` integer: **`D-148`**" in RESERVED, (
+    # ⚠⚠ FLIPPED IN PLACE AT `D-149`, NEVER DELETED — the same repair `D-147` made of this same
+    # assertion, and for the same reason. The RULE this encodes is *the pointer moves in the SAME
+    # commit that spends the integer*, and the rule is what is kept; only the value moves.
+    # ⚠⚠ AND IT MOVES TO **150**, SKIPPING 148, WHICH IS THE PART WORTH READING. `D-149` spent 149
+    # and deliberately SKIPPED 148, which is now a HOLD for the trafficking Spec. A reserved integer
+    # is not a free one — that is `RESERVED.md`'s whole purpose — so "next free" is 150 while 148
+    # keeps a row of its own. Three assertions where there was one: the pointer names 150, and it
+    # names neither 147 nor 148, so a future land that forgets to move it reddens here rather than
+    # drifting (this file has recorded that drift three times, once by thirty-six integers).
+    assert "Next free `D-` integer: **`D-150`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer — this file has "
         "recorded that pointer going stale three times, once by thirty-six integers"
+    )
+    assert "Next free `D-` integer: **`D-148`**" not in RESERVED, (
+        "the pointer still names 148, which D-149 converted into a trafficking HOLD — a hold is "
+        "not a free integer, and handing it to the next writer is what this file exists to prevent"
     )
     assert "Next free `D-` integer: **`D-147`**" not in RESERVED, (
         "the pointer still names a SPENT integer — it would hand 147 to the next writer"

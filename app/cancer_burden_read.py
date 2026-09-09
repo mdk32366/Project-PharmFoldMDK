@@ -38,6 +38,7 @@ from core.cancer_burden import (
     EXCLUDED_TIER,
     GLOBOCAN_ABSENT,
     POPULATION_KEY,
+    RATE_DENOMINATOR_LABEL,
     RUN_VALID,
     SEPARATION,
     SKIN_EXCLUSION,
@@ -46,6 +47,7 @@ from core.cancer_burden import (
     UNMAPPABLE_HPA_SITES,
     US_ONLY_DISCLAIMER,
     US_ONLY_SHORT,
+    rate_denominator,
 )
 from db.models import CancerBurdenRun, CancerBurdenStat
 
@@ -109,6 +111,14 @@ def _row_projection(row: CancerBurdenStat) -> dict[str, Any]:
         "sex": row.sex,
         "sex_substituted": row.sex_substituted,
         "rate_per_100k": row.rate_per_100k,
+        # ⚠⚠ WHAT THE "PER 100,000" IS OVER, ON THE ROW. A sex-specific rate is per 100,000 of THAT
+        # SEX: `Breast (female)` at 132.53 is per 100,000 women while `Lung and Bronchus` at 47.17
+        # is per 100,000 people. Both are published that way and ranking them together is the
+        # standard convention — but the denominators differ, and the effect is visible in this data
+        # (by rate, female-only `Corpus and Uterus, NOS` outranks `Melanoma of the Skin`; by count
+        # they reverse). Stating it makes the comparison a reader's choice rather than a hidden one.
+        "rate_denominator": rate_denominator(row.sex),
+        "rate_denominator_label": RATE_DENOMINATOR_LABEL[rate_denominator(row.sex)],
         "rate_se": row.rate_se,
         "rate_lower_ci": row.rate_lower_ci,
         "rate_upper_ci": row.rate_upper_ci,

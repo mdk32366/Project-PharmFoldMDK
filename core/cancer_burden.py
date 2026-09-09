@@ -124,6 +124,17 @@ POPULATION_KEY = {
         "and Mesothelioma are 2019-2023, and SEER incidence is 2019-2023. A single header period "
         "would have relabelled six rows with a period they do not have."
     )},
+    "rate_denominator": {"kind": "SEX_SCOPED_DENOMINATOR", "text": (
+        "⚠⚠ A SEX-SPECIFIC RATE IS PER 100,000 OF THAT SEX, NOT PER 100,000 PEOPLE. SEER computes "
+        "an age-adjusted rate over the population at risk, so `Breast (female)` at 132.53 is per "
+        "100,000 WOMEN while `Lung and Bronchus` at 47.17 is per 100,000 PEOPLE. Both are "
+        "published this way and ranking them together is the standard convention — but the two "
+        "denominators are not the same, so a sex-specific rate is not strictly comparable to a "
+        "both-sexes rate even though both read 'per 100,000'. ⚠ The effect is visible in this "
+        "data: ordering incidence by rate puts `Corpus and Uterus, NOS` (female-only) above "
+        "`Melanoma of the Skin`, while ordering by count reverses them. Every row states its "
+        "denominator so the comparison is a reader's choice rather than a hidden one."
+    )},
     "sex": {"kind": "PARSED_FROM_SOURCE_RESPONSE", "text": (
         "The sex the SOURCE returned, never the sex requested. ⚠⚠ SEER*Explorer answers a Breast "
         "'Both Sexes' request with the MALE figure — rate 0.26 and 2,457 deaths instead of 18.93 "
@@ -250,3 +261,34 @@ def is_primary_sex_stratum(*, sex: str, site_has_both_row: bool) -> bool:
     if site_has_both_row:
         return sex == "both"
     return sex in ("female", "male")
+
+
+#: The three rate denominators, keyed by the row's `sex`. ⚠ A DERIVED STATEMENT, not a new fact:
+#: `sex` already determines it, and spelling it out on the row is what stops a reader from reading
+#: "per 100,000" as one quantity when it is three.
+RATE_DENOMINATOR = {
+    "both": "per_100k_people",
+    "female": "per_100k_females",
+    "male": "per_100k_males",
+}
+
+RATE_DENOMINATOR_LABEL = {
+    "per_100k_people": "per 100,000 people",
+    "per_100k_females": "per 100,000 women",
+    "per_100k_males": "per 100,000 men",
+}
+
+
+def rate_denominator(sex: str) -> str:
+    """⚠⚠ RAISES on an unknown sex rather than defaulting to `per_100k_people`.
+
+    A default here would be the absent-value defect in its most expensive direction: an unrecognised
+    sex would silently acquire the WIDEST denominator, which is exactly the direction that makes a
+    sex-specific rate look like a whole-population one.
+    """
+    try:
+        return RATE_DENOMINATOR[sex]
+    except KeyError:
+        raise ValueError(
+            f"sex {sex!r} has no stated rate denominator; a default would make a sex-specific rate "
+            f"look like a whole-population one") from None
