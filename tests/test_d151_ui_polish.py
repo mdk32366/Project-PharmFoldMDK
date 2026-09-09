@@ -382,8 +382,14 @@ def test_the_reserved_map_retires_151_marker_safe_and_the_pointer_moves_here():
         "satisfying it")
     # ⚠⚠ THE POINTER MOVES IN THE SAME COMMIT THAT SPENDS THE INTEGER, AND IT SKIPS THE
     # HOLD. A reserved integer is not a free one — that is this file's whole purpose.
-    assert "Next free `D-` integer: **`D-152`**" in RESERVED
-    for spent in ("D-147", "D-148", "D-149", "D-150", "D-151"):
+    # ⚠⚠ FLIPPED IN PLACE AT `D-153`, NEVER DELETED, AND IT NOW SKIPS **TWO** HOLDS. `D-153`
+    # spent 153 (the D-149 burden loader baked into the serving image) and deliberately did
+    # NOT take 152, because 152 became a HOLD for the concurrent sitewide-layout lane while
+    # 148 remains the trafficking hold. So *"next free"* means the lowest AVAILABLE integer,
+    # 154 — and 152 joins the loop below, which is a hold being named as unavailable rather
+    # than a bar being relaxed.
+    assert "Next free `D-` integer: **`D-154`**" in RESERVED
+    for spent in ("D-147", "D-148", "D-149", "D-150", "D-151", "D-152", "D-153"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED, (
             f"the pointer still names {spent}, which would hand a spent or held integer "
             f"to the next writer")

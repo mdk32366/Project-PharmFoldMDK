@@ -942,8 +942,25 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
     # and it names none of 147, 148, 150 or 151, so a future land that forgets to move it reddens
     # here rather than drifting (this file has recorded that drift three times, once by thirty-six
     # integers).
-    assert "Next free `D-` integer: **`D-152`**" in RESERVED, (
+    # ⚠⚠ FLIPPED IN PLACE AT `D-153`, NEVER DELETED — the sixth time this same assertion has been
+    # moved rather than removed, and the RULE it encodes is what is kept: *the pointer moves in the
+    # SAME commit that spends the integer*. Only the value moves.
+    # ⚠⚠ AND IT MOVES TO **154**, SKIPPING **TWO** HOLDS NOW — which is the new part. `D-153` spent
+    # 153 (the D-149 burden loader baked into the serving image) and deliberately did NOT take 152:
+    # 148 is still a HOLD for the trafficking Spec and 152 became a HOLD for the concurrent
+    # sitewide-layout lane. A reserved integer is not a free one, so *"next free"* means the lowest
+    # AVAILABLE integer and not the lowest unwritten one. Six assertions where there was one: the
+    # pointer names 154, and it names none of 147, 148, 150, 151, 152 or 153.
+    assert "Next free `D-` integer: **`D-154`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
+    )
+    assert "Next free `D-` integer: **`D-153`**" not in RESERVED, (
+        "the pointer still names a SPENT integer — D-153 was spent by the burden-loader image "
+        "bake, and naming it would hand a used number to the next writer"
+    )
+    assert "Next free `D-` integer: **`D-152`**" not in RESERVED, (
+        "the pointer still names 152, which D-153 converted into a sitewide-layout HOLD — a hold "
+        "is not a free integer, and handing it to the next writer is what this file prevents"
     )
     assert "Next free `D-` integer: **`D-151`**" not in RESERVED, (
         "the pointer still names a SPENT integer — D-151 was spent by the owner UI-polish "

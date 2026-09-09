@@ -804,7 +804,14 @@ def test_the_reserved_map_holds_148_bars_150_and_the_pointer_skips_the_hold():
         "the bar moved to 152, so 152 must be a RESERVED row")
     # ⚠⚠ THE POINTER MOVES IN THE SAME COMMIT THAT SPENDS THE INTEGER, AND IT SKIPS THE HOLD.
     # A reserved integer is not a free one — that is this file's whole purpose.
-    assert "Next free `D-` integer: **`D-152`**" in RESERVED
+    # ⚠⚠ FLIPPED IN PLACE AT `D-153`, NEVER DELETED, AND IT NOW SKIPS **TWO** HOLDS. `D-153` spent
+    # 153 (the D-149 burden loader baked into the serving image — this entry's own loader, which
+    # `D-149` shipped without) and deliberately did NOT take 152, because 152 became a HOLD for the
+    # concurrent sitewide-layout lane while 148 remains the trafficking hold. So *"next free"* means
+    # the lowest AVAILABLE integer, 154, and not the lowest unwritten one.
+    assert "Next free `D-` integer: **`D-154`**" in RESERVED
+    assert "Next free `D-` integer: **`D-153`**" not in RESERVED
+    assert "Next free `D-` integer: **`D-152`**" not in RESERVED
     assert "Next free `D-` integer: **`D-151`**" not in RESERVED
     assert "Next free `D-` integer: **`D-150`**" not in RESERVED
     assert "Next free `D-` integer: **`D-148`**" not in RESERVED
