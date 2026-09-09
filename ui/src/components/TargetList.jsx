@@ -675,19 +675,23 @@ export default function TargetList() {
         cutoff — would make an expression statistic the page never shows into the order of the list.
       </p>
       </details>
-      {/* ⚠⚠ D-152 — THE TABLE SCROLLS AND THE PAGE DOES NOT, WHICH IS D-151'S SECOND HALF ON THIS
-          SURFACE. Measured in Chrome at 1440×900 on `41b9b3b` with the real 82 rows: this table
-          pushed `documentElement.scrollWidth` **175 px** past the viewport, so the nav, the lede
-          and the confidence claim slid sideways with it — the owner's *"the list scrolls off the
-          right side"*, on a page nobody had reported yet. Eight columns of which two hold
-          sentences (`.col-rank`'s cause and `.col-description`) do not fit a 60rem measure.
-          ⚠ A bounded PORT is the remedy and dropping a column is not. Every column D-142 added is
-          still here, `.col-rank`'s 144-character cause still renders in full, and nothing is
-          truncated or ellipsised — a column removed to make a table fit is data withheld to
-          flatter a layout.
-          ⚠ The port also gives the `<thead>` something to stick to: `position: sticky` resolves
-          against the nearest scrollport ancestor, so the shared `.table-scroll thead th` rule works
-          because this wrapper exists and has a height bound. */}
+      {/* ⚠⚠ D-152 — THE TABLE SCROLLS AND THE PAGE DOES NOT. ⚠ AND THE DEFECT HERE WAS **NOT** THE
+          CENSUS'S DEFECT, WHICH IS WORTH RECORDING BECAUSE THE FIRST DRAFT OF THIS COMMENT SAID IT
+          WAS. It claimed this table pushed the document 175 px past the right edge — the census's
+          symptom, assumed rather than measured. The measurement says otherwise: at 1440×900 on
+          `41b9b3b`, `/targets` reported a horizontal bleed of **0**. `.col-rank`, `.col-description`
+          and `.col-assoc` already carry max-widths (D-142), so the table never overflowed.
+          ⚠⚠ WHAT IT DID INSTEAD IS WORSE, AND IT IS WHAT THOSE MAX-WIDTHS COST: eight columns
+          squeezed into a ~912 px content box wrapped nearly every cell, so the page ran to
+          **16,409 px** — a mean row height of about **190 px** for a table of one-line facts, and
+          nineteen screens of scrolling for 83 rows. The bound was doing exactly what D-142 designed
+          it to do; it was the 60rem measure around it that was wrong.
+          ⚠ So the port here is for the sticky `<thead>` and for the narrow viewport, and the wide
+          measure is what actually pays: 16,409 px → 1,130 px with no column dropped, no cell
+          truncated and `.col-rank`'s 144-character cause still rendered in full. A column removed
+          to make a table fit is data withheld to flatter a layout.
+          ⚠ `position: sticky` resolves against the nearest scrollport ancestor, so the shared
+          `.table-scroll thead th` rule works because this wrapper exists and has a height bound. */}
       <div className="table-scroll">
       <table>
         <thead>

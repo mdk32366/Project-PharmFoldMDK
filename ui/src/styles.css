@@ -154,6 +154,34 @@ main.wide { max-width: 96rem; }
 .assoc-rest { display: block; font-size: 0.82rem; }
 .assoc-unordered { color: var(--muted); font-style: italic; }
 
+/* ── ⚠⚠ D-152 — THE D-142 BOUNDS ARE RAISED AT THE WIDE MEASURE, AND RAISING A BOUND IS THE
+   OPPOSITE OF THE MOVE THAT WOULD BE FORBIDDEN HERE ──────────────────────────────────────────────
+   D-142 capped the Rank cause at 9.5rem, the Description at 15rem and the Cancer association at
+   12rem so that no one of them could size the table. Those numbers were chosen against a ~912 px
+   content box, which is all `main`'s 60rem reading measure left. `main.wide` gives this route
+   1,392 px, and spending the slack on the three columns that hold sentences is what stops the cells
+   wrapping into paragraphs.
+   ⚠ Measured, not reasoned: at 1440×900 the mean rendered row height on `/targets` was **191 px**
+   before this ship — 83 rows of one-line facts, each laid out as a paragraph.
+   ⚠ THEY ARE STILL BOUNDS. The `min-width` halves are untouched (D-142's 45 px column lesson),
+   `overflow-wrap: break-word` is untouched, and **nothing is truncated, clipped or ellipsised**:
+   this widens what fits on a line, it does not decide what a reader may see.
+   ⚠ THE NARROW MEASURE IS UNCHANGED — below 1100 px the D-142 numbers apply exactly as written.
+   ⚠⚠ AND THE POSITION OF THIS BLOCK IN THE FILE IS LOad-BEARING, which is not obvious and cost a
+   red to find out. It was first written ~80 lines ABOVE the rules it overrides; a media query adds
+   no specificity, so the later D-142 rules simply won and the override was inert on two of the
+   three columns while looking correct. `TargetList.columns.test.jsx` reads the FIRST `max-width` it
+   finds for each selector, so the misplacement showed up there as the raised number being read as
+   the base bound. Both facts point the same way: an override belongs after what it overrides. */
+@media (min-width: 1100px) {
+  .target-list .col-rank { max-width: 13rem; }
+  .target-list .rank-cause { max-width: 13rem; }
+  .target-list .col-description { max-width: 24rem; }
+  .target-list .description-text { max-width: 24rem; }
+  .target-list .col-assoc { max-width: 17rem; }
+  .target-list .assoc-cell { max-width: 17rem; }
+}
+
 /* ⚠ D-151 — the cohort paper's citation line on `/targets`. Sized as a note because it is
    provenance rather than a finding, but the anchor is a normal link: a citation styled so quietly
    that it does not look clickable is the defect this change exists to fix, one step along. */
@@ -455,11 +483,29 @@ main.wide { max-width: 96rem; }
 .term { position: relative; white-space: nowrap; }
 .term-trigger { font: inherit; color: #7fb3d1; background: none; border: 0; border-bottom: 1px dotted currentColor;
   padding: 0; cursor: help; }
+/* ⚠⚠ D-152 — `display: none` REPLACES `visibility: hidden`, AND IT IS A BUG FIX RATHER THAN A
+   TIDY-UP. A `visibility: hidden` box is still LAID OUT, and an absolutely-positioned laid-out box
+   still enlarges the document's scrollable overflow area. So every closed tooltip on a page was
+   silently adding width to the document, and `.term-def` is 320px wide.
+   ⚠ Measured, not reasoned: at 1440×900 on this branch `/scorer` reported
+   `documentElement.scrollWidth - clientWidth` = **144 px** with two closed tooltips hanging off the
+   right edge (`right: 1495` and `right: 1584` against a 1440 limit), and **0** with this rule. It
+   was latent at the old 60rem measure — a `<main>` 480px narrower left the tooltips room to hang
+   into the gutter — so widening the page did not create this defect, it revealed one.
+   ⚠ THE TEXT STAYS IN THE DOM AND STAYS REACHABLE. `aria-describedby` resolves to a
+   `display: none` element by specification (accessible-name computation traverses hidden nodes
+   referenced by `aria-labelledby` / `aria-describedby`), so the F-006 requirement — the
+   non-calibration sentence present in the tooltip DOM and never trimmed — is untouched, and every
+   assertion that reads it does so unchanged.
+   ⚠ THE RESIDUAL, STATED: a tooltip OPENED near the right edge can still extend past it for as
+   long as it is open. That is pre-existing at every width, it is transient, and it is not answered
+   here with an edge-detection framework (D-074 dec 3). What is fixed is the standing overflow,
+   which was permanent and which nothing had to hover to suffer. */
 .term-def { position: absolute; left: 0; bottom: 130%; z-index: 5; width: max-content; max-width: 320px;
   white-space: normal; background: var(--panel); color: var(--ink); border: 1px solid var(--line);
   border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.85rem; line-height: 1.35;
-  box-shadow: 0 2px 10px #0006; opacity: 0; visibility: hidden; }
-.term:hover .term-def, .term:focus-within .term-def { opacity: 1; visibility: visible; }  /* focus, not hover-only */
+  box-shadow: 0 2px 10px #0006; display: none; }
+.term:hover .term-def, .term:focus-within .term-def { display: block; }  /* focus, not hover-only */
 .glossary { margin-top: 1.6rem; border-top: 1px solid var(--line); padding-top: 1rem; }
 .glossary dl { margin: 0; }
 .glossary-entry { margin: 0 0 0.6rem; }
@@ -1180,8 +1226,13 @@ main.wide { max-width: 96rem; }
   margin: 0 0 0.9rem;
   line-height: 1.5;
 }
-.burden-release { color: var(--muted); font-size: 0.85rem; margin: 0.2rem 0 1rem; }
-.burden-question { color: var(--muted); margin: 0.5rem 0 1rem; }
+/* ⚠ D-152 — the above-bars budget, tightened rather than emptied. The US-only bar, the statistic
+   toggle, the question and the release pin are all rulings of D-149 and every one of them stays
+   exactly where it is and says exactly what it said; what changes is the whitespace between them,
+   which is the only part of the budget that is not carrying a claim. */
+.burden-release { color: var(--muted); font-size: 0.85rem; margin: 0.2rem 0 0.5rem; }
+.burden-question { color: var(--muted); margin: 0.4rem 0 0.5rem; }
+.burden-bars { margin-top: 0.6rem; }
 
 .burden-toggle { display: inline-flex; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .burden-toggle-btn {
@@ -1204,6 +1255,21 @@ main.wide { max-width: 96rem; }
 .burden-bar-value { font-variant-numeric: tabular-nums; font-size: 0.88rem; text-align: right; }
 /* ⚠ ON EVERY BAR, because the bar is the part that gets screenshotted. */
 .burden-bar-badge { display: block; color: var(--muted); font-size: 0.7rem; letter-spacing: 0.02em; }
+
+/* ⚠⚠ D-152 — THE DISCLAIMER MOVES BESIDE THE FIGURE AND STAYS ON EVERY BAR. This is D-151's HPA
+   treatment on another block: fifteen bars each stacking their `US only — SEER/NCI` badge onto a
+   second line cost the chart ~360 px, which pushed the table below it out of reach. The badge is
+   still emitted per bar, still outside every disclosure control, still unabbreviated — it flows
+   beside the number instead of under it, which costs the reader nothing.
+   ⚠ AT THE WIDE MEASURE ONLY. Below ~1100 px this rule does not apply and the badge keeps its own
+   line, because a figure and its qualifier crushed onto one narrow line is how a disclaimer stops
+   being read — and D-149's requirement is that the qualifier travels with the datum, not that it
+   fits. */
+@media (min-width: 1100px) {
+  .burden-bar-row { grid-template-columns: minmax(11rem, 20rem) 1fr minmax(17rem, auto); }
+  .burden-bar-value { display: flex; align-items: baseline; justify-content: flex-end; gap: 0.5rem; }
+  .burden-bar-badge { display: inline; }
+}
 
 .burden-table caption {
   caption-side: top; text-align: left; color: var(--muted);
