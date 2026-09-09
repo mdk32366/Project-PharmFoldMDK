@@ -724,8 +724,20 @@ def test_d140_entry_exists_in_the_living_log():
         "D-144 must be the census structural-rank entry, not some other entry that took "
         "the number"
     )
-    assert "\n### D-145" not in log, (
-        "D-145 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ Widened again at **D-145** by ADDING, never by a `>=` — the TENTH pass. ⚠⚠ **The SECOND
+    # reserved integer to be SPENT rather than skipped** (142 was the first, the same day): 145
+    # sat in `docs/RESERVED.md` as the next free `D-`, `D-144` cited it in order to bar it, and
+    # this bar reddened **by design** when an entry claimed it. D-145 bakes the D-144
+    # structural-rank loader into the Fly serving image as one explicit `COPY` — image
+    # permanence, no pipeline field and no authority rule, so it changes nothing this suite
+    # measures. `### D-146` now takes the next-free bar.
+    assert re.search(r"^### D-145 — The D-144 loader stops living on the production host",
+                     log, re.M), (
+        "D-145 must be the image-permanence entry that bakes the structural-rank loader in, "
+        "not some other entry that took the number"
+    )
+    assert "\n### D-146" not in log, (
+        "D-146 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
 

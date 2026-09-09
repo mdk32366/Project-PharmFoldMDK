@@ -1,0 +1,466 @@
+"""D-145 — the D-144 loader is baked into the serving image. All of these must go red.
+
+⚠⚠ **The scar this suite exists for was invisible to every guard that already existed.** After
+`D-144` merged, the structural-rank loader was hand-placed on `/srv/scripts/` with `sftp` so the
+load could be run. **A rebuilt image would have dropped it** — `git show 2170bd8:Dockerfile`
+carries exactly one `COPY scripts/...` line, the ingest's, so `/srv/scripts/` in any rebuild
+holds exactly one file. Nothing in the gate objected, because nothing in the gate was looking
+for an *absence*.
+
+⚠ **That is the direction this suite adds.** `tests/test_serving_image_contents.py` holds the
+UPPER bound — the scripts in the image are a subset of the permitted ones — and **a subset test
+is satisfied perfectly by an empty set**. Deleting the `COPY` line keeps it green. So the
+property the GO asks for (*"must go red if the COPY line is removed"*) needed a **positive**
+assertion, and it is here and in `tests/test_image_contents.py`.
+
+⚠ **What this suite CANNOT establish, said plainly rather than implied away.** No docker daemon
+runs in the gate, so nothing here proves the *built image* contains the file. These are
+assertions about the **declaration** — the `Dockerfile` names it, the build context admits it,
+the file exists so the `COPY` is not a typo. The build is the other half of the proof, and it is
+a loud half: a `COPY` of a path `.dockerignore` excludes fails the build rather than shipping
+nothing.
+
+Tree properties throughout, never a `git diff` against `origin/main` — the gate checks out a
+merge ref at depth 1, so a diff-based check would pass by erroring (D-139's precedent).
+"""
+
+from __future__ import annotations
+
+import hashlib
+import pathlib
+import re
+
+import pytest
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+DOCKERFILE = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+DOCKERIGNORE = (ROOT / ".dockerignore").read_text(encoding="utf-8")
+FLY_TOML = (ROOT / "fly.toml").read_text(encoding="utf-8")
+LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
+RESERVED = (ROOT / "docs" / "RESERVED.md").read_text(encoding="utf-8")
+
+LOADER = "scripts/census_structural_rank.py"
+INGEST = "scripts/census_ingest_features.py"
+
+#: The scripts the serving image is permitted to hold, in the order they are copied.
+BAKED = (INGEST, LOADER)
+
+
+def _instructions(text: str) -> list[str]:
+    """Dockerfile INSTRUCTION lines only. A comment is a line whose first non-whitespace
+    character is `#`; inline `#` is not a comment in Dockerfile syntax. ⚠ Stripping comments is
+    not tidiness — every comment in this file *discusses* the things the assertions forbid, so a
+    grep over the raw text is satisfied by the prose that warns against them (F-044)."""
+    return [ln.strip() for ln in text.splitlines()
+            if ln.strip() and not ln.lstrip().startswith("#")]
+
+
+def _runtime_instructions() -> list[str]:
+    """Instructions from the LAST ``FROM`` onward — the runtime stage. Stage 1 is the Node
+    builder, and DEP-001's rules are about what *runs*."""
+    lines = _instructions(DOCKERFILE)
+    last_from = max(i for i, ln in enumerate(lines) if ln.upper().startswith("FROM "))
+    return lines[last_from:]
+
+
+def _copy_sources(lines: list[str]) -> list[str]:
+    out: list[str] = []
+    for line in lines:
+        if not line.upper().startswith("COPY "):
+            continue
+        parts = [p for p in line.split()[1:] if not p.startswith("--")]
+        out.extend(parts[:-1])
+    return out
+
+
+# ─────────────── T-1252 — the COPY is present, named, and one file at a time
+
+
+@pytest.mark.parametrize("rel", BAKED)
+def test_the_runtime_stage_names_each_baked_script_as_its_own_copy(rel):
+    """⚠ The GO's exact shape: *one explicit COPY, not `COPY scripts/`.* Asserted per file, so
+    the failure message says WHICH one went missing rather than that a set changed size."""
+    expected = f"COPY {rel} ./scripts/"
+    assert expected in _runtime_instructions(), (
+        f"D-145: the runtime stage must carry `{expected}` verbatim — and an absent COPY is "
+        f"invisible to every subset guard in tests/test_serving_image_contents.py"
+    )
+
+
+def test_the_loader_is_baked_in_and_this_is_the_assertion_the_scar_needed():
+    """⚠⚠ THE ONE THE OPS SCAR ASKS FOR. Delete the loader's `COPY` line and this reddens;
+    `test_only_the_allowed_scripts_are_copied` stays green, because `{ingest} ⊆ {ingest, loader}`
+    is true. **A set bound cannot see an absence**, and the absence is what happened."""
+    assert f"COPY {LOADER} ./scripts/" in _runtime_instructions()
+    assert (ROOT / LOADER).is_file(), (
+        f"{LOADER} is copied into the image but does not exist — that fails the BUILD during a "
+        f"deploy, not here, so it is caught here instead"
+    )
+
+
+def test_the_scripts_directory_is_never_copied_and_the_fitter_never_ships():
+    """⚠ The bar the growing file list must not become. `D-079` dec 1 bars a refit outright and
+    `scripts/fit_scorer.py` IS the fitter — `COPY scripts/` would leave a barred operation one
+    `fly ssh` away behind no guard at all.
+
+    ⚠⚠ **Measured under revert, and it is the DIRECTORY bar that protects the fitter — not the
+    by-name check that reads as though it did.** With the copy broadened to `COPY scripts/`,
+    `test_no_writing_script_reaches_the_image` and `test_the_fitter_is_named_and_absent` **both
+    stay green**: a Dockerfile COPY yields its *source token*, which for a directory is
+    `scripts/` and never `scripts/fit_scorer.py`, so the intersection against `WRITERS` is empty.
+    A guard that names the fitter cannot see the copy that ships it. Both halves are asserted
+    here — the directory bar first, because it is the one that bites.
+    """
+    sources = _copy_sources(_instructions(DOCKERFILE))
+    bad = [s for s in sources if s.rstrip("/.") == "scripts" or s.startswith("scripts/*")]
+    assert not bad, f"D-145: a scripts DIRECTORY is copied ({bad}) — never the directory"
+    assert set(s for s in sources if s.startswith("scripts/")) == set(BAKED), (
+        f"the scripts entering the image must be exactly {list(BAKED)}; "
+        f"found {sorted(s for s in sources if s.startswith('scripts/'))}"
+    )
+    assert "fit_scorer" not in "\n".join(_instructions(DOCKERFILE)), (
+        "D-079 dec 1: the fitter must never reach the production host"
+    )
+
+
+def test_the_build_context_re_includes_exactly_the_two_named_files():
+    """⚠⚠ The half of the shape that reads as optional and is not. `scripts/` is excluded from
+    the build CONTEXT, so a `COPY` with no matching `!` line names a path docker cannot see and
+    **fails the build** — during a deploy, because no daemon runs in the gate. `b2196e9` shipped
+    the ingest's `Dockerfile` line, its `.dockerignore` negation and its test in ONE commit for
+    exactly this reason, and this test is why that stays true of the second file."""
+    lines = [ln.strip() for ln in DOCKERIGNORE.splitlines()
+             if ln.strip() and not ln.strip().startswith("#")]
+    assert "scripts/" in lines, "`scripts/` must stay excluded from the build context"
+    negations = {ln[1:] for ln in lines if ln.startswith("!")}
+    assert {n for n in negations if n.startswith("scripts/")} == set(BAKED), (
+        f"the context must re-include exactly {list(BAKED)} — never a pattern, never the "
+        f"directory; found {sorted(n for n in negations if n.startswith('scripts/'))}"
+    )
+
+
+# ─────────────── the CSVs are not re-copied, and the paths resolve on the machine
+
+
+def test_no_csv_is_re_copied_for_the_loader():
+    """⚠ Hard stop from the GO. `COPY data/ ./data/` already ships them; a second, narrower copy
+    aimed at `data/census/` would be two paths to one artefact — `F-014`'s class, which this log
+    has now recorded ten times."""
+    data_copies = [s for s in _copy_sources(_instructions(DOCKERFILE))
+                   if s.split("/")[0] == "data"]
+    assert data_copies == ["data/"], (
+        f"data/ must be copied exactly once and as the whole directory; found {data_copies}"
+    )
+
+
+def test_the_loader_and_its_population_resolve_under_srv_without_a_path_constant_moving():
+    """⚠ A loader that cannot find its inputs is worse than one that is absent, so the path is
+    derived here rather than asserted as a string in a comment.
+
+    `WORKDIR /srv` + the loader's own two-parents rule puts it at
+    `/srv/scripts/census_structural_rank.py`; the formula module's two-parents rule puts its
+    population at `/srv/data/census/census_manifest.v7.csv`. **Both are the repo's own relative
+    shape**, which is precisely why baking the file in changes no constant.
+    """
+    assert "WORKDIR /srv" in _runtime_instructions()
+
+    loader_src = (ROOT / LOADER).read_text(encoding="utf-8")
+    assert "pathlib.Path(__file__).resolve().parent.parent" in loader_src, (
+        "the loader's repo root is the file's grandparent — if that rule changes, /srv/scripts/ "
+        "stops resolving to /srv and the population path moves with it"
+    )
+
+    formula_src = (ROOT / "core" / "census_structural.py").read_text(encoding="utf-8")
+    assert '_ROOT / "data" / "census" / "census_manifest.v7.csv"' in formula_src
+
+    for rel in ("data/census/census_manifest.v7.csv", "data/adc_reference_mapping.csv"):
+        assert (ROOT / rel).is_file(), f"{rel} must exist under data/ — COPY data/ is what ships it"
+
+
+def test_the_fly_volume_is_not_the_images_data_directory():
+    """⚠⚠ `/srv/data` and `/data` are one path segment apart in a way that reads as a typo. The
+    Volume holds fold artifacts (`D-031`); the census CSVs live in the IMAGE. An edit that
+    "corrected" one to the other would move the loader's population onto a volume that has never
+    held it."""
+    assert re.search(r'destination\s*=\s*"/data/artifacts"', FLY_TOML), (
+        "fly.toml's mount destination moved — the /srv/data vs /data/artifacts distinction this "
+        "suite records is stated against that line"
+    )
+    assert '"/srv' not in FLY_TOML, "the Fly Volume must never be mounted inside /srv"
+
+
+# ─────────────── hard stops: D-144 stands, and nothing is run
+
+
+#: sha256 over LF-normalised bytes (RESERVED.md's hash-discipline ruling) of the D-144 surface as
+#: it merged at `2170bd8`. ⚠ A pin, not a hope: this PR is image permanence, so a byte moving in
+#: any of these files means the PR is no longer what its entry says it is.
+D144_SURFACE = {
+    "core/census_structural.py":
+        "c859da97f73d9da2628a59dc091f7fbcbd8944d0eebba9096e6b011b62ba12c7",
+    "app/census_structural_read.py":
+        "7f581c690ebc95bceb532f0554e97d7499add4c327fcf15802ec406b69bdef6b",
+    "scripts/census_structural_rank.py":
+        "ef222d19b2c15777ee65736bdc8f7b57b9ed65be990a1ae71a260dbbc7bbafe0",
+    "db/migrations/versions/0012_census_structural_rank.py":
+        "8a4a3d49498147ce070798665f53350d335c608b5da41c2d5c6833228a2dfdf0",
+    "app/read_routes.py":
+        "ceebaf0e6fe39130b8398276a30d58e10a1b541b2d38e3164e20003fce6e1856",
+    "db/models.py":
+        "8be971fb840d37f024e14746ad321f128b7420ca8bbc80033c5952b34348368d",
+}
+
+
+@pytest.mark.parametrize("rel,digest", sorted(D144_SURFACE.items()))
+def test_no_formula_schema_or_route_byte_moved(rel, digest):
+    """⚠⚠ *"No formula/schema/route change — D-144 stands"*, as a property rather than an
+    intention. ⚠ Normalised line endings, per `RESERVED.md`'s hash-discipline ruling: git's
+    `LF→CRLF` conversion on checkout means a committed file's delivered bytes differ from its
+    committed ones, and a rule that raises a false alarm on every checkout trains its readers to
+    ignore it."""
+    raw = (ROOT / rel).read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(raw).hexdigest() == digest, (
+        f"{rel} changed — D-145 is image permanence only; a formula, schema or route edit "
+        f"belongs to a different entry with its own ruling"
+    )
+
+
+def test_nothing_in_this_pr_runs_the_loader():
+    """⚠ Hard stop from the GO: **no ops `--load`**. The ranking is already loaded on Fly, and a
+    rerun would mark the live `valid` run `superseded` and insert a fresh one for no reason —
+    a change to served data wearing a packaging PR's clothes.
+
+    ⚠ The image gives the loader its CODE, never a credential: `--load` needs a `DATABASE_URL`
+    that only Fly holds. That separation is the same one `D-144` recorded when it shipped
+    `result_status: not_run` rather than claiming a rank.
+    """
+    instructions = _instructions(DOCKERFILE)
+    for line in instructions:
+        verb = line.split()[0].upper()
+        if verb in ("RUN", "CMD", "ENTRYPOINT"):
+            assert "census_structural_rank" not in line, (
+                f"the image must not EXECUTE the loader, only carry it: {line}"
+            )
+    assert any(ln.startswith("CMD [\"uvicorn\"") for ln in instructions), (
+        "the container's command is still uvicorn — D-145 adds a file, not a startup step"
+    )
+    workflows = ROOT / ".github" / "workflows"
+    for path in sorted(workflows.glob("*.yml")) + sorted(workflows.glob("*.yaml")):
+        assert "census_structural_rank" not in path.read_text(encoding="utf-8"), (
+            f"{path.name} references the loader — CI must not run an ops load"
+        )
+
+
+def test_no_gpu_world_and_no_worker_entered_the_image():
+    """⚠ DEP-001 / D-004 / D-018, restated because this PR touches the `Dockerfile` at all."""
+    lowered = "\n".join(_instructions(DOCKERFILE)).lower()
+    for forbidden in ("torch", "transformers", "bitsandbytes", "streamlit",
+                      "copy worker", "add worker"):
+        assert forbidden not in lowered, f"DEP-001: {forbidden!r} must not be in the image"
+    assert "worker/" in DOCKERIGNORE, ".dockerignore must keep worker/ out of the context"
+
+
+# ─────────────── the living log leads it, and the id guards were widened by ADDING
+
+
+def _d145_entry() -> str:
+    """The D-145 entry only, bounded by the NEXT `### ` heading whatever it is."""
+    start = LOG.index("\n### D-145 —") + 1
+    nxt = re.search(r"^### (?!D-145\b)", LOG[start + 1:], re.M)
+    return LOG[start: start + 1 + nxt.start()] if nxt else LOG[start:]
+
+
+def test_the_log_entry_exists_exactly_once_and_leads_the_log():
+    """⚠ The check is the `### D-145` HEADING, never a citation of it (D-062 / method-note item
+    7). PR #90 named `D-062` in its title and added no entry, and thirteen later citations
+    treated the missing entry as settled authority."""
+    assert re.search(r"^### D-145 — The D-144 loader stops living on the production host",
+                     LOG, re.M)
+    assert len(re.findall(r"^### D-145 —", LOG, re.M)) == 1, "exactly one D-145 entry"
+    assert LOG.index("### D-145 —") < LOG.index("### D-144 —"), "newest first"
+
+
+def test_the_entry_leads_with_what_this_build_could_not_verify():
+    """⚠⚠ D-016, and the disqualifying fact first: no image was built here. A packaging entry
+    that reads as though it had verified the artefact is the `F-047` shape — clean, plausible,
+    and about a different thing than it appears to be."""
+    lowered = " ".join(_d145_entry().split()).lower()
+    assert "docker" in lowered, "the absent daemon must be named"
+    assert "which docker flyctl fly psql" in lowered, "the command behind the claim, not a summary"
+    assert "declaration" in lowered, "what IS established must be distinguished from what is not"
+    assert "no fly credential" in lowered, "the second absence, which bounds the ops-scar claim"
+
+
+def test_the_entry_records_the_ops_scar_as_reported_rather_than_observed():
+    """⚠ The scar is Trinity's word and cannot be checked from here — no Fly credential, so
+    `/srv/scripts/` is unreadable from this build. **What IS checkable is the hazard**, and the
+    entry has to separate the two rather than let a report read as a measurement (`F-022`)."""
+    flat = " ".join(_d145_entry().split())
+    lowered = flat.lower()
+    assert "kaylee" in lowered and "sftp" in lowered
+    assert "/srv/scripts/" in flat
+    assert "reported" in lowered, "a report must be labelled as one"
+    assert "2170bd8" in flat, "the tree the hazard was measured against must be named"
+
+
+def test_the_entry_states_the_two_line_shape_and_its_precedent():
+    """⚠ The `.dockerignore` half is the one that reads as optional. The entry states it, and
+    names `b2196e9` — the commit that shipped the ingest's three files together — rather than
+    asserting the shape from memory."""
+    flat = " ".join(_d145_entry().split())
+    lowered = flat.lower()
+    assert "b2196e9" in flat, "the precedent commit must be named, not alluded to"
+    assert ".dockerignore" in flat
+    assert "fails the build" in lowered
+    assert "no docker daemon runs in ci" in lowered or "no docker daemon" in lowered
+
+
+def test_the_entry_carries_a_deep_learning_justification():
+    """⚠ CLAUDE.md's prime directive — and the honest form for a packaging PR: it adds no deep
+    learning, and it protects the reproducibility of the one learned factor in a served number.
+    An entry claiming new deep learning here would be the over-claim; an entry claiming none is
+    relevant would be missing why the rule exists."""
+    entry = _d145_entry()
+    assert "Deep-learning justification" in entry
+    lowered = " ".join(entry.split()).lower()
+    assert "esmfold" in lowered and "plddt" in lowered
+    assert "score_model" in lowered, "the factor the network supplies must be named"
+    assert "adds no deep learning" in lowered, "the honest limit, stated rather than implied"
+
+
+def test_the_entry_states_the_hard_stops_from_the_go():
+    lowered = " ".join(_d145_entry().split()).lower()
+    for claim, why in (
+        ("copy scripts/", "the wholesale copy must be named as refused"),
+        ("fit_scorer.py", "the fitter must be named, not left to a category"),
+        ("d-079", "the ruling that bars the refit"),
+        ("--load", "the ops step this PR does not take"),
+        ("/srv/data/census/census_manifest.v7.csv", "the population path on the machine"),
+        ("/data/artifacts", "the volume it must not be confused with"),
+        ("f-014", "the duplicate-path class a second CSV copy would join"),
+    ):
+        assert claim in lowered, why
+
+
+def test_the_entry_records_that_its_own_invariant_prediction_was_wrong():
+    """⚠⚠ `D-016` / `F-044`: this entry predicted the citation-invariant output and the
+    prediction was wrong — `origin/main` reports `['D-131', 'F-067']`, not a hole containing 145,
+    because the RESERVED row is exactly what kept 145 resolved. **The wrong reading is kept
+    beside the measured one** (D-129-C), because an entry that silently replaced it would read
+    as though the checker had agreed with it all along."""
+    flat = " ".join(_d145_entry().split())
+    lowered = flat.lower()
+    assert "was wrong" in lowered, "the failed prediction must be recorded, not overwritten"
+    assert "['d-131', 'f-067']" in lowered, "the measured output, quoted"
+    assert "caught this pr" in lowered, "the direction of the catch is the point"
+
+
+def test_the_next_free_integer_is_named_and_barred_across_every_guard():
+    """⚠⚠ The TENTH pass through this resolution, and the SECOND reserved integer to be SPENT
+    rather than skipped (`D-142` was the first, the same day).
+
+    **Bar OR name, never neither.** While an integer is unspent every enumerated guard must bar
+    it; once an entry spends it, every guard must assert THAT ENTRY by heading. The third state —
+    neither barred nor named — is how the #266/#267 collision got in, and it stays forbidden.
+
+    ⚠⚠ **The bar is matched on `\\n### D-NNN" not in`, WITH the newline, and the first draft of
+    this test matched without it and reported a contradiction that was not there.**
+    `tests/test_d143_track_b_structural_only.py` is the meta-guard: it holds
+    `'### D-145" not in'` as *data*, to check the other files, so a newline-less pattern found a
+    "bar" in the very file whose job is to look for one and declared it both barring and naming.
+    A guard that cannot tell an assertion from a string describing an assertion is the `F-026`
+    shape — a check that shares its subject's vocabulary.
+    """
+    ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
+    assert 145 in ids
+    assert "\n### D-146" not in LOG, (
+        "D-146 is the next free integer and must stay unspent until an entry claims it by name "
+        "— never admitted by a `>=`"
+    )
+
+    guards = (
+        "tests/test_d129_phase5_named_refuse_spec.py",
+        "tests/test_d130_residual_rmsd_spec.py",
+        "tests/test_d136_cancer_type.py",
+        "tests/test_d139_served_path_flip.py",
+        "tests/test_d140_pipeline_programme.py",
+        "tests/test_d141_land_confidence_kabsch.py",
+        "tests/test_d143_track_b_structural_only.py",
+        "tests/test_d144_census_structural_rank.py",
+    )
+    for rel in guards:
+        text = (ROOT / rel).read_text(encoding="utf-8")
+        barred = r'\n### D-145" not in' in text
+        named = "D-145 — The D-144 loader stops living on the production host" in text
+        assert barred or named, (
+            f"{rel} neither bars 145 nor names the entry that spends it"
+        )
+        assert not (barred and named), (
+            f"{rel} both bars 145 and names an entry for it; both cannot be true"
+        )
+        assert r'\n### D-146" not in' in text, (
+            f"{rel} does not bar the next free integer"
+        )
+
+
+def test_the_reserved_row_is_retired_marker_safe_and_146_has_a_row():
+    """⚠⚠ MARKER-SAFE, and the reason is another suite's guard rather than a style preference.
+    `tests/test_d144_census_structural_rank.py` locates this row with
+    `re.search(r"^\\| \\*\\*D-145\\*\\*", …)`, so striking the marker to `~~**D-145**~~` — the
+    convention `~~**D-143**~~` uses — would break that guard instead of satisfying it. The `D-142`
+    row records the same trap of itself, in the open."""
+    assert re.search(r"^\| \*\*D-145\*\*", RESERVED, re.M), (
+        "the D-145 row must keep its literal marker; retirement is recorded INSIDE the cell"
+    )
+    assert "~~**D-145**~~" not in RESERVED, (
+        "striking the D-145 marker breaks tests/test_d144_census_structural_rank.py's lookup"
+    )
+    row = next(ln for ln in RESERVED.splitlines() if ln.startswith("| **D-145**"))
+    assert "WRITTEN" in row, "the retired row must say it was written"
+    assert "Original reservation text" in row, (
+        "the original reservation is provenance and is kept, not replaced (D-129-C)"
+    )
+    assert re.search(r"^\| \*\*D-146\*\*", RESERVED, re.M), (
+        "D-146 is cited in order to bar it, so it must be a RESERVED row or the citation "
+        "invariant has a hole indistinguishable from D-062's"
+    )
+
+
+def test_the_citation_invariant_holds_on_this_branch():
+    """⚠ `RESERVED.md`'s own command, run rather than quoted. **Read the output, not an exit
+    code**: the only passing result is that nothing new is unresolved. `D-131` (the suffix half
+    of `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing."""
+    defined = set(re.findall(r"^### ([DFS]-\d+|DEP-\d+|A-\d+)", LOG, re.M))
+    reserved = set(re.findall(r"^\| \*\*([DFA]-\d+)\*\*", RESERVED, re.M))
+    cited = set(re.findall(r"\b(?:D|F|S|DEP|A)-\d{3}\b", LOG + ARCH))
+    assert sorted(cited - defined - reserved) == ["D-131", "F-067"], (
+        f"the citation invariant moved: {sorted(cited - defined - reserved)}"
+    )
+
+
+def test_the_architecture_doc_records_the_baked_paths():
+    """⚠ CLAUDE.md rule 2: a PR that changes deployment shape updates `ARCHITECTURE.md` in the
+    same PR, and before the PR is filed."""
+    flat = " ".join(ARCH.split())
+    assert "/srv/scripts/census_structural_rank.py" in flat
+    assert "/srv/data/census/census_manifest.v7.csv" in flat
+    assert "/data/artifacts" in flat, "the volume the image data dir is NOT must stay named"
+    assert "D-145" in flat
+
+
+def test_the_test_plan_carries_the_d145_addendum_on_an_id_nobody_else_holds():
+    """⚠ T-ids have collided four times in six days here. The check is that this addendum's id
+    appears in NO other addendum, not merely that a number was chosen."""
+    plan = (ROOT / "docs" / "Test_Plan.md").read_text(encoding="utf-8")
+    start = plan.index("### D-145 (this PR;")
+    nxt = plan.index("## Addendum", start)
+    mine, others = plan[start:nxt], plan[:start] + plan[nxt:]
+    assert "(this PR; T-1252)" in mine
+    assert "| **T-1252** |" in mine, "T-1252 has no row in the D-145 addendum"
+    assert "| **T-1252** |" not in others, (
+        "T-1252 is claimed by another addendum as well — the collision is not resolved"
+    )
+    assert "no docker daemon" in mine.lower(), (
+        "the addendum must state what these tests cannot establish"
+    )

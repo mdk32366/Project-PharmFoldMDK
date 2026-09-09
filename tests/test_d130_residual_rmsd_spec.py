@@ -340,12 +340,13 @@ def test_d130_is_the_next_free_decision_id():
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
     assert [i for i in ids if i > 130] == [
-        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144
+        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141, D-142, D-143 and D-144 — ⚠ 142 is no longer "
-        f"absent: docs/RESERVED.md reserved it and the /targets columns entry is the "
-        f"holder that wrote it, so it is ADDED here beside 143; found {ids[-12:]}"
+        f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144 and D-145 — ⚠ 142 is no "
+        f"longer absent: docs/RESERVED.md reserved it and the /targets columns entry is the "
+        f"holder that wrote it, so it is ADDED here beside 143; ⚠ 145 was reserved the same "
+        f"way and is ADDED beside 144 by the image-permanence entry; found {ids[-13:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "
@@ -390,8 +391,21 @@ def test_d130_is_the_next_free_decision_id():
         "D-144 must be the census structural-rank entry, not some other entry that took "
         "the number"
     )
-    assert "\n### D-145" not in LOG, (
-        "D-145 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ Widened again at **D-145** — to `[…, 142, 143, 144, 145]` — for the TENTH time, and by
+    # ADDING as every pass before it. ⚠⚠ **The SECOND reserved integer to be SPENT rather than
+    # skipped** (142 was the first, the same day): 145 sat in `docs/RESERVED.md` as the next free
+    # `D-`, `D-144` cited it in order to bar it, and this bar reddened **by design** when an entry
+    # claimed it. D-145 bakes the D-144 structural-rank loader into the Fly serving image as one
+    # explicit `COPY` — image permanence, no formula, no route, no schema, no threshold — so it
+    # touches nothing this suite measures and is named only because this is an enumerated id
+    # check. `### D-146` now takes the next-free bar; no bar was deleted, each became a name.
+    assert re.search(r"^### D-145 — The D-144 loader stops living on the production host",
+                     LOG, re.M), (
+        "D-145 must be the image-permanence entry that bakes the structural-rank loader in, "
+        "not some other entry that took the number"
+    )
+    assert "\n### D-146" not in LOG, (
+        "D-146 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
