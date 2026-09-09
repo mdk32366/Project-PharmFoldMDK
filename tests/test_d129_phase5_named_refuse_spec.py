@@ -462,10 +462,10 @@ def test_d129_is_the_next_free_decision_id():
     # an open-PR check cannot see what an authority outside the tree is holding. 142 stays
     # registered in `docs/RESERVED.md` and BARRED below; `### D-144` takes the next-free bar.
     assert [i for i in ids if i > 129] == [
-        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143
+        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144
     ], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141, D-142 and D-143 — ⚠ 142 is no longer "
+        f"D-137, D-138, D-139, D-140, D-141, D-142, D-143 and D-144 — ⚠ 142 is no longer "
         f"absent: docs/RESERVED.md reserved it and the /targets columns entry is the "
         f"holder that wrote it, so it is ADDED here beside 143; found {ids[-13:]}"
     )
@@ -498,10 +498,30 @@ def test_d129_is_the_next_free_decision_id():
         "D-142 is the recorded holder of the reserved integer; it must be the target-list "
         "columns entry, not some other entry that took the number"
     )
-    assert "\n### D-144" not in LOG, (
-        "D-144 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ Widened again at **D-144** — to `[…, 141, 142, 143, 144]` — for the NINTH time, and
+    # by ADDING as every pass before it. D-144 lands the census STRUCTURAL rank in the DB and on
+    # its own route (`/api/census-structural-ranking`): the DB/API half of the same
+    # structural-only ruling D-143's copy lane describes, and neither of them the cohort-82
+    # learned scorer. ⚠⚠ Its GO **assigned** it 144 while 142 and 143 were both unwritten and
+    # unpublished, so its own first draft barred `### D-142` and `### D-143` — and both then
+    # merged mid-flight (`f243f93` / `22ce1d7` / `b7d933f`), reddening those bars **exactly as
+    # they said they would**. The rebase ADDED 142, 143 and 144 by name. Nothing was relaxed to
+    # a `>=`, and `### D-145` now takes the next-free bar.
+    assert re.search(r"^### D-144 — The offline census ranking stops being a spreadsheet",
+                     LOG, re.M), (
+        "D-144 must be the census structural-rank entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-145" not in LOG, (
+        "D-145 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
+    for held in ("D-142", "D-143", "D-145"):
+        assert f"\n### {held}" not in LOG, (
+            f"{held} is unspent here — 142/143 are allocated to other lanes and 145 is the "
+            f"next free integer. Each must stay unwritten until an entry claims it by name, "
+            f"and must never be admitted by a `>=`"
+        )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 is the recorded successor id; it must be the /method contents-rail "
         "entry, not some other entry that took the number"
