@@ -76,8 +76,8 @@ const PLDDT_LENS_NOTE =
 // The Rank cell renders an integer for a ranked row and its CAUSE — a sentence — for an unranked
 // one, and nothing bounded it: `grep -n 'rank-cause\|col-rank' ui/src/styles.css` returned **zero
 // rules** before this change, so the auto table layout sized the column to the longest cause on
-// one line. The causes `rankCause` can emit are 8, 25, 28, 28, 34, 53 and **140** characters long
-// against a four-character header, and the 140 is live (IGF2R is held out AND OOM'd). ⚠ Worse in
+// one line. The causes `rankCause` can emit are 8, 25, 28, 28, 34, 53 and **144** characters long
+// against a four-character header, and the 144 is live (IGF2R is held out AND OOM'd). ⚠ Worse in
 // the state the page is actually in: with no ranking served, EVERY row renders the 34-character
 // shared cause, so the widest column was also the least informative one.
 // ⚠⚠ THE FIX IS A BOUND AND A DEMOTION, NEVER A TRUNCATION. Every cause string is unchanged and
@@ -246,9 +246,11 @@ function AssociationCell({ row, assoc, state }) {
           highest not named — the association map did not arrive in score order
         </span>
       )}
+      {/* ⚠ `\u00a0→` — a NON-BREAKING space before the arrow. With an ordinary space the arrow
+          wrapped onto a line of its own in the bounded column, which reads as a stray glyph. */}
       <span className="assoc-rest col-secondary">
         {row.id != null
-          ? <Link to={`/target/${row.id}`}>{total} →</Link>
+          ? <Link to={`/target/${row.id}`}>{total}{'\u00a0→'}</Link>
           : <>{total} — no target page to open</>}
       </span>
     </span>

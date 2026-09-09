@@ -379,6 +379,339 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-142 — `/targets` gains a Cancer association and a Description column, and the field that looked like the description was the gene symbol: the widest column on the page was holding a 144-character sentence, and the association values had been rendering with no HPA citation since D-053
+
+- **Date:** 2026-09-09
+- **Status:** Accepted as the **target-list columns GO** (Matt 2026-09-08 ~8:02 AM PT via Emma):
+  *"column one is massively wide — reclaim that space"*, plus a **cancer association** and a
+  **description** column so those facts are readable without opening 82 cards. ⚠ **List surface
+  only.** ⚠ **No new route** — `/api/coverage` gains one field and `/api/associations` gains one
+  field, both on routes that already exist and are already fetched by `TargetList.jsx`, so
+  `system-model.json` is unchanged (D-051 fires on route *sets*). ⚠ **No new cancer data of any
+  kind**: the D-053 supplier is consumed and nothing is re-derived, re-cut or re-sorted. ⚠ **No
+  ranking change, no scorer change, no migration, no ops, no fold, no GPU, no rent, no emit.**
+  ⚠ **No pLDDT is promoted to target quality** and the reserved suitability slot stays reserved
+  (D-075-gated).
+- **Ship id:** spends **`D-142`**, and it was verified rather than assumed. On `main` at tip
+  **`30f402f`** (D-141, [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
+  `grep -n '^### D-1[34][0-9]' docs/README.md` returns **`D-141`** as the highest written entry
+  (then 140, 139, 138, 137), and `gh pr list --state open` returns **three** PRs — **#222**
+  *"docs+tests: register DEP-/P-/S-, land F-067, and record a value-pin caught by its own guard"*
+  (branch `docs/registers-and-f067`), **#200** and **#197**. ⚠ Checked in the **diffs**, not
+  inferred from the titles, because that is the check D-141 recorded as the one that actually
+  works: `gh pr diff` on all three, filtered to added lines containing `### D-1NN` or `### F-1NN`,
+  returns **no added `### D-14x` heading** — #222's hits are prose *quoting* `### D-106` /
+  `### D-108` / `### D-110` while auditing the pointer invariant, and #200 / #197 add none at all.
+  ⚠⚠ **And the limit of that check is restated rather than borrowed as comfort:** an open-PR scan
+  proves no *published* branch spent 142 and **cannot prove no unpublished one did** — #263 and
+  D-139 collided precisely that way, both cutting from `dd06e9c`, both running the same command,
+  both writing `### D-139`. The enumeration in the guards is what would catch it, and this entry
+  adds `D-142` to it **by name** while barring a bare **`### D-143`**. **Never a `>=`.**
+  - ⚠ **Effect on the `docs/RESERVED.md` citation invariant: the hole MOVES, it does not grow** —
+    the opposite of D-141, and worth stating in those terms because D-141 had to report a growth.
+    Measured with the `docs/RESERVED.md` §*"How to run the check"* command: `origin/main` at
+    `30f402f` reports **`['D-131', 'D-142', 'F-067']`**; this branch reports
+    **`['D-131', 'D-143', 'F-067']`**. `D-142` is *resolved* by the heading above and `D-143` takes
+    the forward reference — a reference that announces its own absence, which is the distinction
+    `RESERVED.md` exists to draw from the D-062 defect. `D-131` (the suffix half of
+    `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched.
+- **⚠⚠ The disqualifying fact, first: the obvious field was the wrong field, and the repo's own
+  test fixture asserted the wrong belief.** The GO named `label` as the likely Description and
+  asked for it to be verified. It is **not** the description. `data/cohort_82_ecd.csv` — the
+  committed CSV `build_manifest()` reads — carries `label` and `protein_name` as **separate
+  columns**, and `label` **equals `gene` on all 82 rows** (`awk -F, 'NR>1 && $2!=$3'` returns
+  nothing; 83 lines, 82 rows plus the header). The chain to the wire is source-level and complete:
+  `build_manifest` sets `ManifestRow.label` from that column, `core/enqueue.py:222` writes it to
+  `meta["label"]`, and `app/reads.py::list_projection` serves `meta["label"]` as `label`. So
+  **shipping `label` under a "Description" header would have rendered `ADAM17` in a cell whose
+  header promised a description** — 82 times.
+  - ⚠⚠ **AND THE TRAP IS BUILT INTO THE PROJECT, NOT INTO THE GUESS.** On the *census* — the other
+    population, the other supplier — `label` really **is** the protein name
+    (`data/census/census_labels.csv`: `P51677,CCR3,C-C chemokine receptor type 3,spancache`), and
+    `CensusTable.jsx` renders it under the header **`Protein`**. One key, two populations, two
+    meanings, and nothing on either surface said so. That is **`F-049`'s family** — a word that
+    names two things on two routes — and the entry names it rather than quietly picking the right
+    column.
+  - ⚠⚠ **The strongest evidence that the guess was reasonable is that this repository had already
+    made it.** `ui/src/components/TargetList.search.test.jsx` fixtures the cohort list payload with
+    `label: 'Nectin-4'`, `label: 'Receptor tyrosine-protein kinase erbB-2'` and
+    `label: 'Cation-independent M6P receptor'` — three human descriptions the live route does not
+    serve. Nothing was wrong with those tests (they test the *search box*, and `label` is a matched
+    field either way), but **a fixture is not the data**, and a reader checking "is `label` a
+    description?" against the test suite would have got a confident yes. ⚠ The fixture is left
+    standing: correcting it is not this PR's subject and rewriting it would erase the evidence.
+  - **So the Description comes from `protein_name`**, added to `ManifestRow` and served on
+    `/api/coverage`'s per-target rows. Three reasons it is that supplier and not `/api/analyses`:
+    the light list's field set is **EXACT by ruling** (D-034 dec 1, pinned as `LIST_FIELDS` in
+    `tests/test_read_routes.py` — it is what stops `sequence` returning by accident); the value is
+    **not in the DB at all** (`meta` never carried it, so serving it there would mean a backfill);
+    and coverage is **manifest-derived**, which matters because `FAT2` and `MUC16` have **no
+    `protein_analyses` row** — a DB-sourced description would have been blank for exactly the two
+    rows a reader is most likely to be puzzled by. `TargetList.jsx` already fetches `/api/coverage`
+    for the absent-value reasons, so the join is the existing D-068 `TargetScorerPanel` pattern and
+    costs no request.
+- **⚠⚠ The second finding, and it is a licence one: `/api/associations` has never served an
+  attribution, and the D-053 card has been rendering HPA content uncited since D-053.**
+  `core/cancer_associations.py::load_associations` returns
+  `source · method · cutoff · pair_count · targets_covered · cohort_size · unmatched_symbols ·
+  associations` — **no `attribution` key**, verified by reading the return dict and by
+  `grep -n attribution core/cancer_associations.py app/read_routes.py`, which returned nothing.
+  And `CancerAssociations.jsx` renders `<HpaDeepLink attribution={data.attribution} …>`, where
+  `HpaDeepLink` opens `if (!attribution) return null`. **So the prop was `undefined` on every
+  render and the citation was never emitted** — while `D-100` had already established that
+  Kathad's S3 is a **verbatim extract of `pathology.tsv`, 1,640 / 1,640 rows**, i.e. every
+  `qh_score` on that card is HPA content, and HPA words citation as a **precondition**: *"be sure
+  that our content is never displayed in the absence of such citation."*
+  - ⚠⚠ **Why every guard we had missed it, stated as the shape and not as an excuse.** PC3
+    (`HpaAttribution.test.jsx` §*"no HPA-rendering surface escapes the audit"*) asserts that each
+    covered component **imports** the attribution — and `CancerAssociations.jsx` does. Its sibling
+    `HpaAttribution.split.test.jsx` already records the next level down — *"a file-level guard
+    cannot see which BRANCH renders the value"* — and this is **the same shape one level further
+    out, at the PROP**: the right branch renders, the import is present, and the value handed in
+    is `undefined`. ⚠ `CancerAssociations.test.jsx`'s `BASE` fixture carries no `attribution`
+    either, so the suite reproduced the live payload faithfully and asserted nothing about it.
+  - **Fixed here because this PR could not honestly proceed without it.** The list column renders
+    the same HPA-derived tumour types, so it needs an attribution to render them beside; supplying
+    one for the list and leaving the card uncited would have been indefensible.
+    `/api/associations` now carries **`attributions`, one `attribution_block(symbol,
+    "pathology")` per covered symbol**, and the card reads `data.attributions?.[symbol]`.
+  - ⚠ **Per SYMBOL, not one block for the map, and the alternative was rejected for a stated
+    reason.** Element 4 (the deep link) is a property of the **datum**; a single map-level block
+    would have to carry `deep_link: null` with the reason *"no gene symbol on this record"* — true
+    of the map and **false on any card that rendered it**. All **82 of 82** cohort symbols resolve
+    an ENSG, so every block carries a real `v22.proteinatlas.org/<ENSG>-<GENE>/pathology` link
+    (measured: `[k for k, v in attributions.items() if not v['deep_link']]` is empty).
+  - **⚠ The payload cost is measured, not waved through** (D-137's discipline). `json.dumps` of the
+    `/api/associations` body: **17,952 → 56,498 bytes raw (+38,546)**, **2,148 → 4,039 bytes
+    gzipped (+1,891)**. The raw growth is 82 copies of the same three source-level constants, which
+    is why gzip absorbs it. ⚠ Splitting elements 1–3 off onto a single root key to avoid the
+    repetition **was considered and refused**: `attribution_block`'s docstring makes "all four
+    travel together" a named guard, *"a surface that received three of them could render three and
+    look attributed"* — and that is precisely the failure this section is reporting.
+- **⚠⚠ Column one, measured before it was changed.** The fat column is the **Rank** column, and it
+  is fat because it holds prose: a ranked row shows an integer, an unranked row shows its **cause**
+  (`rankCause`). Before this PR **`ui/src/styles.css` contained no rule for `.col-rank` or
+  `.rank-cause` at all** — `git show main:ui/src/styles.css | grep -c 'rank-cause\|col-rank'`
+  returns **`0`** — so under `table-layout: auto` the column was sized to the longest cause laid
+  out on one line. The seven causes `rankCause` can emit are **8, 25, 28, 28, 34, 53 and 144**
+  characters long, against a **4**-character header.
+  - ⚠ The **144** is live, not hypothetical: `IGF2R` is `held_out` **and** its fold died of CUDA
+    OOM, so it renders both causes plus the census-tiling clause (D-053-era rows do not; this one
+    does).
+  - ⚠⚠ **And it is worse in the state the page is usually in.** With no valid pre-registered run
+    served, `rankingServed` is false and **every** row renders the shared 34-character
+    *"no ranking run is currently served"* — so the widest column on the page was also the one
+    carrying the least per-row information.
+- **Decision.**
+  1. **Description column, sortable, from `/api/coverage`'s new `protein_name`.** `ManifestRow`
+     gains `protein_name: str | None = None` (defaulted, so it is additive to the three existing
+     constructor calls in tests) read straight from the CSV column; `_coverage_row` serves it;
+     `TargetList.jsx` joins it onto each row as `description` before sorting. ⚠ Joined onto the
+     **row**, not read inside the cell — `sortRows` reads `r[key]`, so a value living only in JSX
+     would render a sort caret that ordered by `undefined` on every row: a silent no-op wearing a
+     control. ⚠ `?? null`, never `?? ''` — an empty string is a *value* to `sortRows.isAbsent` and
+     would file the un-named rows first alphabetically instead of holding them out as a category.
+  2. **Cancer association column, and it is DELIBERATELY NOT SORTABLE, with the reason printed on
+     the page.** The cell holds a **set** of tumour types. Every scalar that could order it — the
+     leading quasi H-score, or how many types clear the cutoff — would order the cohort by an
+     **expression statistic the cell never shows**, which is the de facto ranking this very list
+     was ruled against on **2026-08-21** for mean pLDDT, and by a quantity with even less claim to
+     be the order (pLDDT at least carries 32.2% of the scorer's attribution, `F-051`; expression
+     carries none of it). ⚠ The precedent is in the file already: **Fold confidence has no sort
+     control** because it is a band *of* mean pLDDT. ⚠⚠ **An absent control with no stated reason
+     reads as an oversight**, so the reason is rendered in the column note — not left in a comment.
+  3. **The claim boundary travels to the list, in D-053's own words.** *An **expression** claim by
+     the source paper's own measure (quasi H-score above the cutoff, from HPA
+     immunohistochemistry): **not** causation, **not** a claim the target drives the disease, and
+     **not** a clinical indication.* ⚠ A reader who never opens a card must not be able to read
+     "cancer association" as causation, and the list is now where most readers will meet it first.
+     ⚠ The **cutoff is interpolated from the payload, never typed** (D-053 dec 5).
+  4. **The cell is a summary that states its own size, and ties are all shown.**
+     `ui/src/associationSummary.js` (new, unit-tested away from the DOM — the `sortRows.js` /
+     `searchRows.js` precedent) returns `{ total, top, topScore, ordered }`. The **count is what
+     stops this being a truncation**: `BTN3A3` carries **16** pairs and the cell says so, with the
+     full list one click away. ⚠ **All tied-at-top types render**, because "the top one" is not
+     well defined for the **three** targets that tie — `JAG1` three ways (Carcinoid / Stomach /
+     Thyroid at 250·0-equal leading score), `CD53` and `INSR` two each — and picking whichever the
+     CSV listed first would be an arbitrary choice presented as a measurement.
+     ⚠ **Nothing re-sorts.** `core/cancer_associations.py` orders each target's pairs by `qh_score`
+     descending **in the data contract** — deliberately not in JSX (D-053) — so a second ordering
+     here could disagree with the card. ⚠⚠ **And the order is checked, not assumed:** if a later
+     pair outscores the first, `ordered: false` and the cell says *"highest not named — the
+     association map did not arrive in score order"* rather than captioning row 0 with a
+     superlative it did not earn.
+  5. **HPA compliance is fail-closed and follows the 2026-08-21 split-by-case ruling.** Element 4
+     (the per-datum link) is **the tumour type itself as the anchor** — the `CensusTable` staining
+     cell pattern, which costs a table **zero** extra real estate. Elements 1–3 render **once**
+     beneath the table (`HpaCredit`), **if and only if a row on screen actually rendered a tumour
+     type**: filter to a tier whose rows carry no association and the credit goes with them,
+     because a citation attached to nothing is not compliance. ⚠⚠ **And a row with no attribution
+     block renders NO tumour types** — it states that the value is withheld and why. *Precondition*
+     leaves no other direction available; a failed attribution supplier costs the column its
+     values, never its honesty.
+  6. **Column one is BOUNDED AND DEMOTED, and not one character is dropped.**
+     `.target-list .col-rank` and `.rank-cause` cap the column at **9.5rem** with a **4.5rem**
+     floor — the bound sits on the inner block as well as the cell, because `max-width` on a `td`
+     alone is advisory under the auto table algorithm while a block child's capped max-content width
+     really does cap the column's contribution — and the cause renders in secondary type (0.78rem,
+     muted, non-mono, since a sentence is not a number). The table also drops to **0.92rem**,
+     matching `.census-table`'s 0.9rem and for the same reason: eight columns in a 60rem `main` is a
+     real budget, and it moves no information. ⚠⚠ **No `text-overflow`, no ellipsis, no
+     `max-height`, no clipping, no rewording of any cause string.** **Demotion is not deletion** is
+     already the standing rule on this surface, for the confidence dot; it governs here too.
+     ⚠ **The stated cost, measured in a browser rather than left for the reader to discover:**
+     `IGF2R`'s two-cause 144-character sentence wraps to **13 lines** at this width, so that one row
+     is tall. One row, every word on screen, against a column sized to that sentence for all 82.
+  7. **The two new columns are bounded for the same reason, before they become the next complaint.**
+     `.col-description` at 15rem (the longest name in the manifest is **72** characters —
+     *"Leucine-rich repeat and fibronectin type-III domain-containing protein 4"*) and
+     `.col-assoc` at 12rem.
+  8. **The row markup becomes ONE component.** `RowCells` renders all eight `<td>`s and is used by
+     both the ranked `<tbody>` and the unranked partition. ⚠ The markup was written **twice**, and
+     two copies of eight cells is a divergence waiting to happen — the next column added to one and
+     forgotten in the other would render a table whose partition shows different facts about the
+     same cohort. The `<tr>` differs (key, class), so only the cells moved.
+  9. **`description` joins the shared row matcher** (`ui/src/searchRows.js`). ⚠ **`F-052`'s shape,
+     in the PR that creates the values:** the census already searches protein names (its `label`
+     *is* the protein name), so without this the surface that just gained 82 protein names could
+     not find any of them from its own search box. A row without the key is unaffected, so this
+     widens one population's reach and changes the other's behaviour not at all.
+  10. **⚠ Three supplier states, not two, on both new columns.** *Still loading*, *the supplier
+      could not be reached* and *the supplier has nothing for this row* are three different facts,
+      and collapsing them would let an ignorance state render as a claim about the target
+      (`unknown ≠ none`, D-128 §1a's wording; `null ≠ 0` in the same breath). Every absence renders
+      its own sentence and **none of them is a bare dash**.
+- **⚠ What this does NOT do.**
+  - **Not** a new route, **not** a `system-model.json` change, **not** a migration, **not** a
+    backfill, **not** a DB write. Two existing payloads gain one field each.
+  - **Not** new cancer data. The D-053 supplier is consumed; the cutoff, the scores, the ordering
+    and the 337 pairs are its, unchanged. **No causal claim is made anywhere.**
+  - **Not** a ranking change. The default sort is still the scorer's rank, the unranked are still
+    **partitioned rather than positioned**, the pre-registered pLDDT floor of **50** is unmoved,
+    and no new axis can order the cohort — the one column added with values on every row
+    (Description) sorts **alphabetically by a name**.
+  - **Not** a deletion or a rewording of any rank cause, and **not** a truncation of anything: the
+    Description and the causes render in full, and the association cell states its own total.
+  - **Not** the suitability score. The reserved slot stays reserved (D-075-gated), and the
+    denylist test that keeps `suitability score` / `good target` / `recommended` / `promising` off
+    this list still passes — see the revert notes for how it earned its keep here.
+  - **Not** a claim about the census. `/targets` is the 82-target cohort under its own span
+    definition (D-081); nothing here reaches the census population.
+- **⚠⚠ Revert proof. `TargetList.columns.test.jsx` passed 32/32 on its first run, and that is
+  evidence about the tests and not about the code** (D-141's closing line, taken literally). So
+  each new guard was reverted deliberately and watched for **where** it reddened. **Nine deliberate
+  reverts, nine bites — plus one bite that arrived uninvited, before any new test existed.**
+  1. **⚠⚠ The `recommended` denylist bit me mid-build, before any new test existed.** The column
+     note first read *"the UniProt **recommended** protein name"* — UniProt's own term of art —
+     and `TargetList.confidence.test.jsx` went red on `/\brecommended\b/i`. It cannot tell a
+     UniProt field name from a recommendation of a target, and **per the F-009 §3 lesson recorded
+     in `ARCHITECTURE.md` the copy AVOIDS the banned vocabulary outright rather than negating
+     it**: the sentence now reads *"the protein name UniProt records for that accession"*. ⚠ A
+     guard that fires on the author before the reviewer is the cheapest evidence there is.
+  2. **`description` joined onto the row under a key `sortRows` cannot see** (`_description`), so
+     the values still render and only the ordering dies → **2 red**: the sort test and the search
+     test. ✅ The silent-no-op — a caret that reorders nothing — is asserted, not assumed.
+  3. **`?? null` relaxed to `?? ''` on the join** → red at the sort test: the un-named row sorts
+     to the front alphabetically instead of trailing as a category in both directions. ✅
+  4. **The attribution precondition removed from the association cell** (render the tumour types
+     with an empty block) → red at the fail-closed test. ✅
+  5. **The `.rank-cause` and `.col-rank` bounds deleted from `styles.css`, comments left intact**
+     → **2 red** (the rule tripwire and the numeric-ceiling test). ⚠⚠ **This is the revert that
+     had to be checked, because D-141 lost a guard to exactly it:** its `.gitignore` check read
+     the whole file and was satisfied by a *comment* containing the string it wanted — `F-044`'s
+     shape, a reference that resolves, to the wrong thing. The prose above `.rank-cause` in this
+     stylesheet contains the literal word `max-width` (it explains why the bound sits on the inner
+     block), so a naive check **would have passed with the rule gone**. The tripwire runs
+     `stripComments` and parses declarations.
+  6. **`text-overflow: ellipsis` + `overflow: hidden` + `white-space: nowrap` added to
+     `.rank-cause`** → red at the no-truncation tripwire. ✅ The bound and the clipping are
+     asserted separately, because "the column is narrower" is not the property — "the column is
+     narrower **and every character is still there**" is.
+  7. **`colSpan={COLUMNS.length}` frozen back to `colSpan={6}`** on the unranked heading → red. ✅
+     A span that lags the column count leaves the partition's own explanation mis-aligned with the
+     table it explains.
+  8. **A sort key given to the Cancer association column** → red at the no-sort test. ✅
+  9. **The three supplier states collapsed to two** (an unreached map rendering as *"no
+     association recorded"*) → **2 red**. ✅ This is the one worth having: it is the state in which
+     the page would make a false claim about 82 targets, and it is one `?.` away at all times.
+  10. **`HpaCredit` rendered unconditionally** rather than only when a row drew a tumour type →
+      red at the suppression test. ✅ A licence-required citation attached to nothing is not
+      compliance.
+- **⚠⚠ And then the page was OPENED, which found two defects the whole suite was blind to.** The
+  33 UI tests and 47 Python tests were green, and **jsdom has no layout**, so every claim the suite
+  can make about a *width* is a claim about a stylesheet rule. A real browser at 1440px was pointed
+  at the surface — the real read API, the real bundle, an in-memory SQLite seeded from the committed
+  manifest — and the two things it found are the two things a rule cannot show:
+  1. **⚠⚠ `overflow-wrap: anywhere` broke the cause MID-WORD and collapsed the column to ~45px** —
+     *"no / ranking / run is / currentl / y served"*. Two faults in one declaration: `anywhere`
+     (unlike `break-word`) shrinks an element's **min-content** size to a single character, so the
+     auto table algorithm was free to squeeze the bounded column away, and the same property is
+     what split the word. **Fixed** to `break-word` plus a `min-width` floor — and `anywhere` /
+     `word-break: break-all` are now **barred by a test**, so the specific declaration that caused
+     it cannot come back, even though the test still cannot see the pixels.
+  2. **A `7rem` floor was tried first and rejected after looking at it.** Under the default sort 37
+     rows show a one- or two-digit integer, and 7rem left a visible gap on every one of them to buy
+     a slightly shorter wrap on 45. It is **4.5rem**, and the table font drops to 0.92rem.
+  ⚠ Two smaller things came out of the same look: the association cell's `→` was wrapping onto a
+  line of its own (now a non-breaking space) and the count line took three lines (the cells gained
+  their own `min-width`).
+  ⚠⚠ **One reported defect was checked and REJECTED, and the check is the point.** A review of the
+  screen recording reported that on the `/target/:id` card the association paragraph *"renders
+  directly on top of"* the `quasi H-score` values. A **static** screenshot of the settled page shows
+  no collision at all: the report was a mid-scroll repaint artefact in a compressed video. **A
+  moving frame is not an artefact you can measure** — this is D-016's rule reaching a screenshot,
+  and "fixing" a layout bug that does not exist would have been the worse outcome.
+- **Deep-learning justification.** The network's own outputs stay the load-bearing content of this
+  surface, and this change is about stopping a **non-network** fact from crowding them out: the
+  Rank column is the **scorer's** ordering over ESMFold-derived features (`F-051`:
+  `membrane_proximal_plddt` at **32.2%** of the attribution, computed from per-residue pLDDT), and
+  the column that rendered *why a row has no such ordering* had grown wider than every column
+  carrying a model output. Bounding it puts mean pLDDT, the fold-confidence band and the rank
+  integer back in the reader's first glance. ⚠ And the new columns are held to the same line the
+  rest of the surface is: **an expression measurement from immunohistochemistry is not a model
+  output and is never allowed to read as one** — it gets its own vocabulary and its own claim
+  boundary, it is not blended into any score (D-028), and it is **not sortable**, so it cannot
+  become an order that competes with the one the network actually produced.
+- **Consequences.** `core/manifest.py` (`ManifestRow.protein_name`, read in `build_manifest`, plus
+  the `label`-is-the-gene warning on the field itself), `app/reads.py` (`_coverage_row` serves
+  `protein_name`), `app/read_routes.py` (`_association_attributions` + `/associations` serves
+  `attributions`), `ui/src/associationSummary.js` (new) + `ui/src/associationSummary.test.js`
+  (new), `ui/src/components/TargetList.jsx` (two columns, `RowCells`, the column note, the three
+  supplier states, the HPA credit), `ui/src/components/CancerAssociations.jsx` (reads
+  `attributions[symbol]` — the uncited-card fix), `ui/src/searchRows.js` (`description` matched),
+  `ui/src/styles.css` (the bounds), `ui/src/components/TargetList.columns.test.jsx` (new),
+  `tests/test_d142_targets_columns.py` (new), `ARCHITECTURE.md` (the target-list narrative and the
+  Read API row), `docs/Test_Plan.md` (the D-142 addendum), and the **six** next-free guards —
+  `tests/test_d129_phase5_named_refuse_spec.py`, `tests/test_d130_residual_rmsd_spec.py`,
+  `tests/test_d136_cancer_type.py`, `tests/test_d139_served_path_flip.py`,
+  `tests/test_d140_pipeline_programme.py` and `tests/test_d141_land_confidence_kabsch.py` —
+  widened **by enumeration** to carry `D-142` by name and to bar `### D-143`. ⚠ **Six because
+  D-141 added the sixth**, and the count is the thing most likely to be stale in this paragraph:
+  the authority is `grep -rn '### D-14' tests/`, not this list.
+  ⚠ **`ui/src/components/TargetList.search.test.jsx` is deliberately NOT edited** — see the
+  fixture note above.
+- **Cite:** Matt GO 2026-09-08 ~8:02 AM PT via Emma (*"column one is massively wide"* + the two
+  columns) · **`D-0037`** model pin (claude-opus-5, thinking, high; never Auto) · **D-053** (the
+  association supplier, its cutoff, its ordering-in-the-contract and its claim boundary — every
+  word of which is reused rather than restated) · **D-100** (S3 is a verbatim extract of
+  `pathology.tsv`, 1,640/1,640 — why the citation attaches at all) · the **2026-08-21 owner
+  ruling** on HPA attribution split-by-case (elements 1–3 once, element 4 per datum) · the
+  **2026-08-21 owner ruling** against a de facto ranking as the default order (why the association
+  column has no sort control) · **F-051** (32.2%) · **D-060 dec 5** (the pre-registered floor of
+  50, unmoved) · **D-034 dec 1** (the light list's exact field set, which is why the description
+  travels on `/api/coverage`) · **D-038** / **D-043** (the coverage supplier and its three-valued
+  `fold_status`) · **D-068** (the client-side join by accession) · **D-023 / D-024** (the manifest
+  is the cohort, computed from committed CSVs) · **F-049** (one word, two populations — `label`) ·
+  **F-052** (the convention obeyed by every caller except the newest — the search matcher) ·
+  **F-044** (a reference that resolves, to the wrong thing — why the width tripwire parses rules
+  and not prose) · **D-028** (a real distinction is not collapsed into a score) · **D-069**
+  (self-sufficient surfaces) · **D-075** (the suitability slot stays reserved) · **D-081** (the
+  cohort and the census are different span definitions) · **D-102** (a reader may choose a lens;
+  the system may not choose one and call it the order) · **D-016** (provenance — and the
+  disqualifying fact, *`label` is the gene symbol*, is stated first).
+
+---
+
 ### D-141 — The gate had nothing to answer with: a script lands the EXISTING D-126 OPS trees onto the serving volume so D-139's flip can be true of something — and the disqualifying fact is that it did not run here, because no Fly credential reached this build
 
 - **Date:** 2026-09-08

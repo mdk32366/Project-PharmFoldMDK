@@ -130,6 +130,15 @@ describe('no HPA-rendering surface escapes the audit', () => {
     // Planner's count of two missed it, and my own enumeration missed it — all three stopped at
     // the component boundary. This is the fifth surface.
     'CensusDetail.jsx',
+    // ⚠⚠ Added at D-142, ENROLLED WITH THE COLUMN rather than after a later audit found it. The
+    // target list now renders the leading tumour type(s) from the D-053 map, and D-100 settled
+    // that those are HPA content whichever route they took. It is the sixth surface, and the
+    // per-datum link is the tumour type itself (the `CensusTable` staining-cell pattern), so
+    // element 4 costs a table no width at all.
+    // ⚠ It does not touch `qh_score` — the reduction lives in `../associationSummary.js` — so the
+    // field scan below would NOT have caught it. A component can render an HPA value without
+    // naming an HPA field, which is the limit of that scan and the reason this list is manual.
+    'TargetList.jsx',
   ])
   // fields whose presence means the component renders a value ORIGINATING in HPA
   const HPA_FIELDS = [

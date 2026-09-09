@@ -326,14 +326,23 @@ def test_d130_is_the_next_free_decision_id():
     and the rebase inserted 140 beside 141. **All three ids are named below** and
     ``### D-142`` is barred. ⚠ Six widenings, six resolutions by ADDING; a ``>=``
     would have concealed every collision above instead of catching it.
+
+    ⚠ **Widened again at D-142 — to ``[132, …, 140, 141, 142]``** — the seventh
+    pass, and the second clean one running. D-142 gives ``/targets`` a Cancer
+    association column and a Description column, and bounds the rank column that
+    had grown to hold a 144-character sentence. Cut from ``30f402f``, it ran the
+    open-PR check **and read the diffs of all three open PRs** rather than their
+    titles — the check the D-140 collision showed to be the only one that bites —
+    and found no ``### D-14x`` on any of them. **All four ids are named below** and
+    ``### D-143`` takes the bar. ⚠ Seven widenings, seven resolutions by ADDING.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
     assert [i for i in ids if i > 130] == [
-        132, 133, 134, 135, 136, 137, 138, 139, 140, 141
+        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140 and D-141; found {ids[-11:]}"
+        f"D-137, D-138, D-139, D-140, D-141 and D-142; found {ids[-12:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "
@@ -347,8 +356,12 @@ def test_d130_is_the_next_free_decision_id():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-142" not in LOG, (
-        "D-142 is the next free integer and must stay unspent until an entry claims "
+    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M), (
+        "D-142 must be the target-list columns entry, not some other entry "
+        "that took the number"
+    )
+    assert "\n### D-143" not in LOG, (
+        "D-143 is the next free integer and must stay unspent until an entry claims "
         "it by name here"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

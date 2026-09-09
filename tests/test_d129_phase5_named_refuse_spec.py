@@ -451,11 +451,21 @@ def test_d129_is_the_next_free_decision_id():
     # beside 141. ⚠⚠ **Six widenings, six resolutions by ADDING.** Not one of them was made to
     # go away with a `>=`, and a `>=` would have hidden every collision above rather than
     # catching it. All three ids are named below; a bare `### D-142` still reddens.
+    #
+    # ⚠ Widened again at **D-142** — to `[…, 140, 141, 142]` — by enumeration, for the SEVENTH
+    # time, and the SECOND clean resolution in a row. D-142 adds the Cancer association and
+    # Description columns to `/targets` and bounds the rank column. It was cut from `30f402f`
+    # with #263 and #265 both already merged, read `gh pr list --state open` (#222 / #200 / #197)
+    # **and then read all three diffs** — the check the D-140 collision proved is the one that
+    # matters — and found no branch holding a `### D-14x`. ⚠⚠ **Seven widenings, seven
+    # resolutions by ADDING.** A bare `### D-143` now takes the bar, and the limit of the
+    # open-PR check restated above stands: it proves nothing about an unpublished branch, which
+    # is exactly why this enumeration exists.
     assert [i for i in ids if i > 129] == [
-        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141
+        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142
     ], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140 and D-141; found {ids[-12:]}"
+        f"D-137, D-138, D-139, D-140, D-141 and D-142; found {ids[-13:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 is the recorded successor id; it must be the served-path flip entry, "
@@ -469,8 +479,12 @@ def test_d129_is_the_next_free_decision_id():
         "D-141 is the recorded successor id; it must be the confidence-Kabsch lander "
         "entry, not some other entry that took the number"
     )
-    assert "\n### D-142" not in LOG, (
-        "D-142 is the next free integer and must stay unspent until an entry claims it "
+    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M), (
+        "D-142 is the recorded successor id; it must be the target-list columns entry, "
+        "not some other entry that took the number"
+    )
+    assert "\n### D-143" not in LOG, (
+        "D-143 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
