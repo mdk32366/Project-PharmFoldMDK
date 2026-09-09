@@ -30,6 +30,12 @@ const META = {
   excluded_product: 'SEER Preliminary Incidence Estimates are NOT used.',
   excluded_tier: 'SEER Research Data / Research Plus (case-level microdata) is NOT used.',
   crosswalk_refused: 'No crosswalk from this surface to HPA tumour strings is offered.',
+  unmappable_hpa_sites: {
+    carcinoid: 'A HISTOLOGY, not a site.',
+    'skin cancer': 'THE DANGEROUS ONE. SEER excludes basal- and squamous-cell carcinoma.',
+    'head and neck': 'A regional grouping on neither ICD-O axis.',
+    urothelial: 'A morphology spanning bladder, renal pelvis and ureter.',
+  },
   count_population_key: {
     seer_registries: {
       text: 'New cases within the SEER registry catchment areas ONLY — not the whole United States.',
@@ -232,6 +238,23 @@ describe('CancerBurdenView — D-149', () => {
     expect(globocan).toMatch(/ABSENT rather than zero/)
     // no worldwide figure anywhere on the page
     expect(container.textContent).not.toMatch(/world(wide)? (incidence|mortality|deaths) of/i)
+  })
+
+  // ⚠⚠ THE PROTEIN CARD'S BURDEN SLOT POINTS HERE FOR "which and why", so the named list has to
+  // EXIST. A pointer to a section that was never written is D-062's defect shape in the UI.
+  it('⚠ names every unmappable atlas tumour string, because the protein card points here for them',
+     async () => {
+    getCancerBurden.mockResolvedValue(MORTALITY)
+    render(<CancerBurdenView />)
+    await waitFor(() => expect(screen.getByTestId('burden-unmappable')).toBeTruthy())
+    const listed = screen.getByTestId('burden-unmappable').textContent
+    for (const name of ['carcinoid', 'skin cancer', 'head and neck', 'urothelial']) {
+      expect(listed).toContain(name)
+    }
+    // ⚠ each one carries its REASON, not just its name: an unexplained exclusion reads as an
+    // oversight, and an oversight gets "fixed" by someone who does not know why it is there.
+    expect(listed).toMatch(/A HISTOLOGY, not a site/)
+    expect(listed).toMatch(/basal-? and squamous-cell/i)
   })
 
   it('⚠ NCI attribution and the pinned release are on the page', async () => {

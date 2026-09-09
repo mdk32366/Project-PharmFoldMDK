@@ -83,17 +83,56 @@ describe('ClinicalEdges', () => {
     // reader was being told the obstacle was permission, which obtaining a licence would not fix.
     // ⚠ Third test this week found pinning defective copy, after `App.test.jsx` and
     // `TargetList.sort.test.jsx`. A test asserting the wrong sentence defends it.
-    // ⚠⚠ THE CLAIM MOVED AGAIN, AND THE PREVIOUS ONE WAS FALSE (owner ruling, WA).
-    // "the tumour names cannot be matched up" generalised FOUR measured failures of TWENTY into a
-    // total impossibility. The invariant is what survives: state that we do not have the data,
-    // WITHOUT claiming the join is impossible and WITHOUT a count before one is measured.
-    expect(t).toMatch(/we do not have that data/i)
+    // ⚠⚠ THE CLAIM HAS MOVED TWICE AND BOTH PREVIOUS VERSIONS WERE FALSE — IN OPPOSITE
+    // DIRECTIONS. (1) "the tumour names cannot be matched up" generalised FOUR measured failures
+    // of TWENTY into a total impossibility (owner ruling, WA). (2) ⚠⚠ **D-149: "we do not have
+    // that data" became false the moment the SEER artefact landed.** US incidence and deaths ARE
+    // held (`data/burden/seer_us_cancer_burden.v1.csv`) and ARE served on `/cancer-burden`; what is
+    // missing is the JOIN from this atlas's tumour names to a registry category.
+    // ⚠⚠ THIS TEST PINNED THE FALSE SENTENCE AND WOULD HAVE DEFENDED IT — the fourth time a
+    // test in this repository has been caught doing that, after `App.test.jsx`,
+    // `TargetList.sort.test.jsx` and this file's own `/no licensed source/` assertion. So the
+    // assertion is REPLACED, and what it pins now is the distinction that matters: *not shown
+    // here* is true; *we do not have it* is not.
+    expect(t).toMatch(/not shown for this protein/i)
+    expect(t).toMatch(/what is missing here is the join/i)
     expect(t).toMatch(/some tumour names/i)
-    expect(t).toMatch(/how many is being measured/i)
-    // ⚠ no total-impossibility claim
+    // ⚠⚠ THE FALSE CLAIM IS BARRED, NOT MERELY UNASSERTED. An unasserted string comes back in
+    // the next copy edit and nothing reddens.
+    expect(t).not.toMatch(/we do not have that data/i)
+    // ⚠ and the stale progress claim goes with it: `D-093` amendment 6 MEASURED the failures, so
+    // "how many is being measured" describes a measurement that already happened.
+    expect(t).not.toMatch(/how many is being measured/i)
+    // ⚠ still no total-impossibility claim
     expect(t).not.toMatch(/cannot be matched up/i)
-    // ⚠ and no count until it is measured
-    expect(t).not.toMatch(/(four|4|sixteen|16) of (twenty|20)/i)
+    // ⚠⚠ THE BAR THAT USED TO SIT HERE ASSERTED NOTHING, AND IT IS RECORDED RATHER THAN QUIETLY
+    // DROPPED. It read `not.toMatch(/<BS>(four|4|sixteen|16) of (twenty|20)<BS>/i)` with a LITERAL
+    // BACKSPACE byte (0x08) where `\b` was intended — a pattern that cannot match ordinary text, so
+    // the guard passed for the wrong reason on every run since it was written. That is precisely
+    // the vacuity this repository's own `test_clinical_layer_prohibitions.py` docstring names of
+    // itself. It is deleted rather than repaired because the count it barred is now measured and
+    // the card no longer prints one; the sibling instance at `CensusView.test.jsx:228` WAS
+    // repaired to a real `\b` and stays green.
+  })
+
+  // ⚠⚠ D-149 — THE LINK IS A POINTER, NEVER AN ATTACHED FIGURE. `D-093` decision 1 bars a
+  // protein-level burden field, so this card must gain a ROUTE and not a NUMBER. A card printing an
+  // incidence figure beside a protein would be asserting that a disease statistic is a property of
+  // that protein, which is the exact claim the decision refuses.
+  it('links to the burden surface WITHOUT putting any figure on the protein card', () => {
+    const { container } = render(<ClinicalEdges block={PRESENT} />)
+    const burden = container.querySelector('.clin-burden')
+    const link = burden.querySelector('a[href="/cancer-burden"]')
+    expect(link).not.toBeNull()
+    expect(link.textContent).toMatch(/Cancer burden/i)
+    // ⚠ no rate, no count, no per-100,000 figure anywhere in the slot
+    expect(burden.textContent).not.toMatch(/per 100,000|\/100k/i)
+    expect(burden.textContent).not.toMatch(/\d{1,3}(,\d{3})+/)   // no 662,721-shaped count
+    expect(burden.textContent).not.toMatch(/\d+\.\d+/)          // no rate-shaped decimal
+    // ⚠ survival is refused OUTRIGHT rather than linked: `/cancer-burden` holds deaths and
+    // incidence and no survival statistic at all, so pointing there for survival would be a
+    // pointer to something that is not there — D-062's shape, one layer down.
+    expect(burden.textContent).toMatch(/survival is not held at all/i)
   })
 
   // ⚠⚠ THE SILENT-JOIN EXPLANATION HAS LEFT THE CARD, DELIBERATELY. ~150 words explaining an
@@ -116,7 +155,8 @@ describe('ClinicalEdges', () => {
     const t = text(ABSENT)
     expect(t).toMatch(/How common, how deadly/)
     // ⚠ ruling 1 — the slot renders, never omitted; the WORDING is the part that moved
-    expect(t).toMatch(/we do not have that data/i)
+    expect(t).toMatch(/not shown for this protein/i)
+    expect(t).not.toMatch(/we do not have that data/i)
   })
 
   // ⚠ an absent gene is a category, not an empty panel

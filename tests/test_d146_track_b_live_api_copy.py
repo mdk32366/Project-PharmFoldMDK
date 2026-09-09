@@ -40,6 +40,15 @@ from pathlib import Path
 
 import pytest
 
+from _d144_surface import (
+    D144_OWN_FILES,
+    D144_REGION_MIN_LINES,
+    D144_SHARED_REGIONS,
+    extract_region,
+    region_digest,
+    whole_file_digest,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 PAPER_PATH = ROOT / "docs" / "pharmfold-adc-nectin4-paper.md"
 ABOUT_PAPER_PATH = ROOT / "ui" / "src" / "aboutPaper.js"
@@ -246,19 +255,7 @@ def test_the_census_table_still_has_no_rank_column():
 #: source_of_truth_paragraph_it_was_right_about` reads its text and is unchanged, so the moved
 #: digest is an ADDITION to that file rather than an edit of what this entry pinned in it.
 UNTOUCHED_SURFACE = {
-    "core/census_structural.py":
-        "c859da97f73d9da2628a59dc091f7fbcbd8944d0eebba9096e6b011b62ba12c7",
-    # ⚠ moved by `### D-147` (was 7f581c690ebc95bceb532f0554e97d7499add4c327fcf15802ec406b69bdef6b)
-    "app/census_structural_read.py":
-        "0fff62b0b9471cd4447255275cb13cd4ac07890e8a79aacec2c3d40a5d7142df",
-    "scripts/census_structural_rank.py":
-        "ef222d19b2c15777ee65736bdc8f7b57b9ed65be990a1ae71a260dbbc7bbafe0",
-    "db/migrations/versions/0012_census_structural_rank.py":
-        "8a4a3d49498147ce070798665f53350d335c608b5da41c2d5c6833228a2dfdf0",
-    "app/read_routes.py":
-        "ceebaf0e6fe39130b8398276a30d58e10a1b541b2d38e3164e20003fce6e1856",
-    "db/models.py":
-        "8be971fb840d37f024e14746ad321f128b7420ca8bbc80033c5952b34348368d",
+    **D144_OWN_FILES,
     "Dockerfile":
         "c5af8c8500c3eb97fe95dfe468568f822811217ddee6b8a4c5a6389f0b64cd68",
     ".dockerignore":
@@ -269,6 +266,16 @@ UNTOUCHED_SURFACE = {
     "core/scorer.py":
         "886b88ad8e0d25f1af74d65b25b46ab887c264fde654e9cea172d04ef9fb120b",
 }
+
+# ⚠⚠ THE TWO SHARED FILES MOVED TO A REGION PIN — D-149, same repair as `D-145`'s guard.
+# `app/read_routes.py` holds every read route and `db/models.py` holds every table, so a WHOLE-FILE
+# pin on them never asserted "D-144/D-145 did not move": it asserted "nothing else was ever added",
+# which is a different and false property. `D-149` added two routes and two tables that touch
+# nothing of D-144's, and this guard's own failure message licenses exactly that — "belongs to a
+# different entry with its own ruling".
+# ⚠ NARROWER, NOT LOOSER: the region digests in `tests/_d144_surface.py` come from `2170bd8`, the
+# commit where D-144 MERGED, never recomputed from this tree. The EIGHT other whole-file pins here
+# — including `Dockerfile`, `.dockerignore`, `MethodNote.jsx` and `core/scorer.py` — are untouched.
 
 
 @pytest.mark.parametrize("rel,digest", sorted(UNTOUCHED_SURFACE.items()))
@@ -282,8 +289,7 @@ def test_no_formula_schema_route_loader_or_image_byte_moved(rel, digest):
     ⚠ A tree property, never a `git diff` against `origin/main` — the gate checks out a shallow
     merge ref, where a diff-based check passes by erroring (D-139's precedent).
     """
-    raw = (ROOT / rel).read_bytes().replace(b"\r\n", b"\n")
-    assert hashlib.sha256(raw).hexdigest() == digest, (
+    assert whole_file_digest(rel) == digest, (
         f"{rel} changed — D-146 is a copy amendment; a formula, schema, route, loader or image "
         f"edit belongs to a different entry with its own ruling (as D-147's route edit did: see "
         f"the note on UNTOUCHED_SURFACE, where two digests moved by name and eight did not)"
@@ -577,4 +583,32 @@ def test_the_test_plan_carries_the_d146_addendum_on_an_id_nobody_else_holds():
     )
     assert "no test here contacts the deployed application" in _flat(mine).lower(), (
         "the addendum must state what these tests cannot establish"
+    )
+
+
+@pytest.mark.parametrize("rel", sorted(D144_SHARED_REGIONS))
+def test_d144s_own_region_of_each_shared_file_has_not_moved(rel):
+    """⚠⚠ The narrowed half of the whole-file pin above. `app/read_routes.py` and `db/models.py` are
+    SHARED files, so what must not move is **D-144's block inside them**, never the whole file.
+
+    ⚠ The expected digest is `2170bd8`'s — D-144's merge commit — so this asserts *"identical to
+    what shipped"* rather than *"identical to itself"*. A pin recomputed from the thing it pins is a
+    mirror.
+    """
+    _start, _stops, expected = D144_SHARED_REGIONS[rel]
+    assert region_digest(rel) == expected, (
+        f"D-144's own region of {rel} changed — D-146 is a copy amendment; an edit inside D-144's "
+        f"block belongs to a different entry with its own ruling"
+    )
+
+
+@pytest.mark.parametrize("rel", sorted(D144_SHARED_REGIONS))
+def test_the_region_extractor_actually_reaches_a_region(rel):
+    """⚠⚠ `A-017` — the fixture must reach the code under test. A region extractor that returned
+    `""` would hash the empty string identically forever and this pin would pass on a DELETED
+    route, which is the loudest thing it exists to catch."""
+    region = extract_region(rel)
+    assert region.count("\n") >= D144_REGION_MIN_LINES[rel], (
+        f"the extracted D-144 region of {rel} is only {region.count(chr(10))} lines; a pin over a "
+        f"near-empty region asserts nothing"
     )

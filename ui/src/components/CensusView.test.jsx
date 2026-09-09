@@ -225,7 +225,7 @@ describe('CensusView — what we found, and how to read it', () => {
     expect(mine).not.toMatch(/higher (is|means) better/i)
     expect(mine).not.toMatch(/prioriti[sz]e/i)
     expect(mine).not.toMatch(/which targets? to/i)
-    expect(mine).not.toMatch(/should (pick|choose|look)/i)
+    expect(mine).not.toMatch(/\bshould (pick|choose|look)/i)
   })
 
   it('keeps every existing limit — the result did not replace the hedges', () => {

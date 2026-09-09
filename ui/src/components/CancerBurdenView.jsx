@@ -242,6 +242,25 @@ export default function CancerBurdenView() {
               </li>
               <li><strong>No crosswalk to protein annotations.</strong> {meta.crosswalk_refused}</li>
             </ul>
+
+            {/* ⚠⚠ THE NAMED FAILURES, BECAUSE THE PROTEIN CARD POINTS HERE FOR THEM. The
+                ClinicalEdges burden slot says *"that page names which and why"* — so this list has
+                to exist, or the card's pointer resolves to nothing. That is D-062's defect shape
+                (a citation treated as settled while the thing cited was never written), one layer
+                down: a UI pointer is a citation too. */}
+            {meta.unmappable_hpa_sites && (
+              <div className="burden-unmappable" data-testid="burden-unmappable">
+                <h4>Tumour names in the protein atlas that do not map to a SEER site</h4>
+                <dl>
+                  {Object.entries(meta.unmappable_hpa_sites).map(([name, why]) => (
+                    <div key={name} className="burden-unmappable-row">
+                      <dt>{name}</dt>
+                      <dd>{why}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
           </section>
 
           {/* ── the licence obligation, at the bottom of the page and in the API ──── */}
