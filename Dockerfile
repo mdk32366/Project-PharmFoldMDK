@@ -2,11 +2,11 @@
 #
 # Stage 1 (Node, BUILD-TIME ONLY — DEP-006) builds the React bundle to static assets. Node
 # never enters the runtime image; the built assets are plain files. Stage 2 is the runtime
-# tier, UNCHANGED from DEP-001: the hash-locked runtime lock, app/ + core/ + db/ + data/, TWO
-# NAMED SCRIPTS (never `scripts/` — see below; the second joined at D-145), and no worker/ /
-# torch. The image-contents test (tests/test_image_contents.py) asserts both halves — the
-# runtime stage's shape, including each script COPY by name, and that no npm/node instruction
-# appears after the runtime FROM (DEP-006).
+# tier, UNCHANGED from DEP-001: the hash-locked runtime lock, app/ + core/ + db/ + data/, THREE
+# NAMED SCRIPTS (never `scripts/` — see below; the second joined at D-145, the third at D-153),
+# and no worker/ / torch. The image-contents test (tests/test_image_contents.py) asserts both
+# halves — the runtime stage's shape, including each script COPY by name, and that no npm/node
+# instruction appears after the runtime FROM (DEP-006).
 
 # ── Stage 1: build the UI bundle (D-037: npm ci against the committed lock) ────
 FROM node:20-slim AS ui-build
@@ -38,17 +38,24 @@ COPY core/ ./core/
 COPY db/ ./db/
 COPY data/ ./data/
 
-# ⚠ TWO NAMED FILES — still not `scripts/`. Both run on the machine so the database credential
-# never leaves it (the same reason migration 0010 was applied here), and both read inputs the
-# `COPY data/` above already ships: the ingest needs `data/census/census_features.v1.jsonl`, the
-# D-144 structural-rank loader needs `data/census/census_manifest.v7.csv` and
-# `data/adc_reference_mapping.csv` — which is why neither line re-copies a CSV. Everything else
-# in `scripts/` stays out, `fit_scorer.py` above all: `D-079` dec 1 bars a refit, and a barred
-# operation must not be sitting on the production host waiting for someone to type it.
-# ⚠ D-145: the loader was hand-placed on /srv/scripts/ once after D-144 shipped, and the next
-# rebuild would have dropped it — an image is the only copy with a provenance chain.
+# ⚠ THREE NAMED FILES — still not `scripts/`. All three run on the machine so the database
+# credential never leaves it (the same reason migration 0010 was applied here), and all three read
+# inputs the `COPY data/` above already ships: the ingest needs
+# `data/census/census_features.v1.jsonl`, the D-144 structural-rank loader needs
+# `data/census/census_manifest.v7.csv` and `data/adc_reference_mapping.csv`, and the D-149 burden
+# loader needs `data/burden/seer_us_cancer_burden.v1.csv` plus its provenance sidecar — which is
+# why no line re-copies a CSV. Everything else in `scripts/` stays out, `fit_scorer.py` above all:
+# `D-079` dec 1 bars a refit, and a barred operation must not be sitting on the production host
+# waiting for someone to type it.
+# ⚠ D-145: the structural-rank loader was hand-placed on /srv/scripts/ once after D-144 shipped,
+# and the next rebuild would have dropped it — an image is the only copy with a provenance chain.
+# ⚠⚠ D-153: THE SAME DEFECT ARRIVED AGAIN FOUR MERGES LATER. D-149 shipped `data/burden/` and its
+# route but not its loader, so the cancer-burden API answered 500 until `alembic 0013` and a
+# one-shot SFTP of `seer_cancer_burden.py` onto /srv/scripts/ let the load run. Adding a file here
+# is the only fix that survives a rebuild.
 COPY scripts/census_ingest_features.py ./scripts/
 COPY scripts/census_structural_rank.py ./scripts/
+COPY scripts/seer_cancer_burden.py ./scripts/
 
 # The built React bundle from stage 1 — static files only, no Node (DEP-006). app_from_env
 # serves it under / with /api and /jobs matched FIRST (route ordering).
