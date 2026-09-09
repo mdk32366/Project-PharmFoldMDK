@@ -379,6 +379,202 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-151 — Three owner UI complaints, one ship: the menu says **Initial Targets**, the Kathad paper becomes a link, and `/census` stops hiding its own list — and the disqualifying fact is that this project enforces a **fail-closed citation precondition for the secondary source and had none at all for the primary one**
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **display, labelling and layout only, on `/targets`, `/about` and
+  `/census`.** ⚠ **No route path changes, no API field is added, renamed or read differently, no
+  migration runs, no `--load` runs, no Fly write happens, no GPU runs, nothing is re-folded, no tile
+  is emitted, no seam is claimed solved, `structural_score` does not move for any row, the scorer
+  and the census structural rank are not touched, and no census row becomes scored or ranked.**
+  `D-051`, `D-079` dec 1, `D-094`, `D-100`, `D-102`, `D-133 am. 1`, `D-135`, `D-137`, `D-142`,
+  `D-150` and `F-009` are cited and **none of them is amended**.
+- **Owner's words, 2026-09-09, all three verbatim:** the menu item should read *"Initial Targets"*;
+  *"Kathad et al."* should be a link to the paper; and — *"The Census surface is a mess. You've got
+  to scroll to get to the list and when you get there, we are not using the entire left side of the
+  table real estate and the list scrolls off the right side."*
+
+**⚠⚠ THE DISQUALIFYING FACT, FIRST, AND IT IS ABOUT THE CITATION RATHER THAN THE LAYOUT.**
+
+`HpaAttribution.jsx` treats citation as a **mount precondition**: the licence's words are quoted in
+its own header — *"be sure that our content is never displayed in the absence of such citation"* —
+and `TargetList`'s `AssociationCell` **fails closed** on it, withholding the tumour types of any
+gene with no attribution block and printing the reason in the cell. There is a test that reddens if
+an HPA value renders without the credit. **That is a real compliance mechanism, and it protects the
+SECONDARY source.**
+
+The **primary** source has no mechanism at all. Measured on `origin/main` at `bdc8ddc` in this
+build: `rg -n '0308604' ui/src` returns **0 hits** — the cohort paper's DOI appears nowhere in any
+rendered surface — while `rg -n 'Kathad' ui/src --include='*.jsx' --include='*.js'` (excluding
+tests) returns **11**, of which two are rendered copy: `AdcContext.jsx:170` (*"one published cohort
+(Kathad et al.)"*) and `ScorerView.jsx:131` (*"cohort targets (Kathad et al.)"*). `ui/src` holds
+**7** anchors with `target="_blank"` and **not one of them is the paper**. The DOI has been in the
+repository the whole time — `data/cohort_82.txt`, `data/cancer_associations.csv` (on every one of
+its rows), `core/cancer_associations.py`'s `SOURCE` — and in no `<a href>`.
+
+**⚠ So the paper that decides which 82 proteins this project ranks, and whose S3 supplies the very
+values the HPA credit is attached to (`D-100`: S3 is a verbatim extract of `pathology.tsv`,
+1,640/1,640), was the one source a reader could not open.** The asymmetry is not that the HPA rule
+is too strict — it is right. It is that *the rule was written where a licence demanded it and
+nowhere else*, and nothing in the tree noticed that the source of the cohort itself had fallen
+through. **A citation nobody can follow is an assertion, not a source**, and this one had been an
+assertion since `F-009`.
+
+⚠ **And the smaller sibling, recorded because it is the same shape:** the `/targets` nav label was
+*"Targets"* while `/census` holds **3,467** proteins. The word was never false — the 82 *are*
+targets — and it was doing the same job `D-150`'s **`Folded`** was doing: standing for a claim
+nobody could disprove, so nothing ever caught it.
+
+**⚠ Provenance (D-016) — the layout numbers are MEASURED, and the instrument is named because it
+is not the test suite.** jsdom computes no layout, so nothing in `ui/`'s 792 tests can see a
+gutter, a fold or an overflow. The figures below come from **headless Chrome (`google-chrome`,
+`puppeteer-core` 23.11.1) at a 1440 × 900 viewport**, driven against **two `vite build` outputs
+served by a fixture API in this build**: `origin/main` at `bdc8ddc` (before) and this branch
+(after). ⚠ **The fixture is 320 synthetic census rows, not production data** — see the limits
+section; it exercises the layout, and it is not a reading of the deployed application.
+
+| measured at 1440 × 900 on `/census` | before (`bdc8ddc`) | after |
+|---|---|---|
+| `documentElement.scrollWidth` − `clientWidth` | **914 px** off the right edge | **0** |
+| top of the first `<tbody> <tr>`, from the document origin | **3,303 px** | **809 px** |
+| search box within the first viewport at load | **no** | **yes** |
+| first row within the first viewport at load | **no** | **yes** |
+| `main` box width | **960 px** in a 1440 px window (**240 px of empty gutter on each side**) | **1,440 px** |
+| table box | 2,072 px wide, right edge at **2,354 px** — 914 px past the glass | 2,174 px wide inside a **1,353 px scroll port**; the document does not move |
+| whole-page height | **29,772 px** | **2,681 px** |
+| after scrolling the port 900 px down and 700 px across | *no port existed* | header row **1 px** from the port's top edge; accession column **1 px** from its left edge |
+
+⚠ **The `29,772 → 2,681` row is not a content deletion.** Nothing was removed; the four background
+sections and the badge legend are inside two `<details>` and contribute their summary line instead
+of their body until the reader opens them. **Every string on that page before this change is on it
+after.**
+
+**Decisions.**
+
+1. **The menu label moves and the ROUTE does not.** `<NavLink to="/targets">Initial Targets</NavLink>`.
+   `/targets` is already in the Story's CTA, in the census card's dead-end note and in every address
+   anyone has ever shared; renaming the path would break all of them to buy nothing. ⚠ The rename
+   also reaches `CensusProteinView`'s *"those live under …"* link, because that link **reads as the
+   menu name** — it tells a reader which nav entry holds the row they wanted. It reaches **no
+   scientific copy**: the word *targets* in a sentence about ADC targets is not a menu.
+2. **One DOI constant, pinned to the committed source.** `ui/src/cohortPaper.js` holds
+   `10.1371/journal.pone.0308604` once, and `cohortPaper.test.js` asserts it is a **substring of
+   `data/cohort_82.txt`** — the file that defines the cohort — so a typo fails on a file read
+   rather than on someone noticing. ⚠ A DOI typed at each call site is three strings free to
+   disagree, and **a citation that disagrees with itself cannot be told from a link to a different
+   paper**. One clear link near the top of `/targets`, `target="_blank"` with
+   `rel="noopener noreferrer"`, and the same anchor on `/about`'s cohort-boundary paragraph because
+   that is where `/targets` sends a reader for what the 82 is. ⚠⚠ **It does NOT discharge the HPA
+   obligation and is kept in a separate module so a later edit cannot route one through the other.**
+3. **`/census` gets the list first, the whole width, and a scroll port of its own.**
+   - **Order.** `CensusView`'s lede, counts, absences and tranches move into one collapsed
+     `<details>`; `CensusTable`'s long-form scope prose, the lens rationale and the badge legend
+     move into a second one, **still directly above the header row they define** (`D-133 am. 1`
+     put the legend there and `D-137` requires the cost axis in the same visual frame; a single
+     `<summary>` between them keeps both true, and moving the block to the foot of the page would
+     not have). Neither is `open` — **an `open` default would restore the exact scroll the owner
+     objected to while looking like a fix.**
+   - **Width.** `main.wide { max-width: 96rem }`, granted **by route** in the shell. A component
+     reaching up to restyle its own container is a decision about the shell made in the wrong file,
+     and one class is something a test can assert structurally. ⚠ Exactly `/census`:
+     `/census/:id` is a protein CARD and keeps the reading measure.
+   - **Bleed.** `.census-table td:nth-child(3) { width: 100% }` is **retired**. Its stated intent —
+     *"the protein name is the only free-text column; it takes the slack instead of the table
+     deciding for itself"* — was right, and `width: 100%` on one cell of a thirteen-column
+     auto-layout table does not express it: the algorithm hands that column everything the other
+     twelve do not strictly demand and lets the total run past the container. The replacement is a
+     bound on a **block child** (`D-142`'s finding: a `max-width` on a `td` is advisory under the
+     auto algorithm), plus a `.census-table-scroll` port with `overflow: auto`.
+   - **⚠ BOUNDED, NEVER TRUNCATED, AND NO COLUMN DROPPED.** No ellipsis, no clipping, no
+     `max-height` on a cell. Names past 70 characters wrap and every character stays on screen.
+     **A column removed to make a table fit is data withheld to flatter a layout**, which is what
+     this surface refuses in every other direction — the announced 200-row cap, the never-folded
+     rows, the named refusal categories.
+   - **Sticky.** The port scrolls in **both** axes deliberately. `position: sticky` resolves
+     against the nearest scrollport ancestor, so once this box scrolls horizontally CSS computes
+     its `overflow-y` to `auto` too — and a box with no height bound never scrolls, which would
+     leave the `<thead>` stuck to a scrollport that cannot move, i.e. not sticky at all. The
+     `max-height` is what **makes the sticky header keep working**, not a decoration on top of it.
+     The accession column is sticky-left for the same reason one axis along: a row whose identity
+     has scrolled out of sight is a row of numbers about nothing.
+4. **What may NOT collapse is decided by the rulings, not by the layout.** Three blocks stay
+   uncollapsed and each for a stated reason, not for balance:
+   - the **unscored claim** (`D-079` dec 1) — a reader who stops at the first row must already have
+     met it, which is the rule `CensusView.test.jsx` has pinned since it was written;
+   - the **lens control** (`D-102`) — the applied lens is part of what the Stained % column *means*,
+     and a lens whose name sits behind a `<summary>` is a lens a reader can look at a percentage
+     without ever having seen;
+   - the **HPA credit** (`D-094` / `D-100`) — the licence words citation as a precondition of
+     *display*, and **a credit behind a disclosure control is not displayed**. It is the one block
+     on this surface whose position is fixed by a licence rather than by layout, and the CSS
+     tightens its leading without moving it out of the reader's way.
+
+**⚠ Revert proof (A-016 — a red proves nothing unless it fires at the assertion).**
+
+- **Run, not predicted.** Reverting the nav label to `Targets` reddens **three** cases in
+  `App.test.jsx` — the five-destination loop, *"the site nav labels the cohort surface"* and
+  *"spells Initial"* — plus `test_d151_ui_polish.py`'s label guard. ⚠ The fourth new nav case,
+  *"`/targets` still routes to the cohort list"*, **stays green, correctly**: it asserts the route,
+  and the route is what the rename must not touch. ⚠⚠ **The draft of this entry predicted four
+  vitest reds and got three**, because it counted the route case as label-coupled; it is not.
+  Recorded rather than quietly corrected — the same shape `D-150` recorded of its own revert 2.
+- **Run, not predicted.** Appending `.census-table td:nth-child(3) { width: 100% }` back to the
+  stylesheet, defaulting `details.census-background` to `open`, and renaming
+  `.census-table-scroll` reddens **four** cases in `CensusLayout.d151.test.jsx` (the disclosure's
+  `open` attribute, the scroll port, the sticky header inside it, and the stylesheet regex) and
+  **three** in `test_d151_ui_polish.py`, each at its own assertion.
+- The stylesheet regex was additionally checked **in both directions**: it matches
+  `git show HEAD:ui/src/styles.css` and does not match the new file, while the three positive rules
+  (`.census-table-scroll { overflow: auto`, `.census-table .protein-name`, `main.wide`) match the
+  new file and not the old one. **A pure absence assertion would have passed on a deleted
+  stylesheet**, which is why the positives are asserted beside it.
+- **Run, not predicted.** Writing a bare `### D-152` into the log reddens **four** suites at once —
+  `test_d151`, `test_d150`, `test_d149` and `test_d129`'s enumeration — which is the collision
+  guard doing exactly what `RESERVED.md` exists for. Every bar this ship inherited was widened by
+  **adding a name beside it**; **not one was relaxed to a `>=`**, and a `>=` would have passed on a
+  log with no entries at all.
+- ⚠⚠ **AND THE REVERT THAT PROVES THE LIMIT RATHER THAN THE GUARD: none of the above can see the
+  defect the owner reported.** Reverting every layout change while keeping the DOM containers would
+  leave all fifteen `CensusLayout.d151` cases green. **jsdom has no layout**, so the suite pins the
+  structure the CSS attaches to and never the result — the same limit `D-142` recorded and paid
+  for, when a column bound this suite certified green collapsed to about 45 px in a real browser.
+
+**⚠⚠ WHAT THIS ENTRY CANNOT ESTABLISH, STATED BECAUSE THE GATE CANNOT SEE IT.**
+
+- **No test in this repository measures the layout.** The before/after table above is a headless
+  Chrome run in this build; it is **not** re-run by CI and **not** re-run by `vitest`. If the
+  gutter comes back, the suite stays green. That residual is accepted in the open rather than
+  answered with a screenshot-diff framework, per `D-074` dec 3.
+- **The measurements are against a FIXTURE API, not production.** 320 synthetic census rows and 82
+  synthetic cohort rows, served by a local server written for this run. Row count, the longest
+  protein name and the badge mix all affect a table's width, so the exact pixel figures are
+  properties of that fixture. **What is not fixture-dependent is the direction**: the document's
+  horizontal overflow is 0 because a bounded port cannot widen its parent, at any row count.
+- **Nothing was deployed.** `D-146`'s recorded limit is unchanged: no test here contacts the
+  deployed application, and this ship does not touch Fly, the image, or any route.
+- **The double HPA credit block on `/census` is pre-existing and is NOT fixed here.**
+  `HpaAttribution`'s default export renders `HpaDeepLink` — which, outside an `HpaCreditProvider`,
+  falls back to link **plus** credit — and then renders `HpaCredit` again, so the census list emits
+  the source credit twice. ⚠ It is the *deliberate* fail-safe direction (*"the failure mode of
+  forgetting the provider is redundancy, never non-compliance"*), it is **visible in the before
+  screenshot as well as the after**, and it is named here rather than silently restyled away.
+
+**Ship:** `ui/src/cohortPaper.js` (new) + `ui/src/App.jsx` + `ui/src/components/CensusView.jsx` +
+`ui/src/components/CensusTable.jsx` + `ui/src/components/CensusProteinView.jsx` +
+`ui/src/components/TargetList.jsx` + `ui/src/components/AdcContext.jsx` + `ui/src/styles.css`;
+`ui/src/cohortPaper.test.js` (new) + `ui/src/components/TargetList.citation.d151.test.jsx` (new) +
+`ui/src/components/CensusLayout.d151.test.jsx` (new) + new cases in `ui/src/App.test.jsx` +
+`tests/test_d151_ui_polish.py` (new).
+**Relied on by:** `D-051` · `D-079` dec 1 · `D-094` · `D-100` · `D-102` · `D-133 am. 1` · `D-135` ·
+`D-137` · `D-142` · `D-150` · `F-009`.
+**Assumptions relied on:** none new. ⚠ **And one explicitly REFUSED:** that a compliance rule
+written for the source that demanded one covers the source that did not. **It does not, and the
+paper this whole project is built on is what fell through the gap.**
+
+⚠ **`### D-148` remains a `RESERVED.md` hold** (trafficking Spec) and is cited here only to bar it.
+⚠ **`### D-152` is barred by name** and has a row; the next-free pointer moved to **`D-152`** in
+this same commit, **skipping 148 because a reserved integer is not a free one**.
+
 ### D-150 — The census surface stops answering three questions with one word: *structure served* · *scored* · *seam* become three orthogonal status lines on the list and on the card — and the disqualifying fact is that the word doing all three jobs, **`Folded`**, **cannot be wrong**, which is why nothing ever caught it
 
 - **Date:** 2026-09-09

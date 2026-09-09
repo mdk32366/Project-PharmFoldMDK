@@ -6,6 +6,7 @@ import { nextSort, sortRows } from '../sortRows.js'
 import { filterRows } from '../searchRows.js'
 import { count } from '../plural.js'
 import { summariseAssociations } from '../associationSummary.js'
+import { COHORT_PAPER_DOI, COHORT_PAPER_SHORT, COHORT_PAPER_URL } from '../cohortPaper.js'
 import { HpaCredit } from './HpaAttribution.jsx'
 
 // The picker over the folded targets (light list, D-034). mean pLDDT carries its band inline, so the
@@ -532,6 +533,31 @@ export default function TargetList() {
         {nFailed > 0 && <>, {nFailed} attempted and failed</>}
         {nNever > 0 && <>, {nNever} too large to attempt</>}. Start with{' '}
         <Link to="/target/1">NECTIN4 →</Link> (the target of a marketed ADC, enfortumab vedotin).
+      </p>
+      {/* ⚠⚠ D-151 — THE PAPER THIS WHOLE LIST COMES FROM, AND IT IS NOW OPENABLE. This surface has
+          named "Kathad et al." in prose since F-009 and never once linked it, so the single
+          artefact that defines which 82 proteins appear here could not be reached from the page
+          that renders them. A citation a reader cannot follow is an assertion, not a source.
+          ⚠ ONE link, near the top, rather than an anchor on every mention: the Description and
+          Cancer association columns below already carry their own per-datum HPA links (D-142 /
+          D-100), and littering a third link through the same paragraphs makes all of them read as
+          decoration.
+          ⚠ It is deliberately NOT the HPA citation. D-100 records that Kathad's S3 is a verbatim
+          extract of HPA's `pathology.tsv` — citing the paper is not citing HPA, so `HpaCredit`
+          below is unchanged and still emits the licence's own four elements. */}
+      <p className="note cohort-paper-cite">
+        The cohort of record comes from one published paper:{' '}
+        <a
+          className="cohort-paper-link"
+          href={COHORT_PAPER_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {COHORT_PAPER_SHORT}
+        </a>
+        , PLOS ONE, CC-BY (DOI <code>{COHORT_PAPER_DOI}</code>). It is a{' '}
+        <strong>comparator set</strong>, not a census of everything an ADC could target —{' '}
+        <Link to="/about">what the 82 is, and is not</Link>.
       </p>
       {/* 1c — the one sentence that inoculates the glance, before any detail panel is opened.
           OWNER-COPY PLACEHOLDER: substance fixed, wording for the owner to finalise. */}

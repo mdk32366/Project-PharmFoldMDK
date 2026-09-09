@@ -132,9 +132,13 @@ export default function CensusProteinView({ id }) {
         <p className="error">Could not load census protein {id}: {error}</p>
         {/* ⚠ A cohort id 404s here by design — the two populations are measured under different
             span definitions (D-081) and must not be reachable through one another's route. */}
+        {/* ⚠ D-151: this link reads as the MENU NAME — it tells the reader which nav entry holds
+            the row they were looking for — so it carries the nav's label, not the old one. The
+            scientific word "targets" elsewhere on this page is untouched: renaming copy is not
+            renaming a menu. */}
         <p className="note">
           If this is one of the 82 ranked targets it will not be here — those live under{' '}
-          <Link to="/targets">Targets</Link>.
+          <Link to="/targets">Initial Targets</Link>.
         </p>
         <p><Link to="/census">← back to the census</Link></p>
       </HpaCreditProvider>

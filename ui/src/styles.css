@@ -33,6 +33,15 @@ a:hover { text-decoration: underline; }
 .tagline { color: var(--muted); font-size: 0.9rem; }
 
 main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
+/* ⚠⚠ D-151 — THE MEASURE IS A CHOICE PER SURFACE, NOT A CONSTANT. 60rem is a reading measure and
+   it is right for every prose page here. It is wrong for `/census`, whose thirteen-column table was
+   squeezed into ~57rem while the browser window sat half empty on either side — the owner's
+   *"we are not using the entire left side of the table real estate"*.
+   ⚠ A MAX, not a width: below ~96rem the page is already full-bleed and this rule does nothing, so
+   nothing changes on a laptop except that the table stops being cropped by a container narrower
+   than the screen. `main`'s own 1.5rem padding still supplies the page margin at every width — a
+   table flush to the glass is the other way to make a page unreadable. */
+main.wide { max-width: 96rem; }
 .loading, .error { color: var(--muted); }
 .error { color: #f0a0a0; }
 
@@ -131,6 +140,12 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .assoc-top { display: block; }
 .assoc-rest { display: block; font-size: 0.82rem; }
 .assoc-unordered { color: var(--muted); font-style: italic; }
+
+/* ⚠ D-151 — the cohort paper's citation line on `/targets`. Sized as a note because it is
+   provenance rather than a finding, but the anchor is a normal link: a citation styled so quietly
+   that it does not look clickable is the defect this change exists to fix, one step along. */
+.cohort-paper-cite { margin-top: 0.3rem; }
+.cohort-paper-link { text-decoration: underline; }
 
 /* target view */
 .target-header h2 { margin: 0 0 0.1rem; }
@@ -451,6 +466,77 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 
 .census-table, .census-detail { margin-top: 1.6rem; }
 .census-scope { color: #cbd5e0; }
+
+/* ── ⚠⚠ D-151 — THE DISCLOSURE BLOCKS. Two of them: `.census-background` on `/census` holds the
+   population counts, the absences and the fold batches that used to stand between the reader and
+   the list; `.census-notes` inside the table holds the long-form column notes and the badge
+   legend. Both are `<details>` — collapsed, one line tall, and one click from everything they
+   contain. **Nothing here is a filter**: the text is in the DOM either way, and the browser's own
+   find-in-page reaches it.
+   ⚠ Styled as a control rather than as a heading, so it does not read as a section that has been
+   demoted. The triangle is the browser's own — a custom marker here would be one more thing that
+   has to keep working. */
+.census-background, .census-notes {
+  margin: 0.7rem 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0f1620;
+}
+.census-background > summary, .census-notes > summary {
+  cursor: pointer;
+  padding: 0.5rem 0.8rem;
+  color: #cbd5e0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.census-background > summary:hover, .census-notes > summary:hover { color: #e2e8f0; }
+.census-background[open] > summary, .census-notes[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+.census-background > :not(summary), .census-notes > :not(summary) {
+  margin-left: 0.8rem; margin-right: 0.8rem;
+}
+.census-background > :last-child, .census-notes > :last-child { margin-bottom: 0.8rem; }
+.census-scope-more { color: #b9c4cc; font-size: 0.88rem; }
+
+/* ── ⚠⚠ D-151 — THE ABOVE-TABLE BUDGET, AND IT IS SPENT DELIBERATELY ─────────────────────────────
+   Every block between `/census`'s `<h2>` and the first `<tr>` is here because a ruling put it
+   there, so the way to reach the list sooner is to make each one COST LESS, never to remove one.
+   Measured in Chrome at 1440×900 on this branch: the `<thead>` sat at **921 px** with the four
+   background sections already collapsed — still below a 900 px fold — and the rules below close
+   that gap by tightening leading and margins rather than by hiding anything.
+   ⚠ NOTHING IS SET SMALLER THAN THE DATUM IT QUALIFIES. D-137's caveat-sizing rule binds here: a
+   disclosure typeset below its subject is a disclosure the page has decided the reader may skip. */
+.census h2 { margin: 0 0 0.5rem; }
+.census .census-table { margin-top: 0.9rem; }
+.census-table .census-count { margin: 0.35rem 0 0.3rem; }
+
+/* ⚠ D-151: the lens control stays ABOVE the table and uncollapsed (D-102 — the applied lens is
+   part of what the Stained % column means), so it earns its place by being compact rather than by
+   being hidden. One row for the radios and the current meaning; nothing is smaller than the datum
+   it qualifies, which is D-137's rule about caveat sizing. */
+.census-table .lens-control { margin-top: 0.5rem; font-size: 0.88rem; line-height: 1.4; }
+.census-table .lens-control fieldset {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem 0.9rem;
+  border: 0; padding: 0; margin: 0;
+}
+.census-table .lens-control fieldset legend { float: left; padding: 0; margin-right: 0.6rem;
+  color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.census-table .lens-meaning { margin: 0.2rem 0 0; }
+.census-table .lens-critical { display: block; margin-top: 0.25rem; }
+.census-notes .lens-why { margin: 0.2rem 0 0.5rem; color: #b9c4cc; font-size: 0.88rem; }
+
+/* ⚠⚠ D-151 — THE HPA BLOCK IS TIGHTENED AND NEVER MOVED. On the census list it rendered as four
+   stacked lines occupying ~163 px directly above the table — the per-datum link, the publication,
+   the website and the image/data credit, each on its own row. All four are still emitted, in full,
+   above the table and outside every disclosure control, because the licence words citation as a
+   precondition of DISPLAY. What changes is that they flow as one paragraph-height band instead of
+   a column, which costs the reader nothing and the layout about 100 px. */
+.census-table .hpa-attrib { margin: 0.3rem 0 0; line-height: 1.35; }
+.census-table .hpa-attrib-datum { margin: 0; }
+.census-table .hpa-attrib-page { border-top: 0; padding-top: 0; margin: 0; }
+.census-table .hpa-attrib-cite, .census-table .hpa-attrib-credit { display: inline; margin: 0; }
+.census-table .hpa-attrib-credit::before { content: ' \00b7 '; }
 .census-count { color: #b9c4cc; font-size: 0.9rem; margin: 0.4rem 0 0.8rem; }
 
 .census-search { display: block; margin-top: 0.9rem; }
@@ -498,11 +584,41 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   .legend-row { grid-template-columns: 1fr; gap: 0; }
 }
 
-.census-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+/* ── ⚠⚠ D-151 — THE TABLE SCROLLS, THE PAGE DOES NOT ─────────────────────────────────────────────
+   Owner, 2026-09-09: *"the list scrolls off the right side."* Thirteen columns do not fit every
+   viewport, and with no scroll port the widest row set the width of the DOCUMENT — so the whole
+   page slid sideways, taking the nav, the unscored disclaimer and the legend with it, and the
+   reader had to scroll right to read a badge and left again to read the next accession.
+   ⚠ A bounded scroll PORT is the remedy, and dropping columns is not. A column removed to make a
+   table fit is data withheld to flatter a layout, which is the thing this surface refuses in every
+   other direction (see the cap notice, the never-folded rows, and the refusal categories).
+   ⚠⚠ IT SCROLLS IN BOTH AXES ON PURPOSE, AND THE STICKY HEADER IS WHY. `position: sticky` resolves
+   against the nearest SCROLLPORT ancestor. Once this box scrolls horizontally, CSS computes its
+   `overflow-y` to `auto` as well, so the `<thead>` below sticks to THIS box rather than to the
+   viewport — and a box with no height bound never scrolls, which would leave the header stuck to
+   a scrollport that cannot move, i.e. not sticky at all. The `max-height` is what makes the sticky
+   header keep working, not a decoration on top of it.
+   ⚠ `min(78vh, …)`: tall enough that the list is what fills the screen once the reader reaches it,
+   bounded so a short viewport still shows the sections beneath. */
+.census-table-scroll {
+  overflow: auto;
+  max-height: min(78vh, 60rem);
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 0.6rem;
+}
+/* ⚠ `min-width` on the TABLE, not on the wrapper: it is what tells the browser the columns have a
+   floor to respect, so narrow viewports scroll the port instead of crushing thirteen columns into
+   unreadable slivers. Removing it does not "fix" a horizontal scrollbar — it moves the damage into
+   the cells. */
+.census-table table { width: 100%; min-width: 78rem; border-collapse: collapse; font-size: 0.9rem; }
 /* ⚠ Sticky header: the list is thousands of rows and a header that scrolls away turns every
-   column into an unlabelled number. */
+   column into an unlabelled number.
+   ⚠ D-151: `top: 0` is now measured against `.census-table-scroll`, and the z-index is raised so
+   the header sits above the sticky first column below rather than beside it. */
 .census-table thead th {
-  position: sticky; top: 0; z-index: 1;
+  position: sticky; top: 0; z-index: 3;
   background: #131c27; border-bottom: 1px solid #2d3748;
   padding: 0; text-align: left; white-space: nowrap;
 }
@@ -518,9 +634,40 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .census-table .num, .census-detail .num {
   text-align: right; font-variant-numeric: tabular-nums;
 }
-/* ⚠ The protein name is the only free-text column; it takes the slack instead of the table
-   deciding for itself. */
-.census-table td:nth-child(3) { width: 100%; }
+/* ── ⚠⚠ D-151 — `td:nth-child(3) { width: 100% }` IS GONE, AND IT WAS THE HACK BEHIND THE BLEED ──
+   The retired rule read *"the protein name is the only free-text column; it takes the slack instead
+   of the table deciding for itself"*, and `width: 100%` on one cell of a thirteen-column auto-layout
+   table does not express that: it asks that column to be as wide as the table, which the algorithm
+   resolves by giving the name column everything the other ten do not strictly demand and then
+   letting the total run past the container. It is recorded rather than deleted in silence, because
+   the intent behind it was right and only the mechanism was wrong.
+   ⚠ The replacement is a BOUND on a block child, which is D-142's finding restated: `max-width` on
+   a `td` is advisory under the auto algorithm, while a capped block child's max-content width
+   really does cap what the column contributes.
+   ⚠ NO ELLIPSIS AND NO CLIPPING. The longest census protein names run past 70 characters; they
+   wrap onto a second line and every character stays on screen. **A bound is not a truncation** is
+   the standing rule here (`.col-rank`, `.description-text`), and it governs this column too. */
+.census-table .protein-cell { min-width: 12rem; }
+.census-table .protein-name {
+  display: block; min-width: 12rem; max-width: 22rem;
+  overflow-wrap: break-word;
+}
+/* ⚠ The identity columns do not wrap — an accession broken across two lines stops being one token
+   a reader can match against the address bar or a search box. */
+.census-table tbody td:nth-child(1), .census-table tbody td:nth-child(2) { white-space: nowrap; }
+
+/* ⚠⚠ THE ACCESSION RIDES ALONG WHEN THE PORT SCROLLS SIDEWAYS. Thirteen columns mean the reader is
+   often looking at the right-hand half of a row, and a row whose identity has scrolled out of sight
+   is a row of numbers about nothing. The background is opaque and matches the surface it covers,
+   because a transparent sticky cell renders the columns underneath it through the text.
+   ⚠ z-index 1, under the header's 3: where the two meet, the header wins — a column heading covered
+   by a cell is the version of this that looks broken. */
+.census-table thead th:first-child { left: 0; z-index: 4; }
+.census-table tbody td:first-child {
+  position: sticky; left: 0; z-index: 1;
+  background: var(--panel);
+}
+.census-table tbody tr:hover td:first-child { background: #172029; }
 
 .link {
   background: none; border: 0; padding: 0; font: inherit;

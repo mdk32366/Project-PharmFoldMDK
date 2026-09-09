@@ -733,18 +733,27 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     assert 150 in ids, (
         "D-150 was spent by the census structure-status honesty surface; this assertion barred it "
         "and must now NAME it — never delete a bar, and never relax one to a `>=`")
-    assert 151 not in ids
+    # ⚠⚠ AND THE 151 BAR BECAME A NAME AT `D-151`, WHICH IS THE FOURTEENTH PASS THROUGH THIS
+    # RESOLUTION. `### D-151` (the owner UI-polish ship — the Initial Targets label, the Kathad DOI
+    # anchor and the census layout) claimed the integer this entry had barred, so the bar is not
+    # deleted and is not relaxed to a `>=` — it becomes the stronger statement that 151 is SPENT
+    # and named, and the bar moves one integer along to 152.
+    assert 151 in ids, (
+        "D-151 was spent by the owner UI-polish ship; this assertion barred it and must now NAME "
+        "it — never delete a bar, and never relax one to a `>=`")
+    assert 152 not in ids
     # the two entries this one is built beside, NAMED so a rename cannot pass silently
     assert re.search(r"^### D-146 — Track B stops denying the surface it is served on", LOG, re.M)
     assert re.search(r"^### D-147 — The census rank stops presenting a loop as an ectodomain",
                      LOG, re.M)
     assert re.search(r"^### D-150 — The census surface stops answering three questions with one word",
                      LOG, re.M)
+    assert re.search(r"^### D-151 — Three owner UI complaints, one ship", LOG, re.M)
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-151" not in LOG, (
-        "D-151 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-152" not in LOG, (
+        "D-152 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
 
@@ -779,11 +788,24 @@ def test_the_reserved_map_holds_148_bars_150_and_the_pointer_skips_the_hold():
     assert "WRITTEN" in row150, "the 150 row does not record that the integer was spent"
     assert "Original reservation text" in row150, (
         "the original reservation is provenance and is kept, not replaced (D-129-C)")
+    # ⚠⚠ THE 151 ROW SURVIVES ITS OWN SPENDING, AND MARKER-SAFE IS WHY THIS LOOKUP STILL WORKS.
+    # `D-151` was written on 2026-09-09 and its row was RETIRED IN PLACE — ✅ WRITTEN recorded
+    # inside the cell, the original reservation text kept as provenance (D-129-C), and the literal
+    # `| **D-151** |` marker deliberately NOT struck. Striking it would have broken this line
+    # rather than satisfied it.
     assert re.search(r"^\| \*\*D-151\*\*", RESERVED, re.M), (
-        "the bar moved to 151, so 151 must be a RESERVED row")
+        "D-151 is cited here, so it must remain a RESERVED row — retiring a row by deleting or "
+        "striking it opens a citation hole indistinguishable from D-062's")
+    row151 = next(ln for ln in RESERVED.splitlines() if ln.startswith("| **D-151**"))
+    assert "WRITTEN" in row151, "the 151 row does not record that the integer was spent"
+    assert "Original reservation text" in row151, (
+        "the original reservation is provenance and is kept, not replaced (D-129-C)")
+    assert re.search(r"^\| \*\*D-152\*\*", RESERVED, re.M), (
+        "the bar moved to 152, so 152 must be a RESERVED row")
     # ⚠⚠ THE POINTER MOVES IN THE SAME COMMIT THAT SPENDS THE INTEGER, AND IT SKIPS THE HOLD.
     # A reserved integer is not a free one — that is this file's whole purpose.
-    assert "Next free `D-` integer: **`D-151`**" in RESERVED
+    assert "Next free `D-` integer: **`D-152`**" in RESERVED
+    assert "Next free `D-` integer: **`D-151`**" not in RESERVED
     assert "Next free `D-` integer: **`D-150`**" not in RESERVED
     assert "Next free `D-` integer: **`D-148`**" not in RESERVED
     assert "Next free `D-` integer: **`D-147`**" not in RESERVED

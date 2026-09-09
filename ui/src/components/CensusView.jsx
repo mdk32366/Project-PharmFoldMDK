@@ -34,21 +34,19 @@ export default function CensusView() {
 
   return (
     <div className="census">
+      {/* ⚠⚠ D-151 — THE LIST MOVED ABOVE FIVE SECTIONS OF PROSE, AND NOTHING WAS DELETED TO DO IT.
+          Owner complaint, 2026-09-09: *"You've got to scroll to get to the list."* Measured cause,
+          not guessed: the lede, the unscored bar, the counts block, the absences `<dl>` and the
+          five tranche rows all rendered ABOVE `<CensusBrowser />`, so the searchable table — the
+          thing every reader of this page came for — began below the fold of a normal laptop.
+          ⚠ THE REMEDY IS ORDER AND DISCLOSURE, NEVER OMISSION. Every block below is still on this
+          page, in full, with the same words: the four that used to precede the table now sit in
+          ONE collapsed `<details>` that costs a single line, and the result / how-to-read / limits
+          sections keep their place beneath the table where they always were.
+          ⚠ The unscored bar is the ONE thing that does not move. It is the page's standing claim
+          and the reader must meet it before any number, which is the rule the block below the
+          `<h2>` has carried since D-079 and the assertion in `CensusView.test.jsx` still pins. */}
       <h2>The wider protein census</h2>
-
-      <p className="lede">
-        Alongside the 82 ranked targets, this project measured a much larger set of human membrane
-        proteins: which of them have an outward-facing stretch precise enough to model, what those
-        structures look like, and <strong>what the pre-registered model says when it is pointed at
-        them</strong>.
-        {/* ⚠⚠ THIS SENTENCE WENT STALE ONCE AND THE REPLACEMENT RECORDS IT. It read "…to find out
-            how many of them could be folded at all. That count is what this page reports." True
-            when written; it described the project as of the FOLDING and stopped describing it once
-            features were extracted and the profile was ruled. ⚠ A page whose opening line lags its
-            own work under-reports that work — the same defect as F-049 amendment 2 instance 4, on
-            a thesis rather than on a disclaimer, and with the same absence of any signal: no diff,
-            no failing test, nothing edits the false thing into place. */}
-      </p>
 
       {/* ⚠ The disclaimer sits ABOVE the numbers, not below them. A reader who stops after the
           headline figure must already have met the limit. */}
@@ -60,84 +58,108 @@ export default function CensusView() {
         ranked 82.
       </p>
 
-      <section className="census-counts">
-        <h3>What was measured</h3>
-        <dl className="census-figures">
-          <div><dt>{rows.toLocaleString()}</dt><dd>proteins examined</dd></div>
-          <div><dt>{foldable.toLocaleString()}</dt><dd>have an outward-facing stretch precise enough to cut out</dd></div>
-          <div><dt>{notFoldableTotal.toLocaleString()}</dt><dd>do not — each with a stated reason, below</dd></div>
-        </dl>
-        <ul>
-          {CENSUS.sources.map((s) => (
-            <li key={s.label}>
-              <strong>{s.label}:</strong> {s.rows.toLocaleString()} examined,{' '}
-              {s.foldable.toLocaleString()} with a usable outward-facing stretch
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* ⚠⚠ COLLAPSED, NOT CUT (D-151). A `<details>` is a disclosure control, not a filter: the
+          text is in the DOM, it is findable by the browser's own page search, and every existing
+          assertion about it reads it unchanged. ⚠ It is deliberately NOT `open` — an `open`
+          default would restore the exact scroll the owner objected to while looking like a fix. */}
+      <details className="census-background">
+        <summary>
+          What was measured, where there is no measurement, and how the folding was batched
+        </summary>
 
-      <section className="census-absences">
-        <h3>Where there is no measurement, the reason is named</h3>
-        <p className="note">
-          ⚠ An absence is recorded as a <em>category with a cause</em> — never as a zero, and never
-          as a blank. &quot;Not described&quot; and &quot;described and empty&quot; are different
-          findings.
+        <p className="lede">
+          Alongside the 82 ranked targets, this project measured a much larger set of human membrane
+          proteins: which of them have an outward-facing stretch precise enough to model, what those
+          structures look like, and <strong>what the pre-registered model says when it is pointed at
+          them</strong>.
+          {/* ⚠⚠ THIS SENTENCE WENT STALE ONCE AND THE REPLACEMENT RECORDS IT. It read "…to find out
+              how many of them could be folded at all. That count is what this page reports." True
+              when written; it described the project as of the FOLDING and stopped describing it once
+              features were extracted and the profile was ruled. ⚠ A page whose opening line lags its
+              own work under-reports that work — the same defect as F-049 amendment 2 instance 4, on
+              a thesis rather than on a disclaimer, and with the same absence of any signal: no diff,
+              no failing test, nothing edits the false thing into place. */}
         </p>
-        <dl>
-          {CENSUS.notFoldable.map((r) => (
-            <div className="census-absence" key={r.reason}>
-              <dt>{r.rows.toLocaleString()} — {r.reason}</dt>
-              <dd>{r.plain}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
 
-      <section className="census-tranches">
-        <h3>How the folding is batched</h3>
-        <p className="note">
-          Folding runs in batches from the shortest to the longest, so that any problem with the
-          hardware shows up on a cheap fold rather than an expensive one. ⚠ <strong>A batch is a
-          running order, not a ranking</strong> — the position of a protein here says nothing
-          whatever about it as a target.
-        </p>
-        {/* ⚠⚠ D-094 amendment 1 dec 2. PLANNED and IN ARTIFACT are different populations and are
-            rendered as two values. ⚠ A bare 776 is forbidden — it asserts 776 structures exist,
-            when 728 are oneshot-folded and the hold-48 remainder was tiled. D-118 retired
-            "48 held" / "waiting on rented capacity". */}
-        <ul>
-          {CENSUS.tranches.map((t) => (
-            <li key={t.tranche}>
-              <strong>Batch {t.tranche}</strong> — {t.span} —{' '}
-              {t.rows.toLocaleString()} planned, {t.inArtifact.toLocaleString()} in{' '}
-              {CENSUS.profile.artifact}
-              {t.tranche === 5 && t.closeout && (
-                <>
-                  {' '}— ⚠ <strong>{t.complete.toLocaleString()} oneshot folds</strong>; tiles
-                  complete; <strong>{t.closeout.uniqueAssembledParents} unique assembled
-                  parents</strong> on the volume, measured {t.closeout.inventoryAmendedOn}{' '}
-                  ({t.closeout.inventoryArtifact}). Of those, the{' '}
-                  {t.closeout.measuredOn} owner closeout slice is{' '}
-                  {t.closeout.wave1Wave2Parents} (Wave1 PASS {t.closeout.wave1Pass} +
-                  Wave2 PASS {t.closeout.wave2Pass}), and{' '}
-                  {t.closeout.additionalAssembledParents} are additional assembled parents
-                  that were already on the volume and simply were not counted by that
-                  slice; {t.closeout.mucins} mucins out of class. Rental closed{' '}
-                  {t.closeout.measuredOn} ({t.closeout.artifact}); pod Terminated — the
-                  amended inventory is a recount, not a re-opened rental. The 728 oneshot
-                  folds are not in the artifact above, which has not been re-parsed.
-                </>
-              )}
-              {t.absent?.length > 0 && (
-                <>
-                  {' '}— ⚠ absent from the artifact: {t.absent.join(', ')}
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+        <section className="census-counts">
+          <h3>What was measured</h3>
+          <dl className="census-figures">
+            <div><dt>{rows.toLocaleString()}</dt><dd>proteins examined</dd></div>
+            <div><dt>{foldable.toLocaleString()}</dt><dd>have an outward-facing stretch precise enough to cut out</dd></div>
+            <div><dt>{notFoldableTotal.toLocaleString()}</dt><dd>do not — each with a stated reason, below</dd></div>
+          </dl>
+          <ul>
+            {CENSUS.sources.map((s) => (
+              <li key={s.label}>
+                <strong>{s.label}:</strong> {s.rows.toLocaleString()} examined,{' '}
+                {s.foldable.toLocaleString()} with a usable outward-facing stretch
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="census-absences">
+          <h3>Where there is no measurement, the reason is named</h3>
+          <p className="note">
+            ⚠ An absence is recorded as a <em>category with a cause</em> — never as a zero, and never
+            as a blank. &quot;Not described&quot; and &quot;described and empty&quot; are different
+            findings.
+          </p>
+          <dl>
+            {CENSUS.notFoldable.map((r) => (
+              <div className="census-absence" key={r.reason}>
+                <dt>{r.rows.toLocaleString()} — {r.reason}</dt>
+                <dd>{r.plain}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section className="census-tranches">
+          <h3>How the folding is batched</h3>
+          <p className="note">
+            Folding runs in batches from the shortest to the longest, so that any problem with the
+            hardware shows up on a cheap fold rather than an expensive one. ⚠ <strong>A batch is a
+            running order, not a ranking</strong> — the position of a protein here says nothing
+            whatever about it as a target.
+          </p>
+          {/* ⚠⚠ D-094 amendment 1 dec 2. PLANNED and IN ARTIFACT are different populations and are
+              rendered as two values. ⚠ A bare 776 is forbidden — it asserts 776 structures exist,
+              when 728 are oneshot-folded and the hold-48 remainder was tiled. D-118 retired
+              "48 held" / "waiting on rented capacity". */}
+          <ul>
+            {CENSUS.tranches.map((t) => (
+              <li key={t.tranche}>
+                <strong>Batch {t.tranche}</strong> — {t.span} —{' '}
+                {t.rows.toLocaleString()} planned, {t.inArtifact.toLocaleString()} in{' '}
+                {CENSUS.profile.artifact}
+                {t.tranche === 5 && t.closeout && (
+                  <>
+                    {' '}— ⚠ <strong>{t.complete.toLocaleString()} oneshot folds</strong>; tiles
+                    complete; <strong>{t.closeout.uniqueAssembledParents} unique assembled
+                    parents</strong> on the volume, measured {t.closeout.inventoryAmendedOn}{' '}
+                    ({t.closeout.inventoryArtifact}). Of those, the{' '}
+                    {t.closeout.measuredOn} owner closeout slice is{' '}
+                    {t.closeout.wave1Wave2Parents} (Wave1 PASS {t.closeout.wave1Pass} +
+                    Wave2 PASS {t.closeout.wave2Pass}), and{' '}
+                    {t.closeout.additionalAssembledParents} are additional assembled parents
+                    that were already on the volume and simply were not counted by that
+                    slice; {t.closeout.mucins} mucins out of class. Rental closed{' '}
+                    {t.closeout.measuredOn} ({t.closeout.artifact}); pod Terminated — the
+                    amended inventory is a recount, not a re-opened rental. The 728 oneshot
+                    folds are not in the artifact above, which has not been re-parsed.
+                  </>
+                )}
+                {t.absent?.length > 0 && (
+                  <>
+                    {' '}— ⚠ absent from the artifact: {t.absent.join(', ')}
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </details>
 
       <CensusBrowser />
 
