@@ -452,20 +452,24 @@ def test_d129_is_the_next_free_decision_id():
     # go away with a `>=`, and a `>=` would have hidden every collision above rather than
     # catching it. All three ids are named below; a bare `### D-142` still reddens.
     #
-    # ⚠ Widened again at **D-142** — to `[…, 140, 141, 142]` — by enumeration, for the SEVENTH
-    # time, and the SECOND clean resolution in a row. D-142 adds the Cancer association and
-    # Description columns to `/targets` and bounds the rank column. It was cut from `30f402f`
-    # with #263 and #265 both already merged, read `gh pr list --state open` (#222 / #200 / #197)
-    # **and then read all three diffs** — the check the D-140 collision proved is the one that
-    # matters — and found no branch holding a `### D-14x`. ⚠⚠ **Seven widenings, seven
-    # resolutions by ADDING.** A bare `### D-143` now takes the bar, and the limit of the
-    # open-PR check restated above stands: it proves nothing about an unpublished branch, which
-    # is exactly why this enumeration exists.
+    # ⚠ Widened again at **D-143** — to `[…, 140, 141, 143]`, with **142 SKIPPED** — by
+    # enumeration, for the SEVENTH time, and this is the SIXTH LIVE COLLISION.
+    # ⚠⚠ D-143 (`/targets` Cancer association + Description columns) was written as `### D-142`.
+    # It was cut from `30f402f`, ran `gh pr list --state open` (#222 / #200 / #197) AND read all
+    # three diffs — the check the D-140 collision proved is the only one that bites — and found no
+    # `### D-14x` held. #266 was then published **four minutes later** and holds `### D-142`.
+    # ⚠⚠ AND #266's TITLE SAYS "D-143" WHILE ITS DIFF WRITES `### D-142`. A title naming a
+    # decision neither spends nor releases it; the HEADING does. Trusting the title would have
+    # produced a second `### D-142` — the D-062 rule arriving from the other direction, where the
+    # entry exists and the reference to it is stale.
+    # ⚠⚠ **Seven widenings, seven resolutions by ADDING.** Not one relaxed to a `>=`, and a `>=`
+    # here would have silently admitted both 142s.
     assert [i for i in ids if i > 129] == [
-        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142
+        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 143
     ], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141 and D-142; found {ids[-13:]}"
+        f"D-137, D-138, D-139, D-140, D-141 and D-143 (142 is held by #266 on an unmerged "
+        f"branch); found {ids[-13:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 is the recorded successor id; it must be the served-path flip entry, "
@@ -479,12 +483,15 @@ def test_d129_is_the_next_free_decision_id():
         "D-141 is the recorded successor id; it must be the confidence-Kabsch lander "
         "entry, not some other entry that took the number"
     )
-    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M), (
-        "D-142 is the recorded successor id; it must be the target-list columns entry, "
+    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", LOG, re.M), (
+        "D-143 is the recorded successor id; it must be the target-list columns entry, "
         "not some other entry that took the number"
     )
-    assert "\n### D-143" not in LOG, (
-        "D-143 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ 142 is deliberately absent HERE and expected to arrive from #266. Asserting its absence
+    # would be a bar on another branch's landed work; asserting its presence would redden until
+    # that branch merges. The enumeration above is what carries the skip.
+    assert "\n### D-144" not in LOG, (
+        "D-144 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

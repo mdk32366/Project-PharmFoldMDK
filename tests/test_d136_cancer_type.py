@@ -420,16 +420,21 @@ def test_d136_entry_exists_in_the_living_log():
     assertion reddened by design, and the rebase inserted 140 beside 141. **All
     three ids are named;** `### D-142` still reddens.
 
-    ⚠ **Widened again at D-142 — to "142 is the target-list columns entry and 143
-    does not exist"** — the seventh widening. D-142 gives `/targets` a Cancer
-    association column and a Description column, and bounds the rank column. ⚠ It
-    touches this suite's subject at a distance and the distinction is worth keeping
-    sharp: **D-136's Approved Cancer type comes from the FDA label** and **D-140's
-    pipeline cancer type from the trial registry**, while D-142's target-list
-    column is the **D-053 expression grid** — three different authorities behind
-    three columns that all read "cancer". None of them moves here. Cut from
-    `30f402f`, D-142 read the open-PR list **and the diffs**, and found no
-    `### D-14x` held. **All four ids are named;** `### D-143` still reddens.
+    ⚠⚠ **Widened again at D-143 — to "143 is the target-list columns entry, 142 is
+    SKIPPED, and 144 does not exist"** — the seventh widening, and the sixth live
+    collision. D-143 gives `/targets` a Cancer association column and a Description
+    column, and bounds the rank column. ⚠ **The three-authorities distinction this
+    suite exists to protect is now on THREE columns and matters more, not less:**
+    D-136's Approved Cancer type comes from the **FDA label**, D-140's pipeline
+    cancer type from the **trial registry**, and D-143's target-list column from the
+    **D-053 expression grid** — three columns that all read "cancer", three
+    authorities, and none of them moves here.
+    ⚠⚠ D-143 was written as `### D-142`. It read the open-PR list at `30f402f`
+    **and the diffs**, found no `### D-14x` held, and #266 was published four
+    minutes later holding `### D-142` — while its own **title** says "D-143". **The
+    heading is the authority and the title is not**; trusting the title would have
+    written a second `### D-142`. So 142 is left with #266 and `### D-144` takes the
+    bar. If #266 merges first this reddens by design and the rebase adds 142.
     """
     log = DOCS_README.read_text(encoding="utf-8")
     assert "\n### D-136 —" in log
@@ -453,11 +458,11 @@ def test_d136_entry_exists_in_the_living_log():
         "D-141 is the recorded successor id; it must be the confidence-Kabsch lander "
         "entry, not some other entry that took the number"
     )
-    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", log, re.M), (
-        "D-142 is the recorded successor id; it must be the target-list columns entry, "
+    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", log, re.M), (
+        "D-143 is the recorded successor id; it must be the target-list columns entry, "
         "not some other entry that took the number"
     )
-    assert "\n### D-143" not in log
+    assert "\n### D-144" not in log
 
 
 def test_every_entry_slice_in_this_suite_is_anchored_to_a_line_start():

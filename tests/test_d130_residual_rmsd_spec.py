@@ -327,22 +327,33 @@ def test_d130_is_the_next_free_decision_id():
     ``### D-142`` is barred. ⚠ Six widenings, six resolutions by ADDING; a ``>=``
     would have concealed every collision above instead of catching it.
 
-    ⚠ **Widened again at D-142 — to ``[132, …, 140, 141, 142]``** — the seventh
-    pass, and the second clean one running. D-142 gives ``/targets`` a Cancer
-    association column and a Description column, and bounds the rank column that
-    had grown to hold a 144-character sentence. Cut from ``30f402f``, it ran the
-    open-PR check **and read the diffs of all three open PRs** rather than their
-    titles — the check the D-140 collision showed to be the only one that bites —
-    and found no ``### D-14x`` on any of them. **All four ids are named below** and
-    ``### D-143`` takes the bar. ⚠ Seven widenings, seven resolutions by ADDING.
+    ⚠⚠ **Widened again at D-143 — to ``[132, …, 140, 141, 143]``, with 142
+    SKIPPED — and this is the SIXTH LIVE COLLISION.** D-143 gives ``/targets`` a
+    Cancer association column and a Description column, and bounds the rank column
+    that had grown to hold a 144-character sentence. It was written as
+    ``### D-142``: cut from ``30f402f``, it ran the open-PR check **and read the
+    diffs** of #222 / #200 / #197 — the check the D-140 collision showed to be the
+    only one that bites — and found no ``### D-14x`` held. #266 (Track B
+    structural-only copy) was published **four minutes later** holding
+    ``### D-142``.
+
+    ⚠⚠ **And #266's TITLE says "D-143" while its DIFF writes ``### D-142``.** A
+    title naming a decision neither spends nor releases it; the **heading** does.
+    Trusting the title would have produced a second ``### D-142`` — the D-062 rule
+    from the other direction, where the entry exists and the reference is stale.
+    So 143 is taken, 142 is left with #266, and ``### D-144`` takes the bar. ⚠ If
+    #266 merges first this enumeration reddens **by design** and the rebase inserts
+    142 beside 143. ⚠ Seven widenings, seven resolutions by ADDING; a ``>=`` here
+    would have silently admitted **both** ``### D-142`` headings.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
     assert [i for i in ids if i > 130] == [
-        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142
+        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 143
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141 and D-142; found {ids[-12:]}"
+        f"D-137, D-138, D-139, D-140, D-141 and D-143 (142 is held by #266 on an "
+        f"unmerged branch); found {ids[-12:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "
@@ -356,12 +367,12 @@ def test_d130_is_the_next_free_decision_id():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M), (
-        "D-142 must be the target-list columns entry, not some other entry "
+    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", LOG, re.M), (
+        "D-143 must be the target-list columns entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-143" not in LOG, (
-        "D-143 is the next free integer and must stay unspent until an entry claims "
+    assert "\n### D-144" not in LOG, (
+        "D-144 is the next free integer and must stay unspent until an entry claims "
         "it by name here"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

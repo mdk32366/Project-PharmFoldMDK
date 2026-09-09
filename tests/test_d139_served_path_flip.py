@@ -727,15 +727,18 @@ def test_d139_entry_exists_in_the_living_log():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    # ⚠ Widened again at D-142 by ADDING. D-142 is a `/targets` LIST-SURFACE change —
-    # two new columns and a bounded rank column — and it changes nothing about the
-    # served path: no threshold, no allowlist, no gate, no artifact, no flip. It is
-    # named here only because it is the next entry in the log this bar walks.
-    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M), (
-        "D-142 must be the target-list columns entry, not some other entry "
+    # ⚠ Widened again at D-143 by ADDING, with 142 SKIPPED. D-143 is a `/targets`
+    # LIST-SURFACE change — two new columns and a bounded rank column — and it changes
+    # nothing about the served path: no threshold, no allowlist, no gate, no artifact,
+    # no flip. It is named here only because this bar walks the log.
+    # ⚠⚠ It was written as `### D-142` and lost the number to #266, published four
+    # minutes after its id check ran — and #266's TITLE says "D-143" while its DIFF
+    # writes `### D-142`. The heading spends the id; the title does not.
+    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", LOG, re.M), (
+        "D-143 must be the target-list columns entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-143" not in LOG, "D-143 is the next free integer"
+    assert "\n### D-144" not in LOG, "D-144 is the next free integer"
 
 
 def test_the_entry_records_the_subset_its_provenance_and_the_zero():

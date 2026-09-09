@@ -1,4 +1,4 @@
-"""D-142 — the `/targets` Cancer association + Description columns. Every one of these can go red.
+"""D-143 — the `/targets` Cancer association + Description columns. Every one of these can go red.
 
 ⚠⚠ **THE FIELD THAT LOOKED LIKE THE DESCRIPTION IS THE GENE SYMBOL, AND THIS FILE PROVES IT
 RATHER THAN ASSERTING IT.** The GO named ``label`` as the likely Description and asked for it to be
@@ -293,7 +293,7 @@ def test_the_added_payload_is_measured_rather_than_waved_through():
     assert len(after) - len(before) < 60_000, "raw growth larger than the entry records"
     gz_before, gz_after = len(gzip.compress(before, 9)), len(gzip.compress(after, 9))
     assert gz_after - gz_before < 4_000, "gzipped growth larger than the entry records"
-    entry = _flat(_d142_entry())
+    entry = _flat(_d143_entry())
     assert "17,952" in entry and "56,498" in entry, "the raw measurement must be in the log"
     assert "2,148" in entry and "4,039" in entry, "the gzipped measurement must be in the log"
 
@@ -498,27 +498,27 @@ def test_this_pr_ships_no_ops_no_fold_and_no_new_cancer_datum():
 # ────────────────────────────────── the log leads the code ──────────────────────────────────────
 
 
-def _d142_entry() -> str:
-    """The D-142 entry only. ⚠ Bounded by the next `### ` heading whatever it is, so a neighbour's
+def _d143_entry() -> str:
+    """The D-143 entry only. ⚠ Bounded by the next `### ` heading whatever it is, so a neighbour's
     text can never be swallowed into these checks (the D-141 helper's reasoning)."""
-    start = LOG.index("\n### D-142 —") + 1
-    nxt = re.search(r"^### (?!D-142\b)", LOG[start + 1:], re.M)
+    start = LOG.index("\n### D-143 —") + 1
+    nxt = re.search(r"^### (?!D-143\b)", LOG[start + 1:], re.M)
     return LOG[start:start + 1 + nxt.start()] if nxt else LOG[start:]
 
 
-def test_the_d142_entry_exists_and_leads_the_log():
+def test_the_d143_entry_exists_and_leads_the_log():
     """⚠⚠ THE CHECK IS THE HEADING, NEVER A CITATION OF IT (D-062 / method-note item 7).
 
     PR #90 named D-062 in its title and shipped no `### D-062`; thirteen later citations then
     pointed at nothing. So this asserts the entry itself, anchored to a line start.
     """
-    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M)
-    assert len(re.findall(r"^### D-142", LOG, re.M)) == 1, "exactly one D-142 entry"
-    assert LOG.index("### D-142 —") < LOG.index("### D-141 —"), "newest first"
+    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", LOG, re.M)
+    assert len(re.findall(r"^### D-143", LOG, re.M)) == 1, "exactly one D-143 entry"
+    assert LOG.index("### D-143 —") < LOG.index("### D-141 —"), "newest first"
 
 
 def test_the_entry_records_the_label_finding_as_a_measurement():
-    entry = _flat(_d142_entry())
+    entry = _flat(_d143_entry())
     assert "label" in entry and "gene symbol" in entry
     assert "cohort_82_ecd.csv" in entry
     assert "all 82 rows" in entry, "the measurement's denominator must be stated"
@@ -528,7 +528,7 @@ def test_the_entry_records_the_label_finding_as_a_measurement():
 
 
 def test_the_entry_records_the_uncited_card_rather_than_quietly_fixing_it():
-    entry = _flat(_d142_entry())
+    entry = _flat(_d143_entry())
     assert "data.attribution" in entry
     assert "PC3" in entry
     assert "precondition" in entry.lower()
@@ -536,40 +536,40 @@ def test_the_entry_records_the_uncited_card_rather_than_quietly_fixing_it():
 
 
 def test_the_entry_measures_column_one_before_it_changed_it():
-    entry = _flat(_d142_entry())
+    entry = _flat(_d143_entry())
     assert "144" in entry, "the longest cause must be measured, not described"
     assert "no rule for" in entry.lower() or "no rule" in entry.lower()
     assert "table-layout: auto" in entry
 
 
 def test_the_entry_states_the_refused_sort_and_its_reason():
-    entry = _flat(_d142_entry())
+    entry = _flat(_d143_entry())
     assert "not sortable" in entry.lower()
     assert "2026-08-21" in entry, "the ruling the refusal rests on must be named"
     assert "32.2%" in entry
 
 
 def test_the_entry_names_what_is_not_shipped():
-    entry = _flat(_d142_entry()).lower()
+    entry = _flat(_d143_entry()).lower()
     for claim in ("not a new route", "not new cancer data", "not a ranking change"):
         assert claim in entry, claim
 
 
 def test_the_entry_carries_a_deep_learning_justification():
-    entry = _flat(_d142_entry())
+    entry = _flat(_d143_entry())
     assert "Deep-learning justification" in entry
     assert "membrane_proximal_plddt" in entry
 
 
 def test_the_entry_records_the_reverts_including_the_one_that_bit_unprompted():
-    entry = _flat(_d142_entry()).lower()
+    entry = _flat(_d143_entry()).lower()
     assert "revert" in entry
     assert "recommended" in entry, "the denylist bite must be recorded"
     assert "f-044" in entry, "the comment-satisfied-guard lesson must be carried forward"
 
 
 def test_the_numbering_provenance_is_recorded_not_assumed():
-    entry = _flat(_d142_entry())
+    entry = _flat(_d143_entry())
     assert "30f402f" in entry, "the tip the id was checked against must be named"
     assert "gh pr list --state open" in entry
     assert "D-143" in entry, "the next-free integer must be barred by name"
@@ -580,6 +580,6 @@ def test_the_architecture_doc_records_the_shipped_shape():
     """⚠ `ARCHITECTURE.md` is the single source of truth for system shape and must be current
     BEFORE the PR is filed (CLAUDE.md living-documentation rule 2)."""
     flat = _flat(ARCH)
-    assert "D-142" in flat
+    assert "D-143" in flat
     assert "protein_name" in flat, "the coverage field must be in the Read API description"
     assert "attributions" in flat, "the associations field must be in the Read API description"

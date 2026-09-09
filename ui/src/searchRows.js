@@ -23,7 +23,7 @@ export function normalizeQuery(text) {
 // ⚠ An alias is a way IN, not a second identity: matching one does not rename the row.
 // ⚠ `aliases` absent (a payload that never carried them) degrades to accession/gene/label matching.
 // It does NOT throw, and it does not claim the protein has no other names.
-// ⚠⚠ `description` IS MATCHED TOO (D-142), and it is the same finding one more time. The census
+// ⚠⚠ `description` IS MATCHED TOO (D-143), and it is the same finding one more time. The census
 // searches protein names already — its `label` IS the protein name — while `/targets`, whose
 // `label` is the gene symbol, could not. So the surface that just gained a Description column would
 // have rendered 82 protein names that its own search box could not find: `F-052`'s shape, in the

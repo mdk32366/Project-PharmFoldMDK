@@ -379,7 +379,7 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
-### D-142 — `/targets` gains a Cancer association and a Description column, and the field that looked like the description was the gene symbol: the widest column on the page was holding a 144-character sentence, and the association values had been rendering with no HPA citation since D-053
+### D-143 — `/targets` gains a Cancer association and a Description column, and the field that looked like the description was the gene symbol: the widest column on the page was holding a 144-character sentence, and the association values had been rendering with no HPA citation since D-053
 
 - **Date:** 2026-09-09
 - **Status:** Accepted as the **target-list columns GO** (Matt 2026-09-08 ~8:02 AM PT via Emma):
@@ -392,29 +392,57 @@ So the rule is not "be careful" — it is:
   ranking change, no scorer change, no migration, no ops, no fold, no GPU, no rent, no emit.**
   ⚠ **No pLDDT is promoted to target quality** and the reserved suitability slot stays reserved
   (D-075-gated).
-- **Ship id:** spends **`D-142`**, and it was verified rather than assumed. On `main` at tip
-  **`30f402f`** (D-141, [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
-  `grep -n '^### D-1[34][0-9]' docs/README.md` returns **`D-141`** as the highest written entry
-  (then 140, 139, 138, 137), and `gh pr list --state open` returns **three** PRs — **#222**
-  *"docs+tests: register DEP-/P-/S-, land F-067, and record a value-pin caught by its own guard"*
-  (branch `docs/registers-and-f067`), **#200** and **#197**. ⚠ Checked in the **diffs**, not
-  inferred from the titles, because that is the check D-141 recorded as the one that actually
-  works: `gh pr diff` on all three, filtered to added lines containing `### D-1NN` or `### F-1NN`,
-  returns **no added `### D-14x` heading** — #222's hits are prose *quoting* `### D-106` /
-  `### D-108` / `### D-110` while auditing the pointer invariant, and #200 / #197 add none at all.
-  ⚠⚠ **And the limit of that check is restated rather than borrowed as comfort:** an open-PR scan
-  proves no *published* branch spent 142 and **cannot prove no unpublished one did** — #263 and
-  D-139 collided precisely that way, both cutting from `dd06e9c`, both running the same command,
-  both writing `### D-139`. The enumeration in the guards is what would catch it, and this entry
-  adds `D-142` to it **by name** while barring a bare **`### D-143`**. **Never a `>=`.**
-  - ⚠ **Effect on the `docs/RESERVED.md` citation invariant: the hole MOVES, it does not grow** —
-    the opposite of D-141, and worth stating in those terms because D-141 had to report a growth.
-    Measured with the `docs/RESERVED.md` §*"How to run the check"* command: `origin/main` at
-    `30f402f` reports **`['D-131', 'D-142', 'F-067']`**; this branch reports
-    **`['D-131', 'D-143', 'F-067']`**. `D-142` is *resolved* by the heading above and `D-143` takes
-    the forward reference — a reference that announces its own absence, which is the distinction
-    `RESERVED.md` exists to draw from the D-062 defect. `D-131` (the suffix half of
-    `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched.
+- **Ship id:** spends **`D-143`**, and **`D-142` is deliberately skipped, not free.** ⚠⚠ **This
+  entry was written as `### D-142`, and it lost the number to a branch it could not see — the
+  SEVENTH instance of that collision, and the one that finally shows why the *title* is not the
+  check.**
+  - **What the check said, and it was run rather than assumed.** On `main` at tip **`30f402f`**
+    (D-141, [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
+    `grep -n '^### D-1[34][0-9]' docs/README.md` returned **`D-141`** as the highest written entry
+    (then 140, 139, 138, 137), and `gh pr list --state open` returned **three** PRs — **#222**
+    *"docs+tests: register DEP-/P-/S-, land F-067…"* (branch `docs/registers-and-f067`), **#200**
+    and **#197**. ⚠ Checked in the **diffs**, not inferred from the titles: `gh pr diff` on all
+    three, filtered to added lines matching `### D-1NN`, returned **no added `### D-14x`** —
+    #222's hits are prose *quoting* `### D-106` / `### D-108` / `### D-110` while auditing the
+    pointer invariant, and #200 / #197 add none.
+  - **⚠⚠ And it was wrong within four minutes, exactly the way D-141 said it would be.**
+    [#266](https://github.com/mdk32366/Project-PharmFoldMDK/pull/266) *"Track B ranks structurally,
+    and says so"* (branch `cursor/track-b-structural-only-truth-d94b`, DRAFT) was **published at
+    2026-09-09T04:47:52Z**, after the check above ran and **before** this branch's PR at
+    `04:51:39Z`. It was unpublished when this branch looked, so the open-PR scan could not have
+    seen it. **An open-PR check proves no PUBLISHED branch spent the id and cannot prove no
+    unpublished one did** — this is now the sixth time that sentence has been the operative one,
+    and it was reported from outside (Trinity, Architect) rather than found here.
+  - **⚠⚠ THE TITLE AND THE DIFF DISAGREED, AND THE DIFF IS THE AUTHORITY.** #266 is *titled*
+    **"D-143: Track B ranks structurally…"** while its **diff adds
+    `### D-142 — Track B stops claiming a composite it cannot compute…`** and widens the six
+    enumerated guards to bar `### D-143`. Verified by reading the diff, not the title:
+    `gh pr diff 266 | grep -E '^\+### '` returns that heading and its `docs/Test_Plan.md`
+    counterpart. ⚠ **A title naming a decision does not spend it and does not release it — the
+    heading does** (method-note item 7, the D-062 rule, arriving from the other direction: there
+    the reference existed and the entry did not; here the entry exists and the reference is
+    stale). Had this branch trusted #266's title it would have taken 143 believing 142 free, and
+    written a second `### D-142`.
+  - **So 142 is left with #266 and this entry takes 143**, the D-138 / D-141 precedent: the branch
+    that looks later skips, and names the id it is not taking. ⚠ **The enumerations below carry
+    141 and 143 and SKIP 142 by name**, and a bare **`### D-144`** takes the bar. **Never a
+    `>=`:** if #266 merges first, the enumerations redden **by design** and the rebase inserts 142
+    beside 143 — that is the guard working, not a false alarm. ⚠ **T-numbers moved too**, for the
+    same reason and by reading the same diff: #266 spends **T-1225–T-1228** and **T-1234**, so this
+    entry's `docs/Test_Plan.md` block is **T-1235–T-1242** rather than the T-1225–T-1232 it was
+    first written as. A T-id collision is the same defect one register down and nothing was
+    checking for it.
+  - ⚠ **Effect on the `docs/RESERVED.md` citation invariant: the hole GROWS by one, and that is
+    recorded rather than smoothed over** — the same shape D-141 had to report, for the same
+    reason: the integer this entry spends (143) is not the one it bars (144), and 142 is now cited
+    here without being written here. Measured with the `docs/RESERVED.md` §*"How to run the
+    check"* command **after the renumber**, not predicted before it: `origin/main` at `30f402f`
+    reports **`['D-131', 'D-142', 'F-067']`**; this branch reports
+    **`['D-131', 'D-142', 'D-144', 'F-067']`**. **`D-144` is the one addition** — a forward
+    reference that announces its own absence, which is the distinction `RESERVED.md` exists to
+    draw from the D-062 defect. `D-142` stays unresolved here **because #266 holds it**, and it
+    resolves on `main` when #266 lands. `D-131` (the suffix half of `### D-130-B / D-131`) and
+    `F-067` (open in #222) are pre-existing and untouched.
 - **⚠⚠ The disqualifying fact, first: the obvious field was the wrong field, and the repo's own
   test fixture asserted the wrong belief.** The GO named `label` as the likely Description and
   asked for it to be verified. It is **not** the description. `data/cohort_82_ecd.csv` — the
@@ -680,12 +708,14 @@ So the rule is not "be careful" — it is:
   supplier states, the HPA credit), `ui/src/components/CancerAssociations.jsx` (reads
   `attributions[symbol]` — the uncited-card fix), `ui/src/searchRows.js` (`description` matched),
   `ui/src/styles.css` (the bounds), `ui/src/components/TargetList.columns.test.jsx` (new),
-  `tests/test_d142_targets_columns.py` (new), `ARCHITECTURE.md` (the target-list narrative and the
-  Read API row), `docs/Test_Plan.md` (the D-142 addendum), and the **six** next-free guards —
+  `tests/test_d143_targets_columns.py` (new), `ARCHITECTURE.md` (the target-list narrative and the
+  Read API row), `docs/Test_Plan.md` (the D-143 addendum, **T-1235–T-1242**), and the **six**
+  next-free guards —
   `tests/test_d129_phase5_named_refuse_spec.py`, `tests/test_d130_residual_rmsd_spec.py`,
   `tests/test_d136_cancer_type.py`, `tests/test_d139_served_path_flip.py`,
   `tests/test_d140_pipeline_programme.py` and `tests/test_d141_land_confidence_kabsch.py` —
-  widened **by enumeration** to carry `D-142` by name and to bar `### D-143`. ⚠ **Six because
+  widened **by enumeration** to carry `D-143` by name, to SKIP `D-142` (held by #266 on an
+  unmerged branch), and to bar `### D-144`. ⚠ **Six because
   D-141 added the sixth**, and the count is the thing most likely to be stale in this paragraph:
   the authority is `grep -rn '### D-14' tests/`, not this list.
   ⚠ **`ui/src/components/TargetList.search.test.jsx` is deliberately NOT edited** — see the

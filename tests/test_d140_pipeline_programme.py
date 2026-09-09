@@ -689,18 +689,21 @@ def test_d140_entry_exists_in_the_living_log():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    # ⚠⚠ Widened again at D-142 by ADDING, and this pairing needs its authorities kept
-    # apart. D-142 adds a **Cancer association** column to `/targets` from the **D-053
-    # expression grid** (quasi H-score, HPA IHC). That is NOT this entry's `cancer_type`,
-    # which comes from the **trial registry**, and NOT D-136's, which comes from the **FDA
-    # label**. Three columns reading "cancer", three authorities, and `adcs.v1.json` /
-    # `adcs.pipeline.v1.json` are untouched by D-142 — no pipeline row and no approved row
-    # moves. The shelves are a different population from the 82-target cohort entirely.
-    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", log, re.M), (
-        "D-142 must be the target-list columns entry, not some other entry "
+    # ⚠⚠ Widened again at D-143 by ADDING, with 142 SKIPPED, and this pairing needs its
+    # authorities kept apart. D-143 adds a **Cancer association** column to `/targets`
+    # from the **D-053 expression grid** (quasi H-score, HPA IHC). That is NOT this
+    # entry's `cancer_type`, which comes from the **trial registry**, and NOT D-136's,
+    # which comes from the **FDA label**. Three columns reading "cancer", three
+    # authorities, and `adcs.v1.json` / `adcs.pipeline.v1.json` are untouched by D-143 —
+    # no pipeline row and no approved row moves. The shelves are a different population
+    # from the 82-target cohort entirely.
+    # ⚠ 142 is held by #266 on an unmerged branch, whose title says "D-143" while its
+    # diff writes `### D-142`; the heading is what spends an id.
+    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", log, re.M), (
+        "D-143 must be the target-list columns entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-143" not in log
+    assert "\n### D-144" not in log
 
 
 def test_the_log_entry_records_the_counts_it_reports():

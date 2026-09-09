@@ -1,4 +1,4 @@
-// D-142 — reducing one target's D-053 association list to a cell a reader can scan.
+// D-143 — reducing one target's D-053 association list to a cell a reader can scan.
 //
 // The detail surface (`CancerAssociations.jsx`) renders EVERY pair with no truncation (D-053
 // decision 4), and that is right for a card and impossible in a table cell: `BTN3A3` carries 16

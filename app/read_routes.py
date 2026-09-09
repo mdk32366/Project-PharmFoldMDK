@@ -211,7 +211,7 @@ def get_adc_row(adc_id: str) -> dict:
 
 
 def _association_attributions(symbols: Any) -> dict[str, Any]:
-    """One HPA attribution block per covered symbol, for the ``pathology`` view (D-142).
+    """One HPA attribution block per covered symbol, for the ``pathology`` view (D-143).
 
     ⚠⚠ **THE CITATION IS A PRECONDITION OF DISPLAY, AND THIS ROUTE WAS SERVING THE VALUES
     WITHOUT IT.** ``D-100`` established that Kathad's S3 is a verbatim extract of HPA's
@@ -246,8 +246,8 @@ def get_associations() -> dict:
     supplier (``core/cancer_associations.py``); counts are computed from what loaded, never
     constants. No credential (D-034 posture).
 
-    ⚠ **D-142 adds one FIELD and no route** — ``attributions``, keyed by gene symbol, so the two
-    surfaces that render these values (the D-053 detail card and the D-142 target-list column) can
+    ⚠ **D-143 adds one FIELD and no route** — ``attributions``, keyed by gene symbol, so the two
+    surfaces that render these values (the D-053 detail card and the D-143 target-list column) can
     satisfy the HPA citation precondition. ``system-model.json`` is unchanged (D-051 fires on
     route sets)."""
     payload = load_associations()

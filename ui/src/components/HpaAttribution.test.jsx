@@ -130,7 +130,7 @@ describe('no HPA-rendering surface escapes the audit', () => {
     // Planner's count of two missed it, and my own enumeration missed it — all three stopped at
     // the component boundary. This is the fifth surface.
     'CensusDetail.jsx',
-    // ⚠⚠ Added at D-142, ENROLLED WITH THE COLUMN rather than after a later audit found it. The
+    // ⚠⚠ Added at D-143, ENROLLED WITH THE COLUMN rather than after a later audit found it. The
     // target list now renders the leading tumour type(s) from the D-053 map, and D-100 settled
     // that those are HPA content whichever route they took. It is the sixth surface, and the
     // per-datum link is the tumour type itself (the `CensusTable` staining-cell pattern), so

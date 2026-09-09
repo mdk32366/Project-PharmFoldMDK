@@ -486,7 +486,7 @@ def _coverage_row(row: ManifestRow, folded: dict[str, int],
     return {
         "accession": row.accession,
         "gene": row.gene,
-        # ⚠⚠ D-142 — THE HUMAN DESCRIPTION, AND IT COULD NOT COME FROM `/api/analyses`.
+        # ⚠⚠ D-143 — THE HUMAN DESCRIPTION, AND IT COULD NOT COME FROM `/api/analyses`.
         # The light list's field set is EXACT by ruling (D-034 dec 1, pinned in
         # `tests/test_read_routes.py::LIST_FIELDS`) and its `label` is the GENE SYMBOL on this
         # population, not a description — `data/cohort_82_ecd.csv` keeps `label` and
