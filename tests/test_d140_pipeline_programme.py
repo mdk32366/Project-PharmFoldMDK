@@ -684,12 +684,19 @@ def test_d140_entry_exists_in_the_living_log():
     # while it was the newest; the confidence-Kabsch lander then claimed 141 (it read
     # the open-PR list *after* #263 was published, so it saw 140 held and skipped it —
     # the clean version of the duplicate this entry records). #263 merging reddened
-    # the bar exactly as intended, so 141 is named here and `### D-142` takes the bar.
+    # the bar exactly as intended, so 141 is named here and `### D-143` takes the bar.
+    # ⚠ Widened again at D-142 by ADDING: the Track B structural-only copy entry claimed
+    # 142 off `30f402f` after `grep` (highest written = 141) and `gh pr list --state open`
+    # (#222 / #200 / #197, none spending a `D-1NN`). It touches no pipeline field.
     assert re.search(r"^### D-141 — The gate had nothing to answer with", log, re.M), (
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-142" not in log
+    assert re.search(r"^### D-142 — Track B stops claiming a composite", log, re.M), (
+        "D-142 must be the Track B structural-only copy entry, not some other entry "
+        "that took the number"
+    )
+    assert "\n### D-143" not in log
 
 
 def test_the_log_entry_records_the_counts_it_reports():

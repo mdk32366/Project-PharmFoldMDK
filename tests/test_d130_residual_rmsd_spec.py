@@ -324,16 +324,23 @@ def test_d130_is_the_next_free_decision_id():
     benefit of exactly the lesson the paragraph above records. #263 then merged at
     ``578f5ac``, this assertion reddened **as that branch's own comment predicted**,
     and the rebase inserted 140 beside 141. **All three ids are named below** and
-    ``### D-142`` is barred. ⚠ Six widenings, six resolutions by ADDING; a ``>=``
+    ``### D-143`` is barred. ⚠ Six widenings, six resolutions by ADDING; a ``>=``
     would have concealed every collision above instead of catching it.
+
+    ⚠ **Widened again at D-142 — to ``[132, …, 140, 141, 142]``** — the seventh pass,
+    and a clean claim rather than a collision: the Track B copy branch was cut from
+    ``30f402f``, ``grep``ed the log for the highest written entry (141) and read
+    ``gh pr list --state open`` (#222 / #200 / #197, none spending a ``D-1NN``) before
+    taking 142. ⚠ The open-PR weakness above still stands — it cannot see an
+    unpublished branch — so 142 is named below and ``### D-143`` takes the bar.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
     assert [i for i in ids if i > 130] == [
-        132, 133, 134, 135, 136, 137, 138, 139, 140, 141
+        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140 and D-141; found {ids[-11:]}"
+        f"D-137, D-138, D-139, D-140, D-141 and D-142; found {ids[-12:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "
@@ -347,8 +354,12 @@ def test_d130_is_the_next_free_decision_id():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-142" not in LOG, (
-        "D-142 is the next free integer and must stay unspent until an entry claims "
+    assert re.search(r"^### D-142 — Track B stops claiming a composite", LOG, re.M), (
+        "D-142 must be the Track B structural-only copy entry, not some other entry "
+        "that took the number"
+    )
+    assert "\n### D-143" not in LOG, (
+        "D-143 is the next free integer and must stay unspent until an entry claims "
         "it by name here"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

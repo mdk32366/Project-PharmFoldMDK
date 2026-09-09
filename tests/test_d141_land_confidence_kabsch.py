@@ -602,9 +602,15 @@ def test_the_log_entry_records_why_140_was_not_taken_and_that_263_then_merged():
     assert "gh pr list --state open" in lowered, "the id must be checked, not assumed"
     assert "amended in place" in lowered, "the mid-flight merge must be recorded"
     assert "578f5ac" in lowered, "the merge commit must be named, not alluded to"
-    # And the tree agrees with the entry: 140 is now written, 141 is this one, 142 is free.
+    # And the tree agrees with the entry: 140 is now written, 141 is this one, and 142 is
+    # spent by the Track B structural-only copy entry (claimed off `30f402f`, after `grep`
+    # and `gh pr list --state open`), so 143 is free. ⚠ Widened by ADDING, never by a `>=`.
     assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", LOG, re.M)
-    assert "\n### D-142" not in LOG, "D-142 is the next free integer"
+    assert re.search(r"^### D-142 — Track B stops claiming a composite", LOG, re.M), (
+        "D-142 must be the Track B structural-only copy entry, not some other entry "
+        "that took the number"
+    )
+    assert "\n### D-143" not in LOG, "D-143 is the next free integer"
 
 
 def test_the_log_entry_states_the_blocker_rather_than_implying_a_land_happened():

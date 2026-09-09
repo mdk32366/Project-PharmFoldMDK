@@ -727,7 +727,13 @@ def test_d139_entry_exists_in_the_living_log():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-142" not in LOG, "D-142 is the next free integer"
+    # ⚠ Widened again at D-142 by ADDING. The Track B structural-only copy entry claimed
+    # 142 off `30f402f`; it changes no served path, no gate and no threshold.
+    assert re.search(r"^### D-142 — Track B stops claiming a composite", LOG, re.M), (
+        "D-142 must be the Track B structural-only copy entry, not some other entry "
+        "that took the number"
+    )
+    assert "\n### D-143" not in LOG, "D-143 is the next free integer"
 
 
 def test_the_entry_records_the_subset_its_provenance_and_the_zero():

@@ -152,8 +152,22 @@ describe('D-123 — two tracks (Nectin-4 / ADC framing) on /about', () => {
     expect(t).toContain('Wet binding assays — required')
     expect(t).toContain('No bind → stop')
     expect(t).toContain('Do not rank docking guesses as hits')
-    expect(t).toContain('rank by (cancer × membrane × internalization × density) / normal risk')
+    // ⚠ D-142 — Track B still says what it ranks by; what it ranks by is now the structural
+    // product we can actually compute, and the retired composite must not come back.
+    expect(t).toContain('structure only — membrane × ECD × fold confidence (pLDDT)')
+    expect(t).not.toContain('rank by (cancer × membrane × internalization × density) / normal risk')
     expect(t).toContain('not a universal V-domain key')
+  })
+
+  it('T-1234: the rendered Track B names its exclusions and refuses ADC readiness (D-142)', () => {
+    const t = renderAdc().container.textContent
+    expect(t).toContain('Cancer vs normal, internalization and antigen density are excluded')
+    expect(t).toContain('0.5 neutrals')
+    expect(t).toContain('not ADC readiness')
+    expect(t).toContain('it runs offline: it is not a ranked surface in this application')
+    // ⚠ The cohort-82 scorer is a different surface, and /about must not be read as a claim
+    // about it: this page names no rank, no percentile and no coefficient for it.
+    expect(t).not.toMatch(/logistic|leave-one-out|percentile/i)
   })
 
   it('T-1233: standing line asks whether; PAPER_QUESTIONS and ADC copy stay; no F-004 figures', () => {
