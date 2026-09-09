@@ -942,8 +942,22 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
     # and it names none of 147, 148, 150 or 151, so a future land that forgets to move it reddens
     # here rather than drifting (this file has recorded that drift three times, once by thirty-six
     # integers).
-    assert "Next free `D-` integer: **`D-152`**" in RESERVED, (
+    # ⚠⚠ FLIPPED IN PLACE AT `D-152`, NEVER DELETED — the sixth time this same assertion has been
+    # moved rather than removed, and the RULE it encodes is what is kept: *the pointer moves in the
+    # SAME commit that spends the integer*. Only the value moves.
+    # ⚠⚠ AND IT MOVES TO **153**, STILL SKIPPING 148. `D-152` spent 152 (the surface-navigation
+    # ship: the census layout pattern applied to /targets, /coverage, /scorer, /cancer-burden and
+    # /adcs); 148 is still a HOLD for the trafficking Spec, and a reserved integer is not a free one
+    # — that is `RESERVED.md`'s whole purpose. Six assertions where there was one: the pointer names
+    # 153, and it names none of 147, 148, 150, 151 or 152, so a future land that forgets to move it
+    # reddens here rather than drifting (this file has recorded that drift three times, once by
+    # thirty-six integers).
+    assert "Next free `D-` integer: **`D-153`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
+    )
+    assert "Next free `D-` integer: **`D-152`**" not in RESERVED, (
+        "the pointer still names a SPENT integer — D-152 was spent by the surface-navigation "
+        "ship, and naming it would hand a used number to the next writer"
     )
     assert "Next free `D-` integer: **`D-151`**" not in RESERVED, (
         "the pointer still names a SPENT integer — D-151 was spent by the owner UI-polish "

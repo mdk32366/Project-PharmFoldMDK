@@ -347,6 +347,14 @@ def test_d130_is_the_next_free_decision_id():
     # enumeration reddened **by design** the moment an entry claimed it. D-147 adds the
     # `ecd_intermittent` disclosure to the census structural ranking rows and touches nothing this
     # suite measures. A bare `### D-148` still reddens.
+    # ⚠⚠ Widened again at **D-152** — to `[…, 150, 151, 152]` — by enumeration, for the
+    # TWELFTH time, and never by a `>=`. Spending 152 reddened the previous form BY DESIGN; that is
+    # the collision guard working, and it is the only reason this file had to be opened by an entry
+    # about applying a layout pattern to five list surfaces. ⚠⚠ **The SIXTH reserved integer to be
+    # SPENT rather than skipped** (142, 145, 146, 147 and 151 were the first five): 152 sat in
+    # `docs/RESERVED.md` as the next free `D-`, `D-151` cited it in order to bar it, and this
+    # enumeration went red the moment an entry claimed it. **148 stays absent** — the trafficking
+    # hold is unchanged, so a bare `### D-148` is still a real collision and still reddens here.
     # ⚠⚠ Widened again at **D-151** — to `[…, 149, 150, 151]` — by enumeration, for the
     # ELEVENTH time, and never by a `>=`. Spending 151 reddened the previous form BY DESIGN; that
     # is the collision guard working, and it is the only reason this file had to be opened by an
@@ -372,7 +380,7 @@ def test_d130_is_the_next_free_decision_id():
     # oversight to the next reader.**
     assert [i for i in ids if i > 130] == [
         132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149,
-        150, 151
+        150, 151, 152
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
         f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144, D-145, D-146 and D-147 — "
@@ -382,8 +390,10 @@ def test_d130_is_the_next_free_decision_id():
         f"⚠ 146 the same way again, ADDED by the Track B live-route copy entry; ⚠ 147 the "
         f"same way once more, ADDED by the census `ecd_intermittent` entry; ⚠ 150 by the "
         f"census structure-status honesty entry; ⚠ 151 by the owner UI-polish entry "
-        f"(Initial Targets label, Kathad DOI anchor, census layout); "
-        f"found {ids[-15:]}"
+        f"(Initial Targets label, Kathad DOI anchor, census layout); ⚠ 152 by the "
+        f"surface-navigation entry (that census layout pattern applied to the other five "
+        f"list routes); "
+        f"found {ids[-16:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "

@@ -379,6 +379,254 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-152 — The census navigation pattern applied to the other five list surfaces — and the disqualifying fact is that **the defect on those five was not the one the owner reported**, which the first draft of this ship assumed it was and a headless browser disproved in one number
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **layout, order and disclosure only, on `/targets`, `/coverage`, `/scorer`,
+  `/cancer-burden` and `/adcs`.** ⚠ **No route path changes, no API field is added, renamed or read
+  differently, no migration runs, no `--load` runs against production, no Fly write happens, no GPU
+  runs, nothing is re-folded, no tile is emitted, no seam is claimed solved, `structural_score` does
+  not move for any row, the scorer and the census structural rank are not touched, and no census row
+  becomes scored or ranked.** `D-022`, `D-024` am. §3, `D-062`, `D-066`, `D-069`, `D-079` dec 1,
+  `D-094`, `D-100`, `D-102`, `D-119`, `D-124`, `D-133 am. 1`, `D-135`, `D-136`, `D-137`, `D-140`,
+  `D-142`, `D-149`, `D-151` and `F-052` are cited and **none of them is amended**.
+- **Owner's words, 2026-09-09:** *"Apply what was done for Census to the rest of the surfaces. 100
+  percent better and easier to navigate."*
+- **What `/census` got at D-151, restated as the pattern this entry applies:** search and table near
+  the top under a compact title and a one-line critical disclaimer; long explanatory prose in
+  collapsed `<details>` with nothing deleted; `main.wide` for list-heavy routes; a bounded table
+  scroll port with the sticky `<thead>` inside it; **no column dropped and every honesty bar left
+  visible.**
+
+**⚠⚠ THE DISQUALIFYING FACT, FIRST, AND IT IS ABOUT THE DRAFT OF THIS ENTRY RATHER THAN ABOUT THE
+CODE.**
+
+The owner's `/census` complaint had three parts and the middle one was *"the list scrolls off the
+right side"*. The first pass at this ship carried that symptom onto `/targets` without measuring it:
+a code comment was written claiming this table *"pushed `documentElement.scrollWidth` **175 px** past
+the viewport"*. **It does not, and it never did.** Measured in headless Chrome at 1440 × 900 against
+`41b9b3b`, `/targets` reports a horizontal bleed of **0**. `D-142` had already capped `.col-rank`,
+`.col-description` and `.col-assoc`, so the table could not overflow — the mechanism the census
+lacked was present here all along.
+
+**⚠ What those bounds cost instead is worse than the bleed, and nothing had reported it.** Squeezed
+into the ~912 px of content `main`'s 60rem reading measure allows, eight columns wrapped almost every
+cell: the page ran to **16,409 px** with a **mean rendered row height of 191 px** — for a table of
+one-line facts — so 83 rows took nineteen screens. The bound was doing exactly what `D-142` designed
+it to do; the measure around it was wrong.
+
+**⚠⚠ The general lesson, which is the reason this leads the entry: *the same complaint does not
+imply the same defect.* A pattern is a set of remedies, and applying it means measuring each surface
+to find out which of them that surface needs — not assuming it needs all of them because the surface
+it came from did.** The wrong claim is corrected in place in `TargetList.jsx` rather than deleted,
+because a comment asserting a measurement nobody took is the artefact worth keeping visible.
+
+**⚠ And two latent defects the measurement found, neither of which this ship created.**
+
+1. **`.term-def` was laid out while hidden.** The glossary tooltip used `visibility: hidden`, and a
+   `visibility: hidden` box is still laid out — so every closed 320 px tooltip was enlarging the
+   document's scrollable overflow area. At the 60rem measure it hung into the empty gutter and
+   nobody could see it; at 96rem, `/scorer` measured **144 px of standing horizontal overflow** with
+   two closed tooltips at `right: 1495` and `right: 1584` against a 1440 limit. `display: none` puts
+   it at **0**. ⚠ **Widening the page did not create this defect, it revealed one** — and the
+   `aria-describedby` text stays in the DOM, because accessible-name computation traverses hidden
+   nodes referenced that way.
+2. **`.row-search` had no rule in the stylesheet at all.** `rg -n 'row-search' ui/src/styles.css`
+   returned **0** on `41b9b3b`, while `TargetList.jsx` had been rendering `className="row-search"`
+   since the search box landed. So the box the owner asked for by name drew as an unstyled browser
+   default — beside `.census-search input`, which is styled. **The same asymmetry `D-151` recorded
+   of the citation, in CSS: a rule written where one surface demanded it and nowhere else.**
+
+**⚠ Provenance (D-016) — the instrument, named, because it is not the test suite.** jsdom computes no
+layout, so nothing in `ui/`'s 822 tests can see a gutter, a fold or an overflow. The figures below
+are **headless Chrome (`google-chrome`, `puppeteer-core` 23.11.1) at 1440 × 900**, driven against two
+`vite build` outputs served by **the real read API** (`app.main.create_app`) over a fixture SQLite:
+`origin/main` at `41b9b3b` (before) and this branch (after). ⚠ The cohort rows come from the
+committed manifest (`core/manifest.build_manifest`, 82 rows with their real protein names) and the
+burden rows from the committed SEER artefact loaded by `scripts/seer_cancer_burden.py --load`; the
+ranking is synthesised, because no pre-registered result artefact is in the tree. **The same fixture
+serves both sides.**
+
+| measured at 1440 × 900 | `main` box | document h-bleed | search box | first primary row | tbody rows in the first viewport | whole-page height |
+|---|---|---|---|---|---|---|
+| `/targets` | 960 → **1,440 px** | 0 (unchanged) | 405 → **241 px** | 495 → **392 px** | 3 → **4** | 16,409 → **1,130 px** |
+| `/coverage` | 960 → **1,440 px** | 0 (unchanged) | **none → 393 px** | 713 → **472 px** | 3 → **12** | 4,067 → **1,383 px** |
+| `/scorer` | 960 → **1,440 px** | 0 → **0** (144 introduced and fixed within this ship) | **none → 614 px** | 1,533 → **691 px** | 4 → **21** | 3,311 → **2,043 px** |
+| `/cancer-burden` | 960 → **1,440 px** | 0 (unchanged) | **none → 338 px** | 356 → **376 px** (first bar) | 0 (unchanged) | 4,622 → **2,723 px** |
+| `/adcs` | 960 → **1,440 px** | 0 (unchanged) | **none → 248 px** | 625 → **391 px** | 3 → **7** | 1,757 → **1,071 px** |
+| `/census` | 1,440 (unchanged) | 0 (unchanged) | 354 px (unchanged) | — | — | 1,818 px (unchanged) |
+
+⚠ **`/census` measuring byte-identically on every metric is the regression proof**, and it is the
+reason it is in the table at all: the shared primitives were extracted out from under a shipped
+surface, and the way that goes wrong is silently.
+
+⚠ **`/cancer-burden` is the one row that did not improve on "first primary row", and it is reported
+rather than framed away.** Its first *table* row moved 1,148 → **905 px**, which is still 5 px below
+a 900 px fold; its first *bar* moved the wrong way, 356 → 376 px, because the search box is now above
+the chart. On this surface the bar chart **is** the primary object — it is what answers *which
+cancers kill the most people* — and it was and remains inside the first viewport. What the reader
+gains is a way to find a site at all, where before there was none.
+
+⚠ **The 191 px row height is fixture-influenced and the direction is not.** In this fixture no gene
+resolves an HPA deep link (`/api/associations` returns attributions for all 82 and `deep_link` for
+**0** of them, because the Ensembl ids it is built from live in `clinical_pathology`, which the
+fixture does not seed), so every association cell renders its named-absence reason. That inflates row
+height on **both** sides equally. **What is not fixture-dependent: the mean row height fell 191 →
+128 px against an identical payload, and a bounded port cannot widen its parent at any row count.**
+
+**Decisions.**
+
+1. **The primitives are extracted, and the census keeps its own class names inside them.**
+   `.surface-notes` is the disclosure block and `.table-scroll` the bounded port; `.census-background`,
+   `.census-notes` and `.census-table-scroll` join those rule sets rather than being renamed. ⚠ Five
+   copies of those declarations would look identical the day they were written and diverge on the
+   first tweak — that is `F-052`, a convention obeyed everywhere except the newest caller. ⚠⚠ **The
+   census markup is left literal on purpose:** `tests/test_d151_ui_polish.py` and
+   `CensusLayout.d151.test.jsx` read those exact opening tags, and **rewriting a shipped guard to
+   accommodate a refactor is how a guard becomes a decoration.**
+2. **`WIDE_ROUTES` grows from one literal to six, and membership is a judgement about the route.**
+   `/`, `/method` and `/about` are argument, not tables, and keep the 60rem reading measure —
+   widening a paragraph makes it harder to read. Every card route (`/target/:id`, `/census/:id`,
+   `/adcs/:id`, `/adcs/pipeline/:id`) is still narrow, and the set is still exact paths rather than a
+   `startsWith`.
+3. **On every surface, only long-form EXPLANATION collapses; every standing CLAIM stays visible.**
+   The line is drawn by what a block *is*, never by its length:
+   - `/targets` — the fold-confidence claim stays (a green dot must not read as a verdict on a
+     target, and a sentence behind a `<summary>` cannot stop it), and so does **the D-151 paper
+     citation**: collapsing the primary source of the cohort would undo that entry's whole finding
+     one release later. The ~700-character column note collapses, directly above the header row it
+     defines.
+   - `/coverage` — the honest denominator leads and does not move. The **census population strip is
+     MOVED below the table and is not collapsed**: every clause of `D-135` still holds (below the
+     coverage line, labelled *a different population*, fraction-free, its assembled caveat still
+     beside the chips it qualifies), and **moving a block is not demoting it; hiding one is.**
+   - `/scorer` — A, B and C collapse; **D does not**, because it holds the first pre-registered
+     negative outcome FIRING, the second not firing, and the three caveats. A caveat behind a
+     `<summary>` is a caveat the page has decided the reader may skip.
+   - `/cancer-burden` — the US-only bar, the limits block and the SEER attribution are outside every
+     disclosure. Nothing on this route was collapsed at all; its long blocks were already below the
+     table, which is where `D-151` left the census's.
+   - `/adcs` — the floor claim (*a dated pin of a file, not a census*) stays above the table, and
+     the **named exclusions stay with it, one click away**: they are the evidence for that claim, so
+     hiding the claim would have been the wrong half to hide.
+4. **The ranking table becomes the first child of `.scorer-cols` in SOURCE order, not by a CSS
+   `order`.** A grid `order` moves the box and leaves the reading order — the one a screen reader
+   follows and the one a narrow viewport stacks to — exactly as it was, which is the version of this
+   change that looks fixed and is not.
+5. **Four surfaces gain a search box, and each uses the matcher that fits its own population.**
+   `/coverage` and `/scorer` take the shared `../searchRows.js` (so `CA-125` finds `MUC16` and
+   `HER2` finds `ERBB2`, aliases included). `/adcs` does **not**: an ADC row's identity is its drug
+   name and INN, neither of which that matcher reads, and a search box that silently cannot find
+   `Enhertu` is worse than none because the miss reads as *this drug is not in the catalog*.
+   `/cancer-burden` does not either — it carries no accession, gene, score or rank by design
+   (`D-149`'s wall), and importing the protein matcher there would put a protein vocabulary on the
+   one surface defined by not having one.
+6. **⚠⚠ A FILTER NARROWS A VIEW AND MAY NEVER MOVE A NUMBER.** This is the half of a search box that
+   ships a lie rather than an ugly page, and there was one such number on each of three surfaces:
+   - `/scorer` — the Score header's tooltip reports the span, median and count of the scores **in
+     this run**. It is derived from the full payload by the caller, so a reader typing in a box
+     cannot move a published median. `n_ranking_set` and the 67 → 56 reconciliation likewise.
+   - `/cancer-burden` — the bars are normalised to the **full population's** maximum. Re-normalising
+     to the filtered maximum would draw a rare cancer at full width the moment a reader typed its
+     name, and a bar chart's whole claim is that length is comparable.
+   - `/cancer-burden` — the `#` column is `rank_within_statistic`, served, never the row index. A
+     filtered table therefore shows `#3` with gaps; renumbering the visible rows 1, 2, 3 would
+     invent a ranking of the reader's search string.
+   Each of the three is pinned by its own case in `SurfaceLayout.d152.test.jsx`.
+7. **The D-142 column bounds are RAISED at ≥1100 px, and raising a bound is the opposite of the move
+   that would be forbidden here.** 9.5/15/12rem become 13/24/17rem; the `min-width` halves, the
+   `overflow-wrap: break-word` and the narrow-measure numbers are untouched, and **nothing is
+   truncated, clipped or ellipsised.** ⚠ The media block had to be placed *after* the rules it
+   overrides — a media query adds no specificity, so its first position left it inert on two of the
+   three columns while looking correct, which `TargetList.columns.test.jsx` caught.
+8. **`/cancer-burden`'s bar disclaimer flows beside its figure at the wide measure, and stays on
+   every bar.** Fifteen badges each on their own line cost the chart ~360 px. This is `D-151`'s HPA
+   treatment on another block: still emitted per bar, still unabbreviated, still outside every
+   disclosure control — and below 1100 px it keeps its own line, because `D-149`'s requirement is
+   that the qualifier travels with the datum, not that it fits.
+9. **An unrecognised `result_status` on `/scorer` states itself instead of throwing.** `FullResult`
+   read `ranking.result.distribution` on its first line, so a payload without a `result` took the
+   route to a blank page. ⚠ It reports the status it was handed and says the surface does not
+   recognise it, rather than falling back to `not_run` — which would be a *claim*. This is the same
+   rule the `/cancer-burden` 500 gets one surface along: **"nothing matched", "not loaded" and "the
+   request failed" must not look the same, and none of them may look like an empty page.**
+
+**⚠ Revert proof (A-016 — a red proves nothing unless it fires at the assertion).**
+
+- **Run, not predicted.** Five mutations, each reddening **exactly one** case in
+  `SurfaceLayout.d152.test.jsx` and leaving the other 25 green: defaulting the `/targets` disclosure
+  to `open`; deleting the `/coverage` scroll port; putting the scorer explanation back in front of
+  the ranking table; rescaling the burden bars to the filtered maximum; and restoring
+  `visibility: hidden` on `.term-def`.
+- **Run, not predicted, and it came back with a number nobody expected.** Reverting the `/coverage`
+  port reddens the `/coverage` case only — **not** the four sibling routes in the same
+  `describe`-loop, which is what confirms the loop is testing five surfaces rather than one shared
+  container five times.
+- **Run, not predicted.** Two inherited assertions went red and **both were flipped in place, neither
+  relaxed**: `ScorerView.test.jsx`'s deferred-note check was a text-INDEX comparison used as a proxy
+  for a CONTAINMENT (D-066 §2 says the note belongs to section D, not to the ranking column), and it
+  now asserts the containment in both directions — strictly stronger, and immune to column order.
+  `App.test.jsx`'s wide-measure set had `/coverage` in its *prose* half; `/coverage` is a six-column
+  table, so it moved to the *list* half and the prose half kept `/`, `/about` and `/method`.
+- **Run, not predicted.** `App.test.jsx`'s `/api/ranking` fixture was `{ rows: [] }` — **a payload
+  the server never emits**, since `D-062` gives every response a `result_status`. It had never
+  mattered because that suite had never rendered `/scorer`; the moment it did, the component threw.
+  Both halves were fixed: the fixture now models a real response **and** the component was taught to
+  state an unrecognised status. ⚠ Fixing only the fixture would have left the crash in the shipped
+  code with a green suite over it.
+- **Run, not predicted.** Writing a bare `### D-153` into the log reddens **six** suites at once —
+  `test_d152`, `test_d151`, `test_d150`, `test_d149`, `test_d129` and `test_d130` — which is the
+  collision guard doing exactly what `RESERVED.md` exists for. ⚠⚠ **The draft of this entry said
+  five**, because it counted `test_d129` and `test_d130` as one item on the strength of their both
+  holding enumerations; they are two files with two independent assertions and they fail separately.
+  Recorded rather than quietly corrected — `D-151` recorded the same shape of miscount against
+  itself, one direction along. Every bar this ship inherited was widened by **adding a name beside
+  it**; **not one was relaxed to a `>=`**, and a `>=` would have passed on a log with no entries at
+  all.
+- ⚠⚠ **AND THE REVERT THAT PROVES THE LIMIT RATHER THAN THE GUARD: none of the above can see the
+  thing the owner asked for.** Reverting every width, margin and media rule while keeping the DOM
+  containers would leave all 26 `SurfaceLayout.d152` cases green. **jsdom has no layout**, so the
+  suite pins the structure the CSS attaches to and never the result — the same limit `D-142` recorded
+  and paid for, and `D-151` recorded again.
+
+**⚠⚠ WHAT THIS ENTRY CANNOT ESTABLISH, STATED BECAUSE THE GATE CANNOT SEE IT.**
+
+- **No test in this repository measures the layout.** The before/after table is a headless Chrome run
+  in this build; it is **not** re-run by CI and **not** re-run by `vitest`. If the gutter comes back,
+  the suite stays green. That residual is accepted in the open rather than answered with a
+  screenshot-diff framework, per `D-074` dec 3.
+- **The measurements are against a FIXTURE database, not production.** The route code and the cohort
+  and SEER data are real; the ranking run and the fold statuses are synthesised, and no gene resolves
+  an HPA deep link. Row counts and the longest cell text both affect a table's height, so the exact
+  pixel figures are properties of that fixture.
+- **Nothing was deployed.** `D-146`'s recorded limit is unchanged: no test here contacts the deployed
+  application, and this ship touches neither Fly, the image, nor any route.
+- **`/api/cancer-burden` is returning HTTP 500 on the deployed app and this ship does not fix it.**
+  That is a load/ops matter held elsewhere. What is done here is that the failure renders **as** a
+  failure — heading, US-only bar and statistic toggle all survive it — and that is asserted rather
+  than asserted-about.
+- **A tooltip OPENED near the right edge can still extend past it while it is open.** That is
+  pre-existing at every width and transient; what was fixed is the *standing* overflow, which was
+  permanent and which nothing had to hover to suffer.
+- **The double HPA credit block on `/census` is still pre-existing and is still NOT fixed here**
+  (`D-151`'s own residual, unchanged).
+
+**Ship:** `ui/src/App.jsx` + `ui/src/components/TargetList.jsx` + `ui/src/components/CoverageView.jsx`
++ `ui/src/components/ScorerView.jsx` + `ui/src/components/CancerBurdenView.jsx` +
+`ui/src/components/AdcsView.jsx` + `ui/src/styles.css`;
+`ui/src/components/SurfaceLayout.d152.test.jsx` (new, 26 cases) + flipped cases in
+`ui/src/App.test.jsx` and `ui/src/components/ScorerView.test.jsx` + `tests/test_d152_surface_navigation.py` (new).
+**Relied on by:** `D-022` · `D-024` am. §3 · `D-062` · `D-066` · `D-069` · `D-079` dec 1 · `D-094` ·
+`D-100` · `D-102` · `D-119` · `D-124` · `D-133 am. 1` · `D-135` · `D-136` · `D-137` · `D-140` ·
+`D-142` · `D-149` · `D-151` · `F-052`.
+**Assumptions relied on:** none new. ⚠ **And one explicitly REFUSED:** that a surface reporting the
+same complaint has the same defect. **It does not — `/targets` never bled, and the remedy it needed
+was the one nobody had asked for.**
+
+⚠ **`### D-148` remains a `RESERVED.md` hold** (trafficking Spec) and is cited here only to bar it.
+⚠ **`### D-153` is barred by name** and has a row; the next-free pointer moved to **`D-153`** in this
+same commit, **skipping 148 because a reserved integer is not a free one**.
+
 ### D-151 — Three owner UI complaints, one ship: the menu says **Initial Targets**, the Kathad paper becomes a link, and `/census` stops hiding its own list — and the disqualifying fact is that this project enforces a **fail-closed citation precondition for the secondary source and had none at all for the primary one**
 
 - **Date:** 2026-09-09

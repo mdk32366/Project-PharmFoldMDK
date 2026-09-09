@@ -420,7 +420,18 @@ def test_the_bounds_are_declarations_and_the_cause_is_not_clipped():
         blocks = re.findall(selector + r"\s*\{([^}]*)\}", css)
         assert blocks, f"no rule for {selector}"
         assert any("max-width" in b for b in blocks), f"{selector} carries no bound"
-    (cause,) = re.findall(r"\.rank-cause\s*\{([^}]*)\}", css)
+    # ⚠⚠ WIDENED IN PLACE AT D-152, AND THE CLAIM IS UNCHANGED AND STRICTLY STRONGER. This read
+    # `(cause,) = re.findall(...)` — an unpack that asserted there is EXACTLY ONE rule for
+    # `.rank-cause`, which was true when the bound had one form and is not a property this test is
+    # about. D-152 raises the D-142 bounds at ≥1100px in a media query, so a second block targets
+    # the same class, and the unpack raised `ValueError` while the thing it stands for stayed true.
+    # ⚠ The no-clipping rule now runs over EVERY block that targets the class, so a later edit that
+    # adds an ellipsis to the wide-measure form reddens here where the old unpack would have passed
+    # after somebody "fixed" it by taking the first match. **A bound is not a truncation** at every
+    # measure, not only at the narrow one.
+    causes = re.findall(r"\.rank-cause\s*\{([^}]*)\}", css)
+    assert causes, "no rule for .rank-cause"
+    cause = "\n".join(causes)
     for banned in ("text-overflow", "max-height", "line-clamp", "overflow: hidden",
                    "white-space: nowrap"):
         assert banned not in cause, f".rank-cause clips its content: {banned}"
