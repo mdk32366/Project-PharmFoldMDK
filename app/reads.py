@@ -486,6 +486,18 @@ def _coverage_row(row: ManifestRow, folded: dict[str, int],
     return {
         "accession": row.accession,
         "gene": row.gene,
+        # ⚠⚠ D-142 — THE HUMAN DESCRIPTION, AND IT COULD NOT COME FROM `/api/analyses`.
+        # The light list's field set is EXACT by ruling (D-034 dec 1, pinned in
+        # `tests/test_read_routes.py::LIST_FIELDS`) and its `label` is the GENE SYMBOL on this
+        # population, not a description — `data/cohort_82_ecd.csv` keeps `label` and
+        # `protein_name` in separate columns and they agree on all 82 rows. So the description
+        # travels on the supplier that is already MANIFEST-derived and already fetched by
+        # `TargetList.jsx`, joined client-side by accession (the D-068 `TargetScorerPanel`
+        # pattern: no new route, no `system-model.json` edit).
+        # ⚠ Manifest-derived is the point, not a convenience: `FAT2` and `MUC16` have no
+        # `protein_analyses` row at all, so a description read from the DB would be blank for
+        # exactly the two rows a reader is most likely to be puzzled by.
+        "protein_name": row.protein_name,
         "boundary_method": row.boundary_method,
         "span": row.span,
         "tier": row.tier,

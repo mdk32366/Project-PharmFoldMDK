@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getCoverage, getRanking, listAnalyses } from '../api.js'
+import { getAssociations, getCoverage, getRanking, listAnalyses } from '../api.js'
 import { bandFor } from '../plddt.js'
 import { nextSort, sortRows } from '../sortRows.js'
 import { filterRows } from '../searchRows.js'
 import { count } from '../plural.js'
+import { summariseAssociations } from '../associationSummary.js'
+import { HpaCredit } from './HpaAttribution.jsx'
 
 // The picker over the folded targets (light list, D-034). mean pLDDT carries its band inline, so the
 // list tells the confidence story before a structure is opened, and the reader sees the ceiling (no
@@ -70,11 +72,39 @@ const PLDDT_LENS_NOTE =
   'scorer’s ranking: membrane_proximal_plddt carries 32.2% of the scorer’s attribution (F-051), so ' +
   'this orders the cohort by roughly a third of the ranking. Sort by Rank for the ranking itself.'
 
+// ── ⚠⚠ COLUMN ONE WAS THE WIDEST COLUMN ON THE PAGE, AND IT WAS HOLDING PROSE (owner, 2026-09-08)
+// The Rank cell renders an integer for a ranked row and its CAUSE — a sentence — for an unranked
+// one, and nothing bounded it: `grep -n 'rank-cause\|col-rank' ui/src/styles.css` returned **zero
+// rules** before this change, so the auto table layout sized the column to the longest cause on
+// one line. The causes `rankCause` can emit are 8, 25, 28, 28, 34, 53 and **140** characters long
+// against a four-character header, and the 140 is live (IGF2R is held out AND OOM'd). ⚠ Worse in
+// the state the page is actually in: with no ranking served, EVERY row renders the 34-character
+// shared cause, so the widest column was also the least informative one.
+// ⚠⚠ THE FIX IS A BOUND AND A DEMOTION, NEVER A TRUNCATION. Every cause string is unchanged and
+// rendered in full — `.col-rank`/`.rank-cause` cap the column and let it wrap, and the cause is
+// typographically secondary to the integer it stands in for. **Demotion is not deletion** is the
+// standing rule on this surface (see the confidence block above), and it governs here too.
 const COLUMNS = [
   // ⚠ The scorer's ordering, and the default. Unranked rows carry their CAUSE here, never a number.
   { key: 'rank', label: 'Rank' },
   { key: 'gene', label: 'Gene' },
   { key: 'accession', label: 'Accession' },
+  // ⚠⚠ THE DESCRIPTION, AND IT IS **NOT** THE LIST PAYLOAD'S `label` (D-142). `/api/analyses`
+  // carries `label`, which reads like a name and IS THE GENE SYMBOL on this population: the
+  // committed manifest keeps `label` and `protein_name` in separate columns and they are equal on
+  // all 82 rows. The census's `label` — same key, other population — really is the protein name
+  // (`data/census/census_labels.csv`), which is what makes the wrong guess so easy; F-049's family.
+  // ⚠ So this sorts and renders `description`, joined from `/api/coverage`'s manifest-derived
+  // `protein_name` by accession (the D-068 pattern), and the light list's exact field set is
+  // untouched.
+  { key: 'description', label: 'Description', className: 'col-description' },
+  // ⚠⚠ AN EXPRESSION CLAIM, AND DELIBERATELY NOT SORTABLE (D-142). The cell holds a SET of tumour
+  // types. Every scalar that could order it — the leading quasi H-score, or how many types clear
+  // the cutoff — would order the cohort by an expression statistic the cell never shows, which is
+  // the de facto ranking this list already refused for mean pLDDT (owner ruling 2026-08-21), by a
+  // quantity that is not even a third of the real one. The reason is printed on the page, not
+  // just here: an absent control with no stated reason reads as an oversight.
+  { key: null, label: 'Cancer association', className: 'col-assoc' },
   { key: 'tier', label: 'Tier' },
   { key: 'mean_plddt', label: 'mean pLDDT' },
   // Not sortable by design (see above); demoted per the confidence-demotion order.
@@ -127,6 +157,161 @@ export function rankCause(row, rankingServed = true) {
 
 const ARIA = { asc: 'ascending', desc: 'descending' }
 
+// ⚠⚠ THREE STATES, NOT TWO, ON BOTH NEW COLUMNS. "still loading", "the supplier could not be
+// reached" and "the supplier has nothing for this row" are three different facts, and collapsing
+// them would let an ignorance state render as a claim about the target. `unknown ≠ none` is the
+// standing rule (D-128 §1a's wording; `null ≠ 0` in the same breath), and it costs one enum here.
+export const SUPPLIER_LOADING = 'loading'
+export const SUPPLIER_FAILED = 'failed'
+export const SUPPLIER_LOADED = 'loaded'
+
+// ⚠ The description is a NAME, so its absence is never a finding — but it is still never a bare
+// dash, because a dash cannot distinguish "no name recorded" from "we could not ask".
+function DescriptionCell({ row, state }) {
+  if (row.description) return <span className="description-text">{row.description}</span>
+  if (state === SUPPLIER_FAILED) {
+    return <span className="absent-reason">no description — /api/coverage could not be reached</span>
+  }
+  if (state === SUPPLIER_LOADING) return <span className="absent-reason">loading…</span>
+  return <span className="absent-reason">no protein name for this accession in the cohort manifest</span>
+}
+
+/**
+ * The compact association cell: the highest-scoring tumour type(s), the total, and the way to the
+ * full list. See `../associationSummary.js` for why ties are all shown and why nothing re-sorts.
+ *
+ * ⚠⚠ THE HPA CITATION IS A PRECONDITION OF DISPLAY, SO A ROW WITH NO ATTRIBUTION BLOCK SHOWS NO
+ * VALUE. D-100: Kathad's S3 is a verbatim extract of `pathology.tsv`, so these tumour types are
+ * HPA content however they reached us, and the licence words citation as a condition — "be sure
+ * that our content is never displayed in the absence of such citation." Fail-closed is therefore
+ * the only direction available: no block, no tumour types, and the row says why.
+ * ⚠ The per-datum link is the CensusTable staining-cell pattern — **the value itself is the
+ * anchor**, so element 4 costs no extra real estate in a table. Elements 1–3 render once beneath
+ * the table (`HpaCredit`), which is the split-by-case ruling of 2026-08-21 applied to a list.
+ */
+function AssociationCell({ row, assoc, state }) {
+  if (state === SUPPLIER_FAILED) {
+    return <span className="absent-reason">no associations — /api/associations could not be reached</span>
+  }
+  if (state !== SUPPLIER_LOADED || !assoc) {
+    return <span className="absent-reason">loading…</span>
+  }
+  const summary = summariseAssociations((assoc.associations ?? {})[row.gene])
+  if (summary.total === 0) {
+    // ⚠ D-053's own sentence, and it is a claim about the MAP, not about the tumour biology.
+    return <span className="assoc-absent">no association recorded for this target</span>
+  }
+  const attribution = assoc.attributions?.[row.gene]
+  if (!attribution) {
+    return (
+      <span className="absent-reason">
+        {count(summary.total, 'tumour type')} recorded, withheld here — no Human Protein Atlas
+        citation is available for this gene, and the licence makes the citation a condition of
+        display
+      </span>
+    )
+  }
+  const total = (
+    <>
+      {count(summary.total, 'tumour type')} above the cutoff
+    </>
+  )
+  return (
+    <span className="assoc-cell">
+      {/* ⚠⚠ THE ORDER IS NOT ASSERTED WHEN IT WAS NOT DELIVERED. `ordered: false` means a later
+          pair outscored the first, so no row here is "the highest" and the cell says so rather
+          than captioning row 0 with a superlative it did not earn. */}
+      {summary.ordered ? (
+        <span className="assoc-top">
+          {attribution.deep_link ? (
+            <a
+              className="assoc-hpa-link"
+              href={attribution.deep_link}
+              rel="noopener noreferrer"
+              target="_blank"
+              title="View the tumour staining behind this on the Human Protein Atlas (v22)"
+            >
+              {summary.top.join(' · ')}
+            </a>
+          ) : (
+            <>
+              {summary.top.join(' · ')}
+              {/* ⚠ An absent link is a CATEGORY with a cause, never a broken anchor. */}
+              <span className="hpa-attrib-nolink"> (no atlas link — {attribution.deep_link_absent_reason})</span>
+            </>
+          )}
+        </span>
+      ) : (
+        <span className="assoc-top assoc-unordered">
+          highest not named — the association map did not arrive in score order
+        </span>
+      )}
+      <span className="assoc-rest col-secondary">
+        {row.id != null
+          ? <Link to={`/target/${row.id}`}>{total} →</Link>
+          : <>{total} — no target page to open</>}
+      </span>
+    </span>
+  )
+}
+
+/**
+ * Every `<td>` of one target row, in one place.
+ *
+ * ⚠⚠ EXTRACTED BECAUSE THE ROW MARKUP WAS WRITTEN TWICE — once for the ranked `<tbody>` and once
+ * for the unranked partition — and two copies of eight cells is a divergence waiting to happen:
+ * the next column added to one and forgotten in the other renders a table whose partition shows
+ * different facts about the same cohort. The `<tr>` differs between the two (key, class, and the
+ * rank cell never shows an integer in the partition), so only the cells move here.
+ */
+function RowCells({ row, rankingServed, foldStatus, absentLabel, covState, assoc, assocState }) {
+  const band = bandFor(row.mean_plddt)
+  const absent = row.mean_plddt == null
+  return (
+    <>
+      {/* ⚠⚠ THE RANK CELL. A ranked row shows its integer. An unranked row shows its CAUSE —
+          never a number, never a dash, and never a position it does not hold.
+          ⚠ `.col-rank` bounds the column and `.rank-cause` demotes the sentence; every character
+          of the cause is still rendered (see the block above `COLUMNS`). */}
+      <td className="mono col-rank">
+        {row.rank != null
+          ? row.rank
+          : <span className="rank-cause">{rankCause(row, rankingServed)}</span>}
+      </td>
+      {/* ⚠⚠ A cohort member with no analysis row has no card to open. `/target/null` would be a
+          link that 404s, which is worse than no link — it invites a click and then denies it. The
+          gene renders as plain text and the reason column says why. */}
+      <td>
+        {row.id != null
+          ? <Link to={`/target/${row.id}`}>{row.gene}</Link>
+          : <span className="gene-unlinked" title="no fold was attempted, so there is no structure page">{row.gene}</span>}
+      </td>
+      <td className="mono">{row.accession}</td>
+      <td className="col-description"><DescriptionCell row={row} state={covState} /></td>
+      <td className="col-assoc"><AssociationCell row={row} assoc={assoc} state={assocState} /></td>
+      <td>
+        <span className={`tier-tag tier-${row.tier}`} title={row.tier_reason || undefined}>
+          {row.tier ?? '—'}
+        </span>
+      </td>
+      <td className="mono">{row.mean_plddt != null ? row.mean_plddt.toFixed(2) : '—'}</td>
+      {/* 1b — demoted: the band colour is retained (no information removed) but rendered as a
+          secondary signal rather than the row's most eye-catching element. */}
+      <td className="col-secondary">
+        {absent ? (
+          <span className="absent-reason" title={foldStatus[row.accession]?.fail_reason || undefined}>
+            {absentLabel(row)}
+          </span>
+        ) : (
+          <>
+            <span className="dot dot-secondary" style={{ background: band.color }} /> {band.label}
+          </>
+        )}
+      </td>
+    </>
+  )
+}
+
 export default function TargetList() {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
@@ -136,6 +321,10 @@ export default function TargetList() {
   const [coverage, setCoverage] = useState([])     // the 82 manifest rows, for the members with no analysis
   const [query, setQuery] = useState('')
   const [ranks, setRanks] = useState(null)         // accession -> rank, from the pre-registered run
+  // ⚠ D-142: the two new columns each track their supplier's state explicitly — see the enum above.
+  const [covState, setCovState] = useState(SUPPLIER_LOADING)
+  const [assoc, setAssoc] = useState(null)         // the whole /api/associations payload (D-053)
+  const [assocState, setAssocState] = useState(SUPPLIER_LOADING)
 
   useEffect(() => {
     listAnalyses().then(setRows).catch((e) => setError(e.message))
@@ -167,8 +356,29 @@ export default function TargetList() {
         setFoldStatus(map)
         // ⚠ the manifest rows themselves, so a cohort member with no analysis row still gets a row
         setCoverage(rows_)
+        setCovState(SUPPLIER_LOADED)
       })
-      .catch(() => { setFoldStatus({}); setCoverage([]) })
+      .catch(() => { setFoldStatus({}); setCoverage([]); setCovState(SUPPLIER_FAILED) })
+  }, [])
+
+  // ⚠⚠ D-142 — THE ASSOCIATION MAP, FROM THE SUPPLIER THAT ALREADY SERVES IT (D-053). The grid is
+  // consumed, never re-derived: `core/cancer_associations.py` validates the rows, applies the
+  // paper's cutoff and sorts each target's pairs, and a second ordering here would be free to
+  // disagree with the detail card that renders the same target.
+  // ⚠ Additive in the same posture as coverage: the map failing costs the column its values and
+  // costs the list nothing. `Promise.resolve()` first so a supplier that throws synchronously —
+  // which is exactly what a test double without this method does — cannot take the page down.
+  useEffect(() => {
+    Promise.resolve()
+      .then(() => getAssociations())
+      .then((payload) => {
+        // ⚠ A response with no `associations` object is not a loaded map. Treating it as one would
+        // print "no association recorded" — a claim about 82 targets — from a malformed payload.
+        if (!payload?.associations) throw new Error('no associations in payload')
+        setAssoc(payload)
+        setAssocState(SUPPLIER_LOADED)
+      })
+      .catch(() => { setAssoc(null); setAssocState(SUPPLIER_FAILED) })
   }, [])
 
   // ⚠⚠ THE SCORER'S ORDERING, FROM THE EXISTING SUPPLIER. `/api/ranking` is served by
@@ -209,11 +419,23 @@ export default function TargetList() {
       mean_plddt: null, tier: null, tier_reason: null, aliases: c.aliases ?? null,
       disposition: c.disposition ?? null, never_attempted: true,
     }))
+  // ⚠ D-142: accession -> the manifest's UniProt protein name, the Description column's only
+  // source. Built from the coverage rows already fetched above — no second request.
+  const descriptions = {}
+  for (const c of coverage) {
+    if (c?.accession && c.protein_name) descriptions[c.accession] = c.protein_name
+  }
   // ⚠ rank and the coverage facts join onto the row so one sort mechanism sees everything.
   const rankMap = ranks ?? {}
   const all = [...rows, ...missing].map((r) => ({
     ...r,
     rank: rankMap[r.accession] ?? null,
+    // ⚠⚠ JOINED ONTO THE ROW, not read inside the cell, and that is what makes the header sortable:
+    // `sortRows` reads `r[key]`, so a description that lived only in JSX would render a sort
+    // control that ordered by `undefined` on every row — a silent no-op wearing a caret.
+    // ⚠ `?? null`, never `?? ''`: an empty string is a VALUE to `sortRows.isAbsent` and would sort
+    // the un-named rows to the front alphabetically instead of holding them out as a category.
+    description: descriptions[r.accession] ?? null,
     disposition: r.disposition ?? foldStatus[r.accession]?.disposition ?? r.disposition,
     fold_status: foldStatus[r.accession]?.fold_status
       ?? (r.never_attempted ? 'not_folded' : r.mean_plddt != null ? 'folded' : undefined),
@@ -262,6 +484,19 @@ export default function TargetList() {
   const nNever = missing.length
   const narrowed = filtered.length !== all.length
 
+  // ⚠⚠ THE CITATION IS EMITTED IF AND ONLY IF A ROW ON SCREEN RENDERED A TUMOUR TYPE. Elements 1–3
+  // are properties of the source, so ANY covered symbol's block carries the same three strings —
+  // what matters is that a value was drawn. Reading it off the FILTERED rows rather than the whole
+  // cohort is the suppression half of the ruling: filter to a tier whose rows have no association
+  // and the credit goes with them, because a citation attached to nothing is not compliance.
+  const assocCredit = (assocState === SUPPLIER_LOADED && assoc)
+    ? (filtered
+        .map((r) => (summariseAssociations((assoc.associations ?? {})[r.gene]).total > 0
+          ? assoc.attributions?.[r.gene]
+          : null))
+        .find(Boolean) ?? null)
+    : null
+
   const onHeaderClick = (key) => {
     if (!key) return
     // ⚠ Advance from the EXPLICIT state (`sort`), not from the effective default. On load `sort` is
@@ -302,6 +537,33 @@ export default function TargetList() {
         Fold confidence is the model&rsquo;s certainty about the <em>predicted structure</em> — not a
         judgement of whether the target is a good ADC candidate. Scoring lives on{' '}
         <Link to="/scorer">Scorer</Link>.
+      </p>
+      {/* ⚠⚠ D-142 — THE TWO NEW COLUMNS STATE WHAT THEY ARE, ON THE PAGE. D-069's self-sufficient
+          surfaces, and for the association column the claim boundary is not optional: it is the
+          same sentence the detail card carries (D-053 orders §2b), because a reader who never
+          opens a card must not be able to read "cancer association" as causation.
+          ⚠ The cutoff is INTERPOLATED from the payload, never typed — D-053 decision 5: our
+          statistics derive, and only the paper's own 290/16 are literals (and they live on the
+          card, not here). */}
+      {/* ⚠⚠ "the protein name UniProt records", NOT UniProt's own term of art *recommended name* —
+          and the change was forced by a guard, which is the guard working. The D-039/F-009 denylist
+          bans `\brecommended\b` anywhere on this list, and it fired on this sentence. It cannot
+          tell a UniProt field name from a recommendation of a target, and per the F-009 §3 lesson
+          the copy AVOIDS the banned vocabulary outright rather than negating it. */}
+      <p className="note column-scope-note">
+        <strong>Description</strong> is the protein name UniProt records for that accession, from
+        the committed cohort manifest — a name, not a finding.{' '}
+        <strong>Cancer association</strong> is an{' '}
+        <em>expression</em> claim by the source paper&rsquo;s own measure (quasi H-score above{' '}
+        {assocState === SUPPLIER_LOADED && assoc?.cutoff != null
+          ? assoc.cutoff
+          : 'the paper\u2019s stated cutoff'}, from Human Protein Atlas immunohistochemistry):{' '}
+        <em>not</em> causation, <em>not</em> a claim the target drives the disease, and <em>not</em>{' '}
+        a clinical indication. The cell names the tumour type(s) with the highest score and how many
+        the map holds for that target; every pair, with its score, is on the target&rsquo;s own page.{' '}
+        ⚠ That column has <strong>no sort control</strong>, deliberately: the cell holds a set of
+        tumour types, and ordering the cohort by the leading score — or by how many types clear the
+        cutoff — would make an expression statistic the page never shows into the order of the list.
       </p>
       <div className="list-controls">
         {/* ⚠⚠ The search box this surface never had. `ERBB2` is folded and ranked here, and the
@@ -366,49 +628,19 @@ export default function TargetList() {
           </tr>
         </thead>
         <tbody>
-          {sorted.map((r) => {
-            const band = bandFor(r.mean_plddt)
-            const absent = r.mean_plddt == null
-            return (
-              <tr key={r.accession ?? r.id}>
-                {/* ⚠⚠ THE RANK CELL. A ranked row shows its integer. An unranked row shows its
-                    CAUSE — never a number, never a dash, and never a position it does not hold. */}
-                <td className="mono col-rank">
-                  {r.rank != null
-                    ? r.rank
-                    : <span className="rank-cause">{rankCause(r, rankingServed)}</span>}
-                </td>
-                {/* ⚠⚠ A cohort member with no analysis row has no card to open. `/target/null` would
-                    be a link that 404s, which is worse than no link — it invites a click and then
-                    denies it. The gene renders as plain text and the reason column says why. */}
-                <td>
-                  {r.id != null
-                    ? <Link to={`/target/${r.id}`}>{r.gene}</Link>
-                    : <span className="gene-unlinked" title="no fold was attempted, so there is no structure page">{r.gene}</span>}
-                </td>
-                <td className="mono">{r.accession}</td>
-                <td>
-                  <span className={`tier-tag tier-${r.tier}`} title={r.tier_reason || undefined}>
-                    {r.tier ?? '—'}
-                  </span>
-                </td>
-                <td className="mono">{r.mean_plddt != null ? r.mean_plddt.toFixed(2) : '—'}</td>
-                {/* 1b — demoted: the band colour is retained (no information removed) but rendered
-                    as a secondary signal rather than the row's most eye-catching element. */}
-                <td className="col-secondary">
-                  {absent ? (
-                    <span className="absent-reason" title={foldStatus[r.accession]?.fail_reason || undefined}>
-                      {absentLabel(r)}
-                    </span>
-                  ) : (
-                    <>
-                      <span className="dot dot-secondary" style={{ background: band.color }} /> {band.label}
-                    </>
-                  )}
-                </td>
-              </tr>
-            )
-          })}
+          {sorted.map((r) => (
+            <tr key={r.accession ?? r.id}>
+              <RowCells
+                row={r}
+                rankingServed={rankingServed}
+                foldStatus={foldStatus}
+                absentLabel={absentLabel}
+                covState={covState}
+                assoc={assoc}
+                assocState={assocState}
+              />
+            </tr>
+          ))}
         </tbody>
         {/* ⚠⚠ THE UNRANKED GROUP — A PARTITION, NOT POSITIONS 57–82.
             It is a second `tbody` inside the same table so the columns stay aligned, with a heading
@@ -437,41 +669,32 @@ export default function TargetList() {
                 of something.
               </td>
             </tr>
-            {unranked.map((r) => {
-              const band = bandFor(r.mean_plddt)
-              const absent = r.mean_plddt == null
-              return (
-                <tr key={r.accession ?? r.id} className="row-unranked">
-                  <td className="col-rank"><span className="rank-cause">{rankCause(r, rankingServed)}</span></td>
-                  <td>
-                    {r.id != null
-                      ? <Link to={`/target/${r.id}`}>{r.gene}</Link>
-                      : <span className="gene-unlinked" title="no fold was attempted, so there is no structure page">{r.gene}</span>}
-                  </td>
-                  <td className="mono">{r.accession}</td>
-                  <td>
-                    <span className={`tier-tag tier-${r.tier}`} title={r.tier_reason || undefined}>
-                      {r.tier ?? '—'}
-                    </span>
-                  </td>
-                  <td className="mono">{r.mean_plddt != null ? r.mean_plddt.toFixed(2) : '—'}</td>
-                  <td className="col-secondary">
-                    {absent ? (
-                      <span className="absent-reason" title={foldStatus[r.accession]?.fail_reason || undefined}>
-                        {absentLabel(r)}
-                      </span>
-                    ) : (
-                      <>
-                        <span className="dot dot-secondary" style={{ background: band.color }} /> {band.label}
-                      </>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
+            {/* ⚠ `rank` is null on every row here, so `RowCells` renders the cause in column one
+                by the same branch the ranked body uses — one rank cell, not two that can drift. */}
+            {unranked.map((r) => (
+              <tr key={r.accession ?? r.id} className="row-unranked">
+                <RowCells
+                  row={r}
+                  rankingServed={rankingServed}
+                  foldStatus={foldStatus}
+                  absentLabel={absentLabel}
+                  covState={covState}
+                  assoc={assoc}
+                  assocState={assocState}
+                />
+              </tr>
+            ))}
           </tbody>
         )}
       </table>
+      {/* ⚠⚠ HPA ELEMENTS 1–3, ONCE, AND ONLY IF A TUMOUR TYPE ACTUALLY RENDERED (D-100 / D-142).
+          The per-datum link (element 4) is the anchor on each cell's tumour type; these three are
+          properties of the SOURCE and render once per page — the split-by-case ruling of
+          2026-08-21, applied to a list instead of a card.
+          ⚠ SUPPRESSED WHEN THE COLUMN SHOWED NOTHING: a licence-required citation beside a table
+          of "loading…" or "could not be reached" is attached to nothing, which is the other half
+          of that ruling. */}
+      {assocCredit && <HpaCredit attribution={assocCredit} />}
     </div>
   )
 }

@@ -67,6 +67,48 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
    than a bare dash, so the reader learns why the value is missing instead of guessing. */
 .absent-reason { color: var(--muted); font-style: italic; }
 
+/* ── ⚠⚠ D-142 — COLUMN ONE STOPS DOMINATING THE TABLE, AND NOT ONE CHARACTER IS DROPPED ──────────
+   The Rank cell holds an integer for a ranked row and a CAUSE — a sentence — for an unranked one,
+   and until now `.rank-cause` and `.col-rank` had NO RULE IN THIS FILE. With `table-layout: auto`
+   the column was therefore sized to the longest cause laid out on one line: 140 characters for the
+   held-out-and-OOM'd row, 53 for a below-floor row, 34 on EVERY row while no ranking is served —
+   against a four-character header.
+
+   ⚠ The bound sits on the inner block as well as on the cell: `max-width` on a `td` alone is
+   advisory under the auto table algorithm, but a block child's capped max-content width really
+   does cap the column's contribution.
+
+   ⚠⚠ THIS IS A BOUND AND A DEMOTION, NEVER A TRUNCATION — no `text-overflow`, no ellipsis, no
+   `max-height`, no clipping. `overflow-wrap: anywhere` exists so a long unbroken token cannot
+   defeat the bound, and every word of every cause is still on screen. **Demotion is not deletion**
+   is the standing rule on this surface (see the confidence block above), and it governs here too. */
+.target-list .col-rank { max-width: 9.5rem; }
+.rank-cause {
+  display: block;
+  max-width: 9.5rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-family: inherit;         /* ⚠ the cell is `.mono` for the integer; a sentence is not a number */
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* The Description column (D-142): the UniProt protein name, bounded so a 72-character name
+   ("Leucine-rich repeat and fibronectin type-III domain-containing protein 4" — the longest in the
+   committed manifest) wraps instead of becoming the new widest column. */
+.target-list .col-description { max-width: 15rem; }
+.description-text { display: block; max-width: 15rem; overflow-wrap: anywhere; }
+
+/* The Cancer association column (D-142). The tumour type(s) lead; the total and the way to the
+   full list are secondary beneath them. `BTN3A3` carries 16 pairs, so the cell states the count
+   and never pretends the one it shows is the whole list. */
+.target-list .col-assoc { max-width: 12rem; }
+.assoc-cell { display: block; max-width: 12rem; overflow-wrap: anywhere; }
+.assoc-top { display: block; }
+.assoc-rest { display: block; font-size: 0.82rem; }
+.assoc-unordered { color: var(--muted); font-style: italic; }
+
 /* target view */
 .target-header h2 { margin: 0 0 0.1rem; }
 .target-header .subtitle { margin: 0 0 1rem; color: var(--muted); }

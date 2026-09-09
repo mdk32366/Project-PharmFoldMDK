@@ -245,6 +245,11 @@ class ManifestRow:
 
     accession: str
     gene: str
+    # ⚠⚠ `label` IS THE GENE SYMBOL ON THIS POPULATION, and the name invites the opposite reading.
+    # `data/cohort_82_ecd.csv` carries `label` and `protein_name` as separate columns and `label`
+    # equals `gene` on all 82 rows; the census's own `label` (`data/census/census_labels.csv`) is
+    # the protein NAME. One key, two meanings, two populations — F-049's family — so the human
+    # description is `protein_name` below and never this field (D-142).
     label: str
     boundary_method: str        # sliced_ecd | gpi_predicted | whole
     span: int | None            # largest ECD span LENGTH (sliced_ecd), else None
@@ -256,6 +261,11 @@ class ManifestRow:
     excluded: bool
     exclusion_reason: str | None
     primary_match: bool         # D-020 mapping-provenance flag
+    # ⚠ D-142: the UniProt recommended full name from the same committed CSV the routing is
+    # computed from — the human description `/targets` had no field for. `None`, never `""`: a
+    # blank cell in the source is an ABSENCE and the surface must be able to say so.
+    # ⚠ Defaulted so it is additive to every existing constructor call (three in tests).
+    protein_name: str | None = None
 
     @property
     def disposition(self) -> str:
@@ -346,6 +356,8 @@ def build_manifest(csv_path: Path | str = DEFAULT_CSV) -> list[ManifestRow]:
                     excluded=acc in NAMED_EXCLUSIONS,
                     exclusion_reason=NAMED_EXCLUSIONS.get(acc),
                     primary_match=acc in PRIMARY_MATCH,
+                    # ⚠ read, never derived, and an empty cell stays an absence (D-142)
+                    protein_name=(src.get("protein_name") or "").strip() or None,
                 )
             )
     return rows
