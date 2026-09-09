@@ -151,6 +151,12 @@
         "methods": [
           "GET"
         ]
+      },
+      {
+        "path": "/api/census-structural-ranking",
+        "methods": [
+          "GET"
+        ]
       }
     ],
     "worker_jobs": [
