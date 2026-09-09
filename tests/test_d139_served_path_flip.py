@@ -727,16 +727,25 @@ def test_d139_entry_exists_in_the_living_log():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    # ⚠ Widened again at D-143 by ADDING, with 142 SKIPPED. D-143 is a `/targets`
-    # LIST-SURFACE change — two new columns and a bounded rank column — and it changes
-    # nothing about the served path: no threshold, no allowlist, no gate, no artifact,
-    # no flip. It is named here only because this bar walks the log.
-    # ⚠⚠ It was written as `### D-142` and lost the number to #266, published four
-    # minutes after its id check ran — and #266's TITLE says "D-143" while its DIFF
-    # writes `### D-142`. The heading spends the id; the title does not.
-    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", LOG, re.M), (
-        "D-143 must be the target-list columns entry, not some other entry "
+    # ⚠ Widened again at D-143 by ADDING. The Track B structural-only copy entry claimed 142
+    # off `30f402f` and was renumbered to 143 by owner ruling (2026-09-09); 142 stays HELD and
+    # barred below. It changes no served path, no gate and no threshold.
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", LOG, re.M), (
+        "D-143 must be the Track B structural-only copy entry, not some other entry "
         "that took the number"
+    )
+    # ⚠⚠ 142 IS NOW WRITTEN, AND THE BAR ON IT REDDENED EXACTLY AS ITS OWN MESSAGE PREDICTED.
+    # `docs/RESERVED.md` reserved 142 after the Track B copy work was renumbered off it, with the
+    # unblock recorded as *"whoever holds it writes `### D-142`"* and the resolution pre-committed:
+    # *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED beside 143."* The holder is
+    # the `/targets` columns entry (Emma CoS assignment, 2026-09-09), so the bar is REPLACED BY A
+    # NAME rather than deleted, and 142 is ADDED to the enumeration beside 143. ⚠ Never a `>=`:
+    # this is the eighth widening and the eighth resolution by adding.
+    # ⚠ A reserved integer that is later spent must be NAMED here, not merely un-barred — an
+    # un-barred integer with no name is exactly what the D-062 defect looked like.
+    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M), (
+        "D-142 is the recorded holder of the reserved integer; it must be the target-list "
+        "columns entry, not some other entry that took the number"
     )
     assert "\n### D-144" not in LOG, "D-144 is the next free integer"
 

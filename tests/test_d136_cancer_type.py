@@ -418,23 +418,17 @@ def test_d136_entry_exists_in_the_living_log():
     duplicate — the D-138 precedent, applied with the benefit of the lesson the
     paragraph above records. #263 merged at `578f5ac` while it was open, this
     assertion reddened by design, and the rebase inserted 140 beside 141. **All
-    three ids are named;** `### D-142` still reddens.
+    three ids are named;** `### D-144` still reddens.
 
-    ⚠⚠ **Widened again at D-143 — to "143 is the target-list columns entry, 142 is
-    SKIPPED, and 144 does not exist"** — the seventh widening, and the sixth live
-    collision. D-143 gives `/targets` a Cancer association column and a Description
-    column, and bounds the rank column. ⚠ **The three-authorities distinction this
-    suite exists to protect is now on THREE columns and matters more, not less:**
-    D-136's Approved Cancer type comes from the **FDA label**, D-140's pipeline
-    cancer type from the **trial registry**, and D-143's target-list column from the
-    **D-053 expression grid** — three columns that all read "cancer", three
-    authorities, and none of them moves here.
-    ⚠⚠ D-143 was written as `### D-142`. It read the open-PR list at `30f402f`
-    **and the diffs**, found no `### D-14x` held, and #266 was published four
-    minutes later holding `### D-142` — while its own **title** says "D-143". **The
-    heading is the authority and the title is not**; trusting the title would have
-    written a second `### D-142`. So 142 is left with #266 and `### D-144` takes the
-    bar. If #266 merges first this reddens by design and the rebase adds 142.
+    ⚠ **Widened again at D-143 — "143 is the Track B structural-only copy entry, 142 is
+    HELD, and 144 does not exist"** — the seventh widening. That branch was cut from
+    `30f402f`, `grep`ed the log for the highest written entry (141), read
+    `gh pr list --state open` (#222 / #200 / #197, none spending a `D-1NN`) and took
+    **142**; the owner then ruled the id to **143** (2026-09-09). Nothing visible in the
+    tree spends 142, so it is registered in `docs/RESERVED.md` and its bar STAYS rather
+    than being dropped. ⚠ **D-143 does not touch this suite's subject** — the ADC
+    catalog, the pipeline shelf and the `cancer_type` envelopes are untouched by it; it
+    is named here only because this is one of the enumerated id guards.
     """
     log = DOCS_README.read_text(encoding="utf-8")
     assert "\n### D-136 —" in log
@@ -458,9 +452,22 @@ def test_d136_entry_exists_in_the_living_log():
         "D-141 is the recorded successor id; it must be the confidence-Kabsch lander "
         "entry, not some other entry that took the number"
     )
-    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", log, re.M), (
-        "D-143 is the recorded successor id; it must be the target-list columns entry, "
-        "not some other entry that took the number"
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", log, re.M), (
+        "D-143 is the recorded successor id; it must be the Track B structural-only "
+        "copy entry, not some other entry that took the number"
+    )
+    # ⚠⚠ 142 IS NOW WRITTEN, AND THE BAR ON IT REDDENED EXACTLY AS ITS OWN MESSAGE PREDICTED.
+    # `docs/RESERVED.md` reserved 142 after the Track B copy work was renumbered off it, with the
+    # unblock recorded as *"whoever holds it writes `### D-142`"* and the resolution pre-committed:
+    # *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED beside 143."* The holder is
+    # the `/targets` columns entry (Emma CoS assignment, 2026-09-09), so the bar is REPLACED BY A
+    # NAME rather than deleted, and 142 is ADDED to the enumeration beside 143. ⚠ Never a `>=`:
+    # this is the eighth widening and the eighth resolution by adding.
+    # ⚠ A reserved integer that is later spent must be NAMED here, not merely un-barred — an
+    # un-barred integer with no name is exactly what the D-062 defect looked like.
+    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", log, re.M), (
+        "D-142 is the recorded holder of the reserved integer; it must be the target-list "
+        "columns entry, not some other entry that took the number"
     )
     assert "\n### D-144" not in log
 

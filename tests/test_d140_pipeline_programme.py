@@ -684,24 +684,31 @@ def test_d140_entry_exists_in_the_living_log():
     # while it was the newest; the confidence-Kabsch lander then claimed 141 (it read
     # the open-PR list *after* #263 was published, so it saw 140 held and skipped it —
     # the clean version of the duplicate this entry records). #263 merging reddened
-    # the bar exactly as intended, so 141 is named here and `### D-142` takes the bar.
+    # the bar exactly as intended, so 141 is named here and `### D-144` takes the bar.
+    # ⚠ Widened again at D-143 by ADDING: the Track B structural-only copy entry claimed 142
+    # off `30f402f` after `grep` (highest written = 141) and `gh pr list --state open`
+    # (#222 / #200 / #197, none spending a `D-1NN`), and was then renumbered to 143 by owner
+    # ruling (2026-09-09) with 142 left HELD and barred below. It touches no pipeline field.
     assert re.search(r"^### D-141 — The gate had nothing to answer with", log, re.M), (
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    # ⚠⚠ Widened again at D-143 by ADDING, with 142 SKIPPED, and this pairing needs its
-    # authorities kept apart. D-143 adds a **Cancer association** column to `/targets`
-    # from the **D-053 expression grid** (quasi H-score, HPA IHC). That is NOT this
-    # entry's `cancer_type`, which comes from the **trial registry**, and NOT D-136's,
-    # which comes from the **FDA label**. Three columns reading "cancer", three
-    # authorities, and `adcs.v1.json` / `adcs.pipeline.v1.json` are untouched by D-143 —
-    # no pipeline row and no approved row moves. The shelves are a different population
-    # from the 82-target cohort entirely.
-    # ⚠ 142 is held by #266 on an unmerged branch, whose title says "D-143" while its
-    # diff writes `### D-142`; the heading is what spends an id.
-    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", log, re.M), (
-        "D-143 must be the target-list columns entry, not some other entry "
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", log, re.M), (
+        "D-143 must be the Track B structural-only copy entry, not some other entry "
         "that took the number"
+    )
+    # ⚠⚠ 142 IS NOW WRITTEN, AND THE BAR ON IT REDDENED EXACTLY AS ITS OWN MESSAGE PREDICTED.
+    # `docs/RESERVED.md` reserved 142 after the Track B copy work was renumbered off it, with the
+    # unblock recorded as *"whoever holds it writes `### D-142`"* and the resolution pre-committed:
+    # *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED beside 143."* The holder is
+    # the `/targets` columns entry (Emma CoS assignment, 2026-09-09), so the bar is REPLACED BY A
+    # NAME rather than deleted, and 142 is ADDED to the enumeration beside 143. ⚠ Never a `>=`:
+    # this is the eighth widening and the eighth resolution by adding.
+    # ⚠ A reserved integer that is later spent must be NAMED here, not merely un-barred — an
+    # un-barred integer with no name is exactly what the D-062 defect looked like.
+    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", log, re.M), (
+        "D-142 is the recorded holder of the reserved integer; it must be the target-list "
+        "columns entry, not some other entry that took the number"
     )
     assert "\n### D-144" not in log
 

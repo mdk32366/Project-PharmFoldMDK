@@ -1,4 +1,4 @@
-// D-143 — the Cancer association and Description columns, and the bound on column one.
+// D-142 — the Cancer association and Description columns, and the bound on column one.
 //
 // ⚠⚠ THE FIELD THAT LOOKED LIKE THE DESCRIPTION WAS THE GENE SYMBOL. `/api/analyses` carries
 // `label`, and on THIS population `label` == `gene` on all 82 rows (`data/cohort_82_ecd.csv` keeps
@@ -40,7 +40,7 @@ const ANALYSES = [
 ]
 
 // ⚠ `protein_name` is the manifest column the Description column reads — added to /api/coverage by
-// D-143 rather than to the light list, whose field set is exact by ruling (D-034 dec 1).
+// D-142 rather than to the light list, whose field set is exact by ruling (D-034 dec 1).
 const COVERAGE = {
   rows: [
     { accession: 'Q92729', gene: 'NECTIN4', protein_name: 'Nectin-4', fold_status: 'folded' },

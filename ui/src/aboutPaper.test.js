@@ -38,8 +38,22 @@ describe('D-123 — aboutPaper.js is a verbatim extract of the owner Doc', () =>
   it('Track A is red without wet bind; Track B ranks; EV is not a universal V-key', () => {
     expect(TRACK_A).toContain('Wet binding assays — required')
     expect(TRACK_A).toContain('No bind → stop')
-    expect(TRACK_B).toContain('rank by (cancer × membrane × internalization × density) / normal risk')
+    expect(TRACK_B).toContain('structure only — membrane × ECD × fold confidence (pLDDT)')
     expect(BOTTOM_LINE_2).toContain('not a universal V-domain key')
+  })
+
+  // ⚠ D-143 (owner GO 2026-09-08) — the aspirational composite is retired as a description
+  // of what we rank by. Presence and absence are asserted TOGETHER: a revert of the copy
+  // reddens at the negative, and a Track B that stops saying what it ranks by reddens at the
+  // positives, so this cannot pass on an empty string the way a pure absence guard would.
+  it('D-143: Track B ranks structurally, names its exclusions, and does not claim the retired composite', () => {
+    expect(TRACK_B).toContain('structure only — membrane × ECD × fold confidence (pLDDT)')
+    expect(TRACK_B).toContain('excluded')
+    expect(TRACK_B).toContain('0.5 neutrals')
+    expect(TRACK_B).toContain('not** ADC readiness')
+    expect(TRACK_B).toContain('Later, on its own GO')
+    expect(TRACK_B).not.toContain('rank by (cancer × membrane × internalization × density) / normal risk')
+    expect(TRACK_B).not.toContain('/ normal risk')
   })
 
   it('chrome asks whether and does not say shows that', () => {

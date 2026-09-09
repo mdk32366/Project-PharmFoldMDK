@@ -89,7 +89,7 @@ const COLUMNS = [
   { key: 'rank', label: 'Rank' },
   { key: 'gene', label: 'Gene' },
   { key: 'accession', label: 'Accession' },
-  // ⚠⚠ THE DESCRIPTION, AND IT IS **NOT** THE LIST PAYLOAD'S `label` (D-143). `/api/analyses`
+  // ⚠⚠ THE DESCRIPTION, AND IT IS **NOT** THE LIST PAYLOAD'S `label` (D-142). `/api/analyses`
   // carries `label`, which reads like a name and IS THE GENE SYMBOL on this population: the
   // committed manifest keeps `label` and `protein_name` in separate columns and they are equal on
   // all 82 rows. The census's `label` — same key, other population — really is the protein name
@@ -98,7 +98,7 @@ const COLUMNS = [
   // `protein_name` by accession (the D-068 pattern), and the light list's exact field set is
   // untouched.
   { key: 'description', label: 'Description', className: 'col-description' },
-  // ⚠⚠ AN EXPRESSION CLAIM, AND DELIBERATELY NOT SORTABLE (D-143). The cell holds a SET of tumour
+  // ⚠⚠ AN EXPRESSION CLAIM, AND DELIBERATELY NOT SORTABLE (D-142). The cell holds a SET of tumour
   // types. Every scalar that could order it — the leading quasi H-score, or how many types clear
   // the cutoff — would order the cohort by an expression statistic the cell never shows, which is
   // the de facto ranking this list already refused for mean pLDDT (owner ruling 2026-08-21), by a
@@ -323,7 +323,7 @@ export default function TargetList() {
   const [coverage, setCoverage] = useState([])     // the 82 manifest rows, for the members with no analysis
   const [query, setQuery] = useState('')
   const [ranks, setRanks] = useState(null)         // accession -> rank, from the pre-registered run
-  // ⚠ D-143: the two new columns each track their supplier's state explicitly — see the enum above.
+  // ⚠ D-142: the two new columns each track their supplier's state explicitly — see the enum above.
   const [covState, setCovState] = useState(SUPPLIER_LOADING)
   const [assoc, setAssoc] = useState(null)         // the whole /api/associations payload (D-053)
   const [assocState, setAssocState] = useState(SUPPLIER_LOADING)
@@ -363,7 +363,7 @@ export default function TargetList() {
       .catch(() => { setFoldStatus({}); setCoverage([]); setCovState(SUPPLIER_FAILED) })
   }, [])
 
-  // ⚠⚠ D-143 — THE ASSOCIATION MAP, FROM THE SUPPLIER THAT ALREADY SERVES IT (D-053). The grid is
+  // ⚠⚠ D-142 — THE ASSOCIATION MAP, FROM THE SUPPLIER THAT ALREADY SERVES IT (D-053). The grid is
   // consumed, never re-derived: `core/cancer_associations.py` validates the rows, applies the
   // paper's cutoff and sorts each target's pairs, and a second ordering here would be free to
   // disagree with the detail card that renders the same target.
@@ -421,7 +421,7 @@ export default function TargetList() {
       mean_plddt: null, tier: null, tier_reason: null, aliases: c.aliases ?? null,
       disposition: c.disposition ?? null, never_attempted: true,
     }))
-  // ⚠ D-143: accession -> the manifest's UniProt protein name, the Description column's only
+  // ⚠ D-142: accession -> the manifest's UniProt protein name, the Description column's only
   // source. Built from the coverage rows already fetched above — no second request.
   const descriptions = {}
   for (const c of coverage) {
@@ -540,7 +540,7 @@ export default function TargetList() {
         judgement of whether the target is a good ADC candidate. Scoring lives on{' '}
         <Link to="/scorer">Scorer</Link>.
       </p>
-      {/* ⚠⚠ D-143 — THE TWO NEW COLUMNS STATE WHAT THEY ARE, ON THE PAGE. D-069's self-sufficient
+      {/* ⚠⚠ D-142 — THE TWO NEW COLUMNS STATE WHAT THEY ARE, ON THE PAGE. D-069's self-sufficient
           surfaces, and for the association column the claim boundary is not optional: it is the
           same sentence the detail card carries (D-053 orders §2b), because a reader who never
           opens a card must not be able to read "cancer association" as causation.
@@ -689,7 +689,7 @@ export default function TargetList() {
           </tbody>
         )}
       </table>
-      {/* ⚠⚠ HPA ELEMENTS 1–3, ONCE, AND ONLY IF A TUMOUR TYPE ACTUALLY RENDERED (D-100 / D-143).
+      {/* ⚠⚠ HPA ELEMENTS 1–3, ONCE, AND ONLY IF A TUMOUR TYPE ACTUALLY RENDERED (D-100 / D-142).
           The per-datum link (element 4) is the anchor on each cell's tumour type; these three are
           properties of the SOURCE and render once per page — the split-by-case ruling of
           2026-08-21, applied to a list instead of a card.

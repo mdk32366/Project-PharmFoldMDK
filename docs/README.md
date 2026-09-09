@@ -379,7 +379,239 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
-### D-143 — `/targets` gains a Cancer association and a Description column, and the field that looked like the description was the gene symbol: the widest column on the page was holding a 144-character sentence, and the association values had been rendering with no HPA citation since D-053
+### D-143 — Track B stops claiming a composite it cannot compute: the ranking sentence becomes structural-only — membrane × ECD × fold confidence (pLDDT) — and the biology terms are EXCLUDED rather than filled in as 0.5 neutrals
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — **copy only, on one sentence and its extract.** The owner Doc's Track B
+  ranking sentence (`docs/pharmfold-adc-nectin4-paper.md`, *Suggested algorithm*) and its D-123
+  verbatim extract (`ui/src/aboutPaper.js` `TRACK_B`) stop describing a
+  cancer/normal/internalization/density composite as **what we rank by**, and describe what is
+  actually computed: **membrane × ECD × fold confidence (pLDDT)**, with the biology terms named as
+  **excluded**. ⚠ **No new route, no component, no payload field, no migration, no DB write, no ops,
+  no fold, no F-004, no ranking-set change.**
+- ⚠⚠ **THE HARD STOP THAT DEFINES THIS ENTRY: the cohort-82 learned scorer is NOT what this touches
+  and is NOT amended.** D-041 / D-060's LOO logistic over the six standardized features
+  (`core/scorer.py`, `scripts/fit_scorer.py`, `target_scores` / `ranking_results`, the `/targets`
+  **Rank** column, `/scorer`, and MethodNote's prose about that scorer) is a **different ranking
+  surface over a different population** — the Kathad 82, frozen span definition, seven parameters.
+  This entry changes **none** of it, and a reader who takes "the ranking became structural-only" as a
+  statement about the cohort-82 scorer has read it wrong. The two ranking surfaces are now
+  distinguishable in the copy, which they were not before.
+- **Ship id:** spends **`D-143`**, and **`D-142` is skipped by owner ruling — held, not free.**
+  ⚠⚠ **This entry FIRST SHIPPED AS `D-142`, and the wrong intermediate version is recorded rather
+  than tidied away** (method-note item 4: record the provenance chain when a claim changes,
+  including the versions that were wrong). What was checked, and what it proved:
+  - **The check that was run**, on `main` at tip **`30f402f`** (D-141,
+    [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
+    `grep -n '^### D-1[34][0-9]' docs/README.md` returned **`D-141`** as the highest written entry,
+    and `gh pr list --state open` returned **three** PRs — **#222** (`docs/registers-and-f067`),
+    **#200** (`data/rb-regate384-first-ten`) and **#197** (`feat/f062-blackwell-ceiling-climb`) —
+    **none** spending a `D-1NN`. On that evidence 142 was taken, and PR
+    [#266](https://github.com/mdk32366/Project-PharmFoldMDK/pull/266) was opened titled *"D-142"*.
+  - **The owner then ruled otherwise (2026-09-09): this work is `D-143`.** The whole entry, its
+    tests, its guards and the PR were renumbered. ⚠ **The disqualifying fact, stated rather than
+    left for a reader to notice: nothing visible in the tree spends 142.** Re-checked after the
+    ruling on `origin/main` at `30f402f` — `git log --oneline origin/main -3` shows D-141 / D-140 /
+    D-139 and `gh pr list --state open` shows #266, #222, #200, #197, of which only #266 spent a
+    `D-1NN`. **So this session cannot show what holds 142; the owner ruling is the only authority
+    for the skip, and 142 is registered in [`RESERVED.md`](RESERVED.md) as held so the citation
+    invariant does not acquire a hole.** ⚠ This is the same asymmetry D-141 recorded from the
+    other side: **an open-PR check proves no PUBLISHED branch spent an id and cannot prove no
+    unpublished one did.** There, the unpublished branch collided; here, an authority outside the
+    tree reserved the integer. Both are invisible to `gh pr list`, and neither is a reason to relax
+    a guard.
+  - **The six guards in `tests/test_d129_*`, `tests/test_d130_*`, `tests/test_d136_*`,
+    `tests/test_d139_*`, `tests/test_d140_*` and `tests/test_d141_*` are widened BY ENUMERATION** —
+    143 named as spent by this entry, **142 asserted STILL ABSENT** (so a later branch cannot
+    quietly take it without reddening these), and a bare `### D-144` barred. **Never a `>=`**, and
+    nothing was widened by deleting a bar. This is the seventh pass through that resolution and the
+    rule has not moved; it is the second pass (after D-138 / D-141) where an integer is skipped
+    rather than collided over, and the **first** where the skip came from a ruling instead of a
+    branch.
+- **Cite:** the owner **GO of 2026-09-08 (Matt)** quoted in Provenance below — the authority for
+  editing an owner Doc sentence at all · D-123 (the verbatim-extract discipline this entry keeps:
+  `aboutPaper.js` stays a character-substring extract of the Doc, so the Doc is edited **first** and
+  the module follows) · D-016 (a claim names how it is known — the reason the excluded terms are
+  named as excluded instead of defaulted) · D-094 (claim discipline; a surface is accountable for the
+  premises it supplies) · D-079 dec 1 (no census row is scored on a live surface — the reason this
+  copy says the structural order is **offline**) · D-129-C (a superseded claim never stands alone —
+  the reason D-123's own quotation of the retired composite gains an in-place amendment note instead
+  of being edited away) · D-041 / D-060 / D-064 (the cohort-82 learned scorer, **untouched**)
+- **Relates:** `D-123` (amended in place, below) · `D-094` amendment 1 dec 3 · `D-079` · `D-041` ·
+  `D-060` · ship index [`decisions.md`](decisions.md)
+- **Does not amend:** D-041 / D-060 / D-064 scorer, its attribution, its LOO evaluation or its
+  `Rank` column · MethodNote's description of that scorer · D-094 ABOUT-COPY / `PAPER_QUESTIONS` ·
+  D-123's placement, chrome, standing line or Track A text · D-079 census-scoring bar · F-004 ·
+  D-109 ranking-set membership · the census manifest or any artefact · the `D-` next-free pointer
+
+#### Context
+
+D-123 extracted the owner Doc's Part 2 verbatim onto `/about`. One of those sentences ended with
+the **aspirational** Track B composite — a product of cancer expression, membrane topology,
+internalization and antigen density over normal-tissue risk, written when the intent was to have
+HPA/TCGA expression and internalization assays to multiply in. ⚠ **It is quoted verbatim exactly
+once in this log — inside D-123's own deep-learning justification, left standing with an amendment
+note beside it** — and this entry deliberately does not reproduce it a second time, so a `grep` for
+that string has one hit and that hit is the historical record.
+
+We do not have them. The offline next-target ranking briefly filled the four missing terms with
+**0.5 neutrals** so the product would evaluate at all. **The owner rejected that as dishonest**
+(GO 2026-09-08), and the reasoning is the reason this entry exists rather than a silent copy fix: a
+0.5 placeholder multiplied into a score is **indistinguishable in the output** from a measured 0.5.
+The number that comes out is not a weaker finding, it is **not a finding** — and the surface that
+renders it inherits the claim. It is the same defect family as the summaries reversed on
+2026-07-19/21 (method note items 2 and 3): each was true as stated and wrong in what it implied.
+
+So the composite was not computed with neutrals; it was **cut down to what exists**. What is
+computed is **membrane × ECD × fold confidence (pLDDT)** — three terms we measure. Cancer vs normal,
+internalization and antigen density are **absent**, and the honest rendering of an absent term is
+its **name**, not its default. Meanwhile the live sentence on `/about` still described the composite
+as what we rank by, which is the D-062 shape one more time: a surface citing an algorithm that does
+not exist behind it.
+
+⚠ **A second, quieter defect the copy carried:** "rank by …" on `/about` sat a paragraph away from
+the cohort-82 scorer's own ranking claims, with nothing telling a reader they are different
+objects — different population (3,467-row census vs the Kathad 82), different span definition,
+different method (a product of three factors vs a fitted logistic). A reader who merged them would
+take D-041's LOO percentiles as evidence for the Track B order. That merge is now barred in the
+words themselves.
+
+#### Decision
+
+1. **The Doc is edited first, and the extract follows it.** `docs/pharmfold-adc-nectin4-paper.md`
+   is the source of truth for the Track B sentence; `ui/src/aboutPaper.js` `TRACK_B` stays a
+   **character substring** of that file (D-123 dec 4). ⚠ Editing the module first, or paraphrasing
+   it to fit, is the drift D-123's substring test exists to redden.
+2. **Structural-only, named as such.** The sentence states what is ranked today:
+   **membrane × ECD × fold confidence (pLDDT)** — "structure only". pLDDT is named as fold
+   confidence so the term cannot be read as a wet measurement.
+3. **The excluded terms are named, and the 0.5 neutral is named as refused.** Cancer vs normal,
+   internalization and antigen density appear in the sentence as **excluded**, with the placeholder
+   refusal stated in the same breath. ⚠ Dropping the four terms silently would have produced copy
+   that *reads* honest while hiding the decision that made it so.
+4. **It is not ADC readiness, in the sentence itself.** The structural order is explicitly not a
+   readiness verdict and not a shortlist. ⚠ Not a footnote, not a caveat elsewhere on the page.
+5. **Scope is stated: the whole census, not a tranche.** The structural order ranges over the full
+   census of outward-facing spans (**3,467** manifest rows), not the tranche-5 / rented-GPU slice,
+   and the sentence says it runs **offline** — it is not a ranked surface in this application, so
+   D-079 dec 1 is not quietly widened by a copy change.
+6. **The biology composite becomes a later, separate GO.** Real HPA/TCGA expression plus wet assays
+   are what turn the four excluded terms into a composite. ⚠ **This entry is not that GO** and
+   confers no authority to compute one.
+7. **D-123's own quotation of the retired composite is amended IN PLACE, not deleted.** D-123's
+   deep-learning justification quotes the composite as the ranking. The quotation stays as the
+   record of what D-123 shipped, and gains an adjacent ⚠ note naming this entry as its supersession
+   (D-129-C: a superseded claim never stands alone). ⚠ The log is append-at-top; history is not
+   rewritten to look like it was always right.
+8. **⚠ A gate red arrived that this copy did not cause, and it is fixed here rather than
+   re-run until it passed.** `MethodNote.toc.test.jsx` › *"does not disturb the prose the page
+   already shipped"* failed on the runner expecting `/3 ranked-and-folded of 7/` and finding the
+   **pre-fetch fallback** (*"ranked-and-folded, out of the full cohort"*). Its helper awaited only
+   `method-toc` — which renders from the static headings on the first paint — and then asserted
+   synchronously on copy that arrives with `getCoverage()`. **Two gate runs on byte-identical test
+   and component code disagreed**, which is the signature of a race and not of a copy change. The
+   helper now waits for the coverage-**derived** denominator before any assertion, and a new
+   deterministic case holds the promise open to assert the fallback and then the numbers **in
+   order**. ⚠ **The assertion was NOT relaxed** to whichever string happened to be on screen: the
+   derived numbers are the contract (D-050 — that line is computed, never a literal), and pinning
+   the fallback would have made the page's loading state its contract. Same defect D-135 records in
+   the readability tripwire: *a check that races the copy it measures reports whichever half
+   arrived first.*
+9. **The tests move with the words, and keep a negative.** `ui/src/aboutPaper.test.js`,
+   `ui/src/components/AdcContext.test.jsx` and `tests/test_about_paper_extract.py` assert the new
+   wording **and** assert the retired composite is **absent** from `docs/` and `ui/` — a revert of
+   the copy reddens at an assertion rather than passing quietly.
+
+#### Deep-learning justification
+
+**The network's output is the only term in the live ranking that is not an annotation lookup.**
+Membrane topology and ECD extent come from UniProt/InterPro records; `mean pLDDT` over the folded
+ECD is produced by the ESMFold pass we run (D-003). Cutting the composite down to what exists does
+not remove the deep learning from Track B — it leaves the ESMFold confidence as **one of three**
+factors instead of one of eight, which makes the neural term *more* load-bearing in the surviving
+order, not less. That is also why this entry is careful about what it is: a fold-confidence-weighted
+structural order is a statement about **foldedness and shape**, and calling it ADC readiness would
+be claiming the network answered a question about tumour biology that it never saw. The prime
+directive is satisfied by the scorer surfaces (D-041/D-060 over ESMFold-derived features, untouched
+here) and by this order's pLDDT term; it is **not** satisfied by multiplying guesses into a product
+until the arithmetic looks like biology.
+
+#### Provenance (D-016)
+
+- **Authority for editing the Doc sentence:** owner GO **2026-09-08** (Matt), handed to this session
+  as the task statement: *"honest STRUCTURAL ranking only; no fake cancer scores"* —
+  `structural_score = membrane × ECD × model(pLDDT)`; cancer / normal / internalization / density
+  **excluded until real HPA/assay data (later GO)**; scope **the full census (3467), not T5-only**;
+  **not ADC readiness**; and the explicit carve-out *"Do not change the cohort-82 D-041/D-060
+  learned scorer, TargetList rank column, or MethodNote's description of that scorer."* ⚠ **That GO
+  is the only artefact behind the 0.5-neutral history and the offline-rank scope** — no run log, CSV
+  or notebook for that offline ranking is in this repository, and this entry does not pretend
+  otherwise. What *is* checkable in-tree is stated separately below.
+- **The strings changed, before and after:** `docs/pharmfold-adc-nectin4-paper.md` line 69 and
+  `ui/src/aboutPaper.js` `TRACK_B` at `30f402f` both carried the retired composite verbatim; the
+  same two strings now carry the structural-only sentence, and they are **byte-identical to each
+  other** — asserted by `aboutPaper.test.js`'s `VERBATIM_EXCERPTS` substring loop and by
+  `tests/test_about_paper_extract.py`, not by inspection.
+- **Every occurrence was enumerated, not assumed.** `rg -n 'rank by \(cancer × membrane ×
+  internalization × density\)'` on `30f402f` returned **five** hits in five files:
+  `docs/pharmfold-adc-nectin4-paper.md:69`, `ui/src/aboutPaper.js:45`,
+  `ui/src/aboutPaper.test.js:41`, `ui/src/components/AdcContext.test.jsx:155`,
+  `tests/test_about_paper_extract.py:54-55`. All five are in this diff. ⚠ **A sixth occurrence
+  exists and is deliberately kept:** D-123's own entry in this file (line ~8546), where the
+  composite is line-wrapped across two lines and is the historical record of what D-123 shipped —
+  amended in place per decision 7, not edited.
+- **`3,467`:** `data/census/census_manifest.v6.provenance.json` → `"manifest_rows": 3467`, and
+  `ui/src/censusSummary.js` → `manifestRows: 3467` at manifest revision 7. Read from both, not
+  recalled. ⚠ **This is the census SIZE, which is checkable; that the offline order covered all of
+  it is from the GO above and nothing else.**
+- **The cohort-82 carve-out is checkable in the diff:** `git diff --stat` touches no `core/`,
+  `app/`, `db/`, `worker/`, `scripts/` or `data/` path, and no `MethodNote.jsx` / `TargetList.jsx` /
+  `ScorerView.jsx` / `TargetScorerPanel.jsx` / `targetScore.js`. Pinned by
+  `tests/test_d143_track_b_structural_only.py`.
+- **Tests run here:** `npx vitest run src/aboutPaper.test.js src/components/AdcContext.test.jsx
+  src/components/readability.tripwire.test.jsx` and `python3 -m pytest
+  tests/test_about_paper_extract.py tests/test_d143_track_b_structural_only.py
+  tests/test_d129_phase5_named_refuse_spec.py tests/test_d130_residual_rmsd_spec.py
+  tests/test_d136_cancer_type.py tests/test_d139_served_path_flip.py
+  tests/test_d140_pipeline_programme.py tests/test_d141_land_confidence_kabsch.py`, plus
+  `tests/test_namespace_pointers.py` and `tests/test_d129_c_must_hunt_supersession.py` for the
+  citation and supersession invariants. **D-056 readability, measured both ways on this branch and
+  reported as a before/after rather than as a pass:** the retired sentence printed
+  `grade = 10.83 over 2343 words / 119 sentences`; the structural sentence prints
+  `grade = 10.84 over 2453 words / 124 sentences`. **+0.01 of grade for +110 words**, and the
+  **ceiling 12.5 is not moved** (D-135: re-calibrating a ceiling to admit new prose is how a
+  tripwire becomes a decoration). ⚠ The baseline was obtained by restoring the old `aboutPaper.js`
+  from `HEAD` and re-running the tripwire, not by quoting D-135's older 11.06 — that figure was
+  measured on different copy.
+- **Ship id, and the renumber:** verified as described under **Ship id** above. The `grep` and
+  `gh pr list --state open` were run on `30f402f` **twice** — before 142 was taken, and again after
+  the owner ruled the id to 143 on **2026-09-09** — and both times the tree showed **no spender of
+  142**. ⚠ **The ruling is the authority; the tree is not evidence for it.** `D-142` is therefore
+  registered in [`RESERVED.md`](RESERVED.md) rather than left as an unresolved citation, and the
+  six id guards assert its continued **absence** so a later branch cannot take it silently. The
+  check that this entry exists is the `### D-143` heading in this file, never a citation of it
+  (D-062 / method note item 7).
+- **The gate red, and how it was diagnosed rather than guessed at** (decision 8): the failing run is
+  [34312428832](https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/34312428832) (`test`
+  job) at commit `2649569`, and the run **immediately before it** —
+  [34312365044](https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/34312365044) at
+  `b49291e` — was **green with the same test and component bytes**; the only diff between them is
+  the paper's amendment-note placement, a markdown file the UI does not read. ⚠ **That pair is the
+  evidence it is a race**, not the local run passing. The log line is
+  `AssertionError: expected 'What this system claims — and what it…' to match /3
+  ranked-and-folded of 7/`, and the captured body in that log carries *"folds a fixed cohort of
+  candidate"* — the denominator absent, i.e. `getCoverage` had not resolved. **Shown to bite before
+  it was committed:** with `getCoverage` delayed 60 ms, the pre-fix helper reproduces the runner's
+  red (1 failed / 6 passed, same test, same message) and the fixed helper passes 7 of 7 — so the
+  fix is known to work by reproducing the failure, not by the absence of one.
+- ⚠ **What the renumber did NOT change:** not one science word, threshold, count or file outside the
+  id itself. `git log` on this branch carries the original `D-142` commit subjects beneath the
+  renumber commit — left standing on purpose, because a history rewritten to look as though the id
+  was right the first time is the shape this project refuses (D-129-C).
+
+---
+
+### D-142 — `/targets` gains a Cancer association and a Description column, and the field that looked like the description was the gene symbol: the widest column on the page was holding a 144-character sentence, and the association values had been rendering with no HPA citation since D-053
 
 - **Date:** 2026-09-09
 - **Status:** Accepted as the **target-list columns GO** (Matt 2026-09-08 ~8:02 AM PT via Emma):
@@ -392,10 +624,38 @@ So the rule is not "be careful" — it is:
   ranking change, no scorer change, no migration, no ops, no fold, no GPU, no rent, no emit.**
   ⚠ **No pLDDT is promoted to target quality** and the reserved suitability slot stays reserved
   (D-075-gated).
-- **Ship id:** spends **`D-143`**, and **`D-142` is deliberately skipped, not free.** ⚠⚠ **This
-  entry was written as `### D-142`, and it lost the number to a branch it could not see — the
-  SEVENTH instance of that collision, and the one that finally shows why the *title* is not the
-  check.**
+- **Ship id:** spends **`D-142`**, and it took **three** passes to settle on that — recorded in
+  full below rather than presented as though it were right the first time.
+  - ⚠⚠ **FINAL STATE, AND IT IS THE THIRD READING (Emma CoS assignment, 2026-09-09 ~05:08):**
+    this entry is **`### D-142`**; **`### D-143` is #266's Track B structural-only copy entry**,
+    **merged** to `main` at **`f243f93`** at 2026-09-09T05:07:56Z; **`### D-144`** takes the bar.
+    Both integers are now **written**, so the enumerations carry `[…, 140, 141, 142, 143]` — 142
+    **ADDED beside** 143, never a `>=`.
+  - ⚠⚠ **AND THE BAR THAT REDDENED WAS A BAR #266 WROTE, WITH THIS RESOLUTION PRE-COMMITTED IN
+    ITS OWN FAILURE MESSAGE.** #266 landed six guards asserting `"\n### D-142" not in LOG` with the
+    message *"D-142 is held by owner ruling and registered in `docs/RESERVED.md`; **if a holder
+    writes it, this reddens BY DESIGN and 142 is ADDED beside 143 — never relaxed to a `>=`**"*,
+    and `docs/RESERVED.md`'s unblock column read *"**Whoever holds it writes `### D-142`.**"* This
+    entry is that holder. **So the guard did not merely catch a collision — it wrote down the
+    correct repair before the repair was needed, and the repair executed as written.** That is the
+    strongest evidence this log has that the enumeration discipline is load-bearing rather than
+    ceremonial. ⚠ The `docs/RESERVED.md` row is **retired in the open, with its reason**, per that
+    file's own rule; a reservation silently deleted once spent is indistinguishable from one that
+    was never honoured.
+  - ⚠ **The two superseded readings are LEFT STANDING below, not rewritten** (D-129-C: a superseded
+    claim never stands alone, and is never quietly deleted). They are the record of a genuine
+    two-branch race and of the check that failed to see it, and a history edited to look
+    error-free is the shape this project refuses. **Read them as history; the paragraph above
+    governs.**
+  - ⚠⚠ **Superseded reading 2 (held for ~20 minutes):** *"spends `D-143`, and `D-142` is
+    deliberately skipped, not free."* This entry **was** written as `### D-142`, lost the number
+    to a branch it could not see, renumbered **up** to 143 — and then #266 renumbered **up** as
+    well, so both branches shipped `### D-143` and the collision reappeared one integer higher.
+    Emma resolved it by assignment: **#266 keeps 143 (it merges first), Targets takes 142.** ⚠ The
+    lesson is not that the renumber was wrong; it is that **two branches renumbering
+    independently, each by reading the other's *published* state, can converge instead of
+    diverge.** An id race is not settled by both parties moving — it is settled by an assignment.
+  - **Superseded reading 1, and the sequence that produced it:**
   - **What the check said, and it was run rather than assumed.** On `main` at tip **`30f402f`**
     (D-141, [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
     `grep -n '^### D-1[34][0-9]' docs/README.md` returned **`D-141`** as the highest written entry
@@ -423,26 +683,38 @@ So the rule is not "be careful" — it is:
     the reference existed and the entry did not; here the entry exists and the reference is
     stale). Had this branch trusted #266's title it would have taken 143 believing 142 free, and
     written a second `### D-142`.
-  - **So 142 is left with #266 and this entry takes 143**, the D-138 / D-141 precedent: the branch
-    that looks later skips, and names the id it is not taking. ⚠ **The enumerations below carry
-    141 and 143 and SKIP 142 by name**, and a bare **`### D-144`** takes the bar. **Never a
-    `>=`:** if #266 merges first, the enumerations redden **by design** and the rebase inserts 142
-    beside 143 — that is the guard working, not a false alarm. ⚠ **T-numbers moved too**, for the
-    same reason and by reading the same diff: #266 spends **T-1225–T-1228** and **T-1234**, so this
-    entry's `docs/Test_Plan.md` block is **T-1235–T-1242** rather than the T-1225–T-1232 it was
-    first written as. A T-id collision is the same defect one register down and nothing was
-    checking for it.
-  - ⚠ **Effect on the `docs/RESERVED.md` citation invariant: the hole GROWS by one, and that is
-    recorded rather than smoothed over** — the same shape D-141 had to report, for the same
-    reason: the integer this entry spends (143) is not the one it bars (144), and 142 is now cited
-    here without being written here. Measured with the `docs/RESERVED.md` §*"How to run the
-    check"* command **after the renumber**, not predicted before it: `origin/main` at `30f402f`
-    reports **`['D-131', 'D-142', 'F-067']`**; this branch reports
-    **`['D-131', 'D-142', 'D-144', 'F-067']`**. **`D-144` is the one addition** — a forward
-    reference that announces its own absence, which is the distinction `RESERVED.md` exists to
-    draw from the D-062 defect. `D-142` stays unresolved here **because #266 holds it**, and it
-    resolves on `main` when #266 lands. `D-131` (the suffix half of `### D-130-B / D-131`) and
-    `F-067` (open in #222) are pre-existing and untouched.
+  - **That reading then took 143 and left 142 with #266**, on the D-138 / D-141 precedent: the
+    branch that looks later skips, and names the id it is not taking. ⚠ It also predicted its own
+    red: *"if #266 merges first, the enumerations redden by design and the rebase inserts 142
+    beside 143."* **#266 did merge first, and it did redden** — from the other direction, because
+    #266 had by then moved to 143 as well.
+  - ⚠ **T-numbers moved once and did not need to move again.** #266 spends **T-1225–T-1229** and
+    **T-1234** on `main` (measured on `origin/main` at `f243f93`, not carried over from its
+    pre-merge diff, which read T-1225–T-1228), so this entry's `docs/Test_Plan.md` block is
+    **T-1235–T-1242** — clear of both, and left alone through the second renumber precisely
+    because it was already clear. A T-id collision is the same defect one register down, and
+    nothing in the repo was checking for it.
+  - ⚠ **Effect on the `docs/RESERVED.md` citation invariant, measured on the FINAL state rather
+    than any of the three intermediate ones — and the first number written here was WRONG.**
+    Run with the command in `docs/RESERVED.md` §*"How to run the check"*, after the merge and the
+    renumber: `origin/main` at **`f243f93`** reports **`['D-131', 'D-144', 'F-067']`** and this
+    branch reports **`['D-131', 'D-144', 'F-067']`** — **identical lists, and the invariant is
+    unchanged by this PR.**
+    - ⚠⚠ **The superseded claim, kept rather than quietly swapped (D-129-C).** This paragraph
+      first read *"`origin/main` reports `['D-131', 'D-142', 'F-067']` … the hole moves rather
+      than grows."* That was **predicted from the shape of the change, not measured**, and it was
+      wrong: it forgot that #266 had already **reserved** 142 in `docs/RESERVED.md`, and the
+      checker whitelists that file, so 142 was never in `main`'s unresolved list to begin with.
+      **A number reasoned about is not a number known** — D-016, and the second time in this
+      entry that running the command beat reasoning about it.
+    - **What actually changed is the REASON 142 is absent from that list, not the list.** On
+      `main` it is absent because it is *reserved* (whitelisted, unwritten); here it is absent
+      because it is **defined** — the heading above resolves it — and the reservation row is
+      struck through in the open with its original text kept verbatim. ⚠ Those are two very
+      different states behind one identical output, which is exactly why the check reports a set
+      of unresolved ids and cannot be read as a summary of health. **`D-144`** is the forward
+      reference that announces its own absence; `D-131` (the suffix half of
+      `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched.
 - **⚠⚠ The disqualifying fact, first: the obvious field was the wrong field, and the repo's own
   test fixture asserted the wrong belief.** The GO named `label` as the likely Description and
   asked for it to be verified. It is **not** the description. `data/cohort_82_ecd.csv` — the
@@ -708,14 +980,18 @@ So the rule is not "be careful" — it is:
   supplier states, the HPA credit), `ui/src/components/CancerAssociations.jsx` (reads
   `attributions[symbol]` — the uncited-card fix), `ui/src/searchRows.js` (`description` matched),
   `ui/src/styles.css` (the bounds), `ui/src/components/TargetList.columns.test.jsx` (new),
-  `tests/test_d143_targets_columns.py` (new), `ARCHITECTURE.md` (the target-list narrative and the
-  Read API row), `docs/Test_Plan.md` (the D-143 addendum, **T-1235–T-1242**), and the **six**
+  `tests/test_d142_targets_columns.py` (new), `ARCHITECTURE.md` (the target-list narrative and the
+  Read API row), `docs/Test_Plan.md` (the D-142 addendum, **T-1235–T-1242**), and the **six**
   next-free guards —
   `tests/test_d129_phase5_named_refuse_spec.py`, `tests/test_d130_residual_rmsd_spec.py`,
   `tests/test_d136_cancer_type.py`, `tests/test_d139_served_path_flip.py`,
   `tests/test_d140_pipeline_programme.py` and `tests/test_d141_land_confidence_kabsch.py` —
-  widened **by enumeration** to carry `D-143` by name, to SKIP `D-142` (held by #266 on an
-  unmerged branch), and to bar `### D-144`. ⚠ **Six because
+  widened **by enumeration** to carry **both** `D-142` (this entry) **and** `D-143` (#266's Track
+  B copy, merged at `f243f93`) by name, and to bar `### D-144`. ⚠ Each of those six landed on
+  `main` with a bar on 142 whose failure message pre-committed this exact repair — *"if a holder
+  writes it, this reddens BY DESIGN and 142 is ADDED beside 143"* — and the bar is therefore
+  **replaced by a NAME, not deleted**: an un-barred integer with no name is what the D-062 defect
+  looked like. `docs/RESERVED.md`'s D-142 row is retired in the open with its reason. ⚠ **Six because
   D-141 added the sixth**, and the count is the thing most likely to be stale in this paragraph:
   the authority is `grep -rn '### D-14' tests/`, not this list.
   ⚠ **`ui/src/components/TargetList.search.test.jsx` is deliberately NOT edited** — see the
@@ -741,6 +1017,7 @@ So the rule is not "be careful" — it is:
   disqualifying fact, *`label` is the gene symbol*, is stated first).
 
 ---
+
 
 ### D-141 — The gate had nothing to answer with: a script lands the EXISTING D-126 OPS trees onto the serving volume so D-139's flip can be true of something — and the disqualifying fact is that it did not run here, because no Fly credential reached this build
 
@@ -770,7 +1047,7 @@ So the rule is not "be careful" — it is:
   exist for, resolved in the *wrong* direction — so **141 is taken and 140 is named as in-flight**,
   exactly the way D-138 skipped 137 while #261 was open. ⚠ **The next-free guards below carry
   BOTH ids** — 139 by name, 141 by name, 140 named as the id this branch is deliberately not
-  taking, and a bare `### D-142` barred. **Never a `>=`:** if #263 merges first, the enumerations
+  taking, and a bare `### D-143` barred. **Never a `>=`:** if #263 merges first, the enumerations
   redden **by design** and the rebase inserts 140 beside 141, which is the guard working rather than
   a false alarm. This is the sixth pass through that resolution and the rule has not moved.
   - ⚠⚠ **AMENDED IN PLACE, same day, before this PR was reviewed — #263 MERGED mid-flight, and the
@@ -780,7 +1057,7 @@ So the rule is not "be careful" — it is:
     *spent by a written entry*, so the four guard enumerations reddened **exactly as the sentence
     above predicted they would**, and the rebase onto `578f5ac` **ADDED 140 beside 141** — final
     form `[…, 138, 139, 140, 141]`, with `### D-140` now asserted as the pipeline programme-fields
-    entry by name and `### D-142` still barred. **Nothing was relaxed to a `>=`.** ⚠ The predicted
+    entry by name and `### D-143` still barred. **Nothing was relaxed to a `>=`.** ⚠ The predicted
     red arriving on schedule is the strongest evidence this log has that the guard is doing work
     rather than describing it. ⚠ **And #263 carried a finding this entry should not take credit for
     avoiding:** #263 and D-139 were *both* cut from `dd06e9c`, both ran `gh pr list --state open`,
@@ -794,13 +1071,13 @@ So the rule is not "be careful" — it is:
   entry spent (141) is not the one it bars (142). Measured with the `docs/RESERVED.md` §*"How to run
   the check"* command, **re-run after the rebase** rather than left at its pre-rebase reading:
   `origin/main` at **`578f5ac`** reports **`['D-131', 'F-067']`**; this branch reports
-  **`['D-131', 'D-142', 'F-067']`**. **`D-142` is the one addition** — the integer the guards bar by
+  **`['D-131', 'D-143', 'F-067']`**. **`D-143` is the one addition** — the integer the guards bar by
   name, a forward reference that **announces its own absence**, which is the distinction
   `RESERVED.md` exists to draw from the D-062 defect. `D-131` (the suffix half of
   `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched.
   - ⚠ **Superseded reading, kept because a number that changed silently is a number nobody can
     check:** before the rebase this paragraph reported `origin/main` at `1e9777c` as
-    `['D-131', 'D-140', 'F-067']` and this branch as `['D-131', 'D-140', 'D-142', 'F-067']` — a hole
+    `['D-131', 'D-140', 'F-067']` and this branch as `['D-131', 'D-140', 'D-143', 'F-067']` — a hole
     of four, with `D-140` unresolved because #263 had not landed. #263 landing resolved `D-140` on
     both sides, exactly as that reading said it would, leaving three.
 - **⚠⚠ The disqualifying fact, first: this PR lands nothing. The live count is still eligible 17 /
@@ -937,7 +1214,7 @@ So the rule is not "be careful" — it is:
   `tests/test_d129_phase5_named_refuse_spec.py`, `tests/test_d130_residual_rmsd_spec.py`,
   `tests/test_d136_cancer_type.py`, `tests/test_d139_served_path_flip.py` and
   `tests/test_d140_pipeline_programme.py` — widened **by enumeration** to carry `D-140` **and**
-  `D-141` by name and to bar `### D-142`. ⚠ **Four when this entry was written, five after the
+  `D-141` by name and to bar `### D-143`. ⚠ **Four when this entry was written, five after the
   rebase:** #263 merged mid-flight and brought a fifth copy of the guard with it, which is worth
   recording because the count is now the thing most likely to be stale in this paragraph — the
   authority is `grep -rn '### D-14' tests/`, not this list.
@@ -8829,7 +9106,11 @@ actually ran.
   `D-110` while later numbers are written). This entry spends `D-123`; the
   pointer stays the owner's.
 - **Amended by:** `D-121` (Method hold-48 8th-grade explainer + `/method`
-  addendum. D-121 does not touch AdcContext or `/adcs`.)
+  addendum. D-121 does not touch AdcContext or `/adcs`.) · **`D-143`** (the
+  Track B ranking sentence becomes structural-only — membrane × ECD × fold
+  confidence (pLDDT) — and the biology terms are named as excluded rather
+  than defaulted to 0.5. Placement, chrome, standing line, Track A and the
+  verbatim-extract discipline of decision 4 are unchanged.)
 
 #### Context
 
@@ -8915,6 +9196,21 @@ track is red. A page that omitted Track A would let a reader take
 pLDDT / IgV shape as EV-binding proof. Neutral to the weights;
 load-bearing for whether About can be read as "the model showed EV
 unlocks every V-domain."
+
+⚠⚠ **AMENDED BY `D-143` (2026-09-08) — the composite quoted two paragraphs
+above is RETIRED as a description of what we rank by, and the quotation is
+left standing rather than edited (D-129-C: a superseded claim never stands
+alone, and is never quietly deleted).** It was the aspirational Track B
+product, written when HPA/TCGA expression and internalization assays were
+expected to fill its four biology terms. They do not exist, filling them with
+**0.5 neutrals** was rejected by the owner as dishonest, and the live sentence
+on `/about` and in the owner Doc now describes what is actually computed:
+**structure only — membrane × ECD × fold confidence (pLDDT)** — with cancer vs
+normal, internalization and antigen density named as **excluded** until a
+separate GO lands real data. ⚠ The pLDDT clause of the justification above
+survives the amendment intact and gets **stronger**: the ESMFold term is now
+one of three factors rather than one of eight. ⚠ **Explicitly not ADC
+readiness**, and still not a demonstrated V-key.
 
 #### Provenance (D-016)
 

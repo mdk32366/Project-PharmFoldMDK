@@ -38,7 +38,7 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 
 /* target list */
 .target-list .lede { color: var(--muted); }
-/* ⚠ D-143: 0.92rem, matching `.census-table`'s 0.9rem and for the same reason — eight columns in a
+/* ⚠ D-142: 0.92rem, matching `.census-table`'s 0.9rem and for the same reason — eight columns in a
    60rem `main` is a real budget, and the alternative to a slightly smaller face is a cell three
    lines tall. It moves no information: every value still renders in full. */
 .target-list table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.92rem; }
@@ -70,7 +70,7 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
    than a bare dash, so the reader learns why the value is missing instead of guessing. */
 .absent-reason { color: var(--muted); font-style: italic; }
 
-/* ── ⚠⚠ D-143 — COLUMN ONE STOPS DOMINATING THE TABLE, AND NOT ONE CHARACTER IS DROPPED ──────────
+/* ── ⚠⚠ D-142 — COLUMN ONE STOPS DOMINATING THE TABLE, AND NOT ONE CHARACTER IS DROPPED ──────────
    The Rank cell holds an integer for a ranked row and a CAUSE — a sentence — for an unranked one,
    and until now `.rank-cause` and `.col-rank` had NO RULE IN THIS FILE. With `table-layout: auto`
    the column was therefore sized to the longest cause laid out on one line: 144 characters for the
@@ -117,13 +117,13 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
   overflow-wrap: break-word;
 }
 
-/* The Description column (D-143): the UniProt protein name, bounded so a 72-character name
+/* The Description column (D-142): the UniProt protein name, bounded so a 72-character name
    ("Leucine-rich repeat and fibronectin type-III domain-containing protein 4" — the longest in the
    committed manifest) wraps instead of becoming the new widest column. */
 .target-list .col-description { min-width: 9rem; max-width: 15rem; }
 .description-text { display: block; min-width: 9rem; max-width: 15rem; overflow-wrap: break-word; }
 
-/* The Cancer association column (D-143). The tumour type(s) lead; the total and the way to the
+/* The Cancer association column (D-142). The tumour type(s) lead; the total and the way to the
    full list are secondary beneath them. `BTN3A3` carries 16 pairs, so the cell states the count
    and never pretends the one it shows is the whole list. */
 .target-list .col-assoc { min-width: 8.5rem; max-width: 12rem; }

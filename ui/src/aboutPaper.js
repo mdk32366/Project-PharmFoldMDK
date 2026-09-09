@@ -41,8 +41,14 @@ export const V_SURFACE_BODY =
 export const TRACK_A =
   '**Track A — Reuse EV antibody:** List membrane IgV / nectin-like ECDs — feasible. Wet binding assays — required. No bind → stop. Do not rank docking guesses as hits. Track A is mostly off-target risk mapping unless wet binding is shown.'
 
+// ⚠ D-143 (owner GO 2026-09-08) — this sentence used to end with the aspirational
+// cancer/membrane/internalization/density product. There is no HPA/assay data behind
+// those terms, and filling them with 0.5 neutrals was rejected as dishonest, so the
+// Doc sentence and this extract describe what is actually computed: structure only.
+// ⚠ NOT the cohort-82 D-041/D-060 learned scorer — that is a different population and
+// a different method, and nothing here says anything about it.
 export const TRACK_B =
-  '**Track B — New Ab, new antigen, reuse ADC learnings** (realistic next-target path): topology; cancer vs normal; internalization; antigen density; fold confidence (pLDDT); epitope exposure; ADC suitability; do **not** require IgV/4JJH similarity; rank by (cancer × membrane × internalization × density) / normal risk.'
+  '**Track B — New Ab, new antigen, reuse ADC learnings** (realistic next-target path): a **new** antibody against a **new** membrane antigen, reusing what the ADC taught us; do **not** require IgV/4JJH similarity. **What is ranked today, until real expression data and wet assays exist: structure only — membrane × ECD × fold confidence (pLDDT).** That order is explicitly **not** ADC readiness and not a shortlist. Cancer vs normal, internalization and antigen density are **excluded** — not filled in as 0.5 neutrals, because a placeholder multiplied into a score cannot be told apart from a measurement in the number that comes out. Scope is the whole census of outward-facing spans (3,467 rows), not one tranche, and it runs offline: it is not a ranked surface in this application. **Later, on its own GO:** real HPA/TCGA expression plus wet assays are what turn cancer vs normal, internalization, antigen density, epitope exposure and ADC suitability into a biology composite.'
 
 export const BOTTOM_LINE_HEADING = 'Bottom line'
 

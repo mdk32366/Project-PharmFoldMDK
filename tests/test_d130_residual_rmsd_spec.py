@@ -324,36 +324,28 @@ def test_d130_is_the_next_free_decision_id():
     benefit of exactly the lesson the paragraph above records. #263 then merged at
     ``578f5ac``, this assertion reddened **as that branch's own comment predicted**,
     and the rebase inserted 140 beside 141. **All three ids are named below** and
-    ``### D-142`` is barred. ⚠ Six widenings, six resolutions by ADDING; a ``>=``
+    ``### D-144`` is barred. ⚠ Six widenings, six resolutions by ADDING; a ``>=``
     would have concealed every collision above instead of catching it.
 
-    ⚠⚠ **Widened again at D-143 — to ``[132, …, 140, 141, 143]``, with 142
-    SKIPPED — and this is the SIXTH LIVE COLLISION.** D-143 gives ``/targets`` a
-    Cancer association column and a Description column, and bounds the rank column
-    that had grown to hold a 144-character sentence. It was written as
-    ``### D-142``: cut from ``30f402f``, it ran the open-PR check **and read the
-    diffs** of #222 / #200 / #197 — the check the D-140 collision showed to be the
-    only one that bites — and found no ``### D-14x`` held. #266 (Track B
-    structural-only copy) was published **four minutes later** holding
-    ``### D-142``.
-
-    ⚠⚠ **And #266's TITLE says "D-143" while its DIFF writes ``### D-142``.** A
-    title naming a decision neither spends nor releases it; the **heading** does.
-    Trusting the title would have produced a second ``### D-142`` — the D-062 rule
-    from the other direction, where the entry exists and the reference is stale.
-    So 143 is taken, 142 is left with #266, and ``### D-144`` takes the bar. ⚠ If
-    #266 merges first this enumeration reddens **by design** and the rebase inserts
-    142 beside 143. ⚠ Seven widenings, seven resolutions by ADDING; a ``>=`` here
-    would have silently admitted **both** ``### D-142`` headings.
+    ⚠ **Widened again at D-143 — to ``[132, …, 140, 141, 143]``, with 142 deliberately
+    ABSENT** — the seventh pass. The Track B copy branch was cut from ``30f402f``,
+    ``grep``ed the log for the highest written entry (141), read
+    ``gh pr list --state open`` (#222 / #200 / #197, none spending a ``D-1NN``) and took
+    **142**; the owner then ruled the id to **143** (2026-09-09) and the PR was
+    renumbered, with nothing visible in the tree spending 142. ⚠ The open-PR weakness
+    above still stands and gains a second face: it cannot see an unpublished branch, and
+    it cannot see an authority holding an integer either. 142 is registered in
+    ``docs/RESERVED.md`` and stays BARRED below; ``### D-144`` takes the next-free bar.
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
     assert [i for i in ids if i > 130] == [
-        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 143
+        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141 and D-143 (142 is held by #266 on an "
-        f"unmerged branch); found {ids[-12:]}"
+        f"D-137, D-138, D-139, D-140, D-141, D-142 and D-143 — ⚠ 142 is no longer "
+        f"absent: docs/RESERVED.md reserved it and the /targets columns entry is the "
+        f"holder that wrote it, so it is ADDED here beside 143; found {ids[-12:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "
@@ -367,9 +359,22 @@ def test_d130_is_the_next_free_decision_id():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    assert re.search(r"^### D-143 — `/targets` gains a Cancer association", LOG, re.M), (
-        "D-143 must be the target-list columns entry, not some other entry "
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", LOG, re.M), (
+        "D-143 must be the Track B structural-only copy entry, not some other entry "
         "that took the number"
+    )
+    # ⚠⚠ 142 IS NOW WRITTEN, AND THE BAR ON IT REDDENED EXACTLY AS ITS OWN MESSAGE PREDICTED.
+    # `docs/RESERVED.md` reserved 142 after the Track B copy work was renumbered off it, with the
+    # unblock recorded as *"whoever holds it writes `### D-142`"* and the resolution pre-committed:
+    # *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED beside 143."* The holder is
+    # the `/targets` columns entry (Emma CoS assignment, 2026-09-09), so the bar is REPLACED BY A
+    # NAME rather than deleted, and 142 is ADDED to the enumeration beside 143. ⚠ Never a `>=`:
+    # this is the eighth widening and the eighth resolution by adding.
+    # ⚠ A reserved integer that is later spent must be NAMED here, not merely un-barred — an
+    # un-barred integer with no name is exactly what the D-062 defect looked like.
+    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M), (
+        "D-142 is the recorded holder of the reserved integer; it must be the target-list "
+        "columns entry, not some other entry that took the number"
     )
     assert "\n### D-144" not in LOG, (
         "D-144 is the next free integer and must stay unspent until an entry claims "
