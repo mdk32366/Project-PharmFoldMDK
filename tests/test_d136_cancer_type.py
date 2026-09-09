@@ -418,7 +418,17 @@ def test_d136_entry_exists_in_the_living_log():
     duplicate — the D-138 precedent, applied with the benefit of the lesson the
     paragraph above records. #263 merged at `578f5ac` while it was open, this
     assertion reddened by design, and the rebase inserted 140 beside 141. **All
-    three ids are named;** `### D-142` still reddens.
+    three ids are named;** `### D-144` still reddens.
+
+    ⚠ **Widened again at D-143 — "143 is the Track B structural-only copy entry, 142 is
+    HELD, and 144 does not exist"** — the seventh widening. That branch was cut from
+    `30f402f`, `grep`ed the log for the highest written entry (141), read
+    `gh pr list --state open` (#222 / #200 / #197, none spending a `D-1NN`) and took
+    **142**; the owner then ruled the id to **143** (2026-09-09). Nothing visible in the
+    tree spends 142, so it is registered in `docs/RESERVED.md` and its bar STAYS rather
+    than being dropped. ⚠ **D-143 does not touch this suite's subject** — the ADC
+    catalog, the pipeline shelf and the `cancer_type` envelopes are untouched by it; it
+    is named here only because this is one of the enumerated id guards.
     """
     log = DOCS_README.read_text(encoding="utf-8")
     assert "\n### D-136 —" in log
@@ -442,7 +452,19 @@ def test_d136_entry_exists_in_the_living_log():
         "D-141 is the recorded successor id; it must be the confidence-Kabsch lander "
         "entry, not some other entry that took the number"
     )
-    assert "\n### D-142" not in log
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", log, re.M), (
+        "D-143 is the recorded successor id; it must be the Track B structural-only "
+        "copy entry, not some other entry that took the number"
+    )
+    # ⚠ 142 is SKIPPED, NOT FREE — the Track B copy work was written as D-142, renumbered to
+    # D-143 by owner instruction 2026-09-09, and nothing visible in the tree spends 142
+    # (docs/RESERVED.md records the ruling and the absence of a discoverable holder). The bar on
+    # it therefore STAYS and is ADDED to, exactly as D-141 kept the bar on 140.
+    assert "\n### D-142" not in log, (
+        "D-142 is held by owner ruling and registered in docs/RESERVED.md; if a holder writes it, "
+        "this reddens BY DESIGN and 142 is ADDED beside 143 — never relaxed to a `>=`"
+    )
+    assert "\n### D-144" not in log
 
 
 def test_every_entry_slice_in_this_suite_is_anchored_to_a_line_start():

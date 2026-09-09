@@ -602,9 +602,24 @@ def test_the_log_entry_records_why_140_was_not_taken_and_that_263_then_merged():
     assert "gh pr list --state open" in lowered, "the id must be checked, not assumed"
     assert "amended in place" in lowered, "the mid-flight merge must be recorded"
     assert "578f5ac" in lowered, "the merge commit must be named, not alluded to"
-    # And the tree agrees with the entry: 140 is now written, 141 is this one, 142 is free.
+    # And the tree agrees with the entry: 140 is now written, 141 is this one, 142 is HELD by
+    # owner ruling (registered in docs/RESERVED.md; the Track B copy work took it, then was
+    # renumbered on 2026-09-09), 143 is that entry, and 144 is free. ⚠ Widened by ADDING,
+    # never by a `>=`, and the bar on 142 was kept rather than dropped.
     assert re.search(r"^### D-140 — The ADC Pipeline shelf gets a cancer type", LOG, re.M)
-    assert "\n### D-142" not in LOG, "D-142 is the next free integer"
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", LOG, re.M), (
+        "D-143 must be the Track B structural-only copy entry, not some other entry "
+        "that took the number"
+    )
+    # ⚠ 142 is SKIPPED, NOT FREE — the Track B copy work was written as D-142, renumbered to
+    # D-143 by owner instruction 2026-09-09, and nothing visible in the tree spends 142
+    # (docs/RESERVED.md records the ruling and the absence of a discoverable holder). The bar on
+    # it therefore STAYS and is ADDED to, exactly as D-141 kept the bar on 140.
+    assert "\n### D-142" not in LOG, (
+        "D-142 is held by owner ruling and registered in docs/RESERVED.md; if a holder writes it, "
+        "this reddens BY DESIGN and 142 is ADDED beside 143 — never relaxed to a `>=`"
+    )
+    assert "\n### D-144" not in LOG, "D-144 is the next free integer"
 
 
 def test_the_log_entry_states_the_blocker_rather_than_implying_a_land_happened():

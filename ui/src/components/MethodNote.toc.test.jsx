@@ -28,10 +28,28 @@ const FIXTURE = {
   ],
 }
 
+// ⚠⚠ THIS HELPER RACED THE COPY IT MEASURES, and the gate caught it where a local run did not.
+// `method-toc` renders from the static headings on the FIRST paint, so awaiting it proves only that
+// the rail mounted — `getCoverage()` is still in flight. Every synchronous assertion below then read
+// whichever half had arrived: locally the promise settled first and `3 ranked-and-folded of 7` was
+// there, on the runner it did not and the body still carried the pre-fetch fallback
+// ("ranked-and-folded, out of the full cohort"). Two gate runs on BYTE-IDENTICAL test and component
+// code disagreed — 34312365044 green, 34312428832 red — which is the signature of a race, not of a
+// copy change. ⚠ The fix is to wait for the ASYNC beat, not to relax the assertion to whichever
+// string happened to be on screen: the derived numbers are the contract (D-050 — the line is
+// computed, never a literal), and the fallback is what a reader sees only before the fetch lands.
+// Same defect D-135 records in the readability tripwire: a check that races the copy it measures
+// reports whichever half arrived first.
 async function renderMethod() {
   getCoverage.mockResolvedValue(FIXTURE)
   const view = render(<MemoryRouter><MethodNote /></MemoryRouter>)
   await waitFor(() => expect(view.getByTestId('method-toc')).toBeTruthy())
+  // ⚠ Deliberately a DIFFERENT beat from the one the prose test asserts: both the denominator here
+  // and the ranked-and-folded count come from the same `cov` state, so waiting on this one settles
+  // the other — while leaving `3 ranked-and-folded of 7` to fail at its own assertion rather than
+  // as a timeout inside this helper.
+  await waitFor(() =>
+    expect(view.getByTestId('method-body').textContent).toMatch(/folds a fixed cohort of 7 candidate/))
   return view
 }
 
@@ -109,6 +127,28 @@ describe('MethodNote — the contents rail (D-138)', () => {
     expect(levels[0]).toBe('toc-h2')
     expect(levels.filter((c) => c === 'toc-h2')).toHaveLength(1)
     expect(levels.filter((c) => c === 'toc-h3').length).toBeGreaterThan(8)
+  })
+
+  // ⚠ The race above, made deterministic. `getCoverage` is held unresolved on purpose, so the two
+  // states are asserted in order instead of being left to whichever the event loop delivered
+  // first. Without the helper's second wait this is the test that says why.
+  it('carries the fallback coverage line until getCoverage resolves, then the derived numbers', async () => {
+    let settle
+    getCoverage.mockReturnValue(new Promise((resolve) => { settle = resolve }))
+    const view = render(<MemoryRouter><MethodNote /></MemoryRouter>)
+    await waitFor(() => expect(view.getByTestId('method-toc')).toBeTruthy())
+
+    const before = view.getByTestId('method-body').textContent
+    expect(before).toMatch(/ranked-and-folded, out of the full cohort/)
+    expect(before).not.toMatch(/3 ranked-and-folded of 7/)
+
+    settle(FIXTURE)
+    await waitFor(() =>
+      expect(view.getByTestId('method-body').textContent).toMatch(/3 ranked-and-folded of 7/))
+    // And the fallback is GONE once the numbers land — a page showing both would be claiming the
+    // cohort size is unknown and 7 at the same time.
+    expect(view.getByTestId('method-body').textContent)
+      .not.toMatch(/ranked-and-folded, out of the full cohort/)
   })
 
   it('does not disturb the prose the page already shipped', async () => {

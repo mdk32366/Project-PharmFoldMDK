@@ -472,6 +472,20 @@ section ("Two tracks (Nectin-4 / ADC framing)") sits after the NECTIN4 worked-ex
 / comparator notes and before the D-094 paper questions. Science copy is a **verbatim
 extract** of `docs/pharmfold-adc-nectin4-paper.md` Part 2 via `ui/src/aboutPaper.js`
 (Track A red-without-wet-bind; Track B ranking; "EV is not a universal V-key").
+⚠ **D-143 (owner GO 2026-09-08) rewrites what Track B says it ranks by, in the Doc
+first and then in the extract.** The sentence used to end with an aspirational
+biology composite over cancer / normal / internalization / density; there is no
+HPA/assay data behind those four terms, filling them with **0.5 neutrals** was
+rejected as dishonest, and the sentence now states the **structural-only** order
+that exists — *structure only — membrane × ECD × fold confidence (pLDDT)* — names
+the four terms as **excluded** until a separate GO, refuses ADC readiness in its own
+words, and states that the order ranges over the whole census (**3,467** rows, not
+the tranche-5 slice) and runs **offline**, so D-079 dec 1's no-census-scoring bar is
+not widened by a copy change. ⚠⚠ **This is NOT the cohort-82 D-041/D-060 learned
+scorer.** That surface (`core/scorer.py`, `scripts/fit_scorer.py`, `target_scores`,
+the `/targets` **Rank** column, `/scorer`, and MethodNote's prose about it) is a
+different method over a different population and D-143 changes none of it; the two
+ranking surfaces are now distinguishable in the copy, which they were not before.
 Chrome says **asks whether**, never **shows that**. ABOUT-COPY / `PAPER_QUESTIONS`
 are untouched. Part 1 is not dumped; Wave2 is not dumped; F-004 is not expanded.
 The four example targets — CD30, CD33, CEACAM5, Trop-2, each the
