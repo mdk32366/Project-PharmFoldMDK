@@ -437,3 +437,129 @@ class ClinicalNormalTissue(Base):
     #: a database CHECK here would be a second copy of the rule, and the two would drift.
     level: Mapped[str] = mapped_column(String(24), nullable=False)
     reliability: Mapped[str] = mapped_column(String(24), nullable=False)
+
+
+class CancerBurdenRun(Base):
+    """One ingest of the SEER official-aggregate US cancer burden artefact (`D-149`, migration
+    0013).
+
+    ⚠⚠ **THIS TABLE CARRIES NO PROTEIN, NO ACCESSION, NO GENE AND NO SCORE, AND THAT IS THE
+    DECISION RATHER THAN AN OMISSION.** `D-093` decision 1 ruled burden a property of a **disease**,
+    attached by traversal — never a protein-level column — and
+    `tests/test_clinical_layer_prohibitions.py` already forbids the column on the protein path.
+    There is **no foreign key from here to `protein_analyses`, to `census_structural_scores` or to
+    `target_scores`**, so no `ORDER BY` can compose a cancer's death rate with a structural rank
+    into one number. The absent join is the product decision.
+
+    ⚠ `release` and `release_updated` pin WHICH SEER release this is — *SEER November 2025
+    Submission*, application updated *2026-04-22*. A product name is not a version: `D-093`
+    amendment 6 disqualified the Preliminary Incidence Estimates precisely because *the registry
+    selection is re-derived each year while the product name never changes*.
+
+    ⚠ `run_status` is the served predicate, on the `census_structural_runs` vocabulary: `valid` is
+    served, `superseded` is what a previous valid run becomes when a new one lands, `invalid` is a
+    run the loader refused to certify.
+    """
+
+    __tablename__ = "cancer_burden_runs"
+    __table_args__ = (
+        Index("ix_cancer_burden_runs_status", "run_status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # ⚠⚠ THE SOURCE IS A COMMITTED FILE AND ITS HASH TRAVELS WITH THE RUN (D-016 / D-024). The
+    # loader never touches the network; a figure that changed can therefore be told from a figure
+    # that was re-loaded.
+    source_file: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    source_sha256: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    release: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    release_updated: Mapped[str] = mapped_column(String(32), nullable=False, server_default="")
+    # ⚠ US-ONLY, STORED. Not a UI string and not a template default — the disclaimer is a column so
+    # a row cannot reach a consumer without it, and the API refuses to serve a run whose
+    # geography_disclaimer is empty.
+    geography: Mapped[str] = mapped_column(String(32), nullable=False, server_default="")
+    geography_disclaimer: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    # ⚠ NCI attribution is a REQUIREMENT that survived the owner's 2026-09-09 closure of D-093
+    # amendment 6's data-vs-text gap, so it is stored beside the figures rather than rendered
+    # beside them.
+    attribution: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    run_status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="valid")
+    status_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    n_sites: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    n_stats: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    # ⚠ The breakdown, not the total (method-note item 2): per-statistic row counts, the distinct
+    # periods actually present, and the count of rows whose sex the source substituted.
+    component_counts: Mapped[dict] = mapped_column(JSON_VARIANT, nullable=False, default=dict)
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class CancerBurdenStat(Base):
+    """One SEER figure: one **(statistic, site, sex)** (`D-149`).
+
+    ⚠⚠ **`period` AND `count_population` ARE PER-ROW COLUMNS, NOT RUN HEADERS, AND BOTH HAVE
+    ALREADY EARNED IT.**
+
+    - **`count_population`.** `observed_count` for `mortality` is a **national NCHS** count;
+      for `incidence` it is a count **within the SEER registry catchment areas only**. Measured on
+      the pinned release: Lung and Bronchus carries **662,721 deaths** and **434,448 new cases** —
+      more deaths than cases, which is impossible in one population and merely two populations.
+      **The two counts must never be compared to each other**; the age-adjusted rates are the
+      comparable quantities. A run-level population field would have made that error invisible.
+    - **`period`.** 81 of 87 mortality rows are 2020-2024; **`Kaposi Sarcoma` and `Mesothelioma`
+      are 2019-2023**, which is what the source's own `year_range` code says for those sites. A
+      header period would have relabelled six rows with a period they do not have.
+
+    ⚠⚠ **`sex` IS PARSED FROM THE SOURCE'S RESPONSE, NEVER FROM THE REQUEST**, and
+    `sex_substituted` records where the two differed. SEER*Explorer answers a Breast *"Both
+    Sexes"* request with the **MALE** figure — rate 0.261793 / 2,457 deaths instead of 18.928734 /
+    212,409 — so a pipeline that trusted its own request would have ranked breast cancer near the
+    bottom of US cancer deaths on a rate 72x too small, with six decimal places and a confidence
+    interval. `F-047`'s class.
+
+    ⚠ `is_context_row` marks *All Cancer Sites Combined*, which is a **denominator** and contains
+    every other site. It is stored so a consumer can show it and is flagged so no consumer ranks
+    it beside its own components (`F-031`: two populations in one table).
+
+    ⚠ `is_primary_sex_stratum` is the row a per-site view should show: the `both` row where the
+    source publishes one, and otherwise every sex-specific row, each labelled. **No both-sexes
+    rate is synthesised** — age-adjusted rates cannot be summed across sexes, and inventing one
+    would be a number with no source.
+    """
+
+    __tablename__ = "cancer_burden_stat"
+    __table_args__ = (
+        Index("ix_cancer_burden_stat_run_statistic", "run_id", "statistic"),
+        Index("ix_cancer_burden_stat_site", "seer_site_id"),
+        # ⚠⚠ ONE ROW PER (run, statistic, site, sex) — F-021's guard, declared HERE as well as in
+        # migration 0013 so the SQLite `create_all` test path enforces what Postgres enforces.
+        UniqueConstraint("run_id", "statistic", "seer_site_id", "sex",
+                         name="uq_cancer_burden_stat_grain"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey("cancer_burden_runs.id"), nullable=False)
+    #: `mortality` | `incidence` — the vocabulary lives in `core.cancer_burden`, not in a CHECK
+    #: constraint here; a database copy of the rule is a second source that drifts.
+    statistic: Mapped[str] = mapped_column(String(16), nullable=False)
+    seer_site_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    #: SEER's OWN category name, carried verbatim. ⚠ `Melanoma of the Skin` is never relabelled
+    #: "skin cancer": its recode group is literally *Skin excluding Basal and Squamous*, and BCC
+    #: and SCC are not in SEER at all.
+    site_label: Mapped[str] = mapped_column(String(96), nullable=False)
+    recode_group: Mapped[str] = mapped_column(String(96), nullable=False)
+    sex: Mapped[str] = mapped_column(String(8), nullable=False)
+    rate_per_100k: Mapped[float] = mapped_column(Float, nullable=False)
+    rate_se: Mapped[float | None] = mapped_column(Float, nullable=True)
+    rate_lower_ci: Mapped[float | None] = mapped_column(Float, nullable=True)
+    rate_upper_ci: Mapped[float | None] = mapped_column(Float, nullable=True)
+    observed_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    count_population: Mapped[str] = mapped_column(String(32), nullable=False)
+    period: Mapped[str] = mapped_column(String(16), nullable=False)
+    rate_basis: Mapped[str] = mapped_column(String(64), nullable=False)
+    sex_substituted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
+    is_context_row: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
+    is_primary_sex_stratum: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="0"
+    )

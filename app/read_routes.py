@@ -185,6 +185,61 @@ def get_census_structural_ranking(engine: Any = Depends(get_engine)) -> dict:
     return census_structural_payload(engine)
 
 
+@read_router.get("/cancer-burden/meta")
+def get_cancer_burden_meta(engine: Any = Depends(get_engine)) -> dict:
+    """D-149: the burden surface's release pin, US-only disclaimer, NCI attribution and named
+    absences — **without** the 174 figures.
+
+    ⚠ It is its own route because a consumer that needs only the US-only badge and the NCI credit
+    should not have to fetch the whole table to get them, and *an obligation that is expensive to
+    fetch is an obligation that gets skipped.*
+
+    ⚠ **DECLARED BEFORE `/cancer-burden`** on `D-138`'s `/census/summary` precedent. Neither path
+    takes a parameter today, so nothing shadows anything yet — the order is kept so that adding
+    `/cancer-burden/{site}` later cannot capture `meta` as a site id.
+
+    Always 200. `not_run` when no valid run exists, **and the disclaimer and attribution are still
+    present** — a licence obligation that appears only once data happens to be loaded is one a
+    fresh database silently drops. No credential (D-034 posture).
+    """
+    from app.cancer_burden_read import cancer_burden_meta_payload
+    return cancer_burden_meta_payload(engine)
+
+
+@read_router.get("/cancer-burden")
+def get_cancer_burden(statistic: str | None = None,
+                      engine: Any = Depends(get_engine)) -> dict:
+    """D-149: **which cancers kill the most people in the United States, and how many are
+    diagnosed** — SEER official aggregate statistics, one row per (statistic, SEER site, sex).
+
+    ⚠⚠ **US ONLY, on the header, in `meta`, and on every row.** These are US figures; nothing here
+    describes burden in any other country.
+
+    ⚠⚠ **A DISEASE-LEVEL SURFACE THAT JOINS TO NOTHING.** No accession, no gene, no score, no
+    rank. It is not `/api/ranking` (the cohort-82 learned scorer) and not
+    `/api/census-structural-ranking` (a fixed arithmetic product over census proteins), and **no
+    burden figure enters `structural_score` as a factor, a tie-break or a sort key.** `D-093`
+    decision 1: burden is a property of a **disease**, attached by traversal, never a protein
+    column.
+
+    ⚠⚠ **DEATHS ARE ORDERED BY COUNT AND INCIDENCE BY RATE, AND THE ASYMMETRY IS THE HONESTY.**
+    A mortality count is national (NCHS); a SEER incidence count covers the registry catchment
+    areas only, so ordering incidence by count would rank a partial-US number as a national one.
+    On this release Lung and Bronchus carries **662,721 deaths against 434,448 new cases** — more
+    deaths than cases, which is impossible in one population and ordinary in two.
+    `rank_basis` states which basis was used, on every row.
+
+    `?statistic=mortality|incidence` filters. ⚠ An unrecognised value is `invalid_request`, never
+    an empty list — an empty list would read as *"no cancers match"*.
+
+    Always 200. Reads persisted rows only and recomputes no rate, no count and no combined-sex
+    figure; `scripts/seer_cancer_burden.py` carries the source's numbers through at load time. No
+    credential (D-034 posture).
+    """
+    from app.cancer_burden_read import cancer_burden_payload
+    return cancer_burden_payload(engine, statistic=statistic)
+
+
 @read_router.get("/coverage")
 def get_coverage(engine: Any = Depends(get_engine)) -> dict:
     """The D-038 coverage supplier UI Plan v2 §3.3/§4.1 need — the honest denominator the read
