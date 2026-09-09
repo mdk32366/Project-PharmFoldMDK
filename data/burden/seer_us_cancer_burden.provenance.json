@@ -1,0 +1,669 @@
+{
+  "artefact": "seer_us_cancer_burden.v1.csv",
+  "artefact_rows": 174,
+  "artefact_sha256": "ed4ad60975699ed74d6d5c1e18a0d3372e85c005e249dee7e6b11605cd070e60",
+  "attribution": "Data source: SEER*Explorer, Surveillance Research Program, National Cancer Institute. Credit the National Cancer Institute as the source.",
+  "attribution_basis": "NCI reuse policy as read in D-093 amendment 6; the data-vs-text gap was closed by the owner on 2026-09-09 (docs/OWNER-2026-09-09-D-093-amd6-seer-aggregates-cleared.md) and the credit requirement SURVIVES that closure.",
+  "context_row": {
+    "note": "All Cancer Sites Combined is a DENOMINATOR, not a ranked site. It contains the sites above and must never be ordered beside them.",
+    "seer_site_id": 1,
+    "site_label": "All Cancer Sites Combined"
+  },
+  "count_population_key": {
+    "seer_registries": "New cases within the SEER registry catchment areas only \u2014 NOT the whole United States. \u26a0 A SEER incidence COUNT and a US mortality COUNT have different denominators and MUST NOT be compared to each other. The age-adjusted RATES are the comparable quantities.",
+    "us_total_nchs": "Deaths for the TOTAL United States, from the NCHS public use file. A national count."
+  },
+  "excluded_product": "Preliminary Incidence Estimates (data_type=3) \u2014 disqualified by D-093 amendment 6: selected registries, subject to revision, registry selection re-derived each year.",
+  "excluded_sites": [
+    {
+      "reason": "sub_site_of_oral_cavity_and_pharynx",
+      "seer_site_id": 5
+    },
+    {
+      "reason": "sub_site_of_oral_cavity_and_pharynx",
+      "seer_site_id": 6
+    },
+    {
+      "reason": "sub_site_of_oral_cavity_and_pharynx",
+      "seer_site_id": 7
+    },
+    {
+      "reason": "sub_site_of_oral_cavity_and_pharynx",
+      "seer_site_id": 8
+    },
+    {
+      "reason": "sub_site_of_oral_cavity_and_pharynx",
+      "seer_site_id": 9
+    },
+    {
+      "reason": "sub_site_of_oral_cavity_and_pharynx",
+      "seer_site_id": 12
+    },
+    {
+      "reason": "sub_site_of_colon_and_rectum",
+      "seer_site_id": 21
+    },
+    {
+      "reason": "sub_site_of_colon_and_rectum",
+      "seer_site_id": 31
+    },
+    {
+      "reason": "leukemia_subtype",
+      "seer_site_id": 92
+    },
+    {
+      "reason": "leukemia_subtype",
+      "seer_site_id": 93
+    },
+    {
+      "reason": "leukemia_subtype",
+      "seer_site_id": 96
+    },
+    {
+      "reason": "leukemia_subtype",
+      "seer_site_id": 97
+    },
+    {
+      "reason": "leukemia_subtype",
+      "seer_site_id": 100
+    },
+    {
+      "reason": "special_histology_definition_not_in_site_recode",
+      "seer_site_id": 402
+    },
+    {
+      "reason": "special_histology_definition_not_in_site_recode",
+      "seer_site_id": 409
+    },
+    {
+      "reason": "special_histology_definition_not_in_site_recode",
+      "seer_site_id": 418
+    },
+    {
+      "reason": "non_malignant_behaviour_not_a_cancer_site",
+      "seer_site_id": 500
+    },
+    {
+      "reason": "non_malignant_behaviour_not_a_cancer_site",
+      "seer_site_id": 501
+    },
+    {
+      "reason": "non_malignant_behaviour_not_a_cancer_site",
+      "seer_site_id": 502
+    },
+    {
+      "reason": "histology_subtype_of_esophagus",
+      "seer_site_id": 600
+    },
+    {
+      "reason": "histology_subtype_of_esophagus",
+      "seer_site_id": 601
+    },
+    {
+      "reason": "histology_subtype_of_lung_and_bronchus",
+      "seer_site_id": 610
+    },
+    {
+      "reason": "histology_subtype_of_lung_and_bronchus",
+      "seer_site_id": 611
+    },
+    {
+      "reason": "histology_subtype_of_lung_and_bronchus",
+      "seer_site_id": 612
+    },
+    {
+      "reason": "histology_subtype_of_lung_and_bronchus",
+      "seer_site_id": 613
+    },
+    {
+      "reason": "receptor_subtype_of_breast",
+      "seer_site_id": 620
+    },
+    {
+      "reason": "receptor_subtype_of_breast",
+      "seer_site_id": 621
+    },
+    {
+      "reason": "receptor_subtype_of_breast",
+      "seer_site_id": 622
+    },
+    {
+      "reason": "receptor_subtype_of_breast",
+      "seer_site_id": 623
+    },
+    {
+      "reason": "sub_site_of_kidney_and_renal_pelvis",
+      "seer_site_id": 630
+    },
+    {
+      "reason": "sub_site_of_kidney_and_renal_pelvis",
+      "seer_site_id": 640
+    },
+    {
+      "reason": "histology_subtype_of_thyroid",
+      "seer_site_id": 650
+    },
+    {
+      "reason": "histology_subtype_of_thyroid",
+      "seer_site_id": 651
+    },
+    {
+      "reason": "brain_cns_recode_subtype",
+      "seer_site_id": 660
+    },
+    {
+      "reason": "brain_cns_recode_subtype",
+      "seer_site_id": 661
+    },
+    {
+      "reason": "brain_cns_recode_subtype",
+      "seer_site_id": 662
+    },
+    {
+      "reason": "brain_cns_recode_subtype",
+      "seer_site_id": 663
+    },
+    {
+      "reason": "brain_cns_recode_subtype",
+      "seer_site_id": 664
+    },
+    {
+      "reason": "alternate_partition_of_colon_and_rectum_excluding_appendix",
+      "seer_site_id": 670
+    }
+  ],
+  "fetched_utc": "2026-09-09T13:44:19+00:00",
+  "geography": "United States only",
+  "globocan": "ABSENT BY RULING. No GLOBOCAN/IARC figure is ingested or rendered \u2014 IARC reserves all rights (D-093 amendment 6).",
+  "graph_type": "Recent Rates (graph_type=10)",
+  "periods": [
+    {
+      "count_population": "seer_registries",
+      "period": "2019-2023",
+      "statistic": "incidence"
+    },
+    {
+      "count_population": "us_total_nchs",
+      "period": "2019-2023",
+      "statistic": "mortality"
+    },
+    {
+      "count_population": "us_total_nchs",
+      "period": "2020-2024",
+      "statistic": "mortality"
+    }
+  ],
+  "product": "SEER*Explorer",
+  "product_url": "https://seer.cancer.gov/statistics-network/explorer/",
+  "release": "SEER November 2025 Submission",
+  "release_application_updated": "2026-04-22",
+  "sex_substitution_note": "render_region_5.php silently answers some sex-specific site requests with a different sex than the one requested, announcing it only in the response key. The sex on every row is parsed from the RESPONSE KEY, never from the request.",
+  "sex_substitutions_observed": [
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "male",
+          "seer_site_id": 55,
+          "statistic": "incidence"
+        }
+      ],
+      "seer_site_id": 55,
+      "sex": "male",
+      "statistic": "incidence"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 57,
+          "statistic": "incidence"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 57,
+          "statistic": "incidence"
+        }
+      ],
+      "seer_site_id": 57,
+      "sex": "female",
+      "statistic": "incidence"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 58,
+          "statistic": "incidence"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 58,
+          "statistic": "incidence"
+        }
+      ],
+      "seer_site_id": 58,
+      "sex": "female",
+      "statistic": "incidence"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 61,
+          "statistic": "incidence"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 61,
+          "statistic": "incidence"
+        }
+      ],
+      "seer_site_id": 61,
+      "sex": "female",
+      "statistic": "incidence"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 62,
+          "statistic": "incidence"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 62,
+          "statistic": "incidence"
+        }
+      ],
+      "seer_site_id": 62,
+      "sex": "female",
+      "statistic": "incidence"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 63,
+          "statistic": "incidence"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 63,
+          "statistic": "incidence"
+        }
+      ],
+      "seer_site_id": 63,
+      "sex": "female",
+      "statistic": "incidence"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "male",
+          "seer_site_id": 66,
+          "statistic": "incidence"
+        },
+        {
+          "requested_sex": "female",
+          "returned_sex": "male",
+          "seer_site_id": 66,
+          "statistic": "incidence"
+        }
+      ],
+      "seer_site_id": 66,
+      "sex": "male",
+      "statistic": "incidence"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "male",
+          "seer_site_id": 67,
+          "statistic": "incidence"
+        },
+        {
+          "requested_sex": "female",
+          "returned_sex": "male",
+          "seer_site_id": 67,
+          "statistic": "incidence"
+        }
+      ],
+      "seer_site_id": 67,
+      "sex": "male",
+      "statistic": "incidence"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "male",
+          "seer_site_id": 55,
+          "statistic": "mortality"
+        }
+      ],
+      "seer_site_id": 55,
+      "sex": "male",
+      "statistic": "mortality"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 57,
+          "statistic": "mortality"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 57,
+          "statistic": "mortality"
+        }
+      ],
+      "seer_site_id": 57,
+      "sex": "female",
+      "statistic": "mortality"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 58,
+          "statistic": "mortality"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 58,
+          "statistic": "mortality"
+        }
+      ],
+      "seer_site_id": 58,
+      "sex": "female",
+      "statistic": "mortality"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 61,
+          "statistic": "mortality"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 61,
+          "statistic": "mortality"
+        }
+      ],
+      "seer_site_id": 61,
+      "sex": "female",
+      "statistic": "mortality"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 62,
+          "statistic": "mortality"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 62,
+          "statistic": "mortality"
+        }
+      ],
+      "seer_site_id": 62,
+      "sex": "female",
+      "statistic": "mortality"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "female",
+          "seer_site_id": 63,
+          "statistic": "mortality"
+        },
+        {
+          "requested_sex": "male",
+          "returned_sex": "female",
+          "seer_site_id": 63,
+          "statistic": "mortality"
+        }
+      ],
+      "seer_site_id": 63,
+      "sex": "female",
+      "statistic": "mortality"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "male",
+          "seer_site_id": 66,
+          "statistic": "mortality"
+        },
+        {
+          "requested_sex": "female",
+          "returned_sex": "male",
+          "seer_site_id": 66,
+          "statistic": "mortality"
+        }
+      ],
+      "seer_site_id": 66,
+      "sex": "male",
+      "statistic": "mortality"
+    },
+    {
+      "detail": [
+        {
+          "requested_sex": "both",
+          "returned_sex": "male",
+          "seer_site_id": 67,
+          "statistic": "mortality"
+        },
+        {
+          "requested_sex": "female",
+          "returned_sex": "male",
+          "seer_site_id": 67,
+          "statistic": "mortality"
+        }
+      ],
+      "seer_site_id": 67,
+      "sex": "male",
+      "statistic": "mortality"
+    }
+  ],
+  "site_vocabulary": "SEER Site Recode ICD-O-3/WHO 2008",
+  "site_vocabulary_basis": "SEER*Explorer cancer-site definitions page, read 2026-09-09: 'The cancer sites available in SEER*Explorer are primarily defined using the SEER Site Recode ICD-O-3/WHO 2008 variable.'",
+  "site_vocabulary_url": "https://seer.cancer.gov/siterecode/icdo3_dwhoheme/index.html",
+  "supplier": "NCI / SEER",
+  "tier": "official aggregate statistics (SEER*Explorer)",
+  "tier_note": "Aggregate statistics only. NOT SEER Research Data / Research Plus: no case-level record was fetched and no data-use agreement is involved.",
+  "top_level_sites": [
+    {
+      "recode_group": "Oral Cavity and Pharynx",
+      "seer_site_id": 3,
+      "site_label": "Oral Cavity and Pharynx"
+    },
+    {
+      "recode_group": "Digestive System",
+      "seer_site_id": 17,
+      "site_label": "Esophagus"
+    },
+    {
+      "recode_group": "Digestive System",
+      "seer_site_id": 18,
+      "site_label": "Stomach"
+    },
+    {
+      "recode_group": "Digestive System",
+      "seer_site_id": 19,
+      "site_label": "Small Intestine"
+    },
+    {
+      "recode_group": "Digestive System",
+      "seer_site_id": 20,
+      "site_label": "Colon and Rectum (including Appendix)"
+    },
+    {
+      "recode_group": "Digestive System",
+      "seer_site_id": 34,
+      "site_label": "Anus, Anal Canal & Anorectum"
+    },
+    {
+      "recode_group": "Digestive System",
+      "seer_site_id": 35,
+      "site_label": "Liver and Intrahepatic Bile Duct"
+    },
+    {
+      "recode_group": "Digestive System",
+      "seer_site_id": 38,
+      "site_label": "Gallbladder"
+    },
+    {
+      "recode_group": "Digestive System",
+      "seer_site_id": 40,
+      "site_label": "Pancreas"
+    },
+    {
+      "recode_group": "Respiratory System",
+      "seer_site_id": 46,
+      "site_label": "Larynx"
+    },
+    {
+      "recode_group": "Respiratory System",
+      "seer_site_id": 47,
+      "site_label": "Lung and Bronchus"
+    },
+    {
+      "recode_group": "Bones and Joints",
+      "seer_site_id": 50,
+      "site_label": "Bones and Joints"
+    },
+    {
+      "recode_group": "Soft Tissue including Heart",
+      "seer_site_id": 51,
+      "site_label": "Soft Tissue including Heart"
+    },
+    {
+      "recode_group": "Skin excluding Basal and Squamous",
+      "seer_site_id": 53,
+      "site_label": "Melanoma of the Skin"
+    },
+    {
+      "recode_group": "Breast",
+      "seer_site_id": 55,
+      "site_label": "Breast"
+    },
+    {
+      "recode_group": "Female Genital System",
+      "seer_site_id": 57,
+      "site_label": "Cervix Uteri"
+    },
+    {
+      "recode_group": "Female Genital System",
+      "seer_site_id": 58,
+      "site_label": "Corpus and Uterus, NOS"
+    },
+    {
+      "recode_group": "Female Genital System",
+      "seer_site_id": 61,
+      "site_label": "Ovary"
+    },
+    {
+      "recode_group": "Female Genital System",
+      "seer_site_id": 62,
+      "site_label": "Vagina"
+    },
+    {
+      "recode_group": "Female Genital System",
+      "seer_site_id": 63,
+      "site_label": "Vulva"
+    },
+    {
+      "recode_group": "Male Genital System",
+      "seer_site_id": 66,
+      "site_label": "Prostate"
+    },
+    {
+      "recode_group": "Male Genital System",
+      "seer_site_id": 67,
+      "site_label": "Testis"
+    },
+    {
+      "recode_group": "Urinary System",
+      "seer_site_id": 71,
+      "site_label": "Urinary Bladder (Invasive & In Situ)"
+    },
+    {
+      "recode_group": "Urinary System",
+      "seer_site_id": 72,
+      "site_label": "Kidney and Renal Pelvis"
+    },
+    {
+      "recode_group": "Eye and Orbit",
+      "seer_site_id": 75,
+      "site_label": "Eye and Orbit"
+    },
+    {
+      "recode_group": "Brain and Other Nervous System",
+      "seer_site_id": 76,
+      "site_label": "Brain and Other Nervous System"
+    },
+    {
+      "recode_group": "Endocrine System",
+      "seer_site_id": 80,
+      "site_label": "Thyroid"
+    },
+    {
+      "recode_group": "Lymphoma",
+      "seer_site_id": 83,
+      "site_label": "Hodgkin Lymphoma"
+    },
+    {
+      "recode_group": "Lymphoma",
+      "seer_site_id": 86,
+      "site_label": "Non-Hodgkin Lymphoma"
+    },
+    {
+      "recode_group": "Myeloma",
+      "seer_site_id": 89,
+      "site_label": "Myeloma"
+    },
+    {
+      "recode_group": "Leukemia",
+      "seer_site_id": 90,
+      "site_label": "Leukemia"
+    },
+    {
+      "recode_group": "Kaposi Sarcoma",
+      "seer_site_id": 110,
+      "site_label": "Kaposi Sarcoma"
+    },
+    {
+      "recode_group": "Mesothelioma",
+      "seer_site_id": 111,
+      "site_label": "Mesothelioma"
+    }
+  ],
+  "us_only_disclaimer": "United States only. These figures describe the US population and say nothing about cancer burden anywhere else."
+}
