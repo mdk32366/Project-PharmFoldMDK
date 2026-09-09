@@ -64,11 +64,11 @@ AGS-22C3 IgG1κ; ~3.8–4 MMAE per antibody via vc linker on interchain cysteine
 
 ### Suggested algorithm
 
-*⚠ Amended 2026-09-08 (owner GO; logged as **D-142** in [`README.md`](README.md)). Track B's ranking sentence used to end with a product of cancer expression, membrane topology, internalization and antigen density over normal-tissue risk. That was the **aspiration**, not the computation: the four biology terms have no data behind them yet, and filling them with 0.5 neutrals so the product would evaluate was rejected as dishonest — a placeholder that is multiplied in comes out looking like a measurement. The sentence below is what the ranking actually is. The old wording is not restored, and the note is kept rather than the claim.*
-
 **Track A — Reuse EV antibody:** List membrane IgV / nectin-like ECDs — feasible. Wet binding assays — required. No bind → stop. Do not rank docking guesses as hits. Track A is mostly off-target risk mapping unless wet binding is shown.
 
 **Track B — New Ab, new antigen, reuse ADC learnings** (realistic next-target path): a **new** antibody against a **new** membrane antigen, reusing what the ADC taught us; do **not** require IgV/4JJH similarity. **What is ranked today, until real expression data and wet assays exist: structure only — membrane × ECD × fold confidence (pLDDT).** That order is explicitly **not** ADC readiness and not a shortlist. Cancer vs normal, internalization and antigen density are **excluded** — not filled in as 0.5 neutrals, because a placeholder multiplied into a score cannot be told apart from a measurement in the number that comes out. Scope is the whole census of outward-facing spans (3,467 rows), not one tranche, and it runs offline: it is not a ranked surface in this application. **Later, on its own GO:** real HPA/TCGA expression plus wet assays are what turn cancer vs normal, internalization, antigen density, epitope exposure and ADC suitability into a biology composite.
+
+*⚠ Amended 2026-09-08 (owner GO; logged as **D-142** in [`README.md`](README.md)). Track B's ranking sentence above used to end with a product of cancer expression, membrane topology, internalization and antigen density over normal-tissue risk. That was the **aspiration**, not the computation: the four biology terms have no data behind them yet, and filling them with 0.5 neutrals so the product would evaluate was rejected as dishonest — a placeholder that is multiplied in comes out looking like a measurement. The sentence above is what the ranking actually is. The old wording is not restored, and the note is kept rather than the claim.*
 
 ### Bottom line
 
