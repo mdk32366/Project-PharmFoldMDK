@@ -272,6 +272,105 @@ class RankingResult(Base):
     )
 
 
+class CensusStructuralRun(Base):
+    """One computation of the CENSUS structural rank (D-144, migration 0012).
+
+    ⚠⚠ **A SEPARATE STORE, AND THE SEPARATION IS THE DECISION.** `ranking_runs` /
+    `target_scores` / `ranking_results` hold the **learned** cohort-82 scorer's pre-registered
+    result (D-041 / D-060 / D-061, `run_kind='preregistered'`) and are **not touched** by this
+    path — no new `run_kind`, no widened column, no 3,467 rows glued into a store shaped for 56.
+    A shared table would have put a fixed arithmetic product and a fitted probability in one
+    `score` column, one careless `ORDER BY` from being served as each other.
+
+    ⚠ `run_status` is the served predicate: `valid` is served, `superseded` is what the previous
+    valid run becomes when a new one lands (the idempotent replace), and `invalid` is a run the
+    loader refused to certify. A run row always states which, so an unserved run is a category
+    rather than an absence a reader has to explain.
+    """
+
+    __tablename__ = "census_structural_runs"
+    __table_args__ = (
+        Index("ix_census_structural_runs_status", "run_status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # ⚠ `core.census_structural.formula_version()` — a hash of the formula module's SOURCE
+    # (the D-027 `feature_version` pattern), never a hand-typed "v1". A run persisted under a
+    # formula that has since changed is then detectable rather than silent.
+    formula_version: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    # The span definition the population's `span_aa` was measured under (D-081). The census is
+    # V2; the cohort 82 is V1, and a row of one measured under the other is not comparable.
+    span_definition: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    # The committed file the POPULATION came from, and its hash (D-016 / D-024). The denominator
+    # is a file, never a query against `protein_analyses` — that would make the population a
+    # function of how much folding has happened.
+    population_source: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    population_sha256: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    run_status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="valid")
+    status_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # ⚠ CANDIDATES EXCLUDES THE REFERENCE SINK, and the two are stored separately because
+    # "3,467 candidates" would count twelve already-taken antigens as things to go after.
+    n_candidates: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    n_reference: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    n_with_fold: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    n_without_fold: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    # ⚠ The breakdown, not just the totals (method-note item 2): per-class, per-tranche and
+    # per-flag counts, so a reader can see WHICH rows moved rather than that the total did.
+    component_counts: Mapped[dict] = mapped_column(JSON_VARIANT, nullable=False, default=dict)
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class CensusStructuralScore(Base):
+    """One census protein's structural score for one run (D-144) — the product **and its three
+    factors**, so a consumer never has to divide the total back apart (a span-unrecorded row
+    would divide by zero) and so a reader can see which factor put a row where it is.
+
+    ⚠ `analysis_id` is a NULLABLE FK: 777 manifest proteins have no `protein_analyses` row at
+    all, and a null here is *never folded*, which is exactly what `has_fold: false` and the
+    `no_fold` flag say on the same row. It is not a defect and it is not backfilled.
+
+    ⚠ `is_reference` is an ORDERING fact, not a scoring one. `structural_score` on a reference
+    row is computed the same way as on a candidate; the flag only sinks it below every candidate
+    so a yardstick is never read as a next target.
+    """
+
+    __tablename__ = "census_structural_scores"
+    __table_args__ = (
+        Index("ix_census_structural_scores_run_rank", "run_id", "rank"),
+        Index("ix_census_structural_scores_accession", "accession"),
+        # ⚠⚠ ONE ROW PER PROTEIN PER RUN. Declared HERE as well as in migration 0012 so the
+        # SQLite `create_all` test path enforces what Postgres enforces — F-021's lesson: a
+        # loader's pure INSERT took `protein_features` from 80 rows to 160 and nothing was red.
+        UniqueConstraint("run_id", "accession", name="uq_census_structural_scores_run_accession"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_id: Mapped[int] = mapped_column(
+        ForeignKey("census_structural_runs.id"), nullable=False
+    )
+    accession: Mapped[str] = mapped_column(String(24), nullable=False)
+    gene: Mapped[str | None] = mapped_column(String(48), nullable=True)
+    census_class: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    tranche: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    span_aa: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    score_membrane: Mapped[float] = mapped_column(Float, nullable=False)
+    score_ecd: Mapped[float] = mapped_column(Float, nullable=False)
+    score_model: Mapped[float] = mapped_column(Float, nullable=False)
+    structural_score: Mapped[float] = mapped_column(Float, nullable=False)
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)     # 1 = highest, references last
+    has_fold: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
+    mean_plddt: Mapped[float | None] = mapped_column(Float, nullable=True)   # 0–100, as read
+    is_reference: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
+    # `core.census_structural`'s row flags — every one a stated category, never an inference
+    # from an absent value.
+    flags: Mapped[list] = mapped_column(JSON_VARIANT, nullable=False, default=list)
+    analysis_id: Mapped[int | None] = mapped_column(
+        ForeignKey("protein_analyses.id"), nullable=True, default=None
+    )
+
+
 # NOTE: `analysis_embeddings` (embedding vector(384) + HNSW) is intentionally NOT an ORM model
 # — it is created in migration 0002 as raw SQL only (D-019). Keeping the Postgres `vector` type
 # out of Base.metadata is what lets the SQLite create_all test path stay clean and avoids adding

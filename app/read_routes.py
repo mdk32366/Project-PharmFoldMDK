@@ -14,6 +14,7 @@ these handlers.
 | `GET /api/analyses/{id}` | full record incl. `sequence` + `fold_provenance` |
 | `GET /api/analyses/{id}/structure` | the stored PDB file, `text/plain`, streamed |
 | `GET /api/analyses/{id}/plddt` | the per-residue pLDDT array |
+| `GET /api/census-structural-ranking` | D-144 full-census STRUCTURAL rank (⚠ not `/api/ranking`) |
 | `GET /api/adcs` | D-119 FDA-approved catalog (file-derived) |
 | `GET /api/adcs/pipeline` | D-124 investigational pipeline catalog (file-derived) |
 | `GET /api/adcs/pipeline/{pipeline_id}` | one pipeline row, or 404 |
@@ -151,6 +152,37 @@ def get_ranking(engine: Any = Depends(get_engine)) -> dict:
     marked invalid — D-064 dec 3) is never served; when no valid run exists, `result_status` is
     `not_run` (200, empty rows). No credential (D-034 posture). Reads persisted rows only."""
     return reads.ranking_payload(engine)
+
+
+@read_router.get("/census-structural-ranking")
+def get_census_structural_ranking(engine: Any = Depends(get_engine)) -> dict:
+    """D-144: the latest VALID **census structural** run — the full-census rank whose score is
+    `score_membrane × score_ecd × score_model`, with its three factors, its denominators and its
+    disclaimer on every row.
+
+    ⚠⚠ **`STRUCTURAL_ONLY — not HPA-weighted; not ADC-ready`.** Rank 1 means *structurally
+    tractable and confidently folded*, never *best ADC target*.
+
+    ⚠⚠ **NOT `/api/ranking`, AND THE SEPARATION IS THE DECISION.** That route serves the
+    cohort-82 **learned** scorer (`D-041` / `D-060` / `D-062`, `run_kind='preregistered'`) out of
+    `ranking_runs` / `target_scores` / `ranking_results`; this one serves a fixed arithmetic
+    product out of `census_structural_runs` / `census_structural_scores`. Different population,
+    different span definition (`D-081`), different tables, different route. `separation` and
+    `population_key` say so in the payload, because `F-049` is what happens when they do not.
+
+    ⚠ **DECLARED BEFORE `/census/{analysis_id}` IS NOT ENOUGH — the path is deliberately NOT
+    under `/census/`.** `/api/census/{analysis_id}` takes a `str`, so a sibling
+    `/api/census/structural-ranking` declared after it would be looked up as the accession
+    `STRUCTURAL-RANKING` and return **404 with a perfectly sensible message about an unknown
+    census protein** (D-120's declaration-order hazard, and D-138's `/census/summary` case). A
+    hyphenated top-level path cannot be captured by that route at all.
+
+    Always 200 with a `result_status`; `not_run` (empty rows, disclaimer still present) when no
+    valid run exists. Reads persisted rows only — the formula runs in
+    `scripts/census_structural_rank.py` at load time (the F-004 posture). No credential (D-034).
+    """
+    from app.census_structural_read import census_structural_payload
+    return census_structural_payload(engine)
 
 
 @read_router.get("/coverage")

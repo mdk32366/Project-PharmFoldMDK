@@ -1023,6 +1023,47 @@ export default function MethodNote() {
           ranking would have been thrown away.
         </p>
 
+        <h3 id="census-structural-rank">The census structural rank — what it is, and what it is not (D-144)</h3>
+        <div data-testid="census-structural-rank-addendum">
+          <p>
+            There is a second, much larger list, and it is <strong>not</strong> the one above.
+            Every census protein with a measured extracellular span gets a{' '}
+            <strong>structural score</strong>. Three things go into it, and nothing else:
+          </p>
+          <ul>
+            <li>Is the protein annotated as sitting on the cell <strong>surface</strong>?</li>
+            <li>How <strong>long</strong> is its extracellular part? Longer helps, up to a point, and then stops helping.</li>
+            <li>How <strong>confident</strong> was the model about the structure we hold for it? A protein we never folded is marked down, not given an average.</li>
+          </ul>
+          <p className="note" data-testid="census-structural-only">
+            <strong>STRUCTURAL_ONLY — not HPA-weighted; not ADC-ready.</strong> This score carries
+            no tumour expression, no normal-tissue risk, no internalisation and no antigen
+            density. Being near the top means <em>we can model this protein well</em>. It does
+            not mean <em>this is a good drug target</em>. Adding the biology is a separate
+            decision that has not been made.
+          </p>
+          <p data-testid="census-structural-not-the-scorer">
+            <strong>It is also not the learned scorer.</strong> The ranking on the{' '}
+            <Link to="/scorer">Scorer</Link> page is a model that was <em>trained</em> on the
+            82-target cohort and its labels (D-041 / D-060). This one is arithmetic: three
+            numbers multiplied together, with all three shown beside the result. The two lists
+            cover different proteins, measured under different rules (D-081), so their numbers
+            are not comparable and neither is a check on the other.
+          </p>
+          <p data-testid="census-structural-source-of-truth">
+            <strong>Where the number lives.</strong> The database and the API are the source of
+            truth: the score is computed and stored by a script, and served at{' '}
+            <code>/api/census-structural-ranking</code>. The spreadsheet is a{' '}
+            <strong>review lens</strong> — an export for reading, never the record. Where the two
+            disagree, the API is right and the sheet is stale.
+          </p>
+          <p className="note">
+            The <Link to="/census">Census</Link> table itself still shows no score and no rank
+            column: every row there says it is unscored, and the default order is still the
+            accession. This rank is something you ask for by name.
+          </p>
+        </div>
+
         <h3 id="non-goals">What it will never do — commitments (D-028)</h3>
         <ul>
           <li><strong>When it classifies disagreement, it will not explain it.</strong> Attribution is a statement about the <em>model</em> ("the model's confidence in the membrane-proximal region drives this rank"), never about the target's biology.</li>

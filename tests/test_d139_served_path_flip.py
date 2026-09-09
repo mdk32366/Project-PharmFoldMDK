@@ -747,7 +747,24 @@ def test_d139_entry_exists_in_the_living_log():
         "D-142 is the recorded holder of the reserved integer; it must be the target-list "
         "columns entry, not some other entry that took the number"
     )
-    assert "\n### D-144" not in LOG, "D-144 is the next free integer"
+    # ⚠ Widened again at **D-144** — to `[…, 141, 142, 143, 144]` — for the NINTH time, and
+    # by ADDING as every pass before it. D-144 lands the census STRUCTURAL rank in the DB and on
+    # its own route (`/api/census-structural-ranking`): the DB/API half of the same
+    # structural-only ruling D-143's copy lane describes, and neither of them the cohort-82
+    # learned scorer. ⚠⚠ Its GO **assigned** it 144 while 142 and 143 were both unwritten and
+    # unpublished, so its own first draft barred `### D-142` and `### D-143` — and both then
+    # merged mid-flight (`f243f93` / `22ce1d7` / `b7d933f`), reddening those bars **exactly as
+    # they said they would**. The rebase ADDED 142, 143 and 144 by name. Nothing was relaxed to
+    # a `>=`, and `### D-145` now takes the next-free bar.
+    assert re.search(r"^### D-144 — The offline census ranking stops being a spreadsheet",
+                     LOG, re.M), (
+        "D-144 must be the census structural-rank entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-145" not in LOG, (
+        "D-145 is the next free integer and must stay unspent until an entry claims it "
+        "by name here — never admitted by a `>=`"
+    )
 
 
 def test_the_entry_records_the_subset_its_provenance_and_the_zero():
