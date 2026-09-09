@@ -331,10 +331,45 @@ def test_d142_is_registered_as_held_rather_than_left_as_an_unresolved_citation()
         "D-142 is cited by this entry as held; the citation invariant requires it to be "
         "listed in docs/RESERVED.md, which the checker whitelists and nothing else"
     )
-    row = _flat(reserved[reserved.index("| **D-142** |"):][:4000])
+    row = _flat(reserved[reserved.index("| **D-142** |"):][:6000])
     assert "renumbered to `D-143` by owner instruction (2026-09-09)" in row
     assert "nothing visible in the tree spends 142" in row.lower()
     assert "266" in row, "the PR that took the id first is named"
+    # ⚠ Amended once the holder was named. Both readings must survive: the named holder
+    # AND the fact that the holder's published PR does not actually take 142 (D-129-C —
+    # a superseded claim never stands alone; D-016 — prefer the disqualifying query).
+    assert "bc-14347bf7" in row, "the holder Trinity named must be recorded"
+    assert "not found or not accessible" in row, (
+        "the row must say the agent's own record could NOT be read from here — "
+        "the pairing is Trinity's word, not a discovery"
+    )
+    assert "267" in row, "the holder's published PR must be named"
+    assert "143 is claimed twice" in row.lower()
+
+
+def test_the_entry_reports_the_live_143_collision_instead_of_merging_over_it():
+    """⚠⚠ Two open PRs write `### D-143`, and an entry that stayed quiet about that would
+    be the D-062 shape again: a record that reads settled while the tree is not.
+
+    ⚠ The resolution is NOT taken here. This ship keeps the id Trinity instructed and
+    escalates; whichever merges second reddens by design, and the fix is a rebase that
+    ADDS the surviving ids.
+    """
+    entry = _flat(_d143_entry())
+    lowered = entry.lower()
+    assert "143 is now claimed twice" in lowered
+    assert "267" in entry, "the colliding PR must be named by number"
+    assert "cursor/d-142-targets-cancer-description-columns-d08d" in entry, (
+        "the colliding branch is named — its NAME says 142 while its diff says 143, "
+        "which is the whole point"
+    )
+    assert "gh pr diff 267" in entry, "checked in the diff, not inferred from the title"
+    assert "bc-14347bf7" in entry
+    assert "not found or not accessible" in lowered, (
+        "the unreadable agent record must be disclosed, not smoothed over"
+    )
+    assert "nothing unilateral" in lowered, "this ship must not resolve it by guessing"
+    assert "never a `>=`" in entry or "never a >=" in lowered
     # ⚠ And the log's own citation must present it as HELD, never as a spent authority.
     entry = _flat(_d143_entry())
     assert "`D-142` is skipped by owner ruling — held, not free" in entry

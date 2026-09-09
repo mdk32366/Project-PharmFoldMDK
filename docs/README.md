@@ -420,6 +420,32 @@ So the rule is not "be careful" — it is:
     unpublished one did.** There, the unpublished branch collided; here, an authority outside the
     tree reserved the integer. Both are invisible to `gh pr list`, and neither is a reason to relax
     a guard.
+  - ⚠⚠ **AMENDED 2026-09-09 — 143 IS NOW CLAIMED TWICE, AND THIS ENTRY REPORTS IT RATHER THAN
+    MERGING ON TOP OF IT.** Trinity's instruction that produced this renumber said *"Targets agent
+    (`bc-14347bf7`) needs D-142 free"*, i.e. 142 for that agent and 143 for this ship — and that is
+    what this ship did. **But that agent's published PR does not take 142.**
+    [#267](https://github.com/mdk32366/Project-PharmFoldMDK/pull/267), branch
+    `cursor/d-142-targets-cancer-description-columns-d08d` — whose *name* still says 142 — writes
+    **`### D-143`**. ⚠ **Checked in its DIFF, not inferred from its title** (D-141's rule):
+    `gh pr diff 267` adds `### D-143 — `/targets` gains a Cancer association and a Description
+    column…`, adds `tests/test_d143_targets_columns.py`, and bars `### D-144` in the same six
+    guards this entry widens. **So two open PRs now write the same heading, and 142 — the integer
+    the instruction was about — is spent by neither.** ⚠ `batch-fetch-details` on `bc-14347bf7`
+    returned *not found or not accessible* from this run, so the agent's own record could not be
+    read; the pairing of run id to PR is **Trinity's word**, while the id inside #267 is checkable
+    and is what this paragraph relies on.
+    - **What this ship does about it: nothing unilateral.** It stays on **143** because that is
+      what Trinity instructed, and the collision is **escalated in the PR body** rather than
+      resolved by guessing at an authority this session does not hold. ⚠ **Whichever merges second
+      goes red BY DESIGN** — `test_the_log_entry_exists_exactly_once_and_leads_the_log` asserts
+      **exactly one** `### D-143` heading, and the six enumerated guards assert the successor list
+      by name. That redness is the guard working, and the resolution is a **rebase that ADDS** the
+      surviving pair of ids, never a `>=` and never a deleted bar.
+    - ⚠ **This is the third instance of one shape in six days** (D-139/#263, D-140/#141, and now
+      this). Each time the loser was invisible to the winner at claim time; each time the
+      enumeration caught it. What is **new** here: the collision was caught **while both PRs were
+      still open**, by reading the other branch's diff instead of trusting its title — the check
+      D-141 said the open-PR list could not perform on its own.
   - **The six guards in `tests/test_d129_*`, `tests/test_d130_*`, `tests/test_d136_*`,
     `tests/test_d139_*`, `tests/test_d140_*` and `tests/test_d141_*` are widened BY ENUMERATION** —
     143 named as spent by this entry, **142 asserted STILL ABSENT** (so a later branch cannot
