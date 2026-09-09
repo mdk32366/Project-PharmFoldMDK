@@ -51,9 +51,17 @@ RESERVED = (ROOT / "docs" / "RESERVED.md").read_text(encoding="utf-8")
 
 LOADER = "scripts/census_structural_rank.py"
 INGEST = "scripts/census_ingest_features.py"
+#: ⚠ ADDED AT `D-153`, and the widening is the whole reason this file had to be opened by an entry
+#: about a different loader. `D-149` shipped `data/burden/` and its route but not
+#: `scripts/seer_cancer_burden.py`, so the burden loader was SFTP'd onto `/srv/scripts/` exactly as
+#: this suite's own docstring says the `D-144` loader was — **the same defect, four merges after
+#: this entry fixed it.** The two set-equality assertions below would otherwise redden on a third
+#: `COPY` line, which is them working: they hold *"exactly these files"*, not *"at least"*.
+BURDEN = "scripts/seer_cancer_burden.py"
 
-#: The scripts the serving image is permitted to hold, in the order they are copied.
-BAKED = (INGEST, LOADER)
+#: The scripts the serving image is permitted to hold, in the order they are copied. ⚠ Widened by
+#: ADDING a named file — never a pattern, never the directory.
+BAKED = (INGEST, LOADER, BURDEN)
 
 
 def _instructions(text: str) -> list[str]:
@@ -133,12 +141,13 @@ def test_the_scripts_directory_is_never_copied_and_the_fitter_never_ships():
     )
 
 
-def test_the_build_context_re_includes_exactly_the_two_named_files():
+def test_the_build_context_re_includes_exactly_the_named_files():
     """⚠⚠ The half of the shape that reads as optional and is not. `scripts/` is excluded from
     the build CONTEXT, so a `COPY` with no matching `!` line names a path docker cannot see and
     **fails the build** — during a deploy, because no daemon runs in the gate. `b2196e9` shipped
     the ingest's `Dockerfile` line, its `.dockerignore` negation and its test in ONE commit for
-    exactly this reason, and this test is why that stays true of the second file."""
+    exactly this reason, and this test is why that stays true of the second file — and, since
+    `D-153` added `BURDEN` to `BAKED`, of the third."""
     lines = [ln.strip() for ln in DOCKERIGNORE.splitlines()
              if ln.strip() and not ln.strip().startswith("#")]
     assert "scripts/" in lines, "`scripts/` must stay excluded from the build context"

@@ -19,8 +19,9 @@ requirements-dev.txt
 requirements-dev.lock
 
 # ⚠⚠ THE EXCEPTIONS ARE NAMED FILES, NEVER THE DIRECTORY AND NEVER A PATTERN.
-# Both of these have to run somewhere with both a DATABASE_URL and their inputs. On the machine
-# is the better place: the credential never leaves it, which is how migration 0010 was applied.
+# All three of these have to run somewhere with both a DATABASE_URL and their inputs. On the
+# machine is the better place: the credential never leaves it, which is how migration 0010 was
+# applied.
 # But `COPY scripts/` would put all 60 scripts on the production host, SEVEN of which write —
 # including `fit_scorer.py`, which creates ranking runs and refits.
 # ⚠ `D-079` decision 1 forbids a refit outright ("no refit — ranking_run id=2 is read from its
@@ -32,8 +33,12 @@ requirements-dev.lock
 # matching `!` line names a path docker cannot see and fails the build — during a deploy, not in
 # the gate, which runs no docker daemon. Add the pair together or not at all; `b2196e9` shipped
 # the ingest's two lines and its test in one commit for this reason.
+# ⚠⚠ D-153 added the THIRD name the same way, and the count is not the invariant — "named, and
+# named here" is. A set that grows by one audited file is the shape working; a set replaced by
+# `scripts/*` is the shape failing.
 !scripts/census_ingest_features.py
 !scripts/census_structural_rank.py
+!scripts/seer_cancer_burden.py
 
 # DEMO-ONLY: the miniature-demo notebook and its GPU dependency world never enter the
 # image (ORDERS 2026-07-30 §1). The Dockerfile already COPYs only app/core/db/data + the

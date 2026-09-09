@@ -379,6 +379,177 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-153 — The D-149 burden loader stops living on the production host by hand: `seer_cancer_burden.py` is baked into the serving image as ONE explicit COPY beside the other two — and the disqualifying fact is that no image was built here, because this build has no docker daemon
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **image permanence only**, and deliberately the same shape `D-145` already
+  ruled for the structural-rank loader rather than a third pattern. Two build-surface files
+  (`Dockerfile`, `.dockerignore`), the serving-image pins that read them, one new focused suite, and
+  the docs. ⚠ **No `--load`, no migration, no formula, no schema, no route, no API field, no UI, no
+  fold, no GPU, no rent, and no Fly write from this agent.**
+- **⚠⚠ The disqualifying fact, first: NO IMAGE WAS BUILT AND NOTHING WAS DEPLOYED HERE, so this
+  entry describes a DECLARATION and not an artefact.** Measured on this build rather than assumed:
+  `which docker flyctl fly psql` returns **nothing** (exit 1) and
+  `env | grep -iE 'DATABASE|FLY|POSTGRES|PGHOST'` returns **nothing** (exit 1) — there is no docker
+  daemon, **no Fly credential** and no Postgres client. So *"the loader is in the image"* cannot be
+  established from here by building one. What **is** established is that the `Dockerfile` names the
+  file, that the build context admits it, and that the named path exists so the `COPY` is not a
+  typo. **The build is the other half of the proof and it is a loud half:** a `COPY` of a path
+  `.dockerignore` excludes fails the build rather than shipping nothing, so the first green deploy
+  is what settles it. `tests/test_serving_image_contents.py` has said exactly this since `b2196e9`
+  and `### D-145` restated it for the second file; it is restated again here rather than quietly
+  inherited, because a packaging entry that reads as though it had verified the artefact is the
+  `F-047` shape.
+- **⚠ The ops scar that prompted the GO, and it is REPORTED rather than observed.** 2026-09-09:
+  the cancer-burden API answered **500** on Fly until `alembic upgrade head` applied `0013` and
+  **`python scripts/seer_cancer_burden.py --load`** was run on the machine, persisting
+  `cancer_burden_runs` **id=1** with **n=174** figures — and the loader had to be put on
+  `/srv/scripts/` by a one-shot **SFTP** first, because `### D-149` shipped the artefact and left
+  the loader out of the image. ⚠⚠ **The run id, the row count and the SFTP are Kaylee's word, not
+  a discovery from this session:** with no Fly credential in this build there is no way from here
+  to read `/srv/scripts/`, to query `cancer_burden_runs`, or to confirm what is on the machine now.
+  **What IS checkable from the tree is the hazard the scar reports**, and it is the load-bearing
+  half:
+  - `git show 6f9613c:Dockerfile | rg -n 'COPY scripts/'` — the tree as `D-149` merged
+    ([#273](https://github.com/mdk32366/Project-PharmFoldMDK/pull/273)) — returns **exactly two
+    lines**, `COPY scripts/census_ingest_features.py ./scripts/` and
+    `COPY scripts/census_structural_rank.py ./scripts/`, and **neither is the burden loader**.
+  - The same command on `origin/main` at **`41b9b3b`**, this branch's base, returns the same
+    **two** lines. So the defect is not historical: it is on the tip.
+  - `git show 6f9613c:.dockerignore | rg -n '^!scripts/'` returns those same two paths and no
+    third, so the loader is not even in the build **context**.
+
+  So **a rebuilt image contains a `/srv/scripts/` holding exactly two files and the SFTP'd loader
+  is not one of them.** Fly replaces machines on deploy, so the next rebuild drops it, and the only
+  record that it was ever there is a person's memory. **This is the same permanence defect `D-145`
+  fixed for `census_structural_rank.py`, arriving a second time in four merges** — which is why the
+  ruling is *follow the precedent*, not *invent a pattern*.
+- **⚠⚠ What is NOT re-run, stated as a hard stop rather than an omission.** `alembic 0013` is
+  already applied on Fly and burden run **id=1** is already `valid` with its 174 figures. A second
+  `--load` would mark that live run `superseded` and insert a fresh one for no reason — **a change
+  to served data wearing a packaging PR's clothes.** The image gives the loader its **code** and
+  never a credential: `--load` needs a `DATABASE_URL` that only Fly holds, which is the same
+  separation `D-145` recorded and the same reason `scripts/seer_cancer_burden.py` refuses loudly
+  when the variable is absent instead of falling back to a local file.
+- **⚠⚠ THE EDIT THAT LOOKS LIKE ONE LINE AND IS TWO, and it is the half that reads as optional.**
+  One `COPY` line is genuinely all the `Dockerfile` needs. **But `.dockerignore` excludes
+  `scripts/` wholesale and re-includes exactly the named files**, so a `COPY` naming the loader
+  **without** a matching `!scripts/seer_cancer_burden.py` names a path docker cannot see and
+  **fails the build** — during a deploy, not in the gate, because **no docker daemon runs in CI**.
+  ⚠ This is not a discovery about docker; it is the precedent read off the tree: `b2196e9`
+  (*"Ship the ingest to the serving image -- ONE file, not `scripts/`"*) touched **three** files —
+  `.dockerignore`, `Dockerfile` and `tests/test_serving_image_contents.py` — and `a0ac6ce`
+  (`D-145`, [#270](https://github.com/mdk32366/Project-PharmFoldMDK/pull/270)) shipped the second
+  file the same way. **Add the pair together or not at all.**
+- **Decision.**
+  1. **ONE explicit `COPY` in the runtime stage, beside the existing two:**
+     `COPY scripts/seer_cancer_burden.py ./scripts/`. ⚠ **Still NOT `COPY scripts/`.** The named
+     set goes from two files to **three** — never to a pattern, never to the directory.
+     `scripts/fit_scorer.py` and the rest stay out: `D-079` decision 1 bars a refit outright, and
+     *"a barred operation must not be sitting on the production host waiting for someone to type
+     it"* is the sentence already in the `Dockerfile` and this PR does not weaken it.
+  2. **`.dockerignore` gains the matching negation and nothing else:**
+     `!scripts/seer_cancer_burden.py`. The exclusion of `scripts/` is untouched.
+  3. **The COPY is pinned in both directions, because the pre-existing suite only had one.**
+     `ALLOWED_SCRIPTS` in `tests/test_serving_image_contents.py` becomes the three-element set,
+     which keeps the **upper** bound (nothing else may enter); `tests/test_image_contents.py` and
+     `tests/test_d145_bake_structural_loader.py` carry the **lower** one (each `COPY` line present
+     by name). ⚠⚠ **A subset test is satisfied perfectly by an empty set** — deleting a `COPY` line
+     keeps it green — so the removal-reddens property needs a **positive** assertion, and
+     `tests/test_d153_bake_burden_loader.py` adds it for this file.
+  4. **No CSV is re-copied.** `COPY data/ ./data/` already ships `data/burden/` — the artefact
+     (**32,427 bytes**) and its provenance sidecar (**17,439 bytes**) are both under `data/`, and a
+     second copy aimed at `data/burden/` would be two paths to one artefact, the `F-014` class this
+     log has recorded ten times. Pinned as *exactly* `["data/"]` rather than left to a reviewer.
+- **The paths on the serving host, stated because a loader that cannot find its inputs is worse
+  than one that is absent.** Read off the code rather than guessed: the runtime stage sets
+  `WORKDIR /srv`, and `scripts/seer_cancer_burden.py:37` computes
+  `REPO = pathlib.Path(__file__).resolve().parents[1]`, from which lines 54–56 derive
+  `BURDEN_DIR = REPO / "data" / "burden"`. So on the machine the loader is
+  **`/srv/scripts/seer_cancer_burden.py`**, its artefact is
+  **`/srv/data/burden/seer_us_cancer_burden.v1.csv`** and its sidecar is
+  **`/srv/data/burden/seer_us_cancer_burden.provenance.json`** — the repo's own relative shape,
+  which is precisely why baking the file in changes no constant.
+  - ⚠ **`/srv/data` is NOT the Fly Volume, and the two are one path segment apart in a way that
+    reads as a typo.** `fly.toml` mounts the volume at **`/data/artifacts`** (fold artifacts,
+    `D-031`). The burden CSV lives in the **image** at `/srv/data/burden/...`. An edit that
+    "corrected" one to the other would move the loader's input onto a volume that has never held
+    it.
+  - ⚠ **The idiom differs from `D-145`'s file and the guard had to differ with it.**
+    `census_structural_rank.py` writes `pathlib.Path(__file__).resolve().parent.parent`; this
+    loader writes `parents[1]`. Same rule, different spelling — so
+    `tests/test_d153_bake_burden_loader.py` pins **`parents[1]`** rather than reusing `D-145`'s
+    string, which would have passed for the wrong reason on a file that does not contain it.
+- **⚠ The failure mode the ingest already paid for, re-checked for this file rather than assumed
+  absent.** `test_a_shipped_script_needs_nothing_from_scripts_that_is_not_shipped` exists because
+  the ingest reached `scripts.kathad_reproduction` **through** `core.clinical_ingest`, the image
+  built clean, and the run died on the production host at `ModuleNotFoundError` — one level of
+  indirection was enough. Walking the same import graph from `scripts.seer_cancer_burden` returns
+  **four** first-party modules — `core.cancer_burden`, `core.source_pin`, `db.dburl`, `db.models`
+  — and **no `scripts.` module at all**, so the loader can reach nothing that does not ship. That
+  is now parametrised over three entry points instead of two.
+- **Deep-learning justification (CLAUDE.md prime directive), and the honest form of it: this PR
+  adds no deep learning at all.** It is packaging, and the surface it packages is the one surface
+  in this project that **joins to no protein and no score** (`D-093` decision 1: burden is a
+  property of a disease). ⚠⚠ **So the defensible claim is narrower than `D-145`'s and is stated
+  narrowly:** where `D-145` protected the reproducibility of a served number whose only learned
+  factor is `score_model` — the **ESMFold** pLDDT, `plddt/100` for a fold — this entry protects
+  nothing learned, because `cancer_burden_stat` carries no `score_model`, no `plddt` and no
+  `structural_score`. What it protects is the **rebuild-from-committed-bytes property of the
+  serving tier as a whole**, which is what makes the *other* surface's learned factor
+  regenerable. An entry claiming new deep learning here would be the over-claim; an entry claiming
+  the rule is irrelevant would be missing why the rule exists.
+- **⚠ What this entry cannot establish, collected in one place rather than implied away.** No image
+  was built (no docker daemon). Nothing was deployed and no Fly credential exists in this build, so
+  `/srv/scripts/` is unreadable from here and the reported run `id=1` / `n=174` is **unverified
+  from this session**. The Postgres path was not exercised. Nothing here proves the *built* image
+  contains the file — only that the declaration names it, the context admits it, and the file
+  exists.
+- **Ship id: spends `D-153`, and `D-153` was FREE when it was claimed.** Measured on `origin/main`
+  at tip **`41b9b3b`** before any edit: `rg -n '^### D-15' docs/README.md` returned **151 and 150
+  only**, and `rg -n 'D-15[234]' docs/README.md` returned **two citation lines and no heading** —
+  so no `### D-152`, no `### D-153` and no `### D-154` existed. ⚠⚠ **152 IS DELIBERATELY SKIPPED
+  AND THAT IS THE POINT OF THIS PARAGRAPH.** `docs/RESERVED.md`'s pointer read **`D-152`** on the
+  tip, and 152 is **held for concurrent sitewide-layout work by a separate agent** (owner
+  instruction, 2026-09-09) — a reserved integer is not a free one, which is this file's whole
+  purpose. So this entry takes **153**, leaves **152** barred-with-a-row exactly as it found it,
+  leaves the **148** trafficking hold untouched, and moves the pointer to **`D-154`** in the same
+  commit that spends 153. ⚠ **The inherited next-free guards were widened by ADDING a name beside
+  a new 154 bar — never relaxed to a `>=`.** A `>=` would pass on a log with no entries at all,
+  and it would have hidden every collision the enumerations in
+  `tests/test_d129_phase5_named_refuse_spec.py` and `tests/test_d130_residual_rmsd_spec.py`
+  have caught. **Bar OR name, never neither** — the third state is how the
+  [#266](https://github.com/mdk32366/Project-PharmFoldMDK/pull/266) /
+  [#267](https://github.com/mdk32366/Project-PharmFoldMDK/pull/267) collision got in.
+- **⚠ Run, not predicted.** The five pointer assertions that read `**`D-152`**` and the two
+  enumerated successor lists reddened **by design** the moment 153 was written and the pointer
+  moved; both were resolved by moving the value and adding the name, with the superseded values
+  kept in place as comments (`D-129-C`) rather than overwritten in silence.
+  - ⚠⚠ **AND ONE REDDENING WAS NOT PREDICTED AT ALL, WHICH IS THE PIN WORKING RATHER THAN THE PIN
+    FAILING.** `tests/test_d146_track_b_live_api_copy.py` carries whole-file sha256 pins on
+    `Dockerfile` and `.dockerignore`, and this is **the first time the `image` clause of that
+    guard's own name — `test_no_formula_schema_route_loader_or_image_byte_moved` — has fired.** Its
+    failure message pre-committed the resolution: an image edit *"belongs to a different entry with
+    its own ruling"*, and this is that entry. Both digests are **re-pinned by name** with the
+    superseded values recorded beside them (`D-129-C`):
+    `Dockerfile c5af8c8500c3eb97… → 7f424013f841…` and `.dockerignore fbd8402067ea504c… →
+    f4e284270c3e…`. ⚠ **What did NOT move is the load-bearing half:** `core/census_structural.py`,
+    `scripts/census_structural_rank.py`, migration `0012` and `core/scorer.py` are byte-identical,
+    so `formula_version()` still returns **`c859da97f73d`** — the value the live rank run recorded —
+    and *"no formula, no schema, no migration, no loader, no learned scorer"* stays a measurement
+    rather than a claim.
+- **⚠ Revert-proved, three probes, each red read AT the assertion (`A-016`).** Recorded in full in
+  `docs/Test_Plan.md`'s `T-1256` addendum; the two results worth carrying here are the ones that
+  passed for the wrong reason. **Deleting the `COPY` line leaves
+  `test_only_the_allowed_scripts_are_copied` GREEN** (6 other guards go red) — measured, not
+  assumed, because `{ingest, rank} ⊆ {ingest, rank, burden}` is true and **a set bound cannot see an
+  absence.** **Broadening to `COPY scripts/` leaves `test_no_writing_script_reaches_the_image` and
+  `test_the_fitter_is_named_and_absent` GREEN** (16 other guards go red) — a Dockerfile `COPY`
+  yields its source token, `scripts/` and never `scripts/fit_scorer.py`, so the by-name intersection
+  is empty on exactly the edit that ships the fitter. `D-145` measured both of these; they are
+  **re-measured here rather than cited**, because a guard's docstring is not evidence of its own
+  behaviour.
+
 ### D-151 — Three owner UI complaints, one ship: the menu says **Initial Targets**, the Kathad paper becomes a link, and `/census` stops hiding its own list — and the disqualifying fact is that this project enforces a **fail-closed citation precondition for the secondary source and had none at all for the primary one**
 
 - **Date:** 2026-09-09

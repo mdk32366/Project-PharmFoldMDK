@@ -10,10 +10,12 @@ away behind no guard at all.**
 ⚠ So the copies are NAMED FILES, and this test is what keeps them named. The convenient
 broadening — `COPY scripts/ ./scripts/` — is one keystroke and would look harmless in a diff.
 
-⚠ **Two files since `D-145`**, not one: the `D-144` structural-rank loader joins the ingest,
-because it had been hand-placed on `/srv/scripts/` and the next rebuild would have dropped it.
-**The count is not the invariant — "named, and named here" is.** A set that grows by one audited
-file is the shape working; a set replaced by `scripts/*` is the shape failing.
+⚠ **Three files since `D-153`**, not one: the `D-144` structural-rank loader joined the ingest at
+`D-145` and the `D-149` SEER burden loader joined both at `D-153`, each because it had been
+hand-placed on `/srv/scripts/` and the next rebuild would have dropped it. **The count is not the
+invariant — "named, and named here" is.** A set that grows by one audited file is the shape
+working; a set replaced by `scripts/*` is the shape failing. ⚠⚠ **That the same defect recurred
+four merges after `D-145` fixed it is the argument for the pins below rather than for a convention.**
 
 ⚠ This asserts the DECLARATION (the Dockerfile), not the built image, and says so rather than
 implying more: no docker daemon runs in the gate. The build itself is the other half of the
@@ -32,15 +34,18 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 DOCKERFILE = REPO / "Dockerfile"
 DOCKERIGNORE = REPO / ".dockerignore"
 
-# ⚠ The ONLY scripts permitted into the serving tier — widened at D-145 by ADDING a named file,
-# never by a pattern and never by admitting the directory. The D-144 structural-rank loader is
-# the second: it had been hand-placed on `/srv/scripts/` after D-144 shipped, and a rebuild would
-# have dropped it. ⚠⚠ This set is an UPPER bound and cannot see an absence — deleting a `COPY`
-# line satisfies it perfectly. The lower bound lives in `tests/test_image_contents.py`, which
-# asserts both lines are PRESENT; neither test is sufficient alone.
+# ⚠ The ONLY scripts permitted into the serving tier — widened at D-145 and again at D-153 by
+# ADDING a named file, never by a pattern and never by admitting the directory. The D-144
+# structural-rank loader is the second and the D-149 SEER burden loader is the third; both had been
+# hand-placed on `/srv/scripts/` after their entry shipped, and a rebuild would have dropped them.
+# ⚠⚠ This set is an UPPER bound and cannot see an absence — deleting a `COPY` line satisfies it
+# perfectly. The lower bound lives in `tests/test_image_contents.py` and
+# `tests/test_d153_bake_burden_loader.py`, which assert the lines are PRESENT; no test here is
+# sufficient alone.
 ALLOWED_SCRIPTS = {
     "scripts/census_ingest_features.py",
     "scripts/census_structural_rank.py",
+    "scripts/seer_cancer_burden.py",
 }
 
 # Scripts that WRITE. None of these may enter the image except the allowed ingest.

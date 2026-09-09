@@ -482,8 +482,14 @@ def test_the_reserved_map_bars_151_and_the_pointer_moves_in_this_commit():
     # ⚠⚠ FLIPPED IN PLACE AT `D-151`, NEVER DELETED. The RULE this encodes is *the pointer moves in
     # the SAME commit that spends the integer*, and the rule is what is kept; only the value moves,
     # and it still skips 148 because a reserved integer is not a free one.
-    assert "Next free `D-` integer: **`D-152`**" in RESERVED, (
+    # ⚠⚠ FLIPPED IN PLACE AGAIN AT `D-153`, AND IT NOW SKIPS **TWO** HOLDS. `D-153` spent 153 (the
+    # D-149 burden loader baked into the serving image) and deliberately did NOT take 152: 152 became
+    # a HOLD for the concurrent sitewide-layout lane, 148 remains the trafficking hold, so
+    # *"next free"* means the lowest AVAILABLE integer, 154.
+    assert "Next free `D-` integer: **`D-154`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer")
+    assert "Next free `D-` integer: **`D-153`**" not in RESERVED
+    assert "Next free `D-` integer: **`D-152`**" not in RESERVED
     assert "Next free `D-` integer: **`D-151`**" not in RESERVED
     assert "Next free `D-` integer: **`D-150`**" not in RESERVED
     assert "Next free `D-` integer: **`D-148`**" not in RESERVED

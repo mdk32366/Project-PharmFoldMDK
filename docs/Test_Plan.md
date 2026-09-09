@@ -1214,6 +1214,89 @@ sha256, so this Spec cannot become a code change.
 
 ---
 
+## Addendum 2026-09-09 — D-153 image permanence for the D-149 burden loader
+
+### D-153 (this PR; T-1256) — the same defect D-145 already fixed, arriving four merges later
+
+Acceptance tests in `tests/test_d153_bake_burden_loader.py`, with the pre-existing image suites
+widened **in place and by ADDING a named file** (`tests/test_image_contents.py`,
+`tests/test_serving_image_contents.py`, `tests/test_d145_bake_structural_loader.py` — whose two
+set-**equality** assertions reddened on the third `COPY` line, which is them working). Hermetic and
+**artefact-reading**: every assertion is a property of the `Dockerfile`, `.dockerignore`, `fly.toml`,
+the loader's parsed AST, or the tree — **no GPU, no fold, no network, no database, no docker build,
+no `--load`, no migration**. Cite `### D-153`.
+
+⚠⚠ **What these tests CANNOT establish, first rather than last: there is no docker daemon in the
+gate**, so nothing here proves the *built image* contains the file. They assert the
+**declaration** — the `Dockerfile` names it, the build context admits it, the file exists so the
+`COPY` is not a typo. **The build is the other half of the proof**, and a `COPY` of a path
+`.dockerignore` excludes fails it loudly. ⚠ **And with no Fly credential in this build**
+(`which docker flyctl fly psql` → nothing, `env | grep -iE 'DATABASE|FLY|POSTGRES|PGHOST'` →
+nothing) the reported ops scar — cancer-burden API **500** until `alembic 0013` and
+`seer_cancer_burden.py --load`, run **id=1**, **n=174** — is **Kaylee's word rather than a
+measurement from this session**, and the addendum says so instead of letting a report read as a
+finding.
+
+⚠ **What IS measured, on the tree.** `git show 6f9613c:Dockerfile | rg 'COPY scripts/'` (D-149's
+merge) and the same command on `41b9b3b` (this branch's base) each return **exactly two** lines,
+neither of them the burden loader; `git show 6f9613c:.dockerignore | rg '^!scripts/'` returns the
+same two paths, so the loader was not even in the build **context**. That is the hazard the scar
+reports, and it is checkable without a credential.
+
+⚠ **T-1256 is the next id above the highest spent (`T-1255`, D-149).** No id is back-filled: the
+`T-1231` / `T-1232` gap that D-144 and D-145 both declined to fill is declined again for the same
+reason — this branch cannot tell whether an in-flight lane holds them, and filling a hole left by a
+branch it cannot see is the collision this repo has recorded five times.
+
+⚠⚠ **The recurrence is the finding, and it is recorded rather than smoothed over.** `D-145` ruled
+this exact permanence rule and wrote the tests for it; `D-149` then shipped `data/burden/`,
+migration `0013`, two tables and two routes, and left the loader out of the image anyway. So this
+addendum's own guard
+`test_the_entry_records_that_the_defect_recurred_rather_than_presenting_it_as_new` exists to stop
+the entry reading as a first discovery. **No new finding integer is claimed** — `F-050` remains
+reserved for the guard-direction sweep, which is where a *"why did the D-145 pattern not generalise"*
+finding would belong.
+
+⚠ **The idiom trap this suite had to avoid.** `D-145`'s guard pins its loader's repo root with the
+literal string `pathlib.Path(__file__).resolve().parent.parent`. The burden loader writes
+`parents[1]` — the same rule, a different spelling — so reusing that assertion would have pinned a
+string this file does not contain. The pin here reads the **parsed `REPO` assignment** instead, and
+asserts there is exactly one of them.
+
+⚠ **Counts, measured rather than estimated.** `tests/test_d153_bake_burden_loader.py` collects **30**
+tests; the whole suite goes from **2,225 passed** on `41b9b3b` to **2,258 passed** here (+33 = the 30
+new ones plus one extra parametrisation in each of the three widened suites, whose script lists went
+from two entries to three).
+
+⚠⚠ **Revert proof, three probes, each red read AT the assertion (`A-016`) rather than inferred from
+an exit code.**
+
+1. **Delete `COPY scripts/seer_cancer_burden.py ./scripts/`** → **6 red**: the two
+   `…_is_baked_in_…` / per-file presence tests in this suite, `test_the_three_copies_are_the_whole_set…`,
+   the parametrised presence test in `tests/test_image_contents.py`, and two in
+   `tests/test_d145_bake_structural_loader.py` (its `BAKED` set equality). ⚠⚠ **And
+   `test_only_the_allowed_scripts_are_copied` stayed GREEN — confirmed by running it, not assumed** —
+   because `{ingest, rank} ⊆ {ingest, rank, burden}` is true. **That is the whole reason this suite
+   exists: a set bound cannot see an absence, and an absence is what the ops scar was.**
+2. **Broaden all three lines to `COPY scripts/ ./scripts/`** → **16 red**, the directory bars first.
+   ⚠⚠ **And the two guards that read as the relevant ones stayed GREEN:**
+   `test_no_writing_script_reaches_the_image` and `test_the_fitter_is_named_and_absent` both pass,
+   because a Dockerfile `COPY` yields its *source token* — `scripts/`, never
+   `scripts/fit_scorer.py` — so the intersection against `WRITERS` is empty. **The fitter is
+   protected by the DIRECTORY bar and not by the guard that names it.** `D-145` measured this and
+   recorded it; re-measured here rather than cited, because a guard's docstring is not evidence of
+   its own behaviour.
+3. **Remove `!scripts/seer_cancer_burden.py` while keeping the `COPY`** — the edit that fails the
+   *build* during a deploy — → **3 red** on the context set difference, in this suite,
+   `tests/test_serving_image_contents.py` and `tests/test_d145_bake_structural_loader.py`. That is
+   the closest a daemon-less gate gets to reproducing the build failure itself.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1256** | **The burden loader is IN the image, the directory is still OUT, and nothing was run.** All **three** `COPY scripts/…` lines are present in the runtime stage **verbatim and per file**, and the new one is asserted on its own so a deletion names *which* file went missing; `scripts/` is never copied wholesale and `fit_scorer` appears in no instruction (`D-079` dec 1); `.dockerignore` still excludes `scripts/` and re-includes **exactly the three named files**, with `!scripts/*.py`-style patterns barred explicitly rather than left to the set equality; `data/` is copied **exactly once** as the whole directory, so neither the CSV nor the provenance sidecar is re-copied (`F-014`), and both are asserted to exist under `data/`; the machine paths are **derived from the parsed AST, not asserted as prose** — `WORKDIR /srv` plus a single `REPO = pathlib.Path(__file__).resolve().parents[1]` gives `/srv/scripts/seer_cancer_burden.py` and `/srv/data/burden/seer_us_cancer_burden.v1.csv`, and `fly.toml`'s mount stays `/data/artifacts` so the image dir and the Volume cannot be confused; **no `RUN`/`CMD`/`ENTRYPOINT` and no workflow runs the loader, the migration or `--load`**, and `CMD` is still uvicorn; the baked loader still **imports no HTTP client** — asserted on parsed imports now that it sits on the production host — and the network half `scripts/fetch_seer_burden.py` is asserted **absent** so the check is not vacuous; no writer and no torch/transformers/worker entered the image; each shipped script's **transitive** first-party import graph reaches no unshipped `scripts.` module (four modules from this loader, none under `scripts.`); `### D-153` exists **exactly once** and leads the log (**the check is the heading, not a citation of one** — D-062 / method-note item 7), leads with the absent docker daemon and the absent Fly credential, labels the ops scar **reported** and names `6f9613c` / `41b9b3b` / `500` / `id=1` / `174`, names `b2196e9` **and** `a0ac6ce` as the two-line precedent, carries a **deep-learning justification** that names ESMFold / `score_model` **and states this surface carries neither and that the PR adds no deep learning**, and **records that the defect recurred**; the two enumerated id guards **name** `### D-153`, keep both **holds** barred (`### D-148` trafficking, `### D-152` sitewide-layout) and **bar** `### D-154`, with a check that neither enumeration was relaxed to a `>=`; the `D-153` RESERVED row is retired **marker-safe** with a `D-154` row added and both hold rows saying what they are held FOR; the pointer moved to `D-154` **in this commit**, skipping both holds; the citation invariant returns `['D-131', 'F-067']`; `ARCHITECTURE.md` and this Test Plan are current | `test_the_burden_loader_is_baked_in_and_this_is_the_assertion_the_scar_needed` · `test_the_runtime_stage_names_each_baked_script_as_its_own_copy` · `test_the_three_copies_are_the_whole_set_and_the_directory_is_never_copied` · `test_the_build_context_re_includes_exactly_the_three_named_files` · `test_a_negation_is_never_a_pattern_or_the_directory` · `test_no_csv_is_re_copied_for_the_burden_loader` · `test_the_burden_inputs_exist_under_data_so_copy_data_really_ships_them` · `test_the_loader_and_its_artefact_resolve_under_srv_without_a_path_constant_moving` · `test_the_fly_volume_is_not_the_images_data_directory` · `test_nothing_in_this_pr_runs_the_loader_or_the_migration` · `test_the_loader_still_refuses_to_reach_the_network_now_that_it_ships` · `test_no_writing_script_reached_the_image_alongside_the_new_copy` · `test_no_gpu_world_and_no_worker_entered_the_image` · `test_the_log_entry_exists_exactly_once_and_leads_the_log` · `test_the_entry_leads_with_what_this_build_could_not_verify` · `test_the_entry_records_the_ops_scar_as_reported_rather_than_observed` · `test_the_entry_states_the_two_line_shape_and_its_precedent` · `test_the_entry_carries_a_deep_learning_justification_and_states_its_own_limit` · `test_the_entry_states_the_hard_stops_from_the_go` · `test_the_entry_records_that_the_defect_recurred_rather_than_presenting_it_as_new` · `test_the_next_free_integer_is_named_and_both_holds_stay_barred` · `test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxing` · `test_the_reserved_map_retires_153_marker_safe_and_records_both_holds` · `test_the_pointer_moved_in_this_commit_and_skips_both_holds` · `test_the_citation_invariant_holds_on_this_branch` · `test_the_architecture_doc_records_the_third_baked_path` · `test_the_test_plan_carries_the_d153_addendum_on_an_id_nobody_else_holds` · `test_the_runtime_stage_copies_every_permitted_script_by_name` · `test_only_the_allowed_scripts_are_copied` · `test_dockerignore_excludes_scripts_and_re_includes_only_the_allowed` · `test_a_shipped_script_needs_nothing_from_scripts_that_is_not_shipped` |
+
+---
+
 ## Addendum 2026-09-09 — D-149 US cancer burden surface (SEER official aggregates)
 
 ### D-149 (this PR; T-1255) — which cancers kill the most in the US, on a surface that joins to nothing

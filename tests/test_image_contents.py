@@ -69,43 +69,47 @@ def test_copies_the_serving_packages(dockerfile, pkg_dir):
         f"DEP-001: the serving image must copy {pkg_dir}/"
 
 
-# ── the two named scripts are IN, and the directory is still OUT (D-145) ─────
+# ── the three named scripts are IN, and the directory is still OUT (D-145, D-153) ─────
 
 # ⚠ Named, in order, as they appear in the runtime stage. `tests/test_serving_image_contents.py`
-# holds the UPPER bound (nothing else may enter); this holds the LOWER one.
+# holds the UPPER bound (nothing else may enter); this holds the LOWER one. ⚠ Widened at D-153 by
+# ADDING the D-149 burden loader — one more explicit line, never a pattern.
 BAKED_SCRIPTS = (
     "COPY scripts/census_ingest_features.py ./scripts/",
     "COPY scripts/census_structural_rank.py ./scripts/",
+    "COPY scripts/seer_cancer_burden.py ./scripts/",
 )
 
 
 @pytest.mark.parametrize("copy_line", BAKED_SCRIPTS)
-def test_the_runtime_stage_copies_both_permitted_scripts_by_name(dockerfile, copy_line):
-    """⚠⚠ D-145. The pre-existing suite could not see this, and that is why it is here.
+def test_the_runtime_stage_copies_every_permitted_script_by_name(dockerfile, copy_line):
+    """⚠⚠ D-145, and widened at D-153 because the defect recurred. The pre-existing suite could
+    not see this, and that is why it is here.
 
     `test_only_the_allowed_scripts_are_copied` asserts an UPPER bound — the set of scripts in the
-    image is a subset of the permitted two. **Deleting a `COPY` line satisfies that perfectly**,
+    image is a subset of the permitted three. **Deleting a `COPY` line satisfies that perfectly**,
     because the empty set is a subset of everything. So the guard that existed said *nothing
-    forbidden ships*, and the property that was wanted is *these two DO*.
+    forbidden ships*, and the property that was wanted is *these three DO*.
 
-    The absence is the failure mode with the history: the `D-144` loader was hand-placed on
-    `/srv/scripts/` by an operator after `D-144` merged, and the next rebuild would have dropped
-    it silently — a green deploy, a green gate, and a script that is simply not there until
-    someone runs it and gets `No such file or directory`.
+    The absence is the failure mode with the history, **twice**: the `D-144` loader was hand-placed
+    on `/srv/scripts/` by an operator after `D-144` merged, and four merges later the `D-149` burden
+    loader was SFTP'd there for the same reason — the cancer-burden API answered 500 until it was.
+    Either way the next rebuild drops it silently: a green deploy, a green gate, and a script that
+    is simply not there until someone runs it and gets `No such file or directory`.
     """
     runtime = _runtime_stage(dockerfile)
     assert copy_line.lower() in runtime, (
-        f"D-145: the runtime stage must carry `{copy_line}` — an absent COPY is invisible to "
-        f"every set-membership guard in tests/test_serving_image_contents.py"
+        f"D-145 / D-153: the runtime stage must carry `{copy_line}` — an absent COPY is invisible "
+        f"to every set-membership guard in tests/test_serving_image_contents.py"
     )
 
 
 def test_the_scripts_directory_is_still_never_copied_wholesale(dockerfile):
-    """⚠ The bar the two lines above must not become. `D-079` dec 1 bars a refit, and
+    """⚠ The bar the three lines above must not become. `D-079` dec 1 bars a refit, and
     `scripts/fit_scorer.py` is the fitter — `COPY scripts/` would put it one `fly ssh` away."""
     runtime = _runtime_stage(dockerfile)
     assert "copy scripts/ " not in runtime and "copy scripts/." not in runtime, \
-        "D-145: the named files may grow one at a time; `COPY scripts/` is never the answer"
+        "D-145 / D-153: the named files may grow one at a time; `COPY scripts/` is never the answer"
     assert "fit_scorer" not in runtime, \
         "D-079 dec 1: the fitter must never reach the production host"
 
