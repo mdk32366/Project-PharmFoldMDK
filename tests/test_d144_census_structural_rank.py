@@ -931,6 +931,31 @@ def test_the_architecture_doc_records_the_shipped_shape():
     assert "STRUCTURAL_ONLY" in flat
 
 
+def test_the_log_entry_records_the_ids_that_merged_mid_flight():
+    """⚠⚠ 142 and 143 were unwritten, unpublished and unbranched when this entry was drafted at
+    `30f402f`; all three of #266 / #268 / #267 then merged while the PR was open, and the bars
+    this branch had placed on `### D-142` / `### D-143` reddened on the rebase.
+
+    D-129-C: the original reading is left standing and the amendment is added beside it. The
+    D-141 precedent test (`…records_why_140_was_not_taken_and_that_263_then_merged`) is the
+    shape — the merge commits must be NAMED, not alluded to, or a later reader cannot check
+    which tree the claim was true of.
+    """
+    entry = _d144_entry()
+    flat = " ".join(entry.split())
+    lowered = flat.lower()
+    assert "amended in place" in lowered, "the mid-flight merges must be recorded, not smoothed"
+    for sha in ("30f402f", "f243f93", "22ce1d7", "b7d933f"):
+        assert sha in flat, f"the commit {sha} must be named, not alluded to"
+    assert "gh pr list --state open" in lowered, "the id must be checked, not assumed"
+    # ⚠ the resolution direction is the load-bearing part: ADD a name, never relax to a `>=`
+    assert "relaxed to a `>=`" in lowered, "the ADD-never-loosen direction must be stated"
+    assert "no bar was deleted" in lowered
+    assert "d-145" in lowered, "the next free integer must be named as barred"
+    # ⚠ and the T-id renumber is recorded rather than silently applied
+    assert "t-1225" in lowered and "t-1243" in lowered
+
+
 def test_the_method_surface_carries_the_section_and_its_banner():
     """⚠ The GO's UI minimum: a Method one-liner that this is a STRUCTURAL_ONLY full-census rank,
     distinct from the cohort-82 scorer, and that the Sheet is a lens. Asserted from Python as
@@ -952,7 +977,28 @@ def test_the_method_surface_carries_the_section_and_its_banner():
             / "MethodNote.censusStructural.test.jsx").is_file()
 
 
-def test_the_test_plan_carries_the_d144_addendum():
+def test_the_test_plan_carries_the_d144_addendum_on_ids_nobody_else_holds():
+    """⚠⚠ THE T-ID COLLISION, AS A PROPERTY. This addendum was written on T-1225–T-1233 against
+    `30f402f`; D-143 then took **T-1225–T-1229**, its amendment **T-1234**, and D-142
+    **T-1235–T-1242**. The nine ids moved to T-1243–T-1251, and the check is that **no id this
+    addendum claims appears in anyone else's addendum** — not merely that the numbers changed."""
     plan = (REPO / "docs" / "Test_Plan.md").read_text(encoding="utf-8")
     assert "D-144" in plan
     assert "census-structural-ranking" in plan
+
+    start = plan.index("### D-144 (this PR;")
+    nxt = plan.index("## Addendum", start)
+    mine = plan[start:nxt]
+    ours = [f"T-{n}" for n in range(1243, 1252)]
+    assert "(this PR; T-1243–T-1251)" in mine
+    for tid in ours:
+        assert f"| **{tid}** |" in mine, f"{tid} has no row in the D-144 addendum"
+    others = plan[:start] + plan[nxt:]
+    for tid in ours:
+        assert f"| **{tid}** |" not in others, (
+            f"{tid} is claimed by another addendum as well — the collision is not resolved")
+    # ⚠ the renumber is RECORDED, and the gap it declines to back-fill is named
+    assert "T-1225–T-1233 → T-1243–T-1251" in mine
+    assert "T-1230–T-1233 are left" in mine
+    for spent_elsewhere in ("T-1225", "T-1234", "T-1242"):
+        assert f"| **{spent_elsewhere}** |" not in mine, spent_elsewhere

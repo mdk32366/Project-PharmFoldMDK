@@ -452,6 +452,35 @@ So the rule is not "be careful" — it is:
     for the two integers it declines: `D-142` was unresolved-and-unreserved on `main` because
     D-141's guards barred it by name with nothing describing it. `D-131` (the suffix half of
     `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched.
+  - ⚠⚠ **AMENDED IN PLACE, 2026-09-09, AFTER A REBASE — AND EVERYTHING ABOVE IS LEFT STANDING
+    RATHER THAN REWRITTEN (D-129-C: a superseded claim never stands alone).** While this PR was
+    open, **all three** of the ids it reasoned about landed on `main`: **`### D-143`** (Track B
+    copy) at **`f243f93`** ([#266](https://github.com/mdk32366/Project-PharmFoldMDK/pull/266)),
+    its collision amendment at **`22ce1d7`**
+    ([#268](https://github.com/mdk32366/Project-PharmFoldMDK/pull/268)), and **`### D-142`**
+    (`/targets` columns) squash-merged at **`b7d933f`**
+    ([#267](https://github.com/mdk32366/Project-PharmFoldMDK/pull/267)) — Trinity's ruling gave
+    #267 the 142 that #266 had vacated. **Everything above stayed true and two things changed:**
+    142 and 143 are no longer *allocated elsewhere and unwritten*, they are **spent by written
+    entries**; and this branch's own bars on `### D-142` and `### D-143` **reddened on the
+    rebase, exactly as the sentence above predicted they would**. ⚠ The resolution was the one
+    this log has now used nine times: the enumerations **ADD** 142, 143 and 144 by name and
+    `### D-145` takes the bar. **Nothing was relaxed to a `>=`, and no bar was deleted** — each
+    became a *name*, which is the distinction `D-142`'s own guard message pre-committed
+    (*"a reserved integer that is later spent must be NAMED here, not merely un-barred"*).
+    - **The RESERVED rows are RETIRED, not removed.** `main` had already marked its `D-142` row
+      ✅ **WRITTEN**; this branch's `D-143` row is **struck through** with its original
+      reservation text kept as provenance, so a reader can tell *written* from *never reserved*.
+      The `D-145` row stays, because this entry cites 145 in order to bar it.
+    - ⚠ **Re-measured after the rebase rather than left at the pre-rebase reading:**
+      `origin/main` at **`b7d933f`** reports **`['D-131', 'D-144', 'F-067']`** — 144 is cited
+      there by the guards that bar it, with no entry — and this branch reports
+      **`['D-131', 'F-067']`**. **The hole still shrinks by one, for a different reason than the
+      paragraph above gives:** it is now 144 itself that this branch resolves.
+    - ⚠ **T-ids moved too, and that is recorded in `docs/Test_Plan.md` rather than here:**
+      **T-1225–T-1233 → T-1243–T-1251**, because D-143 took 1225–1229, its amendment took 1234
+      and D-142 took 1235–1242. **T-1230–T-1233 are left unspent**, not back-filled — filling a
+      gap left by a lane this branch cannot see is the collision itself.
 - **⚠⚠ Track B alignment, and it is a NON-EVENT that is worth stating.** The GO says to align
   with `D-143`'s Track B copy work *if it has landed*. **It has not:** `### D-143` does not
   exist in this log, no open PR carries it, and `git branch -r` holds no branch naming it
@@ -459,6 +488,19 @@ So the rule is not "be careful" — it is:
   What this entry does do is refuse the thing that alignment was meant to prevent: the
   `cancer ×` formula is **not** reintroduced anywhere, and the excluded factors are named in the
   API payload so a later Track B copy edit cannot silently re-imply them.
+  - ⚠⚠ **AMENDED, 2026-09-09: IT LANDED, AND THE NON-EVENT ABOVE IS LEFT STANDING (D-129-C).**
+    `### D-143` merged at **`f243f93`** while this PR was open, so **the alignment is now real
+    rather than absent — and it is an agreement, not a reconciliation.** Read from the merged
+    entry rather than paraphrased: D-143's title is *"the ranking sentence becomes
+    structural-only — **membrane × ECD × fold confidence (pLDDT)** — and the biology terms are
+    **EXCLUDED** rather than filled in as **0.5 neutrals**"*, and it names the same four
+    (`cancer` / `normal` / `internalization` / `density`) and the same cohort-82 hard stop.
+    **The same ruling in two halves: D-143 is the sentence, D-144 is the store and the route
+    that make the sentence checkable.** ⚠ Nothing in this entry was changed to fit it — the
+    formula, the exclusions and the banner were already what D-143 describes, which is the only
+    reason two lanes written apart could agree. ⚠ And `F-022` applies to that agreement: **two
+    independent products of one GO agreeing measures that they read the GO the same way**, not
+    that the formula is right.
 - **Decision.**
   1. **The formula is locked and lives in one module, `core/census_structural.py`:**
 
@@ -668,12 +710,18 @@ So the rule is not "be careful" — it is:
   (`CensusStructuralRun` + `CensusStructuralScore`), `app/read_routes.py` (one route),
   `ui/src/system-model.json` (`D-051`'s route contract — a route not drawn there reddens the
   gate), `ui/src/components/MethodNote.jsx` + its tests, `ARCHITECTURE.md`, `docs/Test_Plan.md`
-  (**T-1225–T-1233**), [`RESERVED.md`](RESERVED.md) (`D-142`, `D-143`, `D-145`), and the **seven**
+  (**T-1243–T-1251** — renumbered off T-1225–T-1233 on the rebase, see the amendment above),
+  [`RESERVED.md`](RESERVED.md) (`D-143` retired in place, `D-145` reserved), and the **seven**
   next-free guards — `tests/test_d129_phase5_named_refuse_spec.py`,
   `tests/test_d130_residual_rmsd_spec.py`, `tests/test_d136_cancer_type.py`,
   `tests/test_d139_served_path_flip.py`, `tests/test_d140_pipeline_programme.py`,
   `tests/test_d141_land_confidence_kabsch.py` and this PR's own suite — widened **by
-  enumeration** to carry `D-144` by name and to bar `### D-145`. ⚠ **Six pre-existing copies,
+  enumeration** to carry `D-142`, `D-143` and `D-144` by name and to bar `### D-145`.
+  ⚠ **Eight after the rebase, not seven:** D-143 shipped a *meta*-guard
+  (`tests/test_d143_track_b_structural_only.py::test_every_enumerated_id_guard_keeps_the_bar_on_142`)
+  that reads every other guard file and requires each to **bar or name** the held integer. It is
+  widened the same way — bar-or-name for 144, and a bar on 145 required in every file — because a
+  guard over guards that only knew about 142 would have gone quiet on the next collision. ⚠ **Six pre-existing copies,
   and the count is the thing most likely to be stale in this paragraph** — the authority is
   `grep -rn '### D-14' tests/`, not this list.
   ⚠ **No production module loses behaviour:** `app/reads.py`, `core/scorer.py`,

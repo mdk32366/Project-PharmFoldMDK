@@ -394,10 +394,6 @@ def test_d130_is_the_next_free_decision_id():
         "D-145 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
-    for held in ("D-142", "D-143", "D-145"):
-        assert f"\n### {held}" not in LOG, (
-            f"{held} must stay unspent until an entry claims it by name here"
-        )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 must be the /method contents-rail entry, not some other entry that "
         "took the number"

@@ -516,12 +516,6 @@ def test_d129_is_the_next_free_decision_id():
         "D-145 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
-    for held in ("D-142", "D-143", "D-145"):
-        assert f"\n### {held}" not in LOG, (
-            f"{held} is unspent here — 142/143 are allocated to other lanes and 145 is the "
-            f"next free integer. Each must stay unwritten until an entry claims it by name, "
-            f"and must never be admitted by a `>=`"
-        )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 is the recorded successor id; it must be the /method contents-rail "
         "entry, not some other entry that took the number"
