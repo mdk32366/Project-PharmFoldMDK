@@ -337,6 +337,28 @@ describe('D-150 — the census card states three statuses, not one', () => {
     expect(status).toMatch(/not solved/i)
   })
 
+  // ⚠⚠ THE FIXTURE THE REVERT PROOF DEMANDED, AND IT WAS MISSING. Restoring the bare-`Folded`
+  // fallback on the card left every vitest case GREEN — because the old expression was
+  // `structure_kind_label ?? (folded === false ? 'NOT FOLDED' : 'Folded')`, and **every fixture in
+  // this file carries a label**, so the branch that says `Folded` was never entered (`A-017`: a
+  // guard that does not enter the path is not a guard). Only the Python source guard caught it.
+  // ⚠ This case removes the label, which is the ONLY state in which the defect was ever visible.
+  it('says provisional rather than "Folded" when the API label is missing from an assembly', () => {
+    const { container } = card({ ...FAT2, structure_kind_label: null })
+    const line = container.querySelector('.status-structure').textContent
+    expect(line).not.toMatch(/\bFolded\b/)
+    expect(line).toMatch(/provisional/)
+  })
+
+  // ⚠ …and the same hole on the LIST. A row whose label failed to arrive must not become the one
+  // assembly on the site that reads as finished.
+  it('says provisional on a list row whose assembled label is missing', () => {
+    const { container } = table([{ ...FAT2, structure_kind_label: null }])
+    const cell = rowFor(container, 'Q9NYQ8').querySelector('.status-cell')
+    expect(cell.textContent).not.toMatch(/\bFolded\b/)
+    expect(cell.textContent).toMatch(/provisional/)
+  })
+
   // ⚠⚠ THE INLINE IGF2R FIGURE IS GONE FROM THE CARD. It read "Seam not solved (IGF2R ≈ 88.76 Å is
   // a measured caveat, not a solved structure)" on every assembly — another protein's measurement,
   // rendered as part of this protein's status.

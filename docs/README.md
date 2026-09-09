@@ -566,36 +566,53 @@ write a census surface will never have met FAT2.**
     It was not.
 
 - **Revert proof (`A-016`: any red proves the assertion bites; `A-017`: the path must be entered).**
-  Six reverts, each applied on its own, run, and read **at the assertion** rather than at a
-  collection error. ⚠⚠ **Two of the reds below were NOT predicted by this entry's first draft, and
-  both are recorded rather than tidied away (D-129-C).**
-  - **Restore the bare-`Folded` fallback** on the card's Status line (axis A left in the module, so
-    the code is still reachable — `A-017`) → **red** at
-    `test_the_card_no_longer_falls_back_to_a_bare_folded`,
-    `test_no_surface_prints_a_bare_folded_as_a_status_word`, and in vitest at *cannot be read as
-    NOT FOLDED, and cannot be read as finished*.
-  - **Put the `folded === false` denial back ahead of the tiles branch** in `structureServed` →
-    **red** at `test_the_tiles_branch_runs_before_the_folded_denial` and at the vitest case *never
-    reads a tiles_only row as not folded* — ⚠ **and also at
-    `test_the_never_folded_badge_needs_both_the_axis_and_the_recorded_false`, which was not
-    predicted**: the two are coupled, because the badge's style condition reads the axis.
-  - **Revert the pLDDT sentinel to `'not folded'`** → **red** at
-    `test_the_absent_plddt_band_says_nothing_about_folding` and at both `plddt.bands.test.js`
-    cases, including the negative one that fires on *any* re-introduced fold word rather than on
-    the old string.
-  - **Delete the `status_structure` entry from `COLUMNS`**, leaving the cell rendering → **red** at
-    `test_the_status_column_is_a_real_columns_entry` and at the vitest *offers the status column as
-    a real sortable header*. ⚠ The cell still drew three chips, which is exactly D-133's finding
-    restated: **a badge that cannot be sorted is not the same feature as a column, and nothing goes
-    red about it** unless something reads `COLUMNS`.
-  - **Put the inline IGF2R sentence back on the card** → **red** at
-    `test_the_card_does_not_paste_igf2rs_angstroms_onto_every_assembly` and at the vitest *quotes
-    this parent's own seam note*.
-  - **Drop the unconditional unscored chip** so it renders only when `folded === false` → **red**
-    at the vitest *carries the unscored chip on a folded row as well as an unfolded one*. ⚠⚠ **This
-    revert passed every Python guard**, which is the honest limit of a source-reading suite: it can
-    see that a constant is declared and cannot see which rows a component chose to render it on.
-    **Recorded as a residual, not repaired by a second framework** (D-074 dec 3).
+  Six reverts, each applied **on its own**, run, restored, and read **at the assertion** rather
+  than at a collection error. Counts below are the harness output, not a prediction — the baseline
+  is `32 passed` (pytest, `tests/test_d150_structure_status_honesty.py`) and `39 passed` (vitest,
+  `CensusStatus.d150.test.jsx` + `plddt.bands.test.js`). ⚠⚠ **Three results contradicted this
+  entry's first draft. One of them was a real hole in the fixtures, and it is recorded here with
+  its repair rather than tidied away (D-129-C).**
+
+  | # | revert applied alone | pytest | vitest |
+  |---|---|---|---|
+  | 1 | bare-`Folded` fallback restored on the card | **2 failed** / 30 | **1 failed** / 40 ⚠ *after the repair below* |
+  | 2 | `folded === false` denial read **before** the tiles branch | **1 failed** / 31 | **3 failed** / 36 |
+  | 3 | pLDDT sentinel back to `'not folded'` | **1 failed** / 31 | **3 failed** / 36 |
+  | 4 | `status_structure` deleted from `COLUMNS`, cell still rendering | **2 failed** / 30 | **1 failed** / 38 |
+  | 5 | inline IGF2R sentence back on the card | **1 failed** / 31 | **1 failed** / 38 |
+  | 6 | unscored chip rendered only when `folded === false` | **32 passed — no red** | **2 failed** / 37 |
+
+  - **⚠⚠ REVERT 1 EXPOSED A HOLE IN THE FIXTURES, AND IT IS THE MOST USEFUL THING THE HARNESS
+    PRODUCED.** As first written, revert 1 reddened the two source guards
+    (`test_the_card_no_longer_falls_back_to_a_bare_folded`,
+    `test_no_surface_prints_a_bare_folded_as_a_status_word`) and left **vitest completely green —
+    39 passed**. The reason is `A-017` exactly: the reverted expression is
+    `structure_kind_label ?? (folded === false ? 'NOT FOLDED' : 'Folded')`, **every card fixture in
+    the file carries a label**, and so the branch that says `Folded` *was never entered*. The
+    rendered suite could not see the defect it was written about. **Two cases were added** — a card
+    and a list row with `structure_kind_label: null`, the only state in which the word was ever
+    reachable — and revert 1 now reddens *says provisional rather than "Folded" when the API label
+    is missing*. ⚠ **A rendered test that never enters the branch is not weaker evidence than a
+    source test; it is no evidence, and it looks identical to evidence.**
+  - **⚠ Revert 2 did NOT redden `test_the_never_folded_badge_needs_both_the_axis_and_the_recorded_false`,
+    which this entry's draft predicted it would.** The draft reasoned that the badge's style
+    condition reads the axis, so a broken axis must break the badge guard. It does not: that guard
+    reads the *source* of the condition, and swapping two branches inside `structureServed` leaves
+    the condition's text untouched. It reddened three **rendered** cases instead — *separates the
+    four categories*, *never reads a tiles_only row as not folded*, *says "tiles only" and not "NOT
+    FOLDED" anywhere on a tiles row*. **The prediction confused a coupling in the behaviour for a
+    coupling in the assertions.**
+  - **⚠ Revert 6 passed every Python guard, exactly as predicted, and the prediction being right
+    does not make the residual smaller.** A source-reading suite can see that `NOT_SCORED_COPY` is
+    declared and cannot see which rows a component chose to render it on. Only the rendered cases
+    (*carries the unscored chip on a folded row as well as an unfolded one*) catch it.
+    **Recorded as a standing residual, not answered with a second framework** (D-074 dec 3).
+  - **Revert 4 is D-133's own finding restated.** The cell still drew all three chips with the
+    column gone from `COLUMNS`: **a badge that cannot be sorted is not the same feature as a
+    column, and nothing goes red about it** unless something reads `COLUMNS`. That is why the guard
+    reads the array and not the rendered text.
+  - **Revert 3's second red is the negative assertion**, which fires on *any* re-introduced fold
+    word rather than on the old string — so restoring the sentinel under a new phrasing reddens too.
 
 **Ship:** `ui/src/structureStatus.js` (new) + `ui/src/plddt.js` + `ui/src/components/CensusTable.jsx`
 + `ui/src/components/CensusDetail.jsx` + `ui/src/components/CensusProteinView.jsx` +
