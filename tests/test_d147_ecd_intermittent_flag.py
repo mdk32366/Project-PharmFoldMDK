@@ -470,6 +470,42 @@ def test_the_structural_score_is_unchanged_for_every_pinned_row(engine, tmp_path
     assert [r["rank"] for r in body["rows"]] == [1, 2, 3, 4, 5]
 
 
+def test_the_served_score_is_the_persisted_score_for_every_factor_and_the_rank(engine, tmp_path):
+    """⚠⚠ THIS TEST EXISTS BECAUSE A REVERT PROOF FOUND THE HOLE IT FILLS, AND THE HOLE IS WORTH
+    NAMING (`### D-147` records it).
+
+    The first draft of this suite proved score-immobility two ways — hand-computed pins on the
+    served rows, and `D-144`'s AST guard on the **formula's** expression. A revert that multiplied
+    `score_ecd` by `0.9` **in the reader**, for flagged rows only, was caught by the pins and by
+    two sha256 pins and by **nothing else**: the AST guard reads `core/census_structural.py`, which
+    that revert never touched, and `test_the_flag_does_not_reach_the_score_for_the_real_population`
+    calls the formula directly rather than the route. ⚠ **A serve-time join is a serve-time place
+    to apply a penalty**, so the guard belongs at the seam the join is on: the served numbers must
+    equal the persisted ones, field by field, for every row.
+    """
+    _load(engine, tmp_path)
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from db.models import CensusStructuralScore
+
+    with Session(engine) as s:
+        stored = {r.accession: r for r in s.scalars(select(CensusStructuralScore)).all()}
+    body = _client(engine, tmp_path).get("/api/census-structural-ranking").json()
+    assert len(body["rows"]) == len(stored) == 5
+    flagged = 0
+    for row in body["rows"]:
+        was = stored[row["accession"]]
+        for field in ("score_membrane", "score_ecd", "score_model", "structural_score",
+                      "span_aa", "rank", "mean_plddt", "has_fold", "is_reference",
+                      "census_class", "tranche", "gene"):
+            assert row[field] == getattr(was, field), f"{row['accession']}.{field}"
+        flagged += segs.FLAG_ECD_INTERMITTENT in row["flags"]
+    # ⚠ A-017: the comparison has to run over rows that actually wear the flag, or it proves that
+    # unflagged rows are unchanged — which nothing was threatening.
+    assert flagged == 2
+
+
 def test_the_flag_does_not_reach_the_score_for_the_real_population():
     """⚠ Over the whole committed population: for every accession, the score computed with the
     topology known and the score computed by the formula alone are the same object, because the

@@ -573,57 +573,107 @@ So the rule is not "be careful" — it is:
     `D-146` by barring an integer with no row, `D-146` recorded checking for the identical hole at
     `D-147`, and it opens again at `D-148` here if the row is forgotten. It was not.
 - **Revert proof (`A-016`: any red proves the assertion bites; `A-017`: the path must be
-  entered).** Each revert was applied on its own, run, and read **at the assertion** rather than
-  at a collection error — and one of them is recorded because it did **not** redden the way the
-  first draft predicted:
-  - **Delete the `if topology == intermittent` branch that appends the flag** (leave the four
-    fields, so the join still runs and the fixture still reaches the code — `A-017`) →
-    **7 failed, 32 passed** in `tests/test_d147_ecd_intermittent_flag.py`:
+  entered).** Seven reverts, each applied on its own, run, and read **at the assertion** rather
+  than at a collection error. ⚠⚠ **Two of them behaved differently from what this entry's first
+  draft predicted, one of those found a real hole, and all three facts are recorded here rather
+  than tidied away (D-129-C).**
+  - **Delete the branch that appends the flag** — `flags_for()` returns `()` unconditionally, the
+    four fields and the whole join left in place so the fixture still reaches the code (`A-017`) →
+    **10 failed, 34 passed** in `tests/test_d147_ecd_intermittent_flag.py`:
     `test_an_intermittent_row_carries_the_flag`,
     `test_the_flag_rides_on_the_served_ranking_row`,
     `test_the_by_flag_count_equals_the_rows_that_wear_the_flag`,
-    `test_the_served_count_matches_the_committed_csv_over_the_real_population`,
-    `test_the_top_of_the_live_rank_is_an_intermittent_row`,
-    `test_the_three_topologies_are_counted_separately_and_reconcile`,
-    `test_a_stale_derivation_withholds_the_flag_rather_than_guessing`. ⚠ Every red is a failure-red
-    at the assertion.
-  - **Append the flag to `no_accepted_segment` rows as well** (the collapse the GO's hard stop
-    forbids) → **3 failed**:
-    `test_a_no_accepted_segment_row_is_not_intermittent_and_wears_no_flag`,
-    `test_the_by_flag_count_equals_the_rows_that_wear_the_flag` (1,774 ≠ 1,649), and
-    `test_the_served_count_matches_the_committed_csv_over_the_real_population`. ⚠⚠ **This is the
-    revert that proves the hard stop is a property and not a paragraph** — the count moves by
-    exactly the 125 GPI rows, so the guard names the collapse rather than merely disliking it.
-  - **Multiply `score_ecd` by `0.9` for an intermittent row** — the change this entry exists to
-    refuse, written as a plausible mistake rather than a strawman → **4 failed**:
+    `test_the_by_flag_count_is_counted_from_the_rows_and_not_read_from_the_provenance_file`,
+    `test_the_served_count_matches_the_committed_csv_over_the_real_population` (`0 == 1649`),
+    `test_the_join_never_drops_or_reorders_a_persisted_flag`,
+    `test_the_flag_is_never_emitted_twice_if_a_loader_ever_persists_it`,
     `test_the_structural_score_is_unchanged_for_every_pinned_row`,
-    `test_the_flag_does_not_reach_the_score_for_the_real_population`, and in
-    `tests/test_d144_census_structural_rank.py` the AST guard
-    `test_the_scored_product_is_exactly_the_three_factors_and_nothing_else` plus
-    `test_the_golden_row_reproduces_the_offline_value_for_gabbr2`. ⚠ **D-144's own AST guard is
-    what catches the arithmetic**, which is why this entry did not need to invent a second one.
+    `test_the_served_score_is_the_persisted_score_for_every_factor_and_the_rank`, and
+    `test_the_flag_does_not_reach_the_score_for_the_real_population`.
+    ⚠ **The last three are the interesting reds:** they are the *score-immobility* tests, and they
+    fail on their **`A-017` non-vacuity clauses** (`flagged == {"O75899", "P51677"}`,
+    `checked == 1649`) rather than on a score. **That is the design working** — a score test whose
+    fixture stopped producing flags would otherwise pass while proving nothing about flagged rows,
+    which is exactly the failure `A-017` names.
+    ⚠ Two tests deliberately stay **green** here and it is worth knowing which:
+    `test_the_top_of_the_live_rank_is_an_intermittent_row` and
+    `test_the_three_topologies_are_counted_separately_and_reconcile` read the **derivation**, not
+    the flag, so they are unaffected by construction. The first draft listed both as reds; they
+    are not, because they were never about the flag.
+  - **Append the flag to `no_accepted_segment` rows as well** (the collapse the GO's hard stop
+    forbids, written as the one-character mistake it would really be — `!= INTERMITTENT` becomes
+    `== CONTIGUOUS`) → **9 failed, 35 passed**, led by
+    `test_a_no_accepted_segment_row_is_not_intermittent_and_wears_no_flag` and
+    `test_the_served_count_matches_the_committed_csv_over_the_real_population`, which reads
+    **1,774 ≠ 1,649**. ⚠⚠ **This is the revert that proves the hard stop is a property and not a
+    paragraph:** the count moves by exactly the **125** GPI-architecture rows, so the guard names
+    the collapse rather than merely disliking it.
+  - **Multiply `score_ecd` by `0.9` for an intermittent row, IN THE READER** — the change this
+    entry exists to refuse, applied at the seam the join is actually on → **4 failed**:
+    `test_the_structural_score_is_unchanged_for_every_pinned_row`,
+    `test_the_served_score_is_the_persisted_score_for_every_factor_and_the_rank`, and the two
+    sha256 pins on `app/census_structural_read.py` in `tests/test_d145_*` / `tests/test_d146_*`.
+    ⚠⚠ **AND THIS REVERT FOUND A HOLE, WHICH IS WHY IT IS THE MOST USEFUL BULLET HERE. On its
+    first run `test_the_served_score_is_the_persisted_score_for_every_factor_and_the_rank` DID NOT
+    EXIST**, and the revert redded **3**: the hand-computed pins plus the two sha256 pins, and
+    **nothing that compared the served numbers to the persisted ones**. `D-144`'s AST guard reads
+    `core/census_structural.py`, which a reader-side penalty never touches, and
+    `test_the_flag_does_not_reach_the_score_for_the_real_population` calls the formula directly
+    rather than the route — so **the only thing standing between a reader-side penalty and a green
+    gate was a five-row hand-typed pin and a byte hash.** The missing test was written in response
+    and is now in the suite; the docstring on it records this. ⚠ *A serve-time join is a
+    serve-time place to apply a penalty*, and the guard has to sit where the risk is.
+  - **Wire the topology INTO the formula** — `score_ecd(span_aa, *, intermittent=False)` with a
+    `topology=` parameter added to `structural_score` and passed by the loader, i.e. the version
+    of the mistake that goes through the front door → **9 failed**:
+    `test_the_formula_module_never_learns_what_a_topology_is` (the AST parameter-list pin),
+    `test_the_formula_version_pin_did_not_move_and_matches_the_live_run`,
+    `test_the_structural_score_is_unchanged_for_every_pinned_row`,
+    `test_no_load_no_migration_and_no_loader_edit_ships_here`,
+    `test_a_stale_derivation_is_reported_on_the_payload_and_flags_nothing`, and the four sha256
+    pins on `core/census_structural.py` + `scripts/census_structural_rank.py` across the D-145 and
+    D-146 suites. ⚠⚠ **The prediction that was wrong, kept rather than replaced: this entry's
+    first draft said `D-144`'s AST guard
+    `test_the_scored_product_is_exactly_the_three_factors_and_nothing_else` would catch it, so
+    *"this entry did not need to invent a second one."* IT STAYS GREEN.** That guard pins the
+    **product expression** `membrane * ecd * model`, and a penalty applied *inside* `score_ecd`
+    leaves the expression untouched — the product is still three factors, and one of them now
+    quietly means something else. **`F-044`'s shape in a guard rather than a citation: it resolves,
+    to the wrong thing.** What actually caught it was this entry's own parameter-list AST pin and
+    the `formula_version` pin. ⚠ It is recorded and **not fixed here** — widening D-144's guard is
+    that entry's ruling to make, not this one's, and the residual is now named in the open.
   - **Serve `span_segments.provenance.json`'s `"intermittent": 1649` as the count instead of
-    counting the rows** → **1 failed**,
-    `test_the_by_flag_count_is_counted_from_the_rows_and_not_read_from_the_provenance_file`, and
-    ⚠⚠ **the first draft of this entry predicted the wrong thing and the prediction is kept rather
-    than replaced (D-129-C).** It said the six-row fixture suites *"would all redden, because the
-    fixture population has no intermittent rows and 1,649 is not 0"*. **They do not all redden** —
-    most of the fixture assertions read the flag off rows, not the count, so exactly one test
-    fails, and it fails only because it was written to compare the served count against a
-    fixture-sized number. **The guard is narrower than predicted, and knowing that is the reason
-    this bullet is worth reading:** a wrong number served beside right rows is caught by one
-    assertion, not by the suite.
-  - **Delete the `### D-147` heading** → **17 failed** across **eleven** files: all ten next-free
+    counting the served rows** → **5 failed**:
+    `test_the_by_flag_count_is_counted_from_the_rows_and_not_read_from_the_provenance_file`,
+    `test_the_by_flag_count_equals_the_rows_that_wear_the_flag`,
+    `test_the_flag_is_never_emitted_twice_if_a_loader_ever_persists_it`,
+    `test_the_not_run_payload_still_carries_the_segment_topology_block` (which is the one that
+    catches it hardest — a **not-run** payload with **zero rows** would serve `1,649`), and
+    `test_a_stale_derivation_is_reported_on_the_payload_and_flags_nothing` (a **withheld**
+    derivation would serve `1,649` beside rows carrying no topology at all). ⚠⚠ **The first draft
+    predicted ONE red and it is five**, and the two extra ones are the two states where the
+    provenance integer is most obviously a lie — no rows, and no trustworthy derivation. **The
+    prediction was pessimistic in a way that mattered:** it had reasoned about the happy path only,
+    and the guard is stronger than the reasoning behind it.
+  - **Delete the `### D-147` heading** → **16 failed** across **ten** files: nine next-free
     guards (`test_d129`, `test_d130`, `test_d136`, `test_d139`, `test_d140`, `test_d141`,
-    `test_d143`, `test_d144`, `test_d145`, `test_d146`) plus the seven entry-content tests in this
-    entry's own suite. ⚠ **The check is the HEADING, never a citation of it** (D-062 /
-    method-note item 7): naming D-147 in a commit message does not discharge the rule.
-  - **Delete the MethodNote paragraph** → **4 failed** in the UI suite
-    (`MethodNote.censusStructural.test.jsx`), at the positive assertions for the count, the
-    largest-segment sentence, the *does not change the score* denial and the *not internalisation*
-    denial. ⚠ **All four denials are asserted individually** rather than as one blob: a paragraph
-    that keeps three of them and drops *"not internalisation"* is exactly the edit a copy pass
-    would make.
+    `test_d143`, `test_d144`, `test_d145`) plus the seven entry-content tests in this entry's own
+    suite. ⚠ **`tests/test_d146_track_b_live_api_copy.py` stays GREEN, and the reason is worth
+    stating rather than counting as an eleventh file:** its cross-guard check reads the **other
+    test files'** text to confirm they name 147, not the log. It enforces that the guards are
+    written; the guards enforce that the entry exists. Two different jobs, and this revert shows
+    which is which. ⚠ **The check is the HEADING, never a citation of it** (D-062 / method-note
+    item 7): naming D-147 in a commit message does not discharge the rule.
+  - **Delete the two MethodNote paragraphs** → **3 failed** in
+    `ui/src/components/MethodNote.censusStructural.test.jsx`, at the positive assertions for the
+    largest-segment sentence, the three denials, and the pointer to where the count lives.
+    **And then, separately, delete ONLY the *not internalisation* sentence** — the plausible copy
+    edit rather than a wholesale removal → **1 failed**,
+    `denies the score, the trafficking claim and the GPI category — each on its own`. ⚠⚠ **That
+    second revert is the one that justifies asserting the three denials individually**: a blob
+    assertion over the paragraph's text would have passed with the trafficking denial gone, and
+    *"multi-loop surface"* read without it is precisely the sentence a reader turns into a claim
+    about internalisation.
 - **⚠ What this build could NOT verify, stated rather than left as an absence.** (1) **That the
   deployed route now serves the flag** — nothing here contacted Fly, no credential exists in this
   build, and the served count is proved against SQLite fixtures plus the committed CSV. The
