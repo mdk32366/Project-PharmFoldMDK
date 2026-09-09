@@ -340,13 +340,14 @@ def test_d130_is_the_next_free_decision_id():
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 130 in ids
     assert [i for i in ids if i > 130] == [
-        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145
+        132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144 and D-145 — ⚠ 142 is no "
-        f"longer absent: docs/RESERVED.md reserved it and the /targets columns entry is the "
+        f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144, D-145 and D-146 — ⚠ 142 is "
+        f"no longer absent: docs/RESERVED.md reserved it and the /targets columns entry is the "
         f"holder that wrote it, so it is ADDED here beside 143; ⚠ 145 was reserved the same "
-        f"way and is ADDED beside 144 by the image-permanence entry; found {ids[-13:]}"
+        f"way and is ADDED beside 144 by the image-permanence entry; ⚠ 146 the same way again, "
+        f"ADDED by the Track B live-route copy entry; found {ids[-14:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "
@@ -404,8 +405,22 @@ def test_d130_is_the_next_free_decision_id():
         "D-145 must be the image-permanence entry that bakes the structural-rank loader in, "
         "not some other entry that took the number"
     )
-    assert "\n### D-146" not in LOG, (
-        "D-146 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ Widened again at **D-146** — to `[…, 143, 144, 145, 146]` — for the ELEVENTH time, and by
+    # ADDING as every pass before it. ⚠⚠ **The THIRD reserved integer to be SPENT rather than
+    # skipped** (142 and 145 were the first two, both the same day): 146 sat in
+    # `docs/RESERVED.md` as the next free `D-`, `D-145` cited it in order to bar it, and this bar
+    # reddened **by design** when an entry claimed it. D-146 retires Track B's offline clause —
+    # the copy denied being a ranked surface in this application while
+    # `GET /api/census-structural-ranking` answers `valid` — so it is copy only, with no route,
+    # no formula, no schema and no threshold, and is named only because this is an enumerated id
+    # check. `### D-147` now takes the next-free bar; no bar was deleted, each became a name.
+    assert re.search(r"^### D-146 — Track B stops denying the surface it is served on",
+                     LOG, re.M), (
+        "D-146 must be the Track B live-route copy entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-147" not in LOG, (
+        "D-147 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

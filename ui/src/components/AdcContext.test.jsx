@@ -164,7 +164,12 @@ describe('D-123 — two tracks (Nectin-4 / ADC framing) on /about', () => {
     expect(t).toContain('Cancer vs normal, internalization and antigen density are excluded')
     expect(t).toContain('0.5 neutrals')
     expect(t).toContain('not ADC readiness')
-    expect(t).toContain('it runs offline: it is not a ranked surface in this application')
+    // ⚠ D-146 — this line used to require the offline denial, which D-144's route and D-145's
+    // baked loader made false. The rendered page must now name the live surface and must not
+    // deny it; both directions, so neither an empty string nor a stale denial passes.
+    expect(t).toContain('served live by this application at /api/census-structural-ranking')
+    expect(t).toContain('review lens — an export for reading, never the source of truth')
+    expect(t).not.toContain('it runs offline: it is not a ranked surface in this application')
     // ⚠ The cohort-82 scorer is a different surface, and /about must not be read as a claim
     // about it: this page names no rank, no percentile and no coefficient for it.
     expect(t).not.toMatch(/logistic|leave-one-out|percentile/i)

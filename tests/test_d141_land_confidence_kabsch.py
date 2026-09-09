@@ -651,8 +651,21 @@ def test_the_log_entry_records_why_140_was_not_taken_and_that_263_then_merged():
         "D-145 must be the image-permanence entry that bakes the structural-rank loader in, "
         "not some other entry that took the number"
     )
-    assert "\n### D-146" not in LOG, (
-        "D-146 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ Widened again at **D-146** by ADDING, never by a `>=` — the ELEVENTH pass. ⚠⚠ **The THIRD
+    # reserved integer to be SPENT rather than skipped** (142 and 145 were the first two, both the
+    # same day): 146 sat in `docs/RESERVED.md` as the next free `D-`, `D-145` cited it in order to
+    # bar it, and this bar reddened **by design** when an entry claimed it. D-146 retires Track B's
+    # offline clause now that `GET /api/census-structural-ranking` answers `valid`. ⚠ It is COPY,
+    # and the distinction this suite cares about holds: D-141 landed OPS trees on the serving
+    # VOLUME, D-145 shipped a script in the IMAGE, and D-146 changes only what two documents say.
+    # `### D-147` now takes the next-free bar.
+    assert re.search(r"^### D-146 — Track B stops denying the surface it is served on",
+                     LOG, re.M), (
+        "D-146 must be the Track B live-route copy entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-147" not in LOG, (
+        "D-147 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
 

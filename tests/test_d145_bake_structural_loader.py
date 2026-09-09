@@ -374,8 +374,19 @@ def test_the_next_free_integer_is_named_and_barred_across_every_guard():
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 145 in ids
-    assert "\n### D-146" not in LOG, (
-        "D-146 is the next free integer and must stay unspent until an entry claims it by name "
+    # ⚠⚠ 146 IS NOW WRITTEN, AND THIS BAR REDDENED EXACTLY AS THIS TEST'S OWN DOCSTRING SAID IT
+    # WOULD — the ELEVENTH pass, and the THIRD reserved integer SPENT rather than skipped. D-146
+    # retires the Track B copy clause that denied the D-144 route existed, now that
+    # `GET /api/census-structural-ranking` answers `valid`; it is copy only and ships no
+    # `Dockerfile`, `.dockerignore` or image change, so nothing this suite measures moves. The bar
+    # is REPLACED BY A NAME and `### D-147` takes it. Never a `>=`.
+    assert re.search(r"^### D-146 — Track B stops denying the surface it is served on",
+                     LOG, re.M), (
+        "D-146 must be the Track B live-route copy entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-147" not in LOG, (
+        "D-147 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`"
     )
 
@@ -399,7 +410,15 @@ def test_the_next_free_integer_is_named_and_barred_across_every_guard():
         assert not (barred and named), (
             f"{rel} both bars 145 and names an entry for it; both cannot be true"
         )
-        assert r'\n### D-146" not in' in text, (
+        barred_146 = r'\n### D-146" not in' in text
+        named_146 = "D-146 — Track B stops denying the surface it is served on" in text
+        assert barred_146 or named_146, (
+            f"{rel} neither bars 146 nor names the entry that spends it"
+        )
+        assert not (barred_146 and named_146), (
+            f"{rel} both bars 146 and names an entry for it; both cannot be true"
+        )
+        assert r'\n### D-147" not in' in text, (
             f"{rel} does not bar the next free integer"
         )
 

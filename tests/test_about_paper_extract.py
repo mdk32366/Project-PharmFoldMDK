@@ -33,6 +33,10 @@ PAPER_QUESTION_ASKS = (
 #: below cannot drift apart from each other by a stray character.
 RETIRED_COMPOSITE = "rank by (cancer × membrane × internalization × density) / normal risk"
 
+#: ⚠ D-146 — the other retired clause, held the same way. It denied that the structural order is a
+#: ranked surface in this application; `D-144`'s route and `D-145`'s baked loader made it false.
+OFFLINE_DENIAL = "it runs offline: it is not a ranked surface in this application"
+
 
 def test_d123_heading_exists_in_the_log():
     log = LOG.read_text(encoding="utf-8")
@@ -63,6 +67,14 @@ def test_aboutpaper_excerpts_are_substrings_of_the_doc():
     assert "structure only — membrane × ECD × fold confidence (pLDDT)" in paper
     assert RETIRED_COMPOSITE not in src
     assert RETIRED_COMPOSITE not in paper
+    # ⚠ D-146 (owner GO 2026-09-09) — the same sentence also denied being a ranked surface in this
+    # application. `D-144` served the rank at /api/census-structural-ranking and `D-145` baked its
+    # loader into the image, so the route is named in both files and the denial is gone from the
+    # extract entirely. It survives once in the Doc, inside the dated amendment note, which is why
+    # this absence is asserted on `src` and not on `paper`.
+    assert "/api/census-structural-ranking" in src
+    assert "/api/census-structural-ranking" in paper
+    assert OFFLINE_DENIAL not in src
     assert "That same antibody is not a universal V-domain key." in src
     assert "That same antibody is not a universal V-domain key." in paper
 
