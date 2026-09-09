@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import ast
 import csv
+import os
 import re
 import sys
 from pathlib import Path
@@ -182,6 +183,32 @@ def test_the_reference_flag_never_enters_the_score():
     assert flagged.score_ecd == plain.score_ecd
     assert flagged.score_model == plain.score_model
     assert cs.FLAG_REFERENCE in flagged.flags and cs.FLAG_REFERENCE not in plain.flags
+
+
+def test_the_scored_product_is_exactly_the_three_factors_and_nothing_else():
+    """⚠⚠ THE GUARD ABOVE DID NOT BITE, AND THIS IS WHY THIS ONE EXISTS (A-016's class).
+
+    Wiring `is_reference` into the score as `× (1.0 if is_reference else 1.0)` — a no-op — left
+    the whole suite green: comparing two products cannot see an arithmetic path that changes
+    nothing *today*, and the next edit to that expression is the one that matters. So the check
+    is the **expression itself**, read off the AST: the value assigned to `structural_score` must
+    be exactly `membrane * ecd * model`. Any fourth term reddens, whether or not it is a no-op.
+    """
+    fn = next(n for n in ast.walk(ast.parse(CORE_SRC))
+              if isinstance(n, ast.FunctionDef) and n.name == "structural_score")
+    calls = [n for n in ast.walk(fn)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+             and n.func.id == "StructuralScore"]
+    assert len(calls) == 1, "one construction site, so there is one expression to check"
+    product = next(kw.value for kw in calls[0].keywords if kw.arg == "structural_score")
+    assert ast.unparse(product) == "membrane * ecd * model", ast.unparse(product)
+    # ⚠ and `is_reference` reaches the flag list and nothing else: its only use inside the
+    # function body is the `if` that appends the flag.
+    uses = [n for n in ast.walk(fn)
+            if isinstance(n, ast.Name) and n.id == "is_reference"]
+    assert len(uses) == 1, (
+        f"`is_reference` is read {len(uses)} times in structural_score; it may be read exactly "
+        f"once, by the branch that appends the flag")
 
 
 def test_references_sink_below_every_candidate_however_high_they_score():
@@ -747,6 +774,33 @@ def test_the_migration_declares_the_unique_grain_the_orm_declares(engine):
     assert "uq_census_structural_scores_run_accession" in names
 
 
+def test_the_migration_renders_valid_postgres_ddl_without_a_database():
+    """⚠⚠ THE TEST SUBSTRATE IS SQLITE AND PRODUCTION IS POSTGRES — `F-056`: the suite runs on a
+    database that forgives exactly what production rejects. Alembic's **offline** mode renders
+    this migration against the real Postgres dialect with no server, so a `JSONB`, a
+    `server_default` or a constraint that only works on SQLite reddens on the CPU gate instead of
+    at `alembic upgrade head` in the `postgres` job."""
+    import subprocess
+
+    out = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade",
+         "0011_clinical_edges:0012_census_structural_rank", "--sql"],
+        cwd=REPO, capture_output=True, text=True,
+        env={**os.environ, "DATABASE_URL": "postgresql+psycopg://u:p@localhost/offline"},
+    )
+    assert out.returncode == 0, out.stderr[-2000:]
+    sql = out.stdout
+    assert "CREATE TABLE census_structural_runs" in sql
+    assert "CREATE TABLE census_structural_scores" in sql
+    assert "JSONB" in sql, "the JSON columns must render as JSONB on Postgres, not JSON"
+    assert "CONSTRAINT uq_census_structural_scores_run_accession UNIQUE (run_id, accession)" in sql
+    # ⚠ additive, on the wire as well as in the source: no statement touches the scorer's tables
+    for table in SCORER_TABLES:
+        assert table not in sql, f"the rendered DDL mentions {table}"
+    for destructive in ("DROP TABLE", "ALTER TABLE", "DELETE FROM", "TRUNCATE"):
+        assert destructive not in sql.upper(), destructive
+
+
 def test_the_migration_chain_is_linear_and_this_is_its_head():
     """⚠ A second migration claiming `0011_clinical_edges` as its parent would leave two heads
     and `alembic upgrade head` would refuse — caught here, not in the Postgres CI job."""
@@ -875,6 +929,27 @@ def test_the_architecture_doc_records_the_shipped_shape():
     assert "/api/census-structural-ranking" in flat
     assert "scripts/census_structural_rank.py" in flat
     assert "STRUCTURAL_ONLY" in flat
+
+
+def test_the_method_surface_carries_the_section_and_its_banner():
+    """⚠ The GO's UI minimum: a Method one-liner that this is a STRUCTURAL_ONLY full-census rank,
+    distinct from the cohort-82 scorer, and that the Sheet is a lens. Asserted from Python as
+    well as from vitest, the `test_both_method_surfaces_…` shape — the copy obligation is the
+    decision's, not the UI suite's."""
+    method = (REPO / "ui" / "src" / "components" / "MethodNote.jsx").read_text(encoding="utf-8")
+    assert 'id="census-structural-rank"' in method, (
+        "the section must carry an id or it drops out of D-138's derived contents rail")
+    assert "STRUCTURAL_ONLY" in method
+    assert "not HPA-weighted" in method and "not ADC-ready" in method
+    assert "source of\n            truth" in method or "source of truth" in method
+    assert "review lens" in method
+    assert "/api/census-structural-ranking" in method
+    # ⚠ it must say it is NOT the learned scorer, by name
+    assert "not the learned scorer" in method
+    # and the census table's own honesty is restated where a reader will be
+    assert "no score and no rank" in method
+    assert (REPO / "ui" / "src" / "components"
+            / "MethodNote.censusStructural.test.jsx").is_file()
 
 
 def test_the_test_plan_carries_the_d144_addendum():

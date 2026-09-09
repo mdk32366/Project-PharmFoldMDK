@@ -608,27 +608,35 @@ So the rule is not "be careful" — it is:
   outcome: a reference row that sinks nothing, silently.
 - **⚠ Revert proof, and the guard that did not bite the first time (A-016 / A-017's class).**
   Each guard was reverted deliberately and watched to see *where* it reddened:
-  1. **Reference sink removed from the sort key** → red at
-     `test_references_sink_below_every_candidate_however_high_they_score` **and** at the
-     end-to-end load assertion that NECTIN4 is rank 6 while holding the top score. ✅
-  2. **`MODEL_NO_FOLD` changed from 0.3 to 0.5** → red at the formula test **and** at the AST
-     `0.5` guard. ✅ Both, which is the intended overlap: one asserts the value, the other
-     asserts the *class of value* cannot return.
-  3. **The idempotent replace weakened to a plain insert** → red at
-     `test_persisting_twice_leaves_exactly_one_valid_run_and_the_same_ranks`, at the
-     *exactly-one-valid-run* assertion rather than at the row count. ✅
-  4. **The unit-swap refusal removed from `_plddt`** → red at
-     `test_a_zero_to_one_plddt_is_refused_rather_than_divided_again`, and the load-level test
-     then showed the consequence it exists to prevent: a 0.9 pLDDT scoring 0.009 instead of
-     stopping the run. ✅
-  5. **⚠ `is_reference` wired into the score (multiplied by 1.0, a no-op)** → **50 passed. The
-     guard did not bite.** `test_the_reference_flag_never_enters_the_score` compared two
-     `structural_score` calls and a no-op multiplication leaves both equal, so the assertion was
-     satisfied by an arithmetic path existing. **Fixed:** the test now also asserts the three
-     components are individually unchanged, and the wall test asserts `is_reference` reaches only
-     the flag list; the same revert reddens.
-  ⚠ **Four of five is written down rather than rounded off.** A green suite is evidence about the
-  tests, not about the code, until each guard has been shown to fail.
+  1. **Reference sink removed from the sort key** (`bool(r.get("is_reference"))` deleted from
+     `rank_rows`) → **4 failed, 50 passed**, at
+     `test_references_sink_below_every_candidate_however_high_they_score`, at the end-to-end load
+     assertion that NECTIN4 is rank 6 while holding the top score, and at two route tests. ✅
+  2. **`MODEL_NO_FOLD` changed from 0.3 to 0.5** → **5 failed, 49 passed**, at the formula test
+     **and** at the AST `0.5` guard. ✅ Both, which is the intended overlap: one asserts the
+     value, the other asserts the *class of value* cannot come back.
+  3. **The idempotent replace weakened to a plain insert** (the supersede loop's body replaced
+     with `pass`) → **2 failed, 52 passed**, at
+     `test_persisting_twice_leaves_exactly_one_valid_run_and_the_same_ranks` — at the
+     *exactly-one-valid-run* assertion rather than at the row count, which is the property. ✅
+  4. **The unit-swap refusal removed from `_plddt`** → **2 failed, 52 passed**: the formula test,
+     and the loader test showing the consequence it exists to prevent — a 0.9 pLDDT scoring
+     0.009 instead of stopping the run. ✅
+  5. **⚠⚠ `is_reference` wired into the score as `× (1.0 if is_reference else 1.0)` — a no-op**
+     → **53 passed. THE GUARD DID NOT BITE AT ALL.**
+     `test_the_reference_flag_never_enters_the_score` compares two `structural_score` calls and
+     their three components, and **a no-op multiplication leaves every one of them equal** — so
+     the test was satisfied by an arithmetic path from the flag into the product *existing*, and
+     the next edit to that expression is the one that would matter. That is `A-016`'s class: an
+     assertion that cannot fail in the direction it protects. **Fixed by checking the expression
+     instead of its output:** `test_the_scored_product_is_exactly_the_three_factors_and_nothing_else`
+     reads the `structural_score=` keyword off the module's AST and requires
+     `ast.unparse(...) == "membrane * ecd * model"`, and requires `is_reference` to be read
+     **exactly once** inside `structural_score` (the branch that appends the flag). The same
+     revert now reddens **that** test and only that test. ✅
+  ⚠ **Four of five bit the first time, and the fifth is written down rather than rounded off.** A
+  green suite is evidence about the tests, not about the code, until each guard has been shown to
+  fail — and this one had to be *rewritten*, not just re-run, before it could.
 - **Deep-learning justification.** This is the first surface on which **ESMFold's per-residue
   confidence orders the whole census.** `score_model` is `mean_plddt / 100` — the network's own
   output, not a proxy for it — and it is a **third of the product**, so the network decides
