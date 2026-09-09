@@ -530,24 +530,38 @@ So the rule is not "be careful" — it is:
 - **Revert proof (`A-016`: any red proves the assertion bites; `A-017`: the path must be
   entered).** Each was run individually and read at the assertion, not at a collection error:
   - Restore *"and it runs offline: it is not a ranked surface in this application"* to the Doc's
-    Track B sentence and to `TRACK_B` → `test_the_offline_denial_is_gone_from_both_files` and
-    `test_the_retired_clause_survives_only_as_the_docs_dated_quotation` **fail at the assertion**
-    (and `aboutPaper.test.js`'s `.not.toContain` reddens in the UI suite). ⚠ **This is the revert
-    the GO asked for by name.**
-  - Restore it in the Doc **only**, leaving the extract as shipped → the substring guard reddens
-    the other way: the Doc quotation count assertion fires, and `TRACK_B` is still a substring, so
-    the failure names the file that moved.
-  - Delete the new live-route clause from both files while leaving the denial out → the
-    **positive** assertions fire (`/api/census-structural-ranking`, `review lens`,
-    `STRUCTURAL_ONLY`, `cohort-82 learned scorer`). ⚠ **Both directions are asserted together on
-    purpose**: a pure absence guard passes on an empty string, which is how a sentence can be
-    "fixed" by deleting the claim instead of correcting it.
-  - Delete the `### D-146` heading → the log guard fires, and every one of the nine next-free
-    guards fires with it. ⚠ **The check is the HEADING, never a citation of it** (D-062 /
-    method-note item 7): a commit message naming this decision does not discharge the rule.
-  - Paste the Track B sentence into `MethodNote.jsx` → `D-143`'s T-1227 guard and this entry's
-    extension of it both redden, which is the merge-the-two-surfaces failure both entries exist
-    to prevent.
+    Track B sentence **and** to `TRACK_B` → **5 failed, 50 passed**:
+    `test_the_offline_denial_is_gone_from_both_files`,
+    `test_the_guard_catches_a_restored_denial_and_a_deleted_route`,
+    `test_the_retired_clause_survives_only_as_the_docs_dated_quotation`, D-143's flipped
+    `test_the_sentence_names_its_exclusions_rather_than_defaulting_them`, and
+    `test_about_paper_extract.py::test_aboutpaper_excerpts_are_substrings_of_the_doc`. In the UI
+    suite, **2 failed, 16 passed** — `aboutPaper.test.js`'s D-146 case and `AdcContext.test.jsx`'s
+    T-1234, both on the rendered text. ⚠ **This is the revert the GO asked for by name**, and
+    every red is a failure-red at the assertion, not an import error.
+  - Restore it in the Doc **only**, leaving the extract as shipped → **5 failed, 50 passed**, and
+    ⚠⚠ **this entry's first draft predicted the wrong reason and the prediction is kept rather
+    than replaced** (D-129-C; `F-044`'s class). It said *"`TRACK_B` is still a substring, so the
+    failure names the file that moved."* **It is not still a substring** — inserting the clause
+    into the Doc's sentence breaks the contiguity `TRACK_B` depends on, so
+    `test_the_extract_is_still_a_character_substring_of_the_owner_doc` and D-143's
+    `test_the_paper_and_the_extract_carry_the_same_structural_sentence` are among the reds. **The
+    outcome is stronger than predicted and the reasoning behind it was wrong**, which is the only
+    reason this bullet is worth reading.
+  - Delete the new live-route clause from both files while leaving the denial out → **3 failed,
+    47 passed**, at the **positive** assertions (`served live by this application`, then the
+    route). ⚠ **Both directions are asserted together on purpose**: a pure absence guard passes on
+    an empty string, which is how a sentence gets "fixed" by deleting the claim instead of
+    correcting it.
+  - Delete the `### D-146` heading → **15 failed** across **ten** files: all nine next-free guards
+    (`test_d129`, `test_d130`, `test_d136`, `test_d139`, `test_d140`, `test_d141`, `test_d143`,
+    `test_d144`, `test_d145`) plus the five entry-content tests in this entry's own suite. ⚠ **The
+    check is the HEADING, never a citation of it** (D-062 / method-note item 7): a commit message
+    naming this decision does not discharge the rule.
+  - Paste the Track B sentence into `MethodNote.jsx` → **3 failed**: `D-143`'s T-1227 carve-out,
+    this entry's `test_track_b_is_not_pasted_into_a_scorer_surface`, **and the sha256 pin on
+    `MethodNote.jsx`** — which is the one that would have caught it even if both prose guards had
+    been written to look at the wrong file.
 - **⚠ What this build could NOT verify, stated rather than left as an absence.** (1) That the
   route stays `valid` — one read, one minute, no test (the disqualifying fact). (2) That the
   spreadsheet the sentence calls a *review lens* is currently stale or current: **the Sheet is
