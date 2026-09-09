@@ -46,7 +46,7 @@ function AdcPipelineCardRoute() {
 // an input to a score. It joins to no protein, accession, score or rank.
 // ⚠⚠ D-151 — ONE SURFACE IS A TABLE AND THE REST ARE PROSE, AND `main` USED TO TREAT THEM ALIKE.
 // `main { max-width: 60rem }` is the right measure for a paragraph and the wrong one for an
-// eleven-column census: it left a wide empty gutter down both sides of the page while the table
+// thirteen-column census: it left a wide empty gutter down both sides of the page while the table
 // itself was squeezed to about 57rem and then scrolled off the right edge. The owner's words,
 // 2026-09-09: *"we are not using the entire left side of the table real estate and the list scrolls
 // off the right side."*

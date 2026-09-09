@@ -758,7 +758,7 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
       </details>
 
       {/* ⚠⚠ THE SCROLL IS CONTAINED, AND THAT IS THE SECOND HALF OF THE OWNER'S COMPLAINT (D-151):
-          *"the list scrolls off the right side."* Eleven columns of accessions, protein names,
+          *"the list scrolls off the right side."* Thirteen columns of accessions, protein names,
           badges and percentages do not fit every viewport, and the old markup let the widest row
           push the **document** wide — so the page itself scrolled sideways and the nav, the
           disclaimer and the legend went with it.
@@ -821,7 +821,7 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                   <td>{r.gene ?? <span className="unknown">unknown</span>}</td>
                   {/* ⚠ D-151: the protein NAME is the only free-text column, and it was the one
                       the CSS handed the table's whole slack to (`td:nth-child(3) { width: 100% }`)
-                      — a rule that fought the layout at eleven columns and pushed the rest off the
+                      — a rule that fought the layout at thirteen columns and pushed the rest off the
                       right edge. It is bounded by a block child rather than by a rule on the `td`,
                       which is D-142's finding restated: under the auto table algorithm a
                       `max-width` on a cell is advisory and a capped block child's max-content width

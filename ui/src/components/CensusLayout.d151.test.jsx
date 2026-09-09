@@ -182,7 +182,7 @@ describe('D-151 — the table scrolls inside a port, and the page does not', () 
   })
 
   // ⚠⚠ THE RETIRED HACK, BARRED BY NAME. `.census-table td:nth-child(3) { width: 100% }` asked the
-  // protein-name cell to be as wide as the whole table; at eleven columns the auto algorithm
+  // protein-name cell to be as wide as the whole table; at thirteen columns the auto algorithm
   // resolved that by running the total past the container, which is the right-side bleed. It is
   // read out of the stylesheet rather than remembered, because the rule and the markup are in
   // different files and only one of them is under a component test.

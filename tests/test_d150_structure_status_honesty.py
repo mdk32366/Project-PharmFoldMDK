@@ -448,12 +448,20 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     look for one. That is D-145's recorded mistake, not rediscovered here."""
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 150 in ids, "this entry did not claim its own integer"
-    assert 148 not in ids and 151 not in ids
+    # ⚠⚠ THE 151 BAR BECAME A NAME AT `D-151`, AND THE BAR IS NEITHER DELETED NOR RELAXED. The
+    # owner UI-polish ship (Initial Targets label, Kathad DOI anchor, census layout) claimed the
+    # integer this entry had barred, so the assertion becomes the stronger statement that 151 is
+    # SPENT and named, and the bar moves one integer along to 152. **148 stays barred**: the
+    # trafficking hold is unchanged.
+    assert 151 in ids, (
+        "D-151 was spent by the owner UI-polish ship; this assertion barred it and must now NAME "
+        "it — never delete a bar, and never relax one to a `>=`")
+    assert 148 not in ids and 152 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-151" not in LOG, (
-        "D-151 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-152" not in LOG, (
+        "D-152 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
 
@@ -463,13 +471,20 @@ def test_the_reserved_map_bars_151_and_the_pointer_moves_in_this_commit():
     breaks the guard instead of satisfying it. The D-142 / D-145 / D-146 / D-147 rows each record
     the same trap of themselves."""
     assert re.search(r"^\| \*\*D-151\*\*", RESERVED, re.M), (
-        "D-151 is cited in order to bar it, so it must be a RESERVED row or the citation invariant "
-        "has a hole indistinguishable from D-062's")
+        "D-151 is cited here, so it must remain a RESERVED row — its row was RETIRED IN PLACE when "
+        "the UI-polish ship spent the integer, and deleting or striking it would open a citation "
+        "hole indistinguishable from D-062's")
+    assert re.search(r"^\| \*\*D-152\*\*", RESERVED, re.M), (
+        "D-152 is cited in order to bar it, so it must be a RESERVED row")
     assert re.search(r"^\| \*\*D-148\*\*", RESERVED, re.M), "the trafficking hold lost its row"
-    assert not re.search(r"^\| ~~\*\*D-15[01]\*\*~~", RESERVED, re.M), (
+    assert not re.search(r"^\| ~~\*\*D-15[012]\*\*~~", RESERVED, re.M), (
         "a marker is struck through; that breaks this suite's lookup instead of satisfying it")
-    assert "Next free `D-` integer: **`D-151`**" in RESERVED, (
+    # ⚠⚠ FLIPPED IN PLACE AT `D-151`, NEVER DELETED. The RULE this encodes is *the pointer moves in
+    # the SAME commit that spends the integer*, and the rule is what is kept; only the value moves,
+    # and it still skips 148 because a reserved integer is not a free one.
+    assert "Next free `D-` integer: **`D-152`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer")
+    assert "Next free `D-` integer: **`D-151`**" not in RESERVED
     assert "Next free `D-` integer: **`D-150`**" not in RESERVED
     assert "Next free `D-` integer: **`D-148`**" not in RESERVED
 

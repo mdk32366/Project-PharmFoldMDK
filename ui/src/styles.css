@@ -34,7 +34,7 @@ a:hover { text-decoration: underline; }
 
 main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 /* ⚠⚠ D-151 — THE MEASURE IS A CHOICE PER SURFACE, NOT A CONSTANT. 60rem is a reading measure and
-   it is right for every prose page here. It is wrong for `/census`, whose eleven-column table was
+   it is right for every prose page here. It is wrong for `/census`, whose thirteen-column table was
    squeezed into ~57rem while the browser window sat half empty on either side — the owner's
    *"we are not using the entire left side of the table real estate"*.
    ⚠ A MAX, not a width: below ~96rem the page is already full-bleed and this rule does nothing, so
@@ -499,20 +499,44 @@ main.wide { max-width: 96rem; }
 .census-background > :last-child, .census-notes > :last-child { margin-bottom: 0.8rem; }
 .census-scope-more { color: #b9c4cc; font-size: 0.88rem; }
 
+/* ── ⚠⚠ D-151 — THE ABOVE-TABLE BUDGET, AND IT IS SPENT DELIBERATELY ─────────────────────────────
+   Every block between `/census`'s `<h2>` and the first `<tr>` is here because a ruling put it
+   there, so the way to reach the list sooner is to make each one COST LESS, never to remove one.
+   Measured in Chrome at 1440×900 on this branch: the `<thead>` sat at **921 px** with the four
+   background sections already collapsed — still below a 900 px fold — and the rules below close
+   that gap by tightening leading and margins rather than by hiding anything.
+   ⚠ NOTHING IS SET SMALLER THAN THE DATUM IT QUALIFIES. D-137's caveat-sizing rule binds here: a
+   disclosure typeset below its subject is a disclosure the page has decided the reader may skip. */
+.census h2 { margin: 0 0 0.5rem; }
+.census .census-table { margin-top: 0.9rem; }
+.census-table .census-count { margin: 0.35rem 0 0.3rem; }
+
 /* ⚠ D-151: the lens control stays ABOVE the table and uncollapsed (D-102 — the applied lens is
    part of what the Stained % column means), so it earns its place by being compact rather than by
    being hidden. One row for the radios and the current meaning; nothing is smaller than the datum
    it qualifies, which is D-137's rule about caveat sizing. */
-.census-table .lens-control { margin-top: 0.7rem; font-size: 0.88rem; }
+.census-table .lens-control { margin-top: 0.5rem; font-size: 0.88rem; line-height: 1.4; }
 .census-table .lens-control fieldset {
   display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem 0.9rem;
   border: 0; padding: 0; margin: 0;
 }
 .census-table .lens-control fieldset legend { float: left; padding: 0; margin-right: 0.6rem;
   color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
-.census-table .lens-meaning { margin: 0.25rem 0 0; }
-.census-table .lens-critical { display: block; margin-top: 0.35rem; }
+.census-table .lens-meaning { margin: 0.2rem 0 0; }
+.census-table .lens-critical { display: block; margin-top: 0.25rem; }
 .census-notes .lens-why { margin: 0.2rem 0 0.5rem; color: #b9c4cc; font-size: 0.88rem; }
+
+/* ⚠⚠ D-151 — THE HPA BLOCK IS TIGHTENED AND NEVER MOVED. On the census list it rendered as four
+   stacked lines occupying ~163 px directly above the table — the per-datum link, the publication,
+   the website and the image/data credit, each on its own row. All four are still emitted, in full,
+   above the table and outside every disclosure control, because the licence words citation as a
+   precondition of DISPLAY. What changes is that they flow as one paragraph-height band instead of
+   a column, which costs the reader nothing and the layout about 100 px. */
+.census-table .hpa-attrib { margin: 0.3rem 0 0; line-height: 1.35; }
+.census-table .hpa-attrib-datum { margin: 0; }
+.census-table .hpa-attrib-page { border-top: 0; padding-top: 0; margin: 0; }
+.census-table .hpa-attrib-cite, .census-table .hpa-attrib-credit { display: inline; margin: 0; }
+.census-table .hpa-attrib-credit::before { content: ' \00b7 '; }
 .census-count { color: #b9c4cc; font-size: 0.9rem; margin: 0.4rem 0 0.8rem; }
 
 .census-search { display: block; margin-top: 0.9rem; }
@@ -561,7 +585,7 @@ main.wide { max-width: 96rem; }
 }
 
 /* ── ⚠⚠ D-151 — THE TABLE SCROLLS, THE PAGE DOES NOT ─────────────────────────────────────────────
-   Owner, 2026-09-09: *"the list scrolls off the right side."* Eleven columns do not fit every
+   Owner, 2026-09-09: *"the list scrolls off the right side."* Thirteen columns do not fit every
    viewport, and with no scroll port the widest row set the width of the DOCUMENT — so the whole
    page slid sideways, taking the nav, the unscored disclaimer and the legend with it, and the
    reader had to scroll right to read a badge and left again to read the next accession.
@@ -585,10 +609,10 @@ main.wide { max-width: 96rem; }
   margin-top: 0.6rem;
 }
 /* ⚠ `min-width` on the TABLE, not on the wrapper: it is what tells the browser the columns have a
-   floor to respect, so narrow viewports scroll the port instead of crushing eleven columns into
+   floor to respect, so narrow viewports scroll the port instead of crushing thirteen columns into
    unreadable slivers. Removing it does not "fix" a horizontal scrollbar — it moves the damage into
    the cells. */
-.census-table table { width: 100%; min-width: 64rem; border-collapse: collapse; font-size: 0.9rem; }
+.census-table table { width: 100%; min-width: 78rem; border-collapse: collapse; font-size: 0.9rem; }
 /* ⚠ Sticky header: the list is thousands of rows and a header that scrolls away turns every
    column into an unlabelled number.
    ⚠ D-151: `top: 0` is now measured against `.census-table-scroll`, and the z-index is raised so
@@ -612,7 +636,7 @@ main.wide { max-width: 96rem; }
 }
 /* ── ⚠⚠ D-151 — `td:nth-child(3) { width: 100% }` IS GONE, AND IT WAS THE HACK BEHIND THE BLEED ──
    The retired rule read *"the protein name is the only free-text column; it takes the slack instead
-   of the table deciding for itself"*, and `width: 100%` on one cell of an eleven-column auto-layout
+   of the table deciding for itself"*, and `width: 100%` on one cell of a thirteen-column auto-layout
    table does not express that: it asks that column to be as wide as the table, which the algorithm
    resolves by giving the name column everything the other ten do not strictly demand and then
    letting the total run past the container. It is recorded rather than deleted in silence, because
@@ -632,7 +656,7 @@ main.wide { max-width: 96rem; }
    a reader can match against the address bar or a search box. */
 .census-table tbody td:nth-child(1), .census-table tbody td:nth-child(2) { white-space: nowrap; }
 
-/* ⚠⚠ THE ACCESSION RIDES ALONG WHEN THE PORT SCROLLS SIDEWAYS. Eleven columns mean the reader is
+/* ⚠⚠ THE ACCESSION RIDES ALONG WHEN THE PORT SCROLLS SIDEWAYS. Thirteen columns mean the reader is
    often looking at the right-hand half of a row, and a row whose identity has scrolled out of sight
    is a row of numbers about nothing. The background is opaque and matches the surface it covers,
    because a transparent sticky cell renders the columns underneath it through the text.

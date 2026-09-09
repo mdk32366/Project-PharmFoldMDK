@@ -124,7 +124,7 @@ describe('App — five-surface nav (D-051)', () => {
 
   // ── ⚠⚠ D-151 — THE CENSUS GETS THE WHOLE WIDTH, AND THE SHELL IS WHERE THAT IS DECIDED ───────
   // Owner, 2026-09-09: *"we are not using the entire left side of the table real estate."*
-  // `main { max-width: 60rem }` is a reading measure and the census is an eleven-column table.
+  // `main { max-width: 60rem }` is a reading measure and the census is a thirteen-column table.
   // ⚠ jsdom computes NO layout, so this asserts the STRUCTURE that carries the width — the class
   // on `<main>` — and never a rendered pixel. A test that claimed to measure the gutter here would
   // be measuring nothing at all.
