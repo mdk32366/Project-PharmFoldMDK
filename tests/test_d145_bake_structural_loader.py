@@ -196,11 +196,25 @@ def test_the_fly_volume_is_not_the_images_data_directory():
 #: sha256 over LF-normalised bytes (RESERVED.md's hash-discipline ruling) of the D-144 surface as
 #: it merged at `2170bd8`. ⚠ A pin, not a hope: this PR is image permanence, so a byte moving in
 #: any of these files means the PR is no longer what its entry says it is.
+#:
+#: ⚠⚠ **ONE DIGEST MOVED AT `D-147`, AND THE PIN IS WHAT DEMANDED THE RULING — which is the pin
+#: working, not the pin failing.** Its own failure message says *"a formula, schema or route edit
+#: belongs to a different entry with its own ruling"*, and `### D-147` is that entry: the
+#: `ecd_intermittent` serve-time join. So `app/census_structural_read.py` is **re-pinned** and the
+#: superseded value is recorded here rather than overwritten in silence (D-129-C):
+#:     app/census_structural_read.py  D-144/D-145/D-146: 7f581c690ebc95bc… → D-147: 0fff62b0b947…
+#: ⚠⚠ **AND WHAT DID *NOT* MOVE IS THE LOAD-BEARING HALF.** `core/census_structural.py`,
+#: `scripts/census_structural_rank.py`, `db/models.py`, migration `0012` and `app/read_routes.py`
+#: are **byte-identical** through D-147, so *"no formula, no schema, no loader, no route"* is a
+#: measurement rather than a claim — and `formula_version()` therefore still returns
+#: `c859da97f73d`, the value the live run recorded. **The pins were not relaxed; one was moved by
+#: name and five were left to prove the rest.**
 D144_SURFACE = {
     "core/census_structural.py":
         "c859da97f73d9da2628a59dc091f7fbcbd8944d0eebba9096e6b011b62ba12c7",
+    # ⚠ moved by `### D-147` (was 7f581c690ebc95bceb532f0554e97d7499add4c327fcf15802ec406b69bdef6b)
     "app/census_structural_read.py":
-        "7f581c690ebc95bceb532f0554e97d7499add4c327fcf15802ec406b69bdef6b",
+        "0fff62b0b9471cd4447255275cb13cd4ac07890e8a79aacec2c3d40a5d7142df",
     "scripts/census_structural_rank.py":
         "ef222d19b2c15777ee65736bdc8f7b57b9ed65be990a1ae71a260dbbc7bbafe0",
     "db/migrations/versions/0012_census_structural_rank.py":
@@ -222,7 +236,8 @@ def test_no_formula_schema_or_route_byte_moved(rel, digest):
     raw = (ROOT / rel).read_bytes().replace(b"\r\n", b"\n")
     assert hashlib.sha256(raw).hexdigest() == digest, (
         f"{rel} changed — D-145 is image permanence only; a formula, schema or route edit "
-        f"belongs to a different entry with its own ruling"
+        f"belongs to a different entry with its own ruling (as D-147's route edit did: see the "
+        f"note on D144_SURFACE, where one digest moved by name and five did not)"
     )
 
 
@@ -385,8 +400,19 @@ def test_the_next_free_integer_is_named_and_barred_across_every_guard():
         "D-146 must be the Track B live-route copy entry, not some other entry that took "
         "the number"
     )
-    assert "\n### D-147" not in LOG, (
-        "D-147 is the next free integer and must stay unspent until an entry claims it by name "
+    # ⚠ Widened again at **D-147** by ADDING — the TWELFTH pass, and the FOURTH reserved integer
+    # SPENT rather than skipped (142, 145 and 146 were the first three, all the same day). D-147
+    # adds the `ecd_intermittent` disclosure on the **read** side only: the loader this entry baked
+    # into the image is **byte-identical** (its sha256 pin below is untouched), **no `--load`
+    # runs**, and no `Dockerfile` / `.dockerignore` byte moves. The bar is REPLACED BY A NAME and
+    # `### D-148` takes it. Never a `>=`.
+    assert re.search(r"^### D-147 — The census rank stops presenting a loop as an ectodomain",
+                     LOG, re.M), (
+        "D-147 must be the census `ecd_intermittent` entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-148" not in LOG, (
+        "D-148 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`"
     )
 
@@ -418,7 +444,19 @@ def test_the_next_free_integer_is_named_and_barred_across_every_guard():
         assert not (barred_146 and named_146), (
             f"{rel} both bars 146 and names an entry for it; both cannot be true"
         )
-        assert r'\n### D-147" not in' in text, (
+        # ⚠⚠ WIDENED THE SAME WAY AT D-147 — and the pattern this check holds as *data* moved with
+        # it. 147 is spent by the census `ecd_intermittent` disclosure, which is a **read-side**
+        # change: the loader this entry baked into the image is byte-identical and no `--load`
+        # runs. Bar OR name, never neither; the next free integer, 148, takes the bar.
+        barred_147 = r'\n### D-147" not in' in text
+        named_147 = "D-147 — The census rank stops presenting a loop as an ectodomain" in text
+        assert barred_147 or named_147, (
+            f"{rel} neither bars 147 nor names the entry that spends it"
+        )
+        assert not (barred_147 and named_147), (
+            f"{rel} both bars 147 and names an entry for it; both cannot be true"
+        )
+        assert r'\n### D-148" not in' in text, (
             f"{rel} does not bar the next free integer"
         )
 

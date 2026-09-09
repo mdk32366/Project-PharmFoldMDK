@@ -379,6 +379,263 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-147 — The census rank stops presenting a loop as an ectodomain: `ecd_intermittent` rides on every row whose extracellular part arrives in more than one segment — and the disqualifying fact is that **rank 1 is one of them**, so the flag lands on the row a reader is most likely to trust
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **a served CATEGORY and its provenance, on `GET /api/census-structural-ranking`
+  only.** ⚠ **`structural_score` does not move for any row, the formula gains no factor, `score_ecd`
+  is still `min(1.0, span_aa / 200)`, the rank order is byte-for-byte the order `main` serves, no
+  migration runs, no `--load` runs, no Fly write happens, no ADC-readiness claim is made, and
+  `no_accepted_segment` / GPI is NOT collapsed into `intermittent`.** `F-037`, `D-133 am. 1` and
+  `D-144` are cited and none of them is amended.
+- **⚠⚠ THE DISQUALIFYING FACT, FIRST — AND IT POINTS AT THIS ENTRY'S OWN SURFACE. `rank 1` OF THE
+  LIVE CENSUS STRUCTURAL RANK IS AN INTERMITTENT ROW.** `D-146` recorded the live read: rank 1 is
+  `GABBR2` (`O75899`), `structural_score` **0.8443** = `1.0 × 1.0 × 0.8443`, `span_aa` **442**,
+  `flags: ["ecd_saturated"]`. Read from `data/census/span_segments.csv` in this build, `O75899` is
+  **`topology: intermittent`, `segment_count: 4`, `extracellular_total_aa: 494`,
+  `discarded_aa: 52`, `segments: 42-483;544-551;619-654;713-720`**. **So the top of the list —
+  the one row every reader looks at, the row `D-146` quoted to prove the surface is live — has
+  been asserting a 442 aa span that is the largest of four segments, with 52 aa of extracellular
+  material outside the structure, and nothing on the wire said so.** ⚠ It scores 1.0 on the ECD
+  factor either way, because 442 saturates the 200 aa cap and so does 494; **the flag changes no
+  number and repairs no arithmetic. What it repairs is what the number is understood to mean** —
+  and the honest reading of the defect is that `F-037` has been open since 2026-08-16, the Census
+  *table* has worn an `intermittent` badge since `D-133 am. 1`, and **the one surface that puts
+  these proteins in a suitability-shaped order is the surface that never carried it.**
+- **⚠ Provenance (D-016) — every count below names the artefact, and the join key names the query
+  that could have disqualified it.** Measured in this build on 2026-09-09 from
+  `data/census/span_segments.csv` (3,467 data rows + header):
+  - `topology` composition: **1,649 `intermittent` · 1,693 `contiguous` · 125
+    `no_accepted_segment`**, summing to **3,467**. ⚠ The sum is stated because a three-way
+    breakdown that does not reconcile with the population is how a fourth silent category hides.
+  - **⚠⚠ THE JOIN IS A BIJECTION, CHECKED RATHER THAN ASSUMED.** The accession set of
+    `span_segments.csv` and of `census_manifest.v7.csv` are **identical** — `3,467` each,
+    `manifest − segments = 0` and `segments − manifest = 0`. **This is the query that could have
+    killed the compute-at-serve design:** a partial join would have meant *some* rows carry a
+    topology and the rest carry an absence indistinguishable from `contiguous`, and the correct
+    build would then have been a named `topology_unrecorded` category rather than a flag.
+  - **⚠⚠ AND THE STRONGER CHECK — IT IS THE SAME POPULATION, BY CONTENT HASH, NOT BY FILENAME.**
+    `span_segments.provenance.json` records `source_manifest_sha256:
+    fd80d65df8b3acf59ce9faa135275dc75eac6caf7f4fc2a2cbc5399d3f970d07`; the manifest on disk hashes
+    to exactly that; and `D-146`'s live read recorded the served run's
+    `population_sha256: fd80d65d…3f970d07`. **The topology artefact, the file on disk and the run
+    the route is serving are pinned to one population by content, and a filename is not an
+    identity** (`core/derived_freshness.py`'s own rule). `core.derived_freshness.check` returns
+    **`fresh`** for it here.
+  - **Where the intermittent rows sit relative to the flags that already exist:** of the 1,649,
+    **1,304** are `census_class: surface` and **345** are not (so **345 of them already wear
+    `non_surface_class`**), and **185** carry a `span_aa ≥ 200` (so they already wear
+    `ecd_saturated`) against **1,464** below the cap. ⚠ **`ecd_intermittent` is orthogonal to
+    both and duplicates neither** — `ecd_saturated` says *the cap was reached*, this says *the
+    thing that reached it is one loop of several*.
+  - **The magnitude the flag is about:** **92,709** extracellular residues are discarded
+    census-wide (`span_segments.provenance.json` `discarded_residues`, re-summed from the CSV's
+    `discarded_aa` column here and agreeing). Worst five, `discarded_aa` descending: `Q9UHC9`
+    (7 segments, 272 of 830 aa folded, **558 discarded**), `O15118` (7; 249 of 763; 514),
+    `Q8N6C5` (2; 756 of 1,246; 490), `Q9P2K9` (6; 432 of 887; 455), `P78363` (6; 604 of 1,032; 428).
+  ⚠ **What these numbers are NOT.** They are counts over a **committed CSV**, not over the served
+  payload — this build holds no `DATABASE_URL` and no Fly credential
+  (`env | grep -iE 'DATABASE|FLY|POSTGRES|PGHOST'` returns nothing), so **nothing here read the
+  live route and nothing here wrote to it.** The served count is asserted by test against a
+  seeded SQLite run, and the reason the CSV count and the served count are expected to agree is
+  the bijection above — which is a property of two files, not an observation of production.
+- **Context.** Owner GO 2026-09-09 (*"D-147 `ecd_intermittent` on census structural ranking
+  surface"*). Model pin `D-0037`: `claude-opus-5` (thinking, high). The Spec is an outcome: the
+  ranking rows carry the flag, the count is countable, the meaning is served, the Method surface
+  says it out loud, and **the score does not move.**
+- **Decision.**
+  1. **`ecd_intermittent` is appended to `flags` on every served ranking row whose census topology
+     is `intermittent`** — the seventh flag, beside `no_fold`, `fold_without_plddt`,
+     `span_unrecorded`, `ecd_saturated`, `non_surface_class` and `reference_not_a_candidate`. The
+     row also gains **`topology`, `segment_count`, `discarded_aa` and `extracellular_total_aa`**,
+     which are the four fields `/api/census/{id}` has served since `F-037` — ⚠ **the same four
+     names, so a consumer reading a census card and a ranking row is reading one vocabulary.**
+  2. **⚠⚠ IT IS A COMPUTE-AT-SERVE JOIN AGAINST THE COMMITTED CSV, NOT A PERSISTED COLUMN, AND
+     THAT IS THE DECISION RATHER THAN THE CONVENIENT PATH.** `app/census_structural_read.py`'s
+     docstring says the route *"reads persisted rows and recomputes nothing"*, so this needs an
+     argument and not a shrug. Three reasons, in the order they bind:
+     - **A persisted flag would require a `--load` against production to become true**, and a
+       load supersedes the run the surface is serving. `D-144`'s replace is one transaction and is
+       safe, but *"run the loader on the live host so a category appears"* is an ops action taken
+       for a display fact — and the GO's hard stop is explicit: **no Fly `--load` unless
+       required.** It is not required, so it does not happen. **`census_structural_runs` id=1,
+       computed `2026-09-09T06:02:08Z`, stays the served run and keeps every score it has.**
+     - **The joined file is version-controlled, so the answer is a function of the deployed tree
+       and not of when the request arrived** — which is the actual content of the
+       *"recomputes nothing"* posture (`F-004`: a result must not depend on fetch time). A
+       committed CSV read at serve is as fixed as a column; a *query* at serve would not be.
+     - **One path, so there is nothing to drift.** The flag is derived in exactly one place
+       (`core.census_structural.segment_join`) and **`structural_score()` never sees a topology
+       at all** — asserted by test, because the moment two code paths can emit this flag they can
+       disagree about 1,649.
+     ⚠ **The cost of the choice is named, not hidden:** `run.component_counts` as *persisted* does
+     not contain `by_flag.ecd_intermittent`, so the payload's `segment_topology` block carries
+     **`persisted_by_flag_count` (null today), `served_by_flag_count`, and
+     `agrees_with_persisted`** — three fields rather than one number, so a future loader that does
+     persist it cannot silently disagree with the rows beside it.
+  3. **`component_counts.by_flag.ecd_intermittent` is countable, and it is counted over the ROWS
+     THAT WERE SERVED** rather than transcribed from the derivation's provenance file.
+     ⚠ **This is deliberate and it is `F-026`'s rule** (a verification sharing an implementation
+     with its subject agrees with it): `span_segments.provenance.json` already says
+     `"intermittent": 1649`, and serving *that* integer beside rows flagged by a different
+     traversal would report a number nothing in the payload checks. **The served count is
+     `sum(1 for row in rows if the flag is on that row)`** — so it cannot disagree with the flags,
+     and if the population ever stops being the manifest it moves with the rows instead of lying.
+  4. **`formula.flag_meaning["ecd_intermittent"]` states four things and denies two of them by
+     name:** the extracellular part arrives in **more than one segment**; **`span_aa` is the
+     LARGEST segment and not the extracellular total** (`F-037`); ⚠ **it does NOT enter
+     `structural_score`** — `score_ecd` reads `span_aa` exactly as it did before this entry; and
+     ⚠⚠ **it is NOT internalization.** The last denial is the one the GO asked for by name and it
+     is the one a reader is most likely to get wrong: a multi-loop surface protein *sounds* like a
+     statement about trafficking, and `formula.excluded_factors` already records `internalization`
+     as *"never measured by this project for any protein"*. **Both sentences now stand in the same
+     payload, and neither is softened.**
+  5. **`no_accepted_segment` is NOT collapsed into `intermittent`, and the payload's
+     `by_topology` breakdown proves it** by carrying all three words with their counts. ⚠ The 125
+     rows are **GPI-anchored and similar architectures for which UniProt records no topological
+     domains BY DESIGN** (`scripts/span_segments.py`; `F-025`, per `D-133 am. 1`'s correction of
+     the `D-081` citation) — *"not missing data, and not an intermittent surface"*, which is the
+     Census legend's own sentence, reused rather than reworded. **They wear no flag from this
+     entry.**
+  6. **⚠ NO UI BADGE SHIPS, BECAUSE THERE IS NO RANKING TABLE TO PUT ONE ON — measured, not
+     assumed.** The GO conditions the badge on *"if the ranking table already shows flags"*.
+     `rg -n 'census-structural-ranking|censusStructural' ui/src --glob '!*.test.*'` returns
+     **three** hits: `ui/src/system-model.json` (the architecture diagram's route list),
+     `ui/src/aboutPaper.js` (`D-146`'s Track B sentence) and
+     `ui/src/components/MethodNote.jsx` (`D-144`'s § Census structural rank). **No component
+     fetches the route and no table renders a `flags` array**, so a badge would have to ship a
+     ranking table with it — and a ranking table on `/census` is barred by `D-079` dec 1 as
+     narrowed by `D-144`, which left *"no rank column on `/census`"* standing. **So the honesty
+     lands as prose on `/method`**, where `D-144`'s section already explains the three factors,
+     and a test asserts the census table still has no rank column.
+  7. **The MethodNote paragraph is written for the reader who does not know what a topological
+     domain is**, in the Census table's existing words (*"the outward-facing part arrives in n
+     separate segments. Only the LARGEST of them was folded"*), and it carries **three** denials
+     as separate sentences a copy pass cannot drop together: **it does not change the score**,
+     **it is not internalisation**, and **it is not `GPI / no segment`**.
+     - ⚠⚠ **AND IT DELIBERATELY DOES NOT TYPE `1,649`, WHICH IS A CHANGE OF PLAN MADE DURING THE
+       BUILD AND IS RECORDED AS ONE (D-129-C).** This decision was drafted as *"it also names the
+       number, because 'some rows' lets a reader assume it is not the ones they care about"* —
+       and that collides with a **ruled** constraint. `D-050` / `D-051` **Constraint A** is that a
+       number on a surface is derived from a payload or it is not on the surface at all, and
+       `MethodNote.censusStructural.test.jsx`'s
+       `test 'names no count of its own'` enforces it with
+       `expect(section).not.toMatch(/\b\d{1,3},\d{3}\b|\b\d{4,}\b/)` — **a guard written by
+       `D-144` against exactly this edit, which reddened on the first run of it.** No component
+       fetches this route (decision 6), so there is no payload for the paragraph to derive from.
+       **The prose therefore names WHERE the count lives —
+       `component_counts.by_flag.ecd_intermittent` — and says why it is not typed here**, which is
+       the stronger sentence anyway: a typed count is a count that can come to disagree with the
+       run it describes. ⚠ The original intent is kept above rather than rewritten, because a
+       decision that quietly acquired the opposite content is a decision nobody can check.
+- **⚠⚠ What this entry does NOT do to `D-081`, `F-037` or the folds, stated because the temptation
+  runs the other way.** No span is recomputed, no fold is re-run, no artefact is rewritten, and
+  **`span_aa` keeps meaning exactly what `core/span_extract.py` made it mean** — the longest
+  accepted extracellular segment, frozen by `D-081`. `F-037` stays **OPEN**: it closes when the
+  span question is ruled or the residual is accepted, and *"we now say so on one more surface"* is
+  not that ruling. ⚠ **A flag is disclosure, not remediation** — the same distinction `D-074`
+  draws about a finding that is not closed when its fix merges.
+- **Deep-learning justification (CLAUDE.md prime directive).** `score_model` **is the ESMFold
+  pLDDT** (`D-003` / `D-039`) and it is the only factor in `structural_score` that varies with what
+  the network predicted; at rank 1 it is the entire score (`1.0 × 1.0 × 0.8443`). ⚠⚠ **This entry
+  is about what that network was given.** A pLDDT of 84.43 is the model's confidence in **the
+  structure it was handed to predict**, and for `O75899` that input was **one 442 aa loop sliced
+  out of a 494 aa extracellular region across four segments** — so the confidence is high *about
+  a fragment*, and an antibody's epitope can span loops that fragment does not contain. **A
+  confidence number is only as meaningful as the statement of what it is confident about**, and
+  until this entry the ranking surface served the number and withheld the statement for 1,649
+  rows. ⚠ **It adds no deep learning, trains nothing, folds nothing and changes no pLDDT** — it
+  makes the network's input legible beside the network's output, which is the defensible version
+  of the prime directive rather than *"a model ran"*.
+- **Ship id: spends `D-147`, which `docs/RESERVED.md` held as the next free integer and ten
+  next-free guards barred by name.** Checked before claiming it, on `main` at tip **`0aaacb6`**
+  (D-146 / [#271](https://github.com/mdk32366/Project-PharmFoldMDK/pull/271)):
+  `rg -n '^### D-14' docs/README.md` returns **140, 141, 142, 143, 144, 145, 146** and **no 147**;
+  the `RESERVED.md` row for 147 reads *"Nothing yet — the next free `D-` integer, barred by name
+  in the ten next-free guards"*, and the pointer reads **`Next free `D-` integer: **`D-147`**`**.
+  ⚠ **This is the FOURTH reserved integer to be SPENT rather than skipped** (`D-142`, `D-145` and
+  `D-146` were the first three, all 2026-09-09), and the resolution is the one this log has now
+  used twelve times: **the ten guards that barred `### D-147` now NAME this entry, and
+  `### D-148` takes the bar. Nothing was relaxed to a `>=` and no bar was deleted** — each became
+  a *name*.
+  - **The `D-147` RESERVED row is RETIRED MARKER-SAFE, not struck and not deleted**, on the
+    `D-142` / `D-145` / `D-146` precedent and for the same mechanical reason:
+    `tests/test_d146_track_b_live_api_copy.py` locates it with
+    `re.search(r"^\| \*\*D-147\*\*", …)`, so striking the marker to `~~**D-147**~~` would break
+    another entry's guard instead of satisfying it. The row records ✅ **WRITTEN** inside the cell
+    and keeps its original reservation text as provenance. A new `| **D-148** |` row is added,
+    because this entry cites 148 in order to bar it, and the next-free pointer moves to
+    **`D-148`** in the same commit.
+  - **The citation invariant, measured on this branch rather than predicted.** `RESERVED.md`'s own
+    command returns **`['D-131', 'F-067']`** — unchanged from `main`, both pre-existing (`D-131`
+    is the suffix half of `### D-130-B / D-131`; `F-067` is open in #222). ⚠ **The known failure
+    mode was checked for specifically:** `D-145` recorded that its first draft opened a hole at
+    `D-146` by barring an integer with no row, `D-146` recorded checking for the identical hole at
+    `D-147`, and it opens again at `D-148` here if the row is forgotten. It was not.
+- **Revert proof (`A-016`: any red proves the assertion bites; `A-017`: the path must be
+  entered).** Each revert was applied on its own, run, and read **at the assertion** rather than
+  at a collection error — and one of them is recorded because it did **not** redden the way the
+  first draft predicted:
+  - **Delete the `if topology == intermittent` branch that appends the flag** (leave the four
+    fields, so the join still runs and the fixture still reaches the code — `A-017`) →
+    **7 failed, 32 passed** in `tests/test_d147_ecd_intermittent_flag.py`:
+    `test_an_intermittent_row_carries_the_flag`,
+    `test_the_flag_rides_on_the_served_ranking_row`,
+    `test_the_by_flag_count_equals_the_rows_that_wear_the_flag`,
+    `test_the_served_count_matches_the_committed_csv_over_the_real_population`,
+    `test_the_top_of_the_live_rank_is_an_intermittent_row`,
+    `test_the_three_topologies_are_counted_separately_and_reconcile`,
+    `test_a_stale_derivation_withholds_the_flag_rather_than_guessing`. ⚠ Every red is a failure-red
+    at the assertion.
+  - **Append the flag to `no_accepted_segment` rows as well** (the collapse the GO's hard stop
+    forbids) → **3 failed**:
+    `test_a_no_accepted_segment_row_is_not_intermittent_and_wears_no_flag`,
+    `test_the_by_flag_count_equals_the_rows_that_wear_the_flag` (1,774 ≠ 1,649), and
+    `test_the_served_count_matches_the_committed_csv_over_the_real_population`. ⚠⚠ **This is the
+    revert that proves the hard stop is a property and not a paragraph** — the count moves by
+    exactly the 125 GPI rows, so the guard names the collapse rather than merely disliking it.
+  - **Multiply `score_ecd` by `0.9` for an intermittent row** — the change this entry exists to
+    refuse, written as a plausible mistake rather than a strawman → **4 failed**:
+    `test_the_structural_score_is_unchanged_for_every_pinned_row`,
+    `test_the_flag_does_not_reach_the_score_for_the_real_population`, and in
+    `tests/test_d144_census_structural_rank.py` the AST guard
+    `test_the_scored_product_is_exactly_the_three_factors_and_nothing_else` plus
+    `test_the_golden_row_reproduces_the_offline_value_for_gabbr2`. ⚠ **D-144's own AST guard is
+    what catches the arithmetic**, which is why this entry did not need to invent a second one.
+  - **Serve `span_segments.provenance.json`'s `"intermittent": 1649` as the count instead of
+    counting the rows** → **1 failed**,
+    `test_the_by_flag_count_is_counted_from_the_rows_and_not_read_from_the_provenance_file`, and
+    ⚠⚠ **the first draft of this entry predicted the wrong thing and the prediction is kept rather
+    than replaced (D-129-C).** It said the six-row fixture suites *"would all redden, because the
+    fixture population has no intermittent rows and 1,649 is not 0"*. **They do not all redden** —
+    most of the fixture assertions read the flag off rows, not the count, so exactly one test
+    fails, and it fails only because it was written to compare the served count against a
+    fixture-sized number. **The guard is narrower than predicted, and knowing that is the reason
+    this bullet is worth reading:** a wrong number served beside right rows is caught by one
+    assertion, not by the suite.
+  - **Delete the `### D-147` heading** → **17 failed** across **eleven** files: all ten next-free
+    guards (`test_d129`, `test_d130`, `test_d136`, `test_d139`, `test_d140`, `test_d141`,
+    `test_d143`, `test_d144`, `test_d145`, `test_d146`) plus the seven entry-content tests in this
+    entry's own suite. ⚠ **The check is the HEADING, never a citation of it** (D-062 /
+    method-note item 7): naming D-147 in a commit message does not discharge the rule.
+  - **Delete the MethodNote paragraph** → **4 failed** in the UI suite
+    (`MethodNote.censusStructural.test.jsx`), at the positive assertions for the count, the
+    largest-segment sentence, the *does not change the score* denial and the *not internalisation*
+    denial. ⚠ **All four denials are asserted individually** rather than as one blob: a paragraph
+    that keeps three of them and drops *"not internalisation"* is exactly the edit a copy pass
+    would make.
+- **⚠ What this build could NOT verify, stated rather than left as an absence.** (1) **That the
+  deployed route now serves the flag** — nothing here contacted Fly, no credential exists in this
+  build, and the served count is proved against SQLite fixtures plus the committed CSV. The
+  deployed answer becomes true on release, not on merge. (2) **That 1,649 is biologically right** —
+  it is `scripts/span_segments.py`'s reading of the pinned UniProt cache's *Topological domain*
+  features under `D-081`'s V2 vocabulary, and this entry re-derives none of it; if that derivation
+  is wrong, this flag is wrong with it and says so through `derivation_status`. (3) **That any of
+  these 1,649 proteins is or is not internalised** — the payload denies the inference; it does not
+  supply the measurement, and `internalization` remains *never measured by this project for any
+  protein*. (4) **That a reader will read it** — the flag is on the wire and in `/method` prose;
+  no ranking table renders it, because none exists.
+
 ### D-146 — Track B stops denying the surface it is served on: the offline clause is retired now that `GET /api/census-structural-ranking` answers `valid` — and the disqualifying fact is that no test in this repository can see that route, so the gate pins the WORDS and never the WORLD
 
 - **Date:** 2026-09-09

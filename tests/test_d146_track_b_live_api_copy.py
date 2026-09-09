@@ -229,11 +229,28 @@ def test_the_census_table_still_has_no_rank_column():
 #: sha256 over LF-normalised bytes (RESERVED.md's hash-discipline ruling) of the D-144 / D-145
 #: surface as it stood on `main` at `a0ac6ce`. ⚠ A pin, not a hope: this entry is copy, so a byte
 #: moving in any of these files means the PR is no longer what its entry says it is.
+#:
+#: ⚠⚠ **TWO DIGESTS MOVED AT `D-147`, AND THAT IS THE PIN DOING ITS JOB.** Its failure message
+#: says a route, loader or image edit *"belongs to a different entry with its own ruling"*, and
+#: `### D-147` is that entry — the `ecd_intermittent` serve-time join and its `/method` paragraph.
+#: The superseded values are recorded rather than overwritten in silence (D-129-C):
+#:     app/census_structural_read.py       D-146: 7f581c690ebc95bc… → D-147: 0fff62b0b947…
+#:     ui/src/components/MethodNote.jsx    D-146: 062fd71ff19a4121… → D-147: fc30481d792a…
+#: ⚠⚠ **THE OTHER EIGHT ARE UNTOUCHED, WHICH IS THE HALF WORTH READING.** `core/census_structural.py`
+#: (so `formula_version()` still returns the live run's `c859da97f73d`),
+#: `scripts/census_structural_rank.py`, migration `0012`, `app/read_routes.py`, `db/models.py`,
+#: `Dockerfile`, `.dockerignore` and `core/scorer.py` are **byte-identical** through D-147 — so
+#: *"no formula, no schema, no migration, no loader, no image, no learned scorer"* is measured, not
+#: asserted. **Nothing was relaxed: two digests moved by name, eight were left to prove the rest.**
+#: ⚠ `MethodNote.jsx` also keeps every D-146 paragraph — `test_method_note_still_carries_the_
+#: source_of_truth_paragraph_it_was_right_about` reads its text and is unchanged, so the moved
+#: digest is an ADDITION to that file rather than an edit of what this entry pinned in it.
 UNTOUCHED_SURFACE = {
     "core/census_structural.py":
         "c859da97f73d9da2628a59dc091f7fbcbd8944d0eebba9096e6b011b62ba12c7",
+    # ⚠ moved by `### D-147` (was 7f581c690ebc95bceb532f0554e97d7499add4c327fcf15802ec406b69bdef6b)
     "app/census_structural_read.py":
-        "7f581c690ebc95bceb532f0554e97d7499add4c327fcf15802ec406b69bdef6b",
+        "0fff62b0b9471cd4447255275cb13cd4ac07890e8a79aacec2c3d40a5d7142df",
     "scripts/census_structural_rank.py":
         "ef222d19b2c15777ee65736bdc8f7b57b9ed65be990a1ae71a260dbbc7bbafe0",
     "db/migrations/versions/0012_census_structural_rank.py":
@@ -246,8 +263,9 @@ UNTOUCHED_SURFACE = {
         "c5af8c8500c3eb97fe95dfe468568f822811217ddee6b8a4c5a6389f0b64cd68",
     ".dockerignore":
         "fbd8402067ea504c6b477483f4b111f114576a73fa0de931b6388b9e0912a63f",
+    # ⚠ moved by `### D-147` (was 062fd71ff19a4121a2924e00979f7bcc58228234368221ffac423f34956c7074)
     "ui/src/components/MethodNote.jsx":
-        "062fd71ff19a4121a2924e00979f7bcc58228234368221ffac423f34956c7074",
+        "fc30481d792a938c3990a68fff4e1f4c06aad2c7b6397307ed51585e1e48da5f",
     "core/scorer.py":
         "886b88ad8e0d25f1af74d65b25b46ab887c264fde654e9cea172d04ef9fb120b",
 }
@@ -267,7 +285,8 @@ def test_no_formula_schema_route_loader_or_image_byte_moved(rel, digest):
     raw = (ROOT / rel).read_bytes().replace(b"\r\n", b"\n")
     assert hashlib.sha256(raw).hexdigest() == digest, (
         f"{rel} changed — D-146 is a copy amendment; a formula, schema, route, loader or image "
-        f"edit belongs to a different entry with its own ruling"
+        f"edit belongs to a different entry with its own ruling (as D-147's route edit did: see "
+        f"the note on UNTOUCHED_SURFACE, where two digests moved by name and eight did not)"
     )
 
 
@@ -439,13 +458,22 @@ def test_the_next_free_integer_is_named_and_barred_across_every_guard():
     BAR the bare `### D-147`. The third state — an integer neither barred nor named — is how the
     #266/#267 collision got in.
 
-    ⚠ The bar is matched WITH its newline (`\\n### D-147" not in`), because two of these files
+    ⚠ The bar is matched WITH its newline (`\\n### D-148" not in`), because two of these files
     hold such patterns as *data* in order to check the others; a newline-less match would find a
     "bar" in the file whose job is to look for one. That is `D-145`'s recorded mistake, not
     rediscovered here.
+
+    ⚠⚠ **WIDENED AT `D-147` BY ADDING A NAME, AND THE PATTERN INSIDE THIS CHECK MOVED WITH IT —
+    which is the part worth reading.** This test held the string `\\n### D-147" not in` as **data**,
+    in order to require it of nine other files. When 147 was spent, that requirement became a
+    demand that nine guards go on barring a written integer: **a required-string assertion that had
+    become a required lie**, which is exactly the defect `### D-146` was written to repair, one
+    level up and inside its own gate. So the requirement is now that each guard **names 146, names
+    147, and bars 148** — three assertions where there were two, nothing relaxed to a `>=`, and
+    nothing deleted.
     """
-    assert "\n### D-147" not in LOG, (
-        "D-147 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-148" not in LOG, (
+        "D-148 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`"
     )
     guards = (
@@ -458,13 +486,19 @@ def test_the_next_free_integer_is_named_and_barred_across_every_guard():
         "tests/test_d143_track_b_structural_only.py",
         "tests/test_d144_census_structural_rank.py",
         "tests/test_d145_bake_structural_loader.py",
+        # ⚠ ADDED at `D-147`: the suite that spent 147 is itself an enumerated guard now, so the
+        # rule it is checked against is the rule it applies to everyone else.
+        "tests/test_d147_ecd_intermittent_flag.py",
     )
     for rel in guards:
         text = (ROOT / rel).read_text(encoding="utf-8")
         assert "D-146 — Track B stops denying the surface it is served on" in text, (
             f"{rel} does not NAME the entry that spent 146"
         )
-        assert r'\n### D-147" not in' in text, f"{rel} does not bar the next free integer"
+        assert "D-147 — The census rank stops presenting a loop as an ectodomain" in text, (
+            f"{rel} does not NAME the entry that spent 147"
+        )
+        assert r'\n### D-148" not in' in text, f"{rel} does not bar the next free integer"
 
 
 def test_the_reserved_row_is_retired_marker_safe_and_147_has_a_row():
@@ -490,9 +524,18 @@ def test_the_reserved_row_is_retired_marker_safe_and_147_has_a_row():
         "D-147 is cited in order to bar it, so it must be a RESERVED row or the citation "
         "invariant has a hole indistinguishable from D-062's"
     )
-    assert "Next free `D-` integer: **`D-147`**" in RESERVED, (
+    # ⚠⚠ FLIPPED IN PLACE AT `D-147`, NEVER DELETED, AND FOR THE REASON THIS FILE EXISTS TO TEACH.
+    # This asserted the pointer read `D-147`, which was true for exactly as long as 147 was
+    # unspent. The rule it encodes is *the pointer moves in the SAME commit that spends the
+    # integer*, and that rule is what is kept: it now asserts **`D-148`**, and it asserts that 147
+    # is no longer the pointer — so a future land that forgets to move it reddens here rather than
+    # drifting, which this file has recorded happening three times, once by thirty-six integers.
+    assert "Next free `D-` integer: **`D-148`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer — this file has "
         "recorded that pointer going stale three times, once by thirty-six integers"
+    )
+    assert "Next free `D-` integer: **`D-147`**" not in RESERVED, (
+        "the pointer still names a SPENT integer — it would hand 147 to the next writer"
     )
 
 

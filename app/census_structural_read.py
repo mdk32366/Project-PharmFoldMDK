@@ -23,6 +23,15 @@ result and the module that serves a census rank are different files, and a test 
 ⚠ **Reads persisted rows and recomputes nothing** (the `F-004` posture): the formula runs in
 `scripts/census_structural_rank.py` at load time. A route that recomputed would make the served
 rank a function of when it was fetched.
+
+⚠⚠ **ONE EXCEPTION, RULED RATHER THAN SLIPPED IN — THE `D-147` SEGMENT-TOPOLOGY JOIN.** Every row
+is joined against the **committed** `data/census/span_segments.csv` to carry `topology`,
+`segment_count`, `extracellular_total_aa`, `discarded_aa` and — where the ECD arrives in more than
+one segment — the flag `ecd_intermittent`. **No score, no factor and no rank is computed here or
+changed by it**, and the sentence above still holds in the way it means to: the joined file is
+version-controlled, so the answer is a function of the **deployed tree** and not of the minute the
+request arrived. The alternative was persisting a column, which would require a `--load` against
+production — superseding the run the surface is serving — before a *display* category could exist.
 """
 
 from __future__ import annotations
@@ -32,6 +41,14 @@ from typing import Any
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
+from core.census_segments import (
+    FLAG_ECD_INTERMITTENT,
+    SPAN_SEGMENTS,
+    TOPOLOGY_UNKNOWN,
+    SegmentJoin,
+    segment_join,
+)
+from core.census_segments import FLAG_MEANING as SEGMENT_FLAG_MEANING
 from core.census_structural import (
     DISCLAIMER,
     ECD_SATURATION_AA,
@@ -95,7 +112,36 @@ POPULATION_KEY = {
         "broken by accession so two runs over identical inputs agree. ⚠ Rank 1 means "
         "'structurally tractable and confidently folded', NEVER 'best ADC target'."
     )},
+    # ⚠⚠ EVERY COUNT STATES ITS KEY (method-note item 2), and this one's key is the unusual half of
+    # `D-147`: it is the ONE number in this payload that is not a property of the persisted run.
+    "component_counts.by_flag.ecd_intermittent": {
+        "kind": "SERVE_TIME_JOIN_AGAINST_COMMITTED_FILE", "text": (
+            "Rows whose census topology is `intermittent` — the extracellular part arrives in more "
+            "than one segment, and span_aa is the LARGEST of them (F-037). Joined at serve from "
+            "data/census/span_segments.csv, which is freshness-checked against the population "
+            "manifest by content hash, and COUNTED FROM THE ROWS THAT WERE SERVED rather than read "
+            "off the derivation's provenance file — so it cannot disagree with the flags beside it. "
+            "⚠ It is NOT a persisted column and NOT part of the run's own component_counts; see "
+            "`segment_topology` for the verdict, the three-way topology breakdown, and whether a "
+            "persisted count exists to agree with. ⚠⚠ It enters NO score: structural_score and rank "
+            "are identical whether or not a row is flagged (D-147), and it is NOT internalization, "
+            "which formula.excluded_factors records as never measured."
+        )},
 }
+
+#: The joined artifact, named as a repo-relative path so the payload can say where a served
+#: category came from without a consumer guessing. ⚠ A filename is not an identity — the content
+#: hash in `segment_topology.derivation_note` is what pins it to a population.
+SEGMENT_SOURCE = f"data/census/{SPAN_SEGMENTS.name}"
+
+#: ⚠⚠ Served in BOTH branches, `valid` and `not_run`, and the sentence is the point: a reader
+#: meeting a not-run panel must not conclude the topology disclosure is optional.
+SEGMENT_JOIN_POSTURE = (
+    "Joined at serve from a COMMITTED file, never a persisted column and never a query. A --load "
+    "would have been needed to persist this category, and a load supersedes the run this route is "
+    "serving — an ops action for a display fact (D-147). The joined file is version-controlled, so "
+    "this answer is a function of the deployed tree, not of when the request arrived."
+)
 
 
 def formula_block() -> dict[str, Any]:
@@ -123,14 +169,31 @@ def formula_block() -> dict[str, Any]:
             f"{MODEL_NO_FOLD} with no fold at all — a PENALTY, not a neutral"
         ),
         "excluded_factors": [{"factor": name, "why": why} for name, why in EXCLUDED_FACTORS],
-        "flag_meaning": FLAG_MEANING,
+        # ⚠⚠ THE UNION OF BOTH SUPPLIERS' MAPPINGS (`D-147`). Six flags are the formula's own and
+        # `ecd_intermittent` belongs to `core/census_segments.py`; a consumer must not have to know
+        # which module produced a flag in order to look up what it means. A test asserts every flag
+        # that can reach a served row has an entry here — the union, not either half.
+        "flag_meaning": {**FLAG_MEANING, **SEGMENT_FLAG_MEANING},
     }
 
 
-def _row_projection(row: CensusStructuralScore) -> dict[str, Any]:
+def _flags_with_topology(row: CensusStructuralScore, segments: SegmentJoin) -> list[str]:
+    """The row's persisted flags, plus `ecd_intermittent` when the ECD is multi-segment.
+
+    ⚠⚠ THE ONLY PLACE THE TWO SETS MEET, AND IT IS ADDITIVE ONLY. A persisted flag is never
+    dropped, reordered or rewritten here — this function may only lengthen the list. A reader
+    diffing yesterday's payload against today's therefore sees an append and not a reshuffle, and
+    a bug in this join cannot silently retract `no_fold`.
+    """
+    persisted = list(row.flags or [])
+    return persisted + [f for f in segments.flags_for(row.accession) if f not in persisted]
+
+
+def _row_projection(row: CensusStructuralScore, segments: SegmentJoin) -> dict[str, Any]:
     """One ranked row. ⚠ The three factors travel with the product (`D-041`'s attribution
     discipline): a consumer must never have to divide the total back apart, and on a
     span-unrecorded row that division is by zero."""
+    facts = segments.facts.get(row.accession)
     return {
         "rank": row.rank,
         "accession": row.accession,
@@ -145,7 +208,21 @@ def _row_projection(row: CensusStructuralScore) -> dict[str, Any]:
         "has_fold": row.has_fold,
         "mean_plddt": row.mean_plddt,
         "is_reference": row.is_reference,
-        "flags": row.flags or [],
+        # ⚠⚠ `D-147`. The persisted flags PLUS the serve-time topology flag, and the union is
+        # ordered persisted-first so a consumer diffing two payloads sees an append, never a
+        # reshuffle. ⚠ A set union rather than a bare append: if a future loader ever persists
+        # `ecd_intermittent`, this must not emit it twice.
+        "flags": _flags_with_topology(row, segments),
+        # ⚠⚠ THE SAME FOUR FIELD NAMES `/api/census/{id}` HAS SERVED SINCE `F-037`, deliberately.
+        # A ranking row and a census card must not describe one protein's segment structure in two
+        # vocabularies — `topology`, `segment_count`, `extracellular_total_aa`, `discarded_aa`.
+        # ⚠ `topology` is a WORD, and a stale derivation reports its VERDICT rather than the old
+        # value: `unknown` means nobody derived it, anything else means it was derived against a
+        # manifest that has since moved. Different causes, different fixes.
+        "topology": segments.topology_for(row.accession),
+        "segment_count": facts.segment_count if facts else None,
+        "extracellular_total_aa": facts.extracellular_total_aa if facts else None,
+        "discarded_aa": facts.discarded_aa if facts else None,
         # ⚠⚠ ON EVERY ROW, DELIBERATELY. A single row lifted out of this list into a slide, a
         # notebook or a spreadsheet takes the sentence with it. That is the whole reason the
         # short form exists (see `core.census_structural.STRUCTURAL_ONLY`).
@@ -155,6 +232,61 @@ def _row_projection(row: CensusStructuralScore) -> dict[str, Any]:
         # (`tests/test_no_census_leak_on_tranche_zero.py`). Consumers address the census row by
         # ACCESSION, which /api/census/{id} has resolved since D-118.
         "census_url": f"/api/census/{row.accession}",
+    }
+
+
+def _segment_topology_block(
+    segments: SegmentJoin,
+    projected: list[dict[str, Any]],
+    persisted_by_flag: dict[str, Any],
+) -> dict[str, Any]:
+    """Provenance for the `D-147` join: where it came from, what it counted, and what it is not.
+
+    ⚠⚠ **THE COUNT IS TAKEN FROM THE PROJECTED ROWS, NOT FROM THE DERIVATION'S PROVENANCE FILE**,
+    and that is `F-026`'s rule: `span_segments.provenance.json` already records
+    `"intermittent": 1649`, and serving *that* integer beside rows flagged by a different traversal
+    would report a number nothing in this payload can check. Counting the rows makes the two
+    incapable of disagreeing.
+
+    ⚠ **The persisted count is reported beside the served one rather than replaced by it.** Today
+    no loader writes `by_flag.ecd_intermittent`, so `persisted_by_flag_count` is `null` — and if
+    one ever does, `agrees_with_persisted` is the field that would go `false` instead of the
+    disagreement being invisible. A single number here would have hidden exactly that.
+    """
+    served = sum(1 for r in projected if FLAG_ECD_INTERMITTENT in r["flags"])
+    persisted = persisted_by_flag.get(FLAG_ECD_INTERMITTENT)
+    by_topology: dict[str, int] = {}
+    for r in projected:
+        word = r["topology"] or TOPOLOGY_UNKNOWN
+        by_topology[word] = by_topology.get(word, 0) + 1
+    return {
+        "source": SEGMENT_SOURCE,
+        "posture": SEGMENT_JOIN_POSTURE,
+        # ⚠ The freshness verdict and its sentence, on the payload rather than in a log line: a
+        # stale derivation withholds every topology and flags nothing, and a consumer must be able
+        # to tell that from a census in which nothing is intermittent.
+        "derivation_status": segments.verdict,
+        "derivation_note": segments.note,
+        "n_joined": sum(1 for r in projected if r["accession"] in segments.facts),
+        "n_rows": len(projected),
+        # ⚠⚠ ALL THREE TOPOLOGY WORDS WITH THEIR COUNTS, so `no_accepted_segment` is VISIBLE as its
+        # own category rather than folded into `intermittent`. The 125 GPI-architecture rows have
+        # no topological domains BY DESIGN (F-025) — "not missing data, and not an intermittent
+        # surface" — and a two-way breakdown is how that collapse would have happened quietly.
+        "by_topology": by_topology,
+        "served_by_flag_count": served,
+        "persisted_by_flag_count": persisted,
+        "agrees_with_persisted": persisted is None or persisted == served,
+        # ⚠ The two denials the flag exists to survive a copy edit with, on the wire beside the
+        # count rather than only in `formula.flag_meaning`.
+        "enters_score": False,
+        "is_internalization": False,
+        "not_internalization_note": (
+            "A multi-loop extracellular topology says nothing about whether an antibody bound to "
+            "this protein would be internalised. internalization is named in "
+            "formula.excluded_factors as never measured by this project for any protein, and this "
+            "flag does not measure it (D-147)."
+        ),
     }
 
 
@@ -177,6 +309,9 @@ def census_structural_payload(engine: Any) -> dict[str, Any]:
     not-run panel is exactly where a reader is most likely to reach for the other route's
     numbers instead.
     """
+    # ⚠ ONE read of the committed derivation per request, before the session opens — a per-row
+    # file read would make the join's cost a function of the population size on every request.
+    segments = segment_join()
     with Session(engine) as session:
         run = _latest_valid_run(session)
         if run is None:
@@ -192,6 +327,11 @@ def census_structural_payload(engine: Any) -> dict[str, Any]:
                 # reading `n_candidates` off a payload that lacks the key gets `undefined`, which
                 # renders as blank rather than as "no run".
                 "n_candidates": 0,
+                # ⚠⚠ PRESENT ON A NOT-RUN PAYLOAD TOO (`D-147`), with zero counts and the live
+                # derivation verdict. A block that appeared only alongside rows would read as an
+                # optional extra; the topology disclosure is not optional, and a not-run panel is
+                # exactly where a reader reaches for numbers from somewhere else.
+                "segment_topology": _segment_topology_block(segments, [], {}),
                 "rows": [],
             }
         rows = session.scalars(
@@ -199,6 +339,16 @@ def census_structural_payload(engine: Any) -> dict[str, Any]:
             .where(CensusStructuralScore.run_id == run.id)
             .order_by(CensusStructuralScore.rank)
         ).all()
+        projected = [_row_projection(r, segments) for r in rows]
+        persisted_counts = dict(run.component_counts or {})
+        persisted_by_flag = dict(persisted_counts.get("by_flag") or {})
+        topology = _segment_topology_block(segments, projected, persisted_by_flag)
+        # ⚠⚠ THE SERVE-TIME COUNT JOINS `by_flag`, WHICH IS WHERE A READER LOOKS FOR IT — and the
+        # persisted breakdown is not otherwise touched. `segment_topology` carries both numbers and
+        # `agrees_with_persisted`, so this overlay cannot hide a future loader disagreeing with it.
+        persisted_by_flag[FLAG_ECD_INTERMITTENT] = topology["served_by_flag_count"]
+        persisted_counts["by_flag"] = persisted_by_flag
+        persisted_counts["by_topology"] = topology["by_topology"]
         return {
             "result_status": RUN_VALID,
             "disclaimer": DISCLAIMER,
@@ -218,12 +368,15 @@ def census_structural_payload(engine: Any) -> dict[str, Any]:
                 "n_reference": run.n_reference,
                 "n_with_fold": run.n_with_fold,
                 "n_without_fold": run.n_without_fold,
-                # the breakdown beside the totals (method-note item 2)
-                "component_counts": run.component_counts or {},
+                # the breakdown beside the totals (method-note item 2), with the D-147 serve-time
+                # `by_flag.ecd_intermittent` and `by_topology` overlaid — see `segment_topology`
+                "component_counts": persisted_counts,
                 "computed_at": run.computed_at.isoformat() if run.computed_at else None,
             },
             # ⚠ Also at the top level, because it is the number the honesty of this payload
             # rests on and a consumer should not have to reach into `run` to state a denominator.
             "n_candidates": run.n_candidates,
-            "rows": [_row_projection(r) for r in rows],
+            # the D-147 join's own provenance: verdict, three-way breakdown, both counts
+            "segment_topology": topology,
+            "rows": projected,
         }

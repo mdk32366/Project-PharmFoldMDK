@@ -461,15 +461,25 @@ def test_d129_is_the_next_free_decision_id():
     # from a ruling rather than from a branch, and it is the same asymmetry from the other side:
     # an open-PR check cannot see what an authority outside the tree is holding. 142 stays
     # registered in `docs/RESERVED.md` and BARRED below; `### D-144` takes the next-free bar.
+    #
+    # ⚠ Widened again at **D-147** — to `[…, 145, 146, 147]` — by enumeration, for the EIGHTH
+    # time, and by ADDING as every pass before it. ⚠⚠ **The FOURTH reserved integer to be SPENT
+    # rather than skipped** (142, 145 and 146 were the first three, all 2026-09-09): 147 sat in
+    # `docs/RESERVED.md` as the next free `D-`, `D-146` cited it in order to bar it, and this
+    # enumeration reddened **by design** the moment an entry claimed it. D-147 adds the
+    # `ecd_intermittent` disclosure to the census structural ranking rows and touches nothing this
+    # suite measures. A bare `### D-148` still reddens.
     assert [i for i in ids if i > 129] == [
-        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146
+        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147
     ], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144, D-145 and D-146 — ⚠ 142 is "
-        f"no longer absent: docs/RESERVED.md reserved it and the /targets columns entry is the "
-        f"holder that wrote it, so it is ADDED here beside 143; ⚠ 145 was reserved the same "
-        f"way and is ADDED beside 144 by the image-permanence entry; ⚠ 146 the same way again, "
-        f"ADDED by the Track B live-route copy entry; found {ids[-15:]}"
+        f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144, D-145, D-146 and D-147 — "
+        f"⚠ 142 is no longer absent: docs/RESERVED.md reserved it and the /targets columns "
+        f"entry is the holder that wrote it, so it is ADDED here beside 143; ⚠ 145 was "
+        f"reserved the same way and is ADDED beside 144 by the image-permanence entry; "
+        f"⚠ 146 the same way again, ADDED by the Track B live-route copy entry; ⚠ 147 the "
+        f"same way once more, ADDED by the census `ecd_intermittent` entry; "
+        f"found {ids[-16:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 is the recorded successor id; it must be the served-path flip entry, "
@@ -542,8 +552,22 @@ def test_d129_is_the_next_free_decision_id():
         "D-146 must be the Track B live-route copy entry, not some other entry that took "
         "the number"
     )
-    assert "\n### D-147" not in LOG, (
-        "D-147 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ Widened again at **D-147** by ADDING, never by a `>=` — the TWELFTH pass. ⚠⚠ **The FOURTH
+    # reserved integer to be SPENT rather than skipped** (142, 145 and 146 were the first three,
+    # all the same day): 147 sat in `docs/RESERVED.md` as the next free `D-`, `D-146` cited it in
+    # order to bar it, and this bar reddened **by design** the moment an entry claimed it.
+    # D-147 adds the `ecd_intermittent` disclosure to the census structural ranking rows and
+    # is named here only because this is one of the enumerated id checks — **no Phase 5 label,
+    # no fate, no seam and no threshold moves.**
+    # `### D-148` now takes the next-free bar; nothing was relaxed to a `>=` and no bar was
+    # deleted, only replaced by a name.
+    assert re.search(r"^### D-147 — The census rank stops presenting a loop as an ectodomain",
+                     LOG, re.M), (
+        "D-147 must be the census `ecd_intermittent` entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-148" not in LOG, (
+        "D-148 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

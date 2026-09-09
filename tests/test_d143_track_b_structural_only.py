@@ -320,7 +320,18 @@ def test_the_log_entry_exists_exactly_once_and_leads_the_log():
         "D-146 is the recorded successor id; it must be the Track B live-route copy entry, "
         "not some other entry that took the number"
     )
-    assert "\n### D-147" not in LOG, "D-147 is the next free integer"
+    # ⚠⚠ 147 IS NOW WRITTEN, AND THIS BAR REDDENED EXACTLY AS THE THREE ABOVE IT DID. D-147 adds
+    # the `ecd_intermittent` disclosure to the census structural ranking rows — a serve-time join
+    # against the committed `span_segments.csv`, changing **no score, no formula, no loader and no
+    # sentence this suite pins**, and it takes nothing back from this entry's structural-only
+    # framing: the flag is a category on a row, not a fourth factor. The bar is REPLACED BY A
+    # NAME — never deleted — and `### D-148` takes the next-free bar. Never a `>=`.
+    assert re.search(r"^### D-147 — The census rank stops presenting a loop as an ectodomain",
+                     LOG, re.M), (
+        "D-147 is the recorded successor id; it must be the census `ecd_intermittent` entry, "
+        "not some other entry that took the number"
+    )
+    assert "\n### D-148" not in LOG, "D-148 is the next free integer"
 
 
 def test_the_entry_carries_the_cohort_82_hard_stop_and_the_go_that_authorised_it():
@@ -540,7 +551,21 @@ def test_every_enumerated_id_guard_keeps_the_bar_on_142():
         assert not (barred_146 and named_146), (
             f"{rel} both bars 146 and names an entry for it; both cannot be true"
         )
-        assert '### D-147" not in' in text, f"{rel} does not bar the next free integer"
+        # ⚠⚠ WIDENED THE SAME WAY AT D-147, and this is the pass where the pattern this check
+        # holds as *data* had to move with it. 147 was the next free integer while D-146 was the
+        # tip; it is now spent by the census `ecd_intermittent` disclosure — a serve-time join on
+        # the ranking rows that changes **no score, no formula and no loader** — so demanding that
+        # every guard go on barring it would be demanding they defend a written integer. Bar OR
+        # name, never neither; the next free integer, 148, takes the bar.
+        barred_147 = '### D-147" not in' in text
+        named_147 = "D-147 — The census rank stops presenting a loop as an ectodomain" in text
+        assert barred_147 or named_147, (
+            f"{rel} neither bars 147 nor names the entry that spends it"
+        )
+        assert not (barred_147 and named_147), (
+            f"{rel} both bars 147 and names an entry for it; both cannot be true"
+        )
+        assert '### D-148" not in' in text, f"{rel} does not bar the next free integer"
         assert "D-143 — Track B stops claiming a composite" in text, (
             f"{rel} must name 143 by its heading, not by a `>=`"
         )
