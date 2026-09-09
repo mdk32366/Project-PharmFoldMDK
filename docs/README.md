@@ -379,6 +379,181 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-142 — Track B stops claiming a composite it cannot compute: the ranking sentence becomes structural-only — membrane × ECD × fold confidence (pLDDT) — and the biology terms are EXCLUDED rather than filled in as 0.5 neutrals
+
+- **Date:** 2026-09-08
+- **Status:** Accepted — **copy only, on one sentence and its extract.** The owner Doc's Track B
+  ranking sentence (`docs/pharmfold-adc-nectin4-paper.md`, *Suggested algorithm*) and its D-123
+  verbatim extract (`ui/src/aboutPaper.js` `TRACK_B`) stop describing a
+  cancer/normal/internalization/density composite as **what we rank by**, and describe what is
+  actually computed: **membrane × ECD × fold confidence (pLDDT)**, with the biology terms named as
+  **excluded**. ⚠ **No new route, no component, no payload field, no migration, no DB write, no ops,
+  no fold, no F-004, no ranking-set change.**
+- ⚠⚠ **THE HARD STOP THAT DEFINES THIS ENTRY: the cohort-82 learned scorer is NOT what this touches
+  and is NOT amended.** D-041 / D-060's LOO logistic over the six standardized features
+  (`core/scorer.py`, `scripts/fit_scorer.py`, `target_scores` / `ranking_results`, the `/targets`
+  **Rank** column, `/scorer`, and MethodNote's prose about that scorer) is a **different ranking
+  surface over a different population** — the Kathad 82, frozen span definition, seven parameters.
+  This entry changes **none** of it, and a reader who takes "the ranking became structural-only" as a
+  statement about the cohort-82 scorer has read it wrong. The two ranking surfaces are now
+  distinguishable in the copy, which they were not before.
+- **Ship id:** spends **`D-142`**, checked before it was claimed rather than assumed, on `main` at
+  tip **`30f402f`** (D-141, [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
+  `grep -n '^### D-1[34][0-9]' docs/README.md` returns **`D-141`** as the highest written entry, and
+  `gh pr list --state open` returns **three** PRs — **#222** (`docs/registers-and-f067`), **#200**
+  (`data/rb-regate384-first-ten`) and **#197** (`feat/f062-blackwell-ceiling-climb`) — **none** of
+  which spends a `D-1NN`. ⚠ **An open-PR check proves no PUBLISHED branch spent the id and cannot
+  prove no unpublished one did** (the finding #263 and D-139 paid for, recorded in D-141): the
+  enumerated next-free guards, not this paragraph, are what catches a collision. **The six guards in
+  `tests/test_d129_*`, `tests/test_d130_*`, `tests/test_d136_*`, `tests/test_d139_*`,
+  `tests/test_d140_*` and `tests/test_d141_*` are widened BY ENUMERATION** — 142 named as spent by
+  this entry, a bare `### D-143` barred. **Never a `>=`.** This is the seventh pass through that
+  resolution and the rule has not moved.
+- **Cite:** the owner **GO of 2026-09-08 (Matt)** quoted in Provenance below — the authority for
+  editing an owner Doc sentence at all · D-123 (the verbatim-extract discipline this entry keeps:
+  `aboutPaper.js` stays a character-substring extract of the Doc, so the Doc is edited **first** and
+  the module follows) · D-016 (a claim names how it is known — the reason the excluded terms are
+  named as excluded instead of defaulted) · D-094 (claim discipline; a surface is accountable for the
+  premises it supplies) · D-079 dec 1 (no census row is scored on a live surface — the reason this
+  copy says the structural order is **offline**) · D-129-C (a superseded claim never stands alone —
+  the reason D-123's own quotation of the retired composite gains an in-place amendment note instead
+  of being edited away) · D-041 / D-060 / D-064 (the cohort-82 learned scorer, **untouched**)
+- **Relates:** `D-123` (amended in place, below) · `D-094` amendment 1 dec 3 · `D-079` · `D-041` ·
+  `D-060` · ship index [`decisions.md`](decisions.md)
+- **Does not amend:** D-041 / D-060 / D-064 scorer, its attribution, its LOO evaluation or its
+  `Rank` column · MethodNote's description of that scorer · D-094 ABOUT-COPY / `PAPER_QUESTIONS` ·
+  D-123's placement, chrome, standing line or Track A text · D-079 census-scoring bar · F-004 ·
+  D-109 ranking-set membership · the census manifest or any artefact · the `D-` next-free pointer
+
+#### Context
+
+D-123 extracted the owner Doc's Part 2 verbatim onto `/about`. One of those sentences ended with
+the **aspirational** Track B composite — a product of cancer expression, membrane topology,
+internalization and antigen density over normal-tissue risk, written when the intent was to have
+HPA/TCGA expression and internalization assays to multiply in. ⚠ **It is quoted verbatim exactly
+once in this log — inside D-123's own deep-learning justification, left standing with an amendment
+note beside it** — and this entry deliberately does not reproduce it a second time, so a `grep` for
+that string has one hit and that hit is the historical record.
+
+We do not have them. The offline next-target ranking briefly filled the four missing terms with
+**0.5 neutrals** so the product would evaluate at all. **The owner rejected that as dishonest**
+(GO 2026-09-08), and the reasoning is the reason this entry exists rather than a silent copy fix: a
+0.5 placeholder multiplied into a score is **indistinguishable in the output** from a measured 0.5.
+The number that comes out is not a weaker finding, it is **not a finding** — and the surface that
+renders it inherits the claim. It is the same defect family as the summaries reversed on
+2026-07-19/21 (method note items 2 and 3): each was true as stated and wrong in what it implied.
+
+So the composite was not computed with neutrals; it was **cut down to what exists**. What is
+computed is **membrane × ECD × fold confidence (pLDDT)** — three terms we measure. Cancer vs normal,
+internalization and antigen density are **absent**, and the honest rendering of an absent term is
+its **name**, not its default. Meanwhile the live sentence on `/about` still described the composite
+as what we rank by, which is the D-062 shape one more time: a surface citing an algorithm that does
+not exist behind it.
+
+⚠ **A second, quieter defect the copy carried:** "rank by …" on `/about` sat a paragraph away from
+the cohort-82 scorer's own ranking claims, with nothing telling a reader they are different
+objects — different population (3,467-row census vs the Kathad 82), different span definition,
+different method (a product of three factors vs a fitted logistic). A reader who merged them would
+take D-041's LOO percentiles as evidence for the Track B order. That merge is now barred in the
+words themselves.
+
+#### Decision
+
+1. **The Doc is edited first, and the extract follows it.** `docs/pharmfold-adc-nectin4-paper.md`
+   is the source of truth for the Track B sentence; `ui/src/aboutPaper.js` `TRACK_B` stays a
+   **character substring** of that file (D-123 dec 4). ⚠ Editing the module first, or paraphrasing
+   it to fit, is the drift D-123's substring test exists to redden.
+2. **Structural-only, named as such.** The sentence states what is ranked today:
+   **membrane × ECD × fold confidence (pLDDT)** — "structure only". pLDDT is named as fold
+   confidence so the term cannot be read as a wet measurement.
+3. **The excluded terms are named, and the 0.5 neutral is named as refused.** Cancer vs normal,
+   internalization and antigen density appear in the sentence as **excluded**, with the placeholder
+   refusal stated in the same breath. ⚠ Dropping the four terms silently would have produced copy
+   that *reads* honest while hiding the decision that made it so.
+4. **It is not ADC readiness, in the sentence itself.** The structural order is explicitly not a
+   readiness verdict and not a shortlist. ⚠ Not a footnote, not a caveat elsewhere on the page.
+5. **Scope is stated: the whole census, not a tranche.** The structural order ranges over the full
+   census of outward-facing spans (**3,467** manifest rows), not the tranche-5 / rented-GPU slice,
+   and the sentence says it runs **offline** — it is not a ranked surface in this application, so
+   D-079 dec 1 is not quietly widened by a copy change.
+6. **The biology composite becomes a later, separate GO.** Real HPA/TCGA expression plus wet assays
+   are what turn the four excluded terms into a composite. ⚠ **This entry is not that GO** and
+   confers no authority to compute one.
+7. **D-123's own quotation of the retired composite is amended IN PLACE, not deleted.** D-123's
+   deep-learning justification quotes the composite as the ranking. The quotation stays as the
+   record of what D-123 shipped, and gains an adjacent ⚠ note naming this entry as its supersession
+   (D-129-C: a superseded claim never stands alone). ⚠ The log is append-at-top; history is not
+   rewritten to look like it was always right.
+8. **The tests move with the words, and keep a negative.** `ui/src/aboutPaper.test.js`,
+   `ui/src/components/AdcContext.test.jsx` and `tests/test_about_paper_extract.py` assert the new
+   wording **and** assert the retired composite is **absent** from `docs/` and `ui/` — a revert of
+   the copy reddens at an assertion rather than passing quietly.
+
+#### Deep-learning justification
+
+**The network's output is the only term in the live ranking that is not an annotation lookup.**
+Membrane topology and ECD extent come from UniProt/InterPro records; `mean pLDDT` over the folded
+ECD is produced by the ESMFold pass we run (D-003). Cutting the composite down to what exists does
+not remove the deep learning from Track B — it leaves the ESMFold confidence as **one of three**
+factors instead of one of eight, which makes the neural term *more* load-bearing in the surviving
+order, not less. That is also why this entry is careful about what it is: a fold-confidence-weighted
+structural order is a statement about **foldedness and shape**, and calling it ADC readiness would
+be claiming the network answered a question about tumour biology that it never saw. The prime
+directive is satisfied by the scorer surfaces (D-041/D-060 over ESMFold-derived features, untouched
+here) and by this order's pLDDT term; it is **not** satisfied by multiplying guesses into a product
+until the arithmetic looks like biology.
+
+#### Provenance (D-016)
+
+- **Authority for editing the Doc sentence:** owner GO **2026-09-08** (Matt), handed to this session
+  as the task statement: *"honest STRUCTURAL ranking only; no fake cancer scores"* —
+  `structural_score = membrane × ECD × model(pLDDT)`; cancer / normal / internalization / density
+  **excluded until real HPA/assay data (later GO)**; scope **the full census (3467), not T5-only**;
+  **not ADC readiness**; and the explicit carve-out *"Do not change the cohort-82 D-041/D-060
+  learned scorer, TargetList rank column, or MethodNote's description of that scorer."* ⚠ **That GO
+  is the only artefact behind the 0.5-neutral history and the offline-rank scope** — no run log, CSV
+  or notebook for that offline ranking is in this repository, and this entry does not pretend
+  otherwise. What *is* checkable in-tree is stated separately below.
+- **The strings changed, before and after:** `docs/pharmfold-adc-nectin4-paper.md` line 69 and
+  `ui/src/aboutPaper.js` `TRACK_B` at `30f402f` both carried the retired composite verbatim; the
+  same two strings now carry the structural-only sentence, and they are **byte-identical to each
+  other** — asserted by `aboutPaper.test.js`'s `VERBATIM_EXCERPTS` substring loop and by
+  `tests/test_about_paper_extract.py`, not by inspection.
+- **Every occurrence was enumerated, not assumed.** `rg -n 'rank by \(cancer × membrane ×
+  internalization × density\)'` on `30f402f` returned **five** hits in five files:
+  `docs/pharmfold-adc-nectin4-paper.md:69`, `ui/src/aboutPaper.js:45`,
+  `ui/src/aboutPaper.test.js:41`, `ui/src/components/AdcContext.test.jsx:155`,
+  `tests/test_about_paper_extract.py:54-55`. All five are in this diff. ⚠ **A sixth occurrence
+  exists and is deliberately kept:** D-123's own entry in this file (line ~8546), where the
+  composite is line-wrapped across two lines and is the historical record of what D-123 shipped —
+  amended in place per decision 7, not edited.
+- **`3,467`:** `data/census/census_manifest.v6.provenance.json` → `"manifest_rows": 3467`, and
+  `ui/src/censusSummary.js` → `manifestRows: 3467` at manifest revision 7. Read from both, not
+  recalled. ⚠ **This is the census SIZE, which is checkable; that the offline order covered all of
+  it is from the GO above and nothing else.**
+- **The cohort-82 carve-out is checkable in the diff:** `git diff --stat` touches no `core/`,
+  `app/`, `db/`, `worker/`, `scripts/` or `data/` path, and no `MethodNote.jsx` / `TargetList.jsx` /
+  `ScorerView.jsx` / `TargetScorerPanel.jsx` / `targetScore.js`. Pinned by
+  `tests/test_d142_track_b_structural_only.py`.
+- **Tests run here:** `npx vitest run src/aboutPaper.test.js src/components/AdcContext.test.jsx
+  src/components/readability.tripwire.test.jsx` and `python3 -m pytest
+  tests/test_about_paper_extract.py tests/test_d142_track_b_structural_only.py
+  tests/test_d129_phase5_named_refuse_spec.py tests/test_d130_residual_rmsd_spec.py
+  tests/test_d136_cancer_type.py tests/test_d139_served_path_flip.py
+  tests/test_d140_pipeline_programme.py tests/test_d141_land_confidence_kabsch.py`, plus
+  `tests/test_namespace_pointers.py` and `tests/test_d129_c_must_hunt_supersession.py` for the
+  citation and supersession invariants. **D-056 readability, measured both ways on this branch and
+  reported as a before/after rather than as a pass:** the retired sentence printed
+  `grade = 10.83 over 2343 words / 119 sentences`; the structural sentence prints
+  `grade = 10.84 over 2453 words / 124 sentences`. **+0.01 of grade for +110 words**, and the
+  **ceiling 12.5 is not moved** (D-135: re-calibrating a ceiling to admit new prose is how a
+  tripwire becomes a decoration). ⚠ The baseline was obtained by restoring the old `aboutPaper.js`
+  from `HEAD` and re-running the tripwire, not by quoting D-135's older 11.06 — that figure was
+  measured on different copy.
+- **Ship id:** verified as described under **Ship id** above — `grep` for the highest written entry
+  and `gh pr list --state open`, both run on `30f402f`. The check is the `### D-142` heading in this
+  file, never a citation of it (D-062 / method note item 7).
+
 ### D-141 — The gate had nothing to answer with: a script lands the EXISTING D-126 OPS trees onto the serving volume so D-139's flip can be true of something — and the disqualifying fact is that it did not run here, because no Fly credential reached this build
 
 - **Date:** 2026-09-08
@@ -8466,7 +8641,11 @@ actually ran.
   `D-110` while later numbers are written). This entry spends `D-123`; the
   pointer stays the owner's.
 - **Amended by:** `D-121` (Method hold-48 8th-grade explainer + `/method`
-  addendum. D-121 does not touch AdcContext or `/adcs`.)
+  addendum. D-121 does not touch AdcContext or `/adcs`.) · **`D-142`** (the
+  Track B ranking sentence becomes structural-only — membrane × ECD × fold
+  confidence (pLDDT) — and the biology terms are named as excluded rather
+  than defaulted to 0.5. Placement, chrome, standing line, Track A and the
+  verbatim-extract discipline of decision 4 are unchanged.)
 
 #### Context
 
@@ -8552,6 +8731,21 @@ track is red. A page that omitted Track A would let a reader take
 pLDDT / IgV shape as EV-binding proof. Neutral to the weights;
 load-bearing for whether About can be read as "the model showed EV
 unlocks every V-domain."
+
+⚠⚠ **AMENDED BY `D-142` (2026-09-08) — the composite quoted two paragraphs
+above is RETIRED as a description of what we rank by, and the quotation is
+left standing rather than edited (D-129-C: a superseded claim never stands
+alone, and is never quietly deleted).** It was the aspirational Track B
+product, written when HPA/TCGA expression and internalization assays were
+expected to fill its four biology terms. They do not exist, filling them with
+**0.5 neutrals** was rejected by the owner as dishonest, and the live sentence
+on `/about` and in the owner Doc now describes what is actually computed:
+**structure only — membrane × ECD × fold confidence (pLDDT)** — with cancer vs
+normal, internalization and antigen density named as **excluded** until a
+separate GO lands real data. ⚠ The pLDDT clause of the justification above
+survives the amendment intact and gets **stronger**: the ESMFold term is now
+one of three factors rather than one of eight. ⚠ **Explicitly not ADC
+readiness**, and still not a demonstrated V-key.
 
 #### Provenance (D-016)
 
