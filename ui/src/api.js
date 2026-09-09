@@ -23,6 +23,14 @@ export const getAdc = (id) => getJSON(`/api/adcs/${id}`)        // D-119 / D-122
 export const listPipelineAdcs = () => getJSON('/api/adcs/pipeline')           // D-124
 export const getPipelineAdc = (id) => getJSON(`/api/adcs/pipeline/${id}`)     // D-124
 export const getAdcAccess = () => getJSON('/api/adcs/access')                 // D-124
+// D-149 — US cancer burden (SEER official aggregates). ⚠ `statistic` is passed through to the
+// server, which decides the ranking basis (deaths by count, incidence by rate) and states it in
+// `rank_basis`. The client never picks a basis: a client that did could draw bars in one order and
+// number them in another with nothing red.
+export const getCancerBurden = (statistic) =>
+  getJSON(statistic ? `/api/cancer-burden?statistic=${encodeURIComponent(statistic)}`
+                    : '/api/cancer-burden')
+export const getCancerBurdenMeta = () => getJSON('/api/cancer-burden/meta')
 
 
 // 3Dmol.js takes the structure BY URL (D-034 decision 2) so the browser caches it independently

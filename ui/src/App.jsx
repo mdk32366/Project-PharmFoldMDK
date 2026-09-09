@@ -11,6 +11,7 @@ import AdcContext from './components/AdcContext.jsx'
 import AdcsView from './components/AdcsView.jsx'
 import AdcCard from './components/AdcCard.jsx'
 import AdcPipelineCard from './components/AdcPipelineCard.jsx'
+import CancerBurdenView from './components/CancerBurdenView.jsx'
 
 function TargetRoute() {
   const { id } = useParams()
@@ -39,6 +40,10 @@ function AdcPipelineCardRoute() {
 // D-122 landed ADC-B — `/adcs` + `/adcs/:id` consume the D-119 catalog. Nav: ADCs.
 // D-124 / ADC-C-B adds a Pipeline shelf on `/adcs` and `/adcs/pipeline/:id`
 // (declared before `:id` so the literal is not captured as an approved id).
+// D-149 adds `/cancer-burden` — a DEDICATED disease-level surface (US cancer deaths and new
+// cases from SEER official aggregates). It is its own nav landmark on purpose: it must not be
+// buried in Method and must not appear on Census or Scorer, where a burden figure would read as
+// an input to a score. It joins to no protein, accession, score or rank.
 export default function App() {
   return (
     <div className="app">
@@ -53,6 +58,10 @@ export default function App() {
           <NavLink to="/coverage">Coverage</NavLink>
           <NavLink to="/census">Census</NavLink>
           <NavLink to="/scorer">Scorer</NavLink>
+          {/* ⚠⚠ D-149: ITS OWN TOP-LEVEL LANDMARK, not a panel on Method and not a column on
+              Census. A burden figure on a scoring surface is one glance from being read as an
+              input to the score — the "cancer ×" composite refused by D-143/D-144/D-146. */}
+          <NavLink to="/cancer-burden">Cancer burden</NavLink>
           <NavLink to="/method">Method</NavLink>
           <NavLink to="/adcs">ADCs</NavLink>
           <NavLink to="/about">About ADCs</NavLink>
@@ -67,6 +76,7 @@ export default function App() {
           <Route path="/census" element={<CensusView />} />
           <Route path="/census/:id" element={<CensusProteinRoute />} />
           <Route path="/scorer" element={<ScorerView />} />
+          <Route path="/cancer-burden" element={<CancerBurdenView />} />
           <Route path="/method" element={<MethodNote />} />
           <Route path="/adcs" element={<AdcsView />} />
           <Route path="/adcs/pipeline/:id" element={<AdcPipelineCardRoute />} />
