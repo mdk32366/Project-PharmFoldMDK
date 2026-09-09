@@ -525,6 +525,30 @@ So the rule is not "be careful" — it is:
   enumerated successor lists reddened **by design** the moment 153 was written and the pointer
   moved; both were resolved by moving the value and adding the name, with the superseded values
   kept in place as comments (`D-129-C`) rather than overwritten in silence.
+  - ⚠⚠ **AND ONE REDDENING WAS NOT PREDICTED AT ALL, WHICH IS THE PIN WORKING RATHER THAN THE PIN
+    FAILING.** `tests/test_d146_track_b_live_api_copy.py` carries whole-file sha256 pins on
+    `Dockerfile` and `.dockerignore`, and this is **the first time the `image` clause of that
+    guard's own name — `test_no_formula_schema_route_loader_or_image_byte_moved` — has fired.** Its
+    failure message pre-committed the resolution: an image edit *"belongs to a different entry with
+    its own ruling"*, and this is that entry. Both digests are **re-pinned by name** with the
+    superseded values recorded beside them (`D-129-C`):
+    `Dockerfile c5af8c8500c3eb97… → 7f424013f841…` and `.dockerignore fbd8402067ea504c… →
+    f4e284270c3e…`. ⚠ **What did NOT move is the load-bearing half:** `core/census_structural.py`,
+    `scripts/census_structural_rank.py`, migration `0012` and `core/scorer.py` are byte-identical,
+    so `formula_version()` still returns **`c859da97f73d`** — the value the live rank run recorded —
+    and *"no formula, no schema, no migration, no loader, no learned scorer"* stays a measurement
+    rather than a claim.
+- **⚠ Revert-proved, three probes, each red read AT the assertion (`A-016`).** Recorded in full in
+  `docs/Test_Plan.md`'s `T-1256` addendum; the two results worth carrying here are the ones that
+  passed for the wrong reason. **Deleting the `COPY` line leaves
+  `test_only_the_allowed_scripts_are_copied` GREEN** (6 other guards go red) — measured, not
+  assumed, because `{ingest, rank} ⊆ {ingest, rank, burden}` is true and **a set bound cannot see an
+  absence.** **Broadening to `COPY scripts/` leaves `test_no_writing_script_reaches_the_image` and
+  `test_the_fitter_is_named_and_absent` GREEN** (16 other guards go red) — a Dockerfile `COPY`
+  yields its source token, `scripts/` and never `scripts/fit_scorer.py`, so the by-name intersection
+  is empty on exactly the edit that ships the fitter. `D-145` measured both of these; they are
+  **re-measured here rather than cited**, because a guard's docstring is not evidence of its own
+  behaviour.
 
 ### D-151 — Three owner UI complaints, one ship: the menu says **Initial Targets**, the Kathad paper becomes a link, and `/census` stops hiding its own list — and the disqualifying fact is that this project enforces a **fail-closed citation precondition for the secondary source and had none at all for the primary one**
 
