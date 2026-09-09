@@ -46,7 +46,14 @@ describe('CensusProteinView', () => {
   it('says it is unscored at the top, and carries no scorer panel', async () => {
     view()
     await screen.findByRole('heading', { name: 'SLC5A10' })
-    expect(screen.getByText(/Not scored, not ranked\./)).toBeInTheDocument()
+    // ⚠⚠ `getAllByText` AT D-150, AND THE PLURAL IS THE POINT — this was `getByText` and would now
+    // throw on finding two. The page states axis B twice on purpose: once in the bar at the top,
+    // where a reader arriving from a search engine meets it, and once as its own line in the
+    // Status block, beside the structure and seam lines it must not be confused with. Both read
+    // the SAME `scoreState` rule, so they are one statement rendered twice rather than two
+    // phrasings — which is what the old copy was, the block having said "Not scored and not
+    // ranked" while the bar said "Not scored, not ranked".
+    expect(screen.getAllByText(/Not scored, not ranked\./).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/not comparable to the ranked 82/i)).toBeInTheDocument()
     // ⚠ A real absence check: TargetView's scorer panel must not appear here.
     expect(document.querySelector('.scorer-panel')).toBeNull()

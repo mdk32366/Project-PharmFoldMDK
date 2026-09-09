@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getCensusDetail, getPlddt } from '../api.js'
+import {
+  STRUCTURE_NONE, STRUCTURE_TILES_ONLY,
+  scoreState, seamState, structureServed, structureServedLabel,
+} from '../structureStatus.js'
 import StructureViewer from './StructureViewer.jsx'
 import { HpaCreditProvider } from './HpaAttribution.jsx'
 import Confidence from './Confidence.jsx'
@@ -133,6 +137,12 @@ export default function CensusProteinView({ id }) {
   }
   if (!detail) return <p className="loading">Loading census protein {id}…</p>
 
+  // ⚠ D-150: the page's three axes, resolved once from the same rules the census list and the
+  // Status block use. Derived after the loading guards so `detail` is never null here.
+  const structureA = structureServed(detail)
+  const score = scoreState(detail)
+  const seam = seamState(detail)
+
   return (
     <article className="census-protein">
       {/* ⚠⚠ ONE SOURCE-LEVEL CREDIT PER PAGE. Measured before this change: 79 of 100 census
@@ -160,19 +170,21 @@ export default function CensusProteinView({ id }) {
         )}
         {/* ⚠ Said at the top, where a reader arriving from a search engine meets it first — not
             buried under the structure they came to look at. */}
-        {detail.structure_kind_label && (
-          <p className="structure-kind-badge" title={detail.assembler_note || undefined}>
-            {detail.structure_kind_label}
-            {detail.structure_kind === 'assembled'
-              ? ' — overlap by pLDDT; not superimposed; seam not solved'
-              : null}
-          </p>
-        )}
+        {/* ⚠ D-150: the word is axis A's, so the top of the page and the Status block at the
+            bottom of it cannot spell one protein's structure two ways. The assembled suffix comes
+            from this parent's own `assembler_note` where there is one, rather than from a
+            sentence typed here. */}
+        <p className="structure-kind-badge" title={detail.assembler_note || undefined}>
+          {structureServedLabel(detail)}
+          {seam.label ? ` — ${seam.note ?? seam.label}` : null}
+        </p>
         <Igf2rTwoPopulation copy={detail.igf2r_two_population} />
         <p className="census-bar">
           {/* ⚠ The bar asserted "this protein WAS FOLDED" on every card, including the ones that
               were never folded — a false claim sitting directly above a NOT FOLDED banner. */}
-          <strong>Not scored, not ranked.</strong>{' '}
+          {/* ⚠ D-150: axis B's wording comes from `scoreState` so the bar, the census row and the
+              Status block cannot drift into three phrasings of one fact. */}
+          <strong>{score.label}.</strong>{' '}
           {unfoldedCopy(detail)?.bar
             ?? (detail.structure_kind === 'assembled'
               ? 'This chain was assembled by pLDDT overlap, not superimposed. It has not been assessed as a target, and it is not comparable to the ranked 82.'
@@ -184,7 +196,12 @@ export default function CensusProteinView({ id }) {
           HER2 reaches this page because it is in the manifest; there is simply no fold to show.
           An empty viewer would read as a broken widget — the same false signal the census list
           gave when it answered "no protein matches that search". */}
-      {detail.folded === false ? (
+      {/* ⚠⚠ THE NEVER-FOLDED CARD IS GATED ON AXIS A, NOT ON `folded` (D-150). `folded === false`
+          is also true of a `tiles_only` parent — a protein whose tile structures ARE on disk — so
+          this heading used to shout NOT FOLDED over a payload that says the opposite. The card is
+          NOT softened for the case it was written for: an axis-A `none` row still gets it, whole,
+          with all three reasons. */}
+      {structureA === STRUCTURE_NONE ? (
         <section className="unfolded-card">
           <h3>NOT FOLDED</h3>
           {/* ⚠⚠ THREE OUTCOMES, AND THE CARD USED TO STATE ONLY ONE. "Waiting on rented capacity"
@@ -237,10 +254,25 @@ export default function CensusProteinView({ id }) {
             which proteins had a graphics card available, and nothing more.
           </p>
         </section>
+      ) : structureA === STRUCTURE_TILES_ONLY ? (
+        /* ⚠⚠ A THIRD BRANCH, AND THE VIEWER STAYS WITHHELD (D-118, preserved by D-150). Tiles are
+           on disk, so this is NOT the never-folded card — but a tile window is not the outward-
+           facing region, and drawing one would let a 1,656-aa window be read as the ectodomain.
+           The page states what exists and what does not, and shows neither a dead frame nor a
+           misleading structure. */
+        <section className="tiles-only-card">
+          <h3>{structureServedLabel(detail)}</h3>
+          <p className="tiles-only-why"><strong>{unfoldedCopy(detail)?.bar}</strong></p>
+          <p>{unfoldedCopy(detail)?.body}</p>
+        </section>
       ) : (
         /* ⚠⚠ `analysisId`, NEVER `id`. See the note above the pLDDT effect: `id` is the route
            param and may be an accession, which makes the structure URL a 422. */
-        <StructureViewer id={analysisId} assembled={detail.structure_kind === 'assembled'} />
+        <StructureViewer
+          id={analysisId}
+          assembled={detail.structure_kind === 'assembled'}
+          seamNote={seam.note}
+        />
       )}
 
       {detail.folded !== false && (
