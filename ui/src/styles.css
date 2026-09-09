@@ -47,6 +47,19 @@ main.wide { max-width: 96rem; }
 
 /* target list */
 .target-list .lede { color: var(--muted); }
+/* ⚠ D-152 — the above-table budget on `/targets`, spent the way D-151 spent the census's: every
+   block between the heading and the first `<tr>` is here because a ruling put it there, so each one
+   is made to COST LESS rather than removed. Heading, lede, the standing confidence claim and the
+   D-151 paper citation are four short lines; the long column note is one summary line below them. */
+.target-list h2 { margin: 0 0 0.4rem; font-size: 1.35rem; }
+.target-list .lede { margin: 0 0 0.35rem; }
+.target-list .confidence-scope-note { margin-top: 0.1rem; }
+.target-list .list-controls { margin: 0.55rem 0 0.2rem; }
+/* ⚠ `min-width` on the TABLE, not on the port: it tells the browser the eight columns have a floor
+   to respect, so a narrow viewport scrolls the port instead of crushing `.col-rank`'s cause and the
+   Description column into slivers. Removing it does not "fix" a scrollbar — it moves the damage
+   into the cells, which is D-142's measured 45px column all over again. */
+.target-list .table-scroll table { min-width: 62rem; }
 /* ⚠ D-142: 0.92rem, matching `.census-table`'s 0.9rem and for the same reason — eight columns in a
    60rem `main` is a real budget, and the alternative to a slightly smaller face is a cell three
    lines tall. It moves no information: every value still renders in full. */
@@ -264,6 +277,15 @@ main.wide { max-width: 96rem; }
 
 /* cohort table */
 .cohort-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.88rem; }
+/* ⚠ D-152 — the two surfaces built on `.cohort-table` each get a floor of their own, because they
+   are different tables: `/coverage` is six columns with a prose Note, `/cancer-burden` is seven of
+   which three hold long labels. One shared number would be wrong for one of them. */
+.coverage .table-scroll table { min-width: 58rem; }
+.burden .table-scroll table { min-width: 64rem; }
+.coverage .list-controls { margin: 0.6rem 0 0.2rem; }
+.burden .list-controls { margin: 0.5rem 0 0.2rem; }
+/* ⚠ The scorer's ranking table is three narrow columns; it needs the port for its sticky header and
+   not for a width floor, so it is given none — a `min-width` there would invent a scrollbar. */
 .cohort-table th, .cohort-table td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--line); }
 .cohort-table th { color: var(--muted); font-weight: 600; }
 .cohort-table .disp-excluded { color: #f0a0a0; }
@@ -322,6 +344,24 @@ main.wide { max-width: 96rem; }
 .list-controls { display: flex; align-items: center; gap: 0.5rem; margin: 0.6rem 0; font-size: 0.88rem; }
 .list-controls select { background: var(--panel); color: var(--ink); border: 1px solid var(--line);
   border-radius: 4px; padding: 0.2rem 0.4rem; }
+/* ⚠⚠ D-152 — `.row-search` HAD NO RULE IN THIS FILE, on the box the owner asked for by name.
+   `TargetList` has rendered `<input className="row-search">` since the search box landed, and
+   `rg -n 'row-search' ui/src/styles.css` returned **0** on `41b9b3b`: it drew as an unstyled
+   browser default — a pale native box on a dark page, half the width of the census's own search and
+   not obviously the same control. The census search (`.census-search input`) was styled and this
+   one was not, which is the asymmetry `D-151` recorded of the citation, in CSS.
+   ⚠ Deliberately the SAME declarations as `.census-search input`: one search box across the site,
+   not five that each look nearly right. */
+.row-search {
+  flex: 1 1 18rem; max-width: 26rem; padding: 0.35rem 0.6rem;
+  background: #0f1620; color: #e2e8f0;
+  border: 1px solid #2d3748; border-radius: 6px; font: inherit; font-size: 0.9rem;
+}
+.row-search:focus { outline: 2px solid #4299e1; outline-offset: 1px; }
+/* ⚠ The count of what is ON SCREEN, not of what matched — the rule `/targets` already followed and
+   the one every list this ship touches now follows. It sits between the controls and the table so a
+   reader cannot meet a filtered table under an unqualified total. */
+.filter-count { margin: 0.2rem 0 0.4rem; }
 .tier-tag { font-size: 0.78rem; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid var(--line);
   text-transform: lowercase; }
 .tier-local { color: #7fb3d1; border-color: #7fb3d155; }
@@ -476,26 +516,39 @@ main.wide { max-width: 96rem; }
    ⚠ Styled as a control rather than as a heading, so it does not read as a section that has been
    demoted. The triangle is the browser's own — a custom marker here would be one more thing that
    has to keep working. */
-.census-background, .census-notes {
+/* ⚠⚠ D-152 — `.surface-notes` IS THE SAME BLOCK, MADE AVAILABLE TO THE OTHER FIVE LIST ROUTES.
+   The owner's ask was to give `/targets`, `/coverage`, `/scorer`, `/cancer-burden` and `/adcs` what
+   `/census` got, and the cheapest wrong way to do that is five copies of these declarations. They
+   would look identical on the day they were written and diverge on the first tweak, which is
+   `F-052`'s shape — a convention obeyed everywhere except the newest caller.
+   ⚠ So the census's two class names JOIN this rule rather than being replaced by it. Renaming them
+   would redden `tests/test_d151_ui_polish.py` and `CensusLayout.d151.test.jsx`, which read those
+   exact opening tags; **rewriting a shipped guard to accommodate a refactor is how a guard becomes
+   a decoration**, so the selector list grew and the guards were left alone. */
+.surface-notes, .census-background, .census-notes {
   margin: 0.7rem 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0f1620;
 }
-.census-background > summary, .census-notes > summary {
+.surface-notes > summary, .census-background > summary, .census-notes > summary {
   cursor: pointer;
   padding: 0.5rem 0.8rem;
   color: #cbd5e0;
   font-size: 0.88rem;
   font-weight: 600;
 }
+.surface-notes > summary:hover,
 .census-background > summary:hover, .census-notes > summary:hover { color: #e2e8f0; }
+.surface-notes[open] > summary,
 .census-background[open] > summary, .census-notes[open] > summary {
   border-bottom: 1px solid var(--line);
 }
+.surface-notes > :not(summary),
 .census-background > :not(summary), .census-notes > :not(summary) {
   margin-left: 0.8rem; margin-right: 0.8rem;
 }
+.surface-notes > :last-child,
 .census-background > :last-child, .census-notes > :last-child { margin-bottom: 0.8rem; }
 .census-scope-more { color: #b9c4cc; font-size: 0.88rem; }
 
@@ -600,6 +653,14 @@ main.wide { max-width: 96rem; }
    header keep working, not a decoration on top of it.
    ⚠ `min(78vh, …)`: tall enough that the list is what fills the screen once the reader reaches it,
    bounded so a short viewport still shows the sections beneath. */
+/* ⚠⚠ D-152 — AND THE SAME PORT, FOR THE SAME REASON, ON THE OTHER FIVE. `/targets` is eight
+   columns and two of them hold sentences; `/coverage`'s Note column holds prose with a chip in it;
+   `/cancer-burden` is seven columns of which three are long labels. Measured at 1440×900 on
+   `origin/main` at `41b9b3b`, `/targets` pushed the DOCUMENT 175 px past the right edge — the same
+   defect the owner reported on `/census`, on a surface nobody had looked at yet.
+   ⚠ `.table-scroll` is the shared class and `.census-table-scroll` keeps its own name inside the
+   same rule (see the disclosure block above for why a rename was refused). */
+.table-scroll,
 .census-table-scroll {
   overflow: auto;
   max-height: min(78vh, 60rem);
@@ -608,6 +669,19 @@ main.wide { max-width: 96rem; }
   border-radius: 8px;
   margin-top: 0.6rem;
 }
+/* ⚠⚠ THE STICKY HEADER IS PART OF THE PORT, NEVER A SEPARATE DECISION. `position: sticky` resolves
+   against the nearest scrollport ancestor, so a `<thead>` outside this box sticks to nothing and a
+   box with no `max-height` gives it a scrollport that cannot move. The three declarations above and
+   this rule are one mechanism; splitting them is how the header silently stops sticking.
+   ⚠ It is written against `.table-scroll` rather than against each surface's own table class, so a
+   sixth list added later inherits it by being wrapped rather than by remembering to. */
+.table-scroll thead th {
+  position: sticky; top: 0; z-index: 3;
+  background: #131c27;
+}
+/* ⚠ The scroll port is a box, so the table inside it must not also carry a top margin — that
+   margin would push the first header row away from the border and read as a gap in the frame. */
+.table-scroll > table { margin-top: 0; }
 /* ⚠ `min-width` on the TABLE, not on the wrapper: it is what tells the browser the columns have a
    floor to respect, so narrow viewports scroll the port instead of crushing thirteen columns into
    unreadable slivers. Removing it does not "fix" a horizontal scrollbar — it moves the damage into
@@ -1038,6 +1112,15 @@ main.wide { max-width: 96rem; }
 .adc-nct-list { margin: 0.2rem 0 0.4rem; padding-left: 1.1rem; }
 .adcs-index .lede { color: var(--muted); }
 .adcs-floor { margin: 0.8rem 0; }
+/* ⚠ D-152 — the file's sourcing dates, inside the disclosure. Typeset as provenance rather than as
+   a claim, and NOT smaller than the floor sentence above it: D-137's rule that a caveat set below
+   its subject is a caveat the page has decided the reader may skip binds here too. */
+.adcs-provenance { color: var(--muted); font-size: 0.85rem; margin: 0.4rem 0; }
+.adcs-index .adcs-floor { margin: 0.5rem 0 0.3rem; }
+.adcs-index .list-controls { margin: 0.4rem 0 0.2rem; }
+/* ⚠ Five columns, two of which hold lists and a paragraph — the port scrolls before the document
+   does, and the floor keeps the cells from being crushed instead. */
+.adcs-index .table-scroll table { min-width: 54rem; }
 .adcs-exclusions { color: var(--muted); font-size: 0.9rem; }
 .adcs-exclusions ul { padding-left: 1.1rem; }
 .adcs-index table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }

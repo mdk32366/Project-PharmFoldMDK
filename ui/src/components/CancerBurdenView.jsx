@@ -51,10 +51,23 @@ const POPULATION_LABEL = {
   seer_registries: 'SEER registry areas only',
 }
 
+// ⚠⚠ D-152 — THE SEARCH MATCHES THE LABEL THIS PAGE ACTUALLY PRINTS, AND NOT THE SHARED PROTEIN
+// MATCHER. `../searchRows.js` looks at `accession`, `gene`, `label`, `description` and `aliases`;
+// a burden row has none of those, and this route carries no accession, no gene, no score and no
+// rank BY DESIGN (D-149's wall). Importing the protein matcher here would have been the one line
+// that put a protein vocabulary on the surface that is defined by not having one — so the filter
+// is three lines against `display_label`, which is the string the reader can see.
+function matchesSite(row, query) {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  return String(row.display_label ?? '').toLowerCase().includes(q)
+}
+
 export default function CancerBurdenView() {
   const [statistic, setStatistic] = useState('mortality')
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     let live = true
@@ -74,8 +87,16 @@ export default function CancerBurdenView() {
   const rows = data?.rows ?? []
   const ranked = rows.filter((r) => r.rank_within_statistic != null)
   const contextRow = rows.find((r) => r.is_context_row && r.sex === 'both')
+  // ⚠⚠ THE BAR SCALE IS THE FULL POPULATION'S MAXIMUM AND **NEVER** THE FILTERED ONE (D-152).
+  // This is the one place a search box could tell a lie on this surface: re-normalising the bars to
+  // whatever is on screen would draw a rare cancer at full width the moment a reader typed its
+  // name, and a bar chart's whole claim is that length is comparable. So `max` is computed from
+  // `ranked` before any filtering, the search HIDES bars and never rescales them, and a filtered
+  // view of the bars is a subset of the same chart rather than a new one.
   const max = ranked.length ? Math.max(...ranked.map(barValue)) : 0
   const substituted = rows.filter((r) => r.sex_substituted)
+  const shownRanked = ranked.filter((r) => matchesSite(r, query))
+  const narrowed = shownRanked.length !== ranked.length
 
   return (
     <div className="burden">
@@ -103,6 +124,13 @@ export default function CancerBurdenView() {
       </div>
       <p className="burden-question">{active.question}</p>
 
+      {/* ⚠⚠ THE ERROR IS A STATEMENT AND THE PAGE AROUND IT STAYS UP (D-152). `/api/cancer-burden`
+          is returning HTTP 500 on the deployed app as this ships — a load/ops matter held elsewhere
+          and deliberately NOT fixed here. What this ship owes it is that the failure renders as a
+          failure: the heading, the US-only bar and the statistic toggle are above this line and
+          survive it, so the surface says *the request failed* rather than going blank, which reads
+          as *there is no cancer burden data*. "Nothing matched", "not loaded" and "the request
+          failed" are three different facts and this page keeps them three. */}
       {error && <p className="error">Could not load cancer burden: {error}</p>}
       {!data && !error && <p className="loading">Loading cancer burden…</p>}
 
@@ -123,9 +151,43 @@ export default function CancerBurdenView() {
             {meta.site_vocabulary}
           </p>
 
+          {/* ⚠⚠ D-152 — THE SEARCH SITS ABOVE THE BARS AND THE TABLE AND NARROWS BOTH. Owner,
+              2026-09-09: *"Apply what was done for Census to the rest of the surfaces."* A reader
+              looking for pancreas had to scan a fifteen-bar chart and then a twenty-odd-row table;
+              the box answers *is it here, and where* in one keystroke.
+              ⚠ It filters BY THE PRINTED LABEL, so what the reader types is what they can see. */}
+          <div className="list-controls">
+            <label htmlFor="burden-search">Search</label>
+            <input
+              id="burden-search"
+              type="search"
+              className="row-search"
+              value={query}
+              placeholder="cancer site, e.g. pancreas, lung, melanoma"
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          {narrowed && (
+            <p className="note filter-count" data-testid="burden-filter-count">
+              Showing {shownRanked.length} of {ranked.length} ranked SEER sites matching{' '}
+              &ldquo;{query.trim()}&rdquo;.{' '}
+              {/* ⚠⚠ THE TWO THINGS A FILTER MUST NOT BE ALLOWED TO IMPLY, SAID OUT LOUD. The bars
+                  are still drawn against the full population's maximum, so a short bar is still
+                  short; and the rank numbers are the rank WITHIN the statistic, not a position in
+                  this filtered view — row #7 is the seventh deadliest site, not the seventh row on
+                  screen. */}
+              <strong>The bars keep the full ranking&rsquo;s scale and the numbers keep their
+              rank</strong> — this hides rows, it does not re-rank or re-scale them.
+              {shownRanked.length === 0 && <> Nothing here matches. SEER&rsquo;s site vocabulary is
+                the one on screen — <em>Corpus and Uterus, NOS</em> rather than &ldquo;womb&rdquo;,
+                and melanoma rather than &ldquo;skin cancer&rdquo; — so a miss may be a naming
+                difference rather than an absent disease.</>}
+            </p>
+          )}
+
           {/* ── the bars ─────────────────────────────────────────────────────────── */}
           <ol className="burden-bars" aria-label={`${active.label} by cancer site`}>
-            {ranked.slice(0, 15).map((r) => (
+            {shownRanked.slice(0, 15).map((r) => (
               <li key={`${r.seer_site_id}-${r.sex}`} className="burden-bar-row">
                 <span className="burden-bar-label">{r.display_label}</span>
                 <span className="burden-bar-track">
@@ -146,6 +208,15 @@ export default function CancerBurdenView() {
           </ol>
 
           {/* ── the table ────────────────────────────────────────────────────────── */}
+          {/* ⚠⚠ D-152 — THE BOUNDED PORT. Seven columns, three of which hold long strings (the
+              SEER site name with the melanoma warning attached to one of them, the rate
+              denominator, and the counted-in population), so the widest row was setting the width
+              of the DOCUMENT and sliding the US-only bar sideways with it.
+              ⚠ NO COLUMN IS DROPPED, and on this surface that is a rule rather than a preference:
+              "Rate is over" and "Counted in" exist because the denominators differ per row, and a
+              layout that dropped either would put two incomparable numbers side by side with
+              nothing saying so — the exact defect D-149 built them to prevent. */}
+          <div className="table-scroll">
           <table className="cohort-table burden-table">
             <caption>
               {active.label} by SEER cancer site — <strong>United States only</strong>. Ordered by{' '}
@@ -171,8 +242,12 @@ export default function CancerBurdenView() {
               </tr>
             </thead>
             <tbody>
-              {ranked.map((r) => (
+              {shownRanked.map((r) => (
                 <tr key={`${r.seer_site_id}-${r.sex}`}>
+                  {/* ⚠ THE RANK IS THE RANK WITHIN THE STATISTIC, NOT THE ROW'S POSITION HERE. It
+                      is served, never derived from the index — so a filtered table shows #1, #7,
+                      #13 with gaps, which is the honest rendering: renumbering the visible rows
+                      1,2,3 would invent a ranking of the reader's search string. */}
                   <td>{r.rank_within_statistic}</td>
                   <td>
                     {r.display_label}
@@ -205,6 +280,7 @@ export default function CancerBurdenView() {
               ))}
             </tbody>
           </table>
+          </div>
 
           {/* ── the denominator, separated from the sites it contains ─────────────── */}
           {contextRow && (
