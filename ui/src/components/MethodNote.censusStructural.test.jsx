@@ -88,6 +88,44 @@ describe('MethodNote — the census structural rank (D-144)', () => {
     expect(section).toMatch(/default order is still the\s+accession/i)
   })
 
+  // ⚠⚠ D-147. The failure worth guarding is not a missing paragraph either — it is a paragraph
+  // that explains the multi-loop topology and lets a reader take it for a score adjustment or a
+  // trafficking claim. So the three denials are asserted INDIVIDUALLY: a copy pass that keeps
+  // "does not change the score" and drops "not internalisation" is exactly the plausible edit,
+  // and one blob assertion would not see it.
+  it('explains that the reported span is the largest segment, not the total', async () => {
+    const view = await renderMethod()
+    const text = view.getByTestId('census-structural-intermittent').textContent
+    expect(text).toMatch(/several separate segments/i)
+    expect(text).toMatch(/largest single segment/i)
+    expect(text).toMatch(/not the total/i)
+    expect(text).toMatch(/ecd_intermittent/)
+    // ⚠ the ADC-specific reason it matters at all, in the reader's terms rather than F-037's
+    expect(text).toMatch(/several loops/i)
+    expect(text).toMatch(/D-147/)
+  })
+
+  it('denies the score, the trafficking claim and the GPI category — each on its own', async () => {
+    const view = await renderMethod()
+    const text = view.getByTestId('census-structural-intermittent-limits').textContent
+    expect(text).toMatch(/does not change the score/i)
+    expect(text).toMatch(/no protein moves up or down the list/i)
+    expect(text).toMatch(/not internalisation/i)
+    expect(text).toMatch(/GPI \/ no segment/)
+    expect(text).toMatch(/by design/i)
+  })
+
+  it('points at where the count lives instead of typing it (Constraint A)', async () => {
+    const view = await renderMethod()
+    const text = view.getByTestId('census-structural-intermittent-limits').textContent
+    // ⚠⚠ D-050 / D-051 Constraint A: a number on a surface is derived from a payload or it is not
+    // on the surface at all. No component fetches /api/census-structural-ranking, so there is no
+    // payload for this paragraph to derive from — it names the field and says why.
+    expect(text).toMatch(/component_counts\.by_flag\.ecd_intermittent/)
+    expect(text).toMatch(/not typed/i)
+    expect(text).not.toMatch(/\b\d{1,3},\d{3}\b|\b\d{4,}\b/)
+  })
+
   it('names no count of its own — the page types no census denominator here', async () => {
     const view = await renderMethod()
     const section = view.getByTestId('census-structural-rank-addendum').textContent

@@ -509,8 +509,21 @@ def test_d136_entry_exists_in_the_living_log():
         "D-146 must be the Track B live-route copy entry, not some other entry that took "
         "the number"
     )
-    assert "\n### D-147" not in log, (
-        "D-147 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ Widened again at **D-147** by ADDING, never by a `>=` — the TWELFTH pass. ⚠⚠ **The FOURTH
+    # reserved integer to be SPENT rather than skipped** (142, 145 and 146 were the first three,
+    # all the same day): 147 sat in `docs/RESERVED.md` as the next free `D-`, `D-146` cited it in
+    # order to bar it, and this bar reddened **by design** the moment an entry claimed it.
+    # D-147 adds the `ecd_intermittent` disclosure to the census structural ranking rows and
+    # **does not touch this suite's subject** (the ADC cancer-type columns).
+    # `### D-148` now takes the next-free bar; nothing was relaxed to a `>=` and no bar was
+    # deleted, only replaced by a name.
+    assert re.search(r"^### D-147 — The census rank stops presenting a loop as an ectodomain",
+                     log, re.M), (
+        "D-147 must be the census `ecd_intermittent` entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-148" not in log, (
+        "D-148 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
 

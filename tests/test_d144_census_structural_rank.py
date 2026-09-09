@@ -591,7 +591,18 @@ def test_the_formula_and_its_exclusions_are_served_not_typed_on_a_surface(engine
     assert [f["factor"] for f in formula["excluded_factors"]] == [
         "cancer", "normal_risk", "internalization", "density"]
     assert all(f["why"].strip() for f in formula["excluded_factors"])
-    assert set(formula["flag_meaning"]) == set(cs.FLAG_MEANING)
+    # ⚠⚠ WIDENED IN PLACE BY `D-147`, NEVER DELETED. This read `== set(cs.FLAG_MEANING)`, which was
+    # exactly right while one module owned every flag. `D-147` adds `ecd_intermittent` from
+    # `core/census_segments.py` — a separate supplier, so that `core/census_structural.py`'s
+    # `formula_version()` (a sha256 of its own source) does not move for a display category. The
+    # served mapping is the UNION, and the direction that matters is asserted first: **every flag
+    # D-144 declared is still there.** A relaxation to a subset check would have let a formula flag
+    # silently leave the payload.
+    from core import census_segments as segs
+
+    assert set(cs.FLAG_MEANING) <= set(formula["flag_meaning"]), "a D-144 flag left the payload"
+    assert set(formula["flag_meaning"]) == set(cs.FLAG_MEANING) | set(segs.FLAG_MEANING)
+    assert all(str(v).strip() for v in formula["flag_meaning"].values())
 
 
 def test_no_run_reports_not_run_with_the_disclaimer_still_present(engine, tmp_path):
@@ -922,8 +933,21 @@ def test_the_next_free_integer_is_named_and_barred():
                      LOG, re.M), (
         "D-146 must be the Track B live-route copy entry, not some other entry that took "
         "the number")
-    assert "\n### D-147" not in LOG, (
-        "D-147 is the next free integer and must stay unspent until an entry claims it by name")
+    # ⚠⚠ 147 IS NOW WRITTEN TOO, AND IT IS THE FIRST OF THESE PASSES TO TOUCH THIS SUITE'S OWN
+    # SURFACE. `D-147` adds `ecd_intermittent` to the ranking rows as a **serve-time join** against
+    # the committed `data/census/span_segments.csv` — so the disclosure lands without a `--load`,
+    # and **the formula, the loader, the migration and every persisted score are byte-for-byte
+    # unchanged.** This suite measures that directly: its sha256 pin on `core/census_structural.py`
+    # is still `c859da97…` and `formula_version()` is still `c859da97f73d`, the value the live run
+    # recorded. The bar is REPLACED BY A NAME — never deleted — and `### D-148` takes the next-free
+    # bar. Never a `>=`. ⚠ **The FOURTH reserved integer SPENT rather than skipped** (142, 145 and
+    # 146 were the first three, all the same day), and the TWELFTH pass through this resolution.
+    assert re.search(r"^### D-147 — The census rank stops presenting a loop as an ectodomain",
+                     LOG, re.M), (
+        "D-147 must be the census `ecd_intermittent` entry, not some other entry that took "
+        "the number")
+    assert "\n### D-148" not in LOG, (
+        "D-148 is the next free integer and must stay unspent until an entry claims it by name")
     # ⚠⚠ 142 AND 143 ARE NOW WRITTEN ON `main`, AND THAT IS WHY THIS ASSERTION CHANGED SHAPE.
     # This entry's first draft reserved both in `docs/RESERVED.md`, because at `30f402f` neither
     # had a heading, an open PR or a branch. Both then merged (`f243f93` / `22ce1d7` / `b7d933f`)

@@ -1057,6 +1057,33 @@ export default function MethodNote() {
             <strong>review lens</strong> — an export for reading, never the record. Where the two
             disagree, the API is right and the sheet is stale.
           </p>
+          <p data-testid="census-structural-intermittent">
+            <strong>One thing the span number does not tell you (D-147).</strong> For many of
+            these proteins the outward-facing part does not arrive in one piece: it arrives in{' '}
+            <em>several separate segments</em>, and the length we report is the{' '}
+            <strong>largest single segment</strong> — not the total. Only that largest segment was
+            folded; the others were left out. Every row of the ranking now says so: a{' '}
+            <code>ecd_intermittent</code> flag, the number of segments, and how many amino acids
+            were left outside the structure. It matters here because an antibody can bind across
+            several loops at once, and a confident model of <em>one</em> loop is not a model of
+            that site.
+          </p>
+          <p className="note" data-testid="census-structural-intermittent-limits">
+            <strong>Three things that flag is not.</strong> It{' '}
+            <strong>does not change the score</strong> — the ECD factor still reads the same span
+            length it always did, and no protein moves up or down the list because it is flagged;
+            the flag is a label on the row, not a term in the arithmetic. It is{' '}
+            <strong>not internalisation</strong> — whether an antibody bound here would be taken
+            into the cell is one of the four things this score leaves out, and a multi-loop
+            surface says nothing about it. And it is <strong>not</strong> the same as{' '}
+            <em>GPI / no segment</em>, which the <Link to="/census">Census</Link> table already
+            marks separately: those proteins have no recorded segments{' '}
+            <em>by design</em> rather than several, and they carry no flag from this. How many
+            proteins are affected is served on the route itself, under{' '}
+            <code>component_counts.by_flag.ecd_intermittent</code>, and is deliberately not typed
+            into this page — a count in prose is a count that can come to disagree with the run it
+            describes.
+          </p>
           <p className="note">
             The <Link to="/census">Census</Link> table itself still shows no score and no rank
             column: every row there says it is unscored, and the default order is still the
