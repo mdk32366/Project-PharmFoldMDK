@@ -344,7 +344,8 @@ def test_the_architecture_doc_is_current_in_this_same_pr():
 def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole():
     """⚠⚠ **Bar OR name, never neither.** ``### D-151`` is claimed by name here;
     ``### D-148`` is a ``RESERVED.md`` HOLD for the trafficking Spec and stays BARRED;
-    ``### D-152`` takes the next-free bar. ⚠ Nothing is relaxed to a ``>=``: a ``>=`` here
+    ``### D-152`` was spent by the surface-navigation lane D-153 held it for, so it is NAMED
+    rather than barred, and ``### D-154`` takes the next-free bar. ⚠ Nothing is relaxed to a ``>=``: a ``>=`` here
     would pass on a log with no entries at all.
 
     ⚠ The bars are matched WITH their newline, because this file holds such patterns as
@@ -353,12 +354,23 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     here."""
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 151 in ids, "this entry did not claim its own integer"
-    assert 148 not in ids and 152 not in ids
+    # ⚠⚠ THE 152 BAR BECAME A NAME AT `D-152`, AND THE BAR IS NEITHER DELETED NOR RELAXED. 152 was
+    # not merely the next free integer here — `D-153` SKIPPED it and converted it into a HOLD for
+    # the concurrent sitewide-layout lane (owner instruction, 2026-09-09). That lane has now claimed
+    # it: `### D-152` applies the D-151 census layout pattern to /targets, /coverage, /scorer,
+    # /cancer-burden and /adcs. So the bar becomes the stronger statement that 152 is SPENT and
+    # named. ⚠ **148 stays barred** — the trafficking hold is unchanged — and **the next-free
+    # pointer does NOT move here**, because `D-153` already moved it past 152 to 154.
+    assert 152 in ids, (
+        "D-152 was spent by the surface-navigation ship, which is the lane D-153 held it for; "
+        "this assertion barred it and must now NAME it — never delete a bar, and never relax one "
+        "to a `>=`")
+    assert 148 not in ids and 154 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until "
         "that Spec claims it by name — never admitted by a `>=`")
-    assert "\n### D-152" not in LOG, (
-        "D-152 is the next free integer and must stay unspent until an entry claims it by "
+    assert "\n### D-154" not in LOG, (
+        "D-154 is the next free integer and must stay unspent until an entry claims it by "
         "name — never admitted by a `>=`")
 
 

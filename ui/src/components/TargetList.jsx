@@ -528,11 +528,38 @@ export default function TargetList() {
 
   return (
     <div className="target-list">
+      {/* ⚠⚠ D-152 — THE CENSUS TREATMENT, APPLIED HERE, AND THE ORDER IS THE WHOLE CHANGE.
+          Owner, 2026-09-09: *"Apply what was done for Census to the rest of the surfaces."* On this
+          page the search box and the table sat beneath four paragraphs — the lede, the paper
+          citation, the confidence-scope note and the ~700-character column-scope note — and the
+          last of those is the longest block of prose on the surface.
+          ⚠ THE REMEDY IS ORDER AND DISCLOSURE, NEVER OMISSION, which is D-151's rule inherited
+          rather than re-derived. The column-scope note moves into ONE collapsed `<details>` that
+          costs a line and sits directly above the header row it defines; every other block stays
+          exactly where it was, in full, with the same words.
+          ⚠ THE PAGE HAD NO HEADING AT ALL. It opened on a `<p>`, so the browser's own outline —
+          and every screen reader that builds one — saw a table with no name. The `<h2>` carries the
+          MENU's words (D-151 ruled the label *Initial Targets*), because a reader who clicked that
+          entry must land on a page that agrees with it. */}
+      <h2>Initial Targets — the cohort of {all.length}</h2>
       <p className="lede">
         The {all.length} cohort targets: <strong>{nFolded} folded</strong>
         {nFailed > 0 && <>, {nFailed} attempted and failed</>}
         {nNever > 0 && <>, {nNever} too large to attempt</>}. Start with{' '}
         <Link to="/target/1">NECTIN4 →</Link> (the target of a marketed ADC, enfortumab vedotin).
+      </p>
+      {/* 1c — the one sentence that inoculates the glance, before any detail panel is opened.
+          OWNER-COPY PLACEHOLDER: substance fixed, wording for the owner to finalise.
+          ⚠⚠ D-152 MOVED IT UP AND REFUSED TO COLLAPSE IT. It is this surface's standing claim —
+          the census's unscored bar, one page along — and a reader who stops at the first row must
+          already have met it. That is the rule `CensusView`'s `.census-bar` has carried since
+          D-079 dec 1, and the reason is the same: the defect this sentence exists to prevent is a
+          green dot being read as a verdict on a target, and it cannot prevent it from behind a
+          `<summary>`. */}
+      <p className="note confidence-scope-note">
+        Fold confidence is the model&rsquo;s certainty about the <em>predicted structure</em> — not a
+        judgement of whether the target is a good ADC candidate. Scoring lives on{' '}
+        <Link to="/scorer">Scorer</Link>.
       </p>
       {/* ⚠⚠ D-151 — THE PAPER THIS WHOLE LIST COMES FROM, AND IT IS NOW OPENABLE. This surface has
           named "Kathad et al." in prose since F-009 and never once linked it, so the single
@@ -559,40 +586,11 @@ export default function TargetList() {
         <strong>comparator set</strong>, not a census of everything an ADC could target —{' '}
         <Link to="/about">what the 82 is, and is not</Link>.
       </p>
-      {/* 1c — the one sentence that inoculates the glance, before any detail panel is opened.
-          OWNER-COPY PLACEHOLDER: substance fixed, wording for the owner to finalise. */}
-      <p className="note confidence-scope-note">
-        Fold confidence is the model&rsquo;s certainty about the <em>predicted structure</em> — not a
-        judgement of whether the target is a good ADC candidate. Scoring lives on{' '}
-        <Link to="/scorer">Scorer</Link>.
-      </p>
-      {/* ⚠⚠ D-142 — THE TWO NEW COLUMNS STATE WHAT THEY ARE, ON THE PAGE. D-069's self-sufficient
-          surfaces, and for the association column the claim boundary is not optional: it is the
-          same sentence the detail card carries (D-053 orders §2b), because a reader who never
-          opens a card must not be able to read "cancer association" as causation.
-          ⚠ The cutoff is INTERPOLATED from the payload, never typed — D-053 decision 5: our
-          statistics derive, and only the paper's own 290/16 are literals (and they live on the
-          card, not here). */}
-      {/* ⚠⚠ "the protein name UniProt records", NOT UniProt's own term of art *recommended name* —
-          and the change was forced by a guard, which is the guard working. The D-039/F-009 denylist
-          bans `\brecommended\b` anywhere on this list, and it fired on this sentence. It cannot
-          tell a UniProt field name from a recommendation of a target, and per the F-009 §3 lesson
-          the copy AVOIDS the banned vocabulary outright rather than negating it. */}
-      <p className="note column-scope-note">
-        <strong>Description</strong> is the protein name UniProt records for that accession, from
-        the committed cohort manifest — a name, not a finding.{' '}
-        <strong>Cancer association</strong> is an{' '}
-        <em>expression</em> claim by the source paper&rsquo;s own measure (quasi H-score above{' '}
-        {assocState === SUPPLIER_LOADED && assoc?.cutoff != null
-          ? assoc.cutoff
-          : 'the paper\u2019s stated cutoff'}, from Human Protein Atlas immunohistochemistry):{' '}
-        <em>not</em> causation, <em>not</em> a claim the target drives the disease, and <em>not</em>{' '}
-        a clinical indication. The cell names the tumour type(s) with the highest score and how many
-        the map holds for that target; every pair, with its score, is on the target&rsquo;s own page.{' '}
-        ⚠ That column has <strong>no sort control</strong>, deliberately: the cell holds a set of
-        tumour types, and ordering the cohort by the leading score — or by how many types clear the
-        cutoff — would make an expression statistic the page never shows into the order of the list.
-      </p>
+      {/* ⚠⚠ D-152 — THE SEARCH BOX AND THE TIER FILTER MOVE ABOVE THE COLUMN NOTE, NOT ABOVE THE
+          TWO CLAIMS. The lede states the population, the confidence note is the standing claim and
+          the paper citation is the primary source D-151 shipped precisely so it could be reached —
+          those three are what a reader must pass. The ~700 characters that used to come after them
+          and before the controls are now one summary line BELOW the controls. */}
       <div className="list-controls">
         {/* ⚠⚠ The search box this surface never had. `ERBB2` is folded and ranked here, and the
             owner searching `HER2` found nothing — because there was nothing to type into. */}
@@ -625,10 +623,76 @@ export default function TargetList() {
         </p>
       )}
       {/* ⚠⚠ TA3 / D-102 — THE LENS IS STATED WHERE THE LENS IS APPLIED. pLDDT is still available as
-          a sort the reader chooses; what it may not be is the order the page arrives in unlabelled. */}
+          a sort the reader chooses; what it may not be is the order the page arrives in unlabelled.
+          ⚠ D-152 does NOT collapse it, for D-102's reason rather than for balance: it appears only
+          when that sort is in force, and it says what the order currently MEANS. A statement about
+          the applied ordering behind a `<summary>` is a statement the reader can look at the
+          ordering without having seen. */}
       {active.key === 'mean_plddt' && (
         <p className="note plddt-lens-note">{PLDDT_LENS_NOTE}</p>
       )}
+      {/* ⚠⚠ D-152 — THE COLUMN NOTE, COLLAPSED AND NOT CUT, DIRECTLY ABOVE THE HEADER ROW IT
+          DEFINES. This is `CensusTable`'s `.census-notes` move on the other list: a `<details>` is
+          a disclosure control and not a filter — the text is in the DOM either way, the browser's
+          own find-in-page reaches it, and every existing assertion in `TargetList.columns.test.jsx`
+          reads it unchanged.
+          ⚠ ADJACENCY IS THE POINT. D-069 requires this surface to be self-sufficient and D-142
+          requires the association column's claim boundary to be on the page; both are satisfied by
+          a block one click from the header row, and neither would be by a paragraph at the foot of
+          the page or a link to a glossary.
+          ⚠ It is NOT `open`: an `open` default restores the exact scroll it was collapsed to end
+          while looking like a fix. */}
+      <details className="surface-notes target-notes">
+        <summary>
+          How to read this table — what Description and Cancer association mean, and why one of
+          them has no sort control
+        </summary>
+      {/* ⚠⚠ D-142 — THE TWO NEW COLUMNS STATE WHAT THEY ARE, ON THE PAGE. D-069's self-sufficient
+          surfaces, and for the association column the claim boundary is not optional: it is the
+          same sentence the detail card carries (D-053 orders §2b), because a reader who never
+          opens a card must not be able to read "cancer association" as causation.
+          ⚠ The cutoff is INTERPOLATED from the payload, never typed — D-053 decision 5: our
+          statistics derive, and only the paper's own 290/16 are literals (and they live on the
+          card, not here). */}
+      {/* ⚠⚠ "the protein name UniProt records", NOT UniProt's own term of art *recommended name* —
+          and the change was forced by a guard, which is the guard working. The D-039/F-009 denylist
+          bans `\brecommended\b` anywhere on this list, and it fired on this sentence. It cannot
+          tell a UniProt field name from a recommendation of a target, and per the F-009 §3 lesson
+          the copy AVOIDS the banned vocabulary outright rather than negating it. */}
+      <p className="note column-scope-note">
+        <strong>Description</strong> is the protein name UniProt records for that accession, from
+        the committed cohort manifest — a name, not a finding.{' '}
+        <strong>Cancer association</strong> is an{' '}
+        <em>expression</em> claim by the source paper&rsquo;s own measure (quasi H-score above{' '}
+        {assocState === SUPPLIER_LOADED && assoc?.cutoff != null
+          ? assoc.cutoff
+          : 'the paper\u2019s stated cutoff'}, from Human Protein Atlas immunohistochemistry):{' '}
+        <em>not</em> causation, <em>not</em> a claim the target drives the disease, and <em>not</em>{' '}
+        a clinical indication. The cell names the tumour type(s) with the highest score and how many
+        the map holds for that target; every pair, with its score, is on the target&rsquo;s own page.{' '}
+        ⚠ That column has <strong>no sort control</strong>, deliberately: the cell holds a set of
+        tumour types, and ordering the cohort by the leading score — or by how many types clear the
+        cutoff — would make an expression statistic the page never shows into the order of the list.
+      </p>
+      </details>
+      {/* ⚠⚠ D-152 — THE TABLE SCROLLS AND THE PAGE DOES NOT. ⚠ AND THE DEFECT HERE WAS **NOT** THE
+          CENSUS'S DEFECT, WHICH IS WORTH RECORDING BECAUSE THE FIRST DRAFT OF THIS COMMENT SAID IT
+          WAS. It claimed this table pushed the document 175 px past the right edge — the census's
+          symptom, assumed rather than measured. The measurement says otherwise: at 1440×900 on
+          `41b9b3b`, `/targets` reported a horizontal bleed of **0**. `.col-rank`, `.col-description`
+          and `.col-assoc` already carry max-widths (D-142), so the table never overflowed.
+          ⚠⚠ WHAT IT DID INSTEAD IS WORSE, AND IT IS WHAT THOSE MAX-WIDTHS COST: eight columns
+          squeezed into a ~912 px content box wrapped nearly every cell, so the page ran to
+          **16,409 px** — a mean row height of about **190 px** for a table of one-line facts, and
+          nineteen screens of scrolling for 83 rows. The bound was doing exactly what D-142 designed
+          it to do; it was the 60rem measure around it that was wrong.
+          ⚠ So the port here is for the sticky `<thead>` and for the narrow viewport, and the wide
+          measure is what actually pays: 16,409 px → 1,130 px with no column dropped, no cell
+          truncated and `.col-rank`'s 144-character cause still rendered in full. A column removed
+          to make a table fit is data withheld to flatter a layout.
+          ⚠ `position: sticky` resolves against the nearest scrollport ancestor, so the shared
+          `.table-scroll thead th` rule works because this wrapper exists and has a height bound. */}
+      <div className="table-scroll">
       <table>
         <thead>
           <tr>
@@ -715,13 +779,20 @@ export default function TargetList() {
           </tbody>
         )}
       </table>
+      </div>
       {/* ⚠⚠ HPA ELEMENTS 1–3, ONCE, AND ONLY IF A TUMOUR TYPE ACTUALLY RENDERED (D-100 / D-142).
           The per-datum link (element 4) is the anchor on each cell's tumour type; these three are
           properties of the SOURCE and render once per page — the split-by-case ruling of
           2026-08-21, applied to a list instead of a card.
           ⚠ SUPPRESSED WHEN THE COLUMN SHOWED NOTHING: a licence-required citation beside a table
           of "loading…" or "could not be reached" is attached to nothing, which is the other half
-          of that ruling. */}
+          of that ruling.
+          ⚠⚠ D-152 LEFT IT OUTSIDE EVERY DISCLOSURE CONTROL, and that is decided by the licence
+          rather than by the layout: HPA words citation as a precondition of DISPLAY — *"be sure
+          that our content is never displayed in the absence of such citation"* — so a credit the
+          reader must open a `<summary>` to see is a credit that is not displayed. It is the same
+          block, held out of the same control, for the same reason `D-151` held it out on the
+          census. */}
       {assocCredit && <HpaCredit attribution={assocCredit} />}
     </div>
   )

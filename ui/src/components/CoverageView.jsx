@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getCoverage, getCensusSummary } from '../api.js'
+import { filterRows } from '../searchRows.js'
 import CoverageLine from './CoverageLine.jsx'
 import CensusPopulationStrip from './CensusPopulationStrip.jsx'
 
@@ -83,10 +84,22 @@ function censusBridge(r) {
   )
 }
 
+// ⚠⚠ D-152 — THE CENSUS TREATMENT ON `/coverage`, AND THE ONE THING THIS PAGE WAS MISSING ENTIRELY
+// WAS A WAY TO FIND A ROW. Owner, 2026-09-09: *"Apply what was done for Census to the rest of the
+// surfaces. 100 percent better and easier to navigate."* `/census` has had a search box since D-087
+// and `/targets` since the owner searched `HER2` and found nothing; `/coverage` lists the same 82
+// proteins and had none, so the only way to answer *"is MUC16 in here, and what does it say?"* was
+// to read 82 rows. ⚠ **A surface that lists proteins and cannot find one is the F-052 shape** — a
+// convention every list obeys except this one.
+//
+// ⚠ The matcher is the SHARED one (`../searchRows.js`), never a third copy: it already reaches
+// aliases, so `CA-125` finds `MUC16` here exactly as it does on the other two lists. A local
+// `filter(r => r.gene.includes(q))` would have been four lines and a fourth behaviour.
 export default function CoverageView() {
   const [data, setData] = useState(null)
   const [census, setCensus] = useState(null)
   const [error, setError] = useState(null)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     getCoverage().then(setData).catch((e) => setError(e.message))
@@ -99,9 +112,11 @@ export default function CoverageView() {
   if (error) return <p className="error">Could not load coverage: {error}</p>
   if (!data) return <p className="loading">Loading coverage…</p>
 
-  const rows = [...data.rows].sort(
+  const sorted = [...data.rows].sort(
     (a, b) => ORDER[a.disposition] - ORDER[b.disposition] || (a.gene || '').localeCompare(b.gene || ''),
   )
+  const rows = filterRows(sorted, query)
+  const narrowed = rows.length !== sorted.length
 
   return (
     <div className="coverage">
@@ -109,9 +124,46 @@ export default function CoverageView() {
       {/* ⚠⚠ THE COHORT HEADLINE, AND IT IS NOT SHARED. `CoverageLine` receives the cohort payload
           and only the cohort payload; the census summary is not threaded into it and must not be.
           The one number this page leads with is `ranked ∧ folded` of the cohort denominator
-          (D-024 am. §3), and it stays that number however large the population below it is. */}
+          (D-024 am. §3), and it stays that number however large the population below it is.
+          ⚠ D-152 does not touch it and does not collapse it. It is the claim the route exists to
+          make, and a headline behind a `<summary>` is a headline the page has decided the reader
+          may skip. */}
       <CoverageLine coverage={data.coverage} rows={data.rows} />
-      <CensusPopulationStrip summary={census} />
+      {/* ⚠⚠ D-152 — THE SEARCH SITS DIRECTLY UNDER THE HEADLINE AND DIRECTLY OVER THE TABLE, which
+          is the whole of D-151's first rule: the thing the reader came for comes first. */}
+      <div className="list-controls">
+        <label htmlFor="coverage-search">Search</label>
+        <input
+          id="coverage-search"
+          type="search"
+          className="row-search"
+          value={query}
+          placeholder="gene, accession, or a name like CA-125"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+      {/* ⚠⚠ THE COUNT REPORTS WHAT IS ON SCREEN, AND IT NAMES THE DENOMINATOR IT IS A FRACTION OF.
+          On THIS page that matters more than on any other: the surface exists to defend one
+          denominator (D-024), so a filtered table under an unqualified total would undercut the
+          exact claim above it. ⚠ It appears only when the two differ — a permanent
+          "Showing 82 of 82" is noise that teaches a reader to stop reading the line. */}
+      {narrowed && (
+        <p className="note filter-count">
+          Showing {rows.length} of {sorted.length} cohort rows matching &ldquo;{query.trim()}&rdquo;
+          {rows.length === 0 && <> — nothing here matches. <strong>Every one of the {sorted.length}{' '}
+            cohort targets is in this table</strong>, held out and excluded rows included (D-022), so
+            a name that returns nothing is outside the cohort rather than merely unfolded.</>}
+          {' '}The denominator above is unchanged: it is a property of the cohort, not of this filter.
+        </p>
+      )}
+      {/* ⚠⚠ D-152 — THE BOUNDED PORT. The Note column holds prose (a fold failure reason, an
+          exclusion reason, and for IGF2R a census bridge chip with a sentence after it), so six
+          columns are wider than they look. The port keeps the widest row from setting the width of
+          the DOCUMENT, and it is what the shared `.table-scroll thead th` sticky rule resolves
+          against — 82 rows scroll past a header that stays put.
+          ⚠ No column is dropped and no cell is truncated: the held-out and excluded rows and their
+          named reasons are the reason this page exists (D-022). */}
+      <div className="table-scroll">
       <table className="cohort-table">
         <thead>
           <tr>
@@ -141,6 +193,21 @@ export default function CoverageView() {
           ))}
         </tbody>
       </table>
+      </div>
+      {/* ⚠⚠ D-152 MOVED THE SECOND POPULATION BELOW THE TABLE, AND DID NOT COLLAPSE IT.
+          D-135's requirement is that this page states TWO populations, labels the second one, gives
+          it no denominator and never lets one number stand for the other — and every clause of that
+          still holds here: it is still below the coverage line, still labelled *a different
+          population*, still fraction-free, and its chips still carry the assembled caveat beside
+          them (D-133 am. 1, *the caveat arrives with the act*).
+          ⚠ What it is NOT is a `<details>`. A collapsed strip would put a claim about scale behind
+          a control, and D-135 exists precisely because this page once said nothing about the census
+          and so under-reported three weeks of measurement. **Moving a block is not demoting it;
+          hiding one is.**
+          ⚠ The cost of the old position, measured rather than argued: at 1440×900 the strip was
+          ~470 px tall and stood between the headline and the first cohort row, so the table this
+          route is named for began below the fold. */}
+      <CensusPopulationStrip summary={census} />
     </div>
   )
 }

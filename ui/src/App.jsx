@@ -57,7 +57,23 @@ function AdcPipelineCardRoute() {
 // ⚠ EXACTLY `/census`. `/census/:id` is a protein CARD — prose, one column, and it keeps the
 // reading measure. A `startsWith` here would have widened it too, which is the opposite of what a
 // card needs.
-const WIDE_ROUTES = new Set(['/census'])
+//
+// ⚠⚠ D-152 — THE OTHER FIVE LISTS JOIN IT, AND THE SET IS STILL A SET OF EXACT PATHS. The owner's
+// ask was to apply the census treatment to the rest of the surfaces; `main { max-width: 60rem }` is
+// a reading measure, and it was cropping `/targets` (eight columns, two of them holding sentences),
+// `/coverage` (a Note column of prose), `/scorer` (a two-column layout squeezed into one measure),
+// `/cancer-burden` (seven columns, three of them long labels) and `/adcs` (five columns on the
+// Pipeline shelf) in exactly the way it was cropping the census.
+// ⚠ MEMBERSHIP IS A JUDGEMENT ABOUT THE ROUTE, AND THE PROSE PAGES ARE DELIBERATELY OUT. `/`,
+// `/method` and `/about` are argument, not tables: 60rem is the right measure for a paragraph and
+// widening them would make them harder to read, not easier. That is the whole reason this is a set
+// of names rather than a default.
+// ⚠ And every entry is still a LITERAL. `/target/:id`, `/census/:id`, `/adcs/:id` and
+// `/adcs/pipeline/:id` are cards and keep the reading measure — a `startsWith` would have widened
+// all four, which is the opposite of what a card needs.
+const WIDE_ROUTES = new Set([
+  '/targets', '/coverage', '/census', '/scorer', '/cancer-burden', '/adcs',
+])
 
 export default function App() {
   const { pathname } = useLocation()

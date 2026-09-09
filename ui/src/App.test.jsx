@@ -21,7 +21,14 @@ vi.mock('./api.js', () => ({
   // `/census/:id` to assert which surfaces get the wide measure. Empty payloads on purpose —
   // the claim under test is the SHELL's class, not anything about census rows.
   getAssociations: vi.fn().mockResolvedValue({ associations: {}, attributions: {} }),
-  getRanking: vi.fn().mockResolvedValue({ rows: [] }),
+  // ⚠⚠ D-152: `result_status` ADDED, and its absence was not a tidiness matter. This suite now
+  // renders `/scorer` to assert the shell's measure, and the payload it was handed —
+  // `{ rows: [] }` with no status — took `ScorerView` down the FullResult branch and threw on
+  // `ranking.result.distribution`. `/api/ranking` never serves a statusless payload (`D-062`
+  // gives it `not_run` / `raised` / `partial` / `valid`), so the fixture was modelling a response
+  // that does not exist. It is corrected here, and the component was separately taught to state an
+  // unrecognised status rather than crash on one — the fixture and the guard, not one or the other.
+  getRanking: vi.fn().mockResolvedValue({ result_status: 'not_run', rows: [] }),
   listCensus: vi.fn().mockResolvedValue([]),
   getCensusDetail: vi.fn().mockResolvedValue({}),
   getCancerBurden: vi.fn().mockResolvedValue({}),
@@ -128,15 +135,34 @@ describe('App — five-surface nav (D-051)', () => {
   // ⚠ jsdom computes NO layout, so this asserts the STRUCTURE that carries the width — the class
   // on `<main>` — and never a rendered pixel. A test that claimed to measure the gutter here would
   // be measuring nothing at all.
-  describe('D-151 — /census is granted the wide measure, and only /census', () => {
+  // ⚠⚠ WIDENED IN PLACE AT D-152, AND THE RULE IT ENCODES IS UNCHANGED: **a list route gets the
+  // wide measure and a prose route keeps the reading measure.** D-151 had exactly one list route,
+  // so the two halves of that rule were spelled `/census` and *everything else*. The owner then
+  // asked for the census treatment on the rest of the surfaces, and the second half stopped being
+  // "everything else" — `/coverage` is a six-column table with a Note column of prose, not an
+  // essay, and it moved from the negative list to the positive one.
+  // ⚠ THE NEGATIVE HALF IS NOT WEAKENED. `/`, `/about` and `/method` are argument, and the card
+  // routes are still asserted narrow below — widening a paragraph makes it harder to read, which is
+  // why the set is a list of names rather than a default.
+  describe('D-151 / D-152 — the wide measure is granted by route, to the lists only', () => {
     it('puts the wide class on <main> for the census list', async () => {
       const { container } = renderAt('/census')
       await waitFor(() => expect(container.querySelector('main')).toBeTruthy())
       expect(container.querySelector('main').className).toContain('wide')
     })
 
+    it('D-152 — every list-heavy route gets it, not just the census', async () => {
+      for (const path of ['/targets', '/coverage', '/census', '/scorer', '/cancer-burden', '/adcs']) {
+        const { container, unmount } = renderAt(path)
+        await waitFor(() => expect(container.querySelector('main')).toBeTruthy())
+        expect(container.querySelector('main').className ?? '',
+          `${path} is a list route and did not get the wide measure`).toContain('wide')
+        unmount()
+      }
+    })
+
     it('leaves every prose surface at the reading measure', async () => {
-      for (const path of ['/', '/about', '/method', '/coverage']) {
+      for (const path of ['/', '/about', '/method']) {
         const { container, unmount } = renderAt(path)
         expect(container.querySelector('main').className ?? '').not.toContain('wide')
         unmount()

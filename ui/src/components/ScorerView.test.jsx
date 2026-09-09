@@ -167,9 +167,18 @@ describe('ScorerView', () => {
     const before = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
     expect(before(box, recon)).toBe(true)
     expect(before(recon, table)).toBe(true)
-    // the deferred-columns note moved OUT of the ranking column into section D (left), so it now
-    // precedes the E heading in source order (D-066 §2)
-    expect(t.indexOf('Deferred columns')).toBeLessThan(t.indexOf('E · The ranking table'))
+    // ⚠⚠ FLIPPED IN PLACE AT D-152, NEVER DELETED, AND THE CLAIM IT GUARDS IS UNCHANGED.
+    // It read `t.indexOf('Deferred columns') < t.indexOf('E · The ranking table')` — a POSITION
+    // used as a proxy for a CONTAINMENT: D-066 §2 says the deferred-columns note belongs to section
+    // D and not to the ranking column, and while the explanation was the first grid child that
+    // proposition happened to imply the text order. D-152 reversed the source order so the ranking
+    // table comes first, and the proxy went red while the thing it stands for stayed true.
+    // ⚠ So it now asserts the containment directly, in both directions — which is strictly stronger
+    // than the index comparison it replaces, and which no column reordering can make wrong. A
+    // relaxation would have been to delete it or to widen it to `!= -1`; this is neither.
+    expect(container.querySelector('.scorer-result .deferred')).toBeTruthy()
+    expect(container.querySelector('.scorer-ranking .deferred')).toBeNull()
+    expect(t).toMatch(/Deferred columns/)
   })
 
   it('reconciles 67 → 56 immediately above the table, every number derived (D-066 dec 2)', async () => {

@@ -438,8 +438,9 @@ def test_the_entry_records_that_the_defect_recurred_rather_than_presenting_it_as
 
 def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
     """⚠⚠ **Bar OR name, never neither.** `### D-153` is claimed by name here; `### D-148` is a
-    `RESERVED.md` HOLD for the trafficking Spec and stays BARRED; `### D-152` is a HOLD for the
-    concurrent sitewide-layout lane and stays BARRED; `### D-154` takes the next-free bar. ⚠ Nothing
+    `RESERVED.md` HOLD for the trafficking Spec and stays BARRED; `### D-152` was the HOLD for the
+    concurrent sitewide-layout lane and **that lane has now claimed it**, so it is NAMED rather than
+    barred; `### D-154` takes the next-free bar. ⚠ Nothing
     is relaxed to a `>=`: a `>=` here would pass on a log with no entries at all.
 
     ⚠⚠ **THIS IS THE FIRST PASS WHERE THE CLAIMED INTEGER IS NOT THE ONE THE GUARDS BARRED.** The
@@ -454,13 +455,26 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
     """
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 153 in ids, "this entry did not claim its own integer"
-    assert 148 not in ids and 152 not in ids and 154 not in ids
+    # ⚠⚠ FLIPPED IN PLACE AT `D-152`, NEVER DELETED, AND THIS IS THE HOLD DOING EXACTLY WHAT IT WAS
+    # FOR. This entry skipped 152 and held it for the concurrent sitewide-layout lane rather than
+    # spending it. That lane has now written `### D-152` (the D-151 census layout pattern applied to
+    # /targets, /coverage, /scorer, /cancer-burden and /adcs), so the bar becomes the stronger
+    # statement that 152 is SPENT and named — the reservation worked, and a reservation that is
+    # never allowed to be claimed is just a hole.
+    # ⚠ **The pointer does not move for it, and that is correct**: this entry already moved it past
+    # 152 to 154, so there was nothing left to move. `RESERVED.md`'s pointer paragraph states that
+    # exception where the claim is made.
+    assert 152 in ids, (
+        "D-152 was spent by the sitewide-layout lane this entry held it for; this assertion barred "
+        "it and must now NAME it — never delete a bar, and never relax one to a `>=`")
+    assert 148 not in ids and 154 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-152" not in LOG, (
-        "D-152 is a RESERVED HOLD for the concurrent sitewide-layout lane and must stay unspent "
-        "until that lane claims it by name — never admitted by a `>=`")
+    assert re.search(r"^### D-152 — The census navigation pattern applied to the other five",
+                     LOG, re.M), (
+        "D-152 was spent by the sitewide-layout lane this entry held it for, so it must be NAMED "
+        "here rather than barred")
     assert "\n### D-154" not in LOG, (
         "D-154 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
@@ -477,7 +491,10 @@ def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxin
             f"{rel} does not NAME the entry that spent 153")
         assert r'\n### D-154" not in' in text, f"{rel} does not bar the next free integer"
         assert r'\n### D-148" not in' in text, f"{rel} stopped barring the trafficking hold"
-        assert r'\n### D-152" not in' in text, f"{rel} does not bar the sitewide-layout hold"
+        # ⚠ FLIPPED AT `D-152`: the hold was claimed by its lane, so those two files NAME the
+        # entry instead of barring the integer. The check moves with it rather than being dropped.
+        assert "D-152 — The census navigation pattern applied to the other five" in text, (
+            f"{rel} does not NAME the entry that spent the sitewide-layout hold")
         assert "if i > 129] >=" not in text and "if i > 130] >=" not in text, (
             f"{rel} relaxed its enumeration to a `>=` — the widening must ADD a name")
 
@@ -497,7 +514,11 @@ def test_the_reserved_map_retires_153_marker_safe_and_records_both_holds():
     # ⚠ the two holds are rows, and each says what it is held FOR — an unexplained gap in an
     # enumerated set reads as an oversight to the next reader
     row152 = next(ln for ln in RESERVED.splitlines() if ln.startswith("| **D-152**"))
-    assert "layout" in row152.lower(), "the 152 hold does not say what it is held FOR"
+    # ⚠ The row is now RETIRED rather than held, and it keeps this entry's hold text verbatim as
+    # provenance (D-129-C) — so it still says what the integer was held FOR, and additionally what
+    # spent it. Both halves are asserted; losing either would erase half the record.
+    assert "layout" in row152.lower(), "the 152 row does not say what it was held FOR"
+    assert "WRITTEN" in row152, "the 152 row does not record that the hold was claimed"
     row148 = next(ln for ln in RESERVED.splitlines() if ln.startswith("| **D-148**"))
     assert "trafficking" in row148.lower(), "the 148 hold stopped saying what it is held FOR"
     # ⚠ AT LINE START, not anywhere in the file: those cells EXPLAIN that their markers must not be

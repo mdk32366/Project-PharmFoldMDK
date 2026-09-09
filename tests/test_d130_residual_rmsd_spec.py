@@ -347,6 +347,15 @@ def test_d130_is_the_next_free_decision_id():
     # enumeration reddened **by design** the moment an entry claimed it. D-147 adds the
     # `ecd_intermittent` disclosure to the census structural ranking rows and touches nothing this
     # suite measures. A bare `### D-148` still reddens.
+    # ⚠⚠ Widened again at **D-152** — to `[…, 151, 152, 153]`, and **152 is no longer the absence
+    # this list was careful about**. `D-153` skipped 152 and converted it into a HOLD for the
+    # concurrent sitewide-layout lane rather than spending it; that lane has now written
+    # `### D-152` (the census layout pattern applied to /targets, /coverage, /scorer,
+    # /cancer-burden and /adcs), so the integer is ADDED here by enumeration — never by a `>=`.
+    # ⚠ **This is the FIRST widening where the new number is LOWER than the one before it**, because
+    # the two lanes landed out of numeric order; the list is a set of spent integers and not a
+    # chronology, so it is sorted and 152 simply takes its place between 151 and 153. **148 stays
+    # absent** — the trafficking hold is unchanged and a bare `### D-148` still reddens here.
     # ⚠⚠ Widened again at **D-153** — to `[…, 150, 151, 153]`, with **152 deliberately absent** —
     # by enumeration, for the TWELFTH time, and never by a `>=`. ⚠⚠ **152 IS THE SECOND HOLE HERE
     # THAT IS A DECISION RATHER THAN A COLLISION**, and its cause differs from 148's: 148 is held
@@ -381,7 +390,7 @@ def test_d130_is_the_next_free_decision_id():
     # oversight to the next reader.**
     assert [i for i in ids if i > 130] == [
         132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149,
-        150, 151, 153
+        150, 151, 152, 153
     ], (
         f"D-130's successors must be exactly D-132, D-133, D-134, D-135, D-136, "
         f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144, D-145, D-146 and D-147 — "
@@ -394,7 +403,7 @@ def test_d130_is_the_next_free_decision_id():
         f"(Initial Targets label, Kathad DOI anchor, census layout); ⚠ 153 by the burden-loader "
         f"image-permanence entry, which SKIPPED 152 because 152 is held for the concurrent "
         f"sitewide-layout lane; "
-        f"found {ids[-16:]}"
+        f"found {ids[-17:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 must be the served-path flip entry, not some other entry that "
@@ -495,9 +504,14 @@ def test_d130_is_the_next_free_decision_id():
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name here — never admitted by a `>=`"
     )
-    assert "\n### D-152" not in LOG, (
-        "D-152 is a RESERVED HOLD for the concurrent sitewide-layout lane and must stay unspent "
-        "until that lane claims it by name here — never admitted by a `>=`"
+    # ⚠ FLIPPED AT `D-152`: the hold was claimed by the lane it was held for, so the bar became a
+    # name. The 148 bar above and the 154 bar below are untouched.
+    assert re.search(r"^### D-152 — The census navigation pattern applied to the other five",
+                     LOG, re.M), (
+        "D-152 was spent by the surface-navigation ship — the very lane D-153 held it for — so "
+        "this assertion must NAME it rather than bar it. It read: 'D-152 is a RESERVED HOLD for "
+        "the concurrent sitewide-layout lane and must stay unspent until that lane claims it by "
+        "name here — never admitted by a `>=`'"
     )
     assert "\n### D-154" not in LOG, (
         "D-154 is the next free integer and must stay unspent until an entry claims it "

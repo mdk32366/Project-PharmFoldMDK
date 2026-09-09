@@ -456,12 +456,23 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert 151 in ids, (
         "D-151 was spent by the owner UI-polish ship; this assertion barred it and must now NAME "
         "it — never delete a bar, and never relax one to a `>=`")
-    assert 148 not in ids and 152 not in ids
+    # ⚠⚠ THE 152 BAR BECAME A NAME AT `D-152`, AND THE BAR IS NEITHER DELETED NOR RELAXED. 152 was
+    # not merely the next free integer here — `D-153` SKIPPED it and converted it into a HOLD for
+    # the concurrent sitewide-layout lane (owner instruction, 2026-09-09). That lane has now claimed
+    # it: `### D-152` applies the D-151 census layout pattern to /targets, /coverage, /scorer,
+    # /cancer-burden and /adcs. So the bar becomes the stronger statement that 152 is SPENT and
+    # named. ⚠ **148 stays barred** — the trafficking hold is unchanged — and **the next-free
+    # pointer does NOT move here**, because `D-153` already moved it past 152 to 154.
+    assert 152 in ids, (
+        "D-152 was spent by the surface-navigation ship, which is the lane D-153 held it for; "
+        "this assertion barred it and must now NAME it — never delete a bar, and never relax one "
+        "to a `>=`")
+    assert 148 not in ids and 154 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-152" not in LOG, (
-        "D-152 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-154" not in LOG, (
+        "D-154 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
 
@@ -475,7 +486,9 @@ def test_the_reserved_map_bars_151_and_the_pointer_moves_in_this_commit():
         "the UI-polish ship spent the integer, and deleting or striking it would open a citation "
         "hole indistinguishable from D-062's")
     assert re.search(r"^\| \*\*D-152\*\*", RESERVED, re.M), (
-        "D-152 is cited in order to bar it, so it must be a RESERVED row")
+        "D-152 is cited here, so it must remain a RESERVED row — its row was RETIRED IN PLACE when "
+        "the surface-navigation ship spent the integer D-153 had held for it, and deleting or "
+        "striking it would open a citation hole indistinguishable from D-062's")
     assert re.search(r"^\| \*\*D-148\*\*", RESERVED, re.M), "the trafficking hold lost its row"
     assert not re.search(r"^\| ~~\*\*D-15[012]\*\*~~", RESERVED, re.M), (
         "a marker is struck through; that breaks this suite's lookup instead of satisfying it")
