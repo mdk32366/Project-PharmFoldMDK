@@ -727,13 +727,22 @@ def test_d139_entry_exists_in_the_living_log():
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    # ⚠ Widened again at D-142 by ADDING. The Track B structural-only copy entry claimed
-    # 142 off `30f402f`; it changes no served path, no gate and no threshold.
-    assert re.search(r"^### D-142 — Track B stops claiming a composite", LOG, re.M), (
-        "D-142 must be the Track B structural-only copy entry, not some other entry "
+    # ⚠ Widened again at D-143 by ADDING. The Track B structural-only copy entry claimed 142
+    # off `30f402f` and was renumbered to 143 by owner ruling (2026-09-09); 142 stays HELD and
+    # barred below. It changes no served path, no gate and no threshold.
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", LOG, re.M), (
+        "D-143 must be the Track B structural-only copy entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-143" not in LOG, "D-143 is the next free integer"
+    # ⚠ 142 is SKIPPED, NOT FREE — the Track B copy work was written as D-142, renumbered to
+    # D-143 by owner instruction 2026-09-09, and nothing visible in the tree spends 142
+    # (docs/RESERVED.md records the ruling and the absence of a discoverable holder). The bar on
+    # it therefore STAYS and is ADDED to, exactly as D-141 kept the bar on 140.
+    assert "\n### D-142" not in LOG, (
+        "D-142 is held by owner ruling and registered in docs/RESERVED.md; if a holder writes it, "
+        "this reddens BY DESIGN and 142 is ADDED beside 143 — never relaxed to a `>=`"
+    )
+    assert "\n### D-144" not in LOG, "D-144 is the next free integer"
 
 
 def test_the_entry_records_the_subset_its_provenance_and_the_zero():

@@ -379,7 +379,7 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
-### D-142 — Track B stops claiming a composite it cannot compute: the ranking sentence becomes structural-only — membrane × ECD × fold confidence (pLDDT) — and the biology terms are EXCLUDED rather than filled in as 0.5 neutrals
+### D-143 — Track B stops claiming a composite it cannot compute: the ranking sentence becomes structural-only — membrane × ECD × fold confidence (pLDDT) — and the biology terms are EXCLUDED rather than filled in as 0.5 neutrals
 
 - **Date:** 2026-09-08
 - **Status:** Accepted — **copy only, on one sentence and its extract.** The owner Doc's Track B
@@ -397,18 +397,37 @@ So the rule is not "be careful" — it is:
   This entry changes **none** of it, and a reader who takes "the ranking became structural-only" as a
   statement about the cohort-82 scorer has read it wrong. The two ranking surfaces are now
   distinguishable in the copy, which they were not before.
-- **Ship id:** spends **`D-142`**, checked before it was claimed rather than assumed, on `main` at
-  tip **`30f402f`** (D-141, [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
-  `grep -n '^### D-1[34][0-9]' docs/README.md` returns **`D-141`** as the highest written entry, and
-  `gh pr list --state open` returns **three** PRs — **#222** (`docs/registers-and-f067`), **#200**
-  (`data/rb-regate384-first-ten`) and **#197** (`feat/f062-blackwell-ceiling-climb`) — **none** of
-  which spends a `D-1NN`. ⚠ **An open-PR check proves no PUBLISHED branch spent the id and cannot
-  prove no unpublished one did** (the finding #263 and D-139 paid for, recorded in D-141): the
-  enumerated next-free guards, not this paragraph, are what catches a collision. **The six guards in
-  `tests/test_d129_*`, `tests/test_d130_*`, `tests/test_d136_*`, `tests/test_d139_*`,
-  `tests/test_d140_*` and `tests/test_d141_*` are widened BY ENUMERATION** — 142 named as spent by
-  this entry, a bare `### D-143` barred. **Never a `>=`.** This is the seventh pass through that
-  resolution and the rule has not moved.
+- **Ship id:** spends **`D-143`**, and **`D-142` is skipped by owner ruling — held, not free.**
+  ⚠⚠ **This entry FIRST SHIPPED AS `D-142`, and the wrong intermediate version is recorded rather
+  than tidied away** (method-note item 4: record the provenance chain when a claim changes,
+  including the versions that were wrong). What was checked, and what it proved:
+  - **The check that was run**, on `main` at tip **`30f402f`** (D-141,
+    [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
+    `grep -n '^### D-1[34][0-9]' docs/README.md` returned **`D-141`** as the highest written entry,
+    and `gh pr list --state open` returned **three** PRs — **#222** (`docs/registers-and-f067`),
+    **#200** (`data/rb-regate384-first-ten`) and **#197** (`feat/f062-blackwell-ceiling-climb`) —
+    **none** spending a `D-1NN`. On that evidence 142 was taken, and PR
+    [#266](https://github.com/mdk32366/Project-PharmFoldMDK/pull/266) was opened titled *"D-142"*.
+  - **The owner then ruled otherwise (2026-09-09): this work is `D-143`.** The whole entry, its
+    tests, its guards and the PR were renumbered. ⚠ **The disqualifying fact, stated rather than
+    left for a reader to notice: nothing visible in the tree spends 142.** Re-checked after the
+    ruling on `origin/main` at `30f402f` — `git log --oneline origin/main -3` shows D-141 / D-140 /
+    D-139 and `gh pr list --state open` shows #266, #222, #200, #197, of which only #266 spent a
+    `D-1NN`. **So this session cannot show what holds 142; the owner ruling is the only authority
+    for the skip, and 142 is registered in [`RESERVED.md`](RESERVED.md) as held so the citation
+    invariant does not acquire a hole.** ⚠ This is the same asymmetry D-141 recorded from the
+    other side: **an open-PR check proves no PUBLISHED branch spent an id and cannot prove no
+    unpublished one did.** There, the unpublished branch collided; here, an authority outside the
+    tree reserved the integer. Both are invisible to `gh pr list`, and neither is a reason to relax
+    a guard.
+  - **The six guards in `tests/test_d129_*`, `tests/test_d130_*`, `tests/test_d136_*`,
+    `tests/test_d139_*`, `tests/test_d140_*` and `tests/test_d141_*` are widened BY ENUMERATION** —
+    143 named as spent by this entry, **142 asserted STILL ABSENT** (so a later branch cannot
+    quietly take it without reddening these), and a bare `### D-144` barred. **Never a `>=`**, and
+    nothing was widened by deleting a bar. This is the seventh pass through that resolution and the
+    rule has not moved; it is the second pass (after D-138 / D-141) where an integer is skipped
+    rather than collided over, and the **first** where the skip came from a ruling instead of a
+    branch.
 - **Cite:** the owner **GO of 2026-09-08 (Matt)** quoted in Provenance below — the authority for
   editing an owner Doc sentence at all · D-123 (the verbatim-extract discipline this entry keeps:
   `aboutPaper.js` stays a character-substring extract of the Doc, so the Doc is edited **first** and
@@ -484,7 +503,21 @@ words themselves.
    record of what D-123 shipped, and gains an adjacent ⚠ note naming this entry as its supersession
    (D-129-C: a superseded claim never stands alone). ⚠ The log is append-at-top; history is not
    rewritten to look like it was always right.
-8. **The tests move with the words, and keep a negative.** `ui/src/aboutPaper.test.js`,
+8. **⚠ A gate red arrived that this copy did not cause, and it is fixed here rather than
+   re-run until it passed.** `MethodNote.toc.test.jsx` › *"does not disturb the prose the page
+   already shipped"* failed on the runner expecting `/3 ranked-and-folded of 7/` and finding the
+   **pre-fetch fallback** (*"ranked-and-folded, out of the full cohort"*). Its helper awaited only
+   `method-toc` — which renders from the static headings on the first paint — and then asserted
+   synchronously on copy that arrives with `getCoverage()`. **Two gate runs on byte-identical test
+   and component code disagreed**, which is the signature of a race and not of a copy change. The
+   helper now waits for the coverage-**derived** denominator before any assertion, and a new
+   deterministic case holds the promise open to assert the fallback and then the numbers **in
+   order**. ⚠ **The assertion was NOT relaxed** to whichever string happened to be on screen: the
+   derived numbers are the contract (D-050 — that line is computed, never a literal), and pinning
+   the fallback would have made the page's loading state its contract. Same defect D-135 records in
+   the readability tripwire: *a check that races the copy it measures reports whichever half
+   arrived first.*
+9. **The tests move with the words, and keep a negative.** `ui/src/aboutPaper.test.js`,
    `ui/src/components/AdcContext.test.jsx` and `tests/test_about_paper_extract.py` assert the new
    wording **and** assert the retired composite is **absent** from `docs/` and `ui/` — a revert of
    the copy reddens at an assertion rather than passing quietly.
@@ -534,10 +567,10 @@ until the arithmetic looks like biology.
 - **The cohort-82 carve-out is checkable in the diff:** `git diff --stat` touches no `core/`,
   `app/`, `db/`, `worker/`, `scripts/` or `data/` path, and no `MethodNote.jsx` / `TargetList.jsx` /
   `ScorerView.jsx` / `TargetScorerPanel.jsx` / `targetScore.js`. Pinned by
-  `tests/test_d142_track_b_structural_only.py`.
+  `tests/test_d143_track_b_structural_only.py`.
 - **Tests run here:** `npx vitest run src/aboutPaper.test.js src/components/AdcContext.test.jsx
   src/components/readability.tripwire.test.jsx` and `python3 -m pytest
-  tests/test_about_paper_extract.py tests/test_d142_track_b_structural_only.py
+  tests/test_about_paper_extract.py tests/test_d143_track_b_structural_only.py
   tests/test_d129_phase5_named_refuse_spec.py tests/test_d130_residual_rmsd_spec.py
   tests/test_d136_cancer_type.py tests/test_d139_served_path_flip.py
   tests/test_d140_pipeline_programme.py tests/test_d141_land_confidence_kabsch.py`, plus
@@ -550,9 +583,31 @@ until the arithmetic looks like biology.
   tripwire becomes a decoration). ⚠ The baseline was obtained by restoring the old `aboutPaper.js`
   from `HEAD` and re-running the tripwire, not by quoting D-135's older 11.06 — that figure was
   measured on different copy.
-- **Ship id:** verified as described under **Ship id** above — `grep` for the highest written entry
-  and `gh pr list --state open`, both run on `30f402f`. The check is the `### D-142` heading in this
-  file, never a citation of it (D-062 / method note item 7).
+- **Ship id, and the renumber:** verified as described under **Ship id** above. The `grep` and
+  `gh pr list --state open` were run on `30f402f` **twice** — before 142 was taken, and again after
+  the owner ruled the id to 143 on **2026-09-09** — and both times the tree showed **no spender of
+  142**. ⚠ **The ruling is the authority; the tree is not evidence for it.** `D-142` is therefore
+  registered in [`RESERVED.md`](RESERVED.md) rather than left as an unresolved citation, and the
+  six id guards assert its continued **absence** so a later branch cannot take it silently. The
+  check that this entry exists is the `### D-143` heading in this file, never a citation of it
+  (D-062 / method note item 7).
+- **The gate red, and how it was diagnosed rather than guessed at** (decision 8): the failing run is
+  [34312428832](https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/34312428832) (`test`
+  job) at commit `2649569`, and the run **immediately before it** —
+  [34312365044](https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/34312365044) at
+  `b49291e` — was **green with the same test and component bytes**; the only diff between them is
+  the paper's amendment-note placement, a markdown file the UI does not read. ⚠ **That pair is the
+  evidence it is a race**, not the local run passing. The log line is
+  `AssertionError: expected 'What this system claims — and what it…' to match /3
+  ranked-and-folded of 7/`, and the captured body in that log carries *"folds a fixed cohort of
+  candidate"* — the denominator absent, i.e. `getCoverage` had not resolved. **Shown to bite before
+  it was committed:** with `getCoverage` delayed 60 ms, the pre-fix helper reproduces the runner's
+  red (1 failed / 6 passed, same test, same message) and the fixed helper passes 7 of 7 — so the
+  fix is known to work by reproducing the failure, not by the absence of one.
+- ⚠ **What the renumber did NOT change:** not one science word, threshold, count or file outside the
+  id itself. `git log` on this branch carries the original `D-142` commit subjects beneath the
+  renumber commit — left standing on purpose, because a history rewritten to look as though the id
+  was right the first time is the shape this project refuses (D-129-C).
 
 ### D-141 — The gate had nothing to answer with: a script lands the EXISTING D-126 OPS trees onto the serving volume so D-139's flip can be true of something — and the disqualifying fact is that it did not run here, because no Fly credential reached this build
 
@@ -582,7 +637,7 @@ until the arithmetic looks like biology.
   exist for, resolved in the *wrong* direction — so **141 is taken and 140 is named as in-flight**,
   exactly the way D-138 skipped 137 while #261 was open. ⚠ **The next-free guards below carry
   BOTH ids** — 139 by name, 141 by name, 140 named as the id this branch is deliberately not
-  taking, and a bare `### D-142` barred. **Never a `>=`:** if #263 merges first, the enumerations
+  taking, and a bare `### D-143` barred. **Never a `>=`:** if #263 merges first, the enumerations
   redden **by design** and the rebase inserts 140 beside 141, which is the guard working rather than
   a false alarm. This is the sixth pass through that resolution and the rule has not moved.
   - ⚠⚠ **AMENDED IN PLACE, same day, before this PR was reviewed — #263 MERGED mid-flight, and the
@@ -592,7 +647,7 @@ until the arithmetic looks like biology.
     *spent by a written entry*, so the four guard enumerations reddened **exactly as the sentence
     above predicted they would**, and the rebase onto `578f5ac` **ADDED 140 beside 141** — final
     form `[…, 138, 139, 140, 141]`, with `### D-140` now asserted as the pipeline programme-fields
-    entry by name and `### D-142` still barred. **Nothing was relaxed to a `>=`.** ⚠ The predicted
+    entry by name and `### D-143` still barred. **Nothing was relaxed to a `>=`.** ⚠ The predicted
     red arriving on schedule is the strongest evidence this log has that the guard is doing work
     rather than describing it. ⚠ **And #263 carried a finding this entry should not take credit for
     avoiding:** #263 and D-139 were *both* cut from `dd06e9c`, both ran `gh pr list --state open`,
@@ -606,13 +661,13 @@ until the arithmetic looks like biology.
   entry spent (141) is not the one it bars (142). Measured with the `docs/RESERVED.md` §*"How to run
   the check"* command, **re-run after the rebase** rather than left at its pre-rebase reading:
   `origin/main` at **`578f5ac`** reports **`['D-131', 'F-067']`**; this branch reports
-  **`['D-131', 'D-142', 'F-067']`**. **`D-142` is the one addition** — the integer the guards bar by
+  **`['D-131', 'D-143', 'F-067']`**. **`D-143` is the one addition** — the integer the guards bar by
   name, a forward reference that **announces its own absence**, which is the distinction
   `RESERVED.md` exists to draw from the D-062 defect. `D-131` (the suffix half of
   `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched.
   - ⚠ **Superseded reading, kept because a number that changed silently is a number nobody can
     check:** before the rebase this paragraph reported `origin/main` at `1e9777c` as
-    `['D-131', 'D-140', 'F-067']` and this branch as `['D-131', 'D-140', 'D-142', 'F-067']` — a hole
+    `['D-131', 'D-140', 'F-067']` and this branch as `['D-131', 'D-140', 'D-143', 'F-067']` — a hole
     of four, with `D-140` unresolved because #263 had not landed. #263 landing resolved `D-140` on
     both sides, exactly as that reading said it would, leaving three.
 - **⚠⚠ The disqualifying fact, first: this PR lands nothing. The live count is still eligible 17 /
@@ -749,7 +804,7 @@ until the arithmetic looks like biology.
   `tests/test_d129_phase5_named_refuse_spec.py`, `tests/test_d130_residual_rmsd_spec.py`,
   `tests/test_d136_cancer_type.py`, `tests/test_d139_served_path_flip.py` and
   `tests/test_d140_pipeline_programme.py` — widened **by enumeration** to carry `D-140` **and**
-  `D-141` by name and to bar `### D-142`. ⚠ **Four when this entry was written, five after the
+  `D-141` by name and to bar `### D-143`. ⚠ **Four when this entry was written, five after the
   rebase:** #263 merged mid-flight and brought a fifth copy of the guard with it, which is worth
   recording because the count is now the thing most likely to be stale in this paragraph — the
   authority is `grep -rn '### D-14' tests/`, not this list.
@@ -8641,7 +8696,7 @@ actually ran.
   `D-110` while later numbers are written). This entry spends `D-123`; the
   pointer stays the owner's.
 - **Amended by:** `D-121` (Method hold-48 8th-grade explainer + `/method`
-  addendum. D-121 does not touch AdcContext or `/adcs`.) · **`D-142`** (the
+  addendum. D-121 does not touch AdcContext or `/adcs`.) · **`D-143`** (the
   Track B ranking sentence becomes structural-only — membrane × ECD × fold
   confidence (pLDDT) — and the biology terms are named as excluded rather
   than defaulted to 0.5. Placement, chrome, standing line, Track A and the
@@ -8732,7 +8787,7 @@ pLDDT / IgV shape as EV-binding proof. Neutral to the weights;
 load-bearing for whether About can be read as "the model showed EV
 unlocks every V-domain."
 
-⚠⚠ **AMENDED BY `D-142` (2026-09-08) — the composite quoted two paragraphs
+⚠⚠ **AMENDED BY `D-143` (2026-09-08) — the composite quoted two paragraphs
 above is RETIRED as a description of what we rank by, and the quotation is
 left standing rather than edited (D-129-C: a superseded claim never stands
 alone, and is never quietly deleted).** It was the aspirational Track B

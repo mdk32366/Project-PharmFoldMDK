@@ -41,7 +41,7 @@ export const V_SURFACE_BODY =
 export const TRACK_A =
   '**Track A — Reuse EV antibody:** List membrane IgV / nectin-like ECDs — feasible. Wet binding assays — required. No bind → stop. Do not rank docking guesses as hits. Track A is mostly off-target risk mapping unless wet binding is shown.'
 
-// ⚠ D-142 (owner GO 2026-09-08) — this sentence used to end with the aspirational
+// ⚠ D-143 (owner GO 2026-09-08) — this sentence used to end with the aspirational
 // cancer/membrane/internalization/density product. There is no HPA/assay data behind
 // those terms, and filling them with 0.5 neutrals was rejected as dishonest, so the
 // Doc sentence and this extract describe what is actually computed: structure only.

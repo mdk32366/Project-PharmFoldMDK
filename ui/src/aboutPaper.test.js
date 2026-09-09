@@ -42,11 +42,11 @@ describe('D-123 — aboutPaper.js is a verbatim extract of the owner Doc', () =>
     expect(BOTTOM_LINE_2).toContain('not a universal V-domain key')
   })
 
-  // ⚠ D-142 (owner GO 2026-09-08) — the aspirational composite is retired as a description
+  // ⚠ D-143 (owner GO 2026-09-08) — the aspirational composite is retired as a description
   // of what we rank by. Presence and absence are asserted TOGETHER: a revert of the copy
   // reddens at the negative, and a Track B that stops saying what it ranks by reddens at the
   // positives, so this cannot pass on an empty string the way a pure absence guard would.
-  it('D-142: Track B ranks structurally, names its exclusions, and does not claim the retired composite', () => {
+  it('D-143: Track B ranks structurally, names its exclusions, and does not claim the retired composite', () => {
     expect(TRACK_B).toContain('structure only — membrane × ECD × fold confidence (pLDDT)')
     expect(TRACK_B).toContain('excluded')
     expect(TRACK_B).toContain('0.5 neutrals')

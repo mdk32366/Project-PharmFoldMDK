@@ -29,7 +29,7 @@ PAPER_QUESTION_ASKS = (
     "This project asks whether a second, independent axis — derived from predicted structure — reorders that list."
 )
 
-#: ⚠ D-142 — the retired Track B composite. Held as one constant so the absence assertions
+#: ⚠ D-143 — the retired Track B composite. Held as one constant so the absence assertions
 #: below cannot drift apart from each other by a stray character.
 RETIRED_COMPOSITE = "rank by (cancer × membrane × internalization × density) / normal risk"
 
@@ -55,7 +55,7 @@ def test_aboutpaper_excerpts_are_substrings_of_the_doc():
     assert "Wet binding assays — required" in src
     assert "Wet binding assays — required" in paper
     assert "No bind → stop" in src and "No bind → stop" in paper
-    # ⚠ D-142 (owner GO 2026-09-08) — the two lines that used to be pinned here carried the
+    # ⚠ D-143 (owner GO 2026-09-08) — the two lines that used to be pinned here carried the
     # aspirational cancer/membrane/internalization/density product. It is retired as a
     # description of what we rank by; the structural sentence takes its place in BOTH files,
     # and the retirement is asserted as an absence beside the new presence.

@@ -450,19 +450,23 @@ def test_d129_is_the_next_free_decision_id():
     # **exactly as that branch's own comment predicted it would**, and the rebase inserted 140
     # beside 141. ⚠⚠ **Six widenings, six resolutions by ADDING.** Not one of them was made to
     # go away with a `>=`, and a `>=` would have hidden every collision above rather than
-    # catching it. All three ids are named below; a bare `### D-143` still reddens.
+    # catching it. All three ids are named below; a bare `### D-144` still reddens.
     #
-    # ⚠ Widened again at **D-142** — to `[…, 140, 141, 142]` — by enumeration, for the SEVENTH
-    # time, and this one is a *clean* claim rather than a collision: the Track B copy branch was
-    # cut from `30f402f`, `grep`ed this file for the highest written entry (141), read
-    # `gh pr list --state open` (#222 / #200 / #197, none spending a `D-1NN`), and took 142 by
-    # name. ⚠ The open-PR weakness recorded above has NOT gone away — it still cannot see an
-    # unpublished branch — so 142 is named below and `### D-143` takes the bar.
+    # ⚠ Widened again at **D-143** — to `[…, 140, 141, 143]`, with **142 deliberately absent** —
+    # by enumeration, for the SEVENTH time. The Track B copy branch was cut from `30f402f`,
+    # `grep`ed this file for the highest written entry (141), read `gh pr list --state open`
+    # (#222 / #200 / #197, none spending a `D-1NN`), and took **142** on that evidence. ⚠ The
+    # owner then ruled the id to **143** (2026-09-09) and the whole PR was renumbered, while
+    # nothing visible in the tree spends 142 — so this is the FIRST pass where the skip comes
+    # from a ruling rather than from a branch, and it is the same asymmetry from the other side:
+    # an open-PR check cannot see what an authority outside the tree is holding. 142 stays
+    # registered in `docs/RESERVED.md` and BARRED below; `### D-144` takes the next-free bar.
     assert [i for i in ids if i > 129] == [
-        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142
+        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 143
     ], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141 and D-142; found {ids[-13:]}"
+        f"D-137, D-138, D-139, D-140, D-141 and D-143 — ⚠ 142 is deliberately ABSENT "
+        f"(held by owner ruling, docs/RESERVED.md); found {ids[-13:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 is the recorded successor id; it must be the served-path flip entry, "
@@ -476,12 +480,20 @@ def test_d129_is_the_next_free_decision_id():
         "D-141 is the recorded successor id; it must be the confidence-Kabsch lander "
         "entry, not some other entry that took the number"
     )
-    assert re.search(r"^### D-142 — Track B stops claiming a composite", LOG, re.M), (
-        "D-142 is the recorded successor id; it must be the Track B structural-only "
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", LOG, re.M), (
+        "D-143 is the recorded successor id; it must be the Track B structural-only "
         "copy entry, not some other entry that took the number"
     )
-    assert "\n### D-143" not in LOG, (
-        "D-143 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ 142 is SKIPPED, NOT FREE — the Track B copy work was written as D-142, renumbered to
+    # D-143 by owner instruction 2026-09-09, and nothing visible in the tree spends 142
+    # (docs/RESERVED.md records the ruling and the absence of a discoverable holder). The bar on
+    # it therefore STAYS and is ADDED to, exactly as D-141 kept the bar on 140.
+    assert "\n### D-142" not in LOG, (
+        "D-142 is held by owner ruling and registered in docs/RESERVED.md; if a holder writes it, "
+        "this reddens BY DESIGN and 142 is ADDED beside 143 — never relaxed to a `>=`"
+    )
+    assert "\n### D-144" not in LOG, (
+        "D-144 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

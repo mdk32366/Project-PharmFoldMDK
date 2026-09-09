@@ -1,4 +1,4 @@
-"""D-142 — Track B ranks structurally, and says so; the retired composite is gone.
+"""D-143 — Track B ranks structurally, and says so; the retired composite is gone.
 
 The owner Doc's Track B sentence and its D-123 verbatim extract used to end with an
 aspirational product of cancer expression, membrane topology, internalization and
@@ -9,13 +9,13 @@ comes out, from a measurement. The live sentence now describes what is computed.
 
 ⚠ **What these tests are NOT about.** The cohort-82 D-041/D-060 learned scorer — the
 LOO logistic over six standardized features, its `Rank` column and MethodNote's prose
-about it — is a **different ranking surface over a different population**, and D-142
+about it — is a **different ranking surface over a different population**, and D-143
 does not touch it. T-1227 pins that carve-out as a property of the tree, so a future
 edit that quietly reaches into the scorer while claiming this entry goes red here.
 
-⚠ Failure-reds against the pre-D-142 tree: T-1225's absence assertions and T-1226's
+⚠ Failure-reds against the pre-D-143 tree: T-1225's absence assertions and T-1226's
 presence assertions both fail on the retired wording, at the assertion rather than on
-an import. T-1228 fails on a missing `### D-142` heading — the check is the entry, not
+an import. T-1228 fails on a missing `### D-143` heading — the check is the entry, not
 a citation of it (D-062 / method-note item 7).
 
 Acceptance tests T-1225–T-1228 (docs/Test_Plan.md addendum 2026-09-08).
@@ -105,7 +105,7 @@ def test_the_one_surviving_copy_is_d123s_record_and_carries_its_supersession():
     )
     where = flat.index(RETIRED_COMPOSITE)
     window = flat[where: where + 2000]
-    assert "AMENDED BY `D-142`" in window, "the quotation must name its supersession"
+    assert "AMENDED BY `D-143`" in window, "the quotation must name its supersession"
     assert "RETIRED as a description of what we rank by" in window
     assert STRUCTURAL_CLAUSE in window or "membrane × ECD × fold confidence (pLDDT)" in window
     # ⚠ And the amendment note must not itself re-assert the composite as current.
@@ -179,7 +179,7 @@ def test_the_sentence_names_its_exclusions_rather_than_defaulting_them():
 def test_the_paper_records_the_amendment_instead_of_silently_swapping_the_line():
     """An owner Doc sentence changed; the Doc says so, dated, with the id."""
     flat = _flat(PAPER)
-    assert "Amended 2026-09-08 (owner GO; logged as **D-142**" in flat
+    assert "Amended 2026-09-08 (owner GO; logged as **D-143**" in flat
     assert "was the **aspiration**, not the computation" in flat
     assert "0.5 neutrals" in flat
 
@@ -188,15 +188,15 @@ def test_the_paper_records_the_amendment_instead_of_silently_swapping_the_line()
 
 
 def test_the_cohort_82_learned_scorer_is_untouched_by_this_entry():
-    """⚠⚠ The hard stop that defines D-142, checked against files rather than intent.
+    """⚠⚠ The hard stop that defines D-143, checked against files rather than intent.
 
-    Two different ranking surfaces exist in this project and D-142 edits copy about
+    Two different ranking surfaces exist in this project and D-143 edits copy about
     one of them. So: the scorer's own surfaces must still say what they always said,
     and none of them may pick up this entry's structural sentence.
     """
     scorer = (ROOT / "core" / "scorer.py").read_text(encoding="utf-8")
     assert "logistic" in scorer.lower()
-    assert "D-142" not in scorer, "core/scorer.py must not name a copy decision"
+    assert "D-143" not in scorer, "core/scorer.py must not name a copy decision"
 
     method = (ROOT / "ui" / "src" / "components" / "MethodNote.jsx").read_text(encoding="utf-8")
     assert "a learned scorer over structure-derived features ranks the cohort" in method, (
@@ -229,7 +229,7 @@ def test_this_entry_ships_no_code_path_and_no_artefact():
     for rel in ("core/scorer.py", "scripts/fit_scorer.py", "app/read_routes.py",
                 "core/structural_profile.py"):
         text = (ROOT / rel).read_text(encoding="utf-8")
-        assert "D-142" not in text, f"{rel} names D-142 — this is a copy entry"
+        assert "D-143" not in text, f"{rel} names D-143 — this is a copy entry"
     # No structural_score product is implemented in-tree by this entry: the offline
     # order lives outside this repository and the entry says so rather than implying
     # a script exists.
@@ -239,24 +239,24 @@ def test_this_entry_ships_no_code_path_and_no_artefact():
 # ─────────────── T-1228 — the log leads it, and the id guards were widened by adding
 
 
-def _d142_entry() -> str:
-    """The D-142 entry only, bounded by the NEXT `### ` heading whatever it is."""
-    start = LOG.index("\n### D-142 —") + 1
-    nxt = re.search(r"^### (?!D-142\b)", LOG[start + 1:], re.M)
+def _d143_entry() -> str:
+    """The D-143 entry only, bounded by the NEXT `### ` heading whatever it is."""
+    start = LOG.index("\n### D-143 —") + 1
+    nxt = re.search(r"^### (?!D-143\b)", LOG[start + 1:], re.M)
     return LOG[start: start + 1 + nxt.start()] if nxt else LOG[start:]
 
 
 def test_the_log_entry_exists_exactly_once_and_leads_the_log():
-    """⚠ The check is the `### D-142` HEADING, never a citation of it (D-062 / item 7)."""
-    assert re.search(r"^### D-142 — Track B stops claiming a composite", LOG, re.M)
-    assert len(re.findall(r"^### D-142 —", LOG, re.M)) == 1, "exactly one D-142 entry"
-    assert LOG.index("### D-142 —") < LOG.index("### D-141 —"), "newest first"
-    assert "\n### D-143" not in LOG, "D-143 is the next free integer"
+    """⚠ The check is the `### D-143` HEADING, never a citation of it (D-062 / item 7)."""
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", LOG, re.M)
+    assert len(re.findall(r"^### D-143 —", LOG, re.M)) == 1, "exactly one D-143 entry"
+    assert LOG.index("### D-143 —") < LOG.index("### D-141 —"), "newest first"
+    assert "\n### D-144" not in LOG, "D-144 is the next free integer"
 
 
 def test_the_entry_carries_the_cohort_82_hard_stop_and_the_go_that_authorised_it():
     """The carve-out is stated in the entry, not only honoured in the diff."""
-    lowered = _flat(_d142_entry()).lower()
+    lowered = _flat(_d143_entry()).lower()
     for claim, why in (
         ("d-041", "the learned scorer's own ids must be named as out of scope"),
         ("d-060", "the pre-registered evaluation is out of scope too"),
@@ -279,7 +279,7 @@ def test_the_entry_carries_a_deep_learning_justification_that_survives_the_cut()
     ESMFold confidence carrying MORE of the surviving order. The entry has to say
     that, and must not claim the network answered a question about tumour biology.
     """
-    lowered = _flat(_d142_entry()).replace("**", "").lower()
+    lowered = _flat(_d143_entry()).replace("**", "").lower()
     assert "#### deep-learning justification" in lowered
     assert "esmfold" in lowered and "d-003" in lowered
     assert "one of three" in lowered, "the surviving weight of the pLDDT term"
@@ -294,7 +294,7 @@ def test_the_entry_names_the_artefact_behind_every_claim_including_the_missing_o
     the GO. No run log, CSV or notebook for that order is in this repository, and
     the entry must say so rather than let a reader assume a measured provenance.
     """
-    entry = _flat(_d142_entry())
+    entry = _flat(_d143_entry())
     lowered = entry.lower()
     assert "#### provenance (d-016)" in lowered
     assert "no run log, csv or notebook" in lowered, (
@@ -316,13 +316,99 @@ def test_d123_points_forward_at_this_entry():
     entry = _flat(LOG[start: start + 12000])
     assert "**Amended by:**" in entry
     amended_by = entry.split("**Amended by:**", 1)[1][:600]
-    assert "D-142" in amended_by, "D-123 must name D-142 as an amender"
+    assert "D-143" in amended_by, "D-123 must name D-143 as an amender"
+
+
+def test_d142_is_registered_as_held_rather_than_left_as_an_unresolved_citation():
+    """⚠ This entry CITES 142 as skipped, and a citation with no entry is the D-062 defect.
+
+    `docs/RESERVED.md` is the only whitelist the citation check honours, so the skipped
+    integer belongs there — with the ruling that caused it and the fact that nothing in
+    the tree spends it.
+    """
+    reserved = (ROOT / "docs" / "RESERVED.md").read_text(encoding="utf-8")
+    assert re.search(r"^\| \*\*D-142\*\* \|", reserved, re.M), (
+        "D-142 is cited by this entry as held; the citation invariant requires it to be "
+        "listed in docs/RESERVED.md, which the checker whitelists and nothing else"
+    )
+    row = _flat(reserved[reserved.index("| **D-142** |"):][:4000])
+    assert "renumbered to `D-143` by owner instruction (2026-09-09)" in row
+    assert "nothing visible in the tree spends 142" in row.lower()
+    assert "266" in row, "the PR that took the id first is named"
+    # ⚠ And the log's own citation must present it as HELD, never as a spent authority.
+    entry = _flat(_d143_entry())
+    assert "`D-142` is skipped by owner ruling — held, not free" in entry
+    assert "RESERVED.md" in entry
+
+
+def test_every_enumerated_id_guard_keeps_the_bar_on_142():
+    """⚠ Widened by ADDING. The bar on a skipped integer STAYS (D-141's precedent on 140).
+
+    Enumerated over the six guard files rather than spot-checked, so a guard that drops
+    the bar while renumbering is caught here instead of by the next collision.
+    """
+    guards = (
+        "tests/test_d129_phase5_named_refuse_spec.py",
+        "tests/test_d130_residual_rmsd_spec.py",
+        "tests/test_d136_cancer_type.py",
+        "tests/test_d139_served_path_flip.py",
+        "tests/test_d140_pipeline_programme.py",
+        "tests/test_d141_land_confidence_kabsch.py",
+    )
+    for rel in guards:
+        text = (ROOT / rel).read_text(encoding="utf-8")
+        assert '### D-142" not in' in text, f"{rel} dropped the bar on the held 142"
+        assert '### D-144" not in' in text, f"{rel} does not bar the next free integer"
+        assert "D-143 — Track B stops claiming a composite" in text, (
+            f"{rel} must name 143 by its heading, not by a `>=`"
+        )
+        # ⚠ The bar on 142 must be EXPLAINED where it sits. An unexplained absence
+        # assertion is the thing a later session deletes because it looks like a typo.
+        # ⚠ A first draft of this check asserted `">=" not in …` nearby, which fired on
+        # every guard's own *"never relaxed to a `>=`"* prose — a guard reporting its
+        # own good news. Replaced with the claim that actually matters.
+        assert "142 is SKIPPED, NOT FREE" in text or "142 is HELD" in text, (
+            f"{rel} bars 142 without saying why it is barred"
+        )
+
+
+# ─────────────── T-1229 — the /method rail suite stops racing the copy it measures
+
+
+def test_the_method_toc_suite_waits_for_the_async_coverage_beat():
+    """⚠⚠ The gate's red on this PR, and it was a RACE rather than a copy change.
+
+    `MethodNote.toc.test.jsx` awaited only `method-toc` — which renders from the static
+    headings on the first paint — then asserted synchronously on copy that arrives with
+    `getCoverage()`. Two gate runs on byte-identical test and component code disagreed.
+    The fix waits for the async beat; it does NOT relax the assertion to the pre-fetch
+    fallback, which would pin the page's loading state as its contract.
+    """
+    toc = (ROOT / "ui" / "src" / "components" / "MethodNote.toc.test.jsx").read_text(encoding="utf-8")
+    helper = toc[toc.index("async function renderMethod()"):]
+    helper = helper[: helper.index("return view")]
+    assert helper.count("await waitFor(") == 2, (
+        "the helper must wait for the async coverage beat as well as the rail landmark"
+    )
+    assert "folds a fixed cohort of 7 candidate" in helper, (
+        "the second wait must be on a coverage-DERIVED string, so it settles the same "
+        "state the prose assertions read"
+    )
+    # ⚠ The contract itself is unchanged and still asserted where it always was.
+    assert "expect(body).toMatch(/3 ranked-and-folded of 7/)" in toc, (
+        "the derived-numbers assertion is the contract (D-050) and must not be weakened "
+        "to the pre-fetch fallback copy"
+    )
+    # ⚠ And the race is now a deterministic test, not a comment: the promise is held open
+    # so both states are asserted in order.
+    assert "carries the fallback coverage line until getCoverage resolves" in toc
+    assert "getCoverage.mockReturnValue(new Promise(" in toc
 
 
 def test_the_architecture_doc_describes_the_extract_as_structural_only():
     """ARCHITECTURE.md is brought current in the same PR (CLAUDE.md rule 2)."""
     flat = _flat(ARCH)
     assert "aboutPaper.js" in flat
-    assert "D-142" in flat
+    assert "D-143" in flat
     assert RETIRED_COMPOSITE not in flat
     assert "structural" in flat.lower()

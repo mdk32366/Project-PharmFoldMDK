@@ -684,19 +684,28 @@ def test_d140_entry_exists_in_the_living_log():
     # while it was the newest; the confidence-Kabsch lander then claimed 141 (it read
     # the open-PR list *after* #263 was published, so it saw 140 held and skipped it —
     # the clean version of the duplicate this entry records). #263 merging reddened
-    # the bar exactly as intended, so 141 is named here and `### D-143` takes the bar.
-    # ⚠ Widened again at D-142 by ADDING: the Track B structural-only copy entry claimed
-    # 142 off `30f402f` after `grep` (highest written = 141) and `gh pr list --state open`
-    # (#222 / #200 / #197, none spending a `D-1NN`). It touches no pipeline field.
+    # the bar exactly as intended, so 141 is named here and `### D-144` takes the bar.
+    # ⚠ Widened again at D-143 by ADDING: the Track B structural-only copy entry claimed 142
+    # off `30f402f` after `grep` (highest written = 141) and `gh pr list --state open`
+    # (#222 / #200 / #197, none spending a `D-1NN`), and was then renumbered to 143 by owner
+    # ruling (2026-09-09) with 142 left HELD and barred below. It touches no pipeline field.
     assert re.search(r"^### D-141 — The gate had nothing to answer with", log, re.M), (
         "D-141 must be the confidence-Kabsch lander entry, not some other entry "
         "that took the number"
     )
-    assert re.search(r"^### D-142 — Track B stops claiming a composite", log, re.M), (
-        "D-142 must be the Track B structural-only copy entry, not some other entry "
+    assert re.search(r"^### D-143 — Track B stops claiming a composite", log, re.M), (
+        "D-143 must be the Track B structural-only copy entry, not some other entry "
         "that took the number"
     )
-    assert "\n### D-143" not in log
+    # ⚠ 142 is SKIPPED, NOT FREE — the Track B copy work was written as D-142, renumbered to
+    # D-143 by owner instruction 2026-09-09, and nothing visible in the tree spends 142
+    # (docs/RESERVED.md records the ruling and the absence of a discoverable holder). The bar on
+    # it therefore STAYS and is ADDED to, exactly as D-141 kept the bar on 140.
+    assert "\n### D-142" not in log, (
+        "D-142 is held by owner ruling and registered in docs/RESERVED.md; if a holder writes it, "
+        "this reddens BY DESIGN and 142 is ADDED beside 143 — never relaxed to a `>=`"
+    )
+    assert "\n### D-144" not in log
 
 
 def test_the_log_entry_records_the_counts_it_reports():
