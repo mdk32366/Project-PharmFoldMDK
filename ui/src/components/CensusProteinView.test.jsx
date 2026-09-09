@@ -254,4 +254,38 @@ describe('D-118 — assembled / tiles-only honesty', () => {
     expect(screen.queryByTestId('structure')).toBeNull()
     expect(container.textContent).not.toMatch(/waiting on rented capacity/)
   })
+
+  // ⚠⚠ D-150, AND A SCREENSHOT OF THE LIVE `P55073` CARD IS WHAT CAUGHT IT. The header's structure
+  // line used to be gated on `structure_kind_label`, which a never-folded row does not carry, so
+  // it was never reached. Reading axis A unconditionally put a bare `NOT FOLDED` above the census
+  // bar AND above the full NOT FOLDED card — **three** of them stacked, one unstyled. A verdict
+  // repeated three times is how a reader learns to skim the copy that matters.
+  it('says the fold verdict once, not three times, on a never-folded page', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({
+      ...DETAIL, id: null, folded: false, mean_plddt: null,
+      structure_kind: null, structure_kind_label: null,
+      not_folded_copy: 'not folded — and nothing records why',
+    })
+    const { container } = view()
+    await screen.findByRole('heading', { name: 'SLC5A10' })
+    expect(container.querySelectorAll('.structure-kind-badge')).toHaveLength(0)
+    // the card itself is untouched — NOT FOLDED is not softened where it is true
+    expect(container.querySelector('.unfolded-card h3').textContent).toBe('NOT FOLDED')
+  })
+
+  // ⚠ …and the header line is still there for a protein that HAS a structure, carrying axis A's
+  // word and this parent's own seam note rather than a sentence typed into the component.
+  it('carries the header status line, with the seam note, for an assembled parent', async () => {
+    vi.mocked(getCensusDetail).mockResolvedValue({
+      ...DETAIL, folded: true, structure_kind: 'assembled',
+      structure_kind_label: 'assembled (provisional)',
+      assembler_note: 'assembled by pLDDT overlap, not superimposed; seam not solved',
+    })
+    const { container } = view()
+    await screen.findByRole('heading', { name: 'SLC5A10' })
+    const badge = container.querySelector('.structure-kind-badge')
+    expect(badge.textContent).toMatch(/assembled \(provisional\)/)
+    expect(badge.textContent).toMatch(/seam not solved/)
+    expect(badge.textContent).not.toMatch(/88\.76/)
+  })
 })
