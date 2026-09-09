@@ -28,6 +28,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import CensusTable from './CensusTable.jsx'
 import CensusDetail from './CensusDetail.jsx'
+import { unfoldedCopy } from './CensusProteinView.jsx'
 import {
   STRUCTURE_ASSEMBLED_SERVED, STRUCTURE_NONE, STRUCTURE_ONESHOT, STRUCTURE_TILES_ONLY,
   scoreState, seamState, structureServed, structureServedLabel,
@@ -280,6 +281,15 @@ describe('D-150 — the census row states three statuses, not one', () => {
       .toMatch(/longer than the local graphics card/)
   })
 
+  // ⚠ The tiles copy is a fact about the tiles, so it does not ask the fold verdict first. Before
+  // D-150 `unfoldedCopy` returned null for anything not `folded === false`, which would have left
+  // the page's tiles card — gated on axis A, not on the flag — rendering two empty paragraphs.
+  it('supplies the tiles copy without first requiring a fold denial', () => {
+    expect(unfoldedCopy(TILES)?.bar).toMatch(/have not been assembled/)
+    expect(unfoldedCopy({ ...TILES, folded: true })?.bar).toMatch(/have not been assembled/)
+    expect(unfoldedCopy({ ...TILES, folded: true })?.body).toBeTruthy()
+  })
+
   it('says "tiles only" and not "NOT FOLDED" anywhere on a tiles row', () => {
     const { container } = table([FAT2, TILES])
     const row = rowFor(container, 'Q00003')
@@ -387,6 +397,10 @@ describe('D-150 — the census card states three statuses, not one', () => {
     const { container } = card(HER2)
     expect(container.querySelector('.status-structure').textContent).toMatch(/NOT FOLDED/)
   })
+
+  // ⚠ The page-level companion to this — *the fold verdict is said once, not three times* — lives
+  // in `CensusProteinView.test.jsx`, which already carries the api / viewer mocks a whole page
+  // needs. Duplicating those here would make this file's fixtures answer to a second harness.
 })
 
 // ── the pLDDT band ─────────────────────────────────────────────────────────────────
