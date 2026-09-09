@@ -47,8 +47,16 @@ export const TRACK_A =
 // Doc sentence and this extract describe what is actually computed: structure only.
 // ⚠ NOT the cohort-82 D-041/D-060 learned scorer — that is a different population and
 // a different method, and nothing here says anything about it.
+// ⚠ D-146 (owner GO 2026-09-09) — the sentence also used to deny that the order is a
+// ranked surface in this application, calling it offline. D-144 put the score in the
+// database and on GET /api/census-structural-ranking and D-145 baked the loader into
+// the serving image, so that denial contradicted MethodNote's own source-of-truth
+// paragraph. The route is named here instead, and the retired wording is quoted ONCE,
+// in the Doc's dated amendment note — never here, where it would read as copy.
+// Where the number LIVES changed; what the number IS did not — still STRUCTURAL_ONLY,
+// still not ADC-ready, still not the cohort-82 learned scorer.
 export const TRACK_B =
-  '**Track B — New Ab, new antigen, reuse ADC learnings** (realistic next-target path): a **new** antibody against a **new** membrane antigen, reusing what the ADC taught us; do **not** require IgV/4JJH similarity. **What is ranked today, until real expression data and wet assays exist: structure only — membrane × ECD × fold confidence (pLDDT).** That order is explicitly **not** ADC readiness and not a shortlist. Cancer vs normal, internalization and antigen density are **excluded** — not filled in as 0.5 neutrals, because a placeholder multiplied into a score cannot be told apart from a measurement in the number that comes out. Scope is the whole census of outward-facing spans (3,467 rows), not one tranche, and it runs offline: it is not a ranked surface in this application. **Later, on its own GO:** real HPA/TCGA expression plus wet assays are what turn cancer vs normal, internalization, antigen density, epitope exposure and ADC suitability into a biology composite.'
+  '**Track B — New Ab, new antigen, reuse ADC learnings** (realistic next-target path): a **new** antibody against a **new** membrane antigen, reusing what the ADC taught us; do **not** require IgV/4JJH similarity. **What is ranked today, until real expression data and wet assays exist: structure only — membrane × ECD × fold confidence (pLDDT).** That order is explicitly **not** ADC readiness and not a shortlist. Cancer vs normal, internalization and antigen density are **excluded** — not filled in as 0.5 neutrals, because a placeholder multiplied into a score cannot be told apart from a measurement in the number that comes out. Scope is the whole census of outward-facing spans (3,467 rows), not one tranche, and that structure-only order is **served live by this application** at /api/census-structural-ranking: the database and that route are the record, while the spreadsheet is a **review lens** — an export for reading, never the source of truth. It stays **STRUCTURAL_ONLY** — still not ADC readiness, still not a shortlist — and it is **not** the cohort-82 learned scorer, which is a different population measured a different way. **Later, on its own GO:** real HPA/TCGA expression plus wet assays are what turn cancer vs normal, internalization, antigen density, epitope exposure and ADC suitability into a biology composite.'
 
 export const BOTTOM_LINE_HEADING = 'Bottom line'
 

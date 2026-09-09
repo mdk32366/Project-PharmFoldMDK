@@ -496,8 +496,21 @@ def test_d136_entry_exists_in_the_living_log():
         "D-145 must be the image-permanence entry that bakes the structural-rank loader in, "
         "not some other entry that took the number"
     )
-    assert "\n### D-146" not in log, (
-        "D-146 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠ Widened again at **D-146** — "146 is the Track B live-route copy entry and 147 takes the
+    # bar" — for the ELEVENTH time, and by ADDING as every pass before it. ⚠⚠ **The THIRD
+    # reserved integer to be SPENT rather than skipped** (142 and 145 were the first two, both the
+    # same day): 146 sat in `docs/RESERVED.md` as the next free `D-`, `D-145` cited it in order to
+    # bar it, and this bar reddened **by design** when an entry claimed it. D-146 retires Track B's
+    # offline clause now that `GET /api/census-structural-ranking` answers `valid` — copy only,
+    # and it **does not touch this suite's subject** (the ADC cancer-type columns). It is named
+    # here because this is one of the enumerated id checks, not because it changes anything.
+    assert re.search(r"^### D-146 — Track B stops denying the surface it is served on",
+                     log, re.M), (
+        "D-146 must be the Track B live-route copy entry, not some other entry that took "
+        "the number"
+    )
+    assert "\n### D-147" not in log, (
+        "D-147 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
 

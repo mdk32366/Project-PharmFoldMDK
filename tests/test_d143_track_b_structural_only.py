@@ -18,7 +18,17 @@ presence assertions both fail on the retired wording, at the assertion rather th
 an import. T-1228 fails on a missing `### D-143` heading — the check is the entry, not
 a citation of it (D-062 / method-note item 7).
 
-Acceptance tests T-1225–T-1228 (docs/Test_Plan.md addendum 2026-09-08).
+⚠⚠ **AMENDED BY D-146 (2026-09-09), in one clause and no more.** T-1226 required the Track B
+sentence to say *"it runs offline: it is not a ranked surface in this application"*. `D-144` then
+put the structural rank in the database and on `GET /api/census-structural-ranking`, `D-145` baked
+its loader into the serving image, and the route answers `result_status: valid` — so this file was
+**requiring a lie**, in the most dangerous shape available: green, specific, and defending the
+error. That clause now requires the live route and the review-lens status and asserts the denial
+**absent**; every other D-143 pin above is unchanged, and the retired wording survives exactly once,
+inside the Doc's dated amendment note (D-129-C).
+
+Acceptance tests T-1225–T-1228 (docs/Test_Plan.md addendum 2026-09-08); the flipped clause is
+T-1253 (addendum 2026-09-09).
 """
 
 from __future__ import annotations
@@ -39,6 +49,13 @@ RETIRED_COMPOSITE = "rank by (cancer × membrane × internalization × density) 
 #: What replaced it. One constant, so the two files cannot drift apart from each other
 #: by a stray character while both still "look right" to a reader.
 STRUCTURAL_CLAUSE = "structure only — membrane × ECD × fold confidence (pLDDT)"
+
+#: ⚠⚠ D-146 — the OTHER retired clause, and this one this file used to REQUIRE. It read true when
+#: D-143 shipped and stopped being true when `D-144` put the rank on
+#: `GET /api/census-structural-ranking` and `D-145` baked its loader into the serving image. Held
+#: as one constant for the same reason as the composite: the presence and absence guards must not
+#: drift apart by a stray character.
+OFFLINE_DENIAL = "it runs offline: it is not a ranked surface in this application"
 
 
 def _flat(text: str) -> str:
@@ -165,13 +182,34 @@ def test_the_sentence_names_its_exclusions_rather_than_defaulting_them():
         ("not a shortlist", "nor a shortlist"),
         ("whole census of outward-facing spans (3,467 rows), not one tranche",
          "the scope must be stated: the full census, not the tranche-5 slice"),
-        ("it runs offline: it is not a ranked surface in this application",
-         "D-079 dec 1 must not be widened by a copy change"),
+        # ⚠⚠ FLIPPED BY D-146 (owner GO 2026-09-09), and this is the one clause of T-1226 that
+        # moved. It required *"it runs offline: it is not a ranked surface in this application"* —
+        # a required-string assertion that had become a REQUIRED LIE. `D-144` put the rank in the
+        # database and on `GET /api/census-structural-ranking` and `D-145` baked its loader into
+        # the serving image; the route answers `result_status: valid` over 3,467 rows. So the
+        # clause now requires the live route and the review-lens status, and the denial is
+        # asserted ABSENT below. ⚠ **D-079 dec 1 is still not widened by a copy change** — it was
+        # narrowed by `D-144` in the log, where a bar belongs, and the copy follows the log.
+        ("served live by this application** at /api/census-structural-ranking",
+         "the route that serves the order must be named, not denied"),
+        ("review lens** — an export for reading, never the source of truth",
+         "the spreadsheet's status is D-144's ruling and must travel with the route"),
         ("**Later, on its own GO:**", "the biology composite must stay a later GO"),
         ("real HPA/TCGA expression plus wet assays",
          "what would have to exist before the composite is computed"),
     ):
         assert clause in track_b, why
+    # ⚠⚠ D-146 — the absence, asserted BESIDE the presences above rather than in a file of its
+    # own. A pure absence guard passes on an empty string; a pure presence guard passes with the
+    # denial still sitting one clause away from the route it denies. Both directions or neither.
+    assert OFFLINE_DENIAL not in track_b, (
+        "the retired offline denial is back in TRACK_B — the rank is served at "
+        "/api/census-structural-ranking, so the clause is false (D-146)"
+    )
+    assert OFFLINE_DENIAL not in _flat(PAPER[PAPER.index("**Track B —"):]).split("*⚠ Amended")[0], (
+        "the retired offline denial is back in the Doc's Track B sentence; it may survive ONLY "
+        "as the dated quotation inside the amendment note (D-129-C)"
+    )
     # Track A is untouched by this entry, and the Doc still holds its red-without-bind.
     assert "Wet binding assays — required" in PAPER and "No bind → stop" in PAPER
 
@@ -270,7 +308,19 @@ def test_the_log_entry_exists_exactly_once_and_leads_the_log():
         "D-145 is the recorded successor id; it must be the image-permanence entry, not some "
         "other entry that took the number"
     )
-    assert "\n### D-146" not in LOG, "D-146 is the next free integer"
+    # ⚠⚠ 146 IS NOW WRITTEN, AND IT IS THIS ENTRY'S OWN SENTENCE THAT MOVED. D-146 retires the
+    # Track B clause D-143 shipped — *"it runs offline: it is not a ranked surface in this
+    # application"* — because D-144 put the rank on `GET /api/census-structural-ranking` and
+    # D-145 baked its loader into the image, so the clause stopped being true. ⚠ **D-143 is NOT
+    # amended away by that:** everything else this file pins is unchanged, and the one flipped
+    # clause is flipped IN PLACE below (T-1226) rather than deleted. The bar is REPLACED BY A
+    # NAME — never deleted — and `### D-147` takes the next-free bar. Never a `>=`.
+    assert re.search(r"^### D-146 — Track B stops denying the surface it is served on",
+                     LOG, re.M), (
+        "D-146 is the recorded successor id; it must be the Track B live-route copy entry, "
+        "not some other entry that took the number"
+    )
+    assert "\n### D-147" not in LOG, "D-147 is the next free integer"
 
 
 def test_the_entry_carries_the_cohort_82_hard_stop_and_the_go_that_authorised_it():
@@ -476,7 +526,21 @@ def test_every_enumerated_id_guard_keeps_the_bar_on_142():
         assert not (barred_145 and named_145), (
             f"{rel} both bars 145 and names an entry for it; both cannot be true"
         )
-        assert '### D-146" not in' in text, f"{rel} does not bar the next free integer"
+        # ⚠⚠ WIDENED THE SAME WAY AT D-146, by the same **bar OR name, never neither** rule —
+        # the THIRD reserved integer spent rather than skipped, and the one that retires this
+        # entry's own offline clause. 146 was the next free integer when D-145 landed and is now
+        # spent by the Track B live-route copy entry, so a guard must either bar it (while
+        # unspent) or name the entry that took it (once spent). The next free integer, 147, takes
+        # the bar. The third state stays forbidden.
+        barred_146 = '### D-146" not in' in text
+        named_146 = "D-146 — Track B stops denying the surface it is served on" in text
+        assert barred_146 or named_146, (
+            f"{rel} neither bars 146 nor names the entry that spends it"
+        )
+        assert not (barred_146 and named_146), (
+            f"{rel} both bars 146 and names an entry for it; both cannot be true"
+        )
+        assert '### D-147" not in' in text, f"{rel} does not bar the next free integer"
         assert "D-143 — Track B stops claiming a composite" in text, (
             f"{rel} must name 143 by its heading, not by a `>=`"
         )

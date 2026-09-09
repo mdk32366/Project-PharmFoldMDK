@@ -56,6 +56,23 @@ describe('D-123 — aboutPaper.js is a verbatim extract of the owner Doc', () =>
     expect(TRACK_B).not.toContain('/ normal risk')
   })
 
+  // ⚠ D-146 (owner GO 2026-09-09) — Track B used to deny being a ranked surface in this
+  // application. D-144 put the rank in the database and on GET /api/census-structural-ranking and
+  // D-145 baked its loader into the serving image, so the denial contradicted MethodNote's own
+  // source-of-truth paragraph. Presence and absence are asserted TOGETHER: deleting the route
+  // clause reddens at the positives, restoring the denial reddens at the negative, and neither
+  // can be satisfied by an empty string.
+  it('D-146: Track B names the live route and the review lens, and no longer denies the surface', () => {
+    expect(TRACK_B).toContain('served live by this application')
+    expect(TRACK_B).toContain('/api/census-structural-ranking')
+    expect(TRACK_B).toContain('review lens')
+    expect(TRACK_B).toContain('never the source of truth')
+    expect(TRACK_B).toContain('STRUCTURAL_ONLY')
+    expect(TRACK_B).toContain('not** the cohort-82 learned scorer')
+    expect(TRACK_B).not.toContain('it runs offline: it is not a ranked surface in this application')
+    expect(TRACK_B).not.toContain('runs offline')
+  })
+
   it('chrome asks whether and does not say shows that', () => {
     expect(STANDING_LINE).toContain('asks whether')
     expect(STANDING_LINE).not.toContain('shows that')

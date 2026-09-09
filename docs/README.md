@@ -379,6 +379,197 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-146 — Track B stops denying the surface it is served on: the offline clause is retired now that `GET /api/census-structural-ranking` answers `valid` — and the disqualifying fact is that no test in this repository can see that route, so the gate pins the WORDS and never the WORLD
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **copy amendment only, on one clause of one sentence and its D-123
+  extract.** `docs/pharmfold-adc-nectin4-paper.md` (*Suggested algorithm*, Track B) and
+  `ui/src/aboutPaper.js` `TRACK_B` stop saying the structural order *"runs offline"* and *"is not
+  a ranked surface in this application"*, and name the live route instead. ⚠ **No formula change,
+  no schema change, no migration, no route change, no loader change, no `--load`, no Census UI
+  rank column, no `cancer ×` product, no 0.5 neutrals, no ops, no fold, no GPU, no `COPY`.**
+  `D-144` and `D-145` are cited and neither is amended.
+- **⚠⚠ THE DISQUALIFYING FACT, FIRST: NOTHING IN THE GATE CAN CHECK THE CLAIM THIS ENTRY MAKES
+  TRUE.** The new sentence asserts something about a **deployed system**; every test shipped with
+  it is a string check over committed bytes. **If Fly began answering `result_status: not_run`
+  tomorrow, `tests/test_d146_track_b_live_api_copy.py` would stay green and the sentence would be
+  a lie again** — the same class of failure this entry is repairing, one direction over. ⚠ **That
+  is deliberate, not an oversight:** a test that curls production turns the gate into a monitor,
+  goes red for reasons no commit caused, and trains its readers to re-run it. The residual is
+  named here instead of being papered over with a network call, and the honest reading is that
+  **the tests pin an agreement between two documents, while the live read below is what pins the
+  agreement to the world — and the live read happened once, at a stated minute.**
+- **⚠ The contradiction that prompted the GO, quoted from both sides rather than summarised.**
+  On `main` at **`a0ac6ce`** two shipped surfaces disagreed about the same object:
+  - `ui/src/components/MethodNote.jsx:1053-1058` (D-144): *"The database and the API are the
+    source of truth: the score is computed and stored by a script, and served at
+    `/api/census-structural-ranking`. The spreadsheet is a **review lens** — an export for
+    reading, never the record."*
+  - `docs/pharmfold-adc-nectin4-paper.md:69` and its extract (D-143): *"…and it runs offline: it
+    is not a ranked surface in this application."*
+  **Both were true when written and one stopped being true on 2026-09-09**, when `D-144` landed
+  the rank in the DB and on its own route and `D-145` baked the loader into the image. A reader
+  who visits `/about` and `/method` in either order is told the ranked surface does and does not
+  exist. ⚠ **The Doc is the one that moved, because the Doc is the one that is wrong** — the
+  D-123 substring discipline then carries the change into the extract, never the other way.
+- **⚠ Provenance (D-016) — the live read, measured from this build, with the query that could
+  have disqualified the whole GO.** `curl -s https://pharmfoldmdk.fly.dev/api/census-structural-ranking`
+  from this session on **2026-09-09** returned HTTP **200**, **1,306,900 bytes**, and:
+  - `result_status: "valid"` — ⚠ **this is the field that could have killed the amendment.**
+    `D-144` ships `not_run` and `superseded` as first-class values, and the whole of this entry
+    rests on it reading `valid`; had it read `not_run`, the offline clause would have been stale
+    rather than false and the correct edit would have been a different sentence.
+  - `run`: `id: 1`, `formula_version: c859da97f73d`, `run_status: valid`,
+    `population_source: data/census/census_manifest.v7.csv`,
+    `population_sha256: fd80d65d…3f970d07`, `computed_at: 2026-09-09T06:02:08.843194+00:00`.
+  - **3,467 rows returned**, `n_candidates: 3455`, `n_reference: 12`, `n_with_fold: 3463`,
+    `n_without_fold: 4` — the same 3,467 the Track B sentence already claimed as its scope, so
+    the scope clause is left untouched rather than re-derived.
+  - **Rank 1 is `GABBR2` (`O75899`), `structural_score` 0.8443** =
+    `score_membrane 1.0 × score_ecd 1.0 × score_model 0.8443`, `mean_plddt 84.43`, tranche 5,
+    `flags: ["ecd_saturated"]`. Ranks 2-5: `GP5` 0.8331, `PTPRH` 0.8318, `ENPP4` 0.8282,
+    `LRRC15` 0.8277.
+  - The payload's own `disclaimer` and `separation` fields already say
+    `STRUCTURAL_ONLY — not HPA-weighted; not ADC-ready` and *"This is NOT the cohort-82 learned
+    scorer"*, which is why the new copy **restates the route's own words** rather than inventing
+    softer ones.
+  ⚠ **What this read is NOT.** It is one unauthenticated GET at one minute. It does not establish
+  uptime, it does not establish that the run stays `valid`, and it is not repeated by any test
+  (see the disqualifying fact). ⚠ **And it is not an ops action:** nothing was deployed, loaded,
+  superseded or written — this build holds no Fly credential and no `DATABASE_URL`
+  (`env | grep -iE 'DATABASE|FLY|POSTGRES|PGHOST'` returns **nothing**), so a read is the only
+  thing it could have done.
+- **Context.** Owner GO 2026-09-09 (*"D-146 Track B stops denying the live census rank surface"*).
+  Model pin `D-0037`: `claude-opus-5` (thinking, high). The ruling is one sentence: **MethodNote
+  is right, Track B is stale, and the copy contradiction is fixed in the Doc first.**
+- **Decision.**
+  1. **REMOVE from the Track B sentence, in the Doc and then in the extract:** *"and it runs
+     offline: it is not a ranked surface in this application."* It is not softened, hedged or
+     moved — the clause asserts a false thing about a live route and there is no true reading of
+     it left.
+  2. **REPLACE it with what is true, and pin all four halves of it:** the structure-only order is
+     **served live by this application** at `/api/census-structural-ranking`; **the database and
+     that route are the record**, while **the spreadsheet is a review lens — an export for
+     reading, never the source of truth**; the order **stays STRUCTURAL_ONLY**, still not ADC
+     readiness and still not a shortlist; and it is **not the cohort-82 learned scorer**, which
+     is a different population measured a different way. ⚠ The route is written **without
+     backticks** on purpose: `AdcContext.jsx`'s `Verbatim` renders `**bold**` and nothing else,
+     so a backtick would reach the page as a literal character.
+  3. **Everything else in Track B is byte-identical, and it is enumerated rather than trusted:**
+     the *new Ab / new antigen* framing, *do not require IgV/4JJH similarity*, *structure only —
+     membrane × ECD × fold confidence (pLDDT)*, *explicitly not ADC readiness and not a
+     shortlist*, the four **excluded** terms, *not filled in as 0.5 neutrals* and its reason, the
+     *whole census of outward-facing spans (3,467 rows), not one tranche* scope, and **Later, on
+     its own GO:** with *real HPA/TCGA expression plus wet assays*. Track A is untouched.
+  4. **The Doc records the amendment, dated and numbered (D-129-C), and the `D-143` note stays
+     exactly where it is.** Two notes now stand under Track B: 2026-09-08 (`D-143`, the composite)
+     and 2026-09-09 (`D-146`, the offline clause). ⚠ **The retired wording is quoted ONCE, inside
+     the new note**, so a reader meets it as history rather than as copy — and the quotation is
+     the reason `runs offline` still appears in the Doc at all.
+  5. **The tests that pinned the false clause are FLIPPED, never deleted.**
+     `tests/test_d143_track_b_structural_only.py`'s clause list asserted the offline denial as a
+     required string; that one clause now asserts the live-route and review-lens language **and**
+     asserts the denial is absent. Every other `D-143` pin — the retired composite's absence, the
+     substring discipline, the exclusions, the scope, the later GO, the cohort-82 carve-out — is
+     kept unchanged. ⚠ **A required-string assertion that has become a required lie is the most
+     dangerous shape in this repository**: it is green, it is specific, and it actively defends
+     the error.
+  6. **`MethodNote.jsx` is VERIFIED and NOT EDITED.** It was read for a stray denial of the
+     census rank and carries none; its D-144 paragraphs are the sentence the Doc is being brought
+     into line with. ⚠ **Track B is not pasted into it** — `D-143`'s T-1227 carve-out forbids the
+     Track B sentence appearing on a scorer surface, and that assertion is kept and extended.
+- **⚠⚠ What this does NOT do to `D-079` decision 1, because the retired clause existed to protect
+  it.** `D-143` wrote *"runs offline"* precisely so a copy change could not widen D-079 dec 1's
+  *no census row scored, ranked, or ordered by suitability* bar. **The bar then moved on its own,
+  in the log, where it belongs:** `D-144` lifted the **`ranked`** half for one arithmetic rank on
+  its own route and restated what STANDS. So this entry **widens nothing** — it stops the copy
+  contradicting a narrowing the log already ruled, and the parts D-144 recorded as STANDING are
+  the parts the new sentence repeats: no `core/scorer.py` import, no census row in `target_scores`
+  or `ranking_results`, **no rank column on `/census`**, and *ordered by suitability* still
+  refused. ⚠ **A copy PR is not where a bar is relaxed**, and if the two ever disagree the log
+  governs.
+- **Deep-learning justification (CLAUDE.md prime directive).** `structural_score` is
+  `score_membrane × score_ecd × score_model`, and `score_model` **is the ESMFold pLDDT** (`D-003`
+  / `D-039`) — `plddt/100` for a fold, `0.8` where pLDDT was never persisted (`F-042`), `0.3`
+  for no fold at all. Two of the three factors are annotation arithmetic; **the only quantity
+  that varies with what the network actually predicted is the learned one**, and at rank 1 it is
+  the *entire* score (`1.0 × 1.0 × 0.8443`) — the top of the list is a pLDDT ordering wearing a
+  product. ⚠⚠ **A copy that tells the reader this order is not served is telling them the
+  network's output is not consumed anywhere they can look**, which inverts the prime directive:
+  the defensible claim is not *"a network ran"* but *"a network's output is served at a named
+  route and you can check it."* This entry makes the copy point at that route. ⚠ **It adds no
+  deep learning and computes nothing**, and the sentence still refuses to call a pLDDT ordering
+  ADC readiness — a confidence measure is not a tumour-biology verdict, and `D-144`'s own banner
+  is quoted rather than reinterpreted.
+- **Ship id: spends `D-146`, which `docs/RESERVED.md` held as the next free integer and the nine
+  next-free guards barred by name.** Checked before claiming it, on `main` at tip **`a0ac6ce`**
+  (D-145 / [#270](https://github.com/mdk32366/Project-PharmFoldMDK/pull/270)):
+  `rg -n '^### D-14' docs/README.md` returns **140, 141, 142, 143, 144, 145** and **no 146**, and
+  the `RESERVED.md` row for 146 reads *"Nothing yet — the next free `D-` integer, barred by name
+  in the nine next-free guards."* ⚠ **This is the THIRD reserved integer to be SPENT rather than
+  skipped** (`D-142` and `D-145` were the first two, both 2026-09-09), and the resolution is the
+  one this log has now used eleven times: **the nine guards that barred `### D-146` now NAME this
+  entry, and `### D-147` takes the bar. Nothing was relaxed to a `>=` and no bar was deleted** —
+  each became a *name*.
+  - **The `D-146` RESERVED row is RETIRED MARKER-SAFE, not struck and not deleted**, on the
+    `D-142` / `D-145` precedent and for the same mechanical reason: both
+    `tests/test_d144_census_structural_rank.py:938` and
+    `tests/test_d145_bake_structural_loader.py:424` locate it with
+    `re.search(r"^\| \*\*D-146\*\*", …)`, so striking the marker to `~~**D-146**~~` would break
+    two other entries' guards instead of satisfying them. The row records ✅ **WRITTEN** inside
+    the cell and keeps its original reservation text as provenance. A new `| **D-147** |` row is
+    added, because this entry cites 147 in order to bar it, and the next-free pointer moves to
+    **`D-147`** in the same commit.
+  - **The citation invariant, measured on this branch rather than predicted.** `RESERVED.md`'s own
+    command returns **`['D-131', 'F-067']`** — unchanged from `main`, both pre-existing (`D-131`
+    is the suffix half of `### D-130-B / D-131`; `F-067` is open in #222). ⚠ **The failure mode is
+    known and was checked for specifically:** `D-145` recorded that *its* first draft opened a
+    hole at `D-146` by barring an integer with no row, and the identical hole opens at `D-147`
+    here if the row is forgotten. It was not: the row lands in this commit, which is why the
+    output does not move.
+- **Revert proof (`A-016`: any red proves the assertion bites; `A-017`: the path must be
+  entered).** Each was run individually and read at the assertion, not at a collection error:
+  - Restore *"and it runs offline: it is not a ranked surface in this application"* to the Doc's
+    Track B sentence **and** to `TRACK_B` → **5 failed, 50 passed**:
+    `test_the_offline_denial_is_gone_from_both_files`,
+    `test_the_guard_catches_a_restored_denial_and_a_deleted_route`,
+    `test_the_retired_clause_survives_only_as_the_docs_dated_quotation`, D-143's flipped
+    `test_the_sentence_names_its_exclusions_rather_than_defaulting_them`, and
+    `test_about_paper_extract.py::test_aboutpaper_excerpts_are_substrings_of_the_doc`. In the UI
+    suite, **2 failed, 16 passed** — `aboutPaper.test.js`'s D-146 case and `AdcContext.test.jsx`'s
+    T-1234, both on the rendered text. ⚠ **This is the revert the GO asked for by name**, and
+    every red is a failure-red at the assertion, not an import error.
+  - Restore it in the Doc **only**, leaving the extract as shipped → **5 failed, 50 passed**, and
+    ⚠⚠ **this entry's first draft predicted the wrong reason and the prediction is kept rather
+    than replaced** (D-129-C; `F-044`'s class). It said *"`TRACK_B` is still a substring, so the
+    failure names the file that moved."* **It is not still a substring** — inserting the clause
+    into the Doc's sentence breaks the contiguity `TRACK_B` depends on, so
+    `test_the_extract_is_still_a_character_substring_of_the_owner_doc` and D-143's
+    `test_the_paper_and_the_extract_carry_the_same_structural_sentence` are among the reds. **The
+    outcome is stronger than predicted and the reasoning behind it was wrong**, which is the only
+    reason this bullet is worth reading.
+  - Delete the new live-route clause from both files while leaving the denial out → **3 failed,
+    47 passed**, at the **positive** assertions (`served live by this application`, then the
+    route). ⚠ **Both directions are asserted together on purpose**: a pure absence guard passes on
+    an empty string, which is how a sentence gets "fixed" by deleting the claim instead of
+    correcting it.
+  - Delete the `### D-146` heading → **15 failed** across **ten** files: all nine next-free guards
+    (`test_d129`, `test_d130`, `test_d136`, `test_d139`, `test_d140`, `test_d141`, `test_d143`,
+    `test_d144`, `test_d145`) plus the five entry-content tests in this entry's own suite. ⚠ **The
+    check is the HEADING, never a citation of it** (D-062 / method-note item 7): a commit message
+    naming this decision does not discharge the rule.
+  - Paste the Track B sentence into `MethodNote.jsx` → **3 failed**: `D-143`'s T-1227 carve-out,
+    this entry's `test_track_b_is_not_pasted_into_a_scorer_surface`, **and the sha256 pin on
+    `MethodNote.jsx`** — which is the one that would have caught it even if both prose guards had
+    been written to look at the wrong file.
+- **⚠ What this build could NOT verify, stated rather than left as an absence.** (1) That the
+  route stays `valid` — one read, one minute, no test (the disqualifying fact). (2) That the
+  spreadsheet the sentence calls a *review lens* is currently stale or current: **the Sheet is
+  not in this repository and was never read here**; the claim is `D-144`'s ruling about status,
+  restated, not a comparison anyone ran. (3) That `/about` renders the amended sentence in a
+  browser: the UI suite asserts the rendered text through `AdcContext.test.jsx`, which is jsdom,
+  not a deployed page.
+
 ### D-145 — The D-144 loader stops living on the production host by hand: `census_structural_rank.py` is baked into the serving image as ONE explicit COPY beside the ingest — and the disqualifying fact is that no image was built here, because this build has no docker daemon
 
 - **Date:** 2026-09-09

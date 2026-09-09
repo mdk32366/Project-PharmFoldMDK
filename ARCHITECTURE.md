@@ -545,12 +545,26 @@ rejected as dishonest, and the sentence now states the **structural-only** order
 that exists — *structure only — membrane × ECD × fold confidence (pLDDT)* — names
 the four terms as **excluded** until a separate GO, refuses ADC readiness in its own
 words, and states that the order ranges over the whole census (**3,467** rows, not
-the tranche-5 slice) and runs **offline**, so D-079 dec 1's no-census-scoring bar is
-not widened by a copy change. ⚠⚠ **This is NOT the cohort-82 D-041/D-060 learned
+the tranche-5 slice). ⚠ **D-146 (owner GO 2026-09-09) then retires the last clause of
+that sentence, and the superseded reading is recorded here rather than overwritten
+(D-129-C):** D-143 also had Track B say the order was offline and *not a ranked
+surface in this application*, which kept a copy change from widening D-079 dec 1's
+no-census-scoring bar. **D-144 narrowed that bar in the log** — the `ranked` half,
+for one arithmetic rank on its own route — **and D-145 baked the loader into the
+serving image, so the clause became false**: `GET /api/census-structural-ranking`
+answers `result_status: valid` over 3,467 rows (read live 2026-09-09; GABBR2 first at
+0.8443). Track B now names that route, says the DB and the route are the record while
+the spreadsheet is a **review lens** — an export for reading, never the source of
+truth — and repeats what D-144 recorded as STANDING: **STRUCTURAL_ONLY**, not ADC
+readiness, not a shortlist, no rank column on `/census`, and not the learned scorer.
+**No bar is relaxed by the copy change; the copy follows the log.**
+⚠⚠ **This is NOT the cohort-82 D-041/D-060 learned
 scorer.** That surface (`core/scorer.py`, `scripts/fit_scorer.py`, `target_scores`,
 the `/targets` **Rank** column, `/scorer`, and MethodNote's prose about it) is a
-different method over a different population and D-143 changes none of it; the two
-ranking surfaces are now distinguishable in the copy, which they were not before.
+different method over a different population and neither D-143 nor D-146 changes any
+of it — D-146 makes Track B name it as what the structural order is **not**, which is
+copy about the boundary, never a change to either side of it; the two ranking
+surfaces are now distinguishable in the copy, which they were not before.
 Chrome says **asks whether**, never **shows that**. ABOUT-COPY / `PAPER_QUESTIONS`
 are untouched. Part 1 is not dumped; Wave2 is not dumped; F-004 is not expanded.
 The four example targets — CD30, CD33, CEACAM5, Trop-2, each the

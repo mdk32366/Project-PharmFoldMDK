@@ -911,8 +911,19 @@ def test_the_next_free_integer_is_named_and_barred():
                      LOG, re.M), (
         "D-145 must be the image-permanence entry that bakes this entry's loader into the "
         "serving image, not some other entry that took the number")
-    assert "\n### D-146" not in LOG, (
-        "D-146 is the next free integer and must stay unspent until an entry claims it by name")
+    # ⚠⚠ 146 IS NOW WRITTEN, AND THIS BAR REDDENED EXACTLY AS THE ONE ABOVE IT DID ONE INTEGER
+    # AGO. `D-146` retires the Track B copy clause that denied THIS entry's route existed —
+    # *"it runs offline: it is not a ranked surface in this application"* — now that
+    # `GET /api/census-structural-ranking` answers `result_status: valid`. It is copy only: **no
+    # formula, no schema, no migration, no route and no loader byte moves**, so nothing this
+    # suite measures changes. The bar is REPLACED BY A NAME — never deleted — and `### D-147`
+    # takes the next-free bar. Never a `>=`.
+    assert re.search(r"^### D-146 — Track B stops denying the surface it is served on",
+                     LOG, re.M), (
+        "D-146 must be the Track B live-route copy entry, not some other entry that took "
+        "the number")
+    assert "\n### D-147" not in LOG, (
+        "D-147 is the next free integer and must stay unspent until an entry claims it by name")
     # ⚠⚠ 142 AND 143 ARE NOW WRITTEN ON `main`, AND THAT IS WHY THIS ASSERTION CHANGED SHAPE.
     # This entry's first draft reserved both in `docs/RESERVED.md`, because at `30f402f` neither
     # had a heading, an open PR or a branch. Both then merged (`f243f93` / `22ce1d7` / `b7d933f`)
@@ -935,9 +946,15 @@ def test_the_next_free_integer_is_named_and_barred():
         "D-145 is cited by the D-144 entry; its RESERVED row must survive as a row — retired "
         "marker-safe, never struck or deleted — or this citation resolves through nothing")
     # ⚠ And the next free integer must carry a row of its own, for the same reason 145 did.
+    # ⚠⚠ UNCHANGED AT D-146, DELIBERATELY, AND THE ROW IS NOW A RETIREMENT RECORD RATHER THAN A
+    # RESERVATION. `D-146` was spent by the Track B live-route copy entry and its row was retired
+    # **marker-safe** — this `re.search` on the literal `| **D-146** |` is exactly why a strike to
+    # `~~**D-146**~~` was refused there, the same trap the `D-142` and `D-145` rows record of
+    # themselves. Either way the row must exist: while 146 was unwritten it was what kept the
+    # citation resolved, and now that it is written it is what records the spend.
     assert re.search(r"^\| \*\*D-146\*\*", reserved, re.M), (
-        "D-146 is cited in order to bar it and is unwritten — so it must be a RESERVED row, or "
-        "the citation invariant has a hole indistinguishable from D-062's")
+        "D-146 is cited by this entry; its RESERVED row must survive as a row — retired "
+        "marker-safe, never struck or deleted — or this citation resolves through nothing")
     # ⚠ the retired reservation is STRUCK, not deleted (D-129-C): it records what was reserved
     assert "~~**D-143**~~" in reserved, (
         "the D-143 reservation must be retired in place, so a reader can tell 'written' from "
