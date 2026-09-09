@@ -596,6 +596,20 @@ So the rule is not "be careful" — it is:
   it does **not** independently verify the pLDDT, and it says so in its own docstring. ⚠ **And
   the full-census ORDER is expected to differ from the offline CSV** once more tranches have
   folds — that is the load-from-DB design working, not a discrepancy to reconcile away.
+  - ⚠ **END-TO-END SMOKE LOAD, AND WHAT IT IS NOT.** The loader was run for real against a
+    **throwaway SQLite file** (`/tmp/d144.db`, `create_all`, **four** hand-seeded census folds —
+    `O75899` at 84.43, `Q96NY8` at 88.10, `P28908` at 79.50, `A0AVI2` with no pLDDT) and then
+    read back through the route. Measured: **3,467** score rows, `n_candidates` **3,455**,
+    `n_reference` **12**, `n_with_fold` **4**, `population_sha256`
+    `fd80d65df8b3…d3f970d07`, and **`O75899`/GABBR2 at rank 1 with `structural_score`
+    exactly `0.8443`** (`score_membrane` 1.0 · `score_ecd` 1.0 · `score_model` 0.8443, flag
+    `ecd_saturated`) — the GO's reference figure, reproduced through the database path rather
+    than through a unit test. ⚠ **And the sink was measured, not assumed:** `Q96NY8` scored
+    **0.8810** — the highest in that run, rank 1 on score alone — and came back at **rank
+    3,456**, first of the twelve references, flagged `reference_not_a_candidate`. ⚠⚠ **This is a
+    smoke test on a temporary file, NOT the production database and NOT a claim about the live
+    ranking**, which is still `not_run`. The four folds are seeded values, and three of the four
+    pLDDTs are invented for the fixture; only the arithmetic and the plumbing are being reported.
 - **⚠⚠ `PQR` could not be resolved to anything, and it is named rather than guessed.** The GO
   says *"NECTIN4 / PQR: flag as reference, sort to end"*. Measured across the committed data:
   `PQR` appears as a standalone gene name, accession or alias in **zero** rows of
