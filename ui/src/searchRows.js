@@ -23,17 +23,25 @@ export function normalizeQuery(text) {
 // ⚠ An alias is a way IN, not a second identity: matching one does not rename the row.
 // ⚠ `aliases` absent (a payload that never carried them) degrades to accession/gene/label matching.
 // It does NOT throw, and it does not claim the protein has no other names.
+// ⚠⚠ `description` IS MATCHED TOO (D-142), and it is the same finding one more time. The census
+// searches protein names already — its `label` IS the protein name — while `/targets`, whose
+// `label` is the gene symbol, could not. So the surface that just gained a Description column would
+// have rendered 82 protein names that its own search box could not find: `F-052`'s shape, in the
+// PR that created the values. ⚠ A row without the key is unaffected (census rows carry no
+// `description`), so this widens one population's reach and changes the other's behaviour not at
+// all — and it is a way IN, never a second identity.
 export function filterRows(rows, query) {
   const raw = String(query ?? '').trim().toLowerCase()
   if (!raw) return rows
   const q = normalizeQuery(query)
   return rows.filter((r) => {
     // the original substring behaviour is preserved for names with spaces and punctuation
-    if ([r.accession, r.gene, r.label].some((v) => v && String(v).toLowerCase().includes(raw))) {
+    if ([r.accession, r.gene, r.label, r.description].some(
+      (v) => v && String(v).toLowerCase().includes(raw))) {
       return true
     }
     if (!q) return false
-    return [r.accession, r.gene, r.label, ...(r.aliases ?? [])].some(
+    return [r.accession, r.gene, r.label, r.description, ...(r.aliases ?? [])].some(
       (v) => v && normalizeQuery(v).includes(q),
     )
   })

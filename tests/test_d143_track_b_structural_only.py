@@ -378,17 +378,32 @@ def test_the_entry_reports_the_live_143_collision_instead_of_merging_over_it():
         "merge order is not an argument, and the entry must not read as though it were"
     )
     assert "142 is free" in lowered
-    # ⚠ And the log's own citation must present it as HELD, never as a spent authority.
+    # ⚠⚠ WIDENED BY ADDING AT D-142. This asserted that the D-143 entry presents 142 as HELD,
+    # "never as a spent authority" — correct while 142 was unspent, and this entry's own text
+    # said what would end it: *"142 is free"* for the holder to take. The holder took it, so the
+    # requirement is now **held OR spent-by-a-real-heading**: the citation must still resolve, and
+    # what it may never be is a spent authority with NO entry — the D-062 defect this file is
+    # built around. ⚠ The held phrasing is left in the D-143 entry untouched (D-129-C), so on
+    # `main` alone this still matches the first branch.
     entry = _flat(_d143_entry())
-    assert "`D-142` is skipped by owner ruling — held, not free" in entry
+    held = "`D-142` is skipped by owner ruling — held, not free" in entry
+    spent = bool(re.search(r"^### D-142 — ", LOG, re.M))
+    assert held or spent, (
+        "the D-143 entry cites 142; that citation must resolve either to a recorded HOLD or to "
+        "a real `### D-142` heading — a citation resolving to neither is D-062"
+    )
     assert "RESERVED.md" in entry
 
 
 def test_every_enumerated_id_guard_keeps_the_bar_on_142():
-    """⚠ Widened by ADDING. The bar on a skipped integer STAYS (D-141's precedent on 140).
+    """⚠ Widened by ADDING. A skipped integer stays BARRED until an entry NAMES it.
 
     Enumerated over the six guard files rather than spot-checked, so a guard that drops
     the bar while renumbering is caught here instead of by the next collision.
+
+    ⚠⚠ The name is kept for continuity, and it is now half the story: as of `### D-142`
+    the requirement is **bar or name**, never neither. Renaming the test would break the
+    thread back to the collision it was written for.
     """
     guards = (
         "tests/test_d129_phase5_named_refuse_spec.py",
@@ -400,7 +415,21 @@ def test_every_enumerated_id_guard_keeps_the_bar_on_142():
     )
     for rel in guards:
         text = (ROOT / rel).read_text(encoding="utf-8")
-        assert '### D-142" not in' in text, f"{rel} dropped the bar on the held 142"
+        # ⚠⚠ WIDENED BY ADDING AT D-142 — and the widening is the one THIS TEST'S OWN failure
+        # message pre-committed: *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED
+        # beside 143 — never relaxed to a `>=`."* The holder wrote it, so the requirement is now
+        # **bar OR name**: while 142 is unspent every guard must bar it; once an entry spends it
+        # every guard must assert THAT ENTRY by heading. ⚠ The third state stays forbidden — 142
+        # neither barred nor named — because an integer that is silently free is how a collision
+        # gets in, and that is exactly what happened between #266 and #267.
+        barred = '### D-142" not in' in text
+        named = "D-142 — `/targets` gains a Cancer association" in text
+        assert barred or named, (
+            f"{rel} neither bars the held 142 nor names the entry that spends it"
+        )
+        assert not (barred and named), (
+            f"{rel} both bars 142 and names an entry for it; both cannot be true"
+        )
         assert '### D-144" not in' in text, f"{rel} does not bar the next free integer"
         assert "D-143 — Track B stops claiming a composite" in text, (
             f"{rel} must name 143 by its heading, not by a `>=`"
@@ -410,8 +439,12 @@ def test_every_enumerated_id_guard_keeps_the_bar_on_142():
         # ⚠ A first draft of this check asserted `">=" not in …` nearby, which fired on
         # every guard's own *"never relaxed to a `>=`"* prose — a guard reporting its
         # own good news. Replaced with the claim that actually matters.
-        assert "142 is SKIPPED, NOT FREE" in text or "142 is HELD" in text, (
-            f"{rel} bars 142 without saying why it is barred"
+        # ⚠ Widened the same way: while barred a guard must say WHY; once spent it must say the
+        # reserved integer was spent and by whom. Either way it EXPLAINS itself — an unexplained
+        # assertion about an integer is what a later session deletes for looking like a typo.
+        assert ("142 is SKIPPED, NOT FREE" in text or "142 is HELD" in text
+                or "142 IS NOW WRITTEN" in text), (
+            f"{rel} asserts something about 142 without saying why"
         )
 
 

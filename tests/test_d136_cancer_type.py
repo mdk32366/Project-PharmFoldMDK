@@ -456,13 +456,18 @@ def test_d136_entry_exists_in_the_living_log():
         "D-143 is the recorded successor id; it must be the Track B structural-only "
         "copy entry, not some other entry that took the number"
     )
-    # ⚠ 142 is SKIPPED, NOT FREE — the Track B copy work was written as D-142, renumbered to
-    # D-143 by owner instruction 2026-09-09, and nothing visible in the tree spends 142
-    # (docs/RESERVED.md records the ruling and the absence of a discoverable holder). The bar on
-    # it therefore STAYS and is ADDED to, exactly as D-141 kept the bar on 140.
-    assert "\n### D-142" not in log, (
-        "D-142 is held by owner ruling and registered in docs/RESERVED.md; if a holder writes it, "
-        "this reddens BY DESIGN and 142 is ADDED beside 143 — never relaxed to a `>=`"
+    # ⚠⚠ 142 IS NOW WRITTEN, AND THE BAR ON IT REDDENED EXACTLY AS ITS OWN MESSAGE PREDICTED.
+    # `docs/RESERVED.md` reserved 142 after the Track B copy work was renumbered off it, with the
+    # unblock recorded as *"whoever holds it writes `### D-142`"* and the resolution pre-committed:
+    # *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED beside 143."* The holder is
+    # the `/targets` columns entry (Emma CoS assignment, 2026-09-09), so the bar is REPLACED BY A
+    # NAME rather than deleted, and 142 is ADDED to the enumeration beside 143. ⚠ Never a `>=`:
+    # this is the eighth widening and the eighth resolution by adding.
+    # ⚠ A reserved integer that is later spent must be NAMED here, not merely un-barred — an
+    # un-barred integer with no name is exactly what the D-062 defect looked like.
+    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", log, re.M), (
+        "D-142 is the recorded holder of the reserved integer; it must be the target-list "
+        "columns entry, not some other entry that took the number"
     )
     assert "\n### D-144" not in log
 

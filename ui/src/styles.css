@@ -38,7 +38,10 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 
 /* target list */
 .target-list .lede { color: var(--muted); }
-.target-list table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+/* ⚠ D-142: 0.92rem, matching `.census-table`'s 0.9rem and for the same reason — eight columns in a
+   60rem `main` is a real budget, and the alternative to a slightly smaller face is a cell three
+   lines tall. It moves no information: every value still renders in full. */
+.target-list table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.92rem; }
 .target-list th, .target-list td {
   text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line);
 }
@@ -66,6 +69,68 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 /* An absent measurement is a CATEGORY, not a low number. It is rendered as its stated reason rather
    than a bare dash, so the reader learns why the value is missing instead of guessing. */
 .absent-reason { color: var(--muted); font-style: italic; }
+
+/* ── ⚠⚠ D-142 — COLUMN ONE STOPS DOMINATING THE TABLE, AND NOT ONE CHARACTER IS DROPPED ──────────
+   The Rank cell holds an integer for a ranked row and a CAUSE — a sentence — for an unranked one,
+   and until now `.rank-cause` and `.col-rank` had NO RULE IN THIS FILE. With `table-layout: auto`
+   the column was therefore sized to the longest cause laid out on one line: 144 characters for the
+   held-out-and-OOM'd row, 53 for a below-floor row, 34 on EVERY row while no ranking is served —
+   against a four-character header.
+
+   ⚠ The bound sits on the inner block as well as on the cell: `max-width` on a `td` alone is
+   advisory under the auto table algorithm, but a block child's capped max-content width really
+   does cap the column's contribution.
+
+   ⚠⚠ THIS IS A BOUND AND A DEMOTION, NEVER A TRUNCATION — no `text-overflow`, no ellipsis, no
+   `max-height`, no clipping. Every word of every cause is still on screen. **Demotion is not
+   deletion** is the standing rule on this surface (see the confidence block above), and it governs
+   here too.
+
+   ⚠⚠ AND THE FIRST ATTEMPT AT THIS BOUND WAS WRONG IN A WAY NO TEST COULD SEE. It used
+   `overflow-wrap: anywhere` with no `min-width`, and rendered in a real browser at 1440px the
+   column collapsed to about **45px** with the cause broken **mid-word** — *"no / ranking / run is /
+   currentl / y served"*. Two causes, one fix each:
+     • `anywhere` (unlike `break-word`) shrinks an element's **min-content** size to a single
+       character, so the auto table algorithm was free to squeeze the column to nothing. It is now
+       `break-word`, which breaks only a word that cannot fit on a line by itself and leaves the
+       intrinsic minimum alone — the longest word in any cause ("pre-registered") is the floor the
+       browser derives for itself.
+     • `min-width` is belt to that brace, and it is **4.5rem, not 7rem**. A 7rem floor was tried and
+       rejected after looking at it: 37 rows show a one- or two-digit integer under the default sort,
+       and 7rem left an awkward gap on every one of them to buy nothing.
+   ⚠ THE STATED COST: `IGF2R`'s two-cause 144-character sentence wraps to **13 lines** at this
+   width, so that one row is tall. It is one row, every word is on screen, and the alternative was
+   a column sized to that sentence for all 82.
+   ⚠ jsdom has **no layout**, so the suite can assert the rule and never the result. Both of these
+   were found by opening the page — which is why `overflow-wrap: anywhere` is now barred by a test
+   rather than merely avoided. */
+.target-list .col-rank { min-width: 4.5rem; max-width: 9.5rem; }
+.rank-cause {
+  display: block;
+  min-width: 4.5rem;
+  max-width: 9.5rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-family: inherit;         /* ⚠ the cell is `.mono` for the integer; a sentence is not a number */
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* The Description column (D-142): the UniProt protein name, bounded so a 72-character name
+   ("Leucine-rich repeat and fibronectin type-III domain-containing protein 4" — the longest in the
+   committed manifest) wraps instead of becoming the new widest column. */
+.target-list .col-description { min-width: 9rem; max-width: 15rem; }
+.description-text { display: block; min-width: 9rem; max-width: 15rem; overflow-wrap: break-word; }
+
+/* The Cancer association column (D-142). The tumour type(s) lead; the total and the way to the
+   full list are secondary beneath them. `BTN3A3` carries 16 pairs, so the cell states the count
+   and never pretends the one it shows is the whole list. */
+.target-list .col-assoc { min-width: 8.5rem; max-width: 12rem; }
+.assoc-cell { display: block; min-width: 8.5rem; max-width: 12rem; overflow-wrap: break-word; }
+.assoc-top { display: block; }
+.assoc-rest { display: block; font-size: 0.82rem; }
+.assoc-unordered { color: var(--muted); font-style: italic; }
 
 /* target view */
 .target-header h2 { margin: 0 0 0.1rem; }

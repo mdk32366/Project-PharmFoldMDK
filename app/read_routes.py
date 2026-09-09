@@ -210,13 +210,49 @@ def get_adc_row(adc_id: str) -> dict:
     return row
 
 
+def _association_attributions(symbols: Any) -> dict[str, Any]:
+    """One HPA attribution block per covered symbol, for the ``pathology`` view (D-142).
+
+    ⚠⚠ **THE CITATION IS A PRECONDITION OF DISPLAY, AND THIS ROUTE WAS SERVING THE VALUES
+    WITHOUT IT.** ``D-100`` established that Kathad's S3 is a verbatim extract of HPA's
+    ``pathology.tsv``, so every ``qh_score`` this route serves is HPA content — and the payload
+    carried no ``attribution`` key at all, while ``CancerAssociations.jsx`` read
+    ``data.attribution`` and mounted ``HpaDeepLink`` with ``undefined``. That component returns
+    ``null`` for a falsy attribution, so the detail card has rendered scores with **no HPA
+    citation** since D-053. ⚠ ``HpaAttribution.test.jsx``'s PC3 guard could not see it: it asserts
+    the FILE imports the attribution, and the file does — the same lesson
+    ``HpaAttribution.split.test.jsx`` records one level in ("a file-level guard cannot see which
+    BRANCH renders the value"), here one level further out, at the PROP.
+
+    ⚠ **Per SYMBOL, not one block for the map.** Element 4 is a property of the datum, and a
+    map-level block would have to say *"no gene symbol on this record"* — a true statement about
+    the map and a false one on any card that rendered it. All 82 cohort symbols resolve an ENSG
+    (``core/hpa_attribution.py`` docstring: 82 of 82), so each block carries a real link.
+
+    ⚠ A failure degrades to ``{}``, and the consumer must then WITHHOLD the value rather than
+    render it uncited — the fail-closed direction the word *precondition* requires.
+    """
+    try:
+        from core.hpa_attribution import attribution_block
+        return {sym: attribution_block(sym, "pathology") for sym in sorted(symbols or {})}
+    except Exception:                      # noqa: BLE001
+        return {}
+
+
 @read_router.get("/associations")
 def get_associations() -> dict:
     """D-053: per-target cancer associations, DERIVED from the Kathad S3 grid (the whole map — 337
     pairs is ~30 KB, one route for one picture, per D-038). No engine: it is a pure file-derived
     supplier (``core/cancer_associations.py``); counts are computed from what loaded, never
-    constants. No credential (D-034 posture)."""
-    return load_associations()
+    constants. No credential (D-034 posture).
+
+    ⚠ **D-142 adds one FIELD and no route** — ``attributions``, keyed by gene symbol, so the two
+    surfaces that render these values (the D-053 detail card and the D-142 target-list column) can
+    satisfy the HPA citation precondition. ``system-model.json`` is unchanged (D-051 fires on
+    route sets)."""
+    payload = load_associations()
+    payload["attributions"] = _association_attributions(payload.get("associations"))
+    return payload
 
 
 @read_router.get("/census")

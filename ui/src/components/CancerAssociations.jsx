@@ -53,8 +53,19 @@ export default function CancerAssociations({ symbol }) {
           Citing the paper is not citing HPA. D-053 predates the clinical layer, so this
           surface rendered HPA data unattributed longer than any other.
           ⚠ SUPPRESSED WHEN NO ROW RENDERS. "No association recorded" is not HPA content, so a
-          licence-required citation beside it is attached to nothing. */}
-      {rows.length > 0 && <HpaDeepLink attribution={data.attribution} view="pathology" />}
+          licence-required citation beside it is attached to nothing.
+          ⚠⚠ `data.attributions[symbol]`, NOT `data.attribution` — AND THAT WAS A LIVE GAP, NOT A
+          RENAME (D-142). `/api/associations` carried no `attribution` key of any kind, so this
+          prop was `undefined` on every render and `HpaDeepLink` returns null for a falsy
+          attribution: the card has shown quasi H-scores with NO HPA citation since D-053. PC3
+          (`HpaAttribution.test.jsx`) could not see it — it asserts the FILE imports the
+          attribution, and it does. `HpaAttribution.split.test.jsx` records the same lesson one
+          level in ("a file-level guard cannot see which BRANCH renders the value"); this is the
+          same shape one level further out, at the PROP. The route now serves one block per
+          covered symbol, because element 4 belongs to the DATUM. */}
+      {rows.length > 0 && (
+        <HpaDeepLink attribution={data.attributions?.[symbol]} view="pathology" />
+      )}
 
     </section>
   )

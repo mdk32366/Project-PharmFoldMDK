@@ -462,11 +462,12 @@ def test_d129_is_the_next_free_decision_id():
     # an open-PR check cannot see what an authority outside the tree is holding. 142 stays
     # registered in `docs/RESERVED.md` and BARRED below; `### D-144` takes the next-free bar.
     assert [i for i in ids if i > 129] == [
-        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 143
+        130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143
     ], (
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
-        f"D-137, D-138, D-139, D-140, D-141 and D-143 — ⚠ 142 is deliberately ABSENT "
-        f"(held by owner ruling, docs/RESERVED.md); found {ids[-13:]}"
+        f"D-137, D-138, D-139, D-140, D-141, D-142 and D-143 — ⚠ 142 is no longer "
+        f"absent: docs/RESERVED.md reserved it and the /targets columns entry is the "
+        f"holder that wrote it, so it is ADDED here beside 143; found {ids[-13:]}"
     )
     assert re.search(r"^### D-139 — The served PDB stops being a constant", LOG, re.M), (
         "D-139 is the recorded successor id; it must be the served-path flip entry, "
@@ -484,13 +485,18 @@ def test_d129_is_the_next_free_decision_id():
         "D-143 is the recorded successor id; it must be the Track B structural-only "
         "copy entry, not some other entry that took the number"
     )
-    # ⚠ 142 is SKIPPED, NOT FREE — the Track B copy work was written as D-142, renumbered to
-    # D-143 by owner instruction 2026-09-09, and nothing visible in the tree spends 142
-    # (docs/RESERVED.md records the ruling and the absence of a discoverable holder). The bar on
-    # it therefore STAYS and is ADDED to, exactly as D-141 kept the bar on 140.
-    assert "\n### D-142" not in LOG, (
-        "D-142 is held by owner ruling and registered in docs/RESERVED.md; if a holder writes it, "
-        "this reddens BY DESIGN and 142 is ADDED beside 143 — never relaxed to a `>=`"
+    # ⚠⚠ 142 IS NOW WRITTEN, AND THE BAR ON IT REDDENED EXACTLY AS ITS OWN MESSAGE PREDICTED.
+    # `docs/RESERVED.md` reserved 142 after the Track B copy work was renumbered off it, with the
+    # unblock recorded as *"whoever holds it writes `### D-142`"* and the resolution pre-committed:
+    # *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED beside 143."* The holder is
+    # the `/targets` columns entry (Emma CoS assignment, 2026-09-09), so the bar is REPLACED BY A
+    # NAME rather than deleted, and 142 is ADDED to the enumeration beside 143. ⚠ Never a `>=`:
+    # this is the eighth widening and the eighth resolution by adding.
+    # ⚠ A reserved integer that is later spent must be NAMED here, not merely un-barred — an
+    # un-barred integer with no name is exactly what the D-062 defect looked like.
+    assert re.search(r"^### D-142 — `/targets` gains a Cancer association", LOG, re.M), (
+        "D-142 is the recorded holder of the reserved integer; it must be the target-list "
+        "columns entry, not some other entry that took the number"
     )
     assert "\n### D-144" not in LOG, (
         "D-144 is the next free integer and must stay unspent until an entry claims it "
