@@ -16,6 +16,7 @@ import {
   BOTTOM_LINE_1,
   BOTTOM_LINE_2,
 } from '../aboutPaper.js'
+import { COHORT_PAPER_SHORT, COHORT_PAPER_URL } from '../cohortPaper.js'
 import AdcSchematic from './AdcSchematic.jsx'
 import AdcMechanismPanels from './AdcMechanismPanels.jsx'
 import Term from './Term.jsx'
@@ -166,8 +167,16 @@ export default function AdcContext() {
           wording for the owner to finalise. The example targets are DERIVED from heldoutExamples.js,
           which is drift-tested against data/heldout_positives.csv, so no accession is hand-typed. */}
       <h3>What the 82 is — a comparator, not a census</h3>
+      {/* ⚠ D-151: the paper is an ANCHOR here as well, from the same constant `/targets` reads.
+          `/targets` sends a reader here for what the 82 is; arriving at a second unlinked mention
+          of the same paper would make the trail end one page later than it looks like it does. */}
       <p>
-        The {stats ? stats.n : ''} targets here come from one published cohort (Kathad et al.), selected
+        The {stats ? stats.n : ''} targets here come from one published cohort (<a
+          className="cohort-paper-link"
+          href={COHORT_PAPER_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >{COHORT_PAPER_SHORT}</a>), selected
         by <strong>expression and selectivity</strong> in tumour tissue. That makes it a{' '}
         <strong>comparator set</strong> — the fixed list this project re-orders — and{' '}
         <strong>not a complete census</strong> of antigens an ADC could target.

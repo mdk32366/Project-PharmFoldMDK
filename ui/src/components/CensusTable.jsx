@@ -430,6 +430,26 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
 
   return (
     <section className="census-table panel">
+      {/* ⚠⚠ D-151 — THE READER REACHES THE LIST WITHOUT HUNTING FOR IT, AND NOT ONE SENTENCE WAS
+          CUT TO ARRANGE THAT. Owner complaint, 2026-09-09: *"You've got to scroll to get to the
+          list."* `CensusView` was the larger half of the cause and is fixed there; this component
+          was the other half — between its own `<h3>` and its first `<tr>` it rendered a 700-character
+          scope paragraph, the lens control with three explanatory paragraphs, the HPA citation, two
+          caveats and a badge legend that grows with the data. On a 900 px laptop the header row
+          started below the fold on its own.
+          ⚠ WHAT MOVED AND WHAT DID NOT, because the difference is the whole decision:
+            · the SEARCH and the TABLE come first — they are what the page is for;
+            · the standing claim (`Not scored, not ranked, not ordered by suitability`) stays ABOVE
+              them, uncollapsed, because a reader who stops at the first row must have met it;
+            · the lens CONTROL stays visible and uncollapsed — D-102 makes the applied lens part of
+              what the Stained % column MEANS, and a lens whose name is behind a disclosure control
+              is a lens the reader can look at a percentage without having seen;
+            · the HPA citation stays visible for the same reason one level up — the licence words it
+              as a precondition of display (D-100 / D-094), and a citation behind a `<summary>` is a
+              citation that is not displayed;
+            · only the LONG-FORM prose collapses: the rest of the scope paragraph, the lens's own
+              numbers, and the badge legend. Collapsed, in the DOM, findable by the browser's page
+              search, and every existing assertion reads them unchanged. */}
       <h3>Census — every folded protein</h3>
       <p className="census-scope">
         {/* ⚠⚠ THE COUNT AND ITS KEY. The table now holds BOTH populations, so "N folded proteins"
@@ -438,14 +458,7 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
         <strong>{folded.toLocaleString()}</strong> folded, plus{' '}
         <strong>{unfolded.toLocaleString()}</strong> listed but{' '}
         <strong>never folded</strong> — shown so a protein you can name is never simply missing.{' '}
-        <strong>Not scored, not ranked, not ordered by suitability.</strong> These are structures
-        and their measured properties; no judgement of target quality has been applied to any of
-        them. Each protein&rsquo;s page carries a <strong>structural profile</strong> — a
-        measurement derived from its structure, never a verdict. The <strong>Profile</strong> column
-        below says only whether one could be computed, never what it was.{' '}
-        <strong>A refusal is about range, not merit</strong>: it means the protein sits outside the
-        span of values the model was fitted on, which is a fact about the model&rsquo;s reach and not
-        about the protein.
+        <strong>Not scored, not ranked, not ordered by suitability.</strong>
       </p>
 
       <label className="census-search">
@@ -508,11 +521,10 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
 
       {/* ⚠⚠ THE LENS CONTROL. D-102's condition is "state what it is", and this is where it is
           stated. The control is not a preference — it changes what the Stained % column MEANS, so
-          the meaning is printed under it rather than hidden in a tooltip. */}
-      {/* ⚠ The publication, website reference and data credit for the whole staining column.
-          The per-datum LINK is on each cell above; these three are properties of the source. */}
-      <HpaAttribution attribution={declared?.attribution} view="pathology" />
-
+          the meaning is printed under it rather than hidden in a tooltip.
+          ⚠ D-151 keeps it UNCOLLAPSED for exactly that reason. Everything in this component that
+          moved into a `<details>` is long-form explanation; a control whose setting changes what a
+          rendered number means is not explanation. */}
       <div className="lens-control">
         <fieldset>
           <legend>How to read &ldquo;stained&rdquo;</legend>
@@ -533,12 +545,10 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
           <strong>{LENSES[lens].label}:</strong> {LENSES[lens].meaning}.{' '}
           <span className="lens-caveat">⚠ {LENSES[lens].caveat}.</span>
         </p>
-        {/* ⚠⚠ THE NUMBER THAT MAKES THIS CONTROL NECESSARY RATHER THAN DECORATIVE. */}
-        <p className="lens-why">
-          The same 1,727 proteins read very differently: <strong>728</strong> stain in 100% of
-          patients under <em>best single cancer</em>, and <strong>16</strong> do under{' '}
-          <em>all cancers pooled</em>. Neither is wrong — they answer different questions.
-        </p>
+        {/* ⚠ D-151: the 728-versus-16 paragraph moved into the notes block below the controls —
+            it is the JUSTIFICATION for the control rather than a statement of what is currently
+            applied, and the applied lens plus its caveat are what must be readable beside the
+            column. The paragraph itself is unchanged and still on the page. */}
 
         {declared && (
           <label className="lens-critical">
@@ -567,6 +577,15 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
           </label>
         )}
       </div>
+
+      {/* ⚠ The publication, website reference and data credit for the whole staining column.
+          The per-datum LINK is on each cell above; these three are properties of the source.
+          ⚠⚠ D-151 moved it BELOW the lens control and left it OUTSIDE every disclosure control on
+          this surface. The licence words citation as a precondition of display — "be sure that our
+          content is never displayed in the absence of such citation" — and a citation the reader
+          must open a `<summary>` to see is not displayed. It is the one block on this page whose
+          position is decided by a licence rather than by layout. */}
+      <HpaAttribution attribution={declared?.attribution} view="pathology" />
 
       {/* ⚠⚠ THE COUNT REPORTS WHAT IS ON SCREEN, not what matched. The first version printed
           `shown.length` while the table rendered `visible.length` — so the page read
@@ -610,352 +629,420 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
         </p>
       )}
 
-      {/* ⚠⚠ THE LEGEND (D-133 am. 1), and it sits HERE — against the header row the words appear
-          in, not in a glossary elsewhere on the site. Every one of these badges is a category with
-          a cause, and until now the page printed the category and kept the cause in a tooltip.
-          ⚠ Same spirit as the staining lens block above: state what a word means where it is read.
-          ⚠ It lists only the badges these rows actually wear (plus the three standing topology
-          categories), because a legend for absent categories is the wall it must not become. */}
-      <div className="census-legend">
-        {/* ⚠⚠ THE COST AXIS, IN THE SAME VISUAL FRAME AS THE COLUMN (D-137 / D-077 dec 1
-            refusal 2). It leads the legend deliberately: `local` beside a census of ADC targets
-            reads as *good* to anyone who has not been told otherwise, and being told in a tooltip
-            is not being told. The recipe rides with it because a cost claim without its recipe is
-            not checkable, and both strings are the API's rather than this file's. */}
-        {(costAxis || costLegend.length > 0) && (
-          <>
-            <h4>What the Cost column says — and what it does not</h4>
-            {costAxis && <p className="cost-axis">⚠ {costAxis}</p>}
-            {costRecipe && (
-              <p className="cost-recipe">
-                <strong>Measured at:</strong> {costRecipe}
-              </p>
-            )}
-            <dl className="legend-list">
-              {costLegend.map((c) => (
-                <div className="legend-row" key={c.key}>
-                  {/* ⚠ the TERM is the API's, exactly as in the Structure block above */}
-                  <dt>{c.term}</dt>
-                  <dd>{c.meaning}</dd>
-                </div>
-              ))}
-            </dl>
-          </>
-        )}
-        {/* ⚠⚠ THE THREE AXES, NAMED BEFORE THE CATEGORIES (D-150). The categories below are
-            axis A only, and a reader who meets them without the frame will do exactly what the
-            old single badge invited: treat "a structure is served" as "this protein is done". */}
-        <h4>What the Status column says — three questions, not one</h4>
-        <p className="status-axis">⚠ {STATUS_AXIS_NOTE}</p>
-        {statusLegendRows.length > 0 && (
-          <dl className="legend-list">
-            {statusLegendRows.map((s) => (
-              <div className="legend-row" key={s.key}>
-                <dt>{s.term}</dt>
-                <dd>{s.meaning}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
-        {/* ⚠ Unconditional, both of them. Axis B is true of every census row and axis C's warning
-            is about a class of artefact — printing either only "when relevant" is how a surface
-            teaches a reader that its silence is a clean bill of health. */}
-        <p className="status-unscored">
-          <strong>Not scored, not ranked</strong> is on every row in this census, and it is not a
-          fold verdict: D-079 decision 1 bars scoring a census row, so a protein with a perfectly
-          good structure is still unscored. ⚠ <strong>&ldquo;Not scored&rdquo; never means
-          &ldquo;no structure&rdquo;</strong>, and no absence of a number here should be read as
-          a fold that failed.
+      {/* ⚠⚠ THE LONG-FORM NOTES, COLLAPSED BY DEFAULT (D-151) AND STILL DIRECTLY ABOVE THE HEADER
+          ROW THEY DEFINE. This is a disclosure control, not a filter: nothing is removed, the text
+          is in the DOM, the browser's own page search finds it, and every assertion in
+          `CensusTable.*.test.jsx` reads it through `.census-legend` exactly as before.
+          ⚠ ADJACENCY IS PRESERVED ON PURPOSE. D-133 am. 1 put the legend HERE — against the header
+          row whose words it defines, not in a glossary elsewhere on the site — and D-137 requires
+          the cost axis in the same visual frame as the cost column. One `<summary>` between the
+          legend and the `<thead>` keeps both true; moving the block to the foot of the page would
+          not have.
+          ⚠ It is NOT `open`: an `open` default would restore the scroll the owner objected to
+          while looking like a fix. */}
+      <details className="census-notes">
+        <summary>
+          How to read this table — what every column, badge and figure means
+        </summary>
+
+        {/* ⚠ D-151: the remainder of the scope paragraph. The counts and the standing
+            `Not scored, not ranked, not ordered by suitability` claim stay above the search, where
+            a reader meets them before the first row; this is the explanation of the Profile column
+            that used to sit in the same paragraph, unchanged word for word. */}
+        <p className="census-scope-more">
+          These are structures and their measured properties; no judgement of target quality has
+          been applied to any of them. Each protein&rsquo;s page carries a{' '}
+          <strong>structural profile</strong> — a measurement derived from its structure, never a
+          verdict. The <strong>Profile</strong> column says only whether one could be computed,
+          never what it was. <strong>A refusal is about range, not merit</strong>: it means the
+          protein sits outside the span of values the model was fitted on, which is a fact about
+          the model&rsquo;s reach and not about the protein.
         </p>
-        <p className="status-seam">
-          ⚠ <strong>An assembled parent is not a solved seam.</strong> Assemblies are joined where
-          tiles overlap by per-residue confidence, rather than superimposed, so the artefact is{' '}
-          <strong>provisional</strong>. Seams are <strong>not scientifically solved</strong>. The
-          seam line for a given protein comes from that protein&rsquo;s own record; open its page
-          for the served-path detail, which this list does not carry.
+
+        {/* ⚠⚠ THE NUMBER THAT MAKES THE LENS CONTROL NECESSARY RATHER THAN DECORATIVE. */}
+        <p className="lens-why">
+          The same 1,727 proteins read very differently: <strong>728</strong> stain in 100% of
+          patients under <em>best single cancer</em>, and <strong>16</strong> do under{' '}
+          <em>all cancers pooled</em>. Neither is wrong — they answer different questions.
         </p>
-        {structureLegend.length > 0 && (
-          <>
-            <h4>What the Structure column says</h4>
+
+        {/* ⚠⚠ THE LEGEND (D-133 am. 1), and it sits HERE — against the header row the words appear
+            in, not in a glossary elsewhere on the site. Every one of these badges is a category with
+            a cause, and until now the page printed the category and kept the cause in a tooltip.
+            ⚠ Same spirit as the staining lens block above: state what a word means where it is read.
+            ⚠ It lists only the badges these rows actually wear (plus the three standing topology
+            categories), because a legend for absent categories is the wall it must not become. */}
+        <div className="census-legend">
+          {/* ⚠⚠ THE COST AXIS, IN THE SAME VISUAL FRAME AS THE COLUMN (D-137 / D-077 dec 1
+              refusal 2). It leads the legend deliberately: `local` beside a census of ADC targets
+              reads as *good* to anyone who has not been told otherwise, and being told in a tooltip
+              is not being told. The recipe rides with it because a cost claim without its recipe is
+              not checkable, and both strings are the API's rather than this file's. */}
+          {(costAxis || costLegend.length > 0) && (
+            <>
+              <h4>What the Cost column says — and what it does not</h4>
+              {costAxis && <p className="cost-axis">⚠ {costAxis}</p>}
+              {costRecipe && (
+                <p className="cost-recipe">
+                  <strong>Measured at:</strong> {costRecipe}
+                </p>
+              )}
+              <dl className="legend-list">
+                {costLegend.map((c) => (
+                  <div className="legend-row" key={c.key}>
+                    {/* ⚠ the TERM is the API's, exactly as in the Structure block above */}
+                    <dt>{c.term}</dt>
+                    <dd>{c.meaning}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          )}
+          {/* ⚠⚠ THE THREE AXES, NAMED BEFORE THE CATEGORIES (D-150). The categories below are
+              axis A only, and a reader who meets them without the frame will do exactly what the
+              old single badge invited: treat "a structure is served" as "this protein is done". */}
+          <h4>What the Status column says — three questions, not one</h4>
+          <p className="status-axis">⚠ {STATUS_AXIS_NOTE}</p>
+          {statusLegendRows.length > 0 && (
             <dl className="legend-list">
-              {structureLegend.map((s) => (
-                <div className="legend-row" key={s.kind}>
-                  {/* ⚠ the TERM is the API's own label wherever there is one — this block defines
-                      the categories and never re-spells them. */}
-                  <dt>{s.term ?? s.chip.label}</dt>
+              {statusLegendRows.map((s) => (
+                <div className="legend-row" key={s.key}>
+                  <dt>{s.term}</dt>
                   <dd>{s.meaning}</dd>
                 </div>
               ))}
             </dl>
-          </>
-        )}
-        <h4>What the Topology column says</h4>
-        <dl className="legend-list">
-          {topologyLegend.map((t) => (
-            <div className="legend-row" key={t.key}>
-              <dt>{t.term}</dt>
-              <dd>{t.meaning}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            {COLUMNS.map((c) => (
-              <th key={c.key}>
-                <button
-                  type="button"
-                  onClick={() => toggle(c.key)}
-                  aria-sort={sort.key === c.key ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
-                >
-                  {c.label}
-                  {sort.key === c.key && <span aria-hidden="true">{sort.dir === 'asc' ? ' ▲' : ' ▼'}</span>}
-                </button>
-              </th>
+          )}
+          {/* ⚠ Unconditional, both of them. Axis B is true of every census row and axis C's warning
+              is about a class of artefact — printing either only "when relevant" is how a surface
+              teaches a reader that its silence is a clean bill of health. */}
+          <p className="status-unscored">
+            <strong>Not scored, not ranked</strong> is on every row in this census, and it is not a
+            fold verdict: D-079 decision 1 bars scoring a census row, so a protein with a perfectly
+            good structure is still unscored. ⚠ <strong>&ldquo;Not scored&rdquo; never means
+            &ldquo;no structure&rdquo;</strong>, and no absence of a number here should be read as
+            a fold that failed.
+          </p>
+          <p className="status-seam">
+            ⚠ <strong>An assembled parent is not a solved seam.</strong> Assemblies are joined where
+            tiles overlap by per-residue confidence, rather than superimposed, so the artefact is{' '}
+            <strong>provisional</strong>. Seams are <strong>not scientifically solved</strong>. The
+            seam line for a given protein comes from that protein&rsquo;s own record; open its page
+            for the served-path detail, which this list does not carry.
+          </p>
+          {structureLegend.length > 0 && (
+            <>
+              <h4>What the Structure column says</h4>
+              <dl className="legend-list">
+                {structureLegend.map((s) => (
+                  <div className="legend-row" key={s.kind}>
+                    {/* ⚠ the TERM is the API's own label wherever there is one — this block defines
+                        the categories and never re-spells them. */}
+                    <dt>{s.term ?? s.chip.label}</dt>
+                    <dd>{s.meaning}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          )}
+          <h4>What the Topology column says</h4>
+          <dl className="legend-list">
+            {topologyLegend.map((t) => (
+              <div className="legend-row" key={t.key}>
+                <dt>{t.term}</dt>
+                <dd>{t.meaning}</dd>
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {visible.map((r) => {
-            const band = bandFor(r.mean_plddt)
-            // ⚠ D-133 am. 1: the SAME function the legend asks, so the badge a row wears and the
-            // entry that explains it can never come from two different rules.
-            const topo = topologyBadgeKey(r)
-            // ⚠ D-137: same discipline, same reason.
-            const costKey = costBadgeKey(r)
-            // ⚠ D-150: same discipline again — the cell asks the exported rules rather than
-            // re-deriving them, so the legend, the sort and the chip cannot disagree.
-            const statusA = r.status_structure ?? structureServed(r)
-            const score = scoreState(r)
-            const seam = seamState(r)
-            return (
-              <tr key={r.id ?? r.accession} className={r.folded === false ? 'row-unfolded' : undefined}>
-                <td>
-                  {/* ⚠ A real Link, not a button: each protein has its own page, so it must be
-                      openable in a new tab, shareable, and reachable by the back button. An
-                      onClick handler is none of those things.
-                      ⚠⚠ A NEVER-FOLDED row links by ACCESSION — it has no analysis id, and the
-                      route resolves accessions since it was fixed. Rendering it unlinked would
-                      make a dead end of the one row a reader most wants to click. */}
-                  <Link className="link" to={`/census/${r.accession ?? r.id}`}
-                        onClick={() => onSelect?.(r)}>
-                    {r.accession}
-                  </Link>
-                  {/* ⚠ D-133: the structure-kind badge MOVED to its own sortable column. It is not
-                      also drawn here — two spellings of one fact, only one of them sortable, is
-                      how a surface teaches a reader to distrust it. */}
-                </td>
-                <td>{r.gene ?? <span className="unknown">unknown</span>}</td>
-                <td>{r.label ?? <span className="unknown">unknown</span>}</td>
-                <td className="num">{r.span_aa ?? '—'}</td>
-                <td>
-                  {/* ⚠⚠ NOT FOLDED, said plainly and in a column the reader is already scanning.
-                      The reason travels with it: "above the ceiling" and "never tested" are
-                      different claims, and one row is neither — nothing records its reason at all,
-                      which is a defect rather than a category. */}
-                  {/* ⚠ The row carries the same three-way distinction as the card. A tooltip saying
-                      "waiting on rented capacity" over a protein whose fold exists is the same
-                      false claim, just smaller and harder to notice. */}
-                  {topo === 'not_folded' || topo === 'not_folded_here' ? (
-                    // ⚠ D-150: the WORD comes from `structureServedLabel`, the same rule the
-                    // status column's axis-A chip asks. It is one rule rendered in two places —
-                    // never two spellings — which is the discipline the badge/legend pair already
-                    // follows. `NOT FOLDED` / `NOT FOLDED HERE` are unchanged for these rows.
-                    <span className="badge badge-unfolded" title={notFoldedTitle(r)}>
-                      {structureServedLabel(r)}
-                    </span>
-                  ) : topo === 'tiles_only' ? (
-                    // ⚠⚠ D-150: NOT the `badge-unfolded` class and NOT the fold verdict. Tiles are
-                    // on disk; what is absent is the assembled parent, and the badge says which.
-                    // ⚠ The class is `badge-tiles-only` and NOT a kind class. D-133's guard proves
-                    // the Structure column's badge is drawn exactly once by counting its class
-                    // name in this file's source, so a near-miss spelling here would read as a
-                    // second copy of a badge this is not. The guard is right; the name changed.
-                    <span className="badge badge-tiles-only"
-                          title="tile folds exist and were never joined into a parent — a tile window is not the outward-facing region">
-                      {structureServedLabel(r)}
-                    </span>
-                  ) : topo === 'intermittent' ? (
-                    <span className="badge badge-intermittent" title={`${r.segment_count} extracellular segments; ${r.discarded_aa} aa not folded`}>
-                      intermittent ({r.segment_count})
-                    </span>
-                  ) : topo === 'gpi' ? (
-                    // ⚠⚠ THE TOOLTIP SPELLS THE ACRONYM (owner ruling 2026-09-08). It read
-                    // "GPI-anchored: no topological domains by design" — four letters explaining
-                    // four letters. It now carries the expansion, from the same constant the
-                    // legend reads.
-                    <span className="badge" title={GPI_MEANING}>
-                      GPI / no segment
-                    </span>
-                  ) : topo === 'contiguous' ? (
-                    <span className="badge badge-contiguous">contiguous</span>
-                  ) : (
-                    // ⚠ Anything else is NOT contiguous. The final branch used to swallow
-                    // 'unknown' and every derivation verdict into the benign label — a default
-                    // that asserts the safe case is how a surface states something nobody measured.
-                    <span className="badge badge-unknown" title={r.derivation_note ?? undefined}>
-                      {topo === 'not_derived' ? 'not derived' : 'derivation out of date'}
-                    </span>
-                  )}
-                </td>
+          </dl>
+        </div>
+      </details>
 
-                {/* ⚠⚠ THE THREE STATUS AXES (D-150), each as its own chip, in the order a reader
-                    asks them: is there a structure · was it scored · is its seam solved.
-                    ⚠⚠ THEY ARE NOT COLLAPSED WHEN THEY AGREE. Axis B says the same thing on all
-                    3,467 census rows (D-079 dec 1), which is precisely why it is printed: a status
-                    that only appears when it is bad teaches a reader that silence means fine, and
-                    then "no score" has to be inferred from "no number", which reads as a failed
-                    fold.
-                    ⚠ Axis C is rendered only for an assembled parent — a single-pass fold has no
-                    seam, and printing `n/a` about one would invent a question nobody asked. */}
-                <td className="status-cell">
-                  {/* ⚠⚠ `badge-unfolded` IS THE NEVER-FOLDED STYLE, so it needs BOTH conditions and
-                      neither alone is enough. Axis A alone would dress a legacy row that never
-                      carried `folded` as a denial; `folded === false` alone would dress a
-                      `tiles_only` row as one, which is the very claim this entry exists to stop —
-                      those rows are served `folded: false` while their tiles sit on disk. The
-                      style follows the claim, and the claim is *no structure, and we recorded
-                      that*. */}
-                  <span
-                    className={`badge badge-status badge-status-${statusA}${
-                      statusA === STRUCTURE_NONE && r.folded === false ? ' badge-unfolded' : ''}`}
-                    title={statusA === STRUCTURE_NONE ? notFoldedTitle(r) : (r.assembler_note || undefined)}
+      {/* ⚠⚠ THE SCROLL IS CONTAINED, AND THAT IS THE SECOND HALF OF THE OWNER'S COMPLAINT (D-151):
+          *"the list scrolls off the right side."* Eleven columns of accessions, protein names,
+          badges and percentages do not fit every viewport, and the old markup let the widest row
+          push the **document** wide — so the page itself scrolled sideways and the nav, the
+          disclaimer and the legend went with it.
+          ⚠ The remedy is a bounded scroll PORT, never fewer columns and never a truncated cell: a
+          column removed to make the table fit is data withheld to flatter a layout, which is the
+          shape this surface refuses everywhere else. `overflow-x: auto` here means the reader
+          scrolls the TABLE and the page stays still.
+          ⚠ `.census-table-scroll` is also what keeps the sticky `<thead>` working. A sticky header
+          is positioned against its nearest scrolling ancestor, so the rule that used to stick it to
+          the viewport now sticks it to this box — see the matching CSS, which is the half of this
+          change jsdom cannot see. */}
+      <div className="census-table-scroll">
+        <table>
+          <thead>
+            <tr>
+              {COLUMNS.map((c) => (
+                <th key={c.key}>
+                  <button
+                    type="button"
+                    onClick={() => toggle(c.key)}
+                    aria-sort={sort.key === c.key ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    {structureServedLabel(r)}
-                  </span>
-                  {/* ⚠ The reason travels with the status, as it does on the card. `scoreState`
-                      supplies a named fallback: one live row carries `not_scored_reason: null`,
-                      and `Not scored, not ranked. null` is how an absence becomes a typo. */}
-                  <span className="badge badge-status badge-status-unscored" title={score.reason}>
-                    {score.label}
-                  </span>
-                  {/* ⚠⚠ `assembly_review` IS NOT ON THE LIST PAYLOAD — measured 2026-09-09, the
-                      `/api/census` row carries 34 keys and that is not one of them. So axis C
-                      resolves to `artifacts_absent` here for most rows and says *not on this
-                      payload* rather than falling to `n/a`, which would read as "this assembly has
-                      no seam question". The card fetches the review and answers it properly. */}
-                  {seam.label && (
-                    <span className="badge badge-status badge-status-seam" title={seam.note || undefined}>
-                      {seam.label}
-                    </span>
-                  )}
-                </td>
+                    {c.label}
+                    {sort.key === c.key && <span aria-hidden="true">{sort.dir === 'asc' ? ' ▲' : ' ▼'}</span>}
+                  </button>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((r) => {
+              const band = bandFor(r.mean_plddt)
+              // ⚠ D-133 am. 1: the SAME function the legend asks, so the badge a row wears and the
+              // entry that explains it can never come from two different rules.
+              const topo = topologyBadgeKey(r)
+              // ⚠ D-137: same discipline, same reason.
+              const costKey = costBadgeKey(r)
+              // ⚠ D-150: same discipline again — the cell asks the exported rules rather than
+              // re-deriving them, so the legend, the sort and the chip cannot disagree.
+              const statusA = r.status_structure ?? structureServed(r)
+              const score = scoreState(r)
+              const seam = seamState(r)
+              return (
+                <tr key={r.id ?? r.accession} className={r.folded === false ? 'row-unfolded' : undefined}>
+                  <td>
+                    {/* ⚠ A real Link, not a button: each protein has its own page, so it must be
+                        openable in a new tab, shareable, and reachable by the back button. An
+                        onClick handler is none of those things.
+                        ⚠⚠ A NEVER-FOLDED row links by ACCESSION — it has no analysis id, and the
+                        route resolves accessions since it was fixed. Rendering it unlinked would
+                        make a dead end of the one row a reader most wants to click. */}
+                    <Link className="link" to={`/census/${r.accession ?? r.id}`}
+                          onClick={() => onSelect?.(r)}>
+                      {r.accession}
+                    </Link>
+                    {/* ⚠ D-133: the structure-kind badge MOVED to its own sortable column. It is not
+                        also drawn here — two spellings of one fact, only one of them sortable, is
+                        how a surface teaches a reader to distrust it. */}
+                  </td>
+                  <td>{r.gene ?? <span className="unknown">unknown</span>}</td>
+                  {/* ⚠ D-151: the protein NAME is the only free-text column, and it was the one
+                      the CSS handed the table's whole slack to (`td:nth-child(3) { width: 100% }`)
+                      — a rule that fought the layout at eleven columns and pushed the rest off the
+                      right edge. It is bounded by a block child rather than by a rule on the `td`,
+                      which is D-142's finding restated: under the auto table algorithm a
+                      `max-width` on a cell is advisory and a capped block child's max-content width
+                      is not.
+                      ⚠ BOUNDED AND WRAPPED, NEVER TRUNCATED. No ellipsis and no clipping — the
+                      longest names run to 70-odd characters and every one of them stays legible on
+                      screen, which is the standing rule this tree applies to the Rank cause and to
+                      the Description column. */}
+                  <td className="protein-cell">
+                    {r.label
+                      ? <span className="protein-name">{r.label}</span>
+                      : <span className="unknown">unknown</span>}
+                  </td>
+                  <td className="num">{r.span_aa ?? '—'}</td>
+                  <td>
+                    {/* ⚠⚠ NOT FOLDED, said plainly and in a column the reader is already scanning.
+                        The reason travels with it: "above the ceiling" and "never tested" are
+                        different claims, and one row is neither — nothing records its reason at all,
+                        which is a defect rather than a category. */}
+                    {/* ⚠ The row carries the same three-way distinction as the card. A tooltip saying
+                        "waiting on rented capacity" over a protein whose fold exists is the same
+                        false claim, just smaller and harder to notice. */}
+                    {topo === 'not_folded' || topo === 'not_folded_here' ? (
+                      // ⚠ D-150: the WORD comes from `structureServedLabel`, the same rule the
+                      // status column's axis-A chip asks. It is one rule rendered in two places —
+                      // never two spellings — which is the discipline the badge/legend pair already
+                      // follows. `NOT FOLDED` / `NOT FOLDED HERE` are unchanged for these rows.
+                      <span className="badge badge-unfolded" title={notFoldedTitle(r)}>
+                        {structureServedLabel(r)}
+                      </span>
+                    ) : topo === 'tiles_only' ? (
+                      // ⚠⚠ D-150: NOT the `badge-unfolded` class and NOT the fold verdict. Tiles are
+                      // on disk; what is absent is the assembled parent, and the badge says which.
+                      // ⚠ The class is `badge-tiles-only` and NOT a kind class. D-133's guard proves
+                      // the Structure column's badge is drawn exactly once by counting its class
+                      // name in this file's source, so a near-miss spelling here would read as a
+                      // second copy of a badge this is not. The guard is right; the name changed.
+                      <span className="badge badge-tiles-only"
+                            title="tile folds exist and were never joined into a parent — a tile window is not the outward-facing region">
+                        {structureServedLabel(r)}
+                      </span>
+                    ) : topo === 'intermittent' ? (
+                      <span className="badge badge-intermittent" title={`${r.segment_count} extracellular segments; ${r.discarded_aa} aa not folded`}>
+                        intermittent ({r.segment_count})
+                      </span>
+                    ) : topo === 'gpi' ? (
+                      // ⚠⚠ THE TOOLTIP SPELLS THE ACRONYM (owner ruling 2026-09-08). It read
+                      // "GPI-anchored: no topological domains by design" — four letters explaining
+                      // four letters. It now carries the expansion, from the same constant the
+                      // legend reads.
+                      <span className="badge" title={GPI_MEANING}>
+                        GPI / no segment
+                      </span>
+                    ) : topo === 'contiguous' ? (
+                      <span className="badge badge-contiguous">contiguous</span>
+                    ) : (
+                      // ⚠ Anything else is NOT contiguous. The final branch used to swallow
+                      // 'unknown' and every derivation verdict into the benign label — a default
+                      // that asserts the safe case is how a surface states something nobody measured.
+                      <span className="badge badge-unknown" title={r.derivation_note ?? undefined}>
+                        {topo === 'not_derived' ? 'not derived' : 'derivation out of date'}
+                      </span>
+                    )}
+                  </td>
 
-                {/* ⚠⚠ HOW THE FOLD WAS PRODUCED (D-133), in the column that sorts on it. The label
-                    is the API's (`assembled (provisional)`, `single-pass`, `tiles only`,
-                    `mucin — not folded`) so the surface never re-spells a category it is served,
-                    and the assembler note rides in the tooltip.
-                    ⚠⚠ AND A MISSING KIND IS SAID, NOT ASSUMED. Never-folded manifest rows carry
-                    no kind (only the 3 mucins do), and a blank cell here would read as
-                    "single-pass" — a fold that was never performed. It is a stated absence
-                    instead, the same rule the topology column's final branch learned. */}
-                <td className="kind-cell">
-                  {r.structure_kind_label ? (
+                  {/* ⚠⚠ THE THREE STATUS AXES (D-150), each as its own chip, in the order a reader
+                      asks them: is there a structure · was it scored · is its seam solved.
+                      ⚠⚠ THEY ARE NOT COLLAPSED WHEN THEY AGREE. Axis B says the same thing on all
+                      3,467 census rows (D-079 dec 1), which is precisely why it is printed: a status
+                      that only appears when it is bad teaches a reader that silence means fine, and
+                      then "no score" has to be inferred from "no number", which reads as a failed
+                      fold.
+                      ⚠ Axis C is rendered only for an assembled parent — a single-pass fold has no
+                      seam, and printing `n/a` about one would invent a question nobody asked. */}
+                  <td className="status-cell">
+                    {/* ⚠⚠ `badge-unfolded` IS THE NEVER-FOLDED STYLE, so it needs BOTH conditions and
+                        neither alone is enough. Axis A alone would dress a legacy row that never
+                        carried `folded` as a denial; `folded === false` alone would dress a
+                        `tiles_only` row as one, which is the very claim this entry exists to stop —
+                        those rows are served `folded: false` while their tiles sit on disk. The
+                        style follows the claim, and the claim is *no structure, and we recorded
+                        that*. */}
                     <span
-                      className={`badge badge-kind badge-kind-${r.structure_kind || 'unknown'}`}
-                      title={r.assembler_note || undefined}
+                      className={`badge badge-status badge-status-${statusA}${
+                        statusA === STRUCTURE_NONE && r.folded === false ? ' badge-unfolded' : ''}`}
+                      title={statusA === STRUCTURE_NONE ? notFoldedTitle(r) : (r.assembler_note || undefined)}
                     >
-                      {r.structure_kind_label}
+                      {structureServedLabel(r)}
                     </span>
-                  ) : (
-                    <span
-                      className="unknown"
-                      title="no structure kind on this row — a blank is a missing field, never an implied single-pass fold"
-                    >
-                      not recorded
+                    {/* ⚠ The reason travels with the status, as it does on the card. `scoreState`
+                        supplies a named fallback: one live row carries `not_scored_reason: null`,
+                        and `Not scored, not ranked. null` is how an absence becomes a typo. */}
+                    <span className="badge badge-status badge-status-unscored" title={score.reason}>
+                      {score.label}
                     </span>
-                  )}
-                </td>
+                    {/* ⚠⚠ `assembly_review` IS NOT ON THE LIST PAYLOAD — measured 2026-09-09, the
+                        `/api/census` row carries 34 keys and that is not one of them. So axis C
+                        resolves to `artifacts_absent` here for most rows and says *not on this
+                        payload* rather than falling to `n/a`, which would read as "this assembly has
+                        no seam question". The card fetches the review and answers it properly. */}
+                    {seam.label && (
+                      <span className="badge badge-status badge-status-seam" title={seam.note || undefined}>
+                        {seam.label}
+                      </span>
+                    )}
+                  </td>
 
-                {/* ⚠⚠ WHAT THIS PROTEIN COSTS TO FOLD (D-137), in the column that sorts on it.
-                    A COST class and never a verdict on the protein — the header says so, and the
-                    legend above the table says so at length rather than in a tooltip.
-                    ⚠⚠ `rental` NEVER TRAVELS BARE. The tooltip is the API's `cost_note`, which
-                    carries the closure (rental for the hold-48 remainder closed 2026-09-05, pod
-                    Terminated) — because a bare `rental` badge reads as a queue position, which
-                    is the same false claim `core/census_unfolded.py` already refuses in words.
-                    ⚠⚠ AND TWO ABSENCES STAY TWO. `not recorded` is a missing FIELD on the row;
-                    `span not recorded` is the server saying it looked and found no span. Neither
-                    is `local`: an unmeasured target counted as affordable is how a cost estimate
-                    becomes a fiction (D-024). */}
-                <td className="cost-cell">
-                  {costKey === 'not_served' ? (
-                    <span
-                      className="unknown"
-                      title="no cost verdict on this row — a blank is a missing field, never an implied local fold"
-                    >
-                      not recorded
-                    </span>
-                  ) : (
-                    <span
-                      className={`badge badge-cost badge-cost-${costKey}`}
-                      title={r.cost_note || undefined}
-                    >
-                      {r.cost_label ?? r.cost}
-                    </span>
-                  )}
-                </td>
+                  {/* ⚠⚠ HOW THE FOLD WAS PRODUCED (D-133), in the column that sorts on it. The label
+                      is the API's (`assembled (provisional)`, `single-pass`, `tiles only`,
+                      `mucin — not folded`) so the surface never re-spells a category it is served,
+                      and the assembler note rides in the tooltip.
+                      ⚠⚠ AND A MISSING KIND IS SAID, NOT ASSUMED. Never-folded manifest rows carry
+                      no kind (only the 3 mucins do), and a blank cell here would read as
+                      "single-pass" — a fold that was never performed. It is a stated absence
+                      instead, the same rule the topology column's final branch learned. */}
+                  <td className="kind-cell">
+                    {r.structure_kind_label ? (
+                      <span
+                        className={`badge badge-kind badge-kind-${r.structure_kind || 'unknown'}`}
+                        title={r.assembler_note || undefined}
+                      >
+                        {r.structure_kind_label}
+                      </span>
+                    ) : (
+                      <span
+                        className="unknown"
+                        title="no structure kind on this row — a blank is a missing field, never an implied single-pass fold"
+                      >
+                        not recorded
+                      </span>
+                    )}
+                  </td>
 
-                <td className="num" style={{ color: band.color }}>
-                  {r.mean_plddt != null ? r.mean_plddt.toFixed(1) : <span className="unknown">not measured</span>}
-                </td>
-                <td className="num">{r.tranche}</td>
-                {/* ⚠ The status is a word, never a number. `profile-refused` and `profile-computed`
-                    are styled at the SAME weight: a refusal is an outcome (ruling 3), not a gap. */}
-                <td>
-                  {r.profile_status ? (
-                    <span className={r.profile_status === 'computed'
-                      ? 'profile-computed' : 'profile-refused'}>
-                      {PROFILE_LABEL[r.profile_status] ?? r.profile_status}
-                    </span>
-                  ) : '—'}
-                </td>
+                  {/* ⚠⚠ WHAT THIS PROTEIN COSTS TO FOLD (D-137), in the column that sorts on it.
+                      A COST class and never a verdict on the protein — the header says so, and the
+                      legend above the table says so at length rather than in a tooltip.
+                      ⚠⚠ `rental` NEVER TRAVELS BARE. The tooltip is the API's `cost_note`, which
+                      carries the closure (rental for the hold-48 remainder closed 2026-09-05, pod
+                      Terminated) — because a bare `rental` badge reads as a queue position, which
+                      is the same false claim `core/census_unfolded.py` already refuses in words.
+                      ⚠⚠ AND TWO ABSENCES STAY TWO. `not recorded` is a missing FIELD on the row;
+                      `span not recorded` is the server saying it looked and found no span. Neither
+                      is `local`: an unmeasured target counted as affordable is how a cost estimate
+                      becomes a fiction (D-024). */}
+                  <td className="cost-cell">
+                    {costKey === 'not_served' ? (
+                      <span
+                        className="unknown"
+                        title="no cost verdict on this row — a blank is a missing field, never an implied local fold"
+                      >
+                        not recorded
+                      </span>
+                    ) : (
+                      <span
+                        className={`badge badge-cost badge-cost-${costKey}`}
+                        title={r.cost_note || undefined}
+                      >
+                        {r.cost_label ?? r.cost}
+                      </span>
+                    )}
+                  </td>
 
-                {/* ⚠⚠ THE PERCENTAGE NEVER TRAVELS ALONE. D-102's condition, enforced in the cell:
-                    the n rides with it, and under the best-panel lens so does the cancer it came
-                    from. A bare "100%" over 4 patients and over 40 are different facts. */}
-                <td className="num stained-cell">
-                  {r.folded === false ? (
-                    <span className="unknown">—</span>
-                  ) : r.stained_pct == null ? (
-                    <span className="unknown">
-                      {r.stained_category === 'not_covered' ? 'not covered'
-                        : r.stained_category === 'never_scored' ? 'never scored'
-                        : 'no panel ≥ floor'}
-                    </span>
-                  ) : (
-                    <>
-                      {/* ⚠⚠ THE PER-DATUM LINK. This cell renders an HPA-derived value, so the
-                          citation precondition attaches to the CELL, not to the page. */}
-                      {r.staining?.attribution?.deep_link ? (
-                        <a href={r.staining.attribution.deep_link} rel="noopener noreferrer"
-                           target="_blank" className="stained-link">
+                  <td className="num" style={{ color: band.color }}>
+                    {r.mean_plddt != null ? r.mean_plddt.toFixed(1) : <span className="unknown">not measured</span>}
+                  </td>
+                  <td className="num">{r.tranche}</td>
+                  {/* ⚠ The status is a word, never a number. `profile-refused` and `profile-computed`
+                      are styled at the SAME weight: a refusal is an outcome (ruling 3), not a gap. */}
+                  <td>
+                    {r.profile_status ? (
+                      <span className={r.profile_status === 'computed'
+                        ? 'profile-computed' : 'profile-refused'}>
+                        {PROFILE_LABEL[r.profile_status] ?? r.profile_status}
+                      </span>
+                    ) : '—'}
+                  </td>
+
+                  {/* ⚠⚠ THE PERCENTAGE NEVER TRAVELS ALONE. D-102's condition, enforced in the cell:
+                      the n rides with it, and under the best-panel lens so does the cancer it came
+                      from. A bare "100%" over 4 patients and over 40 are different facts. */}
+                  <td className="num stained-cell">
+                    {r.folded === false ? (
+                      <span className="unknown">—</span>
+                    ) : r.stained_pct == null ? (
+                      <span className="unknown">
+                        {r.stained_category === 'not_covered' ? 'not covered'
+                          : r.stained_category === 'never_scored' ? 'never scored'
+                          : 'no panel ≥ floor'}
+                      </span>
+                    ) : (
+                      <>
+                        {/* ⚠⚠ THE PER-DATUM LINK. This cell renders an HPA-derived value, so the
+                            citation precondition attaches to the CELL, not to the page. */}
+                        {r.staining?.attribution?.deep_link ? (
+                          <a href={r.staining.attribution.deep_link} rel="noopener noreferrer"
+                             target="_blank" className="stained-link">
+                            <strong>{r.stained_pct}%</strong>
+                          </a>
+                        ) : (
                           <strong>{r.stained_pct}%</strong>
-                        </a>
-                      ) : (
-                        <strong>{r.stained_pct}%</strong>
-                      )}
-                      <span className="stained-n"> of {r.stained_n}</span>
-                      {r.stained_cancer && (
-                        <span className="stained-where"> · {r.stained_cancer}</span>
-                      )}
-                    </>
-                  )}
-                </td>
+                        )}
+                        <span className="stained-n"> of {r.stained_n}</span>
+                        {r.stained_cancer && (
+                          <span className="stained-where"> · {r.stained_cancer}</span>
+                        )}
+                      </>
+                    )}
+                  </td>
 
-                {/* ⚠ a COUNT of declared tissues hit, not a verdict. 0 is a real result. */}
-                <td className="num">
-                  {r.critical_n == null ? '—'
-                    : r.critical_n === 0 ? <span className="crit-none">none</span>
-                    : <span className="crit-hit">{r.critical_n}</span>}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+                  {/* ⚠ a COUNT of declared tissues hit, not a verdict. 0 is a real result. */}
+                  <td className="num">
+                    {r.critical_n == null ? '—'
+                      : r.critical_n === 0 ? <span className="crit-none">none</span>
+                      : <span className="crit-hit">{r.critical_n}</span>}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
   )
 }

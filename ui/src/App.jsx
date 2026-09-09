@@ -1,4 +1,4 @@
-import { Routes, Route, Link, NavLink, useParams, Navigate } from 'react-router-dom'
+import { Routes, Route, Link, NavLink, useLocation, useParams, Navigate } from 'react-router-dom'
 import Story from './components/Story.jsx'
 import TargetList from './components/TargetList.jsx'
 import TargetView from './components/TargetView.jsx'
@@ -44,7 +44,24 @@ function AdcPipelineCardRoute() {
 // cases from SEER official aggregates). It is its own nav landmark on purpose: it must not be
 // buried in Method and must not appear on Census or Scorer, where a burden figure would read as
 // an input to a score. It joins to no protein, accession, score or rank.
+// ⚠⚠ D-151 — ONE SURFACE IS A TABLE AND THE REST ARE PROSE, AND `main` USED TO TREAT THEM ALIKE.
+// `main { max-width: 60rem }` is the right measure for a paragraph and the wrong one for an
+// eleven-column census: it left a wide empty gutter down both sides of the page while the table
+// itself was squeezed to about 57rem and then scrolled off the right edge. The owner's words,
+// 2026-09-09: *"we are not using the entire left side of the table real estate and the list scrolls
+// off the right side."*
+// ⚠ The wide measure is granted BY ROUTE, not by a component reaching up and restyling its own
+// container. A `<main>` whose width depends on which page is inside it is a decision about the
+// shell, so it is made in the shell — and it is one class, so a test can assert it structurally
+// rather than trying to measure a layout jsdom does not compute.
+// ⚠ EXACTLY `/census`. `/census/:id` is a protein CARD — prose, one column, and it keeps the
+// reading measure. A `startsWith` here would have widened it too, which is the opposite of what a
+// card needs.
+const WIDE_ROUTES = new Set(['/census'])
+
 export default function App() {
+  const { pathname } = useLocation()
+  const wide = WIDE_ROUTES.has(pathname)
   return (
     <div className="app">
       <header className="app-header">
@@ -54,7 +71,13 @@ export default function App() {
             screen reader, and the site nav is the one that is a contract. */}
         <nav className="app-nav" aria-label="Site">
           <NavLink to="/" end>Story</NavLink>
-          <NavLink to="/targets">Targets</NavLink>
+          {/* ⚠ D-151 (owner ruling 2026-09-09): the LABEL is "Initial Targets" and the PATH stays
+              `/targets`. The word "Targets" alone read as *the* targets of this project while the
+              census holds 3,467 more, and the cohort-82 is the STARTING list — the comparator
+              D-051/F-009 already describe in prose. ⚠ Renaming the route as well would break every
+              deep link the Story CTA, the census card and every shared address already point at,
+              which is a cost the label does not need to pay. */}
+          <NavLink to="/targets">Initial Targets</NavLink>
           <NavLink to="/coverage">Coverage</NavLink>
           <NavLink to="/census">Census</NavLink>
           <NavLink to="/scorer">Scorer</NavLink>
@@ -67,7 +90,7 @@ export default function App() {
           <NavLink to="/about">About ADCs</NavLink>
         </nav>
       </header>
-      <main>
+      <main className={wide ? 'wide' : undefined}>
         <Routes>
           <Route path="/" element={<Story />} />
           <Route path="/targets" element={<TargetList />} />
