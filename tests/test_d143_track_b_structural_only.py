@@ -327,46 +327,83 @@ def test_d142_is_registered_as_held_rather_than_left_as_an_unresolved_citation()
     the tree spends it.
     """
     reserved = (ROOT / "docs" / "RESERVED.md").read_text(encoding="utf-8")
-    # ⚠⚠ WIDENED BY ADDING AT D-142, AND THE ROW IS NOW RETIRED RATHER THAN RESERVED. This test
-    # asserted a LIVE `| **D-142** |` row; the holder this row asked for turned up (the `/targets`
-    # columns entry, assigned 142 by Emma CoS 2026-09-09) and wrote `### D-142`, so the row is
-    # struck through with its reason, exactly as `~~**D-124**~~` and `~~**F-042**~~` were.
-    # ⚠ BOTH SHAPES ARE ACCEPTED, and that is deliberate: the property this test protects is
-    # *"142 is accounted for in the whitelist"*, which is true of a reservation AND of a retired
-    # row. Narrowing it to `| **D-142** |` would have made a resolved reservation redden — a guard
-    # punishing the very outcome it exists to produce.
-    assert re.search(r"^\| (?:\*\*D-142\*\*|~~\*\*D-142\*\*~~) \|", reserved, re.M), (
-        "D-142 must be accounted for in docs/RESERVED.md — as a live reservation while it is "
-        "held, or as a struck-through WRITTEN row once its holder lands it"
+    assert re.search(r"^\| \*\*D-142\*\* \|", reserved, re.M), (
+        "D-142 is cited by this entry as held; the citation invariant requires it to be "
+        "listed in docs/RESERVED.md, which the checker whitelists and nothing else"
     )
-    marker = "| ~~**D-142**~~ |" if "| ~~**D-142**~~ |" in reserved else "| **D-142** |"
-    row = _flat(reserved[reserved.index(marker):][:6000])
-    retired = marker.startswith("| ~~")
-    if retired:
-        # ⚠ Retired in the OPEN: the original reservation text is kept verbatim, so the record of
-        # what was reserved and why survives the resolution (this file's own rule).
-        assert "WRITTEN 2026-09-09" in row, "a retired row must say when it was written"
-        assert "### D-142" in row, "a retired row must point at the entry that resolved it"
-        assert "Original reservation text" in row, (
-            "the reservation's own words must survive its retirement — a row rewritten to hide "
-            "what it once claimed is indistinguishable from one that was never honoured"
-        )
+    row = _flat(reserved[reserved.index("| **D-142** |"):][:6000])
     assert "renumbered to `D-143` by owner instruction (2026-09-09)" in row
     assert "nothing visible in the tree spends 142" in row.lower()
     assert "266" in row, "the PR that took the id first is named"
-    # ⚠ And this entry's own citation of 142 must still resolve — as a held integer while it was
-    # held, or as a spent one now that the holder has written it.
+    # ⚠ Amended once the holder was named. Both readings must survive: the named holder
+    # AND the fact that the holder's published PR does not actually take 142 (D-129-C —
+    # a superseded claim never stands alone; D-016 — prefer the disqualifying query).
+    assert "bc-14347bf7" in row, "the holder Trinity named must be recorded"
+    assert "not found or not accessible" in row, (
+        "the row must say the agent's own record could NOT be read from here — "
+        "the pairing is Trinity's word, not a discovery"
+    )
+    assert "267" in row, "the holder's published PR must be named"
+    assert "143 is claimed twice" in row.lower()
+
+
+def test_the_entry_reports_the_live_143_collision_instead_of_merging_over_it():
+    """⚠⚠ Two open PRs write `### D-143`, and an entry that stayed quiet about that would
+    be the D-062 shape again: a record that reads settled while the tree is not.
+
+    ⚠ The resolution is NOT taken here. This ship keeps the id Trinity instructed and
+    escalates; whichever merges second reddens by design, and the fix is a rebase that
+    ADDS the surviving ids.
+    """
     entry = _flat(_d143_entry())
-    assert ("`D-142` is skipped by owner ruling — held, not free" in entry
-            or "D-142" in entry), "this entry cites 142; the citation must still be present"
+    lowered = entry.lower()
+    assert "143 is now claimed twice" in lowered
+    assert "267" in entry, "the colliding PR must be named by number"
+    assert "cursor/d-142-targets-cancer-description-columns-d08d" in entry, (
+        "the colliding branch is named — its NAME says 142 while its diff says 143, "
+        "which is the whole point"
+    )
+    assert "gh pr diff 267" in entry, "checked in the diff, not inferred from the title"
+    assert "bc-14347bf7" in entry
+    assert "not found or not accessible" in lowered, (
+        "the unreadable agent record must be disclosed, not smoothed over"
+    )
+    assert "nothing unilateral" in lowered, "this ship must not resolve it by guessing"
+    assert "never a `>=`" in entry or "never a >=" in lowered
+    # ⚠ And the resolution is recorded BESIDE the pre-merge reading, not instead of it
+    # (D-129-C). #266 merged first, so 143 is spent here and 142 is still free.
+    assert "resolved by merge order" in lowered
+    assert "f243f93" in entry, "the merge commit that settled the id must be named"
+    assert "did not win an argument; it merged first" in lowered, (
+        "merge order is not an argument, and the entry must not read as though it were"
+    )
+    assert "142 is free" in lowered
+    # ⚠⚠ WIDENED BY ADDING AT D-142. This asserted that the D-143 entry presents 142 as HELD,
+    # "never as a spent authority" — correct while 142 was unspent, and this entry's own text
+    # said what would end it: *"142 is free"* for the holder to take. The holder took it, so the
+    # requirement is now **held OR spent-by-a-real-heading**: the citation must still resolve, and
+    # what it may never be is a spent authority with NO entry — the D-062 defect this file is
+    # built around. ⚠ The held phrasing is left in the D-143 entry untouched (D-129-C), so on
+    # `main` alone this still matches the first branch.
+    entry = _flat(_d143_entry())
+    held = "`D-142` is skipped by owner ruling — held, not free" in entry
+    spent = bool(re.search(r"^### D-142 — ", LOG, re.M))
+    assert held or spent, (
+        "the D-143 entry cites 142; that citation must resolve either to a recorded HOLD or to "
+        "a real `### D-142` heading — a citation resolving to neither is D-062"
+    )
     assert "RESERVED.md" in entry
 
 
 def test_every_enumerated_id_guard_keeps_the_bar_on_142():
-    """⚠ Widened by ADDING. The bar on a skipped integer STAYS (D-141's precedent on 140).
+    """⚠ Widened by ADDING. A skipped integer stays BARRED until an entry NAMES it.
 
     Enumerated over the six guard files rather than spot-checked, so a guard that drops
     the bar while renumbering is caught here instead of by the next collision.
+
+    ⚠⚠ The name is kept for continuity, and it is now half the story: as of `### D-142`
+    the requirement is **bar or name**, never neither. Renaming the test would break the
+    thread back to the collision it was written for.
     """
     guards = (
         "tests/test_d129_phase5_named_refuse_spec.py",
@@ -378,21 +415,20 @@ def test_every_enumerated_id_guard_keeps_the_bar_on_142():
     )
     for rel in guards:
         text = (ROOT / rel).read_text(encoding="utf-8")
-        # ⚠⚠ WIDENED BY ADDING AT D-142. The bar this test enumerated carried its own repair in
-        # its failure message — *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED
-        # beside 143 — never relaxed to a `>=`"* — and the holder arrived. So the requirement is
-        # now **bar OR name**: while 142 is unspent the guard must bar it; once an entry spends it
-        # the guard must assert THAT ENTRY by heading. ⚠ What is still forbidden is the third
-        # state — 142 neither barred nor named — because an un-barred integer with no name is
-        # precisely what the D-062 defect looked like.
+        # ⚠⚠ WIDENED BY ADDING AT D-142 — and the widening is the one THIS TEST'S OWN failure
+        # message pre-committed: *"if a holder writes it, this reddens BY DESIGN and 142 is ADDED
+        # beside 143 — never relaxed to a `>=`."* The holder wrote it, so the requirement is now
+        # **bar OR name**: while 142 is unspent every guard must bar it; once an entry spends it
+        # every guard must assert THAT ENTRY by heading. ⚠ The third state stays forbidden — 142
+        # neither barred nor named — because an integer that is silently free is how a collision
+        # gets in, and that is exactly what happened between #266 and #267.
         barred = '### D-142" not in' in text
         named = "D-142 — `/targets` gains a Cancer association" in text
         assert barred or named, (
-            f"{rel} neither bars the held 142 nor names the entry that spends it — an integer "
-            f"that is silently free is how a collision gets in"
+            f"{rel} neither bars the held 142 nor names the entry that spends it"
         )
         assert not (barred and named), (
-            f"{rel} both bars 142 and names an entry for it, which cannot both be true"
+            f"{rel} both bars 142 and names an entry for it; both cannot be true"
         )
         assert '### D-144" not in' in text, f"{rel} does not bar the next free integer"
         assert "D-143 — Track B stops claiming a composite" in text, (
@@ -403,10 +439,9 @@ def test_every_enumerated_id_guard_keeps_the_bar_on_142():
         # ⚠ A first draft of this check asserted `">=" not in …` nearby, which fired on
         # every guard's own *"never relaxed to a `>=`"* prose — a guard reporting its
         # own good news. Replaced with the claim that actually matters.
-        # ⚠ Widened at D-142 the same way: while barred it must say why; once spent it must say
-        # that the reserved integer was spent and by whom. Either way the guard EXPLAINS itself —
-        # an unexplained assertion about an integer is the thing a later session deletes because
-        # it looks like a typo.
+        # ⚠ Widened the same way: while barred a guard must say WHY; once spent it must say the
+        # reserved integer was spent and by whom. Either way it EXPLAINS itself — an unexplained
+        # assertion about an integer is what a later session deletes for looking like a typo.
         assert ("142 is SKIPPED, NOT FREE" in text or "142 is HELD" in text
                 or "142 IS NOW WRITTEN" in text), (
             f"{rel} asserts something about 142 without saying why"

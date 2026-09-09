@@ -405,6 +405,13 @@ docs-only): `test_accepted_trim_still_discloses_full_overlap_rmsd_and_max_jump`
 **142 held** and registered in [`RESERVED.md`](RESERVED.md) — nothing visible in the tree spends it,
 so the six enumerated id guards keep its bar and add 143 beside it rather than dropping either.
 
+⚠⚠ **143 was claimed twice, and merge order settled it.** [#267](https://github.com/mdk32366/Project-PharmFoldMDK/pull/267)
+(branch `cursor/d-142-targets-cancer-description-columns-d08d` — the *name* says 142) writes
+`### D-143` in its **diff** and adds `tests/test_d143_targets_columns.py`. #266 merged to `main` at
+`f243f93` first, so 143 is spent there and **142 is still free for the Targets agent**. The
+renumber of #267 belongs to that agent and to Trinity; the guards here redden against a second
+`### D-143` **by design**, and the fix on either side is to **ADD** ids, never a `>=`.
+
 Acceptance tests in `tests/test_d143_track_b_structural_only.py`, plus the updated
 D-123 pins in `tests/test_about_paper_extract.py`, `ui/src/aboutPaper.test.js` and
 `ui/src/components/AdcContext.test.jsx` (T-1234). Cite `### D-143` and the **owner GO
