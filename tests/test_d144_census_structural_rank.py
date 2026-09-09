@@ -900,8 +900,19 @@ def test_the_next_free_integer_is_named_and_barred():
     recorded in `docs/RESERVED.md` rather than smoothed over."""
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 144 in ids
-    assert "\n### D-145" not in LOG, (
-        "D-145 is the next free integer and must stay unspent until an entry claims it by name")
+    # ⚠⚠ 145 IS NOW WRITTEN, AND THIS BAR REDDENED EXACTLY AS THE ENTRY ABOVE SAID IT WOULD
+    # (*"when 142 and 143 land, the enumerations redden by design and the resolution is to ADD
+    # them by name"* — the same rule, one integer later). `D-145` bakes THIS entry's loader,
+    # `scripts/census_structural_rank.py`, into the Fly serving image as one explicit `COPY`
+    # beside the ingest: image permanence for the instrument D-144 shipped, and **no formula, no
+    # route, no schema and no `--load`**, so nothing this suite measures moves. The bar is
+    # REPLACED BY A NAME — never deleted — and `### D-146` takes the next-free bar. Never a `>=`.
+    assert re.search(r"^### D-145 — The D-144 loader stops living on the production host",
+                     LOG, re.M), (
+        "D-145 must be the image-permanence entry that bakes this entry's loader into the "
+        "serving image, not some other entry that took the number")
+    assert "\n### D-146" not in LOG, (
+        "D-146 is the next free integer and must stay unspent until an entry claims it by name")
     # ⚠⚠ 142 AND 143 ARE NOW WRITTEN ON `main`, AND THAT IS WHY THIS ASSERTION CHANGED SHAPE.
     # This entry's first draft reserved both in `docs/RESERVED.md`, because at `30f402f` neither
     # had a heading, an open PR or a branch. Both then merged (`f243f93` / `22ce1d7` / `b7d933f`)
@@ -913,9 +924,20 @@ def test_the_next_free_integer_is_named_and_barred():
             f"{spent} is cited by the D-144 entry; it must resolve to a `### ` entry now that "
             f"it is written, or to a RESERVED row while it is not")
     reserved = (REPO / "docs" / "RESERVED.md").read_text(encoding="utf-8")
+    # ⚠⚠ THE MARKER IS THE POINT OF THIS ASSERTION, AND D-145 RETIRED ITS ROW WITHOUT MOVING IT.
+    # `re.search` on the literal `| **D-145** |` row is how this test resolves the citation; a
+    # strike-through (`~~**D-145**~~`) would have satisfied `docs/RESERVED.md`'s own convention
+    # and broken THIS guard — the exact trap the `D-142` row records of itself. So the row stays
+    # marker-safe and records ✅ WRITTEN inside the cell, and this assertion is UNCHANGED: while
+    # 145 was unwritten the row was what kept it resolved, and now that it is written the row is
+    # its retirement record. Either way it must exist.
     assert re.search(r"^\| \*\*D-145\*\*", reserved, re.M), (
-        "D-145 is cited by the D-144 entry in order to bar it, and is unwritten — so it must be "
-        "a RESERVED row, or the citation invariant has a hole indistinguishable from D-062's")
+        "D-145 is cited by the D-144 entry; its RESERVED row must survive as a row — retired "
+        "marker-safe, never struck or deleted — or this citation resolves through nothing")
+    # ⚠ And the next free integer must carry a row of its own, for the same reason 145 did.
+    assert re.search(r"^\| \*\*D-146\*\*", reserved, re.M), (
+        "D-146 is cited in order to bar it and is unwritten — so it must be a RESERVED row, or "
+        "the citation invariant has a hole indistinguishable from D-062's")
     # ⚠ the retired reservation is STRUCK, not deleted (D-129-C): it records what was reserved
     assert "~~**D-143**~~" in reserved, (
         "the D-143 reservation must be retired in place, so a reader can tell 'written' from "

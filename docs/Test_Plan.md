@@ -397,6 +397,61 @@ docs-only): `test_accepted_trim_still_discloses_full_overlap_rmsd_and_max_jump`
 
 ---
 
+## Addendum 2026-09-09 — D-145 the D-144 loader is baked into the serving image
+
+### D-145 (this PR; T-1252) — image permanence for the structural-rank loader
+
+Acceptance tests in `tests/test_d145_bake_structural_loader.py`, with the pre-existing
+image suites widened in place (`tests/test_image_contents.py`,
+`tests/test_serving_image_contents.py`). Hermetic and **artefact-reading**: every
+assertion is a property of the `Dockerfile`, `.dockerignore`, `fly.toml` or the tree —
+**no GPU, no fold, no network, no database, no docker build**. Cite `### D-145` and
+Trinity Spec `@0.0` (Matt / Kaylee ops scar).
+
+⚠⚠ **What these tests CANNOT establish, and it is the first thing in the addendum
+rather than a caveat at the end: there is no docker daemon in the gate**, so nothing
+here proves the *built image* contains the file. They assert the **declaration** — the
+`Dockerfile` names it, the build context admits it, the file exists so the `COPY` is not
+a typo. **The build is the other half of the proof**, and a `COPY` of a path
+`.dockerignore` excludes fails it loudly. This is the same limit
+`tests/test_serving_image_contents.py` has stated about the ingest since `b2196e9`;
+restated because inheriting a caveat silently is how it stops being read.
+
+⚠ **T-1252 is the next id above the highest spent (`T-1251`, D-144), and `T-1231` /
+`T-1232` are left UNSPENT rather than back-filled** — D-144's addendum declined the same
+gap for the same reason: this branch cannot tell whether an in-flight lane holds them,
+and filling a hole left by a branch it cannot see is precisely the collision this repo
+has recorded four times in six days. A hole is cheap; a second claim on an id is not.
+
+⚠⚠ **The revert the pre-existing suite could NOT catch, which is why this addendum
+exists.** `test_only_the_allowed_scripts_are_copied` is a subset assertion, and **the
+empty set is a subset of everything** — delete the loader's `COPY` line and it stays
+green. That is exactly the failure the ops scar was: a rebuild drops a hand-placed file,
+the deploy is green, the gate is green, and the script is simply not there. The property
+the GO asks for needed a **positive** assertion, and the revert now reddens
+`test_the_loader_is_baked_in_and_this_is_the_assertion_the_scar_needed` and both
+parametrised `COPY`-line checks.
+
+⚠ **Revert proof, three guards, each red read at the assertion (`A-016`).** Delete the
+loader `COPY` → the two presence tests fail on the missing instruction, and the subset
+guard stays green (confirmed, not assumed). Broaden to `COPY scripts/ ./scripts/` →
+**four** guards fail on the directory bar. ⚠⚠ **And two that read as the relevant ones
+stay GREEN:** `test_no_writing_script_reaches_the_image` and
+`test_the_fitter_is_named_and_absent` both pass, because a directory COPY yields the
+source token `scripts/` and never `scripts/fit_scorer.py`, so the by-name intersection
+against `WRITERS` is empty. **The fitter is protected by the directory bar, not by the
+guard that names it** — measured under revert and recorded in `### D-145`, unnumbered,
+because `F-050` is reserved for the guard-direction sweep. Remove
+`!scripts/census_structural_rank.py` from `.dockerignore` → the context test fails on
+the set difference, which is the closest a daemon-less gate gets to reproducing the
+build failure itself.
+
+| ID | Check | Test name |
+|----|-------|-----------|
+| **T-1252** | **The loader is IN the image, the directory is still OUT, and nothing was run.** Both `COPY scripts/…` lines are present in the runtime stage **verbatim and per file**; `scripts/` is never copied wholesale and `fit_scorer` appears in no instruction (`D-079` dec 1); `.dockerignore` still excludes `scripts/` and re-includes **exactly the two named files** — never a pattern; `data/` is copied **exactly once** as the whole directory, so no CSV is re-copied (`F-014`); the machine paths are **derived, not asserted as prose** — `WORKDIR /srv` plus the loader's own two-parents rule gives `/srv/scripts/census_structural_rank.py` and `/srv/data/census/census_manifest.v7.csv`, and `fly.toml`'s mount stays `/data/artifacts` so the image dir and the Volume cannot be confused; **six D-144 files are sha256-pinned** on LF-normalised bytes (formula, loader, reader, migration `0012`, `read_routes`, `models`), so *"no formula/schema/route change"* is a property rather than an intention; **no `RUN`/`CMD`/`ENTRYPOINT` and no workflow executes the loader** and `CMD` is still uvicorn; no torch/transformers/worker entered the image; each shipped script's **transitive** first-party import graph reaches no unshipped `scripts.` module (the `ModuleNotFoundError` production found once already); `### D-145` exists **exactly once** and leads the log (**the check is the heading, not a citation of one** — D-062 / method-note item 7), leads with the absent docker daemon and the absent Fly credential, labels the ops scar **reported** rather than observed and names `2170bd8`, names `b2196e9` as the two-line precedent, carries a **deep-learning justification** that names ESMFold / pLDDT / `score_model` **and states it adds no deep learning**, and **records that its own citation-invariant prediction was wrong**; the eight id guards **name** `### D-145` and **bar** `### D-146` (bar-or-name, never neither, never a `>=`); the `D-145` RESERVED row is retired **marker-safe** (not struck — `tests/test_d144_…py:916` locates it by literal marker) with a `D-146` row added; the citation invariant returns `['D-131', 'F-067']`; `ARCHITECTURE.md` and this Test Plan are current | `test_the_runtime_stage_names_each_baked_script_as_its_own_copy` · `test_the_loader_is_baked_in_and_this_is_the_assertion_the_scar_needed` · `test_the_scripts_directory_is_never_copied_and_the_fitter_never_ships` · `test_the_build_context_re_includes_exactly_the_two_named_files` · `test_no_csv_is_re_copied_for_the_loader` · `test_the_loader_and_its_population_resolve_under_srv_without_a_path_constant_moving` · `test_the_fly_volume_is_not_the_images_data_directory` · `test_no_formula_schema_or_route_byte_moved` · `test_nothing_in_this_pr_runs_the_loader` · `test_no_gpu_world_and_no_worker_entered_the_image` · `test_the_log_entry_exists_exactly_once_and_leads_the_log` · `test_the_entry_leads_with_what_this_build_could_not_verify` · `test_the_entry_records_the_ops_scar_as_reported_rather_than_observed` · `test_the_entry_states_the_two_line_shape_and_its_precedent` · `test_the_entry_carries_a_deep_learning_justification` · `test_the_entry_states_the_hard_stops_from_the_go` · `test_the_entry_records_that_its_own_invariant_prediction_was_wrong` · `test_the_next_free_integer_is_named_and_barred_across_every_guard` · `test_the_reserved_row_is_retired_marker_safe_and_146_has_a_row` · `test_the_citation_invariant_holds_on_this_branch` · `test_the_architecture_doc_records_the_baked_paths` · `test_the_test_plan_carries_the_d145_addendum_on_an_id_nobody_else_holds` · `test_the_runtime_stage_copies_both_permitted_scripts_by_name` · `test_the_scripts_directory_is_still_never_copied_wholesale` · `test_only_the_allowed_scripts_are_copied` · `test_dockerignore_excludes_scripts_and_re_includes_only_the_allowed` · `test_the_allowed_scripts_exist_so_a_copy_cannot_silently_be_a_typo` · `test_a_shipped_script_needs_nothing_from_scripts_that_is_not_shipped` |
+
+---
+
 ## Addendum 2026-09-09 — D-144 census STRUCTURAL rank in the DB and on its own route
 
 ### D-144 (this PR; T-1243–T-1251) — the offline census ranking stops being a spreadsheet

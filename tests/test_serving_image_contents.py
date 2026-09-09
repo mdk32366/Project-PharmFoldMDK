@@ -7,8 +7,13 @@ credential never leaves it, which is how migration `0010` was applied. But `COPY
 have shipped all 60 scripts, SEVEN of which write, and put a **ruled prohibition one `fly ssh`
 away behind no guard at all.**
 
-⚠ So exactly one file is copied, and this test is what keeps it exactly one. The convenient
+⚠ So the copies are NAMED FILES, and this test is what keeps them named. The convenient
 broadening — `COPY scripts/ ./scripts/` — is one keystroke and would look harmless in a diff.
+
+⚠ **Two files since `D-145`**, not one: the `D-144` structural-rank loader joins the ingest,
+because it had been hand-placed on `/srv/scripts/` and the next rebuild would have dropped it.
+**The count is not the invariant — "named, and named here" is.** A set that grows by one audited
+file is the shape working; a set replaced by `scripts/*` is the shape failing.
 
 ⚠ This asserts the DECLARATION (the Dockerfile), not the built image, and says so rather than
 implying more: no docker daemon runs in the gate. The build itself is the other half of the
@@ -21,12 +26,22 @@ from __future__ import annotations
 import pathlib
 import re
 
+import pytest
+
 REPO = pathlib.Path(__file__).resolve().parent.parent
 DOCKERFILE = REPO / "Dockerfile"
 DOCKERIGNORE = REPO / ".dockerignore"
 
-# The only script permitted into the serving tier.
-ALLOWED_SCRIPTS = {"scripts/census_ingest_features.py"}
+# ⚠ The ONLY scripts permitted into the serving tier — widened at D-145 by ADDING a named file,
+# never by a pattern and never by admitting the directory. The D-144 structural-rank loader is
+# the second: it had been hand-placed on `/srv/scripts/` after D-144 shipped, and a rebuild would
+# have dropped it. ⚠⚠ This set is an UPPER bound and cannot see an absence — deleting a `COPY`
+# line satisfies it perfectly. The lower bound lives in `tests/test_image_contents.py`, which
+# asserts both lines are PRESENT; neither test is sufficient alone.
+ALLOWED_SCRIPTS = {
+    "scripts/census_ingest_features.py",
+    "scripts/census_structural_rank.py",
+}
 
 # Scripts that WRITE. None of these may enter the image except the allowed ingest.
 WRITERS = {
@@ -62,7 +77,7 @@ def test_the_dockerfile_copies_no_script_directory():
         f"production host, and D-079 dec 1 bars a refit")
 
 
-def test_only_the_allowed_script_is_copied():
+def test_only_the_allowed_scripts_are_copied():
     copied = {s for s in _copy_sources() if s.startswith("scripts/")}
     assert copied <= ALLOWED_SCRIPTS, (
         f"scripts entering the serving image that are not permitted: "
@@ -86,7 +101,11 @@ def test_the_fitter_is_named_and_absent():
         "satisfying it")
 
 
-def test_dockerignore_excludes_scripts_and_re_includes_only_the_ingest():
+def test_dockerignore_excludes_scripts_and_re_includes_only_the_allowed():
+    """⚠⚠ The half of the shape that looks optional and is not (D-145). `scripts/` is excluded
+    from the build CONTEXT, so a `COPY` with no matching `!` line names a path docker cannot see
+    and fails the BUILD — during a deploy, not here, because no daemon runs in the gate. This is
+    the closest a daemon-less CI gets to reproducing that failure."""
     text = DOCKERIGNORE.read_text(encoding="utf-8")
     lines = [ln.strip() for ln in text.splitlines()
              if ln.strip() and not ln.strip().startswith("#")]
@@ -98,7 +117,7 @@ def test_dockerignore_excludes_scripts_and_re_includes_only_the_ingest():
         f"{sorted(ALLOWED_SCRIPTS)} is permitted")
 
 
-def test_the_allowed_script_exists_so_the_copy_cannot_silently_be_a_typo():
+def test_the_allowed_scripts_exist_so_a_copy_cannot_silently_be_a_typo():
     """⚠ A COPY naming a file that does not exist fails the BUILD, not the gate — and that
     failure would arrive during a deploy. Catch it here instead."""
     for rel in sorted(ALLOWED_SCRIPTS):
@@ -141,7 +160,9 @@ def _transitive_imports(entry: str) -> dict[str, str]:
     return via
 
 
-def test_the_ingest_needs_nothing_from_scripts_that_is_not_shipped():
+@pytest.mark.parametrize("entry", sorted(
+    p[:-3].replace("/", ".") for p in ALLOWED_SCRIPTS))
+def test_a_shipped_script_needs_nothing_from_scripts_that_is_not_shipped(entry):
     """⚠⚠ THIS TEST WAS TOO SHALLOW AND PRODUCTION FOUND THE GAP, WHICH IS THE WORST WAY TO
     FIND IT. It originally regex-scanned the ingest's OWN imports for `scripts.*` — and passed,
     because the ingest imported `core.clinical_ingest`, which imports
@@ -155,15 +176,20 @@ def test_the_ingest_needs_nothing_from_scripts_that_is_not_shipped():
 
     Now the graph is walked, and the module that pulled a violation in is NAMED — because
     "something imports scripts" is not an actionable failure.
+
+    ⚠ **Parametrised over EVERY shipped script at D-145, not just the ingest.** The
+    structural-rank loader reaches `app.reads`, which reaches eleven `app.` modules and thirteen
+    `core.` ones — a graph deep enough that the one-level indirection above is not the worst case
+    it could hit. A guard written for one file and left there is a guard that stops watching the
+    moment a second file arrives.
     """
-    via = _transitive_imports("scripts.census_ingest_features")
-    allowed = set(ALLOWED_SCRIPTS) | {"scripts.census_ingest_features"}
-    allowed_mods = {p[:-3].replace("/", ".") if p.endswith(".py") else p for p in allowed}
+    via = _transitive_imports(entry)
+    allowed_mods = {p[:-3].replace("/", ".") for p in ALLOWED_SCRIPTS} | {entry}
     leaked = {m: src for m, src in via.items()
               if m.startswith("scripts.") and m not in allowed_mods}
     assert not leaked, (
-        "the shipped ingest can reach scripts/ modules that do NOT ship — it will build clean "
-        "and fail at run time on the production host:\n  " +
+        f"the shipped {entry} can reach scripts/ modules that do NOT ship — it will build clean "
+        f"and fail at run time on the production host:\n  " +
         "\n  ".join(f"{m}  (pulled in by {src})" for m, src in sorted(leaked.items())))
 
 

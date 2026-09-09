@@ -2,10 +2,11 @@
 #
 # Stage 1 (Node, BUILD-TIME ONLY — DEP-006) builds the React bundle to static assets. Node
 # never enters the runtime image; the built assets are plain files. Stage 2 is the runtime
-# tier, UNCHANGED from DEP-001: the hash-locked runtime lock, app/ + core/ + db/ + data/, and
-# no worker/ / torch. The image-contents test (tests/test_image_contents.py) asserts both
-# halves — the runtime stage's shape, and that no npm/node instruction appears after the
-# runtime FROM (DEP-006).
+# tier, UNCHANGED from DEP-001: the hash-locked runtime lock, app/ + core/ + db/ + data/, TWO
+# NAMED SCRIPTS (never `scripts/` — see below; the second joined at D-145), and no worker/ /
+# torch. The image-contents test (tests/test_image_contents.py) asserts both halves — the
+# runtime stage's shape, including each script COPY by name, and that no npm/node instruction
+# appears after the runtime FROM (DEP-006).
 
 # ── Stage 1: build the UI bundle (D-037: npm ci against the committed lock) ────
 FROM node:20-slim AS ui-build
@@ -37,12 +38,17 @@ COPY core/ ./core/
 COPY db/ ./db/
 COPY data/ ./data/
 
-# ⚠ The census feature ingest ONLY — not `scripts/`. It runs on the machine so the database
-# credential never leaves it (the same reason migration 0010 was applied here), and it needs
-# `data/census/census_features.v1.jsonl`, which the line above already ships. Everything else in
-# `scripts/` stays out, `fit_scorer.py` above all: `D-079` dec 1 bars a refit, and a barred
+# ⚠ TWO NAMED FILES — still not `scripts/`. Both run on the machine so the database credential
+# never leaves it (the same reason migration 0010 was applied here), and both read inputs the
+# `COPY data/` above already ships: the ingest needs `data/census/census_features.v1.jsonl`, the
+# D-144 structural-rank loader needs `data/census/census_manifest.v7.csv` and
+# `data/adc_reference_mapping.csv` — which is why neither line re-copies a CSV. Everything else
+# in `scripts/` stays out, `fit_scorer.py` above all: `D-079` dec 1 bars a refit, and a barred
 # operation must not be sitting on the production host waiting for someone to type it.
+# ⚠ D-145: the loader was hand-placed on /srv/scripts/ once after D-144 shipped, and the next
+# rebuild would have dropped it — an image is the only copy with a provenance chain.
 COPY scripts/census_ingest_features.py ./scripts/
+COPY scripts/census_structural_rank.py ./scripts/
 
 # The built React bundle from stage 1 — static files only, no Node (DEP-006). app_from_env
 # serves it under / with /api and /jobs matched FIRST (route ordering).

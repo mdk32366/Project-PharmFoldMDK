@@ -379,6 +379,183 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-145 — The D-144 loader stops living on the production host by hand: `census_structural_rank.py` is baked into the serving image as ONE explicit COPY beside the ingest — and the disqualifying fact is that no image was built here, because this build has no docker daemon
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **image permanence only.** Three build-surface files (`Dockerfile`,
+  `.dockerignore`, the image-contents tests) plus this log, `ARCHITECTURE.md` and
+  `docs/Test_Plan.md`. ⚠ **No formula change, no schema change, no route change, no migration,
+  no UI, no fold, no GPU, no rent** — and **no `--load`**: `D-144` stands untouched and the
+  ranking is already loaded on Fly, so re-running the loader is not what this PR is for.
+- **⚠⚠ The disqualifying fact, first: NO IMAGE WAS BUILT AND NOTHING WAS DEPLOYED HERE, so this
+  entry describes a DECLARATION and not an artefact.** Measured on this build rather than
+  assumed: `which docker flyctl fly psql` returns **nothing** and
+  `env | grep -iE 'DATABASE|FLY|POSTGRES|PGHOST'` returns **nothing** — there is no docker
+  daemon, no Fly credential and no Postgres client, so *"the loader is in the image"* cannot be
+  established here by building one. What is established here is that the `Dockerfile` names it
+  and the build context admits it; **the build itself is the other half of the proof**, and a
+  `COPY` of a path `.dockerignore` excludes fails the build *loudly*, so the first green deploy
+  is what settles it. `tests/test_serving_image_contents.py` has said exactly this about the
+  ingest since `b2196e9` and the same limit applies to this file, which is why it is restated
+  rather than quietly inherited.
+- **⚠ The ops scar that prompted the GO, and it is REPORTED rather than observed.** After
+  `D-144` merged, **Kaylee had to `sftp` `census_structural_rank.py` onto `/srv/scripts/`** to
+  run the load — per Trinity's GO of 2026-09-08. ⚠⚠ **That is Trinity's word, not a discovery
+  from this session:** with no Fly credential in this build there is no way from here to read
+  `/srv/scripts/` on the machine, or to confirm what is on it now. **What IS checkable from the
+  tree is the hazard the scar reports**, and it is the load-bearing half: `git show
+  2170bd8:Dockerfile | grep -n 'COPY scripts'` returns **exactly one line**,
+  `COPY scripts/census_ingest_features.py ./scripts/`, so **a rebuilt image contains a
+  `/srv/scripts/` holding exactly one file and the sftp'd loader is not in it.** Fly replaces
+  machines on deploy, so **the next rebuild drops it** — an operator-placed file has no
+  provenance, no version pin and no gate, and the only record that it was ever there is a
+  person's memory.
+- **Context.** Trinity Spec `@0.0` — `Grok-Bot/Sessions/Trinity/2026-09-08-d145-bake-structural-loader-image-spec@0.0.md`
+  (Matt / Kaylee ops scar). Model pin `D-0037`: `claude-opus-5` (thinking, high). The ruling is
+  one sentence: **the loader ships the same way the ingest already ships — one explicit file,
+  never the directory.**
+- **⚠⚠ THE EDIT THAT LOOKS LIKE ONE LINE AND IS TWO, and this is the finding-shaped part of
+  this PR.** The GO says *"add ONE line"*, and one `COPY` line is genuinely all the `Dockerfile`
+  needs. **But `.dockerignore` excludes `scripts/` wholesale and re-includes exactly one path**
+  — `git show 2170bd8:.dockerignore | grep -n 'scripts'` returns `scripts/` and
+  `!scripts/census_ingest_features.py` — so a `COPY` naming the loader **without** a second
+  negation line would name a path that is not in the build context, and docker fails the build
+  rather than silently shipping nothing. ⚠ **This is not a discovery about docker; it is the
+  precedent read off the tree:** `b2196e9` (*"Ship the ingest to the serving image -- ONE file,
+  not `scripts/`"*) touched **three** files — `.dockerignore` (+11), `Dockerfile` (+7) and
+  `tests/test_serving_image_contents.py` (+117) — so *"the same way the ingest ships"* was
+  always a three-file shape, and reading the GO's *"one line"* as *"one file"* is how the deploy
+  would have gone red instead of the gate. ⚠ **The gate cannot catch it either** — no docker
+  daemon runs in CI — which is why `test_the_allowed_scripts_exist_so_a_copy_cannot_silently_be_a_typo`
+  and the `.dockerignore` negation assertion are the substitutes, and why they now cover **two**
+  files instead of one.
+- **Decision.**
+  1. **ONE explicit `COPY` in the runtime stage, beside the existing ingest copy, and the comment
+     discipline is kept verbatim:** `COPY scripts/census_structural_rank.py ./scripts/`. ⚠ **Still
+     NOT `COPY scripts/`.** `scripts/fit_scorer.py` and the rest of the directory stay out —
+     `D-079` decision 1 bars a refit outright, and *"a barred operation must not be sitting on
+     the production host waiting for someone to type it"* is the sentence already in the
+     `Dockerfile` and it is not weakened by this PR.
+  2. **`.dockerignore` gains the matching negation and nothing else:**
+     `!scripts/census_structural_rank.py`. The exclusion of `scripts/` is untouched, so the
+     re-included set goes from one named file to **two named files** — never to a pattern, never
+     to the directory.
+  3. **The COPY is pinned by tests that go red if the line is deleted.** `ALLOWED_SCRIPTS` in
+     `tests/test_serving_image_contents.py` becomes the two-element set, which keeps the
+     *upper* bound (nothing else may enter); and `tests/test_image_contents.py` gains the
+     *lower* bound — the runtime stage must contain both explicit `COPY` lines. ⚠⚠ **The
+     direction matters and the existing suite only had one of them:** a set-membership test
+     asserts *no more than*, and deleting the `COPY` line satisfies it perfectly. So the
+     removal-reddens property the GO asks for needed a **positive** assertion, added where the
+     GO put it.
+  4. **No `--load` and no ops step in this PR.** The ranking is already loaded on Fly; a rerun
+     would mark the live `valid` run `superseded` and insert a fresh one for no reason, which is
+     a change to served data dressed up as a packaging PR. Image permanence is the whole scope.
+  5. **The CSVs are NOT re-copied.** `COPY data/ ./data/` already ships them, and a second copy
+     targeted at `data/census/` would be two paths to one artefact — the class this log has
+     recorded ten times (`F-014`). Checked rather than assumed: `data/census/census_manifest.v7.csv`
+     (398,141 bytes) and `data/adc_reference_mapping.csv` (6,355 bytes) are both under `data/`.
+- **The paths on the serving host, stated because a loader that cannot find its inputs is worse
+  than one that is absent.** Read off the code rather than guessed: the runtime stage sets
+  `WORKDIR /srv`, `scripts/census_structural_rank.py:60` computes
+  `REPO = pathlib.Path(__file__).resolve().parent.parent`, and `core/census_structural.py:83`
+  computes `CENSUS_MANIFEST = _ROOT / "data" / "census" / "census_manifest.v7.csv"` from the same
+  two-parents rule. So on the machine the loader is **`/srv/scripts/census_structural_rank.py`**
+  and its population is **`/srv/data/census/census_manifest.v7.csv`** — the same relative shape
+  as in the repo, which is why no path constant changes.
+  - ⚠ **`/srv/data` is NOT the Fly Volume, and the two are one character apart in a way that
+    would read as a typo.** `fly.toml` mounts the volume at **`/data/artifacts`** (fold
+    artifacts, `D-031`). The census CSVs live in the **image** at `/srv/data/...`. A future edit
+    that "corrects" one to the other would move the loader's population onto a volume that has
+    never held it.
+- **⚠ The other failure mode the ingest already paid for, re-checked for this file rather than
+  assumed to be absent.** `test_the_ingest_needs_nothing_from_scripts_that_is_not_shipped`
+  exists because the ingest reached `scripts.kathad_reproduction` **through**
+  `core.clinical_ingest`, the image built clean, and the run died on the production host at
+  `ModuleNotFoundError` — one level of indirection was enough. Walking the same graph from
+  `scripts.census_structural_rank` returns **31 first-party modules, all under `app.` / `core.`
+  / `db.`, and no `scripts.` module other than itself** — so the loader can reach nothing that
+  does not ship. That check is added to the suite, not just run once here.
+- **Deep-learning justification (CLAUDE.md prime directive), and the honest form of it: this PR
+  adds no deep learning at all.** It is packaging. What it protects is the reproducibility of
+  the learned half of a served number: `D-144`'s rank is
+  `score_membrane × score_ecd × score_model`, and `score_model` **is the ESMFold pLDDT** — the
+  only learned quantity in the product, `plddt/100` for a fold, `0.8` where the fold's pLDDT was
+  never persisted (`F-042`) and `0.3` for no fold at all. ⚠⚠ **With the loader outside the
+  image, the served order is refreshable only by an operator hand-placing a script**, so the
+  network's contribution to a published ranking becomes a function of who sftp'd what, and the
+  serving tier stops being rebuildable from committed bytes. **A neural network's output that
+  cannot be regenerated from the image is not a defensible deep-learning result** — that is the
+  whole of this entry's claim on the prime directive, and it is a claim about permanence, not
+  about a new model.
+- **Ship id: spends `D-145`, which `docs/RESERVED.md` held as the next free integer and
+  `D-144`'s entry barred by name.** Checked before claiming it, on `main` at tip **`2170bd8`**
+  (D-144 / [#269](https://github.com/mdk32366/Project-PharmFoldMDK/pull/269)):
+  `rg -n '^### D-14' docs/README.md` returns **140, 141, 142, 143, 144** and no 145, and the
+  `RESERVED.md` row for 145 reads *"the next free `D-` integer, barred by name in the seven
+  next-free guards"*. ⚠ **So this is the second time a RESERVED integer is SPENT rather than
+  skipped** (`D-142` was the first, 2026-09-09), and the resolution is the one this log has now
+  used ten times: **the eight guards that barred `### D-145` now NAME this entry, and
+  `### D-146` takes the bar. Nothing was relaxed to a `>=` and no bar was deleted** — each
+  became a *name*, which is the distinction `D-142`'s guard message pre-committed (*"a reserved
+  integer that is later spent must be NAMED here, not merely un-barred"*).
+  - **The `D-145` RESERVED row is RETIRED MARKER-SAFE, not struck and not deleted**, on the
+    `D-142` / `D-143` precedent and for the reason `D-142`'s row states in the open:
+    `tests/test_d144_census_structural_rank.py:916` locates the row with
+    `re.search(r"^\| \*\*D-145\*\*", reserved, re.M)`, so **striking the marker to
+    `~~**D-145**~~` would break another entry's guard instead of satisfying it.** The row keeps
+    its literal `| **D-145** |` marker and records ✅ **WRITTEN** inside the cell, with the
+    original reservation text kept as provenance. A new `| **D-146** |` row is added, because
+    this entry cites 146 in order to bar it.
+  - ⚠⚠ **The citation invariant — and the prediction about it was WRONG, which is recorded here
+    rather than replaced by the right answer (`F-044`'s class, in the paragraph that exists to
+    catch it).** This entry first claimed `origin/main` at `2170bd8` reports
+    **`['D-131', 'D-145', 'F-067']`**. **It does not: it reports `['D-131', 'F-067']`.** The
+    error was arithmetic about the wrong object — 145 *is* cited on `main` by the guards that
+    bar it, but the `RESERVED.md` row is exactly what keeps it **resolved**, so it was never in
+    the hole. **The hole on `main` does not shrink here, because there was nothing for this PR
+    to close.** Measured with the register's own command on the working tree, not predicted: the
+    first draft of this branch reported **`['D-131', 'D-146', 'F-067']`** — *this entry* opened a
+    new hole by citing 146 in order to bar it — and it returns to
+    **`['D-131', 'F-067']`** once the `| **D-146** |` row lands. `D-131` (the suffix half of
+    `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched. ⚠ **The
+    honest reading of this sub-bullet: the invariant caught this PR, not the other way round.**
+- **Revert proof (`A-016`: any red proves the assertion bites; `A-017`: the path must be
+  entered).** Each guard was reverted individually and the red was read at the assertion, not
+  at a collection error:
+  - Delete `COPY scripts/census_structural_rank.py ./scripts/` from the `Dockerfile` →
+    `test_the_runtime_stage_copies_both_permitted_scripts_by_name` and
+    `test_the_structural_rank_loader_is_baked_in_by_name` **fail at the assertion**. ⚠ **This is
+    the revert the GO asked for by name, and it is the one the pre-existing suite did NOT
+    catch**: with the line gone, `test_only_the_allowed_script_is_copied` stays **green**,
+    because `{} ⊆ {two allowed}` is true. A set bound cannot see an absence.
+  - Broaden the copy to `COPY scripts/ ./scripts/` → **four** guards redden:
+    `test_the_dockerfile_copies_no_script_directory`,
+    `test_only_the_allowed_scripts_are_copied`,
+    `test_the_scripts_directory_is_never_copied_and_the_fitter_never_ships` and
+    `test_the_scripts_directory_is_still_never_copied_wholesale`. ⚠⚠ **AND TWO GUARDS THAT
+    LOOK LIKE THE RELEVANT ONES STAY GREEN, which this entry first claimed reddened and is
+    corrected here rather than quietly fixed.** `test_no_writing_script_reaches_the_image` and
+    `test_the_fitter_is_named_and_absent` **both pass** under `COPY scripts/`. **The reason is
+    mechanical and worth having written down:** the Dockerfile parser yields the COPY's *source
+    token*, which for a directory copy is `scripts/` and never `scripts/fit_scorer.py`, so the
+    by-name intersection against `WRITERS` is empty. **A guard that names the fitter cannot see
+    the copy that ships it.** ⚠ The fitter is protected by the *directory bar*, not by the
+    by-name check that reads as though it were doing the work — recorded here, unnumbered,
+    because `F-050` is reserved for the guard-direction sweep and taking an integer under
+    momentum is the `F-025` defect repeating.
+  - Remove `!scripts/census_structural_rank.py` from `.dockerignore` →
+    `test_dockerignore_excludes_scripts_and_re_includes_only_the_allowed` reddens on the set
+    difference. ⚠ **This is the revert that reproduces a broken deploy in the gate**, which is
+    the closest a daemon-less CI can get to the build failure itself.
+- **⚠ What this build could NOT verify, stated rather than left as an absence.** (1) That the
+  built image contains the file — **no docker daemon** (above). (2) That `/srv/scripts/` on the
+  live machine currently holds the sftp'd copy, or that a rebuild has already dropped it —
+  **no Fly credential**. (3) That the loader runs correctly *on the machine*: this PR ships
+  bytes, and `--load` needs a `DATABASE_URL` that only Fly holds. **The image gives the loader
+  its code; it does not give it a credential, and that separation is deliberate** — it is the
+  same reason `D-144` recorded `result_status: not_run` rather than claiming a rank.
+
 ### D-144 — The offline census ranking stops being a spreadsheet: `structural_score` lands in the DB and on its own route, three factors and no invented fifth — and the disqualifying fact is that no run was loaded here, because no database reached this build
 
 - **Date:** 2026-09-09

@@ -260,7 +260,17 @@ def test_the_log_entry_exists_exactly_once_and_leads_the_log():
         "D-144 is the recorded successor id; it must be the census structural-rank entry, "
         "not some other entry that took the number"
     )
-    assert "\n### D-145" not in LOG, "D-145 is the next free integer"
+    # ⚠⚠ 145 IS NOW WRITTEN, AND THIS BAR REDDENED EXACTLY AS ITS PREDECESSOR DID ONE INTEGER
+    # AGO. D-145 bakes D-144's structural-rank loader into the Fly serving image as one explicit
+    # `COPY` — image permanence for the DB/API half of the same structural-only ruling this copy
+    # entry describes, and it changes **no sentence on any surface**. The bar is REPLACED BY A
+    # NAME — never deleted — and `### D-146` takes the next-free bar. Never a `>=`.
+    assert re.search(r"^### D-145 — The D-144 loader stops living on the production host",
+                     LOG, re.M), (
+        "D-145 is the recorded successor id; it must be the image-permanence entry, not some "
+        "other entry that took the number"
+    )
+    assert "\n### D-146" not in LOG, "D-146 is the next free integer"
 
 
 def test_the_entry_carries_the_cohort_82_hard_stop_and_the_go_that_authorised_it():
@@ -452,7 +462,21 @@ def test_every_enumerated_id_guard_keeps_the_bar_on_142():
         assert not (barred_144 and named_144), (
             f"{rel} both bars 144 and names an entry for it; both cannot be true"
         )
-        assert '### D-145" not in' in text, f"{rel} does not bar the next free integer"
+        # ⚠⚠ WIDENED THE SAME WAY AT D-145, by the same **bar OR name, never neither** rule this
+        # test already carries — and this is the second RESERVED integer to be spent rather than
+        # skipped, so it exercises exactly the path 142 pre-committed. 145 was the next free
+        # integer when D-144 landed and is now spent by the image-permanence entry, so a guard
+        # must either bar it (while unspent) or name the entry that took it (once spent). The
+        # next free integer, 146, takes the bar. The third state stays forbidden.
+        barred_145 = '### D-145" not in' in text
+        named_145 = "D-145 — The D-144 loader stops living on the production host" in text
+        assert barred_145 or named_145, (
+            f"{rel} neither bars 145 nor names the entry that spends it"
+        )
+        assert not (barred_145 and named_145), (
+            f"{rel} both bars 145 and names an entry for it; both cannot be true"
+        )
+        assert '### D-146" not in' in text, f"{rel} does not bar the next free integer"
         assert "D-143 — Track B stops claiming a composite" in text, (
             f"{rel} must name 143 by its heading, not by a `>=`"
         )
