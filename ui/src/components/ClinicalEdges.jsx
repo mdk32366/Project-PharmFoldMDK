@@ -216,20 +216,31 @@ function BurdenSlot() {
           why the others are unattempted. `D-093` amendment 6 measured the actual obstacle, and it
           is a VOCABULARY problem, not a licensing one — so a reader was being given a reason that
           would not be fixed by obtaining a licence. */}
-      {/* ⚠⚠ ONE LINE, AND THE PREVIOUS VERSION WAS FALSE (owner ruling, 2026-08-21 · `WA`).
-          It said *"the tumour names cannot be matched up"* — a claim of total impossibility.
-          `D-093` amendment 6 measured **four failures out of twenty**. Generalising four into all
-          twenty is not a caveat, it is a false statement, and replacing a false claim with a true
-          one waits on nothing.
+      {/* ⚠⚠ ONE LINE, AND IT HAS NOW BEEN FALSE TWICE — IN OPPOSITE DIRECTIONS.
+          (1) It said *"the tumour names cannot be matched up"* — a claim of total impossibility
+          from FOUR measured failures out of twenty (owner ruling, 2026-08-21 · `WA`).
+          (2) ⚠⚠ **D-149 CORRECTS THE SECOND FALSEHOOD: *"we do not have that data"* IS NO LONGER
+          TRUE.** US incidence and deaths by cancer site ARE held, committed at
+          `data/burden/seer_us_cancer_burden.v1.csv` and served on `/cancer-burden`. What is
+          missing is not the DATA; it is the JOIN from this atlas's tumour names to a registry
+          category. Telling a reader we lack the figures while the figures are two clicks away is
+          the same class of error as the impossibility claim, one direction over.
+          ⚠⚠ AND THE PROTEIN CARD GAINED NOTHING, WHICH IS WHY THE REFUSAL STAYS. `D-093` decision
+          1 bars a protein-level burden field and `test_no_protein_level_model_or_payload_carries_
+          a_burden_field` still enforces it. This is a LINK, never an attached figure: no incidence
+          number appears on this card, and none is implied for this protein.
+          ⚠ Survival is refused OUTRIGHT rather than linked — `/cancer-burden` holds deaths and
+          incidence and no survival statistic at all, so pointing at it for survival would be a
+          pointer to something that is not there.
           ⚠ AND ~150 WORDS EXPLAINING AN ABSENCE, ON 2,690 CARDS, OUTWEIGHED THE TUMOUR PANEL BELOW
-          THAT HAS DATA — which is how a reader concludes the protein has none. The explanation
-          belongs on the crosswalk page; the card gets the fact.
-          ⚠ No number here until `VA`/`WB` reports: "how many" is being measured, and printing a
-          count before it is measured would repeat the error in the other direction. */}
+          THAT HAS DATA — which is how a reader concludes the protein has none. So the count and
+          the reasons live on `/cancer-burden`, which NAMES the four unmappable strings; the card
+          gets the fact and the pointer. ⚠ Still one paragraph, still under the length budget. */}
       <p className="clin-burden-missing">
-        <strong>Incidence and survival are not shown — we do not have that data.</strong> Some
-        tumour names in this atlas cannot be reliably matched to registry categories; how many is
-        being measured.
+        <strong>Not shown for this protein.</strong> US figures by cancer site are on{' '}
+        <a href="/cancer-burden">Cancer burden</a> — what is missing here is the join: some tumour
+        names in this atlas do not map to a registry category, and that page names which and why.
+        Survival is not held at all.
       </p>
     </div>
   )

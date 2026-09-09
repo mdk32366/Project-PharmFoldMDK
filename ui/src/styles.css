@@ -902,3 +902,67 @@ main { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
 .prov-field dd { margin: 0; }
 .prov-value { display: block; }
 .prov-meta { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; word-break: break-word; }
+
+/* ── D-149 · the US cancer burden surface ─────────────────────────────────────
+   ⚠ The US-only banner and the per-bar badge are styled to be READ, not to be
+   decorative: this page's whole risk is a figure travelling without its
+   geography, so the qualifier is high-contrast rather than muted. */
+.burden > h2 { margin-bottom: 0.4rem; }
+.burden-us-only {
+  background: #2a1f10;
+  border: 1px solid #7a5a1e;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin: 0 0 0.9rem;
+  line-height: 1.5;
+}
+.burden-release { color: var(--muted); font-size: 0.85rem; margin: 0.2rem 0 1rem; }
+.burden-question { color: var(--muted); margin: 0.5rem 0 1rem; }
+
+.burden-toggle { display: inline-flex; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.burden-toggle-btn {
+  background: var(--panel); color: var(--muted); border: 0;
+  padding: 0.45rem 1.1rem; font: inherit; font-size: 0.92rem; cursor: pointer;
+}
+.burden-toggle-btn + .burden-toggle-btn { border-left: 1px solid var(--line); }
+.burden-toggle-btn:hover { color: var(--ink); }
+.burden-toggle-btn.is-active { background: #1d2a45; color: var(--ink); font-weight: 600; }
+
+.burden-bars { list-style: none; margin: 0 0 1.6rem; padding: 0; }
+.burden-bar-row {
+  display: grid;
+  grid-template-columns: minmax(11rem, 20rem) 1fr minmax(9rem, auto);
+  gap: 0.7rem; align-items: center; padding: 0.2rem 0;
+}
+.burden-bar-label { font-size: 0.9rem; }
+.burden-bar-track { background: #10182c; border-radius: 4px; height: 0.85rem; overflow: hidden; }
+.burden-bar-fill { display: block; height: 100%; background: linear-gradient(90deg, #4d7fd0, #7ca8e8); }
+.burden-bar-value { font-variant-numeric: tabular-nums; font-size: 0.88rem; text-align: right; }
+/* ⚠ ON EVERY BAR, because the bar is the part that gets screenshotted. */
+.burden-bar-badge { display: block; color: var(--muted); font-size: 0.7rem; letter-spacing: 0.02em; }
+
+.burden-table caption {
+  caption-side: top; text-align: left; color: var(--muted);
+  font-size: 0.85rem; line-height: 1.5; padding-bottom: 0.5rem;
+}
+.burden-skin-note { color: #e8c07a; font-size: 0.8rem; }
+.burden-context {
+  border-left: 3px solid var(--line); padding: 0.4rem 0 0.4rem 0.8rem;
+  color: var(--muted); font-size: 0.88rem; line-height: 1.5; margin: 1rem 0 1.6rem;
+}
+.burden-not-run { color: var(--muted); font-style: italic; }
+
+.burden-limits {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 0.9rem 1.1rem; margin: 1.2rem 0;
+}
+.burden-limits h3 { margin: 0 0 0.6rem; font-size: 0.95rem; color: var(--muted); }
+.burden-limits ul { margin: 0; padding-left: 1.1rem; }
+.burden-limits li { margin-bottom: 0.55rem; font-size: 0.87rem; line-height: 1.55; color: var(--ink); }
+.burden-attribution { color: var(--muted); font-size: 0.82rem; line-height: 1.6; margin-top: 1.4rem; }
+.burden-unmappable { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: 0.8rem; }
+.burden-unmappable h4 { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--muted); }
+.burden-unmappable dl { margin: 0; }
+.burden-unmappable-row { display: grid; grid-template-columns: 9rem 1fr; gap: 0.3rem 0.8rem; margin-bottom: 0.35rem; }
+.burden-unmappable dt { font-size: 0.85rem; }
+.burden-unmappable dd { margin: 0; color: var(--muted); font-size: 0.83rem; line-height: 1.5; }

@@ -379,6 +379,283 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-149 — The project gets a cancer burden surface of its own, from SEER official aggregates: which cancers kill the most people in the US, on a route and a page that join to no protein and no score — and the disqualifying fact is that asking SEER for *"Both Sexes"* breast cancer returns the **MALE** figure, a rate 72× too small, announced only in a response key nothing was reading
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **a new DISEASE-level surface: a committed SEER artefact, two tables, two
+  read routes and a dedicated `/cancer-burden` page.** ⚠ **`structural_score` does not move for any
+  row, the formula gains no factor, no burden figure enters any rank as a factor / tie-break / sort
+  key, no protein-level burden column is created, no GLOBOCAN figure is ingested or rendered, no
+  SEER Research Data microdata is fetched, no `--load` runs against Fly, and no protein card gains
+  an incidence number.** `D-093` (decisions 1 and 4, amendment 6), `D-143`, `D-144`, `D-146` and
+  `D-147` are cited and **none of them is amended**.
+
+**⚠⚠ THE DISQUALIFYING FACT, FIRST, AND IT IS THE MOST VALUABLE THING THIS BUILD PRODUCED.**
+SEER\*Explorer's JSON backend **silently substitutes a different `sex` than the one requested** for
+sex-specific sites, and it announces the substitution **only in the response key**. Measured
+2026-09-09 against `render_region_5.php`, both calls returning HTTP 200 with a confidence interval:
+
+| request | response key | rate / 100k | deaths |
+|---|---|---|---|
+| `site=55 data_type=2 sex=1` (**"Both Sexes"**) | `2_1_1_55` (**sex=2, MALE**) | **0.261793** | **2,457** |
+| `site=55 data_type=2 sex=3` (Female) | `3_1_1_55` (sex=3) | **18.928734** | **212,409** |
+
+**A loader that trusted its own request parameter would have ranked breast cancer near the BOTTOM of
+US cancer deaths, on a rate 72× too small, with six decimal places and a confidence interval while
+doing it.** There is no error, no exception and no missing field — the wrong number is well-formed
+and plausible. `F-047`'s class exactly, and the largest single instance yet found in this project by
+a wide margin: it would have put the second-deadliest cancer in the United States below `Vulva`.
+
+- **The remedy is structural, not vigilance.** `scripts/fetch_seer_burden.py` parses the sex out of
+  the **response key**, never the request, reads `key-order` from the response rather than assuming
+  it (incidence and mortality carry *different* key orders, interposing `stage` and `subtype`), and
+  refuses on a key/key-order length mismatch rather than guessing which component is the sex.
+- **All three sex codes are requested for every site and the results deduped on the RETURNED key.**
+  That is not redundancy: it is how Breast ends up carrying its **female** figure at all, instead of
+  carrying the substituted male one alone. **16 of 174 rows carry a recorded substitution**, in
+  `requested_sex_was_substituted` on the row and `component_counts.n_sex_substituted` on the run.
+- ⚠ **Fifteen of those sixteen are BENIGN and the entry says so rather than inflating the finding.**
+  Prostate, Testis, Cervix Uteri, Ovary, Corpus and Uterus, Vagina and Vulva are single-sex diseases,
+  so a substituted sex is the *right* answer there. **Breast is the one that bites**, because Breast
+  is the one site that is common in both sexes and published only per-sex. **A count of sixteen is
+  not a count of sixteen defects** (`F-019`'s over-claim guard).
+- ⚠⚠ **AND NO BOTH-SEXES BREAST RATE IS SYNTHESISED.** SEER\*Explorer publishes none, and an
+  age-adjusted rate **cannot be summed across sexes** — the standard populations differ. So the rows
+  are `Breast (female)` and `Breast (male)`, each labelled, and the display label carries the sex
+  whenever a figure is sex-specific. Inventing a combined rate would have been a number with no
+  source, which is the one thing this project has refused most often.
+
+**WHY THIS ENTRY EXISTS.** `D-093 amendment 6` held the INGEST-versus-LINK choice for the owner and
+said so explicitly: *"Choosing between them is a decision about what the layer IS, and it is the
+owner's. Code will not take it by implementation."* **Matt ruled on 2026-09-09 ~06:27 PT**, and the
+ruling is filed in the tree as
+[`OWNER-2026-09-09-D-093-amd6-seer-aggregates-cleared.md`](OWNER-2026-09-09-D-093-amd6-seer-aggregates-cleared.md)
+rather than summarised only here — **that file is the artefact this entry's provenance names
+(`D-016`)**, and a ruling recorded only inside the entry it authorises is a ruling with no
+independent existence.
+
+- **Amendment 6's narrow-but-real gap is CLOSED**, in favour of Code's own prior language, which
+  predates the gap and was already written in the tree three times:
+  `CROSSWALK-2026-08-21-hpa-tumour-to-registry.md:195`,
+  `ORDERS-Code-WE1-skin-confirmation-and-SEER-decision-6.md:74` and
+  `CLOSEOUT-Code-2026-08-21.md:207` — *"SEER is **US Government, public domain**"*.
+- **Option 1 (INGEST the official aggregates) is TAKEN, without waiting on `NCIinfo@nih.gov`.**
+- ⚠ **Amendment 6's CREDIT requirement survives the closure and is binding.** The gap that closed is
+  *does the policy reach DATA*; the obligation *"Credit the National Cancer Institute as the source"*
+  is not waived. It is a **stored column** on the run, present in `meta` even when no run is loaded,
+  and asserted by test.
+- ⚠ **Amendment 6's US-ONLY clause is NOT removed.**
+- ⚠⚠ **Today's NCI email `fcfc41c2` is a SCAR, not a gate.** It is recorded with its id in the owner
+  file and ruled non-load-bearing **by the owner, not by Code's convenience**. ⚠ This entry does not
+  characterise its contents: it was not read by the agent that wrote this, and *summarising an
+  artefact one has not read is the pointer-not-proof shape* (method-note item 7).
+
+**WHAT SHIPPED.**
+
+| Layer | What |
+|---|---|
+| Data | `data/burden/seer_us_cancer_burden.v1.csv` — **174 rows**, one per (statistic, SEER site, sex), sha256 `ed4ad60975699ed74d6d5c1e18a0d3372e85c005e249dee7e6b11605cd070e60`, pinned in a provenance sidecar with the release, the attribution, the excluded product and the excluded sites |
+| Fetch | `scripts/fetch_seer_burden.py` — **network**, regenerates the artefact, refuses rather than smoothing |
+| Load | `scripts/seer_cancer_burden.py` — **no network import at all**, hash-verifies, computes no burden number |
+| Schema | `cancer_burden_runs` + `cancer_burden_stat`, migration `0013_cancer_burden` (revises `0012`) |
+| API | `GET /api/cancer-burden` and `GET /api/cancer-burden/meta` |
+| UI | `/cancer-burden` — its own nav landmark: top-deaths bars, a full table, an incidence toggle |
+
+**⚠⚠ THE PINNED YEAR, AND IT IS MEASURED FROM THE SOURCE RATHER THAN TYPED IN.**
+`fetch_seer_burden.py` reads the release identity out of SEER's own live vocabulary
+(`get_var_formats.php`) and maps each row's numeric `year_range` code through it, so the period on a
+row is the source's answer and not a constant in our code.
+
+- **Release: SEER November 2025 Submission**; SEER\*Explorer application updated **2026-04-22**.
+  Confirmed against SEER's own revision history: *"the application was updated with incidence,
+  survival, prevalence and risk of diagnosis estimates based on the SEER November 2025 submission
+  and includes the 2023 diagnosis year"*, and *"mortality and risk of death estimates through 2024"*.
+- **US mortality: 2020-2024**, NCHS public use file, **total United States**, age-adjusted per
+  100,000. **SEER incidence: 2019-2023**, observed, age-adjusted per 100,000.
+- ⚠ **NOT the Preliminary Incidence Estimates.** `D-093 amendment 6` disqualified that product on its
+  own documentation — *"selected registries"*, *"Subject to revision: Yes"*, and a registry selection
+  **re-derived each year** while the product name never changes. `PRELIMINARY_DATA_TYPE` exists in
+  the fetcher **only to be excluded by name**.
+- ⚠ **NOT SEER Research Data / Research Plus.** No case-level record was fetched and no data-use
+  agreement is involved.
+
+**⚠⚠ THE SECOND FINDING, AND IT IS WHY `period` IS A COLUMN ON THE FIGURE AND NOT A HEADER ON THE
+RUN.** **`Kaposi Sarcoma` and `Mesothelioma` return mortality for 2019-2023**, not 2020-2024 — **6
+of 87 mortality rows.** That is what the source's own `year_range` code says for those sites. A
+single run-level period would have relabelled six rows with a period they do not have, **and nothing
+would have reddened**, because a header is consistent with itself. The design decision was made
+before the anomaly was seen and the anomaly is what proved it right.
+
+**⚠⚠ THE THIRD FINDING, AND IT IS THE ONE A READER OF THE TABLE WOULD FALL INTO. THE TWO COUNTS HAVE
+DIFFERENT DENOMINATORS, AND THE DEATHS COUNT IS THE LARGER ONE.**
+
+| Lung and Bronchus | value | population |
+|---|---|---|
+| deaths, 2020-2024 | **662,721** | the **whole United States** (NCHS) |
+| new cases, 2019-2023 | **434,448** | the **SEER registry catchment areas only** |
+
+**More deaths than cases is arithmetically impossible in one population, and these are two
+populations.** Anyone reading those two numbers side by side concludes that lung cancer kills more
+people than are diagnosed with it. So:
+
+- **`count_population` is a per-ROW column**, rendered on every row of the page as *"whole US
+  (NCHS)"* or *"SEER registry areas only"*, and served in `meta.count_population_key` with the two
+  numbers above quoted inside it.
+- ⚠⚠ **DEATHS ARE RANKED BY COUNT AND INCIDENCE BY RATE, AND THE ASYMMETRY IS THE HONESTY RATHER
+  THAN an inconsistency.** A mortality count is national, so *"which cancers kill the most people in
+  the US"* has a real national answer. A SEER incidence count is not national, so ranking incidence
+  by count would order a partial-US number as though it were a whole-US one. **`rank_basis` states
+  which basis was used, on every row**, and the **server** decides it — a client that picked its own
+  basis could draw bars in one order and number them in another with nothing red.
+- ⚠ **`All Cancer Sites Combined` (3,049,139 deaths, 143.20/100k) is served and FLAGGED, never
+  ranked beside the sites it contains** (`F-031`: two populations in one table). It is shown apart,
+  as scale, because a reader owed *"which kills the most"* is also owed the denominator.
+
+**⚠⚠ THE FOURTH FINDING, AND IT WAS FOUND BY A TEST THAT WAS TRYING TO PROVE SOMETHING ELSE.
+*"PER 100,000"* IS NOT ONE QUANTITY — IT IS THREE.** A test was written to show that the count order
+and the rate order genuinely differ, so that *"deaths by count, incidence by rate"* is a real choice
+rather than a tautology. **Its first draft compared only the top three, where the two orders happen
+to agree — it would have passed while establishing nothing** (`F-050`'s family: a guard that does not
+fail in the direction it claims). Rewriting it to compare the whole list surfaced the divergence, and
+the divergence had a cause worth naming:
+
+| | rank 5 by **rate** | rank 5 by **count** |
+|---|---|---|
+| incidence | `Corpus and Uterus, NOS (female)` — **28.66 per 100,000 WOMEN** | `Melanoma of the Skin` — 22.34 per 100,000 **PEOPLE** |
+
+**SEER computes an age-adjusted rate over the population at risk**, so a sex-specific site's rate has
+a **sex-specific denominator**. `Breast (female)` at 132.53 is per 100,000 *women*; `Lung and
+Bronchus` at 47.17 is per 100,000 *people*. **Both are published exactly this way and ranking them
+together is the standard convention** — SEER's own Cancer Stat Facts does it — **but the denominators
+are not the same, and a table that prints "per 100,000" in one column header implies they are.**
+
+- ⚠ **`rate_denominator` and `rate_denominator_label` are now on every row** (`per 100,000 people` /
+  `per 100,000 women` / `per 100,000 men`), the table carries a **"Rate is over"** column, and
+  `meta.population_key.rate_denominator` states the whole thing including the measured divergence
+  above. **The comparison becomes a reader's choice rather than a hidden one.**
+- ⚠ **It is a DERIVED statement, not a new fact and not a new column:** `sex` already determines it.
+  What was missing was saying it. `rate_denominator()` **raises** on an unknown sex rather than
+  defaulting — a default would hand the *widest* denominator to an unrecognised row, which is
+  precisely the direction that makes a sex-specific rate look like a whole-population one.
+- ⚠⚠ **No rate is rescaled and no order is changed.** This entry does not decide that ranking by
+  rate across mixed denominators is wrong; it decides that doing it silently is.
+
+**⚠⚠ THE SKIN TRAP, WHICH `D-093 AMENDMENT 6` NAMED AND THIS BUILD RE-VERIFIED AT SOURCE.** The
+SEER Site Recode ICD-O-3/WHO 2008 group is **literally named** *"Skin excluding Basal and Squamous"*,
+and its members are *Melanoma of the Skin* and *Other Non-Epithelial Skin* — read from SEER's own
+recode page, 2026-09-09, and quoted verbatim because the exclusion is in the category **name**.
+
+- ⚠ **AND SEER\*EXPLORER IS NARROWER STILL, WHICH SHARPENS THE TRAP RATHER THAN SOFTENING IT.** Its
+  site vocabulary offers **only `Melanoma of the Skin` (53)**: neither the group total nor *Other
+  Non-Epithelial Skin* is selectable. **Basal-cell and squamous-cell carcinoma — the overwhelming
+  majority of skin cancers diagnosed in the United States — are not in this data at any granularity.**
+- **So the row keeps SEER's own name and the surface never calls it "skin cancer",** and the
+  exclusion is printed **on that row** rather than only in a document. A test asserts the label cell
+  is exactly `Melanoma of the Skin` and that every occurrence of the phrase *"skin cancer"* on the
+  page sits inside an explicit refusal. **Revert-proved:** relabelling row 53 `Skin cancer` — a
+  realistic *"friendlier label"* edit — reddens **at the assertion**.
+
+**⚠ THE CROSSWALK IS REFUSED, AND THE REFUSAL NAMES ITS FOUR CASES SO THE POINTER RESOLVES.**
+`D-093 amendment 6` corrected itself the same day it was written: the failure is not a missing
+mapping table but that **HPA's `Cancer` column interleaves ICD-O's two independent axes** —
+`melanoma` and `skin cancer` appear as *siblings* when one is a subtype located inside the other —
+**and SEER's own recode mixes axes too**. Two differently-mixed vocabularies do not partition the
+same space. `meta.unmappable_hpa_sites` names all four (`carcinoid`, `skin cancer`, `head and neck`,
+`urothelial`) **with a reason each**, and the page renders them.
+
+**⚠⚠ WHAT THE PROTEIN CARD GAINED, AND IT IS A ROUTE RATHER THAN A NUMBER.** `ClinicalEdges`' burden
+slot said *"Incidence and survival are not shown — **we do not have that data**."*
+
+- **That sentence became FALSE the moment the artefact landed**, and this is the **second** time this
+  one line has been false — **in the opposite direction** from the first. The owner ruled against
+  *"the tumour names cannot be matched up"* on 2026-08-21 for generalising four measured failures
+  into a total impossibility; this version understates in the other direction. **We have the figures.
+  What we do not have is the join.** Telling a reader we lack data that is two clicks away is the
+  same class of error, one direction over.
+- **The card now links to `/cancer-burden` and gains NO figure.** `D-093` decision 1 still bars a
+  protein-level burden field, `test_no_protein_level_model_or_payload_carries_a_burden_field` still
+  enforces it, and a new test asserts the slot contains **no rate, no count and no decimal**.
+- ⚠ **Survival is refused OUTRIGHT rather than linked**, because `/cancer-burden` holds deaths and
+  incidence and **no survival statistic at all** — pointing at it for survival would be a pointer to
+  something that is not there, which is `D-062`'s shape one layer down.
+- ⚠⚠ **THE TEST THAT PINNED THE FALSE SENTENCE WOULD HAVE DEFENDED IT — the fourth such catch in
+  this repository**, after `App.test.jsx`, `TargetList.sort.test.jsx` and this same file's own
+  `/no licensed source/` assertion. The assertion is replaced and the false claim is now **barred**
+  rather than merely unasserted: an unasserted string comes back in the next copy edit.
+
+**⚠⚠ AND A VACUOUS GUARD FOUND WHILE FLIPPING THAT COPY, RECORDED BECAUSE IT PASSED FOR THE WRONG
+REASON ON EVERY RUN SINCE IT WAS WRITTEN.** The bar sitting beside the false sentence read
+`expect(t).not.toMatch(/\b(four|4|sixteen|16) of (twenty|20)\b/i)` — except the `\b` was a **literal
+backspace byte (0x08)**, not a word boundary. **A pattern that cannot match ordinary text makes
+`not.toMatch` pass unconditionally**, so the bar was decoration. Measured: **two** files in the tree
+carried the defect and no others. `ClinicalEdges.test.jsx:96` is deleted with this copy change;
+`CensusView.test.jsx:228`'s `/\bshould (pick|choose|look)/i` was **repaired to a real `\b`, stays
+green, and is now red-capable** — proven against a probe string, where the old pattern matched
+nothing. This is the vacuity that `test_clinical_layer_prohibitions.py`'s own docstring names of
+itself, found in a different file by a different route.
+
+**⚠⚠ SIX PRIOR GUARDS REDDENED AND EVERY ONE WAS RESOLVED BY ADDING A NAME — NEVER BY A `>=`, A
+SUBSET, OR A DELETION.** Two of the six were repaired rather than merely re-pinned, because they
+asserted a **proxy** instead of the property they claimed:
+
+| Guard | What it asserted | Resolution |
+|---|---|---|
+| `D-145` + `D-146` whole-file byte pins on `app/read_routes.py` and `db/models.py` | ⚠⚠ Those two paths are **SHARED** — every read route, every table. A whole-file pin on them never asserted *"D-144 did not move"*; it asserted *"nothing else was ever added"*, a **different and false** property, and it never once looked at what the file *contains*. | **REGION pins** over D-144's own block, with digests taken from **`2170bd8`** — D-144's merge commit — never recomputed from this tree, because *a pin recomputed from the thing it pins is a mirror*. Measured: both regions byte-identical between `2170bd8` and this branch. The four D-144-**own** whole-file pins and D-146's other four are untouched. |
+| `D-147`'s *"adds no migration"* | ⚠⚠ It read *"no migration file exists above `0012`"*, which reddens on **any** later entry's migration and **would have passed a `0012` edited in place to add an `ecd_intermittent` column** — the one thing D-147 promised not to do. | Names the **hazard**: no migration anywhere persists the flag, `0012` is still byte-identical, and the corpus is asserted non-empty (`A-017`). **Strictly stronger.** Revert-proved with a probe migration. |
+| `D-142`'s route-set guard | Live `/api` routes ⊆ `ui/src/system-model.json` | The two new routes are **DECLARED in the picture** (`test_architecture_contract.py` pins it by set equality). The picture gained the routes; the guard was not loosened. |
+| `D-144`'s migration-head guard | `heads == {"0012_…"}` | Head **NAMED** as `0013_cancer_burden`, prior value recorded in place (`D-129-C`), **plus** a new assertion that `0013`'s parent is `0012` — a tip-only check would pass on `0013` parented to `0011` with `0012` deleted. |
+| `D-093`'s burden-on-the-protein-path scan | No `burden` / `mortality` / `incidence` field anywhere in `core/`, `app/`, `worker/` | Exempts **two named files** and nothing else, and **the exemption is EARNED by three new tests**: the list cannot grow silently, neither exempt module may define a protein identifier or carry an accession-shaped literal, and **no protein-path module may import them** (the router's import must be function-local). Plus an `A-016` re-proof that inserts a probe into a copy of the **real** `core/features.py`. |
+
+⚠ **A skip-list is exactly the change that turns a live guard vacuous**, and *"the exemption was
+small"* is not a safety property — which is why the compensating tests exist rather than a comment
+promising the exemption is fine.
+
+**⚠⚠ THE DEEP-LEARNING JUSTIFICATION, AND THE HONEST HALF IS THAT THERE IS NO DEEP LEARNING HERE.**
+CLAUDE.md's prime directive asks where the network is and whether the system uses it defensibly.
+**This surface runs no model, trains nothing and computes no burden number** — it serves published
+SEER aggregates unchanged, and `meta.deep_learning_position` says so on the wire rather than leaving
+a reader to infer it. **The load-bearing claim is the refusal, not the ingest:** the network's output
+in this project is ESMFold's per-residue pLDDT, which becomes `score_model` on
+`/api/census-structural-ranking` (`D-144`), and **this surface deliberately does not join to it**.
+Multiplying a cancer death rate into a structural score would make a *learned* quantity look
+validated by an *epidemiological* one that knows nothing about the protein — and `D-143`, `D-144` and
+`D-146` each refused a `cancer ×` composite when it had no real numbers to offer. **This is the first
+time the project has held real cancer numbers and still refused**, which is the only version of that
+refusal that costs anything.
+
+**⚠ WHAT THIS ENTRY CANNOT ESTABLISH, STATED BECAUSE THE GATE CANNOT SEE IT.**
+
+- **No `--load` ran against Fly, and no burden run exists in production.** The loader needs a
+  `DATABASE_URL` only Fly holds. `GET /api/cancer-burden` on the deployed app will answer
+  `result_status: not_run` — **with the US-only disclaimer and the NCI credit still present**, which
+  is deliberate: a licence obligation that appears only once data happens to be loaded is one a
+  fresh database silently drops.
+- **No test in this repository contacts the deployed application** — `D-146`'s recorded limit,
+  unchanged. The loader and both routes were exercised end to end against SQLite in this build (run
+  id 1, 174 figures, `Lung and Bronchus` first at 662,721).
+- **The `recode_group` values are Code's own placement** of each SEER\*Explorer site under its
+  top-level recode group. The **group names and the skin exclusion are verified** from SEER's recode
+  page; the individual placements are **not** cross-checked row-by-row against the recode table, and
+  are recorded as unverified rather than presented as measured — the same honest limit
+  `D-093 amendment 6` recorded of its own sub-site mappings.
+- **`Other Non-Epithelial Skin` and the `Skin excluding Basal and Squamous` group total are absent
+  because SEER\*Explorer does not offer them**, not because they were dropped.
+
+**Ship:** `data/burden/` + `scripts/fetch_seer_burden.py` + `scripts/seer_cancer_burden.py` +
+`core/cancer_burden.py` + `db/migrations/versions/0013_cancer_burden.py` + `app/cancer_burden_read.py`
++ `ui/src/components/CancerBurdenView.jsx`.
+**Relied on by:** `D-093` decision 1 · `D-093` decision 4 · `D-093 amendment 6` ·
+`OWNER-2026-09-09-D-093-amd6-seer-aggregates-cleared.md` · `F-047` · `F-031` · `F-019` · `A-016` ·
+`A-017`.
+**Assumptions relied on:** none new. ⚠ **And one explicitly REFUSED:** that a request parameter
+describes the response it receives. **It does not, and the source says so only in a key.**
+
+⚠ **`### D-148` is deliberately NOT taken** — it is a `RESERVED.md` **hold** for the trafficking Spec
+(owner instruction, 2026-09-09), so 148 is a hole **by decision rather than by accident**, and a bare
+`### D-148` still reddens twelve guards. ⚠ **`### D-150` is barred by name** and has a row; the
+next-free pointer moved to **`D-150`** in this same commit, **skipping 148 because a reserved integer
+is not a free one** — which is the whole purpose of that file.
+
 ### D-147 — The census rank stops presenting a loop as an ectodomain: `ecd_intermittent` rides on every row whose extracellular part arrives in more than one segment — and the disqualifying fact is that **rank 1 is one of them**, so the flag lands on the row a reader is most likely to trust
 
 - **Date:** 2026-09-09

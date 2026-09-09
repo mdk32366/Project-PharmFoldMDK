@@ -32,6 +32,15 @@ import re
 
 import pytest
 
+from _d144_surface import (
+    D144_OWN_FILES,
+    D144_REGION_MIN_LINES,
+    D144_SHARED_REGIONS,
+    extract_region,
+    region_digest,
+    whole_file_digest,
+)
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCKERFILE = (ROOT / "Dockerfile").read_text(encoding="utf-8")
 DOCKERIGNORE = (ROOT / ".dockerignore").read_text(encoding="utf-8")
@@ -209,21 +218,17 @@ def test_the_fly_volume_is_not_the_images_data_directory():
 #: measurement rather than a claim — and `formula_version()` therefore still returns
 #: `c859da97f73d`, the value the live run recorded. **The pins were not relaxed; one was moved by
 #: name and five were left to prove the rest.**
-D144_SURFACE = {
-    "core/census_structural.py":
-        "c859da97f73d9da2628a59dc091f7fbcbd8944d0eebba9096e6b011b62ba12c7",
-    # ⚠ moved by `### D-147` (was 7f581c690ebc95bceb532f0554e97d7499add4c327fcf15802ec406b69bdef6b)
-    "app/census_structural_read.py":
-        "0fff62b0b9471cd4447255275cb13cd4ac07890e8a79aacec2c3d40a5d7142df",
-    "scripts/census_structural_rank.py":
-        "ef222d19b2c15777ee65736bdc8f7b57b9ed65be990a1ae71a260dbbc7bbafe0",
-    "db/migrations/versions/0012_census_structural_rank.py":
-        "8a4a3d49498147ce070798665f53350d335c608b5da41c2d5c6833228a2dfdf0",
-    "app/read_routes.py":
-        "ceebaf0e6fe39130b8398276a30d58e10a1b541b2d38e3164e20003fce6e1856",
-    "db/models.py":
-        "8be971fb840d37f024e14746ad321f128b7420ca8bbc80033c5952b34348368d",
-}
+D144_SURFACE = dict(D144_OWN_FILES)
+
+# ⚠⚠ THE TWO SHARED FILES MOVED TO A REGION PIN — D-149. `app/read_routes.py` holds every read
+# route and `db/models.py` holds every table, so a WHOLE-FILE pin on them never asserted "D-144 did
+# not move": it asserted "nothing else was ever added", which is a different and false property.
+# `D-149` added two routes and two tables that touch nothing of D-144's, and this guard's own
+# failure message licenses exactly that — "belongs to a different entry with its own ruling".
+# ⚠ THE PIN IS NARROWER, NOT LOOSER: the expected region digests in `tests/_d144_surface.py` are
+# taken from `2170bd8`, the commit where D-144 MERGED, not recomputed from this tree — a pin
+# recomputed from the thing it pins is a mirror. Measured 2026-09-09: both regions are byte-
+# identical between `2170bd8` and this branch. The four D-144-OWN whole-file pins are untouched.
 
 
 @pytest.mark.parametrize("rel,digest", sorted(D144_SURFACE.items()))
@@ -233,12 +238,40 @@ def test_no_formula_schema_or_route_byte_moved(rel, digest):
     `LF→CRLF` conversion on checkout means a committed file's delivered bytes differ from its
     committed ones, and a rule that raises a false alarm on every checkout trains its readers to
     ignore it."""
-    raw = (ROOT / rel).read_bytes().replace(b"\r\n", b"\n")
-    assert hashlib.sha256(raw).hexdigest() == digest, (
+    assert whole_file_digest(rel) == digest, (
         f"{rel} changed — D-145 is image permanence only; a formula, schema or route edit "
         f"belongs to a different entry with its own ruling (as D-147's route edit did: see the "
         f"note on D144_SURFACE, where one digest moved by name and five did not)"
     )
+
+
+@pytest.mark.parametrize("rel", sorted(D144_SHARED_REGIONS))
+def test_d144s_own_region_of_each_shared_file_has_not_moved(rel):
+    """⚠⚠ The narrowed half of the pin above: `app/read_routes.py` and `db/models.py` are SHARED,
+    so what must not move is **D-144's block inside them**, not the whole file.
+
+    ⚠ The expected digest is `2170bd8`'s — D-144's merge commit — so this asserts *"identical to
+    what shipped"* rather than *"identical to itself"*.
+    """
+    _start, _stops, expected = D144_SHARED_REGIONS[rel]
+    assert region_digest(rel) == expected, (
+        f"D-144's own region of {rel} changed. D-145 is image permanence only; a formula, schema "
+        f"or route edit inside D-144's block belongs to a different entry with its own ruling"
+    )
+
+
+@pytest.mark.parametrize("rel", sorted(D144_SHARED_REGIONS))
+def test_the_region_extractor_actually_reaches_a_region(rel):
+    """⚠⚠ `A-017` — the fixture must reach the code under test. A region extractor that returned
+    `""` would hash the empty string identically forever and this pin would pass on a deleted
+    route. So the region is asserted to be non-trivially large, at the size measured at
+    `2170bd8`."""
+    region = extract_region(rel)
+    assert region.count("\n") >= D144_REGION_MIN_LINES[rel], (
+        f"the extracted D-144 region of {rel} is only {region.count(chr(10))} lines; a pin over a "
+        f"near-empty region asserts nothing"
+    )
+    assert "census_structural" in region.lower() or "CensusStructural" in region
 
 
 def test_nothing_in_this_pr_runs_the_loader():

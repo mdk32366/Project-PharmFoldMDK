@@ -574,8 +574,33 @@ def test_no_load_no_migration_and_no_loader_edit_ships_here():
         "ef222d19b2c15777ee65736bdc8f7b57b9ed65be990a1ae71a260dbbc7bbafe0", \
         "the loader moved — D-147 is a serve-time join, and persisting the flag is another entry"
     versions = REPO / "db" / "migrations" / "versions"
-    assert sorted(p.name for p in versions.glob("00*.py"))[-1].startswith("0012"), \
-        "D-147 adds no migration"
+    # ⚠⚠ THIS ASSERTED A PROXY AND NEVER THE HAZARD — repaired by `D-149`. It read
+    #     sorted(p.name for p in versions.glob("00*.py"))[-1].startswith("0012")
+    # i.e. *"no migration exists above 0012"*, in order to establish *"D-147 added no migration"*.
+    # Those are different properties. The proxy reddens on ANY later entry's migration — `D-149`'s
+    # `0013_cancer_burden`, which persists SEER cancer sites and has nothing to do with
+    # `ecd_intermittent`, did exactly that — while **never once looking at what a migration
+    # CONTAINS**. It would have passed a `0012` edited in place to add an `ecd_intermittent` column,
+    # which is the one thing D-147 promised not to do.
+    # ⚠ So the check now names the hazard directly, and is STRICTLY STRONGER than what it replaces:
+    # no migration anywhere in the chain persists the flag, and `0012` — the head D-147 shipped
+    # against — is still byte-identical.
+    persisting = sorted(
+        p.name for p in versions.glob("*.py")
+        if segs.FLAG_ECD_INTERMITTENT in p.read_text(encoding="utf-8")
+        or "ecd_intermittent" in p.read_text(encoding="utf-8")
+    )
+    assert not persisting, (
+        f"a migration persists the ecd_intermittent flag: {persisting}. D-147 is a SERVE-TIME "
+        f"join; persisting the flag is another entry with its own ruling")
+    head_0012 = (versions / "0012_census_structural_rank.py").read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(head_0012).hexdigest() == \
+        "8a4a3d49498147ce070798665f53350d335c608b5da41c2d5c6833228a2dfdf0", \
+        "migration 0012 — the head D-147 shipped against — was edited in place"
+    # ⚠ A-017: the scan must reach a real corpus. A glob that matched nothing would make the
+    # `not persisting` assertion above pass forever on an empty list.
+    assert len(list(versions.glob("00*.py"))) >= 12, \
+        "the migration scan is not reaching the versions directory"
     # ⚠ and the loader does not learn the flag: `summarise`'s by_flag counts persisted flags only
     assert "census_segments" not in LOADER_SRC
     assert segs.FLAG_ECD_INTERMITTENT not in LOADER_SRC
@@ -762,7 +787,19 @@ def test_the_log_entry_exists_exactly_once_and_leads_the_log():
     message naming this decision does not discharge the living-documentation rule."""
     assert LOG.count("\n### D-147 —") == 1
     assert LOG.index("\n### D-147") < LOG.index("\n### D-146")
-    assert re.search(r"^## Log \(newest first\)\s*\n\s*### D-147 —", LOG, re.M)
+    # ⚠⚠ MOVED AT `D-149`, NEVER DELETED, AND THE RULE IS WHAT IS KEPT. This asserted that D-147 was
+    # the FIRST heading under `## Log (newest first)` — true for exactly as long as D-147 was the
+    # newest entry, which is not a property of D-147 at all. The rule the log actually has is
+    # **newest first**, so the assertion becomes: D-149 leads, and **D-147 is immediately below it
+    # with nothing between them**. That still catches an entry appended in the wrong place, which is
+    # the only thing the original form ever caught, and it no longer expires the moment anything
+    # newer lands.
+    assert re.search(r"^## Log \(newest first\)\s*\n\s*### D-149 —", LOG, re.M), (
+        "the newest entry does not lead the log")
+    between = LOG[LOG.index("\n### D-149"):LOG.index("\n### D-147")]
+    assert not re.search(r"^### (?!D-149\b)", between[1:], re.M), (
+        "an entry was inserted between D-149 and D-147 — the log is ordered newest first, so a "
+        "heading landing there is either out of order or an id nobody accounted for")
 
 
 def test_the_entry_leads_with_the_disqualifying_fact_about_its_own_surface():
@@ -882,7 +919,25 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
         "D-148 is cited in order to bar it, so it must be a RESERVED row or the citation "
         "invariant has a hole indistinguishable from D-062's"
     )
-    assert "Next free `D-` integer: **`D-148`**" in RESERVED
+    # ⚠⚠ FLIPPED IN PLACE AT `D-149`, NEVER DELETED — the same repair `D-147` made of this same
+    # assertion, and for the same reason. The RULE this encodes is *the pointer moves in the SAME
+    # commit that spends the integer*, and the rule is what is kept; only the value moves.
+    # ⚠⚠ AND IT MOVES TO **150**, SKIPPING 148, WHICH IS THE PART WORTH READING. `D-149` spent 149
+    # and deliberately SKIPPED 148, which is now a HOLD for the trafficking Spec. A reserved integer
+    # is not a free one — that is `RESERVED.md`'s whole purpose — so "next free" is 150 while 148
+    # keeps a row of its own. Three assertions where there was one: the pointer names 150, and it
+    # names neither 147 nor 148, so a future land that forgets to move it reddens here rather than
+    # drifting (this file has recorded that drift three times, once by thirty-six integers).
+    assert "Next free `D-` integer: **`D-150`**" in RESERVED, (
+        "the next-free pointer moves in the SAME commit that spends the integer"
+    )
+    assert "Next free `D-` integer: **`D-148`**" not in RESERVED, (
+        "the pointer still names 148, which D-149 converted into a trafficking HOLD — it would "
+        "hand a reserved integer to the next writer"
+    )
+    assert "Next free `D-` integer: **`D-147`**" not in RESERVED, (
+        "the pointer still names a SPENT integer"
+    )
 
 
 def test_the_citation_invariant_holds_on_this_branch():

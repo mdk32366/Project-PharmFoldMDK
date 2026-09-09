@@ -1214,5 +1214,54 @@ sha256, so this Spec cannot become a code change.
 
 ---
 
+## Addendum 2026-09-09 — D-149 US cancer burden surface (SEER official aggregates)
+
+### D-149 (this PR; T-1255) — which cancers kill the most in the US, on a surface that joins to nothing
+
+Acceptance tests in `tests/test_d149_cancer_burden.py` (36) and
+`ui/src/components/CancerBurdenView.test.jsx` (12), with **five prior guards widened by ADDING a
+name and never by relaxing** — `tests/test_clinical_layer_prohibitions.py` (two named disease-level
+exemptions plus **three** compensating tests that earn them),
+`tests/test_d142_targets_columns.py` (the two routes DECLARED in `ui/src/system-model.json`),
+`tests/test_d144_census_structural_rank.py` (migration head NAMED as `0013`, plus a new
+parent assertion), and `tests/test_d145_bake_structural_loader.py` /
+`tests/test_d146_track_b_live_api_copy.py` (whole-file pins on the two SHARED files converted to
+**region** pins over D-144's own block, digests taken from `2170bd8`). Two guards were **repaired
+rather than re-pinned** because they asserted a proxy: those shared-file pins, and
+`tests/test_d147_ecd_intermittent_flag.py`'s *"adds no migration"*, which read *"no file exists above
+0012"* and would have passed a `0012` edited in place to add the flag. Cite `### D-149`.
+
+⚠⚠ **What these tests CANNOT establish, first rather than last: no test here contacts the deployed
+application** — `D-146`'s recorded limit, unchanged. **No `--load` ran against Fly and no burden run
+exists in production**, so the deployed route answers `result_status: not_run` — which is itself
+asserted to keep the US-only disclaimer and the NCI credit, because a licence obligation that appears
+only once data happens to be loaded is one a fresh database silently drops. **The Postgres path was
+not exercised in this build:** no Docker daemon and no PostgreSQL binary reached it, so
+`0013_cancer_burden` is proved only by `alembic heads` resolving to a single head and by the SQLite
+`create_all` fixture; the `postgres` CI job is where the chain is proved for real.
+
+⚠ **The `recode_group` placements are Code's own** and are recorded as unverified rather than
+measured — the group names and the skin exclusion are read verbatim from SEER's recode page, but the
+per-site placement is not cross-checked row-by-row, the same honest limit `D-093 amendment 6`
+recorded of its own sub-site mappings.
+
+| Id | What it proves | Test |
+|---|---|---|
+| **T-1255** | **US-only is not droppable.** The disclaimer is on the payload header, in `meta`, and on **every** row — and it is present in the `not_run` payload too, alongside the NCI attribution, which is a stored column rather than a rendered string | `test_us_only_is_on_the_header_in_meta_and_on_every_single_row` · `test_us_only_and_the_nci_credit_survive_a_database_with_no_run` · `test_the_nci_attribution_is_stored_beside_the_figures_not_only_rendered` · UI `⚠ US-only rides on the banner, on every bar, and in the limits` |
+| **T-1255** | ⚠⚠ **The 72× sex trap.** SEER answers a Breast *"Both Sexes"* request with the **MALE** figure; the sex on every row is parsed from the **response key**, 16 of 174 substitutions are recorded, no both-sexes breast rate is synthesised, and both sex strata stay primary so male breast cancer's 2,457 deaths are not silently dropped | `test_the_sex_is_the_sources_answer_and_the_substitutions_are_recorded` · `test_no_both_sexes_rate_is_ever_synthesised` · `test_every_site_publishes_at_least_one_primary_stratum_per_statistic` |
+| **T-1255** | ⚠⚠ **Two counts, two populations.** Lung carries **662,721 deaths** against **434,448 cases** — pinned as arithmetic so nobody "fixes" the apparent inconsistency; `count_population` is per-ROW and absent from the run; deaths rank by **count** and incidence by **rate**, and the two orders are proved to **differ over the whole list** (they agree in the top four) | `test_the_two_counts_have_different_populations_and_the_payload_says_so_per_row` · `test_deaths_rank_by_count_and_incidence_by_rate_and_every_row_states_which` |
+| **T-1255** | ⚠ **`period` is per-ROW because six rows disagree.** Kaposi Sarcoma and Mesothelioma mortality is 2019-2023 against 2020-2024 for the other 32 sites; a run-level period would have relabelled them with nothing red | `test_period_is_per_row_because_two_sites_carry_a_different_one` |
+| **T-1255** | ⚠⚠ **`"per 100,000"` is three quantities.** A sex-specific rate is per 100,000 of that sex; every row states its denominator, and the by-rate/by-count divergence at rank 5 (`Corpus and Uterus, NOS` vs `Melanoma of the Skin`) is the measured consequence | `test_deaths_rank_by_count_and_incidence_by_rate_and_every_row_states_which` · UI `burden-rate-denominator` |
+| **T-1255** | ⚠⚠ **Melanoma is never relabelled "skin cancer".** SEER's group is literally *Skin excluding Basal and Squamous*; the label is asserted exact, the exclusion rides on that row, and **revert-proved**: relabelling row 53 `Skin cancer` reddens AT the assertion | `test_seer_melanoma_is_never_relabelled_skin_cancer` · UI `⚠⚠ never calls SEER melanoma "skin cancer"` |
+| **T-1255** | ⚠ **GLOBOCAN is a stated refusal, never a figure**, and the excluded product (Preliminary Incidence Estimates) and excluded tier (Research Data microdata) are both named | `test_globocan_appears_only_as_a_stated_refusal_and_never_as_a_figure` · `test_the_excluded_product_and_the_excluded_tier_are_both_stated` |
+| **T-1255** | ⚠⚠ **No score join.** No accession / gene / score / rank in the payload data, no foreign key out of the burden layer, `0013`'s `upgrade()` is purely additive (and `downgrade()` really reverses it), D-144's formula and route regions are byte-identical, and the burden modules import no scoring module | `test_no_protein_accession_gene_score_or_rank_reaches_the_burden_payload` · `test_the_burden_tables_have_no_foreign_key_out_of_the_disease_layer` · `test_the_migration_adds_two_tables_and_alters_nothing` · `test_the_structural_rank_formula_and_its_route_are_untouched_by_this_entry` · `test_the_burden_surface_is_not_reachable_from_the_scoring_modules` |
+| **T-1255** | ⚠ **The loader cannot fetch.** Asserted on the **parsed imports** rather than a substring, and paired with the converse — the fetcher *does* reach the network — so the check is not vacuous | `test_the_loader_cannot_reach_the_network_at_all` · `test_the_loader_refuses_a_hash_mismatch_rather_than_loading_whatever_is_on_disk` |
+| **T-1255** | ⚠ **Its own surface, not a buried panel.** `/cancer-burden` is a route and a nav landmark, the component is imported by no other page, and both routes are in the architecture picture | `test_the_ui_route_is_its_own_top_level_landmark_and_not_on_a_scoring_page` · `test_the_two_routes_are_declared_in_the_architecture_picture` |
+| **T-1255** | ⚠⚠ **The protein card gains a ROUTE and not a NUMBER**, the now-false *"we do not have that data"* is barred from the rendered copy while kept in the comment as provenance, and the burden slot carries no rate, count or decimal | `test_the_protein_card_links_to_the_surface_and_gains_no_figure` · UI `links to the burden surface WITHOUT putting any figure on the protein card` |
+| **T-1255** | ⚠ **A vacuous-guard class caught and barred.** A literal backspace byte (0x08) where `\b` was intended made a `not.toMatch` bar unmatchable; two files carried it, both repaired, and a tree-wide scan now stops a third | `test_the_bare_backspace_regex_defect_is_absent_from_the_tree` |
+| **T-1255** | ⚠ **Id discipline.** `### D-149` claimed by name; `### D-148` stays barred as a `RESERVED.md` HOLD for the trafficking Spec; `### D-150` barred with a row; the next-free pointer moved to `D-150` **skipping the hold**; the citation invariant unmoved at `["D-131", "F-067"]` | `test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole` · `test_the_reserved_map_holds_148_bars_150_and_the_pointer_skips_the_hold` · `test_the_citation_invariant_holds_on_this_branch` |
+
+---
+
 **End of Test Plan**
 

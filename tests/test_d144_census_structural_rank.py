@@ -826,7 +826,17 @@ def test_the_migration_chain_is_linear_and_this_is_its_head():
     parents = [d for d in downs.values() if d]
     assert len(parents) == len(set(parents)), f"two migrations share a parent: {downs}"
     heads = set(downs) - set(parents)
-    assert heads == {"0012_census_structural_rank"}, heads
+    # ⚠⚠ THIS READ `{"0012_census_structural_rank"}` UNTIL `D-149` LANDED `0013_cancer_burden`, and
+    # the value it read is recorded here rather than silently overwritten (D-129-C). The head MOVING
+    # is not what this guard protects against — the guard exists to catch a SECOND migration
+    # claiming `0011_clinical_edges` as its parent, which would leave two heads and make
+    # `alembic upgrade head` refuse. That property is the line above, and it is untouched.
+    # ⚠ Resolved by NAMING the new head, never by relaxing this to a subset or an `in`: a `<=` here
+    # would pass on a tree with no head at all.
+    assert heads == {"0013_cancer_burden"}, heads
+    # ⚠ and the new link is pinned too, so the chain is asserted end to end rather than only at its
+    # tip — a tip assertion alone would pass on `0013` parented to `0011` alongside a deleted `0012`.
+    assert downs["0013_cancer_burden"] == "0012_census_structural_rank"
 
 
 # ──────────────────────── the living log and the docs ─────────────────────────

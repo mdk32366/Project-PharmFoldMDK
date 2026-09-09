@@ -157,6 +157,18 @@
         "methods": [
           "GET"
         ]
+      },
+      {
+        "path": "/api/cancer-burden/meta",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/cancer-burden",
+        "methods": [
+          "GET"
+        ]
       }
     ],
     "worker_jobs": [
