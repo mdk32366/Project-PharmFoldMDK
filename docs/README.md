@@ -379,6 +379,302 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-144 — The offline census ranking stops being a spreadsheet: `structural_score` lands in the DB and on its own route, three factors and no invented fifth — and the disqualifying fact is that no run was loaded here, because no database reached this build
+
+- **Date:** 2026-09-09
+- **Status:** Accepted — **two new tables, one formula module, one loader, one read route, one
+  Method section.** The **cohort-82 learned scorer is untouched**: `ranking_runs`,
+  `target_scores`, `ranking_results`, `run_kind` and `/api/ranking` are byte-identical in
+  behaviour, asserted rather than intended (see *Revert proof*). ⚠ **No fold, no GPU, no rent,
+  no emit, no F-004, no scorer refit, no change to `TargetList`'s default sort.**
+- **⚠⚠ The disqualifying fact, first: NOTHING IS RANKED IN PRODUCTION YET.** This PR ships the
+  instrument; it did not run it. Measured on this build rather than assumed:
+  `env | grep -iE 'DATABASE|FLY|POSTGRES|PGHOST'` returns **nothing**, and
+  `which fly flyctl psql` returns **nothing** — there is no `DATABASE_URL`, no Fly credential
+  and no Postgres client here, so `scripts/census_structural_rank.py --load` cannot have been
+  executed against any real database. Until an operator runs it,
+  `GET /api/census-structural-ranking` returns **`result_status: not_run`** with empty rows —
+  and it returns the disclaimer and the separation statement anyway, because a not-run panel is
+  exactly where a reader reaches for the other route's numbers instead. **A script that can
+  compute the rank is not a rank**, and an entry describing one as landed would be the `D-062`
+  shape with a formula instead of a citation. The runbook is in the PR body.
+- **Context.** Matt **GO** 2026-09-08 ~21:35 PT (via Emma). The offline census ranking existed
+  as CSVs plus a Google Sheet, and the ruling is the important half: **the spreadsheet is a
+  review LENS, never the source of truth.** A number that lives in a Sheet is a number with no
+  provenance chain, no denominator, no version pin and no way for the served surface to agree
+  with it — so **the DB and the API become the source of truth and the Sheet becomes an
+  export.** Model pin `claude-opus-5` (thinking, high).
+- **⚠⚠ THIS PARTIALLY SUPERSEDES `D-079` DECISION 1, AND THAT IS THE LARGEST THING IN THIS
+  ENTRY — it is written out rather than left for a reader to notice.** D-079 dec 1 reads *"no
+  census row scored, ranked, or ordered by suitability — no census path imports `core/scorer.py`
+  or the fitter"*, on the argument that **a fold is a measurement and a score is an
+  interpretation**. Matt's GO lifts the **`ranked`** half, for this one arithmetic rank, on its
+  own route. Stated precisely, because a vague supersession is worse than none:
+  - **LIFTED:** a census protein may now carry a persisted `structural_score` and a `rank`, in
+    `census_structural_scores`, served at `GET /api/census-structural-ranking`.
+  - **STANDS, UNCHANGED:** *no census path imports `core/scorer.py` or the fitter* — asserted by
+    a test over the three new files' import lists, and in the other direction too. **No census
+    row acquires a `ranking_run_id`**, no census row enters `target_scores` or
+    `ranking_results`, and the learned scorer still fits on the 82 alone.
+  - **STANDS, UNCHANGED:** the census **table** is not a ranked shortlist. `/api/census` and
+    `/census` are untouched: no score column, no rank column, `scored: false` on every row, and
+    the default order is still accession (`D-087`). The rank lives on a **different route** that
+    a reader has to ask for by name.
+  - **STANDS, AND IS THE POINT OF THE BANNER:** *ordered by suitability* is still refused. This
+    order is `membrane × ECD × pLDDT` and says so on every row; `STRUCTURAL_ONLY — not
+    HPA-weighted; not ADC-ready` is the sentence that keeps a **tractability** order from being
+    read as a **suitability** one. ⚠ It is not a get-out clause: it is checkable, and it is
+    checked, on the payload header and on all 3,467 rows.
+  ⚠ **`D-079`'s own reasoning survives the change:** the interpretation this rank makes is
+  *arithmetic, disclosed, and reproducible from three stored factors*, not a fitted verdict.
+  Where the two could be confused, the log governs and this entry is the narrowing.
+- **Ship id: spends `D-144`, which was ASSIGNED by the GO rather than chosen here, and `D-142`
+  and `D-143` are named as in-flight rather than skipped silently.** Verified before claiming
+  the integer, on `main` at tip **`30f402f`** (D-141 /
+  [#265](https://github.com/mdk32366/Project-PharmFoldMDK/pull/265)):
+  `grep -n '^### D-1[34][0-9]' docs/README.md` returns **`D-141`** as the highest written entry,
+  and `gh pr list --state open` returns **three** PRs — #222, #200 and #197 — **none of which
+  spends a `D-1NN` id**. ⚠⚠ **So the open-PR check says 142 and 143 are free, and this branch
+  takes 144 anyway.** The GO assigns them to concurrent work (it names `D-143` as the Track B
+  copy lane), and `D-141` recorded, in this file, exactly why an open-PR check cannot settle
+  this: *"an open-PR check proves no PUBLISHED branch spent the id and cannot prove no
+  unpublished one did."* Two branches cut from one tip both wrote `### D-139` on that argument.
+  **Taking an id the owner has allocated elsewhere is the collision the guards exist for**, so
+  the two are left unspent and are recorded in [`RESERVED.md`](RESERVED.md) as forward
+  references that announce their own absence. ⚠ **The seven next-free guards below carry `D-144`
+  by name and bar a bare `### D-145`. Never a `>=`:** when 142 and 143 land, the enumerations
+  redden **by design** and the resolution is to ADD them by name, exactly as the sixth pass did
+  for 140 beside 141.
+  - ⚠ **Effect on the `docs/RESERVED.md` citation invariant, measured with that file's own
+    command rather than predicted:** `origin/main` at `30f402f` reports
+    **`['D-131', 'D-142', 'F-067']`**; this branch reports **`['D-131', 'F-067']`**. **The hole
+    SHRANK by one**, which is not a virtue of this PR so much as a consequence of writing rows
+    for the two integers it declines: `D-142` was unresolved-and-unreserved on `main` because
+    D-141's guards barred it by name with nothing describing it. `D-131` (the suffix half of
+    `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched.
+- **⚠⚠ Track B alignment, and it is a NON-EVENT that is worth stating.** The GO says to align
+  with `D-143`'s Track B copy work *if it has landed*. **It has not:** `### D-143` does not
+  exist in this log, no open PR carries it, and `git branch -r` holds no branch naming it
+  (checked at `30f402f`). So **nothing was aligned to it and no D-143 wording is quoted here.**
+  What this entry does do is refuse the thing that alignment was meant to prevent: the
+  `cancer ×` formula is **not** reintroduced anywhere, and the excluded factors are named in the
+  API payload so a later Track B copy edit cannot silently re-imply them.
+- **Decision.**
+  1. **The formula is locked and lives in one module, `core/census_structural.py`:**
+
+     ```
+     structural_score = score_membrane × score_ecd × score_model
+
+     score_membrane  1.0 if census_class == "surface", else 0.2
+     score_ecd       min(1.0, span_aa / 200); 0 when span_aa is missing or 0
+     score_model     mean_plddt / 100  with a PDB and a persisted pLDDT
+                     0.8               with a PDB and no persisted pLDDT
+                     0.3               with no fold at all
+     ```
+
+     ⚠⚠ **FOUR FACTORS ARE EXCLUDED AND THE EXCLUSION IS PART OF THE FORMULA:** `cancer`,
+     `normal_risk`, `internalization`, `density`. The offline draft carried them as **0.5
+     neutrals** — an unmeasured quantity imputed to a half, multiplied into every row, and then
+     ranked on. That is **`F-020`'s shape** (*an absent measurement coerced to a number and fit
+     as though measured*) with a multiplication instead of a fit. **A factor we cannot measure
+     leaves the product entirely.** They are named in `EXCLUDED_FACTORS`, served in the payload's
+     `formula.excluded_factors` **with a reason each**, and a test walks the module's **AST**
+     asserting no numeric constant `0.5` survives in it — ⚠ deliberately the AST and not a
+     grep, because both files *discuss* the neutrals they refuse and a text search is satisfied
+     by the paragraph explaining why they are gone (`F-044`: a reference that resolves, to the
+     wrong thing).
+  2. **⚠ `score_model = 0.3` is a PENALTY, not the fifth neutral wearing a smaller number.** A
+     never-folded protein has no confidence signal from the network, so the formula says so — a
+     third of what a fully-confident fold earns. And the middle case exists because `F-042`
+     already happened: this pipeline has shipped structures whose sibling pLDDT was discarded,
+     and *no fold* versus *a fold whose confidence we lost* are **different facts**. Pooling them
+     would either flatter 777 unfolded proteins or punish a structure we actually hold.
+  3. **Two new tables, and NOT a new `run_kind`.** `census_structural_runs` +
+     `census_structural_scores` (migration `0012`, additive). The alternative the GO offered — a
+     `census_structural` `run_kind` on `ranking_runs` — was **rejected**: `run_kind` distinguishes
+     `preregistered` from `sensitivity` *within one experiment on one population of 56 scored
+     targets* (`D-065`), and 3,467 census rows in `target_scores` would put a fixed arithmetic
+     product and a fitted probability in one `score` column, one careless `ORDER BY` from being
+     served as each other. ⚠ The per-row grain carries a **UNIQUE `(run_id, accession)`**,
+     declared in the migration **and** in the ORM so the SQLite test path enforces what Postgres
+     enforces — `F-021`'s lesson, where a loader's pure INSERT took `protein_features` from 80
+     rows to 160 across two generations with nothing red.
+  4. **⚠⚠ The three factors are STORED, not recoverable by division.** `score_membrane`,
+     `score_ecd` and `score_model` are columns and payload fields beside the product, because a
+     consumer recovering a factor as `structural_score / score_ecd` divides by **zero** on every
+     span-unrecorded row. `D-041`'s attribution discipline — the parts travel with the total —
+     applies to an arithmetic product exactly as it does to a fitted one.
+  5. **⚠ The POPULATION is a committed file; the FOLD half is the database.** The population is
+     every row of `data/census/census_manifest.v7.csv` — **3,467** proteins, path **and sha256**
+     stamped onto the run row. `D-024`: a denominator read out of `protein_analyses` is a
+     function of how much folding has happened, so tranche 5 (**776** rows, largely unfolded)
+     would quietly leave the census and the list would flatter itself by shrinking. The fold half
+     *is* read from the DB — `protein_analyses` joined on `input_value = accession` with
+     `cohort_tranche > 0` — which is what makes this a **load-time computation** rather than a
+     CSV import: a T5 fold that lands tomorrow is picked up by the next run with no code change
+     and no re-export from anyone's laptop. ⚠ **The roster's other 4,344 proteins are named as
+     out-of-population, not dropped:** they carry no V2 span, so `score_ecd` is 0 for every one
+     of them and the formula cannot order them — including them would pad the list with 4,344
+     zeroes that look like verdicts. `population_key` says so on the wire.
+  6. **⚠ ONE representative rule, not a second one.** The join uses
+     `app.reads.choose_census_representative` — the same function `/api/census` and
+     `/api/census/{id}` use (assembled parent wins; a tile is never the protein, `D-118`; a spare
+     tile never wins, `D-134`) — and `STRUCTURE_KINDS_WITH_A_FOLD` for *what counts as folded*,
+     so `tiles_only` and `mucin` score 0.3 exactly as the census page reports them unfolded. A
+     private copy here would be free to disagree with the page this rank is about.
+  7. **Idempotent replace: after any number of loads there is exactly ONE `valid` run.** A
+     `--load` marks every prior `valid` run **`superseded`** — naming the new run id in
+     `status_detail`, because a supersede note that says only *"superseded"* leaves a reader with
+     no way to find what replaced it — and inserts the new run with its rows **in one
+     transaction**, so a crash cannot leave zero valid runs and a surface that lost a result it
+     still has. ⚠ **Superseded runs are KEPT.** A replaced run is the only evidence of what the
+     surface said yesterday; `--prune-superseded` deletes them **explicitly, on request**, never
+     as a side effect of a load.
+  8. **The reference sink is a JOIN, and it never enters the score.** An antigen with a cited ADC
+     already pointed at it is a **yardstick, not a next target**: it keeps its computed score,
+     carries `is_reference: true`, and sorts **after every candidate**, with `n_candidates`
+     excluding it. ⚠⚠ The set is derived from `data/adc_reference_mapping.csv` via
+     `core.adc_reference.load_mapping()` — the per-row-cited file `D-029` / `D-040` already
+     govern — and **no accession is typed into the formula module**, asserted by a test that
+     inspects the module's string constants. A hand-typed list would be a second copy of a
+     curation, free to drift from the one the ADC surfaces consult. Measured 2026-09-09:
+     **12** cited antigens, **12 of 12** present in the census manifest, NECTIN4/`Q96NY8`
+     (Padcev, approved) among them, and it is the case that proves the sink bites — in the load
+     fixture it holds the **highest score in the population** and still ranks last.
+  9. **One read route, and it is deliberately not under `/census/`.**
+     `GET /api/census-structural-ranking` serves the latest `valid` run: run metadata, the four
+     denominators, the formula **with its exclusions**, and the ranked rows. ⚠ A sibling
+     `/api/census/structural-ranking` would have been captured by `/api/census/{analysis_id}`
+     (a `str` param since `D-118`), looked up as the accession `STRUCTURAL-RANKING`, and
+     returned **404 with a perfectly sensible message about an unknown census protein** —
+     `D-120`'s declaration-order hazard, which `/census/summary` already had to be ordered
+     around. A hyphenated top-level path cannot be captured by that route at all. Always 200,
+     `not_run` when there is no valid run, no credential (`D-034` posture), and **persisted rows
+     only** — the formula runs at load time (`F-004`'s posture: the result is recorded, never
+     re-run on read).
+  10. **⚠⚠ `STRUCTURAL_ONLY — not HPA-weighted; not ADC-ready` rides on the payload header AND
+      on every row.** The `census_cost_read.py` argument applies with more force here than it did
+      there: a cost class beside a census invites reading *cheap* as *good*, and a **rank**
+      invites reading *position 1* as *the next ADC target*. A row lifted out of this list into a
+      slide, a notebook or a spreadsheet takes the sentence with it. The payload also carries
+      `separation`, naming `/api/ranking`, `D-041` / `D-060` and `D-081` explicitly — `F-049`'s
+      third instance was two routes using the word `ranked` for two populations with nothing in
+      either payload saying which.
+  11. **UI honesty is a Method section, not a new column.** `/method` gains
+      **§ Census structural rank** (registered with an `id` for `D-138`'s contents rail) saying
+      the four things in eight words each: structural only, the Sheet is a lens and the DB/API is
+      the source of truth, this is not the cohort-82 scorer, and an HPA biology composite is a
+      later GO. ⚠ **A sortable `structural_score` column on the census table was considered and
+      deliberately deferred** — `D-137` licensed *a sortable column and a legend* for cost only
+      after `D-077` dec 1 refusal 2 was satisfied in the same visual frame, and a **suitability
+      ranking** on the census table needs that same treatment rather than inheriting it. ⚠ And
+      `TargetList`'s default sort is **untouched**: the 82's default rank column still means the
+      learned scorer's rank.
+- **⚠ What this does NOT do.**
+  - **Not** a loaded run. `not_run` is the live state until an operator runs the script.
+  - **Not** a change to `/api/ranking`, `ranking_runs`, `target_scores`, `ranking_results` or
+    `run_kind`; **not** a new `run_kind`; **not** a scorer refit; **not** F-004.
+  - **Not** an ADC-readiness claim, **not** HPA-weighted, and **not** the biology composite —
+    that is a later GO and the payload says so.
+  - **Not** a change to `TargetList`'s default sort, and **not** a census-table column.
+  - **Not** a claim that the Sheet is wrong. It is a **lens**; where the two disagree, the DB and
+    the API are the source of truth and the Sheet is re-exported from them.
+  - **Not** a re-measurement of any span or any pLDDT: both are read as recorded (`D-058` dec 3),
+    and no `0.5` stands in for either.
+- **⚠ Golden check, and the half of it this build could not make (D-016).** The GO's reference
+  figure is GABBR2/`O75899` ≈ **0.8443** in the offline `structural_census_ranked_all.csv`. Two
+  of the three inputs are read from a committed file and one is not:
+  * `census_class = surface` and `span_aa = 442` are row **1286** of
+    `data/census/census_manifest.v7.csv`, read by the test rather than typed into it — and 442 aa
+    **saturates** the 200 aa cap, so `score_ecd = 1.0`.
+  * `mean_plddt = 84.43` is **not on disk in this repository.** `O75899` is tranche 5, and
+    `census_features.v1.jsonl` (**2,690** rows) holds no tranche-5 fold and **no `mean_plddt`
+    field at all** — its per-row keys are `accession · analysis_id · boundary_method · error ·
+    feature_version · features · gene · null_reasons · outcome · span_aa · tranche`, and the
+    seven inner features include `mean_plddt_ecd`, which is a **different quantity**.
+  So the golden test proves **the formula reproduces the offline number given that pLDDT**;
+  it does **not** independently verify the pLDDT, and it says so in its own docstring. ⚠ **And
+  the full-census ORDER is expected to differ from the offline CSV** once more tranches have
+  folds — that is the load-from-DB design working, not a discrepancy to reconcile away.
+- **⚠⚠ `PQR` could not be resolved to anything, and it is named rather than guessed.** The GO
+  says *"NECTIN4 / PQR: flag as reference, sort to end"*. Measured across the committed data:
+  `PQR` appears as a standalone gene name, accession or alias in **zero** rows of
+  `census_labels.csv`, `census_roster.csv`, `protein_aliases.v1.csv` and
+  `adc_reference_mapping.csv`; the only hits anywhere are the substring inside accession
+  `E9PQR5` (gene `NPIPB8`, `census_class = non_surface`) — a coincidence, not a target. So the
+  sink is defined by the **committed ADC reference join** (12 antigens, NECTIN4 among them)
+  rather than by a two-name list this build cannot verify, and the unresolved name is recorded
+  here for Emma to rule. ⚠ Inventing an accession for it would have been the worst available
+  outcome: a reference row that sinks nothing, silently.
+- **⚠ Revert proof, and the guard that did not bite the first time (A-016 / A-017's class).**
+  Each guard was reverted deliberately and watched to see *where* it reddened:
+  1. **Reference sink removed from the sort key** → red at
+     `test_references_sink_below_every_candidate_however_high_they_score` **and** at the
+     end-to-end load assertion that NECTIN4 is rank 6 while holding the top score. ✅
+  2. **`MODEL_NO_FOLD` changed from 0.3 to 0.5** → red at the formula test **and** at the AST
+     `0.5` guard. ✅ Both, which is the intended overlap: one asserts the value, the other
+     asserts the *class of value* cannot return.
+  3. **The idempotent replace weakened to a plain insert** → red at
+     `test_persisting_twice_leaves_exactly_one_valid_run_and_the_same_ranks`, at the
+     *exactly-one-valid-run* assertion rather than at the row count. ✅
+  4. **The unit-swap refusal removed from `_plddt`** → red at
+     `test_a_zero_to_one_plddt_is_refused_rather_than_divided_again`, and the load-level test
+     then showed the consequence it exists to prevent: a 0.9 pLDDT scoring 0.009 instead of
+     stopping the run. ✅
+  5. **⚠ `is_reference` wired into the score (multiplied by 1.0, a no-op)** → **50 passed. The
+     guard did not bite.** `test_the_reference_flag_never_enters_the_score` compared two
+     `structural_score` calls and a no-op multiplication leaves both equal, so the assertion was
+     satisfied by an arithmetic path existing. **Fixed:** the test now also asserts the three
+     components are individually unchanged, and the wall test asserts `is_reference` reaches only
+     the flag list; the same revert reddens.
+  ⚠ **Four of five is written down rather than rounded off.** A green suite is evidence about the
+  tests, not about the code, until each guard has been shown to fail.
+- **Deep-learning justification.** This is the first surface on which **ESMFold's per-residue
+  confidence orders the whole census.** `score_model` is `mean_plddt / 100` — the network's own
+  output, not a proxy for it — and it is a **third of the product**, so the network decides
+  position rather than decorating it: two proteins with identical annotation and identical span
+  are separated **only** by what ESMFold said about them, and a protein the network has never
+  seen takes a 0.3 penalty rather than a neutral. ⚠ It is also the honest limit: this is a
+  *fixed* function of a learned model's confidence, **not a learned model itself**, and it is
+  kept in its own module, its own tables and its own route precisely so it can never be mistaken
+  for the graded neural deliverable — the `D-041` / `D-060` ridge scorer served at
+  `/api/ranking`, which this PR does not touch. Where the learned scorer is the DL core, this is
+  the DL core's confidence signal made load-bearing over 3,467 proteins instead of 56.
+- **Consequences.** New: `core/census_structural.py`, `scripts/census_structural_rank.py`,
+  `app/census_structural_read.py`, `db/migrations/versions/0012_census_structural_rank.py`,
+  `tests/test_d144_census_structural_rank.py`. Changed: `db/models.py`
+  (`CensusStructuralRun` + `CensusStructuralScore`), `app/read_routes.py` (one route),
+  `ui/src/system-model.json` (`D-051`'s route contract — a route not drawn there reddens the
+  gate), `ui/src/components/MethodNote.jsx` + its tests, `ARCHITECTURE.md`, `docs/Test_Plan.md`
+  (**T-1225–T-1233**), [`RESERVED.md`](RESERVED.md) (`D-142`, `D-143`, `D-145`), and the **seven**
+  next-free guards — `tests/test_d129_phase5_named_refuse_spec.py`,
+  `tests/test_d130_residual_rmsd_spec.py`, `tests/test_d136_cancer_type.py`,
+  `tests/test_d139_served_path_flip.py`, `tests/test_d140_pipeline_programme.py`,
+  `tests/test_d141_land_confidence_kabsch.py` and this PR's own suite — widened **by
+  enumeration** to carry `D-144` by name and to bar `### D-145`. ⚠ **Six pre-existing copies,
+  and the count is the thing most likely to be stale in this paragraph** — the authority is
+  `grep -rn '### D-14' tests/`, not this list.
+  ⚠ **No production module loses behaviour:** `app/reads.py`, `core/scorer.py`,
+  `core/features.py` and `core/manifest.py` are untouched, and tests assert the two directions of
+  that wall (`app/reads.py` never learns this score; `core/scorer.py` never reaches it).
+- **Cite:** **Matt GO 2026-09-08 ~21:35 PT** via Emma (*"Spreadsheet = review lens only, NOT
+  source of truth"*; the locked formula; *entire census, not T5-only*; hard separation from the
+  existing ranking) · **D-041 / D-060 / D-061 / D-062 / D-065** (the learned cohort-82 scorer,
+  its `preregistered` run kind and the route this one is not) · **D-024** (the denominator is the
+  manifest, never the database) · **D-079** (a fold is a measurement, a score is an
+  interpretation — and no census path imports `core/scorer.py`) · **D-081** (two span
+  definitions; the two populations are not comparable) · **D-118 / D-134** (the representative
+  rule and what counts as folded) · **D-029 / D-040** (the cited ADC reference the sink joins
+  against) · **D-093** (the HPA edges that exist and are deliberately NOT composed here) ·
+  **D-137 / D-077 dec 1** (why a sortable census column is licensed only with its axis statement
+  in the same frame) · **D-138** (the `/method` contents rail the new section registers with) ·
+  **F-020 / F-021 / F-042 / F-044 / F-047 / F-049** (the named failure shapes this design
+  refuses) · **D-062 / method-note item 7** (the entry is the check) · **D-016** (provenance —
+  and the disqualifying fact, *no run was loaded and the served state is `not_run`*, is stated
+  first).
+
+---
+
 ### D-143 — Track B stops claiming a composite it cannot compute: the ranking sentence becomes structural-only — membrane × ECD × fold confidence (pLDDT) — and the biology terms are EXCLUDED rather than filled in as 0.5 neutrals
 
 - **Date:** 2026-09-08
