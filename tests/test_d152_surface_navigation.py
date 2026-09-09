@@ -77,8 +77,9 @@ def _plain(text: str) -> str:
 def _entry() -> str:
     """The D-152 entry only. The log is tens of thousands of lines and a substring found anywhere in
     it proves nothing about the entry that is meant to carry the claim."""
-    start = LOG.index("### D-152")
-    return LOG[start: LOG.index("\n### D-151", start)]
+    start = LOG.index("\n### D-152 —") + 1
+    nxt = re.search(r"^### (?!D-152\b)", LOG[start + 1:], re.M)
+    return LOG[start: start + 1 + nxt.start()] if nxt else LOG[start:]
 
 
 def _strip_jsx_comments(src: str) -> str:
@@ -377,7 +378,12 @@ def test_the_log_entry_exists_exactly_once_and_leads_the_log():
     """⚠⚠ METHOD-NOTE ITEM 7 / THE D-062 DEFECT. A commit message naming a decision does not
     discharge the living-documentation rule. **The check is the entry.**"""
     assert LOG.count("\n### D-152 —") == 1
-    assert LOG.index("\n### D-152") < LOG.index("\n### D-151")
+    # ⚠⚠ NEWEST FIRST IS BY LAND ORDER, NOT BY NUMBER. `### D-153` landed on `main` while this
+    # branch was open and sits BELOW this entry, because this entry lands after it. That is the
+    # existing convention working; it is the first time the two orderings disagree, and the entry
+    # says so.
+    assert LOG.index("\n### D-152") < LOG.index("\n### D-153")
+    assert LOG.index("\n### D-153") < LOG.index("\n### D-151")
     # ⚠ NAMES NO LEADER BY NUMBER. D-147 recorded this trap of itself twice: an assertion that pins
     # *which* entry is newest expires the moment anything newer lands, for reasons that have nothing
     # to do with this entry.
@@ -455,8 +461,9 @@ def test_the_architecture_doc_is_current_in_this_same_pr():
 
 def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole():
     """⚠⚠ **Bar OR name, never neither.** ``### D-152`` is claimed by name here; ``### D-148`` is a
-    ``RESERVED.md`` HOLD for the trafficking Spec and stays BARRED; ``### D-153`` takes the next-free
-    bar. ⚠ Nothing is relaxed to a ``>=``: a ``>=`` here would pass on a log with no entries at all.
+    ``RESERVED.md`` HOLD for the trafficking Spec and stays BARRED; ``### D-153`` was spent by the
+    burden-loader image bake — the lane that HELD 152 for this one — so it is NAMED rather than
+    barred, and ``### D-154`` takes the next-free bar. ⚠ Nothing is relaxed to a ``>=``: a ``>=`` here would pass on a log with no entries at all.
 
     ⚠ The bars are matched WITH their newline, because this file holds such patterns as *data* in
     order to check the others; a newline-less match would find a "bar" in the file whose job is to
@@ -464,12 +471,19 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 152 in ids, "this entry did not claim its own integer"
     assert 151 in ids, "the entry this one builds on must still be named"
-    assert 148 not in ids and 153 not in ids
+    # ⚠⚠ 153 IS NAMED, NOT BARRED, AND BY A LANE THAT IS NOT THIS ONE. `D-153` (the burden-loader
+    # image bake) landed on `main` while this branch was open; it SKIPPED 152, held it for this lane
+    # by name, and moved the pointer to 154. So the integer this entry spends was reserved FOR it,
+    # and the bar it inherited moves to 154 rather than 153.
+    assert 153 in ids, (
+        "D-153 was spent by the burden-loader image bake, which held 152 for this lane; it must be "
+        "NAMED here rather than barred")
+    assert 148 not in ids and 154 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-153" not in LOG, (
-        "D-153 is the next free integer and must stay unspent until an entry claims it by name — "
+    assert "\n### D-154" not in LOG, (
+        "D-154 is the next free integer and must stay unspent until an entry claims it by name — "
         "never admitted by a `>=`")
 
 
@@ -485,14 +499,20 @@ def test_the_reserved_map_retires_152_marker_safe_and_the_pointer_moves_here():
     assert "Original reservation text" in row152, (
         "the original reservation is provenance and is kept, not replaced (D-129-C)")
     assert re.search(r"^\| \*\*D-153\*\*", RESERVED, re.M), (
-        "the bar moved to 153, so 153 must be a RESERVED row")
+        "D-153 is cited here, so it must remain a RESERVED row")
+    assert re.search(r"^\| \*\*D-154\*\*", RESERVED, re.M), (
+        "the bar moved to 154, so 154 must be a RESERVED row")
     assert re.search(r"^\| \*\*D-148\*\*", RESERVED, re.M), "the trafficking hold lost its row"
-    assert not re.search(r"^\| ~~\*\*D-15[23]\*\*~~", RESERVED, re.M), (
+    assert not re.search(r"^\| ~~\*\*D-15[234]\*\*~~", RESERVED, re.M), (
         "a marker is struck through; that breaks this suite's lookup instead of satisfying it")
-    # ⚠⚠ THE POINTER MOVES IN THE SAME COMMIT THAT SPENDS THE INTEGER, AND IT SKIPS THE HOLD.
-    # A reserved integer is not a free one — that is this file's whole purpose.
-    assert "Next free `D-` integer: **`D-153`**" in RESERVED
-    for spent in ("D-147", "D-148", "D-149", "D-150", "D-151", "D-152"):
+    # ⚠⚠ AND THE ONE PLACE THIS SHIP DOES **NOT** MOVE THE POINTER, WHICH IS THE POINT RATHER THAN
+    # AN OMISSION. The standing rule is *the pointer moves in the SAME commit that spends the
+    # integer*, and its purpose is that a spent number is never handed to the next writer. `D-153`
+    # skipped 152, held it for this lane and moved the pointer to 154 before this branch landed — so
+    # there was nothing left to move, and moving it again would have skipped a FREE integer.
+    # ⚠ The assertion that matters is unchanged: the pointer must name NO spent or held number.
+    assert "Next free `D-` integer: **`D-154`**" in RESERVED
+    for spent in ("D-147", "D-148", "D-149", "D-150", "D-151", "D-152", "D-153"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED, (
             f"the pointer still names {spent}, which would hand a spent or held integer to the "
             f"next writer")

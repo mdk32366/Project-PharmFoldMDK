@@ -325,14 +325,22 @@ in a compensated Volume+DB transaction, `/complete` enforcing done-ordering serv
 The **deployment arc** (DEP-001…004) then wired the Fly serving tier: a Docker image — **two-stage
 since DEP-006** (a `node:20-slim` stage compiles the React bundle; **Node never enters the runtime
 stage**) — whose runtime tier is `app/` + `core/` + `db/` + `data/` (the cohort CSVs the D-038
-coverage route computes from) plus **exactly two named scripts and never the directory**
-(`scripts/census_ingest_features.py`; and, since **D-145**, `scripts/census_structural_rank.py` —
+coverage route computes from) plus **exactly three named scripts and never the directory**
+(`scripts/census_ingest_features.py`; since **D-145**, `scripts/census_structural_rank.py` —
 so the D-144 loader lands at **`/srv/scripts/census_structural_rank.py`** on the machine and reads
 its population from **`/srv/data/census/census_manifest.v7.csv`**, already shipped by `COPY data/`
-and therefore never re-copied; ⚠ `/srv/data` is the IMAGE, distinct from the Fly Volume at
+and therefore never re-copied; and, since **D-153**, `scripts/seer_cancer_burden.py` — the D-149
+burden loader, at **`/srv/scripts/seer_cancer_burden.py`**, reading
+**`/srv/data/burden/seer_us_cancer_burden.v1.csv`** and its provenance sidecar from the same
+already-shipped `COPY data/`. ⚠⚠ **D-153 is D-145's defect recurring:** D-149 shipped the artefact
+and the route but not the loader, so the cancer-burden API answered 500 on Fly until `alembic 0013`
+and a one-shot SFTP of the loader let `--load` run — an operator-placed file that the next rebuild
+drops. ⚠ `/srv/data` is the IMAGE, distinct from the Fly Volume at
 `/data/artifacts`), the hash-locked lock, **no `worker/`/CUDA** (DEP-001, enforced by an
-image-contents test that also pins the two-stage shape, both `COPY` lines by name, and the
-matching `.dockerignore` negations), a `fly.toml`, and a `deploy` job that runs `flyctl deploy --app pharmfoldmdk`
+image-contents test that also pins the two-stage shape, all three `COPY` lines by name, and the
+matching `.dockerignore` negations — the negation is not optional: `scripts/` is excluded from the
+build context, so a `COPY` without a matching `!` line fails the BUILD during a deploy rather than
+in the gate, which runs no docker daemon), a `fly.toml`, and a `deploy` job that runs `flyctl deploy --app pharmfoldmdk`
 behind a doc-only guard on the job (DEP-002) with an app-scoped `FLY_API_TOKEN` (DEP-003). A green
 deploy means **the transport API is up and the queue accepts work — not** that any fold has run
 (DEP-004); the worker is hand-started on the GPU box. The UI was ruled **React**, superseding

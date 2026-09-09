@@ -741,15 +741,19 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     assert 151 in ids, (
         "D-151 was spent by the owner UI-polish ship; this assertion barred it and must now NAME "
         "it — never delete a bar, and never relax one to a `>=`")
-    # ⚠⚠ AND THE 152 BAR BECAME A NAME AT `D-152`, WHICH IS THE FIFTEENTH PASS THROUGH THIS
-    # RESOLUTION. `### D-152` (the surface-navigation ship — the census layout pattern applied to
-    # /targets, /coverage, /scorer, /cancer-burden and /adcs) claimed the integer this entry had
-    # barred, so the bar is not deleted and is not relaxed to a `>=` — it becomes the stronger
-    # statement that 152 is SPENT and named, and the bar moves one integer along to 153.
+    # ⚠⚠ THE 152 BAR BECAME A NAME AT `D-152`, AND THE BAR IS NEITHER DELETED NOR RELAXED. 152 was
+    # not merely the next free integer here — `D-153` SKIPPED it and converted it into a HOLD for
+    # the concurrent sitewide-layout lane (owner instruction, 2026-09-09). That lane has now claimed
+    # it: `### D-152` applies the D-151 census layout pattern to /targets, /coverage, /scorer,
+    # /cancer-burden and /adcs. So the bar becomes the stronger statement that 152 is SPENT and
+    # named. ⚠ **148 stays barred** — the trafficking hold is unchanged — and **the next-free
+    # pointer does NOT move here**, because `D-153` already moved it past 152 to 154.
     assert 152 in ids, (
-        "D-152 was spent by the surface-navigation ship; this assertion barred it and must now "
-        "NAME it — never delete a bar, and never relax one to a `>=`")
-    assert 153 not in ids
+        "D-152 was spent by the surface-navigation ship, which is the lane D-153 held it for; "
+        "this assertion barred it and must now NAME it — never delete a bar, and never relax one "
+        "to a `>=`")
+    assert 153 in ids, "D-153 spent 153 in the burden-loader bake"
+    assert 154 not in ids
     # the two entries this one is built beside, NAMED so a rename cannot pass silently
     assert re.search(r"^### D-146 — Track B stops denying the surface it is served on", LOG, re.M)
     assert re.search(r"^### D-147 — The census rank stops presenting a loop as an ectodomain",
@@ -757,13 +761,11 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     assert re.search(r"^### D-150 — The census surface stops answering three questions with one word",
                      LOG, re.M)
     assert re.search(r"^### D-151 — Three owner UI complaints, one ship", LOG, re.M)
-    assert re.search(r"^### D-152 — The census navigation pattern applied to the other five",
-                     LOG, re.M)
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-153" not in LOG, (
-        "D-153 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-154" not in LOG, (
+        "D-154 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
 
@@ -810,20 +812,17 @@ def test_the_reserved_map_holds_148_bars_150_and_the_pointer_skips_the_hold():
     assert "WRITTEN" in row151, "the 151 row does not record that the integer was spent"
     assert "Original reservation text" in row151, (
         "the original reservation is provenance and is kept, not replaced (D-129-C)")
-    # ⚠⚠ THE 152 ROW SURVIVES ITS OWN SPENDING, MARKER-SAFE FOR THE SAME MECHANICAL REASON as
-    # 150 and 151 above: this line is the lookup that striking the marker would break.
     assert re.search(r"^\| \*\*D-152\*\*", RESERVED, re.M), (
-        "D-152 is cited here, so it must remain a RESERVED row — retiring a row by deleting or "
-        "striking it opens a citation hole indistinguishable from D-062's")
-    row152 = next(ln for ln in RESERVED.splitlines() if ln.startswith("| **D-152**"))
-    assert "WRITTEN" in row152, "the 152 row does not record that the integer was spent"
-    assert "Original reservation text" in row152, (
-        "the original reservation is provenance and is kept, not replaced (D-129-C)")
-    assert re.search(r"^\| \*\*D-153\*\*", RESERVED, re.M), (
-        "the bar moved to 153, so 153 must be a RESERVED row")
+        "the bar moved to 152, so 152 must be a RESERVED row")
     # ⚠⚠ THE POINTER MOVES IN THE SAME COMMIT THAT SPENDS THE INTEGER, AND IT SKIPS THE HOLD.
     # A reserved integer is not a free one — that is this file's whole purpose.
-    assert "Next free `D-` integer: **`D-153`**" in RESERVED
+    # ⚠⚠ FLIPPED IN PLACE AT `D-153`, NEVER DELETED, AND IT NOW SKIPS **TWO** HOLDS. `D-153` spent
+    # 153 (the D-149 burden loader baked into the serving image — this entry's own loader, which
+    # `D-149` shipped without) and deliberately did NOT take 152, because 152 became a HOLD for the
+    # concurrent sitewide-layout lane while 148 remains the trafficking hold. So *"next free"* means
+    # the lowest AVAILABLE integer, 154, and not the lowest unwritten one.
+    assert "Next free `D-` integer: **`D-154`**" in RESERVED
+    assert "Next free `D-` integer: **`D-153`**" not in RESERVED
     assert "Next free `D-` integer: **`D-152`**" not in RESERVED
     assert "Next free `D-` integer: **`D-151`**" not in RESERVED
     assert "Next free `D-` integer: **`D-150`**" not in RESERVED

@@ -254,12 +254,32 @@ def test_the_census_table_still_has_no_rank_column():
 #: ⚠ `MethodNote.jsx` also keeps every D-146 paragraph — `test_method_note_still_carries_the_
 #: source_of_truth_paragraph_it_was_right_about` reads its text and is unchanged, so the moved
 #: digest is an ADDITION to that file rather than an edit of what this entry pinned in it.
+#:
+#: ⚠⚠ **TWO MORE DIGESTS MOVED AT `D-153` — THE IMAGE PAIR, AND THIS IS THE FIRST TIME THE `image`
+#: CLAUSE OF THIS GUARD'S OWN NAME HAS FIRED.** The failure message pre-committed the resolution: an
+#: image edit *"belongs to a different entry with its own ruling"*, and `### D-153` is that entry —
+#: `scripts/seer_cancer_burden.py` baked in as one explicit `COPY` plus its `.dockerignore`
+#: negation, because `D-149` shipped the burden artefact and route without the loader and the file
+#: had to be SFTP'd onto `/srv/scripts/` for the load to run. The superseded values are recorded
+#: rather than overwritten in silence (D-129-C):
+#:     Dockerfile      D-146/D-147: c5af8c8500c3eb97… → D-153: 7f424013f841…
+#:     .dockerignore   D-146/D-147: fbd8402067ea504c… → D-153: f4e284270c3e…
+#: ⚠⚠ **AND WHAT DID NOT MOVE IS AGAIN THE LOAD-BEARING HALF.** `core/census_structural.py`,
+#: `scripts/census_structural_rank.py`, migration `0012` and `core/scorer.py` are still
+#: byte-identical, so `formula_version()` still returns `c859da97f73d` — the value the live run
+#: recorded — and *"no formula, no schema, no migration, no loader, no learned scorer"* stays a
+#: measurement. **The pins were not relaxed: two were moved by name and the rest were left to prove
+#: the rest.** ⚠ The `image` pins are also the narrower guard now: the additive shape of the change
+#: is asserted line-by-line in `tests/test_d153_bake_burden_loader.py`, so this digest says *"the
+#: image surface moved exactly once, at an entry that owns it"* rather than standing alone.
 UNTOUCHED_SURFACE = {
     **D144_OWN_FILES,
+    # ⚠ moved by `### D-153` (was c5af8c8500c3eb97fe95dfe468568f822811217ddee6b8a4c5a6389f0b64cd68)
     "Dockerfile":
-        "c5af8c8500c3eb97fe95dfe468568f822811217ddee6b8a4c5a6389f0b64cd68",
+        "7f424013f84159e8d4494eebe9726e6a2d4bc150247655ed69f97638c006ee57",
+    # ⚠ moved by `### D-153` (was fbd8402067ea504c6b477483f4b111f114576a73fa0de931b6388b9e0912a63f)
     ".dockerignore":
-        "fbd8402067ea504c6b477483f4b111f114576a73fa0de931b6388b9e0912a63f",
+        "f4e284270c3ea9d98ad10a2f134a158fbf63809e84a5b3f3a6bfabb0789a8635",
     # ⚠ moved by `### D-147` (was 062fd71ff19a4121a2924e00979f7bcc58228234368221ffac423f34956c7074)
     "ui/src/components/MethodNote.jsx":
         "fc30481d792a938c3990a68fff4e1f4c06aad2c7b6397307ed51585e1e48da5f",
@@ -274,8 +294,9 @@ UNTOUCHED_SURFACE = {
 # nothing of D-144's, and this guard's own failure message licenses exactly that — "belongs to a
 # different entry with its own ruling".
 # ⚠ NARROWER, NOT LOOSER: the region digests in `tests/_d144_surface.py` come from `2170bd8`, the
-# commit where D-144 MERGED, never recomputed from this tree. The EIGHT other whole-file pins here
-# — including `Dockerfile`, `.dockerignore`, `MethodNote.jsx` and `core/scorer.py` — are untouched.
+# commit where D-144 MERGED, never recomputed from this tree. Of the EIGHT other whole-file pins
+# here, `MethodNote.jsx` moved at D-147 and the image pair (`Dockerfile`, `.dockerignore`) moved at
+# D-153; `core/scorer.py` and the D-144-own files are untouched throughout.
 
 
 @pytest.mark.parametrize("rel,digest", sorted(UNTOUCHED_SURFACE.items()))
@@ -291,8 +312,9 @@ def test_no_formula_schema_route_loader_or_image_byte_moved(rel, digest):
     """
     assert whole_file_digest(rel) == digest, (
         f"{rel} changed — D-146 is a copy amendment; a formula, schema, route, loader or image "
-        f"edit belongs to a different entry with its own ruling (as D-147's route edit did: see "
-        f"the note on UNTOUCHED_SURFACE, where two digests moved by name and eight did not)"
+        f"edit belongs to a different entry with its own ruling (as D-147's route edit did, and as "
+        f"D-153's image edit did: see the note on UNTOUCHED_SURFACE, where four digests have now "
+        f"moved by name and the formula/schema/loader ones have not)"
     )
 
 
@@ -555,22 +577,26 @@ def test_the_reserved_row_is_retired_marker_safe_and_147_has_a_row():
     # and it names none of 147, 148, 150 or 151, so a future land that forgets to move it reddens
     # here rather than drifting (this file has recorded that drift three times, once by thirty-six
     # integers).
-    # ⚠⚠ FLIPPED IN PLACE AT `D-152`, NEVER DELETED — the sixth time this same assertion has been
+    # ⚠⚠ FLIPPED IN PLACE AT `D-153`, NEVER DELETED — the sixth time this same assertion has been
     # moved rather than removed, and the RULE it encodes is what is kept: *the pointer moves in the
     # SAME commit that spends the integer*. Only the value moves.
-    # ⚠⚠ AND IT MOVES TO **153**, STILL SKIPPING 148. `D-152` spent 152 (the surface-navigation
-    # ship: the census layout pattern applied to /targets, /coverage, /scorer, /cancer-burden and
-    # /adcs); 148 is still a HOLD for the trafficking Spec, and a reserved integer is not a free one
-    # — that is `RESERVED.md`'s whole purpose. Six assertions where there was one: the pointer names
-    # 153, and it names none of 147, 148, 150, 151 or 152, so a future land that forgets to move it
-    # reddens here rather than drifting (this file has recorded that drift three times, once by
-    # thirty-six integers).
-    assert "Next free `D-` integer: **`D-153`**" in RESERVED, (
+    # ⚠⚠ AND IT MOVES TO **154**, SKIPPING **TWO** HOLDS NOW — which is the new part. `D-153` spent
+    # 153 (the D-149 burden loader baked into the serving image) and deliberately did NOT take 152:
+    # 148 is still a HOLD for the trafficking Spec and 152 became a HOLD for the concurrent
+    # sitewide-layout lane. A reserved integer is not a free one — that is `RESERVED.md`'s whole
+    # purpose — so *"next free"* means the lowest AVAILABLE integer and not the lowest unwritten
+    # one. Six assertions where there was one: the pointer names 154, and it names none of 147,
+    # 148, 150, 151, 152 or 153.
+    assert "Next free `D-` integer: **`D-154`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
     )
+    assert "Next free `D-` integer: **`D-153`**" not in RESERVED, (
+        "the pointer still names a SPENT integer — D-153 was spent by the burden-loader image "
+        "bake, and naming it would hand a used number to the next writer"
+    )
     assert "Next free `D-` integer: **`D-152`**" not in RESERVED, (
-        "the pointer still names a SPENT integer — D-152 was spent by the surface-navigation "
-        "ship, and naming it would hand a used number to the next writer"
+        "the pointer still names 152, which D-153 converted into a sitewide-layout HOLD — a hold "
+        "is not a free integer, and handing it to the next writer is what this file prevents"
     )
     assert "Next free `D-` integer: **`D-151`**" not in RESERVED, (
         "the pointer still names a SPENT integer — D-151 was spent by the owner UI-polish "
