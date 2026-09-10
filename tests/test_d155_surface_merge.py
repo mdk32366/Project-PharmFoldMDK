@@ -295,7 +295,9 @@ def test_each_status_axis_states_only_what_that_axis_knows():
     ⚠ Two rules, asserted as source properties here and as counted occurrences in
     `TargetList.merge.d155.test.jsx`: the rank cause renders only where the row HAS a fold, and
     `causeOnly` drops a leading verdict from the confidence axis."""
-    assert "const cause = foldState === 'folded' ? rawCause : null" in TARGET_LIST, (
+    # ⚠ FOLLOW-UP 2 lengthened this expression (the disposition gate joined the fold gate), so the
+    # assertion pins the FOLD half by name rather than the whole line it happened to be on.
+    assert "foldState === 'folded' && causeAddsSomething(" in TARGET_LIST, (
         "the rank cause is back on rows whose fold axis already gives the reason")
     assert "export function causeOnly" in TARGET_LIST
     assert "causeOnly(absentLabel(row))" in TARGET_LIST, (
@@ -340,3 +342,32 @@ def test_the_prose_pages_actually_fill_the_width_they_were_given():
         "the wide routes' prose does not fill the measure the owner ruled for")
     scoped = CSS[CSS.index("main.wide .prose"):]
     assert scoped[: scoped.index("}")].count("max-width") == 1
+
+
+def test_the_cause_gate_is_an_equality_against_a_named_restatement():
+    """⚠⚠ FOLLOW-UP 2, AND THE SHAPE OF THE GATE IS THE CLAIM. Follow-up 1 suppressed the cause where
+    the FOLD axis carried it; the deployed page then said *"held out of ranking · no rank — held out
+    · folded"*. The gate now also asks whether the DISPOSITION carried it.
+
+    ⚠ An EQUALITY against a named restatement, never a `startsWith`: *"excluded by the pre-registered
+    mean pLDDT floor of 50"* begins with `excluded` and belongs on a `ranked` row, so a prefix test
+    would delete the one cause on this surface that nothing else explains."""
+    assert "export function causeAddsSomething" in TARGET_LIST
+    body = TARGET_LIST[TARGET_LIST.index("export function causeAddsSomething"):]
+    body = body[: body.index("\n}")]
+    assert "!==" in body, "the gate stopped comparing for equality"
+    assert "startsWith" not in body and "includes" not in body, (
+        "the gate became a substring test — it will swallow the below-floor cause")
+    assert "causeAddsSomething(rawCause, row.disposition)" in TARGET_LIST
+
+
+def test_the_reason_for_a_hold_stays_on_the_row_after_the_cause_is_dropped():
+    """⚠ Dropping a repetition must not drop a fact. `held out` with no reason invites the reader to
+    supply one, and D-021's reason is a property of the PARTITION — so it rides on the axis as its
+    title rather than becoming a fourth line."""
+    assert "DISPOSITION_WHY" in TARGET_LIST
+    assert "boundary method is not comparable (D-021)" in TARGET_LIST
+    # ⚠ the sentence is a two-line concatenation in source, so the halves are asserted; the JOINED
+    # string is asserted where it actually matters, on the rendered title, in the vitest file.
+    assert "judgement about the target" in TARGET_LIST
+    assert "title={DISPOSITION_WHY[row.disposition] || undefined}" in TARGET_LIST

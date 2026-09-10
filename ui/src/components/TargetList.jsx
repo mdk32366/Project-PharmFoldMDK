@@ -378,6 +378,44 @@ const DISPOSITION_COPY = {
   excluded: 'excluded from the cohort',
 }
 
+//: Why a disposition is what it is, where the record has a reason that is a property of the
+//: PARTITION rather than of the row. ⚠ `D-021` holds a target out because its boundary method is
+//: not comparable — that is not a judgement about the protein, and a cell that says only "held out"
+//: invites the reader to supply their own reason.
+const DISPOSITION_WHY = {
+  held_out: 'held out of ranking because its boundary method is not comparable (D-021) — not a '
+    + 'judgement about the target',
+  excluded: 'excluded from the cohort by name (D-022)',
+}
+
+/**
+ * ⚠⚠ D-155 FOLLOW-UP 2 — DOES THE CAUSE ADD ANYTHING THE DISPOSITION HAS NOT ALREADY SAID?
+ *
+ * The first follow-up suppressed the cause wherever the FOLD axis already carried it, and the
+ * deployed page then read *"held out of ranking · no rank — held out · folded · Confident
+ * backbone"* — the same repetition, one axis over. ⚠ **Two rounds on one cell is the argument for
+ * enumerating the branches instead of fixing the instance**, so every string `rankCause` can return
+ * was checked against what the other axes say:
+ *
+ *   · `no ranking run is currently served` — nothing else says it            → SHOW
+ *   · `excluded by the pre-registered mean pLDDT floor of 50` — nothing else → SHOW
+ *   · `unranked — no cause recorded` — names an absence of cause             → SHOW
+ *   · `held out` — axis A says exactly this                                  → SUPPRESS
+ *   · `not folded — never attempted` / `fold attempted and failed` — axis B  → already suppressed
+ *   · `held out; fold subsequently attempted and failed (CUDA OOM)…` — axis B + the `why`
+ *                                                                            → already suppressed
+ *
+ * ⚠ An EQUALITY against a named restatement, never a substring test: *"excluded by the
+ * pre-registered floor"* starts with the word `excluded` and must still show on a `ranked` row,
+ * which a `startsWith` would have swallowed.
+ */
+const DISPOSITION_RESTATEMENT = { held_out: 'held out', excluded: 'excluded' }
+
+export function causeAddsSomething(cause, disposition) {
+  if (!cause) return false
+  return cause !== DISPOSITION_RESTATEMENT[disposition]
+}
+
 /**
  * D-155 — one cell, three orthogonal answers, and every long reason one click away.
  *
@@ -417,7 +455,9 @@ function StatusCell({ row, rankingServed, foldStatus, absentLabel, band, absent 
   // ⚠ Nothing is lost: the full text is in the `why` disclosure, untruncated, on every row that has
   // one — and `IGF2R`'s CUDA-OOM sentence is exactly such a row.
   const rawCause = rankCause(row, rankingServed)
-  const cause = foldState === 'folded' ? rawCause : null
+  const cause = foldState === 'folded' && causeAddsSomething(rawCause, row.disposition)
+    ? rawCause
+    : null
   // ⚠ The note reads the COVERAGE row's field names, which are already joined onto `row` upstream
   // (`fold_status`, `disposition`) plus the two the merge threads through — see the `all` map.
   const note = hasCoverageNote(row) ? coverageNote(row) : null
@@ -425,7 +465,8 @@ function StatusCell({ row, rankingServed, foldStatus, absentLabel, band, absent 
     <div className="status-cell">
       {/* A · the partition. ⚠ For an unranked row the CAUSE rides with it, because "held out" and
           "excluded by the pLDDT floor" answer the same question at two different depths. */}
-      <span className={`status-line status-disposition disp-${row.disposition ?? 'unknown'}`}>
+      <span className={`status-line status-disposition disp-${row.disposition ?? 'unknown'}`}
+            title={DISPOSITION_WHY[row.disposition] || undefined}>
         {row.disposition
           ? (DISPOSITION_COPY[row.disposition] ?? row.disposition)
           : <span className="unknown">disposition not recorded</span>}

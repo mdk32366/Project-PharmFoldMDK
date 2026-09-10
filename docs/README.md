@@ -553,6 +553,21 @@ this entry's own negative half still holds. ⚠ **The line-length cost is accept
 decision 6 offered the variant that keeps a narrow text measure inside a wide frame and the owner
 declined it, which is why the fix is the measure coming off rather than the frame coming in.
 
+**⚠⚠ AND A FOURTH, ONE ROUND LATER, WHICH IS WHY THE FIX IS A TABLE OF BRANCHES AND NOT A CASE.**
+The repetition fix above suppressed the cause wherever the **fold** axis carried it, and the
+deployed page then read *"held out of ranking · no rank — **held out** · folded · Confident
+backbone"* — the same defect, one axis over. **Two rounds on one cell is the argument for
+enumerating what `rankCause` can return** and checking each string against what the other axes say:
+three of the six add something (*no ranking run is currently served*, *excluded by the
+pre-registered floor*, *unranked — no cause recorded*), two were already suppressed by the fold
+gate, and one — the bare `held out` — is the disposition said twice. ⚠ **The gate is an EQUALITY
+against a named restatement and never a `startsWith`:** *"excluded by the pre-registered mean pLDDT
+floor of 50"* begins with the word `excluded` and belongs on a **ranked** row, so a prefix test
+would have deleted the one cause on this surface that nothing else explains. ⚠ **And dropping a
+repetition must not drop a fact** — *"held out"* with no reason invites the reader to supply one, so
+`D-021`'s (*boundary method not comparable — not a judgement about the target*) now rides on the
+disposition axis as its title rather than becoming a fourth line.
+
 ⚠ Guarded by three cases in `TargetList.merge.d155.test.jsx` that **count occurrences** rather than
 matching a fragment (a fragment match passes on one copy or on five — `D-154`'s lesson), and two
 inherited guards were flipped in place: one now asserts the `no rank —` prefix with `toBe`, and

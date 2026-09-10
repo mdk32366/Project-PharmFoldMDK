@@ -19,7 +19,7 @@ vi.mock('../api.js', () => ({
 import {
   listAnalyses, getCoverage, getAssociations, getRanking, getCensusSummary,
 } from '../api.js'
-import TargetList from './TargetList.jsx'
+import TargetList, { causeAddsSomething } from './TargetList.jsx'
 
 const render = (ui) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>)
 
@@ -205,6 +205,55 @@ describe('D-155 follow-up · each axis says what only it knows', () => {
     // ⚠ and the cause names which question it answers, so "in the set" and "no rank" cannot read
     //   as one self-contradicting sentence
     expect(cause.textContent).toMatch(/^no rank — /)
+  })
+})
+
+// ⚠⚠ FOLLOW-UP 2 — AND THE REASON IT IS A TABLE OF BRANCHES RATHER THAN A CASE. Follow-up 1
+// suppressed the cause wherever the FOLD axis carried it, and the deployed page then read
+// *"held out of ranking · no rank — held out · folded"* — the same repetition one axis over. Two
+// rounds on one cell is the argument for enumerating what `rankCause` can return and checking each
+// against what the other axes say.
+describe('D-155 follow-up 2 · the cause shows only where it adds something', () => {
+  it('drops a cause that merely restates the disposition', async () => {
+    const { container } = await mounted()
+    const cell = rowFor(container, 'CCC').querySelector('.status-cell')   // held out, folded
+    expect(cell.querySelector('.status-disposition').textContent.trim()).toBe('held out of ranking')
+    expect(cell.querySelector('.status-cause')).toBeNull()
+    expect(cell.textContent.split('held out').length - 1).toBe(1)
+  })
+
+  it('keeps the reason for the hold on the row, as the axis title', async () => {
+    const { container } = await mounted()
+    const line = rowFor(container, 'CCC').querySelector('.status-disposition')
+    // ⚠ "held out" with no reason invites the reader to supply one; D-021's is a property of the
+    //   PARTITION, so it rides on the axis rather than becoming a fourth line.
+    expect(line.getAttribute('title')).toMatch(/boundary method is not comparable \(D-021\)/)
+    expect(line.getAttribute('title')).toMatch(/not a judgement about the target/)
+  })
+
+  it('keeps a cause that says something the other axes do not', async () => {
+    // a ranked, folded row below the pre-registered floor: nothing else on the row explains it
+    getRanking.mockResolvedValue({ rows: [] })
+    getCoverage.mockResolvedValue({
+      ...COVERAGE, rows: [{ ...COVERAGE.rows[0], disposition: 'ranked', fold_status: 'folded' }],
+    })
+    listAnalyses.mockResolvedValue([{ ...ANALYSES[0], mean_plddt: 44.1 }])
+    const { container } = await mounted()
+    const cause = rowFor(container, 'AAA').querySelector('.status-cause')
+    expect(cause).toBeTruthy()
+    expect(cause.textContent).toMatch(/^no rank — /)
+  })
+
+  it('never swallows a cause because it starts with the disposition word', () => {
+    // ⚠⚠ THE TRAP THIS AVOIDS, AS A UNIT: "excluded by the pre-registered floor" begins with
+    // `excluded` and belongs on a RANKED row. A `startsWith` gate would have deleted it.
+    expect(causeAddsSomething('excluded by the pre-registered mean pLDDT floor of 50', 'ranked'))
+      .toBe(true)
+    expect(causeAddsSomething('held out', 'held_out')).toBe(false)
+    expect(causeAddsSomething('excluded', 'excluded')).toBe(false)
+    expect(causeAddsSomething('no ranking run is currently served', 'ranked')).toBe(true)
+    expect(causeAddsSomething('unranked — no cause recorded', 'ranked')).toBe(true)
+    expect(causeAddsSomething(null, 'ranked')).toBe(false)
   })
 })
 
