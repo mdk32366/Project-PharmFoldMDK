@@ -96,7 +96,7 @@ export default function Story() {
             <dt>{s.rankedFolded}</dt>
             <dd>
               cohort targets <strong>ranked and folded</strong> — the honest denominator&rsquo;s own
-              intersection, on <Link to="/coverage">Coverage</Link>
+              intersection, on <Link to="/targets">Initial Targets</Link>
             </dd>
           </div>
           {s.census && (
@@ -160,14 +160,14 @@ export default function Story() {
             {s.failed.length > 0 && <> {s.failed.join(', ')} {s.failed.length > 1 ? 'were' : 'was'} attempted and did not complete</>}
             {s.failed.length > 0 && s.excluded.length > 0 && ';'}
             {s.excluded.length > 0 && <> {s.excluded.join(', ')} {s.excluded.length > 1 ? 'were' : 'was'} never attempted</>}
-            . <Link to="/coverage">Coverage</Link> gives each target's reason.</>
+            . <Link to="/targets">Initial Targets</Link> gives each target's reason.</>
           )}
         </p>
       ) : (
         <p>
           <strong>What came out:</strong> most of the cohort folded, each with the model's own
           confidence; a few did not, and the interface names each with its reason rather than hiding
-          it. See <Link to="/coverage">Coverage</Link> for the honest denominator.
+          it. See <Link to="/targets">Initial Targets</Link> for the honest denominator.
         </p>
       )}
       </section>

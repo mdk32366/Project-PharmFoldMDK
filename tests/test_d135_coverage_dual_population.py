@@ -59,7 +59,13 @@ LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
 ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
 READS = (ROOT / "app" / "reads.py").read_text(encoding="utf-8")
 UI = ROOT / "ui" / "src"
-COVERAGE_VIEW = (UI / "components" / "CoverageView.jsx").read_text(encoding="utf-8")
+# ⚠⚠ D-155: `/coverage` MERGED INTO `/targets` and `CoverageView.jsx` is gone. It listed the
+# same 82 rows; the honest denominator, the per-row facts and the census strip all render on
+# the merged surface now. These guards follow their subject — not one of D-135's clauses is
+# dropped, and the two `<CoverageLine>` / `<CensusPopulationStrip>` order checks below are the
+# same checks against the file that now renders them.
+COVERAGE_VIEW = (UI / "components" / "TargetList.jsx").read_text(encoding="utf-8")
+COVERAGE_NOTE = (UI / "components" / "coverageNote.jsx").read_text(encoding="utf-8")
 COVERAGE_LINE = (UI / "components" / "CoverageLine.jsx").read_text(encoding="utf-8")
 STRIP = (UI / "components" / "CensusPopulationStrip.jsx").read_text(encoding="utf-8")
 STORY = (UI / "components" / "Story.jsx").read_text(encoding="utf-8")
@@ -443,8 +449,11 @@ def test_the_coverage_headline_is_not_given_the_census_summary():
     Prove it bites by threading ``census`` into the ``<CoverageLine>`` element."""
     element = COVERAGE_VIEW[COVERAGE_VIEW.index("<CoverageLine"):]
     element = element[: element.index("/>") + 2]
-    assert "coverage={data.coverage}" in element
-    assert "rows={data.rows}" in element
+    # ⚠ D-155: the merged surface holds the coverage OBJECT and the joined rows in its own
+    # state (`coverageObj` / `all`) rather than a single `data` payload. The claim is unchanged
+    # and is the one that matters — the cohort partition in, the census nowhere near it.
+    assert "coverage={coverageObj}" in element
+    assert "rows={all}" in element
     assert "census" not in element, "CoverageLine takes the cohort payload and only the cohort payload"
     # ⚠ and the component itself still knows nothing about the census
     for banned in ("census", "structure_kind", "manifest_rows"):
@@ -458,6 +467,15 @@ def test_the_second_strip_is_a_sibling_of_the_coverage_line_not_a_part_of_it():
     strip = COVERAGE_VIEW.index("<CensusPopulationStrip")
     assert line < strip
     assert "<CensusPopulationStrip summary={census} />" in COVERAGE_VIEW
+    # ⚠ D-155: and the per-row bridge kept its rule when it moved into its own module — a
+    # census id may never travel on a cohort row, so the link is built from the ACCESSION.
+    assert "to={`/census/${r.accession}`}" in COVERAGE_NOTE
+    # ⚠⚠ COMMENTS STRIPPED FIRST — `F-024`, match the thing you mean. That module EXPLAINS at
+    # length why no census id may travel on a cohort row, so a substring check over the raw
+    # source fires on the file's own reasoning about itself. It did, on the first run of this.
+    code = re.sub(r"//[^\n]*", "", COVERAGE_NOTE)
+    assert "analysis_id" not in code, (
+        "the bridge learned about a census analysis id — the named stop condition")
 
 
 def test_the_strip_labels_the_population_before_it_prints_a_count():
@@ -671,7 +689,9 @@ def test_architecture_records_the_shipped_shape():
 def test_the_component_tests_exist_beside_the_python_ones():
     """⚠ A surface asserted only in Python is a surface no render ever exercised. The Python guards
     above read source text; these three actually mount the components."""
-    for name in ("CoverageView.dual.test.jsx", "CensusView.structureurl.test.jsx",
+    # ⚠ D-155: renamed with the component it mounts — the file moved from `/coverage` to
+    # `/targets` and every one of its 21 cases came with it.
+    for name in ("TargetList.dual.test.jsx", "CensusView.structureurl.test.jsx",
                  "Story.d135.test.jsx"):
         path = UI / "components" / name
         assert path.exists(), f"{name} must ship with the surface it pins"

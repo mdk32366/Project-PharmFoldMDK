@@ -50,7 +50,8 @@ APP = (UI / "App.jsx").read_text(encoding="utf-8")
 CSS = (UI / "styles.css").read_text(encoding="utf-8")
 COMPONENTS = UI / "components"
 TARGET_LIST = (COMPONENTS / "TargetList.jsx").read_text(encoding="utf-8")
-COVERAGE = (COMPONENTS / "CoverageView.jsx").read_text(encoding="utf-8")
+# ⚠ D-155: `/coverage` merged into `/targets`; this constant follows the table it describes.
+COVERAGE = (COMPONENTS / "TargetList.jsx").read_text(encoding="utf-8")
 SCORER = (COMPONENTS / "ScorerView.jsx").read_text(encoding="utf-8")
 BURDEN = (COMPONENTS / "CancerBurdenView.jsx").read_text(encoding="utf-8")
 ADCS = (COMPONENTS / "AdcsView.jsx").read_text(encoding="utf-8")
@@ -61,7 +62,10 @@ CENSUS_TABLE = (COMPONENTS / "CensusTable.jsx").read_text(encoding="utf-8")
 # NOT here — it is the surface the pattern came FROM, and its own guards are `test_d151_ui_polish`.
 TOUCHED = {
     "/targets": TARGET_LIST,
-    "/coverage": COVERAGE,
+    # ⚠⚠ D-155: `/coverage` IS `/targets`. The two entries pointed at two files and now point at
+    # one, so the map holds one route — and `COVERAGE` above is kept as a NAME for that same
+    # file, because the checks below that were written about the coverage table are still about
+    # the coverage table. A deleted key would read as a surface that stopped being checked.
     "/scorer": SCORER,
     "/cancer-burden": BURDEN,
     "/adcs": ADCS,
@@ -169,14 +173,23 @@ def test_the_wide_measure_reaches_every_list_route_and_no_prose_route():
     cannot measure a width and it can read a class."""
     app = _strip_jsx_comments(APP)
     assert "WIDE_ROUTES" in app
-    for route in ("/targets", "/coverage", "/census", "/scorer", "/cancer-burden", "/adcs"):
+    # ⚠ D-155: `/coverage` left the router; `/`, `/method` and `/about` joined the wide set on
+    # the owner's ruling, and their membership is asserted in `App.test.jsx` where the shell is.
+    for route in ("/targets", "/census", "/scorer", "/cancer-burden", "/adcs"):
         assert f"'{route}'" in app.split("WIDE_ROUTES")[1].split("])")[0], (
             f"{route} is a list route and is not in the wide set")
-    # ⚠⚠ THE NEGATIVE HALF IS THE POINT OF THE SET. Widening a paragraph makes it harder to read, so
-    # the prose routes are absent BY DECISION and their absence is asserted, not assumed.
+    # ⚠⚠ THE NEGATIVE HALF WAS THE POINT OF THE SET, AND D-155 MOVED WHERE THE LINE FALLS — by an
+    # owner ruling, not by drift. D-152 asserted here that `/method` and `/about` must NOT be wide,
+    # on the reasoning that widening a paragraph makes it harder to read. Owner, 2026-09-10: *"The
+    # Story, Method, and About ADCs surfaces should match the wider format of the other surfaces."*
+    # ⚠ SO THE NEGATIVE HALF IS KEPT AND RE-AIMED RATHER THAN DELETED. The set only means
+    # something if something is outside it, and what is outside it now is every CARD — which is the
+    # line D-152's own comment drew in its last paragraph and the one this ruling did not touch.
     wide_set = app.split("WIDE_ROUTES")[1].split("])")[0]
-    for prose in ("'/method'", "'/about'"):
-        assert prose not in wide_set, f"{prose} is prose and must keep the reading measure"
+    for prose in ("'/method'", "'/about'", "'/'"):
+        assert prose in wide_set, f"{prose} is in the owner's wide ruling and is not in the set"
+    for card in ("'/target/", "'/census/:", "'/adcs/:", "'/adcs/pipeline/"):
+        assert card not in wide_set, f"{card} is a CARD and must keep the reading measure"
     assert "className={wide ? 'wide' : undefined}" in app
     # ⚠ EXACT PATHS. A `startsWith` would widen `/census/:id`, `/target/:id`, `/adcs/:id` and
     # `/adcs/pipeline/:id`, every one of which is a card.
@@ -190,7 +203,10 @@ def test_no_route_path_moved_anywhere_in_the_shell():
     this ship still exists; a re-layout that quietly relocated one would break every shared address
     to buy nothing, which is the trap D-151 refused when it moved a label and not a path."""
     app = _strip_jsx_comments(APP)
-    for path in ("/", "/targets", "/target/:id", "/coverage", "/census", "/census/:id",
+    # ⚠⚠ D-155: `/coverage` is the ONE path this project has ever removed, and it is removed
+    # rather than moved — no deep link is silently redirected, and the four in-app links that
+    # pointed at it now point at `/targets` (asserted in `test_d155_surface_merge.py`).
+    for path in ("/", "/targets", "/target/:id", "/census", "/census/:id",
                  "/scorer", "/cancer-burden", "/method", "/adcs", "/adcs/pipeline/:id",
                  "/adcs/:id", "/about"):
         assert f'path="{path}"' in app, f"the route {path} left the shell"
@@ -215,7 +231,10 @@ def test_every_touched_surface_that_collapsed_prose_used_the_shared_disclosure()
     for route in ("/targets", "/scorer", "/adcs"):
         body = _strip_jsx_comments(TOUCHED[route])
         assert 'className="surface-notes' in body, f"{route} lost its disclosure"
-    for route in ("/coverage", "/cancer-burden"):
+    # ⚠ D-155: `/coverage` was the other member of this list and it no longer exists. Its long
+    # block moved onto `/targets` — which HAS a disclosure, asserted in the loop above — so the only
+    # surface still making this claim is the burden page, and it makes it for D-151's reason.
+    for route in ("/cancer-burden",):
         body = _strip_jsx_comments(TOUCHED[route])
         assert "surface-notes" not in body, (
             f"{route} grew a disclosure it was ruled not to need — check the entry before adding "
@@ -251,7 +270,7 @@ def test_the_shared_matcher_is_reused_where_the_population_is_proteins():
     # why they do not import the shared matcher, so they necessarily contain its name as prose. A
     # substring check over the raw source fires on the file's own reasoning about itself — `F-024`,
     # match the thing you mean — and it did, on the first run of this test.
-    for route in ("/coverage", "/scorer"):
+    for route in ("/targets", "/scorer"):
         assert "searchRows.js" in TOUCHED[route], f"{route} does not use the shared matcher"
     for route in ("/cancer-burden", "/adcs"):
         assert "searchRows.js" not in _strip_jsx_comments(TOUCHED[route]), (
@@ -297,7 +316,15 @@ def test_coverage_keeps_the_denominator_first_and_moves_the_census_strip_without
     cov = _strip_jsx_comments(COVERAGE)
     assert cov.index("<CoverageLine") < cov.index('<div className="table-scroll">')
     assert cov.index("<CensusPopulationStrip") > cov.index("</table>")
-    assert "surface-notes" not in cov, "the census population strip was collapsed rather than moved"
+    # ⚠⚠ D-155 FLIPPED THE LAST CLAUSE IN PLACE, AND IT IS STRICTER THAN THE ONE IT REPLACES.
+    # The merged surface DOES have a `.surface-notes` disclosure — D-152 put the column note
+    # in one — so "no disclosure anywhere on the page" stopped being the right question the
+    # moment these two surfaces became one. The question that was always meant is whether
+    # THESE TWO BLOCKS are inside one, and that is now asked of them directly.
+    for block in ("<CoverageLine", "<CensusPopulationStrip"):
+        before = cov[: cov.index(block)]
+        assert before.count("<details") == before.count("</details>"), (
+            f"{block} is inside an open <details> — a claim behind a disclosure control")
 
 
 def test_the_burden_surface_keeps_every_block_a_ruling_placed():
@@ -463,7 +490,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     """⚠⚠ **Bar OR name, never neither.** ``### D-152`` is claimed by name here; ``### D-148`` is a
     ``RESERVED.md`` HOLD for the trafficking Spec and stays BARRED; ``### D-153`` was spent by the
     burden-loader image bake — the lane that HELD 152 for this one — so it is NAMED rather than
-    barred, and ``### D-155`` takes the next-free bar. ⚠ Nothing is relaxed to a ``>=``: a ``>=`` here would pass on a log with no entries at all.
+    barred, and ``### D-156`` takes the next-free bar. ⚠ Nothing is relaxed to a ``>=``: a ``>=`` here would pass on a log with no entries at all.
 
     ⚠ The bars are matched WITH their newline, because this file holds such patterns as *data* in
     order to check the others; a newline-less match would find a "bar" in the file whose job is to
@@ -479,18 +506,24 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
         "D-153 was spent by the burden-loader image bake, which held 152 for this lane; it must be "
         "NAMED here rather than barred")
     assert 154 in ids, "D-154 spent 154 in the live-surface review ship"
-    assert 148 not in ids and 155 not in ids
+    assert 155 in ids, "D-155 spent 155 in the surface-merge ship"
+    assert 148 not in ids and 156 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
     # ⚠⚠ D-154 SPENT the integer this guard barred (the live-surface review ship), so
-    # it is NAMED here rather than barred and `### D-155` takes the next-free bar. This is the
+    # it is NAMED here rather than barred and `### D-156` takes the next-free bar. This is the
     # widening D-145 fixed the shape of: a name is ADDED and nothing becomes a `>=`.
     assert "\n### D-154 — Every UI surface walked on the live site" in LOG, (
         "D-154 was spent by the live-surface review ship, so it must be NAMED here rather "
         "than barred")
-    assert "\n### D-155" not in LOG, (
-        "D-155 is the next free integer and must stay unspent until an entry claims it by name — "
+    # ⚠⚠ D-155 SPENT the integer this guard barred (the surface-merge ship), so it is NAMED
+    # here rather than barred and `### D-156` takes the next-free bar. A name is ADDED and
+    # nothing becomes a `>=` — the widening D-145 fixed the shape of.
+    assert "\n### D-155 — One population had two tables" in LOG, (
+        "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
+    assert "\n### D-156" not in LOG, (
+        "D-156 is the next free integer and must stay unspent until an entry claims it by name — "
         "never admitted by a `>=`")
 
 
@@ -518,7 +551,7 @@ def test_the_reserved_map_retires_152_marker_safe_and_the_pointer_moves_here():
     # skipped 152, held it for this lane and moved the pointer to 154 before this branch landed — so
     # there was nothing left to move, and moving it again would have skipped a FREE integer.
     # ⚠ The assertion that matters is unchanged: the pointer must name NO spent or held number.
-    assert "Next free `D-` integer: **`D-155`**" in RESERVED
+    assert "Next free `D-` integer: **`D-156`**" in RESERVED
     for spent in ("D-147", "D-148", "D-149", "D-150", "D-151", "D-152", "D-153"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED, (
             f"the pointer still names {spent}, which would hand a spent or held integer to the "

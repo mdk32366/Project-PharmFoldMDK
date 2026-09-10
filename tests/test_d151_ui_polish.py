@@ -119,7 +119,14 @@ def test_no_route_path_moved_anywhere_in_the_shell():
     before this ship still exists; a label change that quietly relocated one would be the
     defect this entry set out not to commit."""
     app = _strip_jsx_comments(APP)
-    for path in ("/", "/targets", "/target/:id", "/coverage", "/census", "/census/:id",
+    # ⚠⚠ D-155 REMOVED `/coverage`, AND THAT IS THE ONE THING THIS GUARD IS NOT ABOUT. Its claim is
+    # that a LABEL change never moves a path — D-151 renamed the menu entry to *Initial Targets* and
+    # left `/targets` alone. A route deliberately retired by a later entry, with its content merged
+    # into another surface and its four in-app links repointed, is a different act with its own
+    # entry and its own guards (`test_d155_surface_merge.py`). ⚠ It is dropped from this list rather
+    # than the list being loosened: every OTHER path is still asserted, so a rename that relocated
+    # one still reddens here.
+    for path in ("/", "/targets", "/target/:id", "/census", "/census/:id",
                  "/scorer", "/cancer-burden", "/method", "/adcs", "/adcs/pipeline/:id",
                  "/adcs/:id", "/about"):
         assert f'path="{path}"' in app, f"the route {path} left the shell"
@@ -345,7 +352,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     """⚠⚠ **Bar OR name, never neither.** ``### D-151`` is claimed by name here;
     ``### D-148`` is a ``RESERVED.md`` HOLD for the trafficking Spec and stays BARRED;
     ``### D-152`` was spent by the surface-navigation lane D-153 held it for, so it is NAMED
-    rather than barred, and ``### D-155`` takes the next-free bar. ⚠ Nothing is relaxed to a ``>=``: a ``>=`` here
+    rather than barred, and ``### D-156`` takes the next-free bar. ⚠ Nothing is relaxed to a ``>=``: a ``>=`` here
     would pass on a log with no entries at all.
 
     ⚠ The bars are matched WITH their newline, because this file holds such patterns as
@@ -366,18 +373,24 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
         "this assertion barred it and must now NAME it — never delete a bar, and never relax one "
         "to a `>=`")
     assert 154 in ids, "D-154 spent 154 in the live-surface review ship"
-    assert 148 not in ids and 155 not in ids
+    assert 155 in ids, "D-155 spent 155 in the surface-merge ship"
+    assert 148 not in ids and 156 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until "
         "that Spec claims it by name — never admitted by a `>=`")
     # ⚠⚠ D-154 SPENT the integer this guard barred (the live-surface review ship), so
-    # it is NAMED here rather than barred and `### D-155` takes the next-free bar. This is the
+    # it is NAMED here rather than barred and `### D-156` takes the next-free bar. This is the
     # widening D-145 fixed the shape of: a name is ADDED and nothing becomes a `>=`.
     assert "\n### D-154 — Every UI surface walked on the live site" in LOG, (
         "D-154 was spent by the live-surface review ship, so it must be NAMED here rather "
         "than barred")
-    assert "\n### D-155" not in LOG, (
-        "D-155 is the next free integer and must stay unspent until an entry claims it by "
+    # ⚠⚠ D-155 SPENT the integer this guard barred (the surface-merge ship), so it is NAMED
+    # here rather than barred and `### D-156` takes the next-free bar. A name is ADDED and
+    # nothing becomes a `>=` — the widening D-145 fixed the shape of.
+    assert "\n### D-155 — One population had two tables" in LOG, (
+        "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
+    assert "\n### D-156" not in LOG, (
+        "D-156 is the next free integer and must stay unspent until an entry claims it by "
         "name — never admitted by a `>=`")
 
 
@@ -407,7 +420,7 @@ def test_the_reserved_map_retires_151_marker_safe_and_the_pointer_moves_here():
     # 148 remains the trafficking hold. So *"next free"* means the lowest AVAILABLE integer,
     # 154 — and 152 joins the loop below, which is a hold being named as unavailable rather
     # than a bar being relaxed.
-    assert "Next free `D-` integer: **`D-155`**" in RESERVED
+    assert "Next free `D-` integer: **`D-156`**" in RESERVED
     for spent in ("D-147", "D-148", "D-149", "D-150", "D-151", "D-152", "D-153"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED, (
             f"the pointer still names {spent}, which would hand a spent or held integer "

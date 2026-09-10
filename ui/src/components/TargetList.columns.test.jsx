@@ -365,8 +365,16 @@ describe('⚠⚠ column one is bounded and demoted, and no cause is truncated', 
     await ready()
     // no ranking is served in these fixtures, so every row carries the shared 34-char cause
     await waitFor(() => expect(container.textContent).toMatch(/no ranking run is currently served/))
-    const cause = container.querySelector('.rank-cause')
-    expect(cause.textContent).toBe('no ranking run is currently served')
+    // ⚠⚠ FOLLOWED THE CAUSE AT D-155 — IT MOVED CELLS, IT WAS NOT SHORTENED. The Rank column is
+    // now the width of the integer it holds and the cause renders beside the disposition it
+    // explains, in `.status-cause`. **The claim this guard makes is unchanged and is the one that
+    // matters: every character, never a truncation** — `toBe`, not `toMatch`, so a `slice(0, 70)`
+    // creeping back in reddens exactly as it would have before.
+    const cause = container.querySelector('.status-cause')
+    expect(cause.textContent.trim()).toBe('— no ranking run is currently served')
+    // and the cell it left holds the category in a word, never a number and never a bare dash
+    // ⚠ `tbody` scoped: the class is on the `<th>` too, and an unscoped query finds the HEADER
+    expect(container.querySelector('tbody .col-rank-num').textContent.trim()).toBe('unranked')
   })
 
   it('bounds the column in the stylesheet — a RULE, never a comment mentioning one', () => {
@@ -458,7 +466,14 @@ describe('what the new columns must NOT have disturbed', () => {
     const at = (re) => labels.findIndex((l) => re.test(l))
     expect(at(/description/i)).toBeGreaterThan(at(/^Accession/))
     expect(at(/cancer association/i)).toBeGreaterThan(at(/description/i))
-    expect(at(/fold confidence/i)).toBeGreaterThan(at(/cancer association/i))
+    // ⚠⚠ D-155: `Fold confidence` is no longer a column of its own — it is axis C of the Status
+    // cell, which also absorbed `/coverage`'s Disposition and Fold columns when that route was
+    // merged into this one. The ORDERING CLAIM is unchanged and still asserted: identity first,
+    // then the two D-142 columns, then the status block last. ⚠ The header text is asserted to
+    // still NAME confidence, so the merge cannot quietly drop the word that D-048's demotion
+    // depends on.
+    expect(at(/^Status/i)).toBeGreaterThan(at(/cancer association/i))
+    expect(labels.join(' ')).toMatch(/confidence/i)
   })
 
   it('spans the unranked heading across every column, including the two new ones', async () => {

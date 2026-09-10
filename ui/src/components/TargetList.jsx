@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getAssociations, getCoverage, getRanking, listAnalyses } from '../api.js'
+import { getAssociations, getCensusSummary, getCoverage, getRanking, listAnalyses } from '../api.js'
 import { bandFor } from '../plddt.js'
 import { nextSort, sortRows } from '../sortRows.js'
 import { filterRows } from '../searchRows.js'
@@ -8,6 +8,15 @@ import { count } from '../plural.js'
 import { summariseAssociations } from '../associationSummary.js'
 import { COHORT_PAPER_DOI, COHORT_PAPER_SHORT, COHORT_PAPER_URL } from '../cohortPaper.js'
 import { HpaCredit } from './HpaAttribution.jsx'
+// ⚠⚠ D-155 — THE THREE PIECES `/coverage` USED TO OWN. That route is gone: it listed the SAME 82
+// rows this table lists, and one population with two tables is a reader asked to hold half a
+// protein's story on each of two pages. `CoverageLine` is the honest denominator (D-024 am. §3),
+// `CensusPopulationStrip` is the second population (D-135), and `coverageNote` / `censusBridge`
+// are the per-row facts — all three arrive unchanged, and each one is a CLAIM rather than a
+// layout, which is why none of them is inside a `<details>` here either.
+import CoverageLine from './CoverageLine.jsx'
+import CensusPopulationStrip from './CensusPopulationStrip.jsx'
+import { coverageNote, hasCoverageNote } from './coverageNote.jsx'
 
 // The picker over the folded targets (light list, D-034). mean pLDDT carries its band inline, so the
 // list tells the confidence story before a structure is opened, and the reader sees the ceiling (no
@@ -86,8 +95,15 @@ const PLDDT_LENS_NOTE =
 // typographically secondary to the integer it stands in for. **Demotion is not deletion** is the
 // standing rule on this surface (see the confidence block above), and it governs here too.
 const COLUMNS = [
-  // ⚠ The scorer's ordering, and the default. Unranked rows carry their CAUSE here, never a number.
-  { key: 'rank', label: 'Rank' },
+  // ⚠ The scorer's ordering, and the default. An unranked row shows a DASH here and its cause in
+  // the Status cell (D-155) — never a number, and never a position it does not hold.
+  // ⚠⚠ THE CAUSE MOVED BECAUSE OF WHAT IT COST HERE, MEASURED. At 1,200 px this column was
+  // **140 px** — 12% of the table — for content that is a one- or two-digit integer on 68 of 83
+  // rows; the width was set by the 15 rows carrying a cause phrase and by one 435-character group
+  // heading. `.col-rank`'s cap then wrapped those phrases over four lines, which is where the mean
+  // row height came from. ⚠ **Demotion is not deletion**: every character of every cause still
+  // renders, one cell to the right, beside the disposition it explains.
+  { key: 'rank', label: 'Rank', className: 'col-rank-num' },
   { key: 'gene', label: 'Gene' },
   { key: 'accession', label: 'Accession' },
   // ⚠⚠ THE DESCRIPTION, AND IT IS **NOT** THE LIST PAYLOAD'S `label` (D-142). `/api/analyses`
@@ -108,8 +124,20 @@ const COLUMNS = [
   { key: null, label: 'Cancer association', className: 'col-assoc' },
   { key: 'tier', label: 'Tier' },
   { key: 'mean_plddt', label: 'mean pLDDT' },
-  // Not sortable by design (see above); demoted per the confidence-demotion order.
-  { key: null, label: 'Fold confidence', className: 'col-secondary' },
+  // ⚠⚠ D-155 — ONE STATUS COLUMN WHERE THERE WERE FOUR FACTS ON TWO PAGES, and it is the D-150
+  // census pattern applied to the cohort rather than a new invention. `/coverage` carried
+  // **Disposition** and **Fold** as columns of their own; this list carried **Fold confidence** as a
+  // third, and the *cause* of an absent rank sat in a fourth place again — the Rank cell. A reader
+  // scanning for *"what happened to this target?"* had to read two pages and three columns.
+  // ⚠ The four are orthogonal and stay orthogonal, stacked as separate lines in one cell:
+  // *disposition* (ranked / held out / excluded — D-024's partition), *fold* (folded / failed /
+  // not yet — D-043's three values, never a fourth), and *confidence* (the band, demoted, only
+  // where a fold exists). Nothing is merged into a composite and nothing is dropped.
+  // ⚠⚠ SORTS ON `disposition`, WHICH IS THE PARTITION AND NOT A QUALITY. The other two axes are
+  // deliberately not sortable: `fold_status` would order a cohort by whether a card was free, and
+  // the band is the demoted signal this surface spent D-048 refusing to lead with.
+  { key: 'disposition', label: 'Status (disposition · fold · confidence)', className: 'col-status',
+    order: ['excluded', 'held_out', 'ranked'] },
 ]
 
 // ⚠⚠ WHY THE UNRANKED ARE PARTITIONED AND NOT SORTED TO THE BOTTOM (owner ruling, TA2).
@@ -276,10 +304,20 @@ function RowCells({ row, rankingServed, foldStatus, absentLabel, covState, assoc
           never a number, never a dash, and never a position it does not hold.
           ⚠ `.col-rank` bounds the column and `.rank-cause` demotes the sentence; every character
           of the cause is still rendered (see the block above `COLUMNS`). */}
-      <td className="mono col-rank">
+      {/* ⚠⚠ D-155 — THE INTEGER, OR THE WORD `unranked`, AND NEVER A BARE DASH. The cause moved to
+          the Status cell in the same row so this column can be the width of the number it holds
+          (measured: 140 px for a two-digit integer on 68 of 83 rows). The ROW stays self-sufficient
+          (D-069); the COLUMN stops paying for a sentence.
+          ⚠⚠ AND THE FIRST DRAFT OF THIS PUT AN EM DASH HERE, WHICH `TargetList.rank.test.jsx`
+          REJECTED BY NAME — *"and never a bare dash"*. The guard was right and the draft was wrong:
+          a dash is an absence with no name, which is the defect this project spends most of its
+          copy avoiding, and the owner's TA2 ruling is that an unranked row is **not** a row with a
+          missing number. So the cell states the category in a word, `title` carries the cause on
+          hover, and the Status cell carries it in text for everyone else. */}
+      <td className="mono col-rank-num">
         {row.rank != null
           ? row.rank
-          : <span className="rank-cause">{rankCause(row, rankingServed)}</span>}
+          : <span className="rank-absent" title={rankCause(row, rankingServed) || undefined}>unranked</span>}
       </td>
       {/* ⚠⚠ A cohort member with no analysis row has no card to open. `/target/null` would be a
           link that 404s, which is worse than no link — it invites a click and then denies it. The
@@ -298,11 +336,79 @@ function RowCells({ row, rankingServed, foldStatus, absentLabel, covState, assoc
         </span>
       </td>
       <td className="mono">{row.mean_plddt != null ? row.mean_plddt.toFixed(2) : '—'}</td>
-      {/* 1b — demoted: the band colour is retained (no information removed) but rendered as a
+      {/* ⚠⚠ D-155 — THE STATUS CELL: three orthogonal lines, and the disclosure that holds the
+          long reasons. 1b's demotion is inherited and not undone — the band colour is still a
           secondary signal rather than the row's most eye-catching element. */}
-      <td className="col-secondary">
+      <td className="col-status">
+        <StatusCell row={row} rankingServed={rankingServed} foldStatus={foldStatus}
+                    absentLabel={absentLabel} band={band} absent={absent} />
+      </td>
+    </>
+  )
+}
+
+//: The words for D-024's partition, spelled for a reader rather than for the payload. ⚠ `held_out`
+//: is not a judgement about the protein — D-021 holds it out because its boundary method is not
+//: comparable, which the disclosure below says in full.
+const DISPOSITION_COPY = {
+  ranked: 'in the ranking set',
+  held_out: 'held out of ranking',
+  excluded: 'excluded from the cohort',
+}
+
+/**
+ * D-155 — one cell, three orthogonal answers, and every long reason one click away.
+ *
+ * ⚠⚠ THIS IS D-150's CENSUS PATTERN, NOT A NEW ONE. That entry split *structure served · scored ·
+ * seam* into three lines on the census because one word (`Folded`) had been doing all three jobs
+ * and **could not be wrong**. The cohort had the mirror-image defect: four facts spread across two
+ * pages and four columns, so nothing was wrong anywhere and no single place answered *what
+ * happened to this target*.
+ *
+ * ⚠ THE THREE AXES:
+ *   A · disposition — `ranked` / `held_out` / `excluded`, D-024's partition. Sortable.
+ *   B · fold — `folded` / `failed` / `not yet`, D-043's three values. **A census structure of the
+ *       same accession never becomes a fourth value**; it renders as a labelled bridge chip in the
+ *       disclosure and says it is a different population (D-135 / D-081).
+ *   C · confidence — the band, and ONLY where a fold exists. An absent fold shows its cause here
+ *       instead, which is where `/targets`' old Fold-confidence column already put it.
+ *
+ * ⚠⚠ THE DISCLOSURE IS A CONTROL OVER LENGTH, NEVER OVER A CLAIM. Every row's disposition, fold
+ * and confidence are visible without opening anything. What collapses is the *prose*: a fold
+ * failure's full text (IGF2R's is 765 characters), an exclusion reason, and the census bridge.
+ * Measured on `/coverage` at 1,200 px: that prose was a column **58% of the table's width** with
+ * content on **3 of 82 rows**. ⚠ It is not `open` by default and it is not rendered at all where
+ * the row has nothing to disclose — a control that opens onto nothing promises a reason the record
+ * does not hold.
+ */
+function StatusCell({ row, rankingServed, foldStatus, absentLabel, band, absent }) {
+  const st = foldStatus[row.accession]
+  const foldState = row.fold_status ?? st?.fold_status
+  const cause = rankCause(row, rankingServed)
+  // ⚠ The note reads the COVERAGE row's field names, which are already joined onto `row` upstream
+  // (`fold_status`, `disposition`) plus the two the merge threads through — see the `all` map.
+  const note = hasCoverageNote(row) ? coverageNote(row) : null
+  return (
+    <div className="status-cell">
+      {/* A · the partition. ⚠ For an unranked row the CAUSE rides with it, because "held out" and
+          "excluded by the pLDDT floor" answer the same question at two different depths. */}
+      <span className={`status-line status-disposition disp-${row.disposition ?? 'unknown'}`}>
+        {row.disposition
+          ? (DISPOSITION_COPY[row.disposition] ?? row.disposition)
+          : <span className="unknown">disposition not recorded</span>}
+        {cause && <span className="status-cause"> — {cause}</span>}
+      </span>
+      {/* B · the fold. ⚠ Three values and never a fourth (D-043). */}
+      <span className="status-line status-fold">
+        {foldState === 'folded' ? <span className="folded">folded</span>
+          : foldState === 'failed' ? <span className="failed">fold failed</span>
+          : foldState === 'not_folded' ? <span className="not-folded">not folded</span>
+          : <span className="unknown">fold state unavailable</span>}
+      </span>
+      {/* C · the confidence, demoted, and only where a fold exists. */}
+      <span className="status-line status-confidence col-secondary">
         {absent ? (
-          <span className="absent-reason" title={foldStatus[row.accession]?.fail_reason || undefined}>
+          <span className="absent-reason" title={st?.fail_reason || undefined}>
             {absentLabel(row)}
           </span>
         ) : (
@@ -310,8 +416,14 @@ function RowCells({ row, rankingServed, foldStatus, absentLabel, covState, assoc
             <span className="dot dot-secondary" style={{ background: band.color }} /> {band.label}
           </>
         )}
-      </td>
-    </>
+      </span>
+      {note && (
+        <details className="status-note">
+          <summary>why</summary>
+          <div className="note-cell">{note}</div>
+        </details>
+      )}
+    </div>
   )
 }
 
@@ -322,6 +434,11 @@ export default function TargetList() {
   const [sort, setSort] = useState(null)          // null = the default order
   const [foldStatus, setFoldStatus] = useState({}) // accession -> { fold_status, fail_reason }
   const [coverage, setCoverage] = useState([])     // the 82 manifest rows, for the members with no analysis
+  // ⚠ D-155 — the two suppliers `/coverage` used to own, now consumed here. `coverageObj` is
+  // D-024's partition object; `census` is the SECOND population (D-135) and is deliberately kept
+  // apart from every cohort number on this page — it has no denominator and shares none.
+  const [coverageObj, setCoverageObj] = useState(null)
+  const [census, setCensus] = useState(null)
   const [query, setQuery] = useState('')
   const [ranks, setRanks] = useState(null)         // accession -> rank, from the pre-registered run
   // ⚠ D-142: the two new columns each track their supplier's state explicitly — see the enum above.
@@ -342,6 +459,12 @@ export default function TargetList() {
       .then(() => getCoverage())
       .then((cov) => {
         const rows_ = cov?.rows ?? []
+        // ⚠⚠ D-155: the `coverage` OBJECT, not just its rows. `CoverageLine` states D-024's
+        // partition and reads `coverage.denominator` — the manifest's 82, computed by
+        // `core/manifest.py` and never by counting what happened to be fetched. Storing the object
+        // separately is what keeps that denominator a property of the cohort rather than of this
+        // page's luck with a request.
+        setCoverageObj(cov?.coverage ?? null)
         const map = {}
         for (const r of rows_) {
           if (r?.accession) {
@@ -361,7 +484,16 @@ export default function TargetList() {
         setCoverage(rows_)
         setCovState(SUPPLIER_LOADED)
       })
-      .catch(() => { setFoldStatus({}); setCoverage([]); setCovState(SUPPLIER_FAILED) })
+      .catch(() => { setFoldStatus({}); setCoverage([]); setCoverageObj(null); setCovState(SUPPLIER_FAILED) })
+  }, [])
+
+  // ⚠⚠ D-155 / D-135 — THE SECOND POPULATION, GUARDED THE WAY `/coverage` GUARDED IT.
+  // `Promise.resolve().then(...)` so a supplier that throws SYNCHRONOUSLY — or is not a promise at
+  // all — costs this page the census strip and never the cohort table it exists for. ⚠ The strip
+  // renders below the table and is NOT collapsed: D-135 exists because this project once described
+  // 82 proteins and said nothing about the 3,467, and moving a block is not demoting it.
+  useEffect(() => {
+    Promise.resolve().then(() => getCensusSummary()).then(setCensus).catch(() => setCensus(null))
   }, [])
 
   // ⚠⚠ D-142 — THE ASSOCIATION MAP, FROM THE SUPPLIER THAT ALREADY SERVES IT (D-053). The grid is
@@ -428,10 +560,29 @@ export default function TargetList() {
   for (const c of coverage) {
     if (c?.accession && c.protein_name) descriptions[c.accession] = c.protein_name
   }
+  // ⚠⚠ D-155 — THE WHOLE COVERAGE ROW, BY ACCESSION. `/coverage`'s Note cell read four fields this
+  // list never joined (`excluded`, `exclusion_reason`, `fail_reason`, `census_sibling`), so the
+  // merge threads them onto the row rather than reaching into a second map inside the cell. ⚠ The
+  // cohort's own fields WIN on collision: `tier` and `tier_reason` fall back to coverage only where
+  // the analyses row has none, which is exactly the two members that have no analyses row at all
+  // (`FAT2`, `MUC16`) and rendered a bare `—` in the Tier column until now.
+  const covByAccession = {}
+  for (const c of coverage) if (c?.accession) covByAccession[c.accession] = c
   // ⚠ rank and the coverage facts join onto the row so one sort mechanism sees everything.
   const rankMap = ranks ?? {}
   const all = [...rows, ...missing].map((r) => ({
     ...r,
+    ...(() => {
+      const c = covByAccession[r.accession] ?? {}
+      return {
+        excluded: c.excluded ?? false,
+        exclusion_reason: c.exclusion_reason ?? null,
+        fail_reason: c.fail_reason ?? null,
+        census_sibling: c.census_sibling ?? null,
+        tier: r.tier ?? c.tier ?? null,
+        tier_reason: r.tier_reason ?? c.tier_reason ?? null,
+      }
+    })(),
     rank: rankMap[r.accession] ?? null,
     // ⚠⚠ JOINED ONTO THE ROW, not read inside the cell, and that is what makes the header sortable:
     // `sortRows` reads `r[key]`, so a description that lived only in JSX would render a sort
@@ -548,6 +699,18 @@ export default function TargetList() {
         {nNever > 0 && <>, {nNever} too large to attempt</>}. Start with{' '}
         <Link to="/target/1">NECTIN4 →</Link> (the target of a marketed ADC, enfortumab vedotin).
       </p>
+      {/* ⚠⚠ D-155 — THE HONEST DENOMINATOR LEADS THIS PAGE NOW, AND IT IS NOT COLLAPSED. It was the
+          headline of `/coverage`, which listed these same 82 rows; that route is gone and its claim
+          came with it rather than being summarised. D-024 amendment §3 requires the intersection
+          `ranked ∧ folded` — never the ranked count, never the folded count, both of which overstate
+          the cohort toward completeness — and `CoverageLine` computes it from the rows, unchanged.
+          ⚠ It sits ABOVE the lede's own counts on purpose: the lede says how many folded, and this
+          says how many of those are actually in the ranking set. The reader meets the stricter
+          number first.
+          ⚠ ABSENT SUPPLIER, ABSENT LINE — never a zero. If `/api/coverage` could not be reached the
+          panel does not render and `covState` already tells the columns below to say so; a
+          denominator drawn from an empty fetch would read as a cohort that shrank. */}
+      {coverageObj && <CoverageLine coverage={coverageObj} rows={all} />}
       {/* 1c — the one sentence that inoculates the glance, before any detail panel is opened.
           OWNER-COPY PLACEHOLDER: substance fixed, wording for the owner to finalise.
           ⚠⚠ D-152 MOVED IT UP AND REFUSED TO COLLAPSE IT. It is this surface's standing claim —
@@ -620,6 +783,14 @@ export default function TargetList() {
           {query.trim() && <> matching &ldquo;{query.trim()}&rdquo;</>}
           {filtered.length === 0 && <> — nothing here matches. The alias index covers names like
             HER2 and CD30; a protein absent from the cohort will not appear here even so.</>}
+          {/* ⚠⚠ D-155 — THE SENTENCE ARRIVED WITH THE HEADLINE, AND IT MATTERS MORE HERE THAN IT DID
+              ON `/coverage`. A filtered table under an unqualified total was already the defect this
+              line was written for; now there is a DENOMINATOR PANEL directly above the filter, so a
+              reader who types `CA-125` sees one row beneath "67 ranked & folded of 82" and has to be
+              told, in words, that the second number is a property of the cohort and not of their
+              search. ⚠ `CoverageLine` computes from the UNFILTERED rows — this states what the code
+              already does, which is the only kind of claim worth printing. */}
+          {' '}The denominator above is unchanged: it is a property of the cohort, not of this filter.
         </p>
       )}
       {/* ⚠⚠ TA3 / D-102 — THE LENS IS STATED WHERE THE LENS IS APPLIED. pLDDT is still available as
@@ -794,6 +965,18 @@ export default function TargetList() {
           block, held out of the same control, for the same reason `D-151` held it out on the
           census. */}
       {assocCredit && <HpaCredit attribution={assocCredit} />}
+      {/* ⚠⚠ D-155 / D-135 — THE SECOND POPULATION, BELOW THE TABLE AND OUTSIDE EVERY DISCLOSURE.
+          It arrived here with `/coverage`, and every clause of D-135 still holds: it is below the
+          coverage line, labelled *a different population*, carries no denominator and no fraction,
+          and its chips keep the assembled caveat beside them (D-133 am. 1).
+          ⚠ WHY IT MATTERS MORE ON THIS PAGE THAN ON THE ONE IT LEFT: this table is the cohort of
+          82 with a rank column, and the census is 3,467 rows that are deliberately NOT ranked
+          (D-079 dec 1). A reader who leaves this page believing the 82 is the whole of the work is
+          the exact misreading D-135 was written to prevent, and they are more likely to form it
+          here — beside a ranking — than they were beside a coverage table.
+          ⚠ NOT a `<details>`, for that reason: a claim about the scale of the work is not an
+          explanatory aside. Moving a block is not demoting it; hiding one is. */}
+      <CensusPopulationStrip summary={census} />
     </div>
   )
 }

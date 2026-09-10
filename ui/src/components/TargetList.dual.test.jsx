@@ -1,4 +1,8 @@
-// D-135 — `/coverage` carries TWO populations, and neither number is allowed to stand for the other.
+// D-135 — the cohort surface carries TWO populations, and neither number may stand for the other.
+//
+// ⚠⚠ MOVED FROM `/coverage` TO `/targets` AT D-155, AND NOT ONE ASSERTION WAS DROPPED. That route
+// listed the same 82 rows this one does; it is gone, and every claim it defended came here with it.
+// The file is renamed for the component it now renders — the claims below are D-135's, unchanged.
 //
 // ⚠⚠ THE DEFECT THESE PIN, AND THE ONE THE FIX COULD HAVE INTRODUCED. The page described the cohort
 // and said nothing about the census, so a reader who arrived at "the honest denominator" learned the
@@ -15,9 +19,12 @@ import { render as rtlRender, screen, waitFor, within } from '@testing-library/r
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-vi.mock('../api.js', () => ({ getCoverage: vi.fn(), getCensusSummary: vi.fn() }))
-import { getCoverage, getCensusSummary } from '../api.js'
-import CoverageView from './CoverageView.jsx'
+vi.mock('../api.js', () => ({
+  getCoverage: vi.fn(), getCensusSummary: vi.fn(),
+  listAnalyses: vi.fn(), getAssociations: vi.fn(), getRanking: vi.fn(),
+}))
+import { getCoverage, getCensusSummary, listAnalyses, getAssociations, getRanking } from '../api.js'
+import TargetList from './TargetList.jsx'
 
 const render = (ui) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>)
 
@@ -69,8 +76,24 @@ const CENSUS = {
   ],
 }
 
+// ⚠ The analyses rows are the SAME accessions as the coverage fixture, because that is the real
+// shape: `/api/analyses` is the folded cohort and `/api/coverage` is the manifest's 82. A row's
+// disposition and fold_status come from coverage on both surfaces, which is why the headline
+// arithmetic below is identical to the one this file asserted against `/coverage`.
+const ANALYSES = COVERAGE.rows.map((r, i) => ({
+  id: r.analysis_id ?? null,
+  accession: r.accession,
+  gene: r.gene,
+  label: r.gene,
+  mean_plddt: r.fold_status === 'folded' ? 70 + i : null,
+  tier: r.tier,
+  tier_reason: r.tier_reason ?? null,
+  disposition: r.disposition,
+  aliases: null,
+}))
+
 const mounted = async () => {
-  const out = render(<CoverageView />)
+  const out = render(<TargetList />)
   await waitFor(() => expect(out.container.textContent).toMatch(/ranked & folded/))
   return out
 }
@@ -79,6 +102,11 @@ beforeEach(() => {
   vi.clearAllMocks()
   getCoverage.mockResolvedValue(COVERAGE)
   getCensusSummary.mockResolvedValue(CENSUS)
+  listAnalyses.mockResolvedValue(ANALYSES)
+  // ⚠ additive suppliers: this file's subject is the two populations, and neither of these may
+  // change a count. They resolve empty so the columns state their own absence and nothing else.
+  getAssociations.mockResolvedValue({ associations: {}, attributions: {}, cutoff: 100 })
+  getRanking.mockResolvedValue({ rows: [] })
 })
 
 describe('D-135 — the headline is still the cohort intersection, with the census on screen', () => {
@@ -238,7 +266,11 @@ describe('D-135 — the failed cohort row gets a bridge, and stays failed', () =
   // still FAILED. Prove it bites by letting the bridge change the fold cell.
   it('keeps the fold cell reading failed, with its reason', async () => {
     const row = await bridgeRow()
-    expect(within(row).getByText('failed')).toBeInTheDocument()
+    // ⚠⚠ D-155: the fold verdict is axis B of the Status cell rather than a column of its own, and
+    // it reads `fold failed` because there is no column header above it to supply the noun. The
+    // claim is unchanged and the assertion is now STRICTER — it pins the axis element itself, so a
+    // future edit that moves the word into a neighbouring line reddens instead of passing.
+    expect(row.querySelector('.status-fold').textContent.trim()).toBe('fold failed')
     expect(row.textContent).toMatch(/CUDA out of memory/)
     expect(row.textContent).not.toMatch(/folded elsewhere/i)
   })
@@ -264,7 +296,9 @@ describe('D-135 — the failed cohort row gets a bridge, and stays failed', () =
   // definition with nothing on screen saying so.
   it('never puts a census target under the cohort Target link', async () => {
     const { container } = await mounted()
-    const geneLinks = [...container.querySelectorAll('tbody tr td:first-child a')]
+    // ⚠ D-155: Rank is column one on the merged table, so the GENE cell is `nth-child(2)`. The
+    // claim — a cohort link never opens a census row — is untouched; only the index moved.
+    const geneLinks = [...container.querySelectorAll('tbody tr td:nth-child(2) a')]
       .map((a) => a.getAttribute('href'))
     expect(geneLinks.length).toBeGreaterThan(0)
     for (const href of geneLinks) {
@@ -274,7 +308,7 @@ describe('D-135 — the failed cohort row gets a bridge, and stays failed', () =
     // ⚠ and the failed row has NO gene link at all — it has no cohort fold to open
     const failed = [...container.querySelectorAll('tbody tr')]
       .find((tr) => tr.textContent.includes('Q00005'))
-    expect(failed.querySelector('td:first-child a')).toBeNull()
+    expect(failed.querySelector('td:nth-child(2) a')).toBeNull()
   })
 
   // ⚠ A tile window is not the protein (D-118). `folded: false` on the sibling, so no bridge.
@@ -311,6 +345,12 @@ describe('D-135 — the failed cohort row gets a bridge, and stays failed', () =
       rows: [{ accession: 'P11717', gene: 'IGF2R', disposition: 'ranked', fold_status: 'failed',
         tier: 'rental', fail_reason: 'CUDA out of memory.' }],
     })
+    // ⚠⚠ D-155: on the merged surface a row exists if `/api/analyses` OR the manifest has it, and
+    // an ATTEMPTED-AND-FAILED target is in `/api/analyses` — that is how the live cohort serves
+    // IGF2R. The old `/coverage` page drew its rows from one supplier, so this fixture named one;
+    // naming only the manifest here would assert against a row the merged page never renders.
+    listAnalyses.mockResolvedValue([{ id: 57, accession: 'P11717', gene: 'IGF2R', label: 'IGF2R',
+      mean_plddt: null, tier: 'rental', tier_reason: null, disposition: 'ranked', aliases: null }])
     const { container } = await mounted()
     expect(container.textContent).toMatch(/Neither substitutes for the other/)
     expect(container.querySelector('.chip-census-sibling')).toBeNull()

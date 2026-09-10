@@ -159,7 +159,7 @@ export default function AdcContext() {
         Enfortumab vedotin proves the <em>mechanism</em>; it says nothing about how easy
         the next target is. A tool built in admiration of the one that worked could quietly encode
         "find me more NECTIN4s" — and the{' '}
-        <Link to="/coverage">honest coverage line</Link>, the confidence bands, and the
+        <Link to="/targets">honest coverage line</Link>, the confidence bands, and the
         detection-not-explanation boundary (<Link to="/method">method</Link>) are the discipline that
         prevents exactly that.
       </p>
