@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listAnalyses } from '../api.js'
 import { HELDOUT_EXAMPLES } from '../heldoutExamples.js'
@@ -18,6 +18,11 @@ import {
 } from '../aboutPaper.js'
 import { COHORT_PAPER_SHORT, COHORT_PAPER_URL } from '../cohortPaper.js'
 import AdcSchematic from './AdcSchematic.jsx'
+// ⚠⚠ D-155 follow-up 3 — THE SAME RAIL `/method` USES, NOT A SECOND ONE. `MethodToc` reads its
+// entries off the headings of whatever subtree it is given, so a third prose page costs a ref
+// and an import rather than a component. `F-052` is the entry about the caller that invents a
+// second convention because the first one was named after where it happened to land first.
+import MethodToc from './MethodToc.jsx'
 import AdcMechanismPanels from './AdcMechanismPanels.jsx'
 import Term from './Term.jsx'
 
@@ -87,9 +92,25 @@ export default function AdcContext() {
       .catch(() => setStats(null))
   }, [])
 
+  // ⚠ D-155 follow-up 3: the rail's entries come out of this subtree, never from a list kept here.
+  const body = useRef(null)
+
   return (
-    <div className="prose">
-      <h2>What an <Term name="ADC">ADC</Term> is, and why target choice is the hard part</h2>
+    /* ⚠⚠ D-155 FOLLOW-UP 3 — THE `/method` LAYOUT, ON THE THIRD PROSE PAGE. `main.wide` gave this
+       route 96rem and `.prose` then filled every pixel of it, so a paragraph ran to ~148 characters
+       — the owner's complaint answered into a different complaint. The remedy is the shape this
+       site already ships: a contents rail beside a body at a reading measure.
+       ⚠ THE GRID CLASS IS `method-layout` AND THAT IS DELIBERATE. Renaming it to something neutral
+       would have meant touching `/method`'s shipped guards to buy a better word; the name records
+       where the pattern came from, and `about-layout` rides beside it for anything this page needs
+       that `/method` does not. */
+    <div className="method-layout about-layout">
+      {/* ⚠ The rail reads its entries out of THIS subtree's headings, so it cannot list a section
+          the page does not carry — D-138's rule, inherited with the component rather than restated
+          in a hand-kept list that would eventually name a section that is not here. */}
+      <MethodToc bodyRef={body} />
+      <div className="prose about" ref={body} data-testid="about-body">
+      <h2 id="what-an-adc-is">What an <Term name="ADC">ADC</Term> is, and why target choice is the hard part</h2>
 
       <p>
         Standard chemotherapy is a blunt weapon: it attacks fast-dividing cells all over the body,
@@ -108,7 +129,7 @@ export default function AdcContext() {
       {/* D-097: anatomy, then process. The schematic above names the parts; the panels below show
           what those parts do, in order. ⚠ The order is load-bearing — "the linker is cut" in panel
           3 is unreadable to someone who has not been shown a linker. */}
-      <h3>What happens when it reaches the tumour cell</h3>
+      <h3 id="inside-the-tumour-cell">What happens when it reaches the tumour cell</h3>
       <p>
         Those parts act in a sequence. The antibody finds its target on the cell surface and binds
         it; the cell draws the whole assembly inside; the linker is cut; and the payload is released
@@ -118,7 +139,7 @@ export default function AdcContext() {
 
       <AdcMechanismPanels />
 
-      <h3>What the mechanism does not license</h3>
+      <h3 id="what-the-mechanism-does-not-license">What the mechanism does not license</h3>
       <p>
         The metaphor is about delivery, not cure. ADCs are a real advance — enfortumab vedotin
         targets <strong>NECTIN4</strong> and changed outcomes in bladder cancer — but the payload is
@@ -128,7 +149,7 @@ export default function AdcContext() {
         target.
       </p>
 
-      <h3>Why this project exists</h3>
+      <h3 id="why-this-project-exists">Why this project exists</h3>
       <p>
         A target must be well-expressed on tumour cells, spare enough on healthy tissue, accessible to
         an antibody, and stable enough not to be simply switched off under pressure.{' '}
@@ -144,7 +165,7 @@ export default function AdcContext() {
         )}. <Link to="/target/1">See its structure →</Link>
       </p>
 
-      <h3>⚠ The success case is a bad prior — and this cohort's own data shows it</h3>
+      <h3 id="success-case-is-a-bad-prior">⚠ The success case is a bad prior — and this cohort's own data shows it</h3>
       <p>
         NECTIN4 is well-expressed, accessible, and stable. <strong>Most candidates are not.</strong>{' '}
         {stats ? (
@@ -166,7 +187,7 @@ export default function AdcContext() {
       {/* F-009 — the cohort-boundary paragraph. OWNER-COPY PLACEHOLDER: substance fixed by the order,
           wording for the owner to finalise. The example targets are DERIVED from heldoutExamples.js,
           which is drift-tested against data/heldout_positives.csv, so no accession is hand-typed. */}
-      <h3>What the 82 is — a comparator, not a census</h3>
+      <h3 id="what-the-82-is">What the 82 is — a comparator, not a census</h3>
       {/* ⚠ D-151: the paper is an ANCHOR here as well, from the same constant `/targets` reads.
           `/targets` sends a reader here for what the 82 is; arriving at a second unlinked mention
           of the same paper would make the trail end one page later than it looks like it does. */}
@@ -243,7 +264,7 @@ export default function AdcContext() {
 
       {/* ⚠ D-094 amendment 1 dec 3. Placed after "Why this project exists", before "What's next".
           ⚠ The standing line is NOT a footnote and is NOT trimmed to fit a layout. */}
-      <h3>The questions this project is trying to answer</h3>
+      <h3 id="the-questions">The questions this project is trying to answer</h3>
       <p className="note">
         The register in the repository governs. This page is derived from it and is not a source of
         truth. Nothing below has been submitted for publication and nothing has been peer-reviewed.
@@ -259,12 +280,13 @@ export default function AdcContext() {
       {/* D-107: future msa tier, named and marked not-built. ESMFold remains the cheap first pass
           we actually run. AlphaFold 3 is out of scope until a license and a compute path still mean
           we ran it. The 48 hold and the 246 reap are not this entry. */}
-      <h3>What&rsquo;s next (not built)</h3>
+      <h3 id="whats-next">What&rsquo;s next (not built)</h3>
       <p>
         A second fold recipe beside ESMFold — MSA search, then an AF2-class model. Same queue, same
         artifacts, same UI. ESMFold stays the cheap first pass. AlphaFold 3 is out of scope until we
         can name a license and a compute path that still means we ran it.
       </p>
+      </div>
     </div>
   )
 }

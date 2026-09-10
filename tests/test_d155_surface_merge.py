@@ -371,3 +371,51 @@ def test_the_reason_for_a_hold_stays_on_the_row_after_the_cause_is_dropped():
     # string is asserted where it actually matters, on the rendered title, in the vitest file.
     assert "judgement about the target" in TARGET_LIST
     assert "title={DISPOSITION_WHY[row.disposition] || undefined}" in TARGET_LIST
+
+
+def test_the_prose_pages_get_a_reading_measure_inside_the_wide_frame():
+    """⚠⚠ FOLLOW-UP 3 — THE OWNER'S FIRST COMPLAINT ANSWERED INTO A SECOND ONE, AND THEN INTO A
+    LAYOUT. Lifting `.prose`'s measure stopped the left-justified column and gave `/` and `/about`
+    paragraphs of about **148 characters** (measured on the deployed build). The fix the owner asked
+    for is a layout that USES the width, not a longer line — so both pages get `/method`'s shape: a
+    contents rail beside a body at a reading measure.
+
+    ⚠ THE MEASURE IS THE POINT AND IS PINNED. A grid with no `ch` bound on the body would look like
+    a two-column layout and read exactly as badly."""
+    wide = CSS.split("@media (min-width: 1100px)")
+    block = next(b for b in wide if "main.wide .story" in b)
+    assert "grid-template-columns: 14rem minmax(0, 78ch)" in block, (
+        "the Story body lost its reading measure or its rail column")
+    assert "main.wide .method-layout > .prose { max-width: 78ch; }" in block, (
+        "/about's body fills the whole wide frame again")
+    # ⚠ read to the closing brace rather than a fixed slice: the rule carries a long comment, and a
+    # character count that happens to end before the declaration is a guard that passes on nothing.
+    rail = block.split("main.wide .story > .story-toc")[1]
+    rail = rail[: rail.index("}")]
+    assert "position: sticky" in rail, (
+        "the Story rail stopped being sticky — a contents list you scroll away from is a heading")
+    assert "grid-row: 1 / span" in rail, (
+        "the rail no longer spans the rows, so its sticky box has no area to stick inside")
+
+
+def test_the_story_rail_defaults_to_the_body_column():
+    """⚠ A layout whose default is *rail* files the next paragraph somebody adds beside the contents.
+    Every child goes to the body column and the rail is the named exception."""
+    block = next(b for b in CSS.split("@media (min-width: 1100px)") if "main.wide .story" in b)
+    assert "main.wide .story > * { grid-column: 2;" in block
+    assert "main.wide .story > .story-toc" in block
+
+
+def test_about_reuses_the_method_rail_rather_than_growing_a_second_one():
+    """⚠⚠ `F-052` IS THE WHOLE REASON THIS IS A TEST. A third prose page needing a contents rail is
+    exactly when a second rail gets written, named after the page it landed on. ⚠ And the `D-097`
+    exemption survives: the mechanism cartoon is sized to be legible and is allowed past the reading
+    measure, which a blanket `max-width` on the body would have quietly undone."""
+    about = (UI / "components" / "AdcContext.jsx").read_text(encoding="utf-8")
+    assert "import MethodToc from './MethodToc.jsx'" in about, "/about grew its own rail"
+    assert "<MethodToc bodyRef={body} />" in about
+    assert 'className="method-layout about-layout"' in about
+    assert "useRef" in about
+    block = next(b for b in CSS.split("@media (min-width: 1100px)") if "main.wide .story" in b)
+    assert ".adc-panels { max-width: none; }" in block, (
+        "the D-097 cartoon was constrained to the reading measure by a layout ship")
