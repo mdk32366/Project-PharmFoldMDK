@@ -384,9 +384,9 @@ def test_the_prose_pages_get_a_reading_measure_inside_the_wide_frame():
     a two-column layout and read exactly as badly."""
     wide = CSS.split("@media (min-width: 1100px)")
     block = next(b for b in wide if "main.wide .story" in b)
-    assert "grid-template-columns: 14rem minmax(0, 78ch)" in block, (
+    assert "grid-template-columns: 14rem minmax(0, 90ch)" in block, (
         "the Story body lost its reading measure or its rail column")
-    assert "main.wide .method-layout > .prose { max-width: 78ch; }" in block, (
+    assert "main.wide .method-layout > .prose { max-width: 90ch; }" in block, (
         "/about's body fills the whole wide frame again")
     # ⚠ read to the closing brace rather than a fixed slice: the rule carries a long comment, and a
     # character count that happens to end before the declaration is a guard that passes on nothing.
@@ -394,6 +394,20 @@ def test_the_prose_pages_get_a_reading_measure_inside_the_wide_frame():
     rail = rail[: rail.index("}")]
     assert "position: sticky" in rail, (
         "the Story rail stopped being sticky — a contents list you scroll away from is a heading")
+    # ⚠ D-155 follow-up 4: 78ch left 320 px of dead gutter on the right — the owner's original
+    # complaint one step less severe. The measure went to the top of the readable band and what is
+    # left over is spent evenly, so neither page is content pushed against an edge.
+    # ⚠⚠ ASSERTED PER RULE, AND THE FIRST FORM OF THIS DID NOT BITE: a single `in block` check was
+    # satisfied by EITHER page's declaration, so deleting the Story's centring left it green. The
+    # revert proof caught that, which is what a revert proof is for.
+    story_rule = block.split("main.wide .story {")[1]
+    story_rule = story_rule[: story_rule.index("}")]
+    assert "justify-content: center" in story_rule, (
+        "the Story layout is left-justified again, with the slack all on one side")
+    about_rule = block.split("main.wide .method-layout {")[1]
+    about_rule = about_rule[: about_rule.index("}")]
+    assert "justify-content: center" in about_rule, (
+        "the /about and /method layout is left-justified again")
     assert "grid-row: 1 / span" in rail, (
         "the rail no longer spans the rows, so its sticky box has no area to stick inside")
 
@@ -419,3 +433,23 @@ def test_about_reuses_the_method_rail_rather_than_growing_a_second_one():
     block = next(b for b in CSS.split("@media (min-width: 1100px)") if "main.wide .story" in b)
     assert ".adc-panels { max-width: none; }" in block, (
         "the D-097 cartoon was constrained to the reading measure by a layout ship")
+
+
+def test_the_rail_label_leaves_a_glossary_definition_behind():
+    """⚠⚠ FOLLOW-UP 4 — THE SECOND CALLER EXPOSED A LATENT DEFECT IN THE SHARED RAIL, which is the
+    argument for reuse as an event rather than as a principle. A glossary term's tooltip body is a
+    real element (`display: none` since D-152, and **hidden is not absent**), so `textContent` walked
+    it and `/about`'s first rail entry carried the whole definition of ADC.
+
+    ⚠ `/method` has no glossary terms in its headings, so ONE caller could never have shown this.
+    ⚠ Clone-and-strip, never `innerText`: `innerText` is layout-dependent and returns `''` in jsdom,
+    which would put this defect beyond the reach of the suite that guards it."""
+    toc = (UI / "components" / "MethodToc.jsx").read_text(encoding="utf-8")
+    assert "export function headingLabel" in toc
+    assert "label: headingLabel(h)" in toc, "the rail builds its labels the old way again"
+    body = toc[toc.index("export function headingLabel"):]
+    body = body[: body.index("\n}")]
+    assert "cloneNode(true)" in body and "'.term-def'" in body
+    assert "innerText" not in body, (
+        "innerText is layout-dependent and empty in jsdom — the guard would stop being able to see "
+        "the defect it exists for")

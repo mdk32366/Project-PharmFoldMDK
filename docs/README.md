@@ -595,6 +595,24 @@ a screen reader follows and the order a narrow viewport stacks to are unchanged 
 4's rule, applied to a page instead of a table. ⚠ Below 1,100 px both pages stack: a 14rem rail
 beside a 20rem body is worse than no rail.
 
+**⚠⚠ AND THE SECOND CALLER IMMEDIATELY EXPOSED A LATENT DEFECT IN THE RAIL ITSELF, WHICH IS THE
+ARGUMENT FOR REUSE STATED AS AN EVENT RATHER THAN AS A PRINCIPLE.** `/about`'s first heading contains
+a `<Term name="ADC">`, and a glossary term's tooltip body is a real element — `display: none` since
+`D-152`, and **hidden is not absent**. `MethodToc` built its labels with `textContent`, which walks
+it, so the rail's first entry read *"What an ADC**antibody–drug conjugate — a cancer drug that uses
+an antibody to carry a toxic payload straight to a tumour cell** is, and why target choice is the
+hard part"*. ⚠ `/method`'s headings carry no glossary terms, so **one caller could never have shown
+this**; the fix lands once, in the shared component (`headingLabel` clones the heading and strips
+`.term-def`), and both pages get it. ⚠ It clones rather than reading `innerText` — `innerText` is
+layout-dependent and returns `''` in jsdom, which would have made the defect untestable in the suite
+that has to guard it.
+
+**⚠ And the measure was widened once more, because 78ch left the owner's original complaint standing
+in a milder form:** the rail and body used ~940 px of a 1,265 px measure and **320 px of dead gutter
+sat on the right**. The body goes to **90ch** — the top of the readable band, not a stretch to the
+frame — and the grid is **centred**, so what is left over is spent evenly and the page reads as a
+document rather than as content pushed against one edge.
+
 **Residuals, stated rather than closed.**
 - ⚠ **Narrow-viewport layout is still unmeasured** — `D-154`'s residual, unchanged.
 - ⚠ **`/coverage` will 404 into the catch-all redirect** for anyone holding an old link. That is the

@@ -18,6 +18,7 @@ vi.mock('../api.js', () => ({
 }))
 import { listAnalyses, getCoverage, getCensusSummary } from '../api.js'
 import AdcContext from './AdcContext.jsx'
+import { headingLabel } from './MethodToc.jsx'
 import Story from './Story.jsx'
 
 const render = (ui) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>)
@@ -52,7 +53,10 @@ describe('D-155 follow-up 3 · /about gets the rail /method already had', () => 
     const { container } = render(<AdcContext />)
     await waitFor(() => expect(container.querySelector('.method-toc a')).toBeTruthy())
     const body = container.querySelector('[data-testid="about-body"]')
-    const headings = [...body.querySelectorAll('h2[id], h3[id]')].map((h) => h.textContent.trim())
+    // ⚠ D-155 follow-up 4: compared through the SAME rule the rail uses. Reading `textContent`
+    // here would re-introduce the defect into the guard — a heading that contains a glossary term
+    // carries its definition in the DOM, and the rail must not.
+    const headings = [...body.querySelectorAll('h2[id], h3[id]')].map(headingLabel)
     const rail = [...container.querySelectorAll('.method-toc a')].map((a) => a.textContent.trim())
     // ⚠⚠ EQUALITY, NOT CONTAINMENT. A rail that lists a section the page does not carry is the
     // ghost entry D-138 forbids; a rail missing one is the direction an absent `id` fails in.
@@ -87,6 +91,31 @@ describe('D-155 follow-up 3 · /about gets the rail /method already had', () => 
     const t = container.querySelector('[data-testid="about-body"]').textContent
     expect(t.indexOf('Why this project exists')).toBeLessThan(t.indexOf('What the 82 is'))
     expect(t.indexOf('What the 82 is')).toBeLessThan(t.indexOf('The questions this project'))
+  })
+
+  it('never lets a glossary definition into a rail entry', async () => {
+    // ⚠⚠ THE DEFECT THE SECOND CALLER EXPOSED. `/about`'s first heading contains <Term name="ADC">,
+    // whose tooltip body is a real (display:none) element, so `textContent` walked it and the rail
+    // read "What an ADCantibody–drug conjugate — a cancer drug that uses an antibody to carry a
+    // toxic payload straight to a tumour cell is, and why target choice is the hard part".
+    // ⚠ /method's headings carry no terms, so one caller could never have shown this.
+    const { container } = render(<AdcContext />)
+    await waitFor(() => expect(container.querySelector('.method-toc a')).toBeTruthy())
+    const first = container.querySelector('.method-toc a').textContent
+    expect(first).toBe('What an ADC is, and why target choice is the hard part')
+    for (const a of container.querySelectorAll('.method-toc a')) {
+      expect(a.textContent).not.toMatch(/a cancer drug that uses an antibody/)
+      expect(a.textContent.length).toBeLessThan(120)
+    }
+  })
+
+  it('headingLabel strips the definition and keeps the heading', () => {
+    const h = document.createElement('h3')
+    h.innerHTML = 'What an <span class="term">ADC<span class="term-def">a long definition</span></span> is'
+    expect(headingLabel(h)).toBe('What an ADC is')
+    const plain = document.createElement('h2')
+    plain.textContent = '  Where the deep learning runs (D-051)  '
+    expect(headingLabel(plain)).toBe('Where the deep learning runs (D-051)')
   })
 })
 
