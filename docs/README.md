@@ -379,6 +379,131 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-155 — One population had two tables: `/coverage` is merged into `/targets` and its route is retired, the Rank and Fold-confidence columns give their width back, and the three prose surfaces go wide on an owner ruling that **supersedes `D-152` decision 2 in part** — and the disqualifying fact is that the column this merge was most afraid of was **58% of a table serving 3 rows in 82**
+
+- **Date:** 2026-09-10
+- **Status:** Accepted — **one route retired, one table merged, layout and column budget, on `/targets`,
+  `/`, `/method` and `/about`.** ⚠ **No API route is added, removed, renamed or read differently
+  (`GET /api/coverage` is untouched and is now consumed by `/targets`), no schema change, no
+  migration, no `--load` run, no GPU run, nothing re-folded, no tile emitted, no seam claimed
+  solved, `structural_score` does not move, the scorer and the census structural rank are not
+  touched, and no census row becomes scored or ranked.** `D-021`, `D-022`, `D-024` am. §3, `D-034`,
+  `D-038`, `D-043`, `D-048`, `D-051`, `D-053`, `D-060` dec 5, `D-062`, `D-069`, `D-079` dec 1,
+  `D-081`, `D-100`, `D-101`, `D-102`, `D-109`, `D-111`, `D-118`, `D-133` am. 1, `D-134`, `D-135`,
+  `D-138`, `D-142`, `D-150`, `D-151`, `D-154`, `F-024`, `F-049` and `F-052` are cited. **`D-152` is
+  the one entry this amends**, and only its decision 2 — see below.
+- **Owner's words, 2026-09-10, in three messages:** *"I think Initial Targets surface and the
+  Coverage surface may be redundant. What are your thoughts and can we 'mash these up' — integrating
+  the missing elements from Coverage into the Initial Targets surface?"* · *"The Fold Confidence and
+  Rank columns waste quite a bit of real estate. Description can be tightened a little even if you
+  get two lines there."* · *"The Story, Method, and About ADCs surfaces should match the wider format
+  of the other surfaces."*
+
+**⚠⚠ THE DISQUALIFYING FACT, AND IT IS ABOUT THE DESIGN THIS ENTRY ALMOST SHIPPED.** The obvious
+merge is *"add Coverage's three columns to Targets' eight"*, and the first plan said exactly that,
+with a note that eleven columns would need watching. **Measured at 1,200 px before writing any code:
+`/coverage`'s `Note` column was 696 px — 58% of the entire table — and carried content on 3 of its
+82 rows**, because one of those three is IGF2R's 765-character CUDA-OOM text. A column that is more
+than half a table and empty for 96% of it is not a column; it is a disclosure that has been left
+open. ⚠ **So the merged table has EIGHT columns, not eleven**, and the merge cost one column rather
+than three: `Disposition` and `Fold` fold into the Status cell beside the confidence band, and the
+prose goes behind a per-row `why`.
+
+**⚠ The general lesson, and it is the reverse of `D-152`'s.** That entry learned that *the same
+complaint does not imply the same defect*. This one: **the same population does not imply the same
+table, and two tables over one population is a defect no measurement of either one will show.** Both
+surfaces measured fine. What was wrong was that a reader had to hold half a protein's story on each
+of two pages — the rank and the biology here, the disposition and the reason there.
+
+**⚠ Provenance (D-016) — measured on the live site at 1,200 px table width on 2026-09-10, before
+the code was written.**
+
+| | `/targets` before | `/coverage` before |
+|---|---|---|
+| Rows | 83 (82 + the unranked group heading) | 82 |
+| Columns | 8 | 6 |
+| Widest column | Description, 321 px (27%) | **Note, 696 px (58%), content on 3 rows** |
+| `Rank` | **140 px (12%)** — a 1–2 digit integer on **68 of 83** rows; the width was set by 15 cause phrases and one 435-character heading | — |
+| `Fold confidence` | **192 px (16%)**, longest cell 55 characters | — |
+| Mean row height | 77 px (max 176) | 41 px |
+
+**⚠ What the merged surface is NOT measured on, stated rather than implied.** No rendered
+before/after figures for the merged table exist in this ship. The harness `D-152` used — a `vite
+build` served by the real read API and driven by a headless browser — was rebuilt here and **the
+browser available to this session could not reach this machine's loopback at all**
+(`ERR_CONNECTION_REFUSED` on IPv4 and IPv6 alike, while `curl` fetched the same URLs), so the run
+was abandoned rather than approximated. ⚠ **The column budget below is a property of the stylesheet
+and is checkable without a browser; the rendered result is owed and is not claimed.**
+
+| Bound at ≥1100 px | before | after |
+|---|---|---|
+| `.col-rank` → `.col-rank-num` | 13rem | **5rem** |
+| `.col-description` | 24rem | **30rem** |
+| `.col-assoc` | 17rem | 17rem |
+| `.col-status` | *(did not exist)* | **20rem** |
+
+**Decisions.**
+
+1. **`/coverage` is retired from the router, not redirected.** The owner chose deletion over a
+   redirect. ⚠ **So the four in-app links that pointed at it are repointed in this same commit** —
+   three in `Story.jsx`, one in `AdcContext.jsx`, **and two in `TargetScorerPanel.jsx` that the
+   first sweep missed**: a link left behind would bounce a reader to the Story with no explanation,
+   which is the silent-failure half of a deletion. ⚠ `GET /api/coverage` is **untouched** and is
+   what the merged page consumes, so `system-model.json` — which draws API routes — does not move
+   and `D-051` does not fire.
+2. **One Status column carries three orthogonal axes, and it is `D-150`'s census pattern rather than
+   a new invention.** *disposition* (`D-024`'s partition, sortable) · *fold* (`D-043`'s three values,
+   never a fourth) · *confidence* (the band, demoted per `D-048`, only where a fold exists). ⚠ **A
+   census structure of the same accession still never becomes a fourth fold value** — it renders as
+   the labelled bridge chip, by accession, with the sentence saying it is a different population
+   (`D-135` / `D-081` / `D-118`).
+3. **The long reasons go behind a per-row `why`, and nothing else does.** Disposition, fold and
+   confidence are visible on every row without opening anything; what collapses is prose. ⚠ The
+   control is not rendered at all where the row has nothing to disclose — **a disclosure that opens
+   onto nothing promises a reason the record does not hold** — and it is never `open` by default.
+4. **The Rank cell says `unranked`, and the reason it does not say `—` is that a guard said so.**
+   The first draft put an em dash there and `TargetList.rank.test.jsx` rejected it **by name**
+   (*"and never a bare dash"*). The guard was right: a dash is an absence with no name, and the
+   owner's TA2 ruling is that an unranked row is not a row with a missing number. ⚠ The cause moved
+   one cell right, in full — `.status-cause` is asserted with `toBe`, not `toMatch`, so a
+   `slice(0, 70)` creeping back in still reddens.
+5. **`CoverageLine` leads the merged page and `CensusPopulationStrip` closes it; neither is
+   collapsed.** ⚠ **And the filter caveat came with them, because it matters more here:** a reader
+   who types `CA-125` now sees one row underneath *"67 ranked & folded of 82"*, so the sentence
+   *"the denominator above is unchanged: it is a property of the cohort, not of this filter"* is
+   printed where that misread is available. `CoverageLine` computes from the unfiltered rows.
+6. **`/`, `/method` and `/about` join the wide measure, and `D-152` decision 2 is superseded in
+   part.** That decision held them out on the reasoning that *"widening a paragraph makes it harder
+   to read"*. ⚠ **The argument is kept, in the log and in `App.jsx`, rather than edited away**
+   (`D-129-C`): it was defensible and it lost to the owner's judgement of a site that read as two
+   different sites. `/method` is the clearest case — its `D-138` contents rail is a second column,
+   and a two-column layout inside a one-column measure is the defect `D-152` itself named on
+   `/scorer`. ⚠ **Every CARD stays narrow**, and that line is now the negative half of the guard.
+7. **Nothing was deleted to make room.** `CoverageView.jsx` is gone, but its two per-row functions
+   moved to `coverageNote.jsx` (the `searchRows.js` precedent — extract, never paste), its 21
+   component cases moved to `TargetList.dual.test.jsx`, and the three Python suites that read the
+   old file now read the new ones. ⚠ **Six inherited guards were flipped in place with a named
+   reason and none was relaxed** — including two where the flip made the assertion *stricter*
+   (the fold axis is pinned to its own element; the disclosure check now asks whether **these two
+   blocks** are inside a `<details>` rather than whether the page has one at all).
+
+**Deep-learning justification.** Neutral to the model and load-bearing for the honest reading of its
+output. The two facts a reader needs in order to judge an ESMFold prediction — *was this target
+folded, and is it in the ranking set* — lived on different pages from the rank and the confidence
+band, so the surface most likely to be read as a leaderboard was the one furthest from the caveats.
+Merging them puts `D-024`'s honest denominator, the fold verdict and the model's own confidence in
+one place, which is where `D-069` says a self-sufficient surface keeps them.
+
+**Residuals, stated rather than closed.**
+
+- ⚠ **The rendered after-figures are owed** (see the provenance note): mean row height, page height
+  and first-row offset for the merged table are unmeasured here.
+- ⚠ **Narrow-viewport layout is still unmeasured** — `D-154`'s residual, unchanged.
+- ⚠ **`/coverage` will 404 into the catch-all redirect** for anyone holding an old link. That is the
+  owner's decision recorded as such, and no redirect route was added.
+
+---
+
 ### D-154 — Every UI surface walked on the live site, and the disqualifying fact is that **the search box whose placeholder names `CA-125` could not find `CA-125`** — the alias block was pasted into one caller and the two surfaces the very next entry reasoned about never received it
 
 - **Date:** 2026-09-10

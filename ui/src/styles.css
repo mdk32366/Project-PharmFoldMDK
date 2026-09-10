@@ -126,6 +126,15 @@ main.wide { max-width: 96rem; }
    ⚠ jsdom has **no layout**, so the suite can assert the rule and never the result. Both of these
    were found by opening the page — which is why `overflow-wrap: anywhere` is now barred by a test
    rather than merely avoided. */
+/* ⚠⚠ D-155 — THE CAUSE LEFT THIS COLUMN, SO THE BOUND CAME DOWN WITH IT. Measured at 1,200 px
+   before the merge: **140 px, 12% of the table**, for a cell holding a one- or two-digit integer on
+   68 of 83 rows — the width was being set by 15 cause phrases and one 435-character group heading.
+   The causes now render in the Status cell beside the disposition they explain, so this column is
+   sized for what it actually holds. ⚠ `.col-rank` and `.rank-cause` are KEPT below rather than
+   deleted: the D-142 no-clipping guard reads them, and the unranked group heading still spans the
+   table. ⚠ The dash is `.rank-absent` and carries the cause as a `title`. */
+.target-list .col-rank-num { min-width: 3.5rem; max-width: 5rem; text-align: right; }
+.rank-absent { color: var(--muted); }
 .target-list .col-rank { min-width: 4.5rem; max-width: 9.5rem; }
 .rank-cause {
   display: block;
@@ -142,8 +151,37 @@ main.wide { max-width: 96rem; }
 /* The Description column (D-142): the UniProt protein name, bounded so a 72-character name
    ("Leucine-rich repeat and fibronectin type-III domain-containing protein 4" — the longest in the
    committed manifest) wraps instead of becoming the new widest column. */
+/* ⚠ D-155 — owner, 2026-09-10: *"Description can be tightened a little even if you get two lines
+   there."* The narrow-measure bound is unchanged; what moves is the WIDE one, below, where the
+   Rank column's 140 px and the old Fold-confidence column's 192 px are now available to spend. */
 .target-list .col-description { min-width: 9rem; max-width: 15rem; }
 .description-text { display: block; min-width: 9rem; max-width: 15rem; overflow-wrap: break-word; }
+
+/* ⚠⚠ D-155 — THE STATUS COLUMN: three orthogonal lines and a disclosure, in one cell.
+   It replaces `/coverage`'s Disposition and Fold columns AND this list's Fold-confidence column,
+   which is why the merged table has EIGHT columns where the two surfaces had fourteen between them.
+   ⚠ The lines stack rather than sitting inline: three facts on one line read as one compound
+   verdict, which is the `Folded`-doing-three-jobs defect D-150 fixed on the census.
+   ⚠ `min-width` is what stops the disclosure summary and the band label wrapping onto separate
+   lines at the narrow measure; nothing here truncates. */
+.target-list .col-status { min-width: 10rem; max-width: 16rem; }
+.status-cell { display: flex; flex-direction: column; gap: 0.15rem; }
+.status-line { display: block; line-height: 1.35; }
+.status-disposition { font-weight: 600; }
+.status-cause { font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+.status-fold { font-size: 0.85rem; }
+.status-confidence { font-size: 0.85rem; }
+/* ⚠ A disclosure over LENGTH, never over a claim — the disposition, the fold and the confidence
+   are all outside it. `summary` is deliberately one short word: the reasons behind it run to 765
+   characters on one row and a long summary would be a second copy of the thing it opens. */
+.status-note { margin-top: 0.1rem; }
+.status-note > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-decoration: underline dotted;
+}
+.status-note .note-cell { margin-top: 0.25rem; font-size: 0.82rem; line-height: 1.4; }
 
 /* The Cancer association column (D-142). The tumour type(s) lead; the total and the way to the
    full list are secondary beneath them. `BTN3A3` carries 16 pairs, so the cell states the count
@@ -174,12 +212,19 @@ main.wide { max-width: 96rem; }
    finds for each selector, so the misplacement showed up there as the raised number being read as
    the base bound. Both facts point the same way: an override belongs after what it overrides. */
 @media (min-width: 1100px) {
+  /* ⚠⚠ D-155 — THE RANK BOUND IS NOT RAISED AT THE WIDE MEASURE ANY MORE, AND THAT IS THE POINT.
+     D-152 raised it 9.5rem → 13rem because the cause had to fit; the cause is in the Status cell
+     now, so raising it would buy a wider column for a two-digit number. The width goes to the two
+     columns that hold sentences instead. ⚠ `.col-rank` / `.rank-cause` keep their raised bound:
+     they are no longer rendered by a row, and a rule that stops applying is not the same as a rule
+     that is wrong — the unranked heading and the D-142 guard both still read them. */
   .target-list .col-rank { max-width: 13rem; }
   .target-list .rank-cause { max-width: 13rem; }
-  .target-list .col-description { max-width: 24rem; }
-  .target-list .description-text { max-width: 24rem; }
+  .target-list .col-description { max-width: 30rem; }
+  .target-list .description-text { max-width: 30rem; }
   .target-list .col-assoc { max-width: 17rem; }
   .target-list .assoc-cell { max-width: 17rem; }
+  .target-list .col-status { max-width: 20rem; }
 }
 
 /* ⚠ D-151 — the cohort paper's citation line on `/targets`. Sized as a note because it is

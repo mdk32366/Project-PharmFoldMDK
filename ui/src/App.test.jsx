@@ -86,10 +86,15 @@ describe('App — five-surface nav (D-051)', () => {
     // is given a string, so this line went red on the rename rather than passing on a substring —
     // which is the guard working, and why the value is corrected here rather than loosened to a
     // regex that would accept either spelling for ever.
+    // ⚠⚠ D-155: `Coverage` LEFT THE NAV BECAUSE IT LEFT THE ROUTER. It listed the same 82 rows as
+    // Initial Targets, and its content — the honest denominator, the disposition and fold facts,
+    // the census strip — now renders there. ⚠ The removal is asserted BELOW as an absence, so a
+    // half-done revert that restores the nav item without the route cannot pass this file.
     const nav = screen.getByRole('navigation', { name: 'Site' })
-    for (const name of ['Story', 'Initial Targets', 'Coverage', 'Method', 'About ADCs']) {
+    for (const name of ['Story', 'Initial Targets', 'Method', 'About ADCs']) {
       expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
     }
+    expect(within(nav).queryByRole('link', { name: 'Coverage' })).toBeNull()
     // Exact — a substring "ADCs" would also match "About ADCs".
     expect(within(nav).getByRole('link', { name: /^ADCs$/ })).toBeInTheDocument()
     await screen.findByText(/We folded a cohort of ADC targets/)  // let Story's fetch settle (act)
@@ -152,7 +157,8 @@ describe('App — five-surface nav (D-051)', () => {
     })
 
     it('D-152 — every list-heavy route gets it, not just the census', async () => {
-      for (const path of ['/targets', '/coverage', '/census', '/scorer', '/cancer-burden', '/adcs']) {
+      // ⚠ D-155: `/coverage` is no longer a route; the list it held is `/targets`.
+      for (const path of ['/targets', '/census', '/scorer', '/cancer-burden', '/adcs']) {
         const { container, unmount } = renderAt(path)
         await waitFor(() => expect(container.querySelector('main')).toBeTruthy())
         expect(container.querySelector('main').className ?? '',
@@ -161,10 +167,32 @@ describe('App — five-surface nav (D-051)', () => {
       }
     })
 
-    it('leaves every prose surface at the reading measure', async () => {
+    // ⚠⚠ FLIPPED IN PLACE AT D-155 ON AN OWNER RULING, AND THE ARGUMENT IT OVERTURNS IS RECORDED
+    // RATHER THAN DELETED. D-152 decision 2 held `/`, `/method` and `/about` at the 60rem reading
+    // measure on the reasoning that widening a paragraph makes it harder to read. Owner,
+    // 2026-09-10, having seen the three of them beside the widened lists: *"The Story, Method, and
+    // About ADCs surfaces should match the wider format of the other surfaces."*
+    // ⚠ The name of this test changes with its claim. A guard whose title says the opposite of what
+    // it asserts is worse than no guard — the next reader trusts the title.
+    it('gives every prose surface the wide measure too (D-155 owner ruling)', async () => {
       for (const path of ['/', '/about', '/method']) {
         const { container, unmount } = renderAt(path)
-        expect(container.querySelector('main').className ?? '').not.toContain('wide')
+        expect(container.querySelector('main').className ?? '',
+          `${path} did not get the wide measure the owner ruled for`).toContain('wide')
+        unmount()
+      }
+      await Promise.resolve()
+    })
+
+    // ⚠⚠ AND THE LINE THE RULING DID **NOT** MOVE: a CARD is one object's story and stays narrow.
+    // The set is still exact paths, so this is the assertion that keeps it from becoming
+    // `startsWith` by accident — which would widen all four card routes silently.
+    it('still leaves every CARD at the reading measure', async () => {
+      for (const path of ['/target/1', '/census/P04626', '/adcs/enfortumab-vedotin',
+                          '/adcs/pipeline/ifinatamab-deruxtecan']) {
+        const { container, unmount } = renderAt(path)
+        expect(container.querySelector('main').className ?? '',
+          `${path} is a card and must keep the reading measure`).not.toContain('wide')
         unmount()
       }
       await Promise.resolve()

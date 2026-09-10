@@ -587,11 +587,12 @@ def test_the_reserved_row_is_retired_marker_safe_and_147_has_a_row():
     # purpose — so *"next free"* means the lowest AVAILABLE integer and not the lowest unwritten
     # one. Six assertions where there was one: the pointer names 154, and it names none of 147,
     # 148, 150, 151, 152 or 153.
-    assert "Next free `D-` integer: **`D-155`**" in RESERVED, (
+    assert "Next free `D-` integer: **`D-156`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
     )
     assert "Next free `D-` integer: **`D-153`**" not in RESERVED
-    assert "Next free `D-` integer: **`D-154`**" not in RESERVED, (
+    assert "Next free `D-` integer: **`D-154`**" not in RESERVED
+    assert "Next free `D-` integer: **`D-155`**" not in RESERVED, (
         "the pointer still names a SPENT integer — D-153 was spent by the burden-loader image "
         "bake, and naming it would hand a used number to the next writer"
     )

@@ -652,7 +652,35 @@ the US-only bar and the SEER attribution on `/cancer-burden`, and the floor clai
 outside every `<details>` — and `/coverage`'s census population strip is **moved below the table, not
 collapsed**, with every D-135 clause intact. ⚠ **`/scorer`'s ranking table becomes the first child of
 `.scorer-cols` in SOURCE order**, never by a CSS `order`, so the reading order and the narrow-viewport
-stack move with it. ⚠⚠ Four surfaces gain a search box and **a filter narrows a view without moving a
+stack move with it. ⚠⚠ **D-155 RETIRES `/coverage` AND MERGES IT INTO `/targets`, WHICH IS THE FIRST ROUTE THIS
+PROJECT HAS EVER REMOVED.** The two surfaces listed **the same 82 rows**: one carried the rank, the
+description and the cancer association, the other the disposition, the fold verdict and the reason,
+so a reader held half a protein's story on each of two pages. The merged surface is `/targets`, and
+it renders `CoverageLine` (the `D-024` am. §3 honest denominator) above its table and
+`CensusPopulationStrip` (the `D-135` second population) below it — **neither collapsed**, both
+outside every `<details>`. ⚠ **`GET /api/coverage` IS UNTOUCHED** and is what the merged page
+consumes, so `system-model.json` does not move and **`D-051` does not fire**: the retirement is of a
+UI route, not of a data route. ⚠ The four in-app links that pointed at it are repointed in the same
+commit (`Story.jsx` ×3, `AdcContext.jsx`, **and two in `TargetScorerPanel.jsx` that only a sweep of
+every component found**) — a link to a retired route bounces the reader through the catch-all with
+nothing saying why. ⚠ No redirect route was added: the owner chose deletion, and an old link 404s
+into the Story rather than being silently rewritten.
+⚠⚠ **EIGHT COLUMNS, NOT ELEVEN, AND THE MEASUREMENT IS WHY.** `/coverage`'s `Note` column was
+**696 px of a 1,200 px table — 58% — with content on 3 of its 82 rows** (one of them IGF2R's
+765-character CUDA-OOM text), so it became a **per-row `why` disclosure** rather than a column, and
+`Disposition` + `Fold` joined the demoted confidence band as **one three-axis Status cell** on the
+`D-150` census pattern: *disposition* (sortable, `D-024`'s partition) · *fold* (`D-043`'s three
+values, never a fourth — a census structure of the same accession stays a labelled BRIDGE, by
+accession, `D-135` / `D-118`) · *confidence* (`D-048`'s demotion, only where a fold exists). The
+Rank column's bound falls **13rem → 5rem** (its cause moved to the Status cell; measured, it was
+**140 px for a 1–2 digit integer on 68 of 83 rows**) and `Description` takes that width, **24rem →
+30rem**. ⚠ **No column was dropped and nothing is truncated** — the standing rule of this table.
+⚠⚠ **AND `D-152` DECISION 2 IS SUPERSEDED IN PART BY AN OWNER RULING** (2026-09-10, *"The Story,
+Method, and About ADCs surfaces should match the wider format of the other surfaces"*): `/`,
+`/method` and `/about` **join `WIDE_ROUTES`**, which now holds eight exact paths. The reasoning that
+lost — *widening a paragraph makes it harder to read* — is kept in the log and in `App.jsx` beside
+its supersession (`D-129-C`), not edited away. **Every CARD route stays narrow**, and that is now the
+negative half the set is checked against. ⚠⚠ Four surfaces gain a search box and **a filter narrows a view without moving a
 number**: the Score header's distribution, `n_ranking_set`, the burden bars' scale and the burden
 table's `rank_within_statistic` are all derived from the full payload, so no text input can rewrite a
 published statistic. ⚠ D-152 also fixes two latent CSS defects the widening exposed rather than

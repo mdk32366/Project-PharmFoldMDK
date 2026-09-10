@@ -242,7 +242,11 @@ def test_the_cohort_82_learned_scorer_is_untouched_by_this_entry():
     )
 
     target_list = (ROOT / "ui" / "src" / "components" / "TargetList.jsx").read_text(encoding="utf-8")
-    assert "{ key: 'rank', label: 'Rank' }" in target_list, "the Rank column stays"
+    # ⚠ D-155 gave this column a `className` when the merge shrank it to the width of the integer
+    # it holds (the cause moved to the Status cell). The claim here is about D-143's scope — the
+    # cohort's learned ranking is untouched by a Track B entry — so it asserts the COLUMN, not the
+    # object literal that happened to declare it in 2026-09.
+    assert "{ key: 'rank', label: 'Rank'" in target_list, "the Rank column stays"
 
     # ⚠ The structural sentence belongs to ONE surface. If it appears on a scorer
     # surface, the two rankings have been merged in the copy — the exact confusion

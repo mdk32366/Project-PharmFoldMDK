@@ -43,7 +43,6 @@ import {
 } from '../api.js'
 
 import TargetList from './TargetList.jsx'
-import CoverageView from './CoverageView.jsx'
 import ScorerView from './ScorerView.jsx'
 import CancerBurdenView from './CancerBurdenView.jsx'
 import AdcsView from './AdcsView.jsx'
@@ -187,8 +186,9 @@ describe('D-152 — one disclosure and one scroll port, defined once', () => {
 // ── 2 · Every list route puts its table in a port ───────────────────────────────────────────────
 describe('D-152 — the table scrolls, the page does not', () => {
   const cases = [
+    // ⚠ D-155: `/coverage` merged into `/targets`, so the pair became one row here rather than
+    // one row being deleted — the port claim is asserted of the surface that now holds that table.
     ['/targets', () => draw(<TargetList />)],
-    ['/coverage', () => draw(<CoverageView />)],
     ['/scorer', () => draw(<ScorerView />)],
     ['/cancer-burden', () => draw(<CancerBurdenView />)],
     ['/adcs', () => draw(<AdcsView />)],
@@ -294,12 +294,15 @@ describe('D-152 — the standing claims stay outside every disclosure', () => {
     expect(follows(claim, container.querySelector('details.surface-notes'))).toBe(true)
   })
 
-  it('/coverage — the honest denominator leads and the census strip is moved, never collapsed', async () => {
+  // ⚠⚠ D-155: this case followed its subject from `/coverage` to `/targets`. Every clause is the
+  // one D-152 shipped — the denominator leads, the strip is below the table, and neither is inside
+  // a disclosure — and the surface under it is the merged one.
+  it('/targets — the honest denominator leads and the census strip is moved, never collapsed', async () => {
     getCensusSummary.mockResolvedValue({
       manifest_rows: 3467, folded: 2690,
       structure_kinds: [{ kind: 'assembled', label: 'assembled (provisional)', n: 45 }],
     })
-    const { container } = draw(<CoverageView />)
+    const { container } = draw(<TargetList />)
     await screen.findByRole('table')
     await waitFor(() => expect(container.querySelector('.census-population')).toBeTruthy())
     const line = container.querySelector('.coverage-line')
@@ -393,13 +396,20 @@ describe('D-152 — the new search boxes cannot rewrite a statistic', () => {
       .toMatch(/keep the full ranking/)
   })
 
-  it('/coverage — the count states the filter and the denominator refuses to move', async () => {
-    const { container } = draw(<CoverageView />)
+  // ⚠⚠ D-155: and this one too — the claim it defends got STRONGER in the move. On `/coverage` the
+  // filter sat under a headline; on the merged surface it sits under the same headline AND over a
+  // ranking, so a filtered table beneath an unqualified denominator is the more available misread.
+  it('/targets — the count states the filter and the denominator refuses to move', async () => {
+    const { container } = draw(<TargetList />)
     await screen.findByRole('table')
     const headline = container.querySelector('.coverage-headline').textContent
     // ⚠ the shared matcher reaches aliases, so the name on the drug label finds the row
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'CA-125' } })
-    expect(container.querySelectorAll('tbody tr')).toHaveLength(1)
+    // ⚠ D-155: the merged table has a SECOND `<tbody>` for the unranked partition, and its
+    // explanatory heading is a `<tr>` too. `MUC16` is unranked, so a bare `tbody tr` count reads 2
+    // where one row matched — the selector excludes the heading rather than the number being
+    // loosened, because "one row matched" is the claim and it is still exactly one.
+    expect(container.querySelectorAll('tbody tr:not(.unranked-heading)')).toHaveLength(1)
     expect(container.textContent).toMatch(/MUC16/)
     expect(container.querySelector('.coverage-headline').textContent).toBe(headline)
     expect(container.querySelector('.filter-count').textContent)

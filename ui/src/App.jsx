@@ -4,7 +4,6 @@ import TargetList from './components/TargetList.jsx'
 import TargetView from './components/TargetView.jsx'
 import CensusView from './components/CensusView.jsx'
 import CensusProteinView from './components/CensusProteinView.jsx'
-import CoverageView from './components/CoverageView.jsx'
 import ScorerView from './components/ScorerView.jsx'
 import MethodNote from './components/MethodNote.jsx'
 import AdcContext from './components/AdcContext.jsx'
@@ -64,15 +63,25 @@ function AdcPipelineCardRoute() {
 // `/coverage` (a Note column of prose), `/scorer` (a two-column layout squeezed into one measure),
 // `/cancer-burden` (seven columns, three of them long labels) and `/adcs` (five columns on the
 // Pipeline shelf) in exactly the way it was cropping the census.
-// ⚠ MEMBERSHIP IS A JUDGEMENT ABOUT THE ROUTE, AND THE PROSE PAGES ARE DELIBERATELY OUT. `/`,
-// `/method` and `/about` are argument, not tables: 60rem is the right measure for a paragraph and
-// widening them would make them harder to read, not easier. That is the whole reason this is a set
-// of names rather than a default.
-// ⚠ And every entry is still a LITERAL. `/target/:id`, `/census/:id`, `/adcs/:id` and
-// `/adcs/pipeline/:id` are cards and keep the reading measure — a `startsWith` would have widened
-// all four, which is the opposite of what a card needs.
+// ⚠⚠ D-155 — THE OWNER OVERRULED THE READING-MEASURE ARGUMENT, AND D-152 DECISION 2 IS SUPERSEDED
+// IN PART. That decision held `/`, `/method` and `/about` out of this set on the reasoning that
+// *"60rem is the right measure for a paragraph and widening them would make them harder to read"*
+// — the sentence directly above this one until this entry. Owner, 2026-09-10, after seeing all
+// three live beside the widened lists: *"The Story, Method, and About ADCs surfaces should match
+// the wider format of the other surfaces."* ⚠ The original reasoning is kept in the log rather
+// than edited away (D-129-C): it was a defensible argument about typography and it lost to the
+// owner's judgement about a site that now reads as two different sites. `/method` is the clearest
+// case — its D-138 contents rail is a second column, and a two-column layout inside a one-column
+// measure is what D-152 itself called out on `/scorer`.
+// ⚠ MEMBERSHIP IS STILL A JUDGEMENT ABOUT THE ROUTE, and every CARD is still deliberately out.
+// `/target/:id`, `/census/:id`, `/adcs/:id` and `/adcs/pipeline/:id` keep the reading measure —
+// a card is one object's story and gains nothing from 96rem.
+// ⚠ And every entry is still a LITERAL rather than a `startsWith`, for that same reason.
+// ⚠⚠ `/coverage` LEFT THIS SET BY LEAVING THE ROUTER (D-155). Its content is the honest-denominator
+// panel, the disposition/fold facts and the census strip, and all of it now renders on `/targets`
+// over the same 82 rows — see the entry for why one population had two tables.
 const WIDE_ROUTES = new Set([
-  '/targets', '/coverage', '/census', '/scorer', '/cancer-burden', '/adcs',
+  '/', '/targets', '/census', '/scorer', '/cancer-burden', '/adcs', '/method', '/about',
 ])
 
 export default function App() {
@@ -94,7 +103,6 @@ export default function App() {
               deep link the Story CTA, the census card and every shared address already point at,
               which is a cost the label does not need to pay. */}
           <NavLink to="/targets">Initial Targets</NavLink>
-          <NavLink to="/coverage">Coverage</NavLink>
           <NavLink to="/census">Census</NavLink>
           <NavLink to="/scorer">Scorer</NavLink>
           {/* ⚠⚠ D-149: ITS OWN TOP-LEVEL LANDMARK, not a panel on Method and not a column on
@@ -111,7 +119,6 @@ export default function App() {
           <Route path="/" element={<Story />} />
           <Route path="/targets" element={<TargetList />} />
           <Route path="/target/:id" element={<TargetRoute />} />
-          <Route path="/coverage" element={<CoverageView />} />
           <Route path="/census" element={<CensusView />} />
           <Route path="/census/:id" element={<CensusProteinRoute />} />
           <Route path="/scorer" element={<ScorerView />} />

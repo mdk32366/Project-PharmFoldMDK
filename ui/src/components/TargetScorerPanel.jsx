@@ -45,7 +45,7 @@ export default function TargetScorerPanel({ detail, ranking }) {
       <Shell>
         <p className="no-score">
           No score — this target was never scored because it wasn't folded:{' '}
-          <b>attempted, but did not complete</b>. <Link to="/coverage">Coverage</Link> gives the reason.
+          <b>attempted, but did not complete</b>. <Link to="/targets">Initial Targets</Link> gives the reason.
         </p>
       </Shell>
     )
@@ -76,7 +76,7 @@ export default function TargetScorerPanel({ detail, ranking }) {
     return (
       <Shell>
         <p className="no-score">
-          No score — <b>reason not determined</b>. <Link to="/coverage">Coverage</Link> carries this
+          No score — <b>reason not determined</b>. <Link to="/targets">Initial Targets</Link> carries this
           target's disposition.
         </p>
       </Shell>

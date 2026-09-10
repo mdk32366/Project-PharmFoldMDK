@@ -57,7 +57,8 @@ UI = ROOT / "ui" / "src"
 BURDEN_VIEW = (UI / "components" / "CancerBurdenView.jsx").read_text(encoding="utf-8")
 CENSUS_PROTEIN = (UI / "components" / "CensusProteinView.jsx").read_text(encoding="utf-8")
 CENSUS_TABLE = (UI / "components" / "CensusTable.jsx").read_text(encoding="utf-8")
-COVERAGE_VIEW = (UI / "components" / "CoverageView.jsx").read_text(encoding="utf-8")
+# ⚠ D-155: `/coverage`'s table is `/targets`' table now, and its search box went with it.
+COVERAGE_VIEW = (UI / "components" / "TargetList.jsx").read_text(encoding="utf-8")
 SCORER_VIEW = (UI / "components" / "ScorerView.jsx").read_text(encoding="utf-8")
 
 #: MUC16 / CA-125 — the query `/coverage`'s own placeholder advertises, and the row it must reach.
@@ -126,7 +127,13 @@ def test_the_two_placeholders_still_name_the_aliases_the_payloads_now_carry():
     """⚠⚠ THE PROMISE AND THE PAYLOAD ARE PINNED TOGETHER, because the defect was the GAP between
     them. If a later edit changes either placeholder to advertise a different name, this reddens and
     sends the writer to the payload rather than letting the surface promise something again."""
-    assert "CA-125" in COVERAGE_VIEW, "/coverage stopped advertising CA-125; the guard above is now aimed at nothing"
+    # ⚠ D-155: one surface, one box. The merged page advertises `HER2`, and `CA-125` remains
+    # the alias that must resolve — asserted on the payload above and on the matcher's own
+    # suite, so the promise and the data stay pinned together even though the two boxes became
+    # one. The literal is kept in this file so a reader can still find the string that failed.
+    assert "HER2" in COVERAGE_VIEW, (
+        "the merged cohort surface stopped advertising an alias; the payload guard above is "
+        "now aimed at nothing")
     assert "HER2" in SCORER_VIEW, "/scorer stopped advertising HER2; the guard above is now aimed at nothing"
 
 
@@ -267,12 +274,18 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 154 in ids, "this entry did not claim its own integer"
     assert 152 in ids and 153 in ids, "the entries this one builds on must still be named"
-    assert 148 not in ids and 155 not in ids
+    assert 155 in ids, "D-155 spent 155 in the surface-merge ship"
+    assert 148 not in ids and 156 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-155" not in LOG, (
-        "D-155 is the next free integer and must stay unspent until an entry claims it by name — "
+    # ⚠⚠ D-155 SPENT the integer this guard barred (the surface-merge ship), so it is NAMED
+    # here rather than barred and `### D-156` takes the next-free bar. A name is ADDED and
+    # nothing becomes a `>=` — the widening D-145 fixed the shape of.
+    assert "\n### D-155 — One population had two tables" in LOG, (
+        "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
+    assert "\n### D-156" not in LOG, (
+        "D-156 is the next free integer and must stay unspent until an entry claims it by name — "
         "never admitted by a `>=`")
 
 
@@ -292,8 +305,8 @@ def test_the_reserved_map_retires_154_marker_safe_and_the_pointer_moves_here():
     assert re.search(r"^\| \*\*D-148\*\*", RESERVED, re.M), "the trafficking hold lost its row"
     assert not re.search(r"^\| ~~\*\*D-15[45]\*\*~~", RESERVED, re.M), (
         "a marker is struck through; that breaks a sibling suite's lookup instead of satisfying it")
-    assert "Next free `D-` integer: **`D-155`**" in RESERVED
-    for spent in ("D-148", "D-149", "D-150", "D-151", "D-152", "D-153", "D-154"):
+    assert "Next free `D-` integer: **`D-156`**" in RESERVED
+    for spent in ("D-148", "D-149", "D-150", "D-151", "D-152", "D-153", "D-154", "D-155"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED, (
             f"the pointer still names {spent}, which would hand a spent or held integer to the "
             f"next writer")
@@ -310,7 +323,7 @@ def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxin
         text = (ROOT / rel).read_text(encoding="utf-8")
         assert "D-154 — Every UI surface walked on the live site" in text, (
             f"{rel} does not NAME the entry that spent 154")
-        assert r'\n### D-155" not in' in text, f"{rel} does not bar the next free integer"
+        assert r'\n### D-156" not in' in text, f"{rel} does not bar the next free integer"
     # ⚠⚠ THE `>=` CHECK IS SCOPED TO THE TWO SPEC SUITES, AND THE SCOPE IS THE POINT.
     # `tests/test_d153_bake_burden_loader.py` performs this very check on those two files, so it
     # HOLDS the relaxation pattern as *data* — asserting the string's absence there would redden on

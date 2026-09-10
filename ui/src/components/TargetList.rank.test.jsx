@@ -102,10 +102,21 @@ describe('the unranked are partitioned, never positioned', () => {
     await waitFor(() => expect(container.querySelector('.unranked-group')).not.toBeNull())
     const group = container.querySelector('.unranked-group')
     for (const tr of group.querySelectorAll('tr.row-unranked')) {
-      const cell = tr.querySelector('.col-rank').textContent.trim()
+      // ⚠⚠ FOLLOWED THE CELL AT D-155, AND NOTHING WAS RELAXED. The cause moved from the Rank cell
+      // to the Status cell in the same row, so this reads `.col-rank-num` — and the three claims
+      // it made are all still made here, plus a fourth that is new:
+      //   · never a position number  · never a BARE DASH  · stated in words
+      //   · and the CAUSE is still on the row, now asserted explicitly rather than implied by length
+      // ⚠ The first draft of D-155 put an em dash here and this guard caught it. That is the whole
+      // reason the bare-dash clause was written, and it is why the clause stays.
+      const cell = tr.querySelector('.col-rank-num').textContent.trim()
       expect(cell).not.toMatch(/^\d+$/)      // never 3, 4, 5…
       expect(cell).not.toBe('—')             // and never a bare dash
-      expect(cell.length).toBeGreaterThan(3) // it is a cause, in words
+      expect(cell).toBe('unranked')          // it names the category, in a word
+      const status = tr.querySelector('.col-status').textContent
+      expect(status.length).toBeGreaterThan(3)
+      // the cause travels with the disposition it explains — one cell right, same row
+      expect(status).toMatch(/excluded|held out|floor|not folded|no scorer rank|attempted/i)
     }
   })
 
