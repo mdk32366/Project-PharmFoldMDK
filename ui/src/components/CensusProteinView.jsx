@@ -261,10 +261,27 @@ export default function CensusProteinView({ id }) {
           ) : (
             <p className="unfolded-why"><strong>{detail.not_folded_copy}.</strong></p>
           )}
+          {/* ⚠⚠ D-154 — THE LENGTH VERDICT WAS UNCONDITIONAL, AND ON ONE ROW IT CONTRADICTED THE
+              SENTENCE DIRECTLY ABOVE IT. This paragraph told every never-folded protein that its
+              span was too long for this project to fold locally. `P55073`/`DIO3`
+              is **237 aa** — inside the local envelope by any measure the record holds (NECTIN4
+              folded locally at 318, `S-005` was clean at 440) — and its own `not_folded_copy`, one
+              line up, says it "was assigned to the local tier and should have folded". The page
+              stated a cause and then denied it in the next breath.
+              ⚠⚠ THE SERVER ALREADY KNEW. `core/census_unfolded.py` keeps three reasons apart on
+              purpose — `above_local_ceiling` (measured too large), `ceiling_unmeasured` (untried,
+              NOT known too large) and `reason_unrecorded` (a defect, not a category) — and this
+              paragraph pooled all three into the first one, which is exactly the pooling that
+              module's own header forbids. So the clause is now keyed on the reason the payload
+              carries, and where the record does not support a length claim the page makes none:
+              it states the span and stops. ⚠ A mucin is not folded BY RULING, so its 14,451 aa is
+              not the reason either — its copy says so and no longer needs a length verdict. */}
           <p>
             Its extracellular stretch is{' '}
-            <strong>{detail.span_aa} aa (amino acids)</strong> — long by the standards of what this
-            project could fold locally.{' '}
+            <strong>{detail.span_aa} aa (amino acids)</strong>
+            {detail.not_folded_reason === 'above_local_ceiling'
+              ? <> — longer than the local graphics card can fold.</>
+              : <>.</>}{' '}
             {unfoldedCopy(detail)?.body}
           </p>
           <p className="caveat">

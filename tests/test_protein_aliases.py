@@ -136,23 +136,40 @@ def test_the_alias_module_neither_scores_nor_ranks():
 # sat in that very list, folded and ranked. **`F-052`'s shape**: a convention that exists, is
 # documented, and is obeyed by every caller except the one nobody revisited.
 def test_the_cohort_payload_carries_aliases_too():
+    """⚠⚠ FLIPPED IN PLACE AT `D-154`, AND STRICTLY STRONGER — never relaxed. This read
+    ``list_analyses``'s own body for ``aliases_by_accession``, which was true while the block sat
+    inline there and **would have gone green on a tree where `/coverage` and `/scorer` had none of
+    it** — which is exactly what shipped. The behaviour now lives in ``attach_aliases``, so the
+    guard asks the two questions that matter: the shared function does the join, and this caller
+    calls it. ⚠ The claim being pinned is unchanged: the cohort list must carry aliases or
+    `/targets` cannot find `ERBB2` by the name `HER2`."""
     src = pathlib.Path("app/reads.py").read_text(encoding="utf-8")
-    fn = next(n for n in ast.walk(ast.parse(src))
-              if isinstance(n, ast.FunctionDef) and n.name == "list_analyses")
-    code = "\n".join(ast.dump(n) for n in fn.body)
+    tree = ast.parse(src)
+    shared = next(n for n in ast.walk(tree)
+                  if isinstance(n, ast.FunctionDef) and n.name == "attach_aliases")
+    code = "\n".join(ast.dump(n) for n in shared.body)
     assert "aliases_by_accession" in code, (
-        "the cohort list must carry aliases or `/targets` cannot find ERBB2 by the name HER2")
+        "the shared alias join no longer reads the pinned index")
     assert "'aliases'" in code or '"aliases"' in code
+    caller = next(n for n in ast.walk(tree)
+                  if isinstance(n, ast.FunctionDef) and n.name == "list_analyses")
+    assert any(isinstance(n, ast.Name) and n.id == "attach_aliases" for n in ast.walk(caller)), (
+        "the cohort list stopped attaching aliases")
 
 
 def test_an_alias_failure_costs_the_aliases_and_not_the_rows():
     """⚠⚠ `F-054`: a guard wider than the optional thing it guards deletes data.
 
     The rows are built and only then decorated, so a missing index degrades the search to
-    gene/accession matching — it does not empty the cohort."""
+    gene/accession matching — it does not empty the cohort.
+
+    ⚠ FOLLOWED THE CODE AT `D-154`: the try/except moved into ``attach_aliases`` when the block was
+    extracted, and the property now holds for all three list payloads at once rather than for the
+    cohort alone. Nothing is relaxed — the assertion below is the same one, on the function that
+    now owns the guard."""
     src = pathlib.Path("app/reads.py").read_text(encoding="utf-8")
     fn = next(n for n in ast.walk(ast.parse(src))
-              if isinstance(n, ast.FunctionDef) and n.name == "list_analyses")
+              if isinstance(n, ast.FunctionDef) and n.name == "attach_aliases")
 
     def mentions(node, name):
         return any(isinstance(n, ast.Name) and n.id == name for n in ast.walk(node))

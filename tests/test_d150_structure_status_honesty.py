@@ -467,12 +467,19 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
         "D-152 was spent by the surface-navigation ship, which is the lane D-153 held it for; "
         "this assertion barred it and must now NAME it — never delete a bar, and never relax one "
         "to a `>=`")
-    assert 148 not in ids and 154 not in ids
+    assert 154 in ids, "D-154 spent 154 in the live-surface review ship"
+    assert 148 not in ids and 155 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
-    assert "\n### D-154" not in LOG, (
-        "D-154 is the next free integer and must stay unspent until an entry claims it by name "
+    # ⚠⚠ D-154 SPENT the integer this guard barred (the live-surface review ship), so
+    # it is NAMED here rather than barred and `### D-155` takes the next-free bar. This is the
+    # widening D-145 fixed the shape of: a name is ADDED and nothing becomes a `>=`.
+    assert "\n### D-154 — Every UI surface walked on the live site" in LOG, (
+        "D-154 was spent by the live-surface review ship, so it must be NAMED here rather "
+        "than barred")
+    assert "\n### D-155" not in LOG, (
+        "D-155 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
 
@@ -499,9 +506,10 @@ def test_the_reserved_map_bars_151_and_the_pointer_moves_in_this_commit():
     # D-149 burden loader baked into the serving image) and deliberately did NOT take 152: 152 became
     # a HOLD for the concurrent sitewide-layout lane, 148 remains the trafficking hold, so
     # *"next free"* means the lowest AVAILABLE integer, 154.
-    assert "Next free `D-` integer: **`D-154`**" in RESERVED, (
+    assert "Next free `D-` integer: **`D-155`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer")
     assert "Next free `D-` integer: **`D-153`**" not in RESERVED
+    assert "Next free `D-` integer: **`D-154`**" not in RESERVED
     assert "Next free `D-` integer: **`D-152`**" not in RESERVED
     assert "Next free `D-` integer: **`D-151`**" not in RESERVED
     assert "Next free `D-` integer: **`D-150`**" not in RESERVED

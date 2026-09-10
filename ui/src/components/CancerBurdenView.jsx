@@ -38,6 +38,30 @@ function formatCount(n) {
   return typeof n === 'number' ? n.toLocaleString('en-US') : '—'
 }
 
+// ⚠⚠ D-154 — THE PAGE SAID IT TWICE. This surface bolded a hardcoded `United States only.` and then
+// printed `meta.us_only`, whose served text *begins with that same sentence* — so the banner read
+// **"United States only. United States only. These are US figures…"** and the honesty block's first
+// bullet did the same. Neither test saw it: the fixture carries the real string and both assertions
+// are `toMatch(/United States only/)`, which passes on one copy or on five.
+//
+// ⚠ THE FIX IS PRESENTATIONAL AND THE SERVED SENTENCE IS NOT EDITED. Nothing is stripped, replaced
+// or re-worded: the payload is rendered whole, and the emphasis D-149 put on the geography now falls
+// on the payload's OWN first sentence instead of on a second copy of it. A string with no sentence
+// break renders entirely inside the `<strong>`, which is the same claim with the same weight.
+export function leadSentence(text) {
+  const s = String(text ?? '')
+  const cut = s.indexOf('. ')
+  return cut === -1 ? { head: s, rest: '' } : { head: s.slice(0, cut + 1), rest: s.slice(cut + 2) }
+}
+
+// The served qualifier, emphasised on its own first sentence. ⚠ `fallback` is used ONLY when the
+// payload carries nothing — it is this component's own words, and it says less rather than more.
+function ServedQualifier({ text, fallback }) {
+  if (!text) return <><strong>United States only.</strong>{' '}{fallback}</>
+  const { head, rest } = leadSentence(text)
+  return <><strong>{head}</strong>{rest ? <>{' '}{rest}</> : null}</>
+}
+
 function formatRate(n) {
   return typeof n === 'number' ? n.toFixed(2) : '—'
 }
@@ -105,8 +129,8 @@ export default function CancerBurdenView() {
       {/* ⚠⚠ THE FIRST THING ON THE PAGE, BEFORE ANY FIGURE. Placed above the toggle deliberately:
           a reader who changes the statistic must not scroll past the geography to do it. */}
       <p className="burden-us-only" data-testid="burden-us-only">
-        <strong>United States only.</strong>{' '}
-        {meta?.us_only ?? 'These are US figures and describe no other country.'}
+        <ServedQualifier text={meta?.us_only}
+                         fallback="These are US figures and describe no other country." />
       </p>
 
       <div className="burden-toggle" role="group" aria-label="Statistic">
@@ -298,7 +322,11 @@ export default function CancerBurdenView() {
           <section className="burden-limits">
             <h3>What these numbers are, and what they are not</h3>
             <ul>
-              <li><strong>United States only.</strong> {meta.us_only}</li>
+              {/* ⚠ D-154: the same doubled sentence, in the honesty block. Same fix, same reason —
+                  a limits list that repeats itself reads as boilerplate, which is the one thing a
+                  limits list must not read as. */}
+              <li><ServedQualifier text={meta.us_only}
+                                   fallback="These are US figures and describe no other country." /></li>
               <li>
                 <strong>The two counts are not comparable to each other.</strong>{' '}
                 {meta.count_population_key?.seer_registries?.text}
