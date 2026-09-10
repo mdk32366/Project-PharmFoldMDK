@@ -373,23 +373,28 @@ def test_the_reason_for_a_hold_stays_on_the_row_after_the_cause_is_dropped():
     assert "title={DISPOSITION_WHY[row.disposition] || undefined}" in TARGET_LIST
 
 
-def test_the_prose_pages_get_a_reading_measure_inside_the_wide_frame():
-    """⚠⚠ FOLLOW-UP 3 — THE OWNER'S FIRST COMPLAINT ANSWERED INTO A SECOND ONE, AND THEN INTO A
-    LAYOUT. Lifting `.prose`'s measure stopped the left-justified column and gave `/` and `/about`
-    paragraphs of about **148 characters** (measured on the deployed build). The fix the owner asked
-    for is a layout that USES the width, not a longer line — so both pages get `/method`'s shape: a
-    contents rail beside a body at a reading measure.
+def test_the_prose_pages_fill_the_wide_frame_beside_their_rail():
+    """⚠⚠ FOLLOW-UP 5 — AN OWNER RULING MADE THREE TIMES, AND THE GUARD RECORDS WHICH WAY IT WENT.
+    The prose measure went 44rem (left-justified against a 96rem frame) → 78ch (320 px of dead
+    gutter) → 90ch centred (still short of it), and each time the answer was *"use the entire
+    width"*. Owner, 2026-09-10: *"On Method and Story, can we please use the entire wide surface?
+    The two column thing is fine, but use the entire width please."*
 
-    ⚠ THE MEASURE IS THE POINT AND IS PINNED. A grid with no `ch` bound on the body would look like
-    a two-column layout and read exactly as badly."""
-    wide = CSS.split("@media (min-width: 1100px)")
-    block = next(b for b in wide if "main.wide .story" in b)
-    assert "grid-template-columns: 14rem minmax(0, 78ch)" in block, (
-        "the Story body lost its reading measure or its rail column")
-    assert "main.wide .method-layout > .prose { max-width: 78ch; }" in block, (
-        "/about's body fills the whole wide frame again")
-    # ⚠ read to the closing brace rather than a fixed slice: the rule carries a long comment, and a
-    # character count that happens to end before the declaration is a guard that passes on nothing.
+    ⚠ SO THE BODY IS `1fr` AND THE `ch` BOUND IS GONE — asserted as an ABSENCE, because the way this
+    reverts is somebody reading the typography argument in the log and quietly restoring a measure.
+    ⚠ The two-column shape is what stays, and it is asserted beside it: a full-width body with no
+    rail would be the state the owner rejected at the very start of this arc."""
+    block = next(b for b in CSS.split("@media (min-width: 1100px)") if "main.wide .story" in b)
+    story_rule = block.split("main.wide .story {")[1]
+    story_rule = story_rule[: story_rule.index("}")]
+    assert "grid-template-columns: 14rem minmax(0, 1fr)" in story_rule, (
+        "the Story body stopped taking the rest of the frame")
+    assert "ch)" not in story_rule, (
+        "a character measure came back on the body — the owner ruled three times against it")
+    assert "justify-content: center" not in story_rule, (
+        "the grid is centred again, which leaves the frame's edges unused")
+    assert "main.wide .method-layout > .prose { max-width: none; }" in block, (
+        "/method and /about stopped filling the frame beside their rail")
     rail = block.split("main.wide .story > .story-toc")[1]
     rail = rail[: rail.index("}")]
     assert "position: sticky" in rail, (
@@ -419,3 +424,23 @@ def test_about_reuses_the_method_rail_rather_than_growing_a_second_one():
     block = next(b for b in CSS.split("@media (min-width: 1100px)") if "main.wide .story" in b)
     assert ".adc-panels { max-width: none; }" in block, (
         "the D-097 cartoon was constrained to the reading measure by a layout ship")
+
+
+def test_the_rail_label_leaves_a_glossary_definition_behind():
+    """⚠⚠ FOLLOW-UP 4 — THE SECOND CALLER EXPOSED A LATENT DEFECT IN THE SHARED RAIL, which is the
+    argument for reuse as an event rather than as a principle. A glossary term's tooltip body is a
+    real element (`display: none` since D-152, and **hidden is not absent**), so `textContent` walked
+    it and `/about`'s first rail entry carried the whole definition of ADC.
+
+    ⚠ `/method` has no glossary terms in its headings, so ONE caller could never have shown this.
+    ⚠ Clone-and-strip, never `innerText`: `innerText` is layout-dependent and returns `''` in jsdom,
+    which would put this defect beyond the reach of the suite that guards it."""
+    toc = (UI / "components" / "MethodToc.jsx").read_text(encoding="utf-8")
+    assert "export function headingLabel" in toc
+    assert "label: headingLabel(h)" in toc, "the rail builds its labels the old way again"
+    body = toc[toc.index("export function headingLabel"):]
+    body = body[: body.index("\n}")]
+    assert "cloneNode(true)" in body and "'.term-def'" in body
+    assert "innerText" not in body, (
+        "innerText is layout-dependent and empty in jsdom — the guard would stop being able to see "
+        "the defect it exists for")

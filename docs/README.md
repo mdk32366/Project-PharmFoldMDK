@@ -595,6 +595,31 @@ a screen reader follows and the order a narrow viewport stacks to are unchanged 
 4's rule, applied to a page instead of a table. ⚠ Below 1,100 px both pages stack: a 14rem rail
 beside a 20rem body is worse than no rail.
 
+**⚠⚠ AND THE SECOND CALLER IMMEDIATELY EXPOSED A LATENT DEFECT IN THE RAIL ITSELF, WHICH IS THE
+ARGUMENT FOR REUSE STATED AS AN EVENT RATHER THAN AS A PRINCIPLE.** `/about`'s first heading contains
+a `<Term name="ADC">`, and a glossary term's tooltip body is a real element — `display: none` since
+`D-152`, and **hidden is not absent**. `MethodToc` built its labels with `textContent`, which walks
+it, so the rail's first entry read *"What an ADC**antibody–drug conjugate — a cancer drug that uses
+an antibody to carry a toxic payload straight to a tumour cell** is, and why target choice is the
+hard part"*. ⚠ `/method`'s headings carry no glossary terms, so **one caller could never have shown
+this**; the fix lands once, in the shared component (`headingLabel` clones the heading and strips
+`.term-def`), and both pages get it. ⚠ It clones rather than reading `innerText` — `innerText` is
+layout-dependent and returns `''` in jsdom, which would have made the defect untestable in the suite
+that has to guard it.
+
+**⚠⚠ AND THE MEASURE MOVED THREE TIMES BEFORE IT LANDED, WHICH IS THE PART WORTH RECORDING.**
+44rem left-justified against a 96rem frame → **78ch**, which left **320 px of dead gutter** on the
+right → **90ch centred**, which was still short of the frame. Each time the reply was the same
+sentence. Owner, 2026-09-10: *"On Method and Story, can we please use the entire wide surface? The
+two column thing is fine, but use the entire width please."* ⚠ **So the body is `1fr` and the
+character bound is gone** — the two-column shape is what the owner kept, and the body is whatever
+the frame has left (~1,000 px at a 1,265 px viewport, ~1,270 px at the full 96rem). ⚠ **The cost is
+named once and not re-argued: about 120 characters a line, above the 45–90 band typography would
+pick.** It was offered as the alternative twice and declined twice, and a third round of a CSS bound
+the owner has rejected three times would be an interface arguing with the person reading it. **The
+guard asserts the absence of a `ch` measure**, because the way this reverts is a later reader
+finding the typography argument in this entry and quietly restoring one.
+
 **Residuals, stated rather than closed.**
 - ⚠ **Narrow-viewport layout is still unmeasured** — `D-154`'s residual, unchanged.
 - ⚠ **`/coverage` will 404 into the catch-all redirect** for anyone holding an old link. That is the

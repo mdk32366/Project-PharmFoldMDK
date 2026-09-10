@@ -328,9 +328,20 @@ main.wide .prose { max-width: none; }
    worse than no rail, which is why this whole block is inside the query rather than a `grid` that
    collapses by luck. */
 @media (min-width: 1100px) {
+  /* ⚠⚠ D-155 follow-up 5 — THE BODY TAKES THE REST OF THE FRAME, AND THAT IS AN OWNER RULING MADE
+     THREE TIMES. The measure went 44rem (left-justified) → 78ch (320 px of dead gutter) → 90ch and
+     centred (still short of the frame), and each time the answer was the same: *"use the entire
+     width"*. Owner, 2026-09-10: *"On Method and Story, can we please use the entire wide surface?
+     The two column thing is fine, but use the entire width please."*
+     ⚠ SO `1fr`, NOT A `ch` BOUND. The two-column shape stays — a rail and a body — and the body is
+     whatever the frame has left, about 1,000 px at 1,265 and ~1,270 px at the full 96rem.
+     ⚠ THE COST IS NAMED RATHER THAN RE-ARGUED: that is roughly 120 characters a line, above the
+     45–90 band typography would pick. It was offered as the alternative twice and declined twice;
+     the owner is reading their own site, and this file records whose call it was rather than
+     re-litigating it in CSS. */
   main.wide .story {
     display: grid;
-    grid-template-columns: 14rem minmax(0, 78ch);
+    grid-template-columns: 14rem minmax(0, 1fr);
     column-gap: 2.5rem;
     align-items: start;
   }
@@ -352,7 +363,8 @@ main.wide .prose { max-width: none; }
 
   /* `/about` gets the rail through `.method-layout`, which it now shares with `/method` — so the
      only thing needed here is the body measure, because that grid is already `14rem | 1fr`. */
-  main.wide .method-layout > .prose { max-width: 78ch; }
+  /* the same ruling on the two pages that share this grid — `/method` and `/about` */
+  main.wide .method-layout > .prose { max-width: none; }
   /* ⚠ D-097 EXEMPTION, AND IT IS A RULING RATHER THAN A TWEAK: the mechanism cartoon is sized to be
      legible and the anatomy schematic is not, so the cartoon is allowed past the reading measure
      while the line drawing is not. Constraining it here would undo that entry inside a layout ship. */

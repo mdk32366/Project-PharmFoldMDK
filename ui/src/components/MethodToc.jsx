@@ -6,6 +6,29 @@ import { useEffect, useState } from 'react'
 // section the page does not have, which is the ghost-entry failure the GO forbids. Deriving means
 // the rail can be wrong in only one direction (a heading without an `id` goes missing), and the
 // test file asserts that direction closed by requiring an `id` on every h2/h3 in the body.
+/**
+ * The words a heading actually shows, with any glossary definition left behind.
+ *
+ * ⚠⚠ D-155 FOLLOW-UP 4 — THE RAIL ATE A DEFINITION, AND ONLY THE SECOND PAGE COULD SHOW IT.
+ * `/about`'s first heading contains a `<Term name="ADC">`, whose tooltip body is a real element in
+ * the DOM (hidden with `display: none` since `D-152`, but hidden is not absent). `textContent`
+ * walks it, so the rail's first entry read:
+ *
+ *   *"What an ADCantibody–drug conjugate — a cancer drug that uses an antibody to carry a toxic
+ *   payload straight to a tumour cell is, and why target choice is the hard part"*
+ *
+ * ⚠ `/method`'s headings carry no glossary terms, so this was invisible for as long as the rail had
+ * one caller — **a second caller is what turned a latent defect into a visible one**, which is the
+ * argument for reusing a component rather than copying it: the fix lands once, here.
+ * ⚠ It clones and strips rather than reading `innerText`: `innerText` is layout-dependent, returns
+ * `''` in jsdom, and would have made this untestable in the suite that has to guard it.
+ */
+export function headingLabel(heading) {
+  const copy = heading.cloneNode(true)
+  for (const def of copy.querySelectorAll('.term-def')) def.remove()
+  return copy.textContent.replace(/\s+/g, ' ').trim()
+}
+
 export default function MethodToc({ bodyRef }) {
   const [entries, setEntries] = useState([])
   const [active, setActive] = useState(null)
@@ -17,7 +40,7 @@ export default function MethodToc({ bodyRef }) {
       Array.from(body.querySelectorAll('h2[id], h3[id]')).map((h) => ({
         id: h.id,
         level: Number(h.tagName.slice(1)),
-        label: h.textContent.trim(),
+        label: headingLabel(h),
       })),
     )
   }, [bodyRef])
