@@ -17,7 +17,15 @@ primary_region = "sjc"   # matches the MPG Postgres cluster's region (D-014).
 
 [[vm]]
   size = "shared-cpu-1x"
-  memory = "512mb"              # OWNER-tunable; the transport is I/O-bound, not compute
+  # ⚠⚠ 512mb → 1024mb (D-154), and the reason is a MEASURED kill rather than a precaution. On
+  # 2026-09-10 15:37:17Z the machine was OOM-killed under an ordinary review session — flyd event
+  # `exit_code=137, oom_killed=true, requested_stop=false`, the log line "Process appears to have
+  # been OOM killed!", a reboot, and `/cancer-burden` answering HTTP 502 in a browser while it
+  # happened. ⚠ THE MECHANISM IS PREDICTED, NOT MEASURED: `/api/census` builds a 7.1 MB JSON of
+  # 3,467 rows on every `/census` view (1.29 MB gzipped, 5.4 s), which is the largest thing this
+  # tier serves — but no peak-RSS number was taken from the running machine, so this doubles the
+  # headroom and does NOT claim to have found the allocation. The payload itself is unchanged.
+  memory = "1024mb"             # OWNER-tunable; the transport is I/O-bound, not compute
 
 # Fold artifacts (structure.pdb / plddt.json / pae.json.gz / provenance.json) are written to a
 # Fly Volume by the upload route (D-031); ARTIFACT_ROOT defaults to this mount (app/config.py).

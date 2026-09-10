@@ -987,7 +987,14 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                   <td className="num" style={{ color: band.color }}>
                     {r.mean_plddt != null ? r.mean_plddt.toFixed(1) : <span className="unknown">not measured</span>}
                   </td>
-                  <td className="num">{r.tranche}</td>
+                  {/* ⚠ D-154: NAMED, like every neighbour. `{r.tranche}` drew an EMPTY cell for the
+                      one row of 3,467 with no tranche (`P55073`/`DIO3`) — while `span_aa ?? '—'` two
+                      cells up, `not measured` beside it and `not recorded` in Structure all name
+                      theirs. A blank cell is the only absence on this table a reader cannot tell
+                      from a rendering failure. ⚠ `null` is not `0`: `?? ` and never `||`. */}
+                  <td className="num">
+                    {r.tranche ?? <span className="unknown">not batched</span>}
+                  </td>
                   {/* ⚠ The status is a word, never a number. `profile-refused` and `profile-computed`
                       are styled at the SAME weight: a refusal is an outcome (ruling 3), not a gap. */}
                   <td>

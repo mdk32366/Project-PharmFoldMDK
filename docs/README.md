@@ -379,6 +379,125 @@ So the rule is not "be careful" — it is:
 
 ## Log (newest first)
 
+### D-154 — Every UI surface walked on the live site, and the disqualifying fact is that **the search box whose placeholder names `CA-125` could not find `CA-125`** — the alias block was pasted into one caller and the two surfaces the very next entry reasoned about never received it
+
+- **Date:** 2026-09-10
+- **Status:** Accepted — **two read-payload fields, three copy fixes and one machine size.** ⚠ **No
+  route path changes, no schema change, no migration, no `--load` run, no Fly write beyond the
+  release this merge triggers, no GPU run, nothing re-folded, no tile emitted, no seam claimed
+  solved, no `structural_score` moves, the scorer and the census structural rank are untouched, and
+  no census row becomes scored or ranked.** `D-016`, `D-024`, `D-038`, `D-062`, `D-079` dec 1,
+  `D-101`, `D-109`, `D-111`, `D-118`, `D-135`, `D-142`, `D-146`, `D-149`, `D-150`, `D-151`,
+  `D-152`, `F-004`, `F-042`, `F-052` and `F-054` are cited and **none of them is amended.**
+- **Owner's words, 2026-09-10:** *"I want all of the UI surfaces reviewed on the website and be
+  brought up to speed with the current local repo."*
+
+**⚠⚠ THE FIRST THING THE REVIEW ESTABLISHED IS THAT THERE WAS NOTHING TO BRING UP TO SPEED, AND IT
+IS RECORDED BECAUSE IT COULD HAVE BEEN ASSUMED EITHER WAY.** The ask presumes a gap between the
+deployed site and the tree. There is none, and it was **proved rather than inferred**: `npm run
+build` at `49f5909` emits `assets/index-nsNUQDda.js` and `assets/index-WkLGxDZd.css`, and
+`GET https://pharmfoldmdk.fly.dev/` serves those two exact names. A bundle name is content-addressed,
+so identical names are the bundle's identity — not a deploy timestamp, which is what a "looks
+current" check would have used. ⚠ **The stale copy was the LOCAL one:** `main` here was **23 commits
+behind** `origin/main` (D-131 → D-152) and was fast-forwarded before any review began, because
+reviewing a live site against a three-week-old tree produces findings about the reviewer.
+
+**⚠⚠ THE DISQUALIFYING FACT, AND IT IS ABOUT THE ENTRY BEFORE THIS ONE.** `D-152` decision 5 states
+that `/coverage` and `/scorer` *"take the shared `../searchRows.js` (so `CA-125` finds `MUC16` and
+`HER2` finds `ERBB2`, aliases included)"*. **Measured on the live site, `CA-125` on `/coverage`
+returns 0 rows and `HER2` on `/scorer` returns 0 ranking rows** — while `MUC16` returns its row and
+`ERBB2` returns rank 7. The matcher was wired in correctly. **The rows it matches against carry no
+`aliases` field at all**, so `filterRows` fell through to accession / gene / label exactly as its own
+comment says it will, and each surface printed a placeholder naming the one query that could not
+work. ⚠ **`D-152` is not amended:** every word of decision 5 describes what that PR wired, and the
+defect is a payload absent on the server side of it. This entry supplies the missing half.
+
+**⚠ Why no test saw it, and the answer is `F-054`'s shape one more time.**
+`ui/src/components/SurfaceLayout.d152.test.jsx:71` hand-writes `aliases: ['CA-125']` onto a coverage
+fixture row and then asserts `CA-125` finds it. The assertion is true of the fixture and false of
+the API — **the field the fixture supplies is one the server never sends.** `D-146` recorded this
+exact failure mode of this exact suite family (*"the gate pins the WORDS and never the WORLD"*), and
+jsdom cannot tell the two apart. **So the guard this entry adds is a payload-contract test in
+`tests/`, run against the real builders, and not another fixture.**
+
+**⚠ Provenance (D-016) — the instruments, named, because none of them is the test suite.**
+
+| Claim | Value | How known |
+|---|---|---|
+| Deployed bundle == tree at `49f5909` | `index-nsNUQDda.js` / `index-WkLGxDZd.css` | local `vite build` vs `GET /` on 2026-09-10 |
+| Local `main` behind origin | 23 commits (D-131 → D-152) | `git log HEAD..origin/main` before the fast-forward |
+| Every public read route answers | 12 routes, all `200` | `curl` sweep, 2026-09-10 |
+| `/coverage` search for `CA-125` | **0 rows** (`MUC16` → 1) | live DOM, Chrome at a 1265 px viewport |
+| `/scorer` search for `HER2` | **0 ranking rows** (`ERBB2` → 1, rank 7) | same |
+| `/targets` search for `HER2` | 1 row — the cohort list already had aliases | same; `/api/analyses` carries `aliases` on 71 of 80 rows |
+| `MUC16` / `FAT2` on `/targets` | alias-less: neither is in `/api/analyses` at all | both are oversize exclusions (`D-022`); they reach that surface from the coverage payload |
+| `/cancer-burden` banner | *"United States only. United States only. These are US figures…"* | live DOM; `meta.us_only` begins with the sentence the page bolds ahead of it |
+| `P55073` / `DIO3` card | *"237 aa … long by the standards of what this project could fold locally"* | live DOM, `/census/P55073` |
+| `DIO3` Tranche cell | **empty** — the only unnamed absence on the row | live DOM; `tranche: null` on 1 of 3,467 rows |
+| Serving machine OOM-killed | `exit_code=137, oom_killed=true, requested_stop=false` @ 2026-09-10T15:37:17Z | `fly machine status`; `fly logs` — *"Process appears to have been OOM killed!"*, then reboot |
+| What the browser saw while it happened | `/cancer-burden` → **HTTP 502** | live DOM error line, which the surface names rather than hides |
+| `/api/census` payload | 7.1 MB JSON, 1.29 MB gzipped, 5.4 s, 3,467 rows | `curl -w` on 2026-09-10 |
+| Console | zero messages on a fresh load of every surface | Chrome console, tracking enabled before load |
+| Horizontal bleed | **0** on all 13 routes | `documentElement.scrollWidth - clientWidth` |
+
+**Decisions.**
+
+1. **The alias block becomes `app.reads.attach_aliases`, and all three list payloads call it.** The
+   block existed once, inline, in `list_analyses`. ⚠⚠ **Copying it a third and a fourth time was the
+   wrong instrument, and `F-052` is the reason** — a convention obeyed by every caller except the
+   newest is the finding, not the fix, and `ui/src/searchRows.js` is this repository's own precedent
+   for extracting a matcher rather than pasting it. ⚠ **An alias is a way IN and never a second
+   identity:** no denominator, disposition, rank, score or count moves, and `D-024`'s coverage
+   invariant is untouched — the rows are already built when this function sees them.
+2. **The `/cancer-burden` geography sentence is printed once.** The page bolded a hardcoded
+   *"United States only."* and then printed the served `meta.us_only`, which **begins with that same
+   sentence**. ⚠ **The served string is not edited, stripped or re-worded:** `leadSentence`
+   emphasises the payload's *own* first sentence, so `D-149`'s decision that the geography leads in
+   bold survives and the second copy disappears. The component's fallback wording — used only when
+   the payload carries nothing — keeps its lead-in, because there is nothing there to duplicate.
+3. **The never-folded card stops issuing a length verdict the record does not support.** It told
+   every unfolded protein its span was *"long by the standards of what this project could fold
+   locally"*. **`DIO3` is 237 aa** — inside the local envelope by every measurement in this log
+   (`NECTIN4` folded locally at 318; `S-005` was clean at 440) — and the same card says one line
+   above that it *"was assigned to the local tier and should have folded"*. **The page stated a
+   cause and denied it in the next breath.** ⚠⚠ **The server already keeps the reasons apart:**
+   `core/census_unfolded.py` distinguishes `above_local_ceiling` (measured too large) from
+   `ceiling_unmeasured` (untried, **not** known too large) and from `reason_unrecorded` (a defect,
+   not a category), and its own header forbids pooling them. The clause is now keyed on that reason,
+   and where the record supports no length claim the card states the span and stops. ⚠ A mucin is
+   unfolded **by ruling** (`D-111`), so its 14,451 aa was never the reason either.
+4. **The census Tranche cell names its absence.** `{r.tranche}` drew an empty cell for the one row
+   of 3,467 that has no tranche, beside `span_aa ?? '—'`, `not measured` and `not recorded`. ⚠ **A
+   blank cell is the only absence on that table a reader cannot tell apart from a rendering
+   failure.** `?? ` and never `||`, because a tranche of `0` is the cohort.
+5. **The serving machine goes 512 MB → 1024 MB, and the mechanism is named as PREDICTED.** The kill
+   is measured — `oom_killed=true`, a reboot, and a 502 on a public surface during an ordinary
+   read-only review. **What allocated the memory is not.** `/api/census` building 7.1 MB of JSON per
+   `/census` view is the largest thing this tier does and is the obvious candidate, but no peak-RSS
+   figure was taken from the running machine, and this ship deliberately did **not** re-run a load
+   test against production to get one. ⚠ **So it doubles the headroom and claims nothing about the
+   allocation** — the payload is unchanged, and a paged or trimmed census route remains the real fix
+   if the kill recurs. ⚠ The new size takes effect on the release this merge triggers.
+
+**Deep-learning justification.** Neutral to the model, load-bearing for the claim that the model's
+output can be *checked*. Every structure on this site is our own ESMFold forward pass, and the
+project's defence of that claim is that a reader can reach the evidence and find the caveat — a
+reader who searches `CA-125`, is told nothing matches, and concludes the protein is absent has been
+misinformed by the interface about the model's coverage. ⚠ **Decision 3 is the one that matters most
+here:** it removes a false statement about *why a fold does not exist*, and the fold envelope is a
+property of the network and the card it ran on, not a presentation detail.
+
+**Residuals, stated rather than closed.**
+
+- ⚠ **Narrow-viewport layout is UNMEASURED.** The browser would not resize below the 1280 px screen,
+  so no mobile figure was taken and none is claimed. `D-152`'s measurements were 1440 × 900 only.
+- ⚠ **The OOM mechanism is predicted, not measured** (decision 5); `F-042`'s PAE hole and the
+  live-versus-frozen census counts are untouched by this entry.
+- ⚠ **No surface was re-verified on the deployed site after this change** — the release happens on
+  merge, and every measurement above is of the build that was live on 2026-09-10.
+
+---
+
 ### D-152 — The census navigation pattern applied to the other five list surfaces — and the disqualifying fact is that **the defect on those five was not the one the owner reported**, which the first draft of this ship assumed it was and a headless browser disproved in one number
 
 - **Date:** 2026-09-09

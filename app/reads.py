@@ -222,6 +222,35 @@ def detail_projection(row: ProteinAnalysis) -> dict[str, Any]:
 COHORT_TRANCHE = 0
 
 
+def attach_aliases(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Give already-built rows their ``aliases`` from the pinned UniProt cache, keyed on
+    ``accession`` (D-154; the block was `list_analyses`-only, written at D-101 for the census).
+
+    ⚠⚠ **A FUNCTION AND NOT A THIRD COPY, and `F-052` is why.** This block was pasted into
+    `list_analyses` because the census had it and `/targets` did not — and the same PR left
+    `coverage_payload` and `ranking_payload` untouched, so `/coverage` printed the placeholder
+    *"a name like CA-125"* over a population whose rows carried no alias to match, and `/scorer`
+    promised `HER2` and returned nothing. **The third occurrence of the finding is the one that
+    says copy is the wrong instrument**: `ui/src/searchRows.js` is the precedent on the client
+    (matcher extracted, both surfaces import it) and this is the same move on the server.
+
+    ⚠ Derived from the pinned cache, never typed (`scripts/build_protein_aliases.py`).
+    ⚠⚠ **THE ROWS ARE ALREADY BUILT.** A failure here costs the aliases and NOTHING ELSE — `F-054`
+    is the entry for what happens when a guard is wider than the optional thing it guards — and
+    search degrades to gene/accession/label matching rather than raising.
+    ⚠ Mutates in place and returns the same list, so a caller may use either form; the rows are
+    this function's own projections in every caller and never ORM objects.
+    """
+    try:
+        from core.protein_aliases import aliases_by_accession
+        alias_map = aliases_by_accession()
+    except Exception:                          # noqa: BLE001
+        alias_map = {}                         # ⚠ search degrades to gene/accession/label matching
+    for row in rows:
+        row["aliases"] = alias_map.get(row.get("accession")) or None
+    return rows
+
+
 def list_analyses(engine: Any) -> list[dict[str, Any]]:
     """The **cohort** as light rows, ordered by ``id`` ascending (D-034 / Orders §1; D-079).
 
@@ -246,17 +275,9 @@ def list_analyses(engine: Any) -> list[dict[str, Any]]:
     # census and wired only there, so the owner searching the cohort for the name on the drug label
     # found nothing — while `ERBB2` sat in this very list, folded and ranked. `F-052`'s shape: the
     # convention obeyed by every caller except the one nobody revisited.
-    # ⚠ Derived from the pinned UniProt cache, never typed (`scripts/build_protein_aliases.py`).
-    # ⚠⚠ THE ROWS ARE ALREADY BUILT. A failure here costs the aliases and NOTHING ELSE — `F-054` is
-    # the entry for what happens when a guard is wider than the optional thing it guards.
-    try:
-        from core.protein_aliases import aliases_by_accession
-        alias_map = aliases_by_accession()
-    except Exception:                          # noqa: BLE001
-        alias_map = {}                         # ⚠ search degrades to gene/accession/label matching
-    for row in out:
-        row["aliases"] = alias_map.get(row.get("accession")) or None
-    return out
+    # ⚠ D-154: the block that used to sit inline here is now `attach_aliases`, because the SAME
+    # finding then turned up twice more — `coverage_payload` and `ranking_payload` never got it.
+    return attach_aliases(out)
 
 
 def get_analysis(engine: Any, analysis_id: int) -> Optional[dict[str, Any]]:
@@ -562,6 +583,11 @@ def coverage_payload(engine: Any) -> dict[str, Any]:
     failed = _failed_accessions(engine)
     projected = [_coverage_row(r, folded, failed) for r in rows]
     _attach_census_sibling(engine, projected)
+    # ⚠⚠ D-154: `/coverage`'s search box says *"gene, accession, or a name like CA-125"* and, until
+    # this line, `CA-125` matched NOTHING — `MUC16` is on the surface, and the alias that names it
+    # on every clinical assay was not on the row. ⚠ THE MANIFEST IS STILL THE COHORT: an alias is a
+    # way IN and never a second identity, so no denominator, disposition or count moves here.
+    attach_aliases(projected)
     return {
         "coverage": coverage(rows),
         "population_key": COVERAGE_POPULATION_KEY,
@@ -784,7 +810,11 @@ def ranking_payload(engine: Any) -> dict[str, Any]:
                 "excluded": result.excluded or [],            # [[symbol, reason], ...] (D-060 §3.5)
                 "paper_published_count": PAPER_PUBLISHED_GROUP_B,   # source constant, served not typed
             },
-            "rows": [_score_projection(sc, row) for sc, row in pairs],
+            # ⚠⚠ D-154: aliases, for the same reason as `/coverage` — `/scorer`'s box promises
+            # *"a name like HER2"* and returned zero ranking rows for it, while `ERBB2` sat at
+            # rank 7. ⚠ NOTHING ABOUT THE RESULT MOVES: the rank, the score and the attributions
+            # are the recorded run's (F-004, never re-run); this adds a way to FIND a row.
+            "rows": attach_aliases([_score_projection(sc, row) for sc, row in pairs]),
         }
 
 

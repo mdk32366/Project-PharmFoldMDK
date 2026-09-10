@@ -487,7 +487,7 @@ def test_d129_is_the_next_free_decision_id():
     # still reddens here, exactly as a bare `### D-148` does. D-153 bakes the D-149 SEER burden
     # loader into the Fly serving image as one explicit `COPY` — image permanence, no formula, no
     # route, no schema, no `--load` — so it touches nothing this suite measures and is named here
-    # only because this is one of the enumerated id checks. `### D-154` now takes the next-free bar.
+    # only because this is one of the enumerated id checks. `### D-155` now takes the next-free bar (154 was spent 2026-09-10).
     # ⚠⚠ Widened again at **D-151** — to `[…, 149, 150, 151]` — by enumeration, for the
     # ELEVENTH time, and never by a `>=`. Spending 151 reddened the previous form BY DESIGN; that
     # is the collision guard working, and it is the only reason this file had to be opened by an
@@ -513,8 +513,11 @@ def test_d129_is_the_next_free_decision_id():
     # oversight to the next reader.**
     assert [i for i in ids if i > 129] == [
         130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149,
-        150, 151, 152, 153
+        150, 151, 152, 153, 154
     ], (
+        f"⚠ 154 is ADDED by the live-surface review entry — the THIRTEENTH resolution by "
+        f"enumeration and never by a `>=`. Spending 154 reddened the previous form BY DESIGN, "
+        f"which is what tells a spent id from a free one; `### D-155` now takes the bar. "
         f"D-129's successors must be exactly D-130, D-132, D-133, D-134, D-135, D-136, "
         f"D-137, D-138, D-139, D-140, D-141, D-142, D-143, D-144, D-145, D-146 and D-147 — "
         f"⚠ 142 is no longer absent: docs/RESERVED.md reserved it and the /targets columns "
@@ -617,7 +620,7 @@ def test_d129_is_the_next_free_decision_id():
     # FIRST where the spent integer is not the one this file barred. 153 had NO row and NO bar when
     # it was claimed (measured on `41b9b3b`: `rg -n '^### D-15' docs/README.md` returned 151 and 150
     # only), because the bar sat on **152** — which is held for another agent's lane. So the
-    # resolution here is a pure ADD: 153 is named, 152 keeps its bar, and `### D-154` takes the
+    # resolution here is a pure ADD: 153 is named, 152 keeps its bar, and `### D-155` takes the
     # next-free one. D-153 bakes the D-149 burden loader into the serving image; **no Phase 5 label,
     # no fate, no seam and no threshold moves.**
     assert re.search(r"^### D-153 — The D-149 burden loader stops living on the production host",
@@ -638,8 +641,14 @@ def test_d129_is_the_next_free_decision_id():
         "the concurrent sitewide-layout lane and must stay unspent until that lane claims it by "
         "name here — never admitted by a `>=`'"
     )
-    assert "\n### D-154" not in LOG, (
-        "D-154 is the next free integer and must stay unspent until an entry claims it "
+    # ⚠⚠ D-154 SPENT the integer this guard barred (the live-surface review ship), so
+    # it is NAMED here rather than barred and `### D-155` takes the next-free bar. This is the
+    # widening D-145 fixed the shape of: a name is ADDED and nothing becomes a `>=`.
+    assert "\n### D-154 — Every UI surface walked on the live site" in LOG, (
+        "D-154 was spent by the live-surface review ship, so it must be NAMED here rather "
+        "than barred")
+    assert "\n### D-155" not in LOG, (
+        "D-155 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
