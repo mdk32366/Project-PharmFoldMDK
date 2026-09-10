@@ -295,7 +295,21 @@ main.wide { max-width: 96rem; }
 .app-nav a.active { color: var(--ink); }
 
 /* prose pages (method note, ADC context) */
+/* ⚠⚠ D-155 FOLLOW-UP — WIDENING `main` DID NOT WIDEN THE PROSE, AND THE HALF-DONE STATE LOOKED
+   WORSE THAN EITHER END OF IT. `main.wide` is 96rem; `.prose` kept its 44rem reading measure and
+   has no auto margins, so the Story, Method and About ADCs pages rendered a 44rem column of text
+   pinned to the LEFT with ~52rem of empty gutter on the right. Owner, 2026-09-10: *"Story, Method,
+   and About ADCs are simply left justified now. They are not using the entire width of the
+   surface."*
+   ⚠ THE RULING IS ALREADY ON THE RECORD AND THIS IS THE OTHER HALF OF IT. D-155 decision 6 put
+   these three routes in `WIDE_ROUTES` on the owner's instruction, having offered — and been
+   declined — the variant that kept a narrow text measure inside a wide frame. So the measure comes
+   off inside `main.wide` and stays exactly as it was everywhere else.
+   ⚠ SCOPED TO `main.wide`, never global: `.prose` is also the body of a CARD (`/target/:id` and
+   friends keep the reading measure by D-155 decision 6's negative half), and a bare
+   `max-width: none` here would widen those too. */
 .prose { max-width: 44rem; }
+main.wide .prose { max-width: none; }
 .prose h2 { margin-top: 0; }
 .prose h3 { margin-top: 1.6rem; }
 .prose ul { padding-left: 1.1rem; }

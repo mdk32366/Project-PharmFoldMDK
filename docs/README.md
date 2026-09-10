@@ -494,10 +494,73 @@ band, so the surface most likely to be read as a leaderboard was the one furthes
 Merging them puts `D-024`'s honest denominator, the fold verdict and the model's own confidence in
 one place, which is where `D-069` says a self-sufficient surface keeps them.
 
-**Residuals, stated rather than closed.**
+#### D-155 follow-up — the owed figures, measured on the deployed build, and the two defects only looking could find
 
-- ⚠ **The rendered after-figures are owed** (see the provenance note): mean row height, page height
-  and first-row offset for the merged table are unmeasured here.
+**⚠ The residual above is discharged rather than carried.** Measured on
+`https://pharmfoldmdk.fly.dev/targets` at a 1,200 px table width on **2026-09-10, after the merge
+deployed** (release `c836171`; the served bundle `index-CGEOdYMh.js` is hash-identical to a local
+`vite build` of `main`, the same provenance check `D-154` used). ⚠⚠ **A cache-busting query string
+was needed to see it at all** — the first read of the deployed page returned the PREVIOUS bundle from
+the browser cache and showed the old eight columns, which is a way to certify a deploy that did not
+happen and is recorded here so the next session does not repeat it.
+
+| measured at 1,200 px | before (two surfaces) | after (one) |
+|---|---|---|
+| `Rank` column | 140 px | **87 px** |
+| `Description` | 321 px | **346 px** |
+| `Fold confidence` → `Status` | 192 px | **219 px** |
+| Rows | 82 + heading, twice over | 82, once |
+| `why` disclosures rendered | — | **3** — exactly the rows that have a reason |
+| Document h-bleed | 0 | **0** (unchanged) |
+| Mean row height | 77 px | **86 px** ⚠ |
+| Max row height | 176 px | **196 px** ⚠ |
+| First data row at | 391 px | **613 px** ⚠ |
+| Whole-page height | 857 px + `/coverage`'s 1,231 px | **1,419 px** |
+
+⚠⚠ **THREE OF THESE MOVED THE WRONG WAY AND THEY ARE REPORTED RATHER THAN FRAMED AWAY.** The
+first data row sits **222 px lower** because the honest denominator now leads the page, and the mean
+row is **9 px taller** because the Status cell stacks three lines where a column held one. Both are
+the merge's cost, paid on purpose: the panel is a claim `D-024` requires above the table it
+qualifies, and three orthogonal facts on one line is the `Folded`-doing-three-jobs defect `D-150`
+exists to prevent. ⚠ The reader's total scroll across the same content fell — **2,088 px over two
+pages → 1,419 px over one** — and the first rows are still inside a 900 px fold.
+
+**⚠⚠ AND THE DEPLOYED PAGE SHOWED TWO DEFECTS THIS SHIP INTRODUCED, BOTH IN THE STATUS CELL, BOTH
+FOUND BY READING IT RATHER THAN BY A TEST.**
+
+1. **It said the fold verdict three times.** `MUC16` and `FAT2` rendered *"excluded from the cohort
+   — not folded — never attempted · not folded · not folded — oversize"*: the rank cause, axis B and
+   axis C's absence label each spelling the same fact. **That is the defect the owner reported at
+   the `D-150` follow-up, re-created by the entry that cited it.** ⚠ The rule now holds explicitly:
+   *an axis states what that axis knows and never what the one beside it already said* — the cause
+   renders only where the row **has** a fold, and `causeOnly` drops a leading verdict from axis C.
+   Nothing is lost: the full text is in the `why` disclosure, untruncated.
+2. **It contradicted itself on a below-floor row.** Joined by an em dash, axis A read *"in the
+   ranking set — excluded by the pre-registered mean pLDDT floor of 50"*. Both halves are true and
+   they answer **different questions**: `ranked` is `D-024`'s partition of the cohort, and the floor
+   decides membership of the **scored** set at fit time — the 67-versus-56 reconciliation `D-066`
+   put on `/scorer`. The cause is now its own line, prefixed **`no rank —`**, which names the
+   question it answers.
+
+**⚠⚠ AND A THIRD, REPORTED BY THE OWNER ON THE DEPLOYED BUILD: THE WIDE PROSE PAGES WERE
+LEFT-JUSTIFIED.** *"Story, Method, and About ADCs are simply left justified now. They are not using
+the entire width of the surface."* — owner, 2026-09-10. `main.wide` is **96rem** and `.prose` kept
+its **44rem** reading measure with no auto margins, so all three rendered a narrow column pinned to
+the left with roughly **52rem of empty gutter**. ⚠ **Widening the container is not widening the
+page, and the half-done state reads worse than either end of it** — a centred narrow column at least
+looks deliberate. The measure is lifted **inside `main.wide` only**, so a CARD's prose keeps it and
+this entry's own negative half still holds. ⚠ **The line-length cost is accepted, not discovered:**
+decision 6 offered the variant that keeps a narrow text measure inside a wide frame and the owner
+declined it, which is why the fix is the measure coming off rather than the frame coming in.
+
+⚠ Guarded by three cases in `TargetList.merge.d155.test.jsx` that **count occurrences** rather than
+matching a fragment (a fragment match passes on one copy or on five — `D-154`'s lesson), and two
+inherited guards were flipped in place: one now asserts the `no rank —` prefix with `toBe`, and
+`TargetList.search.test.jsx` asserts the verdict and the reason as **separate axes plus a count of
+one**, which is strictly stronger than the concatenated string it replaced — **that string is what
+passed while the page said it twice.**
+
+**Residuals, stated rather than closed.**
 - ⚠ **Narrow-viewport layout is still unmeasured** — `D-154`'s residual, unchanged.
 - ⚠ **`/coverage` will 404 into the catch-all redirect** for anyone holding an old link. That is the
   owner's decision recorded as such, and no redirect route was added.

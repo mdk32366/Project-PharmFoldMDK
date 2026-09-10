@@ -282,3 +282,61 @@ def test_the_component_suite_ships_beside_the_python_one():
     assert "D-135" in dual.read_text(encoding="utf-8")
     assert not (UI / "components" / "CoverageView.dual.test.jsx").exists(), (
         "the old component suite is still here — two suites over one surface will drift")
+
+
+# ───────────────────────────── the follow-up ───────────────────────────────────────────────────
+
+
+def test_each_status_axis_states_only_what_that_axis_knows():
+    """⚠⚠ THE DEPLOYED MERGE SAID `not folded` THREE TIMES on `MUC16` and `FAT2`, and it took reading
+    the live page to see it — every suite was green while it was on screen. **It is the defect the
+    owner reported at the `D-150` follow-up, re-created by the entry that cites `D-150`.**
+
+    ⚠ Two rules, asserted as source properties here and as counted occurrences in
+    `TargetList.merge.d155.test.jsx`: the rank cause renders only where the row HAS a fold, and
+    `causeOnly` drops a leading verdict from the confidence axis."""
+    assert "const cause = foldState === 'folded' ? rawCause : null" in TARGET_LIST, (
+        "the rank cause is back on rows whose fold axis already gives the reason")
+    assert "export function causeOnly" in TARGET_LIST
+    assert "causeOnly(absentLabel(row))" in TARGET_LIST, (
+        "the confidence axis repeats the fold verdict again")
+
+
+def test_the_rank_cause_names_the_question_it_answers():
+    """⚠⚠ *"in the ranking set — excluded by the pre-registered mean pLDDT floor of 50"* is one
+    sentence saying a row is in a set and out of it. The halves answer different questions:
+    `ranked` is `D-024`'s partition, the floor decides the SCORED set at fit time (`D-066`'s 67 vs
+    56). The prefix is what keeps them apart, so it is pinned."""
+    assert '"status-line status-cause">no rank — {cause}' in TARGET_LIST, (
+        "the cause lost the prefix that says which question it answers")
+    disposition = TARGET_LIST[TARGET_LIST.index("status-disposition disp-"):]
+    disposition = disposition[: disposition.index("</span>")]
+    assert "cause" not in disposition, (
+        "the cause is joined onto the disposition line again — that reads as a contradiction")
+
+
+def test_causeonly_strips_a_verdict_and_never_empties_a_cell():
+    """⚠ A known PREFIX, never a search, and never an empty result: a blank cell is an unnamed
+    absence, which `D-154` spent an entry closing."""
+    body = TARGET_LIST[TARGET_LIST.index("export function causeOnly"):]
+    body = body[: body.index("\n}")]
+    assert "startsWith(verdict)" in body, "the strip became a search and can truncate a new wording"
+    assert "return rest || text" in body, "a label that is only a verdict now renders as an empty cell"
+
+
+def test_the_prose_pages_actually_fill_the_width_they_were_given():
+    """⚠⚠ THE OTHER HALF OF DECISION 6, AND THE HALF-DONE STATE LOOKED WORSE THAN EITHER END.
+    `main.wide` is 96rem and `.prose` kept a 44rem measure with no auto margins, so Story, Method
+    and About ADCs rendered a narrow column pinned to the LEFT with ~52rem of empty gutter. Owner,
+    2026-09-10: *"Story, Method, and About ADCs are simply left justified now. They are not using
+    the entire width of the surface."*
+
+    ⚠ SCOPED, NOT GLOBAL. `.prose` is also a CARD's body, and cards keep the reading measure by this
+    entry's own negative half — so the override hangs off `main.wide` and a bare `max-width: none`
+    on `.prose` would redden here."""
+    assert re.search(r"^\.prose \{[^}]*max-width:\s*44rem", CSS, re.M), (
+        "the reading measure for a card's prose is gone")
+    assert re.search(r"^main\.wide \.prose \{[^}]*max-width:\s*none", CSS, re.M), (
+        "the wide routes' prose does not fill the measure the owner ruled for")
+    scoped = CSS[CSS.index("main.wide .prose"):]
+    assert scoped[: scoped.index("}")].count("max-width") == 1
