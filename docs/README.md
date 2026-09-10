@@ -607,11 +607,18 @@ this**; the fix lands once, in the shared component (`headingLabel` clones the h
 layout-dependent and returns `''` in jsdom, which would have made the defect untestable in the suite
 that has to guard it.
 
-**⚠ And the measure was widened once more, because 78ch left the owner's original complaint standing
-in a milder form:** the rail and body used ~940 px of a 1,265 px measure and **320 px of dead gutter
-sat on the right**. The body goes to **90ch** — the top of the readable band, not a stretch to the
-frame — and the grid is **centred**, so what is left over is spent evenly and the page reads as a
-document rather than as content pushed against one edge.
+**⚠⚠ AND THE MEASURE MOVED THREE TIMES BEFORE IT LANDED, WHICH IS THE PART WORTH RECORDING.**
+44rem left-justified against a 96rem frame → **78ch**, which left **320 px of dead gutter** on the
+right → **90ch centred**, which was still short of the frame. Each time the reply was the same
+sentence. Owner, 2026-09-10: *"On Method and Story, can we please use the entire wide surface? The
+two column thing is fine, but use the entire width please."* ⚠ **So the body is `1fr` and the
+character bound is gone** — the two-column shape is what the owner kept, and the body is whatever
+the frame has left (~1,000 px at a 1,265 px viewport, ~1,270 px at the full 96rem). ⚠ **The cost is
+named once and not re-argued: about 120 characters a line, above the 45–90 band typography would
+pick.** It was offered as the alternative twice and declined twice, and a third round of a CSS bound
+the owner has rejected three times would be an interface arguing with the person reading it. **The
+guard asserts the absence of a `ch` measure**, because the way this reverts is a later reader
+finding the typography argument in this entry and quietly restoring one.
 
 **Residuals, stated rather than closed.**
 - ⚠ **Narrow-viewport layout is still unmeasured** — `D-154`'s residual, unchanged.
