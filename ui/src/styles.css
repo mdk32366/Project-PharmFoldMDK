@@ -310,6 +310,54 @@ main.wide { max-width: 96rem; }
    `max-width: none` here would widen those too. */
 .prose { max-width: 44rem; }
 main.wide .prose { max-width: none; }
+
+/* ── ⚠⚠ D-155 FOLLOW-UP 3 — THE TWO-COLUMN READING LAYOUT FOR THE PROSE PAGES ──────────────────
+   Owner, 2026-09-10, after the measure came off: the wide prose pages should use the width without
+   becoming a wall of 148-character lines. **This is `/method`'s shipped shape (`D-138`) applied to
+   the other two prose surfaces, not a new invention** — a contents rail beside a body at a readable
+   measure. `F-052`'s rule is that the third caller reuses the convention rather than inventing a
+   second one, and here that means the same grid, the same rail styles and (on `/about`) the same
+   `MethodToc` component reading its entries off the headings it actually renders.
+
+   ⚠ THE BODY KEEPS A READING MEASURE AND THE PAGE KEEPS THE WIDTH. `minmax(0, 78ch)` is the point
+   of the whole exercise: at 96rem a paragraph ran to ~148 characters, and the fix the owner asked
+   for is a LAYOUT that uses the space, never a longer line.
+   ⚠ WHY THE RAIL IS STICKY AND THE BODY IS NOT: the rail is orientation and is wanted at every
+   scroll position; the body is the thing being read.
+   ⚠ NARROW MEASURE UNTOUCHED. Below 1100 px both pages stack — a 14rem rail beside a 20rem body is
+   worse than no rail, which is why this whole block is inside the query rather than a `grid` that
+   collapses by luck. */
+@media (min-width: 1100px) {
+  main.wide .story {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 78ch);
+    column-gap: 2.5rem;
+    align-items: start;
+  }
+  /* ⚠ EVERY child to the body column by default, so a block ADDED to the Story later lands in the
+     prose rather than in the rail. A layout whose default is "rail" would silently file the next
+     paragraph beside the contents. */
+  main.wide .story > * { grid-column: 2; min-width: 0; }
+  main.wide .story > .story-toc {
+    grid-column: 1;
+    /* ⚠ Spans the rows so the sticky box has an area to stick INSIDE — a sticky grid item is
+       confined to its own grid area, so a one-row rail would unstick immediately. */
+    grid-row: 1 / span 999;
+    position: sticky;
+    top: 1rem;
+    margin: 0;
+  }
+  /* the cold strip is three big numbers and reads as a band, so it keeps the body's full width */
+  main.wide .story > .story-cold-strip { grid-column: 2; }
+
+  /* `/about` gets the rail through `.method-layout`, which it now shares with `/method` — so the
+     only thing needed here is the body measure, because that grid is already `14rem | 1fr`. */
+  main.wide .method-layout > .prose { max-width: 78ch; }
+  /* ⚠ D-097 EXEMPTION, AND IT IS A RULING RATHER THAN A TWEAK: the mechanism cartoon is sized to be
+     legible and the anatomy schematic is not, so the cartoon is allowed past the reading measure
+     while the line drawing is not. Constraining it here would undo that entry inside a layout ship. */
+  main.wide .method-layout > .prose .adc-panels { max-width: none; }
+}
 .prose h2 { margin-top: 0; }
 .prose h3 { margin-top: 1.6rem; }
 .prose ul { padding-left: 1.1rem; }

@@ -575,6 +575,26 @@ inherited guards were flipped in place: one now asserts the `no rank —` prefix
 one**, which is strictly stronger than the concatenated string it replaced — **that string is what
 passed while the page said it twice.**
 
+**⚠⚠ AND A FIFTH — THE FIRST COMPLAINT ANSWERED INTO A SECOND ONE, AND THEN INTO A LAYOUT.**
+Lifting `.prose`'s measure stopped the left-justified column and gave `/` and `/about` paragraphs of
+about **148 characters** (measured on the deployed build), which is *"use the entire width"* honoured
+in the letter and broken in the spirit. Owner, 2026-09-10: *"Do the two-column reading layout for
+Story and About"*. ⚠⚠ **It is `/method`'s shipped shape (`D-138`), not a new one:** a contents rail
+beside a body bounded at **78ch**. `/` already had its own three-beat contents (`D-135`) and needed
+only a grid — its rail is CSS over the nav that was already there. `/about` had none, so it
+**imports `MethodToc`**, which reads its entries off the headings of whatever subtree it is given;
+its nine headings gained stable ids so the rail can address them. ⚠ **`F-052` is why that is an
+import rather than a second rail:** a third caller needing a pattern is exactly when one gets
+re-written and named after the page it landed on. ⚠ **The grid class stays `method-layout`** — a
+neutral rename would have meant editing `/method`'s shipped guards to buy a better word, and the
+name records where the pattern came from. ⚠ **`D-097`'s exemption survives the ship:** the mechanism
+cartoon is sized to be legible and the anatomy schematic is not, so the cartoon is allowed past the
+reading measure **by name** — a blanket bound on the body would have undone that entry inside a
+layout change. ⚠ **The DOM order is untouched** (the layout is a grid over it), so the reading order
+a screen reader follows and the order a narrow viewport stacks to are unchanged — `D-152` decision
+4's rule, applied to a page instead of a table. ⚠ Below 1,100 px both pages stack: a 14rem rail
+beside a 20rem body is worse than no rail.
+
 **Residuals, stated rather than closed.**
 - ⚠ **Narrow-viewport layout is still unmeasured** — `D-154`'s residual, unchanged.
 - ⚠ **`/coverage` will 404 into the catch-all redirect** for anyone holding an old link. That is the
