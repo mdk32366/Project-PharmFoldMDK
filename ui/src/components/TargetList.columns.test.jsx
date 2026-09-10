@@ -371,7 +371,10 @@ describe('⚠⚠ column one is bounded and demoted, and no cause is truncated', 
     // matters: every character, never a truncation** — `toBe`, not `toMatch`, so a `slice(0, 70)`
     // creeping back in reddens exactly as it would have before.
     const cause = container.querySelector('.status-cause')
-    expect(cause.textContent.trim()).toBe('— no ranking run is currently served')
+    // ⚠ D-155 follow-up: the cause names which question it answers (`no rank — …`), because joined
+    // to the disposition by a bare em dash it read as "in the ranking set — excluded from it".
+    // The claim here is unchanged: every character, `toBe` and never `toMatch`.
+    expect(cause.textContent.trim()).toBe('no rank — no ranking run is currently served')
     // and the cell it left holds the category in a word, never a number and never a bare dash
     // ⚠ `tbody` scoped: the class is on the `<th>` too, and an unscoped query finds the HEADER
     expect(container.querySelector('tbody .col-rank-num').textContent.trim()).toBe('unranked')

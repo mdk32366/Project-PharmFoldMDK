@@ -72,7 +72,14 @@ describe('the count states its key', () => {
     await waitFor(() => expect(container.textContent).toMatch(/FAT2/))
     expect(container.textContent).toMatch(/MUC16/)
     // ⚠ and with the CAUSE, not a bare dash — the reason lives in `exclusion_reason`
-    expect(container.textContent).toMatch(/not folded — oversize/)
+    // ⚠⚠ D-155 follow-up: the verdict and the reason are now SEPARATE AXES of the Status cell, so
+    // this asserts both rather than the string that used to concatenate them. That is strictly
+    // stronger — the old form passed on a cell that said `not folded` twice, which is what shipped.
+    const row = [...container.querySelectorAll('tbody tr')].find((tr) => tr.textContent.includes('MUC16'))
+    const status = row.querySelector('.status-cell').textContent
+    expect(status).toMatch(/not folded/)
+    expect(status).toMatch(/oversize/)
+    expect(status.split('not folded').length - 1).toBe(1)
   })
 
   it('does not link a row that has no analysis to open', async () => {

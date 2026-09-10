@@ -163,6 +163,51 @@ describe('D-155 · the Status cell answers three questions and keeps them apart'
   })
 })
 
+// ⚠⚠ THE FOLLOW-UP, AND IT WAS FOUND BY LOOKING AT THE DEPLOYED PAGE RATHER THAN BY A TEST.
+// The merged Status cell shipped saying `not folded` THREE TIMES on `MUC16` and `FAT2` — once as
+// the rank cause, once as the fold axis, once inside the confidence axis's absence label — and it
+// told a below-floor row it was *"in the ranking set — excluded by the pre-registered floor"* in a
+// single em-dashed sentence. Both read as one claim contradicting itself. ⚠ These count occurrences
+// rather than matching a fragment, because a fragment match passes on one copy or on five (the
+// same reason `D-154`'s burden guard counts).
+describe('D-155 follow-up · each axis says what only it knows', () => {
+  const countOf = (haystack, needle) => haystack.split(needle).length - 1
+
+  it('never says the fold verdict more than once in one cell', async () => {
+    const { container } = await mounted()
+    const cell = rowFor(container, 'DDD').querySelector('.status-cell').textContent
+    expect(countOf(cell, 'not folded')).toBe(1)
+    // and the REASON is still there — the repetition went, the fact did not
+    expect(cell).toMatch(/oversize/)
+  })
+
+  it('does not repeat the fold verdict on a failed fold either', async () => {
+    const { container } = await mounted()
+    const cell = rowFor(container, 'BBB').querySelector('.status-cell').textContent
+    expect(countOf(cell.replace('fold failed', 'FOLDVERDICT'), 'fold failed')).toBe(0)
+    expect(cell).toMatch(/CUDA out of memory/)
+  })
+
+  it('never joins the disposition and the rank cause into one contradictory sentence', async () => {
+    getRanking.mockResolvedValue({ rows: [] })
+    getCoverage.mockResolvedValue({
+      ...COVERAGE,
+      rows: [{ ...COVERAGE.rows[0], disposition: 'ranked', fold_status: 'folded' }],
+    })
+    listAnalyses.mockResolvedValue([ANALYSES[0]])
+    const { container } = await mounted()
+    const cell = rowFor(container, 'AAA').querySelector('.status-cell')
+    const disposition = cell.querySelector('.status-disposition').textContent
+    // ⚠ the disposition line states the partition and NOTHING else
+    expect(disposition.trim()).toBe('in the ranking set')
+    const cause = cell.querySelector('.status-cause')
+    expect(cause).toBeTruthy()
+    // ⚠ and the cause names which question it answers, so "in the set" and "no rank" cannot read
+    //   as one self-contradicting sentence
+    expect(cause.textContent).toMatch(/^no rank — /)
+  })
+})
+
 describe('D-155 · the Rank cell after the cause moved out of it', () => {
   it('shows the integer for a ranked row', async () => {
     const { container } = await mounted()

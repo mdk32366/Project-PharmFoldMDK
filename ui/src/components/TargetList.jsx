@@ -347,6 +347,28 @@ function RowCells({ row, rankingServed, foldStatus, absentLabel, covState, assoc
   )
 }
 
+/**
+ * D-155 follow-up — drop a leading fold verdict from an absence label, keeping the reason.
+ *
+ * ⚠⚠ `absentLabel` builds *"not folded — oversize: 4030 aa …"* and *"fold failed — CUDA OOM …"*,
+ * which are exactly right in a column of their own and say the fold verdict a SECOND time when
+ * axis B is directly above them. This keeps the half axis B does not carry.
+ * ⚠ It strips a known PREFIX and never searches for one: a label that does not start with a verdict
+ * is returned whole, so a future wording cannot be silently truncated by a loose match. And it
+ * never empties a cell — a label that is nothing but the verdict is left as it is, because *"not
+ * folded"* twice is a repetition and a blank cell is an unnamed absence, which is worse (`D-154`).
+ */
+export function causeOnly(label) {
+  const text = String(label ?? '')
+  for (const verdict of ['not folded — ', 'fold failed — ']) {
+    if (text.startsWith(verdict)) {
+      const rest = text.slice(verdict.length).trim()
+      return rest || text
+    }
+  }
+  return text
+}
+
 //: The words for D-024's partition, spelled for a reader rather than for the payload. ⚠ `held_out`
 //: is not a judgement about the protein — D-021 holds it out because its boundary method is not
 //: comparable, which the disclosure below says in full.
@@ -384,7 +406,18 @@ const DISPOSITION_COPY = {
 function StatusCell({ row, rankingServed, foldStatus, absentLabel, band, absent }) {
   const st = foldStatus[row.accession]
   const foldState = row.fold_status ?? st?.fold_status
-  const cause = rankCause(row, rankingServed)
+  // ⚠⚠ D-155 FOLLOW-UP — THE CELL SAID `not folded` THREE TIMES, AND IT TOOK LOOKING AT IT TO SEE.
+  // On the deployed merge `MUC16` and `FAT2` read: *"excluded from the cohort — not folded — never
+  // attempted · not folded · not folded — oversize"*. Three axes, one fact, three spellings — the
+  // exact defect `D-150` fixed on the census and the owner reported again at the D-150 follow-up.
+  // ⚠ THE RULE: an axis states what the axis knows and never what the one beside it already said.
+  //   · the CAUSE is shown only where the row HAS a fold — where it does not, axis B is the reason
+  //     it has no rank, and repeating that as a cause adds a sentence and no fact;
+  //   · axis C drops a leading fold verdict for the same reason, keeping only the reason itself.
+  // ⚠ Nothing is lost: the full text is in the `why` disclosure, untruncated, on every row that has
+  // one — and `IGF2R`'s CUDA-OOM sentence is exactly such a row.
+  const rawCause = rankCause(row, rankingServed)
+  const cause = foldState === 'folded' ? rawCause : null
   // ⚠ The note reads the COVERAGE row's field names, which are already joined onto `row` upstream
   // (`fold_status`, `disposition`) plus the two the merge threads through — see the `all` map.
   const note = hasCoverageNote(row) ? coverageNote(row) : null
@@ -396,8 +429,17 @@ function StatusCell({ row, rankingServed, foldStatus, absentLabel, band, absent 
         {row.disposition
           ? (DISPOSITION_COPY[row.disposition] ?? row.disposition)
           : <span className="unknown">disposition not recorded</span>}
-        {cause && <span className="status-cause"> — {cause}</span>}
       </span>
+      {/* ⚠⚠ D-155 FOLLOW-UP — THE CAUSE IS ITS OWN LINE, PREFIXED `no rank`, AND THAT PREFIX FIXES A
+          FLAT CONTRADICTION. Joined to the disposition by an em dash it read *"in the ranking set —
+          excluded by the pre-registered mean pLDDT floor of 50"*, which says a row is in the set and
+          excluded from it in one breath. Both halves are true and they are about DIFFERENT things:
+          `ranked` is `D-024`'s partition of the cohort, and the floor decides membership of the
+          SCORED set at fit time — the 67-versus-56 reconciliation `D-066` put on `/scorer`. The
+          prefix names which question the sentence answers. */}
+      {cause && (
+        <span className="status-line status-cause">no rank — {cause}</span>
+      )}
       {/* B · the fold. ⚠ Three values and never a fourth (D-043). */}
       <span className="status-line status-fold">
         {foldState === 'folded' ? <span className="folded">folded</span>
@@ -409,7 +451,7 @@ function StatusCell({ row, rankingServed, foldStatus, absentLabel, band, absent 
       <span className="status-line status-confidence col-secondary">
         {absent ? (
           <span className="absent-reason" title={st?.fail_reason || undefined}>
-            {absentLabel(row)}
+            {causeOnly(absentLabel(row))}
           </span>
         ) : (
           <>
