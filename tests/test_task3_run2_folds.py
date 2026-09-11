@@ -325,3 +325,91 @@ def test_this_script_gates_exactly_as_the_production_worker_does():
     assert production["requirement_mib"] == 6357
     assert posted == [101, 101], "both paths must post the PAE to the D-036 route"
     assert len(rec.rows) == 1 and rec.rows[0]["free_mib_before"] == 7043
+
+
+# ── the stranger check must ask EXACTLY the question the claim asks ──────────────────────────
+
+def _queue_fixture(jobs):
+    """A real queue: `(job_id, accession, tier, status)` rows through the real models.
+
+    ⚠ SQLite is a fair substrate HERE and `F-056` is checked rather than waved at: the predicate
+    under test is plain equality on a `tier` column, not a JSON path, so the two engines cannot
+    disagree about it. A test that turned on JSON semantics would not belong on this substrate.
+    """
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    from db.models import Base, JobRecord, ProteinAnalysis
+
+    eng = create_engine("sqlite://")
+    Base.metadata.create_all(eng)
+    with Session(eng) as s:
+        for jid, acc, tier, status in jobs:
+            a = ProteinAnalysis(id=jid * 10, input_type="uniprot", input_value=acc, meta={})
+            s.add(a)
+            s.flush()
+            s.add(JobRecord(id=jid, analysis_id=a.id, status=status, tier=tier,
+                            inference_settings={}))
+        s.commit()
+    return eng
+
+
+def _claimable(eng, tier="local"):
+    from sqlalchemy.orm import Session
+
+    with Session(eng) as s:
+        return T._claimable_pending(s, tier)
+
+
+def test_a_null_tier_pending_job_is_not_a_stranger():
+    """⚠⚠ `core/queue.py`'s claim says it in its own comment: *`tier = :tier` is strict. A
+    NULL-tier job is claimed by NOBODY, deliberately* — three-valued logic makes `NULL = 'local'`
+    unknown, hence false. So a NULL-tier pending job cannot be folded by this run, and refusing
+    to start because one exists refuses on a job that could never have been claimed."""
+    eng = _queue_fixture([(1, "Q8WXF7", None, "pending")])
+    assert _claimable(eng) == {}
+
+
+def test_a_pending_job_of_ANOTHER_tier_is_not_a_stranger_either():
+    """⚠ The same reasoning one step along, and it is why this filters on the tier rather than
+    only on NULL: a pending `rental` job is exactly as unclaimable by a local worker as a
+    NULL-tier one. Excluding only NULL would fix the symptom and leave the class."""
+    eng = _queue_fixture([(1, "P04626", "rental", "pending"),
+                          (2, "Q9NYQ8", "msa", "pending")])
+    assert _claimable(eng) == {}
+
+
+def test_a_CLAIMABLE_stranger_still_triggers_the_refusal():
+    """⚠⚠ A-017 (c), and this is the clause that keeps the three tests above honest. Widen the
+    filter too far — drop the status check, or return `{}` unconditionally — and this goes red.
+    A guard that never fires is the vacuity this repository catalogues."""
+    eng = _queue_fixture([(1, "Q8WXF7", "local", "pending"),      # one of the twenty
+                          (2, "STRANGER", "local", "pending")])   # NOT one of the twenty
+    claimable = _claimable(eng)
+    assert claimable == {1: "Q8WXF7", 2: "STRANGER"}
+    allowed = {1: "Q8WXF7"}
+    assert {j: a for j, a in claimable.items() if j not in allowed} == {2: "STRANGER"}
+
+
+def test_a_non_pending_job_is_not_claimable_whatever_its_tier():
+    """⚠ The status half of the predicate, pinned separately so widening the tier half cannot
+    silently take the status half with it."""
+    eng = _queue_fixture([(1, "A", "local", "complete"),
+                          (2, "B", "local", "failed"),
+                          (3, "C", "local", "claimed")])
+    assert _claimable(eng) == {}
+
+
+def test_the_guard_asks_the_same_tier_the_run_will_pass_to_run_worker(monkeypatch):
+    """⚠⚠ F-046 — divergent parameters under one name. If the guard checks `local` while the run
+    claims `rental`, the guard is protecting a queue that will not be drained. One source for the
+    tier, asserted rather than assumed."""
+    monkeypatch.setenv("WORKER_TIER", "rental")
+    assert T.worker_tier() == "rental"
+    monkeypatch.delenv("WORKER_TIER", raising=False)
+    assert T.worker_tier() == "local"
+
+    eng = _queue_fixture([(1, "R", "rental", "pending"), (2, "L", "local", "pending")])
+    assert _claimable(eng, T.worker_tier()) == {2: "L"}
+    monkeypatch.setenv("WORKER_TIER", "rental")
+    assert _claimable(eng, T.worker_tier()) == {1: "R"}
