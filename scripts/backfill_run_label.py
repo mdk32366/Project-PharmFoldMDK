@@ -89,10 +89,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     from sqlalchemy.orm import Session
 
     sys.path.insert(0, os.getcwd())
+    from db.dburl import normalize_db_url               # noqa: PLC0415
     from db.models import JobRecord                     # noqa: PLC0415
 
-    url = os.environ["DATABASE_URL"].replace("postgresql+psycopg://", "postgresql://")
-    engine = create_engine(url)
+    # ⚠⚠ `normalize_db_url` is NOT optional, and a hand-rolled replace here was WRONG IN THE
+    # DANGEROUS DIRECTION: it stripped `+psycopg` down to a bare `postgresql://`, which SQLAlchemy
+    # resolves to **psycopg2 — the driver D-012 does not install**. It happened to work on the
+    # machine it was written on and would have failed on Fly.
+    # ⚠ Caught by `tests/test_every_engine_normalizes_the_url.py`, which exists for exactly this
+    # and did its job: a guard that failed in the direction it claims to protect.
+    engine = create_engine(normalize_db_url(os.environ["DATABASE_URL"]), future=True)
 
     with Session(engine) as s:
         rows = [(j.id, j.inference_settings) for j in s.scalars(select(JobRecord)).all()]
