@@ -23,7 +23,8 @@ METHOD_NOTE = (COMPONENTS / "MethodNote.jsx").read_text(encoding="utf-8")
 METHOD_TOC = (COMPONENTS / "MethodToc.jsx").read_text(encoding="utf-8")
 GLOSSARY = (COMPONENTS / "Glossary.jsx").read_text(encoding="utf-8")
 SPAN_GLOSSARY = (COMPONENTS / "SpanGlossary.jsx").read_text(encoding="utf-8")
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 ARCHITECTURE = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
 
 # The Method page's sections come from three components; the rail spans all three.

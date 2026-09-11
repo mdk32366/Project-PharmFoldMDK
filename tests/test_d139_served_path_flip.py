@@ -67,7 +67,8 @@ from core.hold48_kabsch import REFUSE_REASONS
 from db.models import Base, JobRecord, ProteinAnalysis
 
 ROOT = Path(__file__).resolve().parent.parent
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 METHOD_MD = (ROOT / "docs" / "method-hold48-tiles.md").read_text(encoding="utf-8")
 METHOD_NOTE = (ROOT / "ui" / "src" / "components" / "MethodNote.jsx").read_text(
     encoding="utf-8"

@@ -43,7 +43,10 @@ ID = r"(?:[DFS]-\d+|DEP-\d+|A-\d+)"
 BT = r"`?"
 
 #: ⚠ the corpus the PARENT invariant uses, so the two checks share a key
-PRIMARY = ("docs/README.md", "ARCHITECTURE.md")
+# D-156: the entries live in three files now; README.md keeps the rules, the S-/DEP-
+# entries and the open questions, so it stays in the set.
+PRIMARY = ("docs/decisions.md", "docs/findings.md", "docs/assumptions.md",
+           "docs/README.md", "ARCHITECTURE.md")
 
 CITE_PATTERNS = (
     ("amendment N", re.compile(BT + "(" + ID + ")" + BT + r"\s+amendment\s+(\d+)")),

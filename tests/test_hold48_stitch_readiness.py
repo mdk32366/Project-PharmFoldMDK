@@ -201,7 +201,8 @@ def test_d116_is_a_log_header():
     """The check is the entry, not a reference to one (D-062)."""
     import re
 
-    log = (REPO / "docs" / "README.md").read_text(encoding="utf-8")
+    log = (chr(10) * 2).join((REPO / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
     assert re.search(r"^### D-116 — ", log, re.M)
     assert "stitch_readiness" in log
     assert "parent **2817**" in log

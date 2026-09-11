@@ -51,7 +51,18 @@ from tests.test_adc_pipeline import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS_README = ROOT / "docs" / "README.md"
+class _KeelLog:  # D-156: the D-/F-/A- entries live in three files now, not in README.md
+    """Path-shaped shim so existing `.read_text(...)` call sites keep working unchanged."""
+
+    def __init__(self, docs):
+        self._docs = list(docs)
+
+    def read_text(self, encoding="utf-8"):
+        return (chr(10) * 2).join(p.read_text(encoding=encoding) for p in self._docs)
+
+
+DOCS_README = _KeelLog((ROOT / "docs" / n)
+                 for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 
 
 def _normalise(text):

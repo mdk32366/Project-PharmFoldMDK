@@ -55,7 +55,8 @@ from app.reads import (
 from db.models import Base, JobRecord, ProteinAnalysis
 
 ROOT = Path(__file__).resolve().parent.parent
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
 READS = (ROOT / "app" / "reads.py").read_text(encoding="utf-8")
 UI = ROOT / "ui" / "src"

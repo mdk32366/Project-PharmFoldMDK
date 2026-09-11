@@ -592,6 +592,7 @@ def test_d111_is_the_go_and_d110_is_the_deferred_surface_integer():
     """⚠ D-094 amendment 1 cited D-110 first. Spending it on tiling would resolve
     that citation to the wrong live entry (F-044 / F-065)."""
     import re
-    log = (REPO / "docs" / "README.md").read_text(encoding="utf-8")
+    log = (chr(10) * 2).join((REPO / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
     assert re.search(r"^### D-111 — BUILD GO", log, re.M)
     assert re.search(r"^### D-110 — PAE figure provenance", log, re.M)

@@ -37,7 +37,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 PAPER_PATH = ROOT / "docs" / "pharmfold-adc-nectin4-paper.md"
 PAPER = PAPER_PATH.read_text(encoding="utf-8")
 ABOUT_PAPER = (ROOT / "ui" / "src" / "aboutPaper.js").read_text(encoding="utf-8")
@@ -87,13 +88,20 @@ def test_the_retired_composite_appears_nowhere_in_docs_or_ui_as_a_live_claim():
             except (UnicodeDecodeError, OSError):
                 continue
             if RETIRED_COMPOSITE in _flat(text):
-                carriers.append(str(path.relative_to(ROOT)))
+                # ⚠ `as_posix()`, not `str()`: on Windows `str()` yields `docs\\decisions.md`
+                # and this assertion could never pass, so the guard was red on one platform
+                # and green on the other. It is how the D-156 carrier move got past a local
+                # run and was caught only by CI — F-034's shape, in the harness itself.
+                carriers.append(path.relative_to(ROOT).as_posix())
     # ⚠ Three files may still hold the words, and each for a stated reason: the log
     # keeps D-123's historical quotation (checked below), and the two UI test files
     # hold it inside `.not.toContain(...)` — an absence guard has to name the string
     # it forbids. Anything else is the live claim coming back.
+    # ⚠ D-156: the log's `### D-NNN` entries moved out of `docs/README.md` into
+    # `docs/decisions.md`, and D-123's historical quotation travelled with them. The
+    # carrier changed; the count did not.
     assert carriers == [
-        "docs/README.md",
+        "docs/decisions.md",
         "ui/src/aboutPaper.test.js",
         "ui/src/components/AdcContext.test.jsx",
     ], (

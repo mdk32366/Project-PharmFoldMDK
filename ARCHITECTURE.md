@@ -4,9 +4,29 @@
 > is built and why. It MUST be updated **in the same change** that alters the
 > architecture, and it MUST be brought current **before any PR is filed**. If a PR
 > changes structure, data flow, dependencies, or deployment and does not touch this
-> file, the PR is incomplete. See [`docs/README.md`](docs/README.md) for the
-> chronological log of individual design decisions. [`docs/decisions.md`](docs/decisions.md)
-> is a thin **ship index** (which id ships which work) — not a second living log.
+> file, the PR is incomplete.
+>
+> **⚠ THE DOCUMENTATION SET IS FIVE FILES (`D-156`, 2026-09-11).** KEEL-4 §2 names five
+> documents because a reader arrives with one of five questions, and this repository now has
+> one file per question:
+>
+> | document | holds | the question it answers |
+> |---|---|---|
+> | **this file** | the current-state shape | *What am I looking at?* |
+> | [`docs/decisions.md`](docs/decisions.md) | `### D-NNN` — the chronological log | *Why is it like this?* |
+> | [`docs/findings.md`](docs/findings.md) | `### F-NNN` — measured results | *How do we know?* |
+> | [`docs/assumptions.md`](docs/assumptions.md) | `### A-NNN` — the register | *What are we taking for granted?* |
+> | [`docs/Test_Plan.md`](docs/Test_Plan.md) | the guards | *What would catch it if it broke?* |
+>
+> ⚠ [`docs/README.md`](docs/README.md) **is no longer the log** — it holds the rules, the method
+> notes, the entry template and the open questions, plus the `S-` (spike) and `DEP-`
+> (deprecation) entries, which are not part of the KEEL five and did not move.
+> ⚠ [`docs/SHIP-INDEX.md`](docs/SHIP-INDEX.md) — **renamed from `docs/decisions.md`** — is a thin
+> **ship index** (which id ships which work) and is **not** a second living log.
+> ⚠⚠ [`docs/RESERVED.md`](docs/RESERVED.md) is the **allocator**: it holds the next free `D-`,
+> `F-` and `A-` integer, and **the pointer moves in the SAME commit that spends one.** It also
+> carries the citation invariant, which `D-156` widened to read the **code** — it previously read
+> only `docs/README.md` and this file, so 71 `A-` citations in shipped Python were invisible to it.
 > **D-124 ships** ADC-C-A (pipeline catalog + access/RTT informational payload +
 > thin read API; no UI). **D-125 ships** the Kabsch restitch Spec (already on
 > `main`, `fbe8978` / #234) **and D-125-A** (already on `main`, `26a40a8` /
@@ -162,8 +182,8 @@
 > negation**, or **supersession-carrying**, with the qualifier in **the
 > same sentence** — adjacency does not count.
 > **Twelve** bare occurrences were qualified by **adding** a clause (2
-> Method, 4 here, 2 in the `docs/README.md` living header, 3 in
-> `docs/decisions.md`, 1 in `docs/PLAN-ui-post-wave2-endstate.md`);
+> Method, 4 here, 2 in the `docs/decisions.md` living header, 3 in
+> `docs/SHIP-INDEX.md`, 1 in `docs/PLAN-ui-post-wave2-endstate.md`);
 > [`tests/test_d129_c_must_hunt_supersession.py`](tests/test_d129_c_must_hunt_supersession.py)
 > (hermetic, stdlib) goes red if one returns, and re-pins that the rule
 > was **not** satisfied by deletion. ⚠ **Phase 5 is not reopened, no fate
@@ -743,7 +763,7 @@ learning, and is *our* system running/using it in a defensible way?"**
   input*, but it cannot be the graded deliverable on its own.
 
 **Rule:** at least one iteration's headline feature must be a deep-learning model that
-this project runs or fine-tunes. This is recorded and defended in `docs/README.md`.
+this project runs or fine-tunes. This is recorded and defended in `docs/decisions.md`.
 
 ---
 

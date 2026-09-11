@@ -203,7 +203,9 @@ def test_guide_and_budget_carry_d120_review_stamp():
 
 def test_d120_entry_exists_before_the_code_claims_it():
     """Living-doc rule: the heading exists; Phase 2 must not claim D-119."""
-    log = Path("docs/README.md").read_text(encoding="utf-8")
+    log = (chr(10) * 2).join(Path("docs/" + n).read_text(encoding="utf-8")
+                             for n in ("decisions.md", "findings.md",
+                                       "assumptions.md", "README.md"))
     assert "### D-120 — Phase 2 review UI" in log
     assert "### D-119 — ADC-A:" in log
     assert "Phase 2 review UI is **D-119**" not in log
@@ -296,7 +298,9 @@ def test_the_card_reports_both_memberships_separately():
 
 def test_d132_entry_exists_before_the_code_claims_it():
     """Living-doc rule, and the D-062 defect: check the ENTRY, never a reference to it."""
-    log = Path("docs/README.md").read_text(encoding="utf-8")
+    log = (chr(10) * 2).join(Path("docs/" + n).read_text(encoding="utf-8")
+                             for n in ("decisions.md", "findings.md",
+                                       "assumptions.md", "README.md"))
     assert "### D-132 — Assemble-inventory amend" in log
     # the entry has to carry the provenance the surfaces are now citing
     # ⚠ Anchored (D-136 amendment 1): an unanchored lookup also matches the id written

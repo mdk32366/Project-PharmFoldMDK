@@ -102,7 +102,8 @@ def _write(path, obj):
 
 def test_d124_entry_exists_in_the_living_log():
     """The check is the heading, not a citation of it (D-062 / method-note item 7)."""
-    log = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+    log = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
     assert "### D-124 — ADC-C-A:" in log
     assert "pipeline_investigational" in log
     assert "NOT medical advice" in log or "NOT medical" in log
