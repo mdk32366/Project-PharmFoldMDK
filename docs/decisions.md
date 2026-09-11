@@ -16,6 +16,95 @@
 
 ## Log (newest first)
 
+### D-157 — The Run 2 census re-fold's real scope is **2,572, not 2,691**, because the 440 ceiling is card-bound and does not apply to this host — and the disqualifying fact is that **`F-062`'s own finding was applied to the card `F-062` was written about**, by the party that wrote it
+
+- **Date:** 2026-09-11
+- **Status:** Accepted. ⚠ **A SCOPE CORRECTION, NOT A CAMPAIGN AUTHORISATION.** No fold is
+  authorised by this entry; it records what the campaign's population actually is.
+- **How known (`D-016`):** measured twice, from two independent sources, at `main` `5085ba6` —
+  `data/census/census_manifest.v7.csv` and a read-only query against `protein_analyses` through
+  the owner-held proxy. **They agree exactly.** Each figure below states its key.
+
+**Context — the owner's scoping ruling, and the answer it was given.** The owner ruled the
+campaign as *"as many of the 2,690 as we can do without renting a card."* The answer recorded was
+**2,691 — all of them** — on the reasoning that every tranche 1–4 row has `span_aa ≤ 439`, one
+residue under the **440** known-good ceiling.
+
+**⚠⚠ THE DISQUALIFYING FACT.** **440 is not this card's ceiling.** It is the A6000's, and
+**`F-062` is the finding that measured-success envelopes are CARD-BOUND** — *S-005's 6,665 MiB
+does not license a Blackwell FIT*. On this host:
+
+- **`F-063`** — the climb reached `highest_ok = 384` and **the host BUGCHECKED before 392 was
+  written.** ⚠ **OPEN.**
+- **`F-064`** — in-process headroom collapse **after a successful fold**, 7,043 → 1,649 MiB.
+  ⚠ **OPEN.**
+- **`scripts/rb_local_tile_folds.py`** caps at **L ≤ 384** and drops L > 384, citing *F-063 last
+  OK `peak_alloc` 6,357 MiB at 384 aa*.
+
+> ⚠⚠ **So the scope answer applied a card-bound envelope to a different card — which is `F-062`'s
+> finding, verbatim, committed about the very card `F-062` was written about.** The number was
+> not wrong by a rounding; it was right for a machine nobody is folding on.
+
+**Decision — the campaign's population is 2,572, and the remainder is a named category.**
+
+| key | rows |
+|---|---|
+| tranche 1–4, manifest **and** `protein_analyses` | **2,691** |
+| `span_aa ≤ 384` — **the true local-tier population** | **2,572** |
+| `span_aa` 385–439 — **EXCLUDED** | **119** |
+
+**The 119 are a NAMED EXCLUDED CATEGORY WITH A CAUSE, never a low number** (`D-016`): they exceed
+the 384 aa envelope measured safe on this card, under `F-062` / `F-063` / `F-064`, **all three
+OPEN**. That is **4.42%** of the census and ⚠ **25.6% of the old band 5**.
+
+⚠ **Band 5 is redefined 251–384.** A band labelled 251–439 in the key while holding only 251–384
+in the data is **`F-047`'s wrong-but-plausible answer manufactured by a band definition**. The
+timing projector **refuses** to project over 385–439 rather than weighting band 5 as though it
+were whole.
+
+**The stratified sample's weights, recorded because they are the projection's inputs:**
+
+| band | population | sampled | rate |
+|---|---|---|---|
+| 1–10 | 130 | 4 | 3.08% |
+| 11–30 | 395 | 4 | 1.01% |
+| 31–100 | 1,101 | 4 | 0.36% |
+| 101–250 | 600 | 4 | 0.67% |
+| **251–384** | **346** | 4 | **1.16%** |
+| **total** | **2,572** | **20** | |
+
+⚠⚠ **The rates are NOT uniform, and that is why a sample mean must never be multiplied by the
+population total.** The earlier ~22-hour estimate was wrong by an order of magnitude for exactly
+that reason — it assumed 440-aa folds at ~30 s when the measured median span is **53 aa**.
+
+**Deep-learning justification: neutral.** No model, feature, or score moves. ⚠ **It is not
+neutral to what the re-fold can claim:** a determinism comparison stated over "the census" while
+silently excluding 4.42% of it would be a denominator defect in the one result the campaign
+exists to produce.
+
+**Assumptions relied on:** `A-030 (a JSONB column can take an additive key without changing any
+consumer)` — HELD at a named scope, and the `run: 1` partition is what lets Run 2 rows coexist
+with these 2,572 · ⚠ **none new.**
+
+**Consequences, stated rather than discovered later.**
+- **Task 4's scope is 2,572**, and any per-band denominator is drawn from that, not from 2,691.
+- ⚠ **The 119 do not become foldable by wanting them.** Raising the cap needs `F-063` and `F-064`
+  closed — *a finding against an instrument stays open until the instrument no longer exhibits
+  it* (`D-074`) — and the downside is a machine the owner works on dying mid-campaign.
+- ⚠ **The excluded category must travel with every citation of the campaign's size.** "2,572 of
+  the census" without "119 excluded, cause named" is the same omission one layer along.
+
+**Residuals, stated rather than closed.**
+- ⚠ **Whether the 119 could fold safely here is UNMEASURED, not disproven.** The cap is the
+  measured envelope, not a demonstration that 385–439 fails.
+- ⚠⚠ **The campaign's cost is not yet known and span length may not set it.** The fold path now
+  runs one OS process per fold, so the 8.4 GB weight load is paid **per fold** — if that
+  dominates the short bands, cost is set by **process count, not by span length**, and 2,572
+  folds is not "a few hours" on that arithmetic. **The 20-fold sample measures it; nothing here
+  projects it.**
+
+---
+
 ### D-156 — The five KEEL documents become five files: `decisions.md`, `findings.md` and `assumptions.md` take the `D-`/`F-`/`A-` entries out of this README, the next-free pointer gains the two namespaces it never had — and the disqualifying fact is that **the citation invariant has never once read the code**, so 71 `A-` citations in shipped Python pointed at entries that did not exist, for 38 days, behind a green gate
 
 - **Date:** 2026-09-11
@@ -13705,6 +13794,151 @@ on it, because the vocabulary gap is established by the count alone.**
 
 **Assumptions relied on:** ⚠ `A-014` — **UniProt topology and domain annotation is a curated MODEL of
 the protein, and its silence about these ten is the model's silence, not the molecule's.**
+
+---
+
+#### D-095 amendment 3 — ⚠⚠ Eight of the ten `no_domains` rows DO have annotation, from a source already in the tree; and the `tile_cut_kind` vocabulary the disclosure argument rests on has never been emitted
+
+- **Date:** 2026-09-11 · **Status:** ⚠ **PROPOSED — written, not ruled.** Owner ruling required.
+  ⚠⚠ **Landing it does not rule it.** Until the owner rules, it is citable as a PROPOSAL and its
+  §1/§2 measurements are citable as measurements; **its dispositions are not.**
+- **Amends:** `D-095 amendment 2`, which ruled the fifth `tile_cut_kind` value
+  `unannotated_interior`. ⚠ **Sub-entry beneath its parent, consuming NO integer** — the
+  `D-099 amendment 1` precedent, as used by `D-095 amendment 1` itself.
+- **Measured at** `836a9a3` by the Planner; ⚠ **RE-MEASURED against `main` by Code on landing
+  (2026-09-11, tree at `2118cb9`). Every figure in §1 and §2 reproduces**, with the two
+  corrections below applied.
+- **Key:** one row per accession at `regime = no_domains` in `data/census/tranche6_runs.csv`,
+  **n = 10 of 141**.
+
+> **⚠ LANDING NOTE — two defects in the draft, both known, both corrected here rather than
+> silently.** They are recorded because a corrected cell that leaves no trace is how the next
+> reader inherits the original.
+>
+> 1. ⚠⚠ **The `whole_run` cell was MIS-KEYED.** The draft placed **1,532 / 1,532** under *quoted
+>    occurrences in code*. It is not a code count — it is a **CSV value count**, and the two live
+>    in different columns. Measured: `whole_run` occurs **once** in code, as
+>    `TILE_CUT_KIND = "whole_run"` at `scripts/tranche6_tiles.py:48`. ⚠ **The correction makes §2
+>    stronger, not weaker** (see §2).
+> 2. **The join key was written `census_accession` on both sides.** `tranche6_runs.csv` keys on
+>    **`acc`**; only the two domain CSVs use `census_accession`. The join is
+>    `runs.acc == domains.census_accession`.
+>
+> ⚠ A third key moved under the entry's feet rather than being wrong in it: `D-156` split the log,
+> so the *"occurrences in log"* column and §4's `docs/README.md` count are now reads of
+> **`docs/decisions.md`** and its sibling entry docs. Restated against the new homes below.
+
+---
+
+**1 — ⚠⚠ AMENDMENT 2's STATED BASIS IS FALSE FOR 8 OF THE 10.**
+
+Amendment 2 §2 ruled `unannotated_interior` on this basis, quoted verbatim:
+
+> *"The alternative is not 'a better cut' — no better cut exists, because there is no
+> annotation to place one."*
+
+That is true of the **UniProt `Domain` + `Repeat`** source decision 1 chose. It is **false of
+InterPro**, which sits in the sibling CSV fetched by the same task, **both sources at
+`status = ok` on all ten rows**:
+
+| acc | gene | span_aa | UniProt d-like | InterPro d-like | **wholly INSIDE span** | straddling | res. in domains | res. bare |
+|---|---|---|---|---|---|---|---|---|
+| Q6YHK3 | CD109 | 1398 | 0 | 7 | **7** | 0 | 778 | 620 |
+| Q15155 | NOMO1 | 1124 | 0 | 8 | **8** | 0 | 652 | 472 |
+| P69849 | NOMO3 | 1124 | 0 | 8 | **8** | 0 | 652 | 472 |
+| Q5JPE7 | NOMO2 | 1124 | 0 | 8 | **8** | 0 | 652 | 472 |
+| Q16706 | MAN2A1 | 1118 | 0 | 4 | **4** | 0 | 678 | 440 |
+| Q7RTW8 | OTOA | 1107 | 0 | 1 | **1** | 0 | 124 | 983 |
+| Q9H7T0 | CATSPERB | 1053 | 0 | 5 | **4** | 1 | 976 | 77 |
+| Q6ZRH7 | CATSPERG | 1030 | 0 | 4 | **3** | 1 | 891 | 139 |
+| E2RYF6 | MUC22 | 1634 | 0 | 1 | **0** | 1 | 16 | 1618 |
+| P09848 | LCT | 1863 | 0 | 0 | **0** | 0 | 0 | 1863 |
+
+- **8 of 10 carry ≥1 InterPro feature wholly inside the folded span**, with substantial
+  coverage — **CATSPERB 976 of 1,053 residues** in annotated domains, CD109 778, MAN2A1 678.
+  **Not fringe hits.**
+- **`E2RYF6`/MUC22** has one feature and it **straddles** the boundary — **no legal *interior*
+  cut from InterPro either.**
+- **`P09848`/LCT returns zero from both sources.** ⚠ **It is the ONLY row for which amendment
+  2's stated basis survives measurement.**
+- ⚠⚠ **The population with no annotation from either source is 2, not 10 — and 1 if MUC22 is
+  ruled `out_of_class` (§4).**
+
+**⚠ THE PROPAGATION FAILURE, NAMED.** `D-095 amendment 1 §3` *already corrected* decision 1's
+basis when Task A2 fetched the InterPro matches API — *"10,592 boundaries with coordinates."*
+**Amendment 2 was written the next day and ruled `unannotated_interior` without consulting it.**
+The correction landed; its consequence did not travel one entry forward.
+
+**⚠ WHAT THIS IS NOT.** **Not** grounds to switch boundary sources. `F-041` holds: the
+disagreement is between models and no arbiter exists. **InterPro aggregates the same
+profile-HMM family (PROSITE / Pfam) — wider coverage of the SAME model class, not an
+independent one** — and `A-014 (an upstream model's negative class is a prediction, not a
+fact)` binds it identically. ⚠ **The defect is that a source in the tree was not read, not
+that it is right.**
+
+**⚠ WHAT THE CSVs CANNOT SUPPORT.** Both carry **counts and bucket classifications, no
+coordinates.** *"A feature is wholly inside the span"* proves a **candidate exists**; it does
+**not** say **where**. The coordinates are in the Task A2 fetch and are **not persisted**.
+**Any cut-site claim needs a read-only re-derivation first.**
+
+**Reproduce:** `data/census/tranche6_domains.{uniprot,interpro}.csv` joined to
+`data/census/tranche6_runs.csv` on **`runs.acc == domains.census_accession`** (⚠ the two files do
+not share a key name), filtered to `regime = no_domains`. ⚠ **Report the bucket columns, never a
+total** — a straddling feature is not an interior cut site, which is the whole distinction MUC22
+turns on.
+
+---
+
+**2 — ⚠⚠ THE `tile_cut_kind` VOCABULARY HAS NEVER BEEN EMITTED.**
+
+`data/census/tranche6_tiles.csv` — **1,532 tile rows**:
+**One value, on every row, and it is NONE of the five ruled values.**
+
+| value | ruled in | quoted occurrences in `core/ app/ scripts/` `.py` | rows in `tranche6_tiles.csv` |
+|---|---|---|---|
+| `gap` | D-095 dec 2 | **0** | **0** |
+| `domain_boundary` | D-095 dec 2 | **0** | **0** |
+| `span_end` | D-095 dec 2 | 40 | **0** |
+| `run_interior` | D-095 am.1 §8 | **0** | **0** |
+| `unannotated_interior` | D-095 am.2 §2 | **0** | **0** |
+| `whole_run` | ⚠⚠ **nowhere** | **1** | ⚠⚠ **1,532 / 1,532** |
+
+⚠⚠ **THE CORRECTED CELL IS THE SHARPER FINDING.** That single code occurrence is
+`TILE_CUT_KIND = "whole_run"` — **a module-level constant, not a branch.** The emitter does not
+*choose badly* among the five ruled values; **it does not choose at all.** A mis-keyed 1,532 read
+as a code count would have suggested the vocabulary was implemented and pinned everywhere; the
+measured **1** shows there is no selection logic to fix.
+
+⚠⚠ **CONSEQUENCE.** `D-095 am.1 §8` and `am.2 §2` both make cut legibility a **`D-094` MOUNT
+PRECONDITION. Nothing records a cut kind.** The ten do not carry `unannotated_interior`; **no
+tile carries any ruled value.**
+
+⚠ **Stated as MEASURED, not as diagnosis.** This is a grep and a value count on one CSV at one
+commit. **Whether the vocabulary is unimplemented, implemented behind an unrun path, or emitted
+under a different column elsewhere is NOT established here and must not be asserted** — ⚠ the
+constant at `scripts/tranche6_tiles.py:48` is one emitter on one path, and the grep does not
+prove it is the only one.
+
+---
+
+**3 — What follows, and what does not**
+
+- ⚠ **Amendment 2's ruling is NOT thereby wrong.** It was correct about the sources it had,
+  which is `A-014` operating exactly as written. `unannotated_interior` **stands as the label**
+  unless a cut site is established (§1's re-derivation).
+- ⚠ **No re-tile, no re-fold, no schema change, no GPU is authorised by this amendment.**
+- ⚠ **Nothing here licenses the withdrawn PLM-boundary proposal.** With the residual at n = 1–2
+  there is no population to run it on.
+
+**4 — ⚠ OWNER RULING, UNMADE: `E2RYF6` / MUC22's disposition**
+MUC22 is in the census roster and **not** in `core/hold48.py`'s `MUCIN_ACCESSIONS`
+(`Q8WXI7`, `Q9UKN1`, `Q685J3`). Those three were ruled on **their nature, not their length**
+(`D-109` ruling 3). ⚠ **MUC22 has never been tested against that ruling** — and the count is now
+**0 occurrences of `MUC22` and 0 of `E2RYF6` across ALL of `decisions.md`, `findings.md`,
+`assumptions.md`, `RESERVED.md` and `README.md`**, which is stronger than the draft's
+single-file read and survives the `D-156` split. Its span is **1,618 of 1,634 residues bare
+(99.0%)**. ⚠ **A cheap sequence-only disorder read would settle the nature question with a
+number and requires no fold.**
 
 ---
 
