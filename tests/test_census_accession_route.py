@@ -156,7 +156,7 @@ def _dual_population_engine():
     from sqlalchemy import create_engine
     from sqlalchemy.orm import Session
 
-    from db.models import Base, ProteinAnalysis
+    from db.models import Base, JobRecord, ProteinAnalysis
 
     eng = create_engine("sqlite://")
     Base.metadata.create_all(eng)
@@ -172,6 +172,15 @@ def _dual_population_engine():
                 cohort_tranche=tranche, ranking_run_id=None,
                 pdb_path=f"/data/artifacts/{census_id}/structure.pdb",
                 mean_plddt=70.0, meta={"tier": "local"}))
+            # ⚠⚠ THE JOB ROWS ARE NOT SCENERY. Census reads now select BY the generation label in
+            # `jobs.inference_settings`, and production carries `run: 1` on 3,656 of 3,656 rows.
+            # A fixture with no job rows has no label, so `keep_run_1` drops every row and all 43
+            # resolve to `cohort` — which is exactly what happened when the filter landed, and it
+            # made the suite RED rather than WRONG. `F-056` at fixture scope: a fixture that does
+            # not carry what production carries is testing a different system.
+            for aid in (cohort_id, census_id):
+                s.add(JobRecord(id=aid, analysis_id=aid, status="succeeded", tier="local",
+                                inference_settings={"source": "sliced_ecd", "run": 1}))
         s.commit()
     return eng
 

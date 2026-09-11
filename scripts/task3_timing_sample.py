@@ -27,7 +27,18 @@ import random
 import sys
 from typing import Optional
 
-BANDS = [(1, 10), (11, 30), (31, 100), (101, 250), (251, 439)]
+# ⚠⚠ BAND 5 IS 251-384, NOT 251-439, AND THE DIFFERENCE IS A CARD LIMIT.
+# F-062: envelopes are CARD-BOUND. F-063: this host reached highest_ok=384 and
+# BUGCHECKED before 392 was written. F-064: post-fold headroom collapse. Both OPEN,
+# and scripts/rb_local_tile_folds.py caps at L<=384 on exactly that evidence.
+# ⚠ 385-439 is a NAMED EXCLUDED CATEGORY WITH A CAUSE (D-016), never a low
+# number and never folded into band 5. A band labelled 251-439 in the key while
+# holding only 251-384 in the data is F-047 manufactured by a band definition.
+BANDS = [(1, 10), (11, 30), (31, 100), (101, 250), (251, 384)]
+EXCLUDED = (385, 439)
+EXCLUDED_CAUSE = ("exceeds the 384 aa envelope measured safe on this card "
+                  "(F-062 card-bound, F-063 host bugcheck at 392, F-064 "
+                  "headroom collapse; all OPEN). Not folded locally.")
 PER_BAND = 4                      # 5 bands x 4 = the 20 the order specifies
 MANIFEST = "data/census/census_manifest.v7.csv"
 
@@ -37,6 +48,18 @@ def band_of(span: int) -> Optional[str]:
         if lo <= span <= hi:
             return f"{lo}-{hi}"
     return None
+
+
+def excluded_rows() -> list[dict]:
+    """The 385-439 category: named, counted, and never projected over."""
+    out = []
+    for r in csv.DictReader(open(MANIFEST, encoding="utf-8")):
+        if str(r.get("tranche")) not in {"1", "2", "3", "4"} or not r.get("span_aa"):
+            continue
+        span = int(float(r["span_aa"]))
+        if EXCLUDED[0] <= span <= EXCLUDED[1]:
+            out.append({"accession": r["census_accession"], "span": span})
+    return out
 
 
 def population() -> list[dict]:
@@ -69,7 +92,14 @@ def report_selection() -> int:
     pop = population()
     counts = collections.Counter(r["band"] for r in pop)
     sample = select()
-    print(f"population (tranches 1-4, with a span): {len(pop)}\n")
+    exc = excluded_rows()
+    print(f"foldable population (tranches 1-4, span <= 384): {len(pop)}")
+    print(f"EXCLUDED 385-439: {len(exc)} rows")
+    print(f"  cause: {EXCLUDED_CAUSE}")
+    _b5 = len([r for r in pop if r["band"] == "251-384"])
+    print(f"  {len(exc) / (len(pop) + len(exc)):.2%} of the 2,691 tranche 1-4 rows, "
+          f"and {len(exc) / (_b5 + len(exc)):.1%} of the OLD band 5 (251-439).")
+    print()
     print(f"{'band':<10}{'population n':>14}{'sampled':>9}{'sampling rate':>15}")
     for lo, hi in BANDS:
         b = f"{lo}-{hi}"

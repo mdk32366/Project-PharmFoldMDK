@@ -12,10 +12,18 @@ the generation label.** That is the right answer produced by id monotonicity rat
 and it flips silently if the picker ever prefers the newest row, or if ids stop being monotonic in
 write order.
 
+⚠ RESOLVED 2026-09-11 by `keep_run_1` at the query sites. Both assertions below are now live,
+and the ``xfail(strict=True)`` markings are gone because the property HOLDS — `XPASS(strict)` is
+what forced their removal, which is the marking working rather than a suite being tidied.
+
 So this file asserts BOTH, separately:
-  * the BEHAVIOUR — Run 1 is returned — which passes today, and
-  * the MECHANISM — that the label is what does it — which does NOT, and is marked ``xfail``
-    ``strict=True`` so it cannot be quietly satisfied and flips the moment the filter lands.
+  * the BEHAVIOUR — Run 1 is returned; and
+  * the MECHANISM — that the LABEL does it, proven by inverting the ids so the wrong generation
+    sorts first. A read riding on id ordering fails that one.
+
+⚠⚠ And the residual is asserted rather than described: an UNLABELLED call to the picker still
+resolves by ``min(id)``. The boundary filter is the guarantee; the picker's optional labels are
+defence in depth.
 """
 from __future__ import annotations
 
@@ -23,7 +31,7 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from app.reads import choose_census_representative, resolve_census_accession
+from app.reads import choose_census_representative, resolve_census_accession, run_labels
 from db.models import Base, JobRecord, ProteinAnalysis
 
 ACC = "P00001"
@@ -73,11 +81,6 @@ def test_a_census_read_returns_the_run_1_row():
 
 # ── the mechanism: it must be the LABEL, not the id ordering ─────────────────────────────────
 
-@pytest.mark.xfail(strict=True, reason=(
-    "Task 4.1's run label is not consulted by any read. Run 1 wins only because "
-    "choose_census_representative takes min(id) and Run 2 rows are written later. Flip the ids "
-    "and the WRONG generation is served. This xfail is the required-red before the first fold; "
-    "it turns green the moment the reads filter on the generation label."))
 def test_the_run_label_is_what_selects_the_generation_not_the_id_ordering():
     """⚠⚠ THE ASSERTION THAT GATES THE CAMPAIGN.
 
@@ -95,12 +98,32 @@ def test_the_run_label_is_what_selects_the_generation_not_the_id_ordering():
         "write order")
 
 
-@pytest.mark.xfail(strict=True, reason="same gap, at the representative picker rather than the route")
-def test_the_representative_picker_prefers_run_1_on_the_label():
-    """⚠ The picker is where the choice is actually made; the route delegates to it."""
-    eng = _two_generation_engine(run1_id=9002, run2_id=1002)
+def test_the_representative_picker_prefers_run_1_when_given_the_labels():
+    """⚠ Defence in depth. The boundary filter is the guarantee; this is the picker refusing
+    to resolve a mixed group by id ordering when it is told what the generations are.
+
+    ⚠⚠ The picker is PURE and has no session, so it cannot fetch labels itself. A caller
+    that omits them gets the historical behaviour — which is exactly why `keep_run_1` at the
+    query sites, and not this, is what makes reads Run-1-only."""
+    eng = _two_generation_engine(run1_id=9002, run2_id=1002)   # Run 2 has the LOWER id
+    with Session(eng) as s:
+        rows = s.scalars(select(ProteinAnalysis).where(ProteinAnalysis.input_value == ACC)).all()
+        labels = run_labels(s, [r.id for r in rows])
+        picked = choose_census_representative(list(rows), run_labels=labels)
+    assert picked is not None
+    assert picked[0].id == 9002, "the picker took the lower id rather than the Run 1 label"
+
+
+def test_the_picker_without_labels_still_resolves_by_id_and_that_is_recorded():
+    """⚠⚠ THE RESIDUAL, ASSERTED RATHER THAN DESCRIBED. An unlabelled call still picks
+    `min(id)`. That is not a defect to fix here — it is why the boundary filter exists —
+    but it must be visible, because a future caller that forgets `keep_run_1` gets the old
+    behaviour silently (`F-052`: a convention obeyed by every caller except the newest)."""
+    eng = _two_generation_engine(run1_id=9003, run2_id=1003)
     with Session(eng) as s:
         rows = s.scalars(select(ProteinAnalysis).where(ProteinAnalysis.input_value == ACC)).all()
         picked = choose_census_representative(list(rows))
     assert picked is not None
-    assert picked[0].id == 9002, "the picker took the lower id rather than the Run 1 label"
+    assert picked[0].id == 1003, (
+        "an unlabelled picker no longer resolves by id — if this changed deliberately, the "
+        "boundary-filter reasoning above needs rewriting")
