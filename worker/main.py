@@ -30,7 +30,7 @@ from core.contracts import TILE_WINDOW_AA  # D-111 cap; D-112: never from core.h
 from core.queue import DEFAULT_TIER
 from worker.http_client import HttpQueueClient
 from worker.orchestrator import FoldError, FoldSpec, run_worker
-from worker.runner import MODEL_REVISION, fold, write_pae
+from worker.runner import MODEL_REVISION, fold, pae_gz_bytes, write_pae
 
 log = logging.getLogger(__name__)
 
@@ -82,9 +82,33 @@ def _persist_pae_local(result: Any, artifact_dir: str, job_id: int,
                     job_id, e)
 
 
+def _persist_pae_via_route(result: Any, job_id: int,
+                           pae_post_fn: Callable[[int, bytes], Any]) -> None:
+    """LOCAL-tier PAE persist, through the D-036 route that writes the COLUMN (route (a)).
+
+    ⚠⚠ **LOUD BY DESIGN, AND THE OPPOSITE OF ITS RENTAL SIBLING.** `_persist_pae_local`
+    swallows deliberately: on the rented box a raise crashes the fold path *before* the upload,
+    leaving the job to reap and re-fold **on a PAID card**, and a missing file is caught downstream
+    by `scripts/retrieve_rental_pae.py`, the blocking gate before pod termination.
+
+    ⚠ **On local there is no pod, so there is no such gate** - a guard placed where the money
+    is, not where the data is. A swallowed failure here reproduces exactly the state this repair
+    exists to remove: a fold that looks fine and a `pae_json_path` that is NULL, invisible until
+    the campaign ends. So nothing is caught: the 204 from the route IS the per-fold assertion that
+    the column was written (Task 2.5), and its absence must stop the fold rather than pass it.
+
+    ⚠ Gate A wrote a FILE; only this route writes the COLUMN. Fixing Gate A alone was the
+    silent half-fix - amended Task 3.3: column non-NULL AND file resolves, both, per fold."""
+    pae_gz = pae_gz_bytes(result)
+    if pae_gz is None:
+        return   # a fold that emitted no PAE has nothing to record; inventing one is worse
+    pae_post_fn(job_id, pae_gz)
+
+
 def fold_from_spec(spec: FoldSpec, fold_fn: Callable[..., Any] = fold, *,
                    artifact_dir: Optional[str] = None,
-                   write_pae_fn: Callable[..., Any] = write_pae) -> Any:
+                   write_pae_fn: Callable[..., Any] = write_pae,
+                   pae_post_fn: Optional[Callable[[int, bytes], Any]] = None) -> Any:
     """Adapt a claimed `FoldSpec` to the runner's `fold(...)` call.
 
     Guards that the job's pinned model revision matches this runner's (D-016/D-026): folding a
@@ -115,6 +139,8 @@ def fold_from_spec(spec: FoldSpec, fold_fn: Callable[..., Any] = fold, *,
     )
     if artifact_dir:
         _persist_pae_local(result, artifact_dir, spec.job_id, write_pae_fn)
+    elif pae_post_fn is not None:
+        _persist_pae_via_route(result, spec.job_id, pae_post_fn)
     return result
 
 
@@ -180,7 +206,12 @@ def run(
     print(f"[worker] tier={tier} - claims ONLY jobs of this tier (F-035)", flush=True)
     run_worker_fn(
         client,
-        lambda spec: fold_from_spec(spec, fold_fn, artifact_dir=config.artifact_dir),
+        # ⚠⚠ `pae_post_fn` is what makes the local tier's PAE reach the COLUMN.
+        # Without it this worker folds, produces PAE, and records nothing - F-042 for 2,691
+        # census rows. On the rental box `artifact_dir` is set, so the D-036 staging path runs
+        # instead and this is not reached: one branch or the other, never both.
+        lambda spec: fold_from_spec(spec, fold_fn, artifact_dir=config.artifact_dir,
+                                    pae_post_fn=client.persist_pae),
         config.worker_id,
         poll_interval=config.poll_interval,
         # ⚠ Reaches the claim SQL's predicate. Injected here rather than read inside the loop so a

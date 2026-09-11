@@ -27,6 +27,7 @@ claims later — which is impossible unless the flag is captured *at fold time*.
 
 from __future__ import annotations
 
+import gzip
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -187,6 +188,19 @@ def write_pae(result: FoldResult, out_dir: str | Path) -> Optional[str]:
     path = out / "pae.json"
     path.write_text(json.dumps(result.pae), encoding="utf-8")
     return str(path)
+
+
+def pae_gz_bytes(result: FoldResult) -> Optional[bytes]:
+    """The fold's PAE as ``pae.json.gz`` bytes, or ``None`` when the fold emitted none.
+
+    ⚠ The **same** payload ``scripts/retrieve_rental_pae.py`` sends: that script gzips the
+    ``pae.json`` this module wrote and POSTs it to the D-036 route. The local tier has no pod to
+    retrieve from, so it produces the identical bytes in memory and posts them directly. **One
+    wire format, two producers** — a second serialisation would be two paths to one quantity.
+    """
+    if result.pae is None:
+        return None
+    return gzip.compress(json.dumps(result.pae).encode("utf-8"))
 
 
 # ── the GPU-bound fold (import-guarded; validated on a GPU host, not in CI) ────

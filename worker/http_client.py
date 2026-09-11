@@ -73,6 +73,22 @@ class HttpQueueClient:
         }
         self._post(f"/jobs/{job_id}/artifacts", files=files, ok=(204,))
 
+    def persist_pae(self, job_id: int, pae_gz: bytes) -> None:
+        """POST /jobs/{id}/pae — the **D-036 out-of-band route**, which is the only writer of
+        ``protein_analyses.pae_json_path``.
+
+        ⚠ Same route, same wire format and same 204 contract that
+        ``scripts/retrieve_rental_pae.py`` uses from the rented box. That script exists because a
+        pod's disk dies with the pod; the local tier has no pod, so it posts the bytes directly
+        instead of staging them for retrieval. **Route (a): the route is widened to a second
+        caller, not reimplemented.**
+
+        ⚠⚠ The 204 IS the per-fold assertion that the column was written: server-side
+        ``persist_pae`` writes the file into ``artifact_root`` and sets the column in one
+        transaction, so a non-204 raises ``TransportError`` here rather than leaving a NULL."""
+        self._post(f"/jobs/{job_id}/pae",
+                   files={"pae": ("pae.json.gz", pae_gz, "application/gzip")}, ok=(204,))
+
     def complete(self, job_id: int) -> None:
         """POST /jobs/{id}/complete — ONLY after ``upload`` landed (the loop guarantees
         the ordering; the endpoint enforces it, D-031 (c))."""
