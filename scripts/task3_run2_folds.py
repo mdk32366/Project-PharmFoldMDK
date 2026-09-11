@@ -337,14 +337,42 @@ def fold_from_spec_ref():
     return fold_from_spec
 
 
-def _pending_local_jobs(session) -> dict[int, str]:
+def worker_tier() -> str:
+    """The ONE source for the tier, read once and used by both the guard and the run.
+
+    ⚠ `F-046` — divergent parameters under one name. A guard that checks `local` while the run
+    claims `rental` is protecting a queue that will not be drained.
+    """
+    return os.environ.get("WORKER_TIER", "local")
+
+
+def _claimable_pending(session, tier: str) -> dict[int, str]:
+    """The jobs this run could actually claim — ⚠⚠ THE SAME PREDICATE THE CLAIM USES, NOT A
+    WIDER ONE.
+
+    `core/queue.py`'s claim filters `status = 'pending' AND tier = :tier` in the SQL, and says in
+    its own comment why the tier match is strict: *"A NULL-tier job is claimed by NOBODY,
+    deliberately: three-valued logic makes `NULL = 'local'` unknown, hence false. `OR tier IS
+    NULL` would have been the friendly-looking version and would have restored the exact hole."*
+
+    ⚠⚠ **So a NULL-tier pending job is not a stranger — it is unclaimable, and refusing to start
+    because one exists refuses on a job that could never have been folded.** The same reasoning
+    covers any other tier: a pending `rental` job is exactly as unreachable from a local worker.
+    ⚠ **This filters on the tier rather than only on NULL for that reason** — excluding NULL
+    alone would fix the symptom and leave the class one step along.
+
+    ⚠ The guard must ask the question the CLAIM asks, or it is guarding a different queue than
+    the one that will be drained. It is deliberately no wider: anything this run CAN claim is
+    still checked, which is the whole protection.
+    """
     from sqlalchemy import select                        # noqa: PLC0415
     from db.models import JobRecord, ProteinAnalysis     # noqa: PLC0415
 
     rows = session.execute(
         select(JobRecord.id, ProteinAnalysis.input_value)
         .join(ProteinAnalysis, ProteinAnalysis.id == JobRecord.analysis_id)
-        .where(JobRecord.status == "pending")).all()
+        .where(JobRecord.status == "pending")
+        .where(JobRecord.tier == tier)).all()      # ⚠ strict, like the claim. Never `OR IS NULL`.
     return {jid: acc for jid, acc in rows}
 
 
@@ -361,16 +389,20 @@ def fold(owner: bool) -> int:
 
     from sqlalchemy.orm import Session                   # noqa: PLC0415
 
+    tier = worker_tier()
     with Session(_engine()) as s:
-        pending = _pending_local_jobs(s)
+        pending = _claimable_pending(s, tier)
     strangers = {jid: acc for jid, acc in pending.items() if jid not in allowed}
     if strangers:
-        print(f"REFUSING: {len(strangers)} pending job(s) are outside the twenty "
+        print(f"REFUSING: {len(strangers)} CLAIMABLE pending job(s) are outside the twenty "
               f"({sorted(strangers.items())[:5]}). `run_worker` claims the next job of its TIER, "
-              f"not 'one of mine' — starting now could fold a stranger into a 20-row exception.",
+              f"not 'one of mine' - starting now could fold a stranger into a 20-row exception.",
               file=sys.stderr)
         return 1
-    print(f"queue check: {len(pending)} pending job(s), all inside the twenty.")
+    print(f"queue check: {len(pending)} claimable pending job(s) at tier={tier!r}, "
+          f"all inside the twenty.")
+    print("  (a NULL-tier or other-tier pending job is NOT counted here - the claim's own "
+          "predicate is strict, so nothing else is reachable from this run.)")
 
     if not owner:
         print("\nDRY RUN - no fold ran. Re-run with --i-am-the-owner to fold.")
@@ -389,7 +421,7 @@ def fold(owner: bool) -> int:
     try:
         run_worker(client, _fold_one, config.worker_id,
                    poll_interval=config.poll_interval,
-                   tier=os.environ.get("WORKER_TIER", "local"),
+                   tier=tier,
                    should_stop=lambda: len(rec.rows) >= SAMPLE_N)
     finally:
         # ⚠ Written even on a mid-run stop. A campaign that dies at fold 11 and records nothing
