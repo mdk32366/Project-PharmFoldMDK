@@ -258,7 +258,7 @@ def test_pointer_one_past_the_highest_spent_heading_is_accepted():
 
 
 def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
-    """⚠ FIXTURE 4: the tree itself. Pointer F-067, highest spent F-066.
+    """⚠ FIXTURE 4: the tree itself. Pointer F-071, highest spent F-070.
 
     ⚠ This is the only case that touches disk, and it does so through the SAME pure function, so
     the tree is checked by the code the fixtures proved rather than by a second implementation.
@@ -266,7 +266,8 @@ def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
     pointer = check_next_free_pointer(
         LOG.read_text(encoding="utf-8"), RESERVED.read_text(encoding="utf-8")
     )
-    assert pointer == 70  # F-068 spent 068 and 069 and moved the pointer in the same commit
-    # F-068 (the fold-path asymmetry) and F-069 (the short-span population) were spent
-    # 2026-09-11; the pointer moved to 070 in the same commit. ADDED by name, not relaxed.
-    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 69
+    assert pointer == 71  # F-070 spent 070 and moved the pointer in the same commit
+    # Spent 2026-09-11, each with the pointer moved in its own commit: F-068 (the fold-path
+    # asymmetry) and F-069 (the short-span population) together, then F-070 (the silently empty
+    # structure panel). ADDED by name, not relaxed.
+    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 70

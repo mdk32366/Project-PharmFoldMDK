@@ -16,6 +16,94 @@
 
 ## Log (newest first)
 
+### F-070 — ⚠⚠ The census structure panel is EMPTY, SILENTLY, for very short spans — the endpoint serves a valid PDB in every case, so the shipped description of this defect (*"3Dmol dynamic import failing on census pages"*) names a cause that is not happening, and the disjunction ordered to diagnose it had **two branches and both are false**
+
+- **Date:** 2026-09-11 · **Status:** ⚠ **OPEN, and ⚠⚠ WRITTEN-NOT-REPAIRED by standing
+  instruction — the TEXT lands here; the cartoon gap does not.** No viewer code moves under this
+  entry.
+- **How known (`D-016`):** walked live on `pharmfoldmdk.fly.dev` 2026-09-11 — **four accessions**,
+  spans **1** (`Q9H902`), **3** (`Q8N8F6`), **8** (`O60725`), **24** (`Q96LB2`) — and the structure
+  endpoint read directly for each. ⚠ **No fix, no deploy and no re-fold was involved in knowing
+  this.**
+
+**⚠ THE REPLACEMENT TEXT, LANDED AS WRITTEN. This paragraph is the open item; the old one-liner is
+withdrawn.**
+
+> Census structure panels render empty for very short spans. Walked 2026-09-11 on the live site:
+> spans 1 and 3 empty, spans 8 and 24 render. **The endpoint serves a valid PDB in every case
+> (1-residue = 200, 690 bytes, one CA atom)**, so this is a **representation gap in the cartoon
+> style, not a load failure** — 3Dmol cannot spline a backbone from one CA — **and the panel
+> gives no named reason.** 37 rows certainly affected (spans 1–3), up to 99 if 4–7 also fail.
+> Boundary between 4 and 8 unmeasured. Four accessions walked; this does not establish that all
+> census pages render.
+
+---
+
+**⚠⚠ WHY THE OLD DESCRIPTION IS NOT MERELY IMPRECISE — IT IS REFUTED BY THE SAME PAGE LOAD.**
+
+A failed dynamic import is **page-wide**: the module either resolves for the bundle or it does not.
+**Spans 8 and 24 render their cartoons on the same build, from the same chunk, on the same day.**
+⚠ **Row-dependent behaviour cannot be caused by a module that failed to load**, so the walk that
+found the empty panels simultaneously disproved the stated cause. The description survived because
+nobody had to reconcile the two halves: the failing rows were the only ones ever opened.
+
+**⚠ THE DEFECT PROPER IS THE SILENCE, NOT THE SPLINE.** 3Dmol declining to draw a backbone through
+one α-carbon is correct behaviour. What is wrong is that the panel is **empty with no error, no
+placeholder and no named reason, while the confidence bar renders directly below it** — so the page
+shows a working measurement beside a blank frame and asserts nothing about the blank.
+
+> ⚠⚠ **This is `F-018`'s shape at the pixel layer — an absent value read as an affirmative one.**
+> An empty frame under a heading that says a structure is served reads as *this protein has no
+> structure*, and the row it appears on is one where a structure **is** on disk and **is** being
+> served. **`D-150` already ruled on this class in copy** — *a status that appears only when
+> something is wrong teaches a reader that silence means fine* — and the viewer is the one surface
+> the ruling did not reach.
+
+---
+
+**⚠⚠ THE ORDERED DIAGNOSTIC WAS A DISJUNCTION, AND NEITHER BRANCH IS TRUE.**
+
+`ORDERS-Code-2026-09-11-Run-2-census-refold.md` §4.7, verbatim:
+
+> *"if pages work with Run 2 files present, it was a missing asset; if they still fail, it is
+> isolated to the front end and the SPA catch-all."*
+
+| branch | what it would mean | measured |
+|---|---|---|
+| *missing asset* | the PDB is absent or unreachable | ❌ **200, 690 bytes, one CA atom** — served |
+| *front end / SPA catch-all* | the chunk or route never resolves | ❌ **spans 8 and 24 render on the same build** |
+
+⚠ **A third cause — the one that is happening — was outside the disjunction**: the payload is
+valid, the module loads, and the **renderer cannot represent this particular molecule.**
+⚠⚠ **And the disjunction was gated behind Run 2**, so a question a browser answered in minutes was
+scheduled behind a fold campaign that has not run. **`AMENDMENT 1` §4.7 is RETIRED as unsound.**
+
+**⚠ Recorded as a Planner error, and it is NOT added to the day's tally of seven.** The seven are
+instances of *reasoning about this repository instead of reading it* (`F-068`). This is a different
+shape — **a two-branch disjunction presented as exhaustive over causes that neither branch had
+measured, with the measurement deferred to an event that had not happened.** ⚠ **Merging the two
+classes into one count would blur exactly the denominator `D-016` exists to protect**, so it is
+recorded here by name and left out of that number.
+
+---
+
+**WHAT THIS ENTRY DOES NOT CLAIM.**
+- ⚠ **Not that 3Dmol is at fault.** It is the instrument; declining to spline one atom is right.
+  ⚠ **Not that the fix is a cartoon** — what a one-residue panel should show is a design question
+  and is not answered here.
+- ⚠⚠ **Not that the boundary is known.** Spans **4–7 are UNMEASURED**; 37 is certain and 99 is a
+  ceiling, and quoting 99 as the count would be `F-047`'s wrong-but-plausible.
+- ⚠ **Not that the rest of the census renders.** **Four** accessions were walked. That is a
+  positive control for the working case, not a survey.
+- ⚠ **Not a repair, and not an authorisation for one.** The standing instruction is explicit: the
+  text lands, the cartoon gap does not.
+
+**Relied on by:** `F-069`, which holds this as **instrument 3** of four over the short-span
+population — ⚠ **and says so precisely because the viewer's own defect is separate and narrower
+than the population's.**
+
+---
+
 ### F-069 — ⚠⚠ Four instruments have tripped over one population and each recorded it separately: a 1-residue "extracellular span" is not a foldable protein, and the span pipeline treats it as one
 
 - **Date:** 2026-09-11 · **Status:** ⚠ **OPEN, and ⚠⚠ WRITTEN-NOT-REPAIRED.** It must not be
