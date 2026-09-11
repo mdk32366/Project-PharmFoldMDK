@@ -279,17 +279,20 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     # D-156 spent 156 when it split the log into five documents: ADDED by name,
     # and `### D-157` takes the bar. Never relaxed to a `>=`.
     assert 156 in ids, "D-156 claimed this integer"
-    assert 148 not in ids and 157 not in ids
+    # D-157 spent 157 (the Run 2 scope correction: 2,572 not 2,691): ADDED by name, and
+    # `### D-158` takes the bar. Never relaxed to a `>=`.
+    assert 157 in ids, "D-157 claimed this integer"
+    assert 148 not in ids and 158 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
     # ⚠⚠ D-155 SPENT the integer this guard barred (the surface-merge ship), so it is NAMED
-    # here rather than barred and `### D-157` takes the next-free bar. A name is ADDED and
+    # here rather than barred and `### D-158` takes the next-free bar. A name is ADDED and
     # nothing becomes a `>=` — the widening D-145 fixed the shape of.
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
-    assert "\n### D-157" not in LOG, (
-        "D-157 is the next free integer and must stay unspent until an entry claims it by name — "
+    assert "\n### D-158" not in LOG, (
+        "D-158 is the next free integer and must stay unspent until an entry claims it by name — "
         "never admitted by a `>=`")
 
 
@@ -309,7 +312,7 @@ def test_the_reserved_map_retires_154_marker_safe_and_the_pointer_moves_here():
     assert re.search(r"^\| \*\*D-148\*\*", RESERVED, re.M), "the trafficking hold lost its row"
     assert not re.search(r"^\| ~~\*\*D-15[45]\*\*~~", RESERVED, re.M), (
         "a marker is struck through; that breaks a sibling suite's lookup instead of satisfying it")
-    assert "Next free `D-` integer: **`D-157`**" in RESERVED
+    assert "Next free `D-` integer: **`D-158`**" in RESERVED
     for spent in ("D-148", "D-149", "D-150", "D-151", "D-152", "D-153", "D-154", "D-155"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED, (
             f"the pointer still names {spent}, which would hand a spent or held integer to the "
@@ -327,7 +330,7 @@ def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxin
         text = (ROOT / rel).read_text(encoding="utf-8")
         assert "D-154 — Every UI surface walked on the live site" in text, (
             f"{rel} does not NAME the entry that spent 154")
-        assert r'\n### D-157" not in' in text, f"{rel} does not bar the next free integer"
+        assert r'\n### D-158" not in' in text, f"{rel} does not bar the next free integer"
     # ⚠⚠ THE `>=` CHECK IS SCOPED TO THE TWO SPEC SUITES, AND THE SCOPE IS THE POINT.
     # `tests/test_d153_bake_burden_loader.py` performs this very check on those two files, so it
     # HOLDS the relaxation pattern as *data* — asserting the string's absence there would redden on

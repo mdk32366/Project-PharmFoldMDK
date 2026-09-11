@@ -16,6 +16,95 @@
 
 ## Log (newest first)
 
+### D-157 — The Run 2 census re-fold's real scope is **2,572, not 2,691**, because the 440 ceiling is card-bound and does not apply to this host — and the disqualifying fact is that **`F-062`'s own finding was applied to the card `F-062` was written about**, by the party that wrote it
+
+- **Date:** 2026-09-11
+- **Status:** Accepted. ⚠ **A SCOPE CORRECTION, NOT A CAMPAIGN AUTHORISATION.** No fold is
+  authorised by this entry; it records what the campaign's population actually is.
+- **How known (`D-016`):** measured twice, from two independent sources, at `main` `5085ba6` —
+  `data/census/census_manifest.v7.csv` and a read-only query against `protein_analyses` through
+  the owner-held proxy. **They agree exactly.** Each figure below states its key.
+
+**Context — the owner's scoping ruling, and the answer it was given.** The owner ruled the
+campaign as *"as many of the 2,690 as we can do without renting a card."* The answer recorded was
+**2,691 — all of them** — on the reasoning that every tranche 1–4 row has `span_aa ≤ 439`, one
+residue under the **440** known-good ceiling.
+
+**⚠⚠ THE DISQUALIFYING FACT.** **440 is not this card's ceiling.** It is the A6000's, and
+**`F-062` is the finding that measured-success envelopes are CARD-BOUND** — *S-005's 6,665 MiB
+does not license a Blackwell FIT*. On this host:
+
+- **`F-063`** — the climb reached `highest_ok = 384` and **the host BUGCHECKED before 392 was
+  written.** ⚠ **OPEN.**
+- **`F-064`** — in-process headroom collapse **after a successful fold**, 7,043 → 1,649 MiB.
+  ⚠ **OPEN.**
+- **`scripts/rb_local_tile_folds.py`** caps at **L ≤ 384** and drops L > 384, citing *F-063 last
+  OK `peak_alloc` 6,357 MiB at 384 aa*.
+
+> ⚠⚠ **So the scope answer applied a card-bound envelope to a different card — which is `F-062`'s
+> finding, verbatim, committed about the very card `F-062` was written about.** The number was
+> not wrong by a rounding; it was right for a machine nobody is folding on.
+
+**Decision — the campaign's population is 2,572, and the remainder is a named category.**
+
+| key | rows |
+|---|---|
+| tranche 1–4, manifest **and** `protein_analyses` | **2,691** |
+| `span_aa ≤ 384` — **the true local-tier population** | **2,572** |
+| `span_aa` 385–439 — **EXCLUDED** | **119** |
+
+**The 119 are a NAMED EXCLUDED CATEGORY WITH A CAUSE, never a low number** (`D-016`): they exceed
+the 384 aa envelope measured safe on this card, under `F-062` / `F-063` / `F-064`, **all three
+OPEN**. That is **4.42%** of the census and ⚠ **25.6% of the old band 5**.
+
+⚠ **Band 5 is redefined 251–384.** A band labelled 251–439 in the key while holding only 251–384
+in the data is **`F-047`'s wrong-but-plausible answer manufactured by a band definition**. The
+timing projector **refuses** to project over 385–439 rather than weighting band 5 as though it
+were whole.
+
+**The stratified sample's weights, recorded because they are the projection's inputs:**
+
+| band | population | sampled | rate |
+|---|---|---|---|
+| 1–10 | 130 | 4 | 3.08% |
+| 11–30 | 395 | 4 | 1.01% |
+| 31–100 | 1,101 | 4 | 0.36% |
+| 101–250 | 600 | 4 | 0.67% |
+| **251–384** | **346** | 4 | **1.16%** |
+| **total** | **2,572** | **20** | |
+
+⚠⚠ **The rates are NOT uniform, and that is why a sample mean must never be multiplied by the
+population total.** The earlier ~22-hour estimate was wrong by an order of magnitude for exactly
+that reason — it assumed 440-aa folds at ~30 s when the measured median span is **53 aa**.
+
+**Deep-learning justification: neutral.** No model, feature, or score moves. ⚠ **It is not
+neutral to what the re-fold can claim:** a determinism comparison stated over "the census" while
+silently excluding 4.42% of it would be a denominator defect in the one result the campaign
+exists to produce.
+
+**Assumptions relied on:** `A-030 (a JSONB column can take an additive key without changing any
+consumer)` — HELD at a named scope, and the `run: 1` partition is what lets Run 2 rows coexist
+with these 2,572 · ⚠ **none new.**
+
+**Consequences, stated rather than discovered later.**
+- **Task 4's scope is 2,572**, and any per-band denominator is drawn from that, not from 2,691.
+- ⚠ **The 119 do not become foldable by wanting them.** Raising the cap needs `F-063` and `F-064`
+  closed — *a finding against an instrument stays open until the instrument no longer exhibits
+  it* (`D-074`) — and the downside is a machine the owner works on dying mid-campaign.
+- ⚠ **The excluded category must travel with every citation of the campaign's size.** "2,572 of
+  the census" without "119 excluded, cause named" is the same omission one layer along.
+
+**Residuals, stated rather than closed.**
+- ⚠ **Whether the 119 could fold safely here is UNMEASURED, not disproven.** The cap is the
+  measured envelope, not a demonstration that 385–439 fails.
+- ⚠⚠ **The campaign's cost is not yet known and span length may not set it.** The fold path now
+  runs one OS process per fold, so the 8.4 GB weight load is paid **per fold** — if that
+  dominates the short bands, cost is set by **process count, not by span length**, and 2,572
+  folds is not "a few hours" on that arithmetic. **The 20-fold sample measures it; nothing here
+  projects it.**
+
+---
+
 ### D-156 — The five KEEL documents become five files: `decisions.md`, `findings.md` and `assumptions.md` take the `D-`/`F-`/`A-` entries out of this README, the next-free pointer gains the two namespaces it never had — and the disqualifying fact is that **the citation invariant has never once read the code**, so 71 `A-` citations in shipped Python pointed at entries that did not exist, for 38 days, behind a green gate
 
 - **Date:** 2026-09-11

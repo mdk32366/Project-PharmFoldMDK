@@ -952,8 +952,12 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
     # sitewide-layout lane. A reserved integer is not a free one, so *"next free"* means the lowest
     # AVAILABLE integer and not the lowest unwritten one. Six assertions where there was one: the
     # pointer names 154, and it names none of 147, 148, 150, 151, 152 or 153.
-    assert "Next free `D-` integer: **`D-157`**" in RESERVED, (
+    assert "Next free `D-` integer: **`D-158`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
+    )
+    assert "Next free `D-` integer: **`D-157`**" not in RESERVED, (
+        "the pointer still names 157, which the Run 2 scope correction SPENT - handing a "
+        "used integer to the next writer is what this pointer exists to prevent"
     )
     assert "Next free `D-` integer: **`D-156`**" not in RESERVED, (
         "the pointer still names 156, which the KEEL five-document split SPENT — handing a used "
