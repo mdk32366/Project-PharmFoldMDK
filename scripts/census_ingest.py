@@ -267,9 +267,16 @@ def run(argv: Optional[list[str]] = None) -> int:
             # ⚠ `tier` on the JOB (F-035), not only in the analysis meta. `claim()` filters
             # on it inside one atomic UPDATE, and reaching through a JSON column there would need
             # dialect-split SQL in the one statement that must not have two versions.
+            # ⚠⚠ `run: 1` IS NOT DECORATION AND OMITTING IT MAKES THE ROW INVISIBLE.
+            # The census reads now select BY the generation label (`app.reads.keep_run_1`), and a
+            # row carrying no label is NOT Run 1 — deliberately, because Run 1 must be POSITIVELY
+            # DECLARED rather than inferred from a key's absence (`F-018`, and the whole reason
+            # 3,656 rows were backfilled). A new ingest without this key would be written, folded,
+            # and then silently absent from every census surface.
             s.add(JobRecord(analysis_id=analysis.id, status="pending", tier=p["tier"],
                             inference_settings={**p["inference_settings"],
-                                                "model_id": "facebook/esmfold_v1"}))
+                                                "model_id": "facebook/esmfold_v1",
+                                                "run": 1}))
         s.commit()
 
         after = snapshot(s)

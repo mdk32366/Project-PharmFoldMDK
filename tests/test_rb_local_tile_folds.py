@@ -127,13 +127,25 @@ def test_never_passes_f059_as_requirement_mib():
 def test_envelope_constant_is_6357_not_6665():
     """F-063 last OK peak_alloc is the hard envelope. S-005's 6665 is not this card (F-062)."""
     mod = _load_mod()
-    src = SCRIPT.read_text(encoding="utf-8")
     assert mod.MEASURED_SUCCESS_PEAK_MIB == 6357
     assert getattr(mod, "MEASURED_SUCCESS_MIB", None) != 6665
-    compact = src.replace(" ", "")
-    assert "MEASURED_SUCCESS_PEAK_MIB=6357" in compact
-    assert "MEASURED_SUCCESS_MIB=6665" not in compact
-    assert "MEASURED_SUCCESS_PEAK_MIB=6665" not in compact
+
+    # ⚠⚠ THE LITERAL MOVED, AND THE ASSERTION FOLLOWED IT RATHER THAN BEING RELAXED.
+    # The envelope now lives in `core/vram_guard.py` so the DB-writing fold path can share
+    # one gate instead of carrying a second copy. The behavioural half above is unchanged and
+    # still binds through the import; this half checks the literal at its new home.
+    # ⚠ Both source texts are checked for the 6665 trap (F-062: S-005's envelope is card-bound
+    # and produced FIT-then-OOM on Blackwell), because the wrong number must not reappear in
+    # EITHER file.
+    from pathlib import Path as _P
+    guard_src = (_P(__file__).resolve().parents[1] / "core" / "vram_guard.py").read_text(
+        encoding="utf-8")
+    harness_src = SCRIPT.read_text(encoding="utf-8")
+    guard_compact = guard_src.replace(" ", "")
+    assert "MEASURED_SUCCESS_PEAK_MIB=6357" in guard_compact
+    for compact in (guard_compact, harness_src.replace(" ", "")):
+        assert "MEASURED_SUCCESS_MIB=6665" not in compact
+        assert "MEASURED_SUCCESS_PEAK_MIB=6665" not in compact
 
 
 def test_summary_path_is_procpertile_and_does_not_overwrite_sacred_csvs():

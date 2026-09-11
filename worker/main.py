@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -66,6 +67,130 @@ def config_from_env() -> WorkerConfig:
     )
 
 
+class FoldRefused(FoldError):
+    """The fold was ROUTED OUT before the GPU, not attempted and failed.
+
+    ⚠⚠ A REFUSAL IS NOT A FAILURE AND THE JOB RECORD MUST SAY WHICH. *Routed out, no
+    measurement* and *attempted and broke* need different investigations — the same reason
+    `core.fold_persistence_check` returns four named outcomes rather than a boolean. An absent
+    measurement recorded as a fold failure is `F-018`'s shape in `jobs.error`.
+
+    ⚠ It subclasses `FoldError` deliberately, so the loop's existing deterministic-failure
+    taxonomy (`D-030` §4 — reported via `fail()`, never retried) is unchanged: a refusal must
+    not be retried any more than a model mismatch is. The TYPE and the `MARKER` are what make it
+    separable afterwards.
+    """
+
+    #: Stable, greppable, and in the recorded message — so a row is self-describing without
+    #: needing the type to have survived serialisation.
+    MARKER = "PREFLIGHT_REFUSED"
+
+    def __init__(self, outcome: str, detail: str, job_id: int, length: int) -> None:
+        super().__init__(
+            f"{self.MARKER} job {job_id}: {outcome} at {length} aa — {detail}. "
+            f"⚠ Routed out before the GPU, NOT attempted. An absent or insufficient measurement "
+            f"is a category, not a green light (F-061; F-063 host bugcheck; F-064 headroom "
+            f"collapse)."
+        )
+        self.outcome = outcome
+        self.detail = detail
+
+
+def _gate_fold(spec: FoldSpec, preflight_fn: Callable[..., Any]) -> Any:
+    """Refuse rather than attempt, on a MEASURED requirement (`core.vram_guard`).
+
+    ⚠⚠ THE ASYMMETRY THIS CLOSES. The only path that could write Run 2 rows called `preflight`
+    nowhere; the only path with the gate (`scripts/rb_local_tile_folds.py`) refuses to start if
+    `db/` is imported. So every worker-path fold on this host ran **ungated** — a guard placed
+    where the measurement is, not where the writes are.
+
+    ⚠ `requirement_for_length` prefers the climb's measured peak at the EXACT length and falls
+    back to `F-063`'s hard envelope. **Never `F-059`** — `F-061` bars its law from being passed
+    as `requirement_mib`, because a law is not a measurement of the case in front of it.
+
+    ⚠ `margin_mib=0` matches the harness exactly; a margin here that the harness lacks would be
+    `F-046` — divergent parameters under one name.
+    """
+    from core.vram_guard import FIT, requirement_for_length   # noqa: PLC0415 — keep torch-free
+
+    length = len(spec.sequence)
+    requirement_mib, source = requirement_for_length(length)
+    pf = preflight_fn(length, spec.dtype, spec.chunk_size,
+                      requirement_mib=requirement_mib, margin_mib=0)
+    if pf.outcome != FIT:
+        raise FoldRefused(pf.outcome, f"{pf.detail} [requirement {requirement_mib} MiB "
+                                      f"via {source}]", spec.job_id, length)
+    return pf
+
+
+def process_per_fold_fn(*, child_target: Optional[Callable[..., Any]] = None,
+                        memory_fraction: float = 0.85,
+                        timeout_s: Optional[float] = None) -> Callable[..., Any]:
+    """D-105 on the fold path that can WRITE: a child per fold that EXITS before the next preflight.
+
+    ⚠⚠ THE SECOND INSTANCE OF ONE FINDING. The envelope gate lived only on the measurement path,
+    and so did this topology. `_supervised_fold_fn` keeps ONE long-lived child so the 8.4 GB
+    weights load once — the exact opposite of what `F-064` prescribes, and invisible until
+    something tried to use the writing path at scale.
+
+    ⚠ `F-064`: in-process release does not restore free for the next preflight (7043 -> 1649 MiB
+    after a successful fold; recovered only on process exit). With the envelope gate in place, a
+    long-lived child means fold 1 succeeds and every later fold is REFUSED — the gate working
+    correctly while the campaign stalls at n = 1.
+
+    ⚠⚠ THE COST IS REAL AND IS THE POINT. `_MODEL_CACHE` is per-process, so a fresh child reloads
+    the weights EVERY fold. That is the price of the memory actually coming back, and it must
+    travel with the projection: if reload dominates the short bands, campaign cost is set by
+    **process count, not span length**.
+
+    ⚠ The spawn/join/verify-dead lifecycle is REUSED from `worker.rb_tile_child`, not rebuilt —
+    it is the tested part, and a second copy is the defect this project catalogues.
+    """
+    from worker.rb_tile_child import fold_tile_in_fresh_process   # noqa: PLC0415
+    from worker.runner import FoldProvenance, FoldResult          # noqa: PLC0415
+
+    def _fold(sequence: str, **kw: Any) -> Any:
+        payload = {
+            "sequence": sequence,
+            "dtype": kw["dtype"],
+            "chunk_size": kw["chunk_size"],
+            "source": kw["source"],
+            "ecd_start": kw.get("ecd_start"),
+            "ecd_end": kw.get("ecd_end"),
+            "memory_fraction": memory_fraction,
+        }
+        t0 = time.time()
+        spawn_kw: dict[str, Any] = {"target": child_target}
+        if timeout_s is not None:
+            spawn_kw["timeout_s"] = timeout_s
+        rec = fold_tile_in_fresh_process(payload, **spawn_kw)
+        rec = dict(rec)
+        rec["parent_wall_s"] = round(time.time() - t0, 2)
+
+        if not rec.get("ok"):
+            # ⚠ The taxonomy is PRESERVED, not rebuilt: a fold that failed in the child reaches
+            # the loop as `FoldError` exactly as it did in-process — reported via `fail()`, never
+            # retried (D-030 §4). ⚠⚠ And it is NOT a `FoldRefused`: that type means routed out
+            # before the GPU, and this one got there.
+            raise FoldError(rec.get("error") or "the fold failed in the child with no reason")
+
+        payload_out = rec.get("result") or {}
+        prov = payload_out.get("provenance")
+        out = FoldResult(
+            pdb=payload_out.get("pdb", ""),
+            plddt=payload_out.get("plddt") or [],
+            pae=payload_out.get("pae"),
+            provenance=FoldProvenance(**prov) if prov else None,
+        )
+        # ⚠ The per-fold record travels ON the result: wall time (child, containing the weight
+        # reload) and parent wall (containing the spawn), plus the peak read IN the child —
+        # `nvidia-smi` in the parent measures the wrong process.
+        out.fold_record = rec
+        return out
+
+    return _fold
+
+
 def _persist_pae_local(result: Any, artifact_dir: str, job_id: int,
                        write_pae_fn: Callable[..., Any]) -> None:
     """Best-effort, rental-scoped local PAE write (D-036), keyed ``{artifact_dir}/{job_id}/``.
@@ -108,7 +233,8 @@ def _persist_pae_via_route(result: Any, job_id: int,
 def fold_from_spec(spec: FoldSpec, fold_fn: Callable[..., Any] = fold, *,
                    artifact_dir: Optional[str] = None,
                    write_pae_fn: Callable[..., Any] = write_pae,
-                   pae_post_fn: Optional[Callable[[int, bytes], Any]] = None) -> Any:
+                   pae_post_fn: Optional[Callable[[int, bytes], Any]] = None,
+                   preflight_fn: Optional[Callable[..., Any]] = None) -> Any:
     """Adapt a claimed `FoldSpec` to the runner's `fold(...)` call.
 
     Guards that the job's pinned model revision matches this runner's (D-016/D-026): folding a
@@ -129,6 +255,8 @@ def fold_from_spec(spec: FoldSpec, fold_fn: Callable[..., Any] = fold, *,
             f"job {spec.job_id}: sequence length {len(spec.sequence)} exceeds "
             f"{TILE_WINDOW_AA} — D-111 does not raise the 1656 cap; tiles only"
         )
+    if preflight_fn is not None:
+        _gate_fold(spec, preflight_fn)
     result = fold_fn(
         spec.sequence,
         dtype=spec.dtype,
@@ -181,6 +309,7 @@ def run(
     *,
     fold_fn: Callable[..., Any] = fold,
     run_worker_fn: Callable[..., None] = run_worker,
+    preflight_fn: Optional[Callable[..., Any]] = None,
     **run_worker_kwargs: Any,
 ) -> None:
     """Build the client and drive the loop. `fold_fn` / `run_worker_fn` are injected in tests;
@@ -188,6 +317,12 @@ def run(
     point — the loop, its retry/failure taxonomy, and the transport are all already built."""
     config = config or config_from_env()
     client = build_client(config)
+    if preflight_fn is None:
+        # ⚠⚠ PRODUCTION DEFAULTS TO GATED. The gate is injectable so tests can drive it without
+        # a GPU — `preflight` refuses when free VRAM cannot be read, so an unconditional gate
+        # would refuse every CI fold — but the DEFAULT here is the real one, because a gate that
+        # production has to opt into is a gate production will one day be started without.
+        from core.vram_guard import preflight as preflight_fn   # noqa: PLC0415
     # ⚠ Opt-in, and the choice is LOGGED rather than silent: a fold path that changed topology
     # without saying so would make an unexplained failure much harder to attribute later.
     if os.environ.get("WORKER_FOLD_IN_CHILD") == "1" and fold_fn is fold:
@@ -211,7 +346,8 @@ def run(
         # census rows. On the rental box `artifact_dir` is set, so the D-036 staging path runs
         # instead and this is not reached: one branch or the other, never both.
         lambda spec: fold_from_spec(spec, fold_fn, artifact_dir=config.artifact_dir,
-                                    pae_post_fn=client.persist_pae),
+                                    pae_post_fn=client.persist_pae,
+                                    preflight_fn=preflight_fn),
         config.worker_id,
         poll_interval=config.poll_interval,
         # ⚠ Reaches the claim SQL's predicate. Injected here rather than read inside the loop so a

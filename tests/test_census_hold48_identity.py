@@ -24,7 +24,7 @@ from app.reads import (
     list_census,
     resolve_census_accession,
 )
-from db.models import Base, ProteinAnalysis
+from db.models import Base, JobRecord, ProteinAnalysis
 
 # The 27 Wave1+Wave2 stitched parents (D-117 inventory) + IGF2R 3356 if distinct.
 # ⚠ D-132: 27 is the 2026-09-05 WAVE SLICE, not the volume — the measured assembled
@@ -73,6 +73,15 @@ def _add(
             mean_plddt=plddt,
             meta=meta,
         )
+    )
+    # ⚠⚠ Census reads select BY the generation label in `jobs.inference_settings`, and
+    # production carries `run: 1` on 3,656 of 3,656 rows. A fixture row with no job row has no
+    # label, so `app.reads.keep_run_1` drops it and the accession resolves to nothing. `F-056`
+    # at fixture scope: a fixture that does not carry what production carries is a different
+    # system, and it goes RED rather than WRONG - which is how this was found.
+    session.add(
+        JobRecord(id=id, analysis_id=id, status="succeeded", tier="rental",
+                  inference_settings={"source": "sliced_ecd", "run": 1})
     )
 
 

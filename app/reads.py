@@ -946,6 +946,7 @@ def _is_spare_tile(row: ProteinAnalysis) -> bool:
 
 def choose_census_representative(
     group: list[ProteinAnalysis],
+    run_labels: Optional[dict] = None,
 ) -> Optional[tuple[ProteinAnalysis, str]]:
     """One analysis per accession. Never a tile as the protein. Prefer assembled parent.
 
@@ -958,6 +959,16 @@ def choose_census_representative(
     defect survived D-118, D-120, D-132 and D-133: nothing on any surface distinguishes
     *this protein was folded in one pass* from *we failed to notice it was assembled*.
     """
+    if run_labels is not None:
+        # ⚠⚠ DEFENCE IN DEPTH, NOT THE PRIMARY GUARANTEE. The boundary filter
+        # (`keep_run_1`) is what makes reads Run-1-only; this exists because the picker used to
+        # resolve generations BY ID ORDERING and got the right answer by luck, and a future
+        # caller that forgets the boundary filter is `F-052`'s shape - a convention obeyed by
+        # every caller except the newest.
+        # ⚠ The picker cannot fetch labels itself: it is pure and has no session. A caller
+        # that has them passes them; one that does not gets the historical behaviour, which is
+        # why the boundary filter and not this is the guarantee.
+        group = [r for r in group if run_labels.get(r.id) == RUN_1]
     if not group:
         return None
     tiles = [r for r in group if is_census_tile_row(r)]
@@ -1384,6 +1395,48 @@ def assembly_review(
     }
 
 
+# ---------------------------------------------------------------------------
+# Task 4.1's GENERATION LABEL. Run 2 re-folds the same accessions into NEW rows, so an
+# accession stops being unique in `protein_analyses` and every read keyed on it must say
+# WHICH generation it wants.
+#
+# ⚠⚠ BEFORE THIS EXISTED, RUN 1 WON BY ACCIDENT. `choose_census_representative` ends at
+# `min(ordinary, key=lambda r: r.id)`, so the older row was served because Run 2 rows are
+# written later and get higher ids. Invert the ids and the WRONG generation is served -
+# `F-024` exactly: the right occurrence taken by luck is not a uniqueness check.
+#
+# ⚠ The label lives in `jobs.inference_settings`, backfilled to `run: 1` on 3,656 of 3,656
+# rows so Run 1 is POSITIVELY DECLARED rather than inferred from a key's absence (`F-018`).
+# A row carrying no label is therefore NOT Run 1 and is not served - an absence must not do an
+# affirmative value's work, which is the whole reason the backfill happened.
+#
+# ⚠ Filtered in PYTHON, not in SQL, and deliberately: `inference_settings` is JSON on SQLite
+# and JSONB on Postgres, and a dialect-specific JSON operator is exactly the substrate gap
+# `F-056` records - the suite would forgive what production rejects. One batched lookup keeps
+# the behaviour provably identical on both.
+RUN_KEY = "run"
+RUN_1 = 1
+
+
+def run_labels(session: Any, analysis_ids: Any) -> dict[int, Any]:
+    """``{analysis_id: generation label or None}`` in ONE query."""
+    ids = list(analysis_ids)
+    if not ids:
+        return {}
+    rows = session.execute(
+        select(JobRecord.analysis_id, JobRecord.inference_settings)
+        .where(JobRecord.analysis_id.in_(ids))
+    ).all()
+    return {aid: (settings or {}).get(RUN_KEY) for aid, settings in rows}
+
+
+def keep_run_1(session: Any, rows: Any) -> list:
+    """The census serves Run 1 ONLY, selected BY THE LABEL rather than by id ordering."""
+    rows = list(rows)
+    labels = run_labels(session, [r.id for r in rows])
+    return [r for r in rows if labels.get(r.id) == RUN_1]
+
+
 def canonical_census_analysis_id(engine: Any, analysis_id: int) -> Optional[int]:
     """Map a census analysis id to the protein representative (D-118).
 
@@ -1401,6 +1454,7 @@ def canonical_census_analysis_id(engine: Any, analysis_id: int) -> Optional[int]
             .where(ProteinAnalysis.input_value == row.input_value)
             .where(ProteinAnalysis.cohort_tranche > COHORT_TRANCHE)
         ).all()
+        siblings = keep_run_1(session, siblings)
     picked = choose_census_representative(list(siblings))
     if picked is None or is_census_tile_row(picked[0]):
         return None
@@ -1715,14 +1769,19 @@ def resolve_census_accession(engine: Any, accession: str) -> tuple[Optional[int]
         rows = session.scalars(
             select(ProteinAnalysis).where(ProteinAnalysis.input_value == acc)
         ).all()
-    if not rows:
-        return None, "unknown"
-    # ⚠ census first — an accession can exist in both populations, and this route serves one of them
-    # ⚠ D-118: prefer the parent / assembled representative, never an arbitrary tile.
-    census = [
-        r for r in rows
-        if r.cohort_tranche is not None and r.cohort_tranche > COHORT_TRANCHE
-    ]
+        if not rows:
+            return None, "unknown"
+        # ⚠ census first — an accession can exist in both populations, and this route serves one
+        # ⚠ D-118: prefer the parent / assembled representative, never an arbitrary tile.
+        census = [
+            r for r in rows
+            if r.cohort_tranche is not None and r.cohort_tranche > COHORT_TRANCHE
+        ]
+        # ⚠⚠ Inside the session deliberately: the label lives on `jobs`, so the filter needs a
+        # live session. Hoisting the block was the alternative and it is the wrong one — the
+        # rows are already detached-safe here, and reaching for a closed session would have been
+        # a NameError at runtime and green in any test that never had two generations.
+        census = keep_run_1(session, census)
     picked = choose_census_representative(census)
     if picked is not None and not is_census_tile_row(picked[0]):
         return picked[0].id, "census"

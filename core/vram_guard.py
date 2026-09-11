@@ -34,6 +34,8 @@ result belongs on the fold record beside the recipe.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
+from pathlib import Path
 from typing import Any, Optional
 
 #: ⚠ Fraction of total VRAM the caching allocator may hand out. Deliberately conservative: the
@@ -236,3 +238,65 @@ def infer_host_down(jobs_left_running: int) -> dict[str, Any]:
     return {"verdict": "no_evidence_of_host_death",
             "caveat": ("⚠ NOT a clean bill of health. A host that died before claiming anything, "
                        "or after a job was reconciled, leaves no such row.")}
+
+
+# ---------------------------------------------------------------------------
+# THE MEASURED REQUIREMENT, AND WHERE IT COMES FROM.
+#
+# ⚠⚠ MOVED HERE FROM scripts/rb_local_tile_folds.py SO THERE IS ONE IMPLEMENTATION.
+# The harness could not share it: it refuses to start if `db/` is imported, so the
+# DB-writing fold path could never call it. Two copies of a gate is the
+# two-paths-to-one-quantity defect this project catalogues; one home with two callers
+# is the fix.
+#
+# ⚠ NEVER F-059. `f059_peak_gib` is a LAW, not a measurement of the case in front of it
+# (F-061), and passing it as `requirement_mib` is barred above. The order of preference is
+# the climb's measured peak at the EXACT length, then the F-063 hard envelope.
+CLIMB_JSONL = (Path(__file__).resolve().parents[1] / "data" / "census"
+               / "ceiling_climb.blackwell.int8.20260831.jsonl")
+
+#: F-063 last OK peak_alloc on Blackwell (L=384, int8 / chunk 64).
+#: ⚠ NOT F-059. NOT S-005's 6665 (F-062: that envelope is card-bound and produced FIT-then-OOM).
+MEASURED_SUCCESS_PEAK_MIB = 6357
+REQUIREMENT_SOURCE_CLIMB = "climb_exact_L"
+REQUIREMENT_SOURCE_ENVELOPE = "hard_envelope_6357"
+
+
+def load_climb_ok_peaks(path: Optional[Path] = None) -> dict[int, int]:
+    """Map length -> `peak_vram.max_allocated_mib` for each `outcome=ok` climb row.
+
+    ⚠ Uses the measured allocated peak, never `f059_peak_mib` / `f059_peak_gib`.
+    ⚠ A missing climb file is NOT fatal here: the caller falls back to the hard envelope,
+    which is itself measured. Raising would make the gate unavailable exactly when it is
+    most needed.
+    """
+    src = path if path is not None else CLIMB_JSONL
+    peaks: dict[int, int] = {}
+    if not src.is_file():
+        return peaks
+    with src.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            rec = json.loads(line)
+            if rec.get("outcome") != "ok":
+                continue
+            length = rec.get("length")
+            alloc = (rec.get("peak_vram") or {}).get("max_allocated_mib")
+            if length is None or alloc is None:
+                continue
+            peaks[int(length)] = int(alloc)
+    return peaks
+
+
+def requirement_for_length(length: int,
+                           climb_peaks: Optional[dict[int, int]] = None) -> tuple[int, str]:
+    """Prefer the climb peak at the EXACT length; else the F-063 hard envelope.
+
+    ⚠ Never consults F-059. Returns `(requirement_mib, requirement_source)`.
+    """
+    peaks = load_climb_ok_peaks() if climb_peaks is None else climb_peaks
+    if length in peaks:
+        return int(peaks[length]), REQUIREMENT_SOURCE_CLIMB
+    return MEASURED_SUCCESS_PEAK_MIB, REQUIREMENT_SOURCE_ENVELOPE

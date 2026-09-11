@@ -52,13 +52,23 @@ if str(REPO) not in sys.path:
 
 TILES = REPO / "data" / "census" / "tranche6_tiles.csv"
 CACHE = REPO / "data" / "census" / "spancache"
-CLIMB_JSONL = REPO / "data" / "census" / "ceiling_climb.blackwell.int8.20260831.jsonl"
+# ⚠⚠ These now live in core/vram_guard.py so the DB-writing fold path can share them.
+# This script could never export them: it refuses to start if `db/` is imported, so a
+# second copy was the only alternative - and two copies of a gate is the defect.
+from core.vram_guard import (  # noqa: E402
+    CLIMB_JSONL,
+    MEASURED_SUCCESS_PEAK_MIB,
+    REQUIREMENT_SOURCE_CLIMB,
+    REQUIREMENT_SOURCE_ENVELOPE,
+    load_climb_ok_peaks,
+    requirement_for_length,
+)
+
 ARTIFACT_DIR = REPO / "data" / "control" / "rb_local"
 #: D-105 path — do not overwrite the RB4 summary or the PR #201 early-stop CSV.
 SUMMARY = ARTIFACT_DIR / "rb_local_summary.regate384.procpertile.csv"
 
 #: F-063 last OK peak_alloc on Blackwell (L=384, int8/chunk 64). NOT F-059. NOT S-005 6665.
-MEASURED_SUCCESS_PEAK_MIB = 6357
 RECIPE_DTYPE = "int8"
 RECIPE_CHUNK = 64
 F059_DEPARTURE_STOP = 0.10
@@ -66,8 +76,6 @@ RB4_DEFAULT_LIMIT = 10
 LOCAL_POPULATION = 1482
 LOCAL_REGATE_MAX_LENGTH = 384
 ALLOCATOR_FRACTION = 0.85
-REQUIREMENT_SOURCE_CLIMB = "climb_exact_L"
-REQUIREMENT_SOURCE_ENVELOPE = "hard_envelope_6357"
 
 SUMMARY_FIELDS = [
     "census_accession", "gene", "tile_index", "start", "end", "length",
@@ -106,42 +114,6 @@ def sliced_sequence(acc: str, start: int, end: int) -> str:
         raise SystemExit(f"⚠ STOP — missing spancache for {acc}: {path}")
     doc = json.loads(path.read_bytes().decode("utf-8"))
     return doc["sequence"]["value"][start - 1:end]
-
-
-def load_climb_ok_peaks(path: Optional[pathlib.Path] = None) -> dict[int, int]:
-    """Map length → peak_vram.max_allocated_mib for each outcome=ok climb row.
-
-    ⚠ Uses the measured allocated peak, never `f059_peak_mib` / `f059_peak_gib`.
-    """
-    src = path if path is not None else CLIMB_JSONL
-    if not src.is_file():
-        raise SystemExit(f"⚠ STOP — missing F-063 climb jsonl: {src}")
-    peaks: dict[int, int] = {}
-    with src.open(encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            rec = json.loads(line)
-            if rec.get("outcome") != "ok":
-                continue
-            length = rec.get("length")
-            peak = rec.get("peak_vram") or {}
-            alloc = peak.get("max_allocated_mib")
-            if length is None or alloc is None:
-                continue
-            peaks[int(length)] = int(alloc)
-    return peaks
-
-
-def requirement_for_length(length: int, climb_peaks: dict[int, int]) -> tuple[int, str]:
-    """Prefer the climb jsonl peak at the exact OK length; else the F-063 hard envelope.
-
-    Never consults F-059. Returns (requirement_mib, requirement_source).
-    """
-    if length in climb_peaks:
-        return int(climb_peaks[length]), REQUIREMENT_SOURCE_CLIMB
-    return MEASURED_SUCCESS_PEAK_MIB, REQUIREMENT_SOURCE_ENVELOPE
 
 
 def load_local_tiles() -> list[dict[str, str]]:

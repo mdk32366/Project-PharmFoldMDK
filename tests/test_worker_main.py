@@ -214,9 +214,20 @@ def test_run_wires_client_adapter_and_config():
         from worker.runner import FoldResult
         return FoldResult(pdb=f"folded:{sequence}", plddt=[], pae=None)
 
+    def _fit_preflight(length, dtype, chunk_size, *, requirement_mib, margin_mib, **_):
+        # ⚠⚠ run() now DEFAULTS to the real gate, and `preflight` refuses when free
+        # VRAM cannot be read - which is every CI box. This test is about WIRING, not about
+        # gating, so it injects a FIT rather than leaving the default to refuse. The gate's
+        # own refusals are asserted in tests/test_worker_preflight_gate.py.
+        from core.vram_guard import FIT, Preflight
+        return Preflight(outcome=FIT, length=length, dtype=dtype, chunk_size=chunk_size,
+                         free_mib=7043, total_mib=8151, required_mib=requirement_mib,
+                         margin_mib=margin_mib, memory_fraction=0.85, layers={}, detail="")
+
     cfg = WorkerConfig(transport_url="http://x", auth_token="t", worker_id="wid",
                        poll_interval=2.0)
-    run(cfg, fold_fn=fake_fold, run_worker_fn=fake_run_worker)
+    run(cfg, fold_fn=fake_fold, run_worker_fn=fake_run_worker,
+        preflight_fn=_fit_preflight)
 
     assert isinstance(calls["client"], HttpQueueClient)
     assert calls["worker_id"] == "wid"
