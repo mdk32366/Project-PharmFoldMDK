@@ -207,7 +207,12 @@ def test_run_wires_client_adapter_and_config():
         calls["folded"] = fold(_spec(sequence="AAA"))
 
     def fake_fold(sequence, **k):
-        return f"folded:{sequence}"
+        # ⚠ Returns a real `FoldResult`, not a bare string. `run()` now hands the fold path the
+        # D-036 route (route (a)), so the local branch reads `result.pae` — and a fake that is
+        # not result-shaped would fail on its shape rather than on this test's subject. The
+        # assertion below is unchanged in meaning: it still proves the sequence reached the fold.
+        from worker.runner import FoldResult
+        return FoldResult(pdb=f"folded:{sequence}", plddt=[], pae=None)
 
     cfg = WorkerConfig(transport_url="http://x", auth_token="t", worker_id="wid",
                        poll_interval=2.0)
@@ -216,7 +221,7 @@ def test_run_wires_client_adapter_and_config():
     assert isinstance(calls["client"], HttpQueueClient)
     assert calls["worker_id"] == "wid"
     assert calls["poll_interval"] == 2.0
-    assert calls["folded"] == "folded:AAA"
+    assert calls["folded"].pdb == "folded:AAA"
 
 
 # ── rental-scoped local PAE persist (D-035 part 2 / D-036) ────────────────────
