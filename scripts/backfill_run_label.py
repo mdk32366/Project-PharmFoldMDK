@@ -101,7 +101,10 @@ def main(argv: Optional[list[str]] = None) -> int:
               f"to_write={before['to_write']}")
 
         if args.dry_run:
-            print("\n⚠ DRY RUN — nothing written.")
+            # ASCII only in printed strings: this runs in a console whose codepage nobody
+            # controls, and a non-ASCII glyph raises UnicodeEncodeError on cp1252/cp437 and
+            # kills the script mid-report. The same rule worker/main.py's banners already carry.
+            print("\n[DRY RUN] nothing written.")
             return 0
 
         by_id = dict(before["writes"])
@@ -128,10 +131,10 @@ def main(argv: Optional[list[str]] = None) -> int:
                         f"not all of them")
     if problems:
         for p in problems:
-            print(f"  ⚠⚠ {p}", file=sys.stderr)
+            print(f"  [PROBLEM] {p}", file=sys.stderr)
         return 1
 
-    print(f"\n✅ {RUN_KEY}={args.run} on {after['already_labelled']} of {before['total']} rows.")
+    print(f"\n[OK] {RUN_KEY}={args.run} on {after['already_labelled']} of {before['total']} rows.")
     return 0
 
 
