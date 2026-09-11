@@ -272,3 +272,14 @@ data/artifacts/
 # from reddening it. Landing is a VOLUME operation — these bytes belong on the Fly mount, not in git.
 confidence_kabsch/
 
+# One-off ops scratch scripts under scripts/, which are WORKING STATE and not this repository's
+# code. `tests/_tracked_sources.py` exists because `scripts/_emit_igf2r_pilot.py` — another bot
+# team's untracked, UTF-8-BOM-prefixed file — was walked by two AST guards on 2026-09-04 and killed
+# them with `SyntaxError: invalid non-printable character U+FEFF`: five tests red locally, CI green,
+# because a clean checkout has no untracked files. That defence scans what git TRACKS, so an
+# unscoped `git add` that TRACKS the same file defeats it exactly — and then reddens CI too, which
+# is what commit 544c152 did. This is the safety catch, in the shape D-141's stanza above already
+# uses: the guard is the assertion, this keeps one wide `git add` from reaching it.
+scripts/_*.py
+scripts/_*.ps1
+!scripts/__init__.py
