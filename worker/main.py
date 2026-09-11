@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -120,6 +121,74 @@ def _gate_fold(spec: FoldSpec, preflight_fn: Callable[..., Any]) -> Any:
         raise FoldRefused(pf.outcome, f"{pf.detail} [requirement {requirement_mib} MiB "
                                       f"via {source}]", spec.job_id, length)
     return pf
+
+
+def process_per_fold_fn(*, child_target: Optional[Callable[..., Any]] = None,
+                        memory_fraction: float = 0.85,
+                        timeout_s: Optional[float] = None) -> Callable[..., Any]:
+    """D-105 on the fold path that can WRITE: a child per fold that EXITS before the next preflight.
+
+    ⚠⚠ THE SECOND INSTANCE OF ONE FINDING. The envelope gate lived only on the measurement path,
+    and so did this topology. `_supervised_fold_fn` keeps ONE long-lived child so the 8.4 GB
+    weights load once — the exact opposite of what `F-064` prescribes, and invisible until
+    something tried to use the writing path at scale.
+
+    ⚠ `F-064`: in-process release does not restore free for the next preflight (7043 -> 1649 MiB
+    after a successful fold; recovered only on process exit). With the envelope gate in place, a
+    long-lived child means fold 1 succeeds and every later fold is REFUSED — the gate working
+    correctly while the campaign stalls at n = 1.
+
+    ⚠⚠ THE COST IS REAL AND IS THE POINT. `_MODEL_CACHE` is per-process, so a fresh child reloads
+    the weights EVERY fold. That is the price of the memory actually coming back, and it must
+    travel with the projection: if reload dominates the short bands, campaign cost is set by
+    **process count, not span length**.
+
+    ⚠ The spawn/join/verify-dead lifecycle is REUSED from `worker.rb_tile_child`, not rebuilt —
+    it is the tested part, and a second copy is the defect this project catalogues.
+    """
+    from worker.rb_tile_child import fold_tile_in_fresh_process   # noqa: PLC0415
+    from worker.runner import FoldProvenance, FoldResult          # noqa: PLC0415
+
+    def _fold(sequence: str, **kw: Any) -> Any:
+        payload = {
+            "sequence": sequence,
+            "dtype": kw["dtype"],
+            "chunk_size": kw["chunk_size"],
+            "source": kw["source"],
+            "ecd_start": kw.get("ecd_start"),
+            "ecd_end": kw.get("ecd_end"),
+            "memory_fraction": memory_fraction,
+        }
+        t0 = time.time()
+        spawn_kw: dict[str, Any] = {"target": child_target}
+        if timeout_s is not None:
+            spawn_kw["timeout_s"] = timeout_s
+        rec = fold_tile_in_fresh_process(payload, **spawn_kw)
+        rec = dict(rec)
+        rec["parent_wall_s"] = round(time.time() - t0, 2)
+
+        if not rec.get("ok"):
+            # ⚠ The taxonomy is PRESERVED, not rebuilt: a fold that failed in the child reaches
+            # the loop as `FoldError` exactly as it did in-process — reported via `fail()`, never
+            # retried (D-030 §4). ⚠⚠ And it is NOT a `FoldRefused`: that type means routed out
+            # before the GPU, and this one got there.
+            raise FoldError(rec.get("error") or "the fold failed in the child with no reason")
+
+        payload_out = rec.get("result") or {}
+        prov = payload_out.get("provenance")
+        out = FoldResult(
+            pdb=payload_out.get("pdb", ""),
+            plddt=payload_out.get("plddt") or [],
+            pae=payload_out.get("pae"),
+            provenance=FoldProvenance(**prov) if prov else None,
+        )
+        # ⚠ The per-fold record travels ON the result: wall time (child, containing the weight
+        # reload) and parent wall (containing the spawn), plus the peak read IN the child —
+        # `nvidia-smi` in the parent measures the wrong process.
+        out.fold_record = rec
+        return out
+
+    return _fold
 
 
 def _persist_pae_local(result: Any, artifact_dir: str, job_id: int,
