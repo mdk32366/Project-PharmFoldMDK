@@ -955,6 +955,11 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
     assert "Next free `D-` integer: **`D-157`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
     )
+    assert "Next free `D-` integer: **`D-156`**" not in RESERVED, (
+        "the pointer still names 156, which the KEEL five-document split SPENT — handing a used "
+        "integer to the next writer is exactly what this pointer exists to prevent, and it is "
+        "the drift this file has already recorded of itself three times"
+    )
     assert "Next free `D-` integer: **`D-153`**" not in RESERVED
     assert "Next free `D-` integer: **`D-154`**" not in RESERVED
     assert "Next free `D-` integer: **`D-155`**" not in RESERVED, (
