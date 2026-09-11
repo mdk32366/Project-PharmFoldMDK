@@ -203,7 +203,8 @@ def test_withdrawn_status_is_rejected(tmp_path):
 
 def test_d122_entry_exists_in_the_living_log():
     """The check is the heading, not a citation of it (D-062 / method-note item 7)."""
-    log = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+    log = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
     assert "### D-122 —" in log
 
 

@@ -11,9 +11,10 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 SPEC = (ROOT / "docs" / "SPEC-kabsch-restitch.md").read_text(encoding="utf-8")
-INDEX = (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8")
+INDEX = (ROOT / "docs" / "SHIP-INDEX.md").read_text(encoding="utf-8")
 PLAN = (ROOT / "docs" / "PLAN-ui-post-wave2-endstate.md").read_text(encoding="utf-8")
 STITCH = (ROOT / "core" / "hold48_stitch.py").read_text(encoding="utf-8")
 KABSCH = (ROOT / "core" / "hold48_kabsch.py").read_text(encoding="utf-8")

@@ -62,7 +62,8 @@ from scripts.land_d139_confidence_kabsch import (
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = (ROOT / "scripts" / "land_d139_confidence_kabsch.py").read_text(encoding="utf-8")
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
 
 #: In the seventeen. 3097 is mid-list, so an off-by-one at either end still reds.

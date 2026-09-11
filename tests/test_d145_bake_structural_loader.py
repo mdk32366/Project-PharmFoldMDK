@@ -45,7 +45,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCKERFILE = (ROOT / "Dockerfile").read_text(encoding="utf-8")
 DOCKERIGNORE = (ROOT / ".dockerignore").read_text(encoding="utf-8")
 FLY_TOML = (ROOT / "fly.toml").read_text(encoding="utf-8")
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
 RESERVED = (ROOT / "docs" / "RESERVED.md").read_text(encoding="utf-8")
 
@@ -530,10 +531,14 @@ def test_the_citation_invariant_holds_on_this_branch():
     """⚠ `RESERVED.md`'s own command, run rather than quoted. **Read the output, not an exit
     code**: the only passing result is that nothing new is unresolved. `D-131` (the suffix half
     of `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing."""
-    defined = set(re.findall(r"^### ([DFS]-\d+|DEP-\d+|A-\d+)", LOG, re.M))
+    # D-156: every id on the heading, so a compound `### D-130-B / D-131` defines BOTH.
+    _headings = chr(10).join(l for l in LOG.splitlines() if l.startswith("### "))
+    defined = set(re.findall(r"\b(?:D|F|S|DEP|A)-\d{3}\b", _headings))
     reserved = set(re.findall(r"^\| \*\*([DFA]-\d+)\*\*", RESERVED, re.M))
     cited = set(re.findall(r"\b(?:D|F|S|DEP|A)-\d{3}\b", LOG + ARCH))
-    assert sorted(cited - defined - reserved) == ["D-131", "F-067"], (
+    # D-156: was ["D-131", "F-067"]. D-131 resolves now the compound heading parses;
+    # F-067 is RESERVED rather than dangling. An empty list is the only passing result.
+    assert sorted(cited - defined - reserved) == [], (
         f"the citation invariant moved: {sorted(cited - defined - reserved)}"
     )
 

@@ -39,7 +39,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCKERFILE = (ROOT / "Dockerfile").read_text(encoding="utf-8")
 DOCKERIGNORE = (ROOT / ".dockerignore").read_text(encoding="utf-8")
 FLY_TOML = (ROOT / "fly.toml").read_text(encoding="utf-8")
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
 RESERVED = (ROOT / "docs" / "RESERVED.md").read_text(encoding="utf-8")
 
@@ -440,7 +441,7 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
     """⚠⚠ **Bar OR name, never neither.** `### D-153` is claimed by name here; `### D-148` is a
     `RESERVED.md` HOLD for the trafficking Spec and stays BARRED; `### D-152` was the HOLD for the
     concurrent sitewide-layout lane and **that lane has now claimed it**, so it is NAMED rather than
-    barred; `### D-156` takes the next-free bar. ⚠ Nothing
+    barred; `### D-157` takes the next-free bar. ⚠ Nothing
     is relaxed to a `>=`: a `>=` here would pass on a log with no entries at all.
 
     ⚠⚠ **THIS IS THE FIRST PASS WHERE THE CLAIMED INTEGER IS NOT THE ONE THE GUARDS BARRED.** The
@@ -469,7 +470,10 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
         "it and must now NAME it — never delete a bar, and never relax one to a `>=`")
     assert 154 in ids, "D-154 spent 154 in the live-surface review ship"
     assert 155 in ids, "D-155 spent 155 in the surface-merge ship"
-    assert 148 not in ids and 156 not in ids
+    # D-156 spent 156 when it split the log into five documents: ADDED by name,
+    # and `### D-157` takes the bar. Never relaxed to a `>=`.
+    assert 156 in ids, "D-156 claimed this integer"
+    assert 148 not in ids and 157 not in ids
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
@@ -478,18 +482,18 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
         "D-152 was spent by the sitewide-layout lane this entry held it for, so it must be NAMED "
         "here rather than barred")
     # ⚠⚠ D-154 SPENT the integer this guard barred (the live-surface review ship), so
-    # it is NAMED here rather than barred and `### D-156` takes the next-free bar. This is the
+    # it is NAMED here rather than barred and `### D-157` takes the next-free bar. This is the
     # widening D-145 fixed the shape of: a name is ADDED and nothing becomes a `>=`.
     assert "\n### D-154 — Every UI surface walked on the live site" in LOG, (
         "D-154 was spent by the live-surface review ship, so it must be NAMED here rather "
         "than barred")
     # ⚠⚠ D-155 SPENT the integer this guard barred (the surface-merge ship), so it is NAMED
-    # here rather than barred and `### D-156` takes the next-free bar. A name is ADDED and
+    # here rather than barred and `### D-157` takes the next-free bar. A name is ADDED and
     # nothing becomes a `>=` — the widening D-145 fixed the shape of.
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
-    assert "\n### D-156" not in LOG, (
-        "D-156 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-157" not in LOG, (
+        "D-157 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
 
@@ -506,7 +510,7 @@ def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxin
         # with the bar rather than being dropped — the same flip this suite made at D-152.
         assert "D-154 — Every UI surface walked on the live site" in text, (
             f"{rel} does not NAME the entry that spent 154")
-        assert r'\n### D-156" not in' in text, f"{rel} does not bar the next free integer"
+        assert r'\n### D-157" not in' in text, f"{rel} does not bar the next free integer"
         assert r'\n### D-148" not in' in text, f"{rel} stopped barring the trafficking hold"
         # ⚠ FLIPPED AT `D-152`: the hold was claimed by its lane, so those two files NAME the
         # entry instead of barring the integer. The check moves with it rather than being dropped.
@@ -547,7 +551,7 @@ def test_the_reserved_map_retires_153_marker_safe_and_records_both_holds():
 def test_the_pointer_moved_in_this_commit_and_skips_both_holds():
     """⚠ `RESERVED.md`'s own rule: *the pointer moves in the SAME commit that spends the integer*,
     and *"next free"* means the lowest AVAILABLE integer rather than the lowest unwritten one."""
-    assert "Next free `D-` integer: **`D-156`**" in RESERVED
+    assert "Next free `D-` integer: **`D-157`**" in RESERVED
     for unavailable in ("D-148", "D-149", "D-150", "D-151", "D-152", "D-153"):
         assert f"Next free `D-` integer: **`{unavailable}`**" not in RESERVED, (
             f"the pointer still names {unavailable}, which would hand a spent or held integer to "
@@ -558,10 +562,14 @@ def test_the_citation_invariant_holds_on_this_branch():
     """⚠ `RESERVED.md`'s own command, run rather than quoted. **Read the output, not an exit code**:
     the only passing result is that nothing NEW is unresolved. `D-131` (the suffix half of
     `### D-130-B / D-131`) and `F-067` (open in #222) are pre-existing and untouched by this ship."""
-    defined = set(re.findall(r"^### ([DFS]-\d+|DEP-\d+|A-\d+)", LOG, re.M))
+    # D-156: every id on the heading, so a compound `### D-130-B / D-131` defines BOTH.
+    _headings = chr(10).join(l for l in LOG.splitlines() if l.startswith("### "))
+    defined = set(re.findall(r"\b(?:D|F|S|DEP|A)-\d{3}\b", _headings))
     reserved = set(re.findall(r"^\| \*\*([DFA]-\d+)\*\*", RESERVED, re.M))
     cited = set(re.findall(r"\b(?:D|F|S|DEP|A)-\d{3}\b", LOG + ARCH))
-    assert sorted(cited - defined - reserved) == ["D-131", "F-067"], (
+    # D-156: was ["D-131", "F-067"]. D-131 resolves now the compound heading parses;
+    # F-067 is RESERVED rather than dangling. An empty list is the only passing result.
+    assert sorted(cited - defined - reserved) == [], (
         f"the citation invariant moved: {sorted(cited - defined - reserved)}")
 
 

@@ -94,7 +94,7 @@ def test_every_declared_form_actually_matches_something_it_claims_to():
 # It XPASSed the moment the amendment existed, and a strict xfail that passes fails the suite —
 # which is exactly what forced this deletion. ⚠⚠ The marker could not outlive the defect, and
 # that was the point of making it strict rather than a plain skip.
-@pytest.mark.skipif(not pathlib.Path("docs/README.md").exists(), reason="log absent")
+@pytest.mark.skipif(not pathlib.Path("docs/decisions.md").exists(), reason="log absent")
 def test_the_live_log_resolves_every_amendment_it_cites():
     """⚠⚠ THIS TEST IS THE POINT. It was RED on `D-093 amendment 3` when written, against the real
     tree — no synthetic fixture. It goes green only when the amendment lands."""

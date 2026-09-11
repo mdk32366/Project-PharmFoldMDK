@@ -20,7 +20,18 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-LOG = REPO / "docs" / "README.md"
+class _KeelLog:  # D-156: the D-/F-/A- entries live in three files now, not in README.md
+    """Path-shaped shim so existing `.read_text(...)` call sites keep working unchanged."""
+
+    def __init__(self, docs):
+        self._docs = list(docs)
+
+    def read_text(self, encoding="utf-8"):
+        return (chr(10) * 2).join(p.read_text(encoding=encoding) for p in self._docs)
+
+
+LOG = _KeelLog((REPO / "docs" / n)
+                 for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 RESERVED = REPO / "docs" / "RESERVED.md"
 SCRIPT = REPO / "scripts" / "ceiling_climb.py"
 CHILD = REPO / "worker" / "ceiling_climb_child.py"
@@ -255,5 +266,5 @@ def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
     pointer = check_next_free_pointer(
         LOG.read_text(encoding="utf-8"), RESERVED.read_text(encoding="utf-8")
     )
-    assert pointer == 67
+    assert pointer == 68  # D-156 reserved F-067 and moved the pointer in the same commit
     assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 66

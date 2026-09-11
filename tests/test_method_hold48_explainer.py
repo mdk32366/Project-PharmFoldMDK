@@ -15,7 +15,8 @@ DOC = (ROOT / "docs" / "method-hold48-tiles.md").read_text(encoding="utf-8")
 NOTE = (ROOT / "ui" / "src" / "components" / "MethodNote.jsx").read_text(
     encoding="utf-8"
 )
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 APP = (ROOT / "ui" / "src" / "App.jsx").read_text(encoding="utf-8")
 
 # D-122 / #232 shipped /adcs + /adcs/:id on main (86f8a10). D-124 / ADC-C-B

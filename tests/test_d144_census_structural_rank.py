@@ -47,7 +47,8 @@ from db.models import (  # noqa: E402
 )
 from scripts import census_structural_rank as loader  # noqa: E402
 
-LOG = (REPO / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((REPO / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 ARCH = (REPO / "ARCHITECTURE.md").read_text(encoding="utf-8")
 CORE_SRC = (REPO / "core" / "census_structural.py").read_text(encoding="utf-8")
 LOADER_SRC = (REPO / "scripts" / "census_structural_rank.py").read_text(encoding="utf-8")

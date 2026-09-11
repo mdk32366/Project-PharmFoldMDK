@@ -60,7 +60,7 @@ LIVE_SURFACES = (
     "ui/src/components/AssemblyReview.jsx",
     "ARCHITECTURE.md",
     "docs/README.md",
-    "docs/decisions.md",
+    "docs/SHIP-INDEX.md",
     "docs/PLAN-ui-post-wave2-endstate.md",
 )
 
@@ -467,7 +467,8 @@ def test_this_pr_runs_no_ops_and_re_measures_nothing():
 
 def test_living_docs_carry_d129_c():
     """The entry exists as a `### ` heading — checked, not cited (D-062)."""
-    log = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+    log = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
     assert "### D-129-C" in log, (
         "D-129-C is cited by this suite and by the surfaces it edits; a "
         "citation is not an entry (D-062 / method-note item 7)"

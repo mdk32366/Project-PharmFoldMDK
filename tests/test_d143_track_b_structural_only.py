@@ -37,7 +37,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 PAPER_PATH = ROOT / "docs" / "pharmfold-adc-nectin4-paper.md"
 PAPER = PAPER_PATH.read_text(encoding="utf-8")
 ABOUT_PAPER = (ROOT / "ui" / "src" / "aboutPaper.js").read_text(encoding="utf-8")

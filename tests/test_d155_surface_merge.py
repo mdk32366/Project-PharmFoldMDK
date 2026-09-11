@@ -22,7 +22,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LOG = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((ROOT / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 RESERVED = (ROOT / "docs" / "RESERVED.md").read_text(encoding="utf-8")
 ARCH = (ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
 UI = ROOT / "ui" / "src"
@@ -247,10 +248,13 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     ids = sorted({int(m) for m in re.findall(r"^### D-(\d{3})\b", LOG, re.M)})
     assert 155 in ids, "this entry did not claim its own integer"
     assert 154 in ids and 152 in ids, "the entries this one builds on must still be named"
-    assert 148 not in ids and 156 not in ids
+    # ⚠ 156 is ADDED as SPENT by the KEEL five-document split entry — the FIFTEENTH resolution
+    # by enumeration and never by a `>=`; `### D-157` now takes the bar. 148 stays a held hole.
+    assert 156 in ids, "D-156 claimed this integer when it split the log into five documents"
+    assert 148 not in ids and 157 not in ids
     assert "\n### D-148" not in LOG
-    assert "\n### D-156" not in LOG, (
-        "D-156 is the next free integer and must stay unspent until an entry claims it by name — "
+    assert "\n### D-157" not in LOG, (
+        "D-157 is the next free integer and must stay unspent until an entry claims it by name — "
         "never admitted by a `>=`")
 
 
@@ -260,7 +264,7 @@ def test_the_reserved_map_retires_155_marker_safe_and_the_pointer_moves_here():
     assert "WRITTEN" in row and "Original reservation text" in row
     assert re.search(r"^\| \*\*D-156\*\*", RESERVED, re.M), "the bar moved to 156 with no row"
     assert not re.search(r"^\| ~~\*\*D-15[56]\*\*~~", RESERVED, re.M)
-    assert "Next free `D-` integer: **`D-156`**" in RESERVED
+    assert "Next free `D-` integer: **`D-157`**" in RESERVED
     for spent in ("D-152", "D-153", "D-154", "D-155"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED
 

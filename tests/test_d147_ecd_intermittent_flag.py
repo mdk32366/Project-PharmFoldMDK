@@ -53,7 +53,8 @@ from core import census_structural as cs  # noqa: E402
 from db.models import Base  # noqa: E402
 from scripts import census_structural_rank as loader  # noqa: E402
 
-LOG = (REPO / "docs" / "README.md").read_text(encoding="utf-8")
+LOG = (chr(10) * 2).join((REPO / "docs" / n).read_text(encoding="utf-8")
+                      for n in ("decisions.md", "findings.md", "assumptions.md", "README.md"))
 ARCH = (REPO / "ARCHITECTURE.md").read_text(encoding="utf-8")
 RESERVED = (REPO / "docs" / "RESERVED.md").read_text(encoding="utf-8")
 FORMULA_SRC = (REPO / "core" / "census_structural.py").read_text(encoding="utf-8")
@@ -951,7 +952,7 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
     # sitewide-layout lane. A reserved integer is not a free one, so *"next free"* means the lowest
     # AVAILABLE integer and not the lowest unwritten one. Six assertions where there was one: the
     # pointer names 154, and it names none of 147, 148, 150, 151, 152 or 153.
-    assert "Next free `D-` integer: **`D-156`**" in RESERVED, (
+    assert "Next free `D-` integer: **`D-157`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
     )
     assert "Next free `D-` integer: **`D-153`**" not in RESERVED
@@ -984,10 +985,14 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
 def test_the_citation_invariant_holds_on_this_branch():
     """⚠ `RESERVED.md`'s own command, run rather than quoted. **Read the output, not an exit
     code**: the only passing result is that nothing new is unresolved."""
-    defined = set(re.findall(r"^### ([DFS]-\d+|DEP-\d+|A-\d+)", LOG, re.M))
+    # D-156: every id on the heading, so a compound `### D-130-B / D-131` defines BOTH.
+    _headings = chr(10).join(l for l in LOG.splitlines() if l.startswith("### "))
+    defined = set(re.findall(r"\b(?:D|F|S|DEP|A)-\d{3}\b", _headings))
     reserved = set(re.findall(r"^\| \*\*([DFA]-\d+)\*\*", RESERVED, re.M))
     cited = set(re.findall(r"\b(?:D|F|S|DEP|A)-\d{3}\b", LOG + ARCH))
-    assert sorted(cited - defined - reserved) == ["D-131", "F-067"], (
+    # D-156: was ["D-131", "F-067"]. D-131 resolves now the compound heading parses;
+    # F-067 is RESERVED rather than dangling. An empty list is the only passing result.
+    assert sorted(cited - defined - reserved) == [], (
         f"the citation invariant moved: {sorted(cited - defined - reserved)}"
     )
 
