@@ -320,6 +320,60 @@ their cited names, and this paragraph is the reconciliation of the two conventio
 
 ---
 
+---
+
+## 4a — ⚠⚠ REGISTERED FORWARD — the survivorship caveat stops here
+
+> **Everything above this line was seeded from a finding that already recorded a break** (§4), so
+> the score above calibrates nothing. **This section holds entries registered BEFORE the thing
+> they assume is tested.** KEEL-4 §6: *the register becomes calibration only forward, once
+> assumptions are registered before they are tested — which is why a register starts rather than
+> being reconstructed.*
+>
+> ⚠ **The status field below is the instrument.** `ASSUMED` here is a live position, not a
+> retrospective label, and whether it becomes `HELD` or `BROKE` is the first genuine measurement
+> this register has ever produced.
+
+### A-030 — a JSONB column can take an additive key without changing any consumer
+
+- **Registered:** 2026-09-11 · **Status:** ⚠ **ASSUMED** — *registered before the work that tests
+  it, and not yet tested.* ⚠⚠ **The first entry in this register that is not retrospective.**
+- **Relied on by:** the `run: 1` backfill (`AMENDMENT 2` §3.1), which writes one additive key into
+  `jobs.inference_settings` on **3,656 of 3,656 rows** in order to restore `D-095` decision 4's
+  property — *present and monovalued, every row declaring itself* — so that Run 1 is **positively
+  declared rather than inferred from the absence of a key** (`F-018`'s class).
+- **What breaks if false:** ⚠⚠ **a production write to every job row in the table.** If any
+  consumer of `inference_settings` depends on its **key set** rather than on named keys, the
+  backfill changes behaviour everywhere at once — and it is an **express exception to Task §4.2**
+  (*no original row is updated*), granted by the owner with named bounds, so it does not get a
+  second attempt on a different reasoning.
+- **The test:** enumerate every reader of `inference_settings` and establish that none depends on
+  the key set — no `== {...}`, no `len(...)`, no `.keys()`, no iteration over the dict.
+  ⚠ **Cost: one grep and one revert proof**, which is why it is registered rather than assumed
+  silently.
+- **Guard:** the `AMENDMENT 2` §3.1 red test — a revert proof that the backfill changes nothing
+  but the key — plus the before/after counts, and `run: 1` on **3,656 of 3,656** (⚠ a hole makes
+  the partition the absence-based one the ruling exists to avoid).
+
+**⚠ What is already measured, recorded here because it is the reason this is `ASSUMED` and not a
+guess.** How known (`D-016`): `grep -rn "inference_settings"` over `app/ core/ scripts/ worker/ db/`
+at `d6f12ca`. **Every reader is key-addressed** — `job.inference_settings.get(...)`,
+`settings = job.inference_settings or {}` then named lookups, `is_tile_job(...)` testing for named
+keys. **No `== {...}`, no `len()`, no `.keys()`, no iteration over the dict.**
+
+⚠⚠ **AND THAT IS EXACTLY WHY IT STAYS `ASSUMED` RATHER THAN BEING PROMOTED NOW.** A grep over the
+Python in this repository is **not** the population the assumption is about:
+
+- ⚠ **The UI reads through the API, not through these modules**, and a client that renders or
+  round-trips `inference_settings` would not appear in this grep at all.
+- ⚠ **A database-side consumer** — a view, an index on an expression, a downstream query — is not
+  Python and was not searched.
+- ⚠ **`alembic` migrations and any future ORM comparison** are outside the grep's window.
+
+**The grep narrows the risk; it does not close it.** ⚠ **The guard closes it, and the guard has not
+run.** Promoting this entry on the grep alone would be the `[L]`-used-as-`[M]` error this project
+recorded twice on 2026-09-11.
+
 ## 5. The feeding mechanism, measured
 
 KEEL-4 §5.1 is the load-bearing claim of the whole design: *"Every decision entry carries an
@@ -365,7 +419,17 @@ What it does establish, with no denominator — and it is the same thing KEEL-4'
 established: **when this project finally tested a load-bearing assumption, it broke. Fifteen times.**
 Enough to justify the instrument. Not enough to justify a percentage.
 
-**The register becomes calibration at `A-030`** — the first entry registered *before* it is tested.
+**⚠⚠ AND AS OF 2026-09-11 THE FORWARD COUNT IS 1: `A-030`, REGISTERED AND NOT YET TESTED.**
+
+> **16 registered · 15 tested · 15 broke · 1 ASSUMED and untested.**
+
+⚠ **The two numbers must never be added into one rate.** The retrospective fifteen are survivorship
+and calibrate nothing; **the forward one is the only entry whose outcome is not known in advance**,
+and it is a sample of one. ⚠ **`A-030` resolving to `HELD` would be the first evidence this register
+has ever produced that is not drawn from failures** — and one entry is not a rate either.
+
+**The register becomes calibration at `A-030`** — and it has started, which is different from having
+arrived.
 
 ---
 
