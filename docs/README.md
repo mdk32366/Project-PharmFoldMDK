@@ -458,7 +458,22 @@ have triggered the failure it was built to verify against.*
 | **found by running, invisible to reading** (5) | **1** | ❌ ⚠⚠ **a reading sweep has a blind spot exactly this shape** |
 
 ⚠ **Reporting "five instances" would overstate every one of those three answers.** The sweep's
-target is **three**. The fourth says something about the note and nothing about the codebase. The
+target is **three**.
+
+**⚠⚠ THE COUNTER-EXAMPLE, AND IT IS NOT OPTIONAL — WITHOUT IT THIS NOTE READS AS AN INDICTMENT OF
+THE SUITE, WHICH IT IS NOT.**
+
+On the same day, `tests/test_no_engine_is_built_from_a_raw_database_url` **caught a real bug.**
+`scripts/backfill_run_label.py` hand-rolled `DATABASE_URL.replace("postgresql+psycopg://",
+"postgresql://")`, which resolves to **psycopg2** — a driver `D-012` does not install. ⚠ **It
+worked locally and would have failed on Fly**, which is the failure mode a guard is hardest to
+write for, and the guard was red the moment the wrong call appeared. Fixed by using
+`normalize_db_url`.
+
+> **That is a guard that DID fail in the direction it claimed to protect**, on a defect that no
+> reading found and that the developer's own machine actively concealed. ⚠ **Five bad guards and
+> one good one in a session is not a verdict on the suite** — it is the reason the sweep's output
+> must be *instances*, never a rate. The fourth says something about the note and nothing about the codebase. The
 fifth says the sweep's own method has a hole — **a guard-direction audit conducted by reading cannot
 see a defect that only a console produces.**
 
@@ -468,6 +483,19 @@ see a defect that only a console produces.**
   and if the honest answer is *"none that matter"*, it is documentation with an `assert` in it.
 - **A baseline diff must compare failure CAUSES, not names** — or be treated as what it is: a
   smoke test that a branch did not make things obviously worse.
+  > ⚠ **The platform-divergent guard count, with its key, because the shape is what let instance 1
+  > through.** Key: occurrences of `str(<path>.relative_to(<root>))` under `tests/` whose result is
+  > compared against a `/`-separated literal. **Scanned 13 occurrences across 9 test modules at
+  > `ac63059`; 5 already normalise with `.replace("\\", "/")`, and the remaining 8 use the string
+  > only to REPORT offenders or as a dict key compared against itself. Remaining of instance 1's
+  > shape: ZERO** — `test_d143` was the one, and it is fixed. ⚠ **This is a grep with a stated
+  > shape, not a sweep**, and it says nothing about guards that diverge for any other reason.
+- ⚠ **A revert proof mutates the tree, so it needs COMMITTED OR STASHED state first.** One line,
+  not a finding: `git checkout <file>` during a revert proof on 2026-09-11 discarded every
+  uncommitted change in that file, and the work had to be re-applied from memory. ⚠⚠ **This is
+  `D-080`'s reserved lesson at its THIRD occurrence** — *a revert proof operates on committed state
+  or on a copy, never on a working tree holding uncommitted work*, reserved 2026-08-04 and still
+  unwritten. The remedy used for the rest of the session was a `cp` backup before each proof.
 - ⚠ **`A-017` clause (c) is the same rule one level down:** *the fixture must contain a case where
   correct and incorrect differ.* Instances 2 and 3 are that clause failing at file scope rather than
   at fixture scope.
@@ -480,8 +508,15 @@ guard-direction sweep — the audit of whether each guard fails in the direction
 
 > ⚠⚠ **Five unbidden instances in one session is evidence FOR that sweep.** None was found by
 > looking for it; each surfaced while doing something else. **That is the argument for a sweep and
-> also the reason to distrust the count** — an unbidden sample is drawn from what happened to be
-> read, so **five is a floor, never a rate, and the denominator is unknown.**
+> also the reason to distrust the count** — ⚠⚠ and the sentence that must be inherited verbatim by
+> anything that quotes this note:
+>
+> > *An unbidden sample is drawn from whatever happened to be read, so **three** is a FLOOR, never
+> > a rate.*
+>
+> ⚠ **THREE, not five** — the floor is the sweep's own target (the shipped population), because the
+> other two populations are not things a sweep could have found. **The denominator is unknown in
+> all three.**
 >
 > ⚠ **And the five are THREE populations.** Instances 1–3 shipped and ran red or vacuous for weeks;
 > instance 4 never shipped; instance 5 is invisible to reading altogether. **A sweep recovers the
