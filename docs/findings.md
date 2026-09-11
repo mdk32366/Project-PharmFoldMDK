@@ -16,6 +16,139 @@
 
 ## Log (newest first)
 
+### F-071 — ⚠⚠ "Category E" is the `no_topology` breakout: the 13 have been a NAMED, PARTITIONED, SERVED disposition since `D-024`, `held_out == no_topology == 13` exactly — and the Group B claim attached to them does not survive the join, because the roster's `is_group_b` is blank on all 82 rows and **cannot hold a value**
+
+- **Date:** 2026-09-11 · **Status:** ⚠ **OPEN, and ⚠⚠ WRITTEN-NOT-REPAIRED. It MUST NOT be
+  repaired before Run B freezes** — the spans are inputs to the folded set `D-075`'s anchor rests
+  on. **Alongside `F-069`, for the same reason.**
+- **How known (`D-016`):** `core.manifest.build_manifest()` + `coverage()` run against
+  `data/cohort_82_ecd.csv` (82 rows); `core.adc_reference.group_b()` run against
+  `data/adc_reference_mapping.csv` + `data/cohort_82_mapping.csv`;
+  `data/derived/adc_reference_mapping_REVIEW-2026-07-26.csv` read for `curation_status`. ⚠ **No
+  network call, no fetch, no fold, and no file written** — every figure below is a read of the
+  tree at `948149e`.
+
+**⚠⚠ THE FIRST FACT, AND IT REFRAMES THE REST: THIS POPULATION IS NOT UNNAMED.**
+
+```
+82 targets · 67 ranked (13 on an unmeasured local ceiling) · 13 held out
+  (13 no-topology, whole-method) · 2 excluded (named)
+```
+
+That is `core.manifest.coverage_line()` on today's tree. The 13 carry `span = None` and
+`boundary_method = 'whole'`, and `D-021 §1a` holds whole-method targets out of cross-method
+ranking. ⚠ **`held_out` and `no_topology` are 13 and 13, and they are the SAME thirteen rows** —
+measured, not assumed.
+
+> **So the population has had a name, a cause, a disposition and a served count since `D-024`
+> (2026-07-22).** ⚠⚠ **What was missing was not the naming. It was — again — the reading.**
+> `F-068`'s shape, one document along.
+
+---
+
+**1 — THE SPLIT BY CAUSE, WHICH WAS ORDERED BEFORE CALLING IT A DEFECT. IT IS TWO CAUSES.**
+
+| cause | rows | what the source says |
+|---|---|---|
+| **A — no span recorded at all** | **12** | `n_extracellular_spans = 0`, `largest` and `total` empty |
+| **B — a span COUNTED and never MEASURED** | **1** | `SDK1` (`Q7Z5N4`, 2,213 aa): `n_extracellular_spans = 1`, `spans = None-2009(None)` |
+
+**Cause A (12):** `CLCNKB` · `ENPP5` · `FRRS1` · `GPC1` · `IGF2R` · `MSLN` · `SLC44A3` · `TLR3` ·
+`TMEM108` · `TMEM30A` · `TNFRSF10C` · `UGT8`.
+
+⚠⚠ **Cause B is a different defect wearing the same bucket.** `SDK1`'s row asserts **one** span and
+then gives a start of `None` and a length of `None` beside an end of **2009** — *the count says one,
+the measurement says nothing.* The manifest collapses both causes to `span = None`, which is
+**correct for routing and lossy for diagnosis**: a row that found nothing and a row that found
+something it could not measure are one cell apart downstream and are not one bug.
+
+⚠ **THE FINER SPLIT INSIDE CAUSE A IS UNMEASURED AND IS LEFT SO.** Whether a given row is
+*legitimately* span-less — a multi-pass transporter with no extracellular domain — or is a real
+miss cannot be read off this file: it needs the UniProt topology source, and **no fetch was run.**
+⚠⚠ **Naming the 12 is not diagnosing them, and "13 targets are a span defect" would be the same
+over-reach as "38 targets have no coverage."** The bucket is reported; the verdict is not.
+
+---
+
+**2 — ⚠⚠ THE GROUP B CLAIM DOES NOT SURVIVE THE JOIN, AND THE COLUMN IT CITES CANNOT HOLD A VALUE.**
+
+The claim under review: *`MSLN` is `is_group_b = true`, `curation_status = verified`, a verified
+Group B positive absent from the arm Run B measures.* Against the tree:
+
+- ⚠ **`is_group_b` is blank on all 82 rows** of
+  `data/derived/adc_reference_mapping_REVIEW-2026-07-26.csv`, the only file that has the column.
+- ⚠⚠ **And it is blank BY CONSTRUCTION, not by neglect.** `is_group_b` is in
+  `core/adc_reference.py`'s `COMPUTED_ONLY_COLUMNS`; `load_mapping()` **raises `CurationError`** if
+  it appears in the mapping file at all — *"computed by join, never typed (`D-040`)"* — and
+  `scripts/curate_group_b.py`'s own header says it **never emits `is_group_b = false`**, because a
+  registry with no matching trial is not evidence that no ADC exists.
+- **`MSLN`'s actual `curation_status` is `review_as_probable_group_b`.** Not `verified`. ⚠ **And
+  `F-003` Finding 6 already says so in terms** — *CXCR5, MSLN and MUC16 … were **never verified***,
+  absent from the file *because unverified, NOT because negative* — with `MSLN` recorded there as
+  `held_out`, exactly where the manifest puts it today.
+
+**Group B, computed rather than quoted:** **13 drug rows over 12 accessions** (two `ERBB2` drugs
+collapse to one label), stages approved 3 / clinical 4 / preclinical 6 — **reproducing `F-003`'s
+2026-07-27 block digit for digit, 46 days later.**
+
+⚠⚠ **AND THE INTERSECTION IS EMPTY.** **`group_b_accessions() ∩ the 13 = ∅`.** All twelve Group B
+accessions carry a span (6 local · 3 rental · 3 untested). **No Group B positive is in category E.**
+
+⚠ `TLR3`, `TMEM30A` and `IGF2R` do not rescue the claim either: their statuses are
+`review_as_probable_exclusion`, `needs_literature_check` (no agent at all) and
+`review_as_probable_exclusion`. ⚠ **Stated with its own limit:** those are *registry-pass* routings,
+and `F-003` Finding 2 measured the **positive** routing at a 27% false-positive rate — **the
+exclusion routing's error rate was never measured**, so these are weak negatives, not verdicts. The
+external PDB-entry counts offered for `TLR3` and `TMEM30A` were **not checked here** and nothing
+below rests on them.
+
+---
+
+**3 — ⚠⚠ THE 10-VS-12 IS SETTLED, AND `10` IS NOT A COUNT OF ANYTHING.**
+
+The instruction was *measure it or record it as unmeasured.* It is measured, and the source is in
+this repository:
+
+> `F-003`, written **2026-07-27**, prints in its own measurement block:
+> **`D-040 count check: 12 derived vs 22 published -> -10`**
+
+**`10` is that deficit — `22 − 12` — read back as a count of flagged rows.** It is not a roster
+figure; there is no roster figure; the roster cannot carry one.
+
+⚠⚠ **And this is the SECOND Planner number about Group B produced by misreading the same table.**
+`F-003` already records the first: *"an earlier Planner figure of 15 conflated [drug rows and
+accessions]. Corrected here."* **Three figures — 15, 10, 12 — one table, one correct.**
+
+> **The quoting rule that follows:** ✅ **`12` may be quoted, with its key**
+> (`core.adc_reference.group_b_accessions`, 12 accessions over 13 drug rows). ❌ **`10` may be
+> quoted only as the deficit against the paper's 22 — never as a count of rows, targets or flags.**
+> ⚠ **`22` is the comparator's published figure and remains unreconciled by decision** (`F-003`: no
+> criterion was loosened toward it).
+
+**⚠ Recorded as a Planner error — the EIGHTH instance today of `F-068`'s class**, reasoning about
+this repository instead of reading it. Both halves qualify: a column's value asserted where the
+column is blank and barred from being typed, and a subtraction read as a count, in a finding that
+had been committed for 46 days.
+
+---
+
+**WHAT THIS ENTRY DOES NOT CLAIM.**
+- ⚠ **Not that `MSLN` is not an ADC target in the world.** Anetumab ravtansine (BAY 94-9343) is
+  real, and the string `anetumab` occurs **zero times** in `data/adc_reference_mapping.csv`. ⚠⚠
+  **That is a LABELS gap, not a SPAN gap** — `F-003` Finding 6's floor, with a different repair and
+  a different owner, and joining the two into one bullet is what produced the claim above.
+- ⚠ **Not that the 12 are a span defect.** Their split is unmeasured; see §1.
+- ⚠ **Not that `SDK1`'s row is empty.** It is *unmeasured*, and the difference is the whole of
+  cause B.
+- ⚠ **Not that the fit is unaffected by the 12-against-22.** `F-003` Finding 8 and `D-041`'s sizing
+  clause already carry that, triggered and unabsorbed; nothing here reopens it.
+- ⚠⚠ **Not a repair, and not an authorisation for one.** Category E is frozen until Run B freezes.
+
+**Relied on by:** ⚠ any statement of Run B's positive-arm denominator — which may say **12**, with
+its key, and may not say **10**.
+
+---
+
 ### F-070 — ⚠⚠ The census structure panel is EMPTY, SILENTLY, for very short spans — the endpoint serves a valid PDB in every case, so the shipped description of this defect (*"3Dmol dynamic import failing on census pages"*) names a cause that is not happening, and the disjunction ordered to diagnose it had **two branches and both are false**
 
 - **Date:** 2026-09-11 · **Status:** ⚠ **OPEN, and ⚠⚠ WRITTEN-NOT-REPAIRED by standing
