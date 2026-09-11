@@ -379,8 +379,9 @@ So the rule is not "be careful" — it is:
 
 ## Method note: a guard that is already red reports nothing, and a baseline diff over failure NAMES cannot see it
 
-Learned on 2026-09-11, from **four instances in one session — three found in the code by READING,
-one caught in the WRITING, and none by running.** ⚠ The common property is not that the guards were
+Learned on 2026-09-11, from **five instances in one session, in THREE populations that must not be
+added together — three found in the code by READING, one caught in the WRITING, and one that could
+ONLY be found by RUNNING.** ⚠ The common property is not that the guards were
 wrong. It is that **each could not fail in the direction it claimed to protect**, so each was
 structurally incapable of reporting the defect it existed for.
 
@@ -438,6 +439,29 @@ have triggered the failure it was built to verify against.*
    > the weakest possible test of the note and still the only one available. ⚠ **It says nothing
    > about whether the habit survives the week.**
 
+5. ⚠⚠ **A FIFTH, AND IT COULD ONLY BE FOUND BY RUNNING — WHICH IS A NEW POPULATION.**
+   `scripts/backfill_run_label.py` printed a `⚠` glyph in a **printed string** and died with
+   `UnicodeEncodeError` on cp1252 **before reporting anything** — in a repository that already
+   carries the lesson, in `worker/main.py`: *"an em dash raises UnicodeEncodeError on cp437 and
+   kills the worker at startup. A startup message that can kill the process it announces is worse
+   than none."*
+   ⚠ **No amount of reading would have found it.** It is invisible in review, invisible in CI (a
+   Linux runner's UTF-8 console swallows it), and fires only on the console it will actually be run
+   on. **The four above could only be found by reading; this one could only be found by running.**
+
+**⚠⚠ THREE POPULATIONS, THREE NUMBERS, AND NONE OF THEM ADD.**
+
+| population | n | what a sweep would do |
+|---|---|---|
+| **shipped, and ran red or vacuous for weeks** (1, 2, 3) | **3** | ✅ a reading sweep finds these |
+| **caught in the writing, never shipped** (4) | **1** | ❌ nothing to find — it never existed in the tree |
+| **found by running, invisible to reading** (5) | **1** | ❌ ⚠⚠ **a reading sweep has a blind spot exactly this shape** |
+
+⚠ **Reporting "five instances" would overstate every one of those three answers.** The sweep's
+target is **three**. The fourth says something about the note and nothing about the codebase. The
+fifth says the sweep's own method has a hole — **a guard-direction audit conducted by reading cannot
+see a defect that only a console produces.**
+
 **⚠ What follows, and what deliberately does not.**
 
 - **Prefer the check that can fail.** Before trusting a guard, ask what change would make it red —
@@ -454,15 +478,15 @@ have triggered the failure it was built to verify against.*
 guard-direction sweep — the audit of whether each guard fails in the direction it claims to protect
 — and it is STILL UNWRITTEN.** It has been reserved since 2026-08-06 and deliberately not taken.
 
-> ⚠⚠ **Four unbidden instances in one session is evidence FOR that sweep.** None was found by
+> ⚠⚠ **Five unbidden instances in one session is evidence FOR that sweep.** None was found by
 > looking for it; each surfaced while doing something else. **That is the argument for a sweep and
 > also the reason to distrust the count** — an unbidden sample is drawn from what happened to be
-> read, so **four is a floor, never a rate, and the denominator is unknown.**
+> read, so **five is a floor, never a rate, and the denominator is unknown.**
 >
-> ⚠ **And the four are not one population.** Instances 1–3 are guards that **shipped and ran red
-> or vacuous for weeks**; instance 4 **never shipped**. A sweep would find the first kind and can
-> never find the second. **Counting them together overstates what a sweep would recover** — the
-> sweep's real target is three.
+> ⚠ **And the five are THREE populations.** Instances 1–3 shipped and ran red or vacuous for weeks;
+> instance 4 never shipped; instance 5 is invisible to reading altogether. **A sweep recovers the
+> first kind, cannot find the second, and — ⚠⚠ if conducted by reading — cannot find the third
+> either. The sweep's real target is three, and its own blind spot is instance 5's shape.**
 
 ⚠ **The sweep is NOT started here**, and this note does not authorise it. It records the count, the
 three instances, and the fact that the reserved integer still resolves to nothing.

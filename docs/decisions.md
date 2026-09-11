@@ -72,7 +72,7 @@ namespace of three**:
   shipped code is the one with no allocator discipline at all.
 
 **So this ship gives all three the same three things:** a pointer sentence, a next-free row
-(`D-157`, `F-068`, `A-030`), and a guard that reads all of them. ⚠ **`A-030` is load-bearing beyond
+(`D-157`, `F-068`, `A-030`), and a guard that reads all of them. ⚠ **`A-030` (a JSONB column can take an additive key without changing any consumer) is load-bearing beyond
 bookkeeping** — KEEL-4 §6 says the register calibrates only forward, so `A-030` is where the
 survivorship caveat on `A-018`–`A-029` stops applying.
 

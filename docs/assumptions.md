@@ -336,8 +336,19 @@ their cited names, and this paragraph is the reconciliation of the two conventio
 
 ### A-030 — a JSONB column can take an additive key without changing any consumer
 
-- **Registered:** 2026-09-11 · **Status:** ⚠ **ASSUMED** — *registered before the work that tests
-  it, and not yet tested.* ⚠⚠ **The first entry in this register that is not retrospective.**
+- **Registered:** 2026-09-11 · **Status:** ⚠ **HELD, AT A NAMED SCOPE — not promoted further.**
+  ⚠⚠ **The first entry in this register that is not retrospective**, and the first whose outcome
+  was not known before it was written.
+
+> **HELD against the Python and API consumer paths**, on the 2026-09-11 backfill of `run: 1`
+> across **3,656 rows** — three census read hashes **byte-identical** before and after, and the
+> surface **re-walked unchanged**. ⚠⚠ **NOT tested against a database-side consumer or against
+> migrations**, both named in this entry and **neither exercised by this write.**
+
+⚠ **The scope clause is the entry.** `HELD` without it would be the status flip this registration
+exists to avoid — a forward entry is only worth having if it records *what it survived, at what
+scope, and what remains open.* **The two untested paths stay open and are not evidence of
+anything yet.**
 - **Relied on by:** the `run: 1` backfill (`AMENDMENT 2` §3.1), which writes one additive key into
   `jobs.inference_settings` on **3,656 of 3,656 rows** in order to restore `D-095` decision 4's
   property — *present and monovalued, every row declaring itself* — so that Run 1 is **positively
@@ -419,14 +430,15 @@ What it does establish, with no denominator — and it is the same thing KEEL-4'
 established: **when this project finally tested a load-bearing assumption, it broke. Fifteen times.**
 Enough to justify the instrument. Not enough to justify a percentage.
 
-**⚠⚠ AND AS OF 2026-09-11 THE FORWARD COUNT IS 1: `A-030`, REGISTERED AND NOT YET TESTED.**
+**⚠⚠ AND AS OF 2026-09-11 THE FORWARD COUNT IS 1: `A-030` (a JSONB column can take an additive key without changing any consumer), REGISTERED, TESTED ONCE, AND HELD AT A NAMED SCOPE.**
 
-> **16 registered · 15 tested · 15 broke · 1 ASSUMED and untested.**
+> **16 registered · 16 tested · 15 broke · 1 HELD at a named scope.**
 
 ⚠ **The two numbers must never be added into one rate.** The retrospective fifteen are survivorship
-and calibrate nothing; **the forward one is the only entry whose outcome is not known in advance**,
-and it is a sample of one. ⚠ **`A-030` resolving to `HELD` would be the first evidence this register
-has ever produced that is not drawn from failures** — and one entry is not a rate either.
+and calibrate nothing. **`A-030` is the only entry whose outcome was not known in advance, and it
+HELD** — the first evidence this register has ever produced that is not drawn from a failure.
+⚠⚠ **One entry is not a rate, and it held at a named scope with two consumer paths untested.** The
+honest reading is *one forward test, one survival, two paths still open* — not *94% hold*.
 
 **The register becomes calibration at `A-030`** — and it has started, which is different from having
 arrived.
