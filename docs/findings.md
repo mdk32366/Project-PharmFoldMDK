@@ -35,7 +35,90 @@
 
 **NOT CLAIMED.** That job 57 should be deleted (`D-109` ruling 6 forbids it) · that the ceiling attribution is wrong (it is **unverified**, which is different) · that the counter is defective · that any other `structure_source` row is affected — **it is one row of 3,547.**
 
-- **Amended by:** —
+- **Amended by:** `F-066 amendment 1` (2026-09-11) — a fourth `attempts = 0` instance on a
+  disjoint failure path, and the 2,691 / 2,690 mechanism correction.
+
+#### F-066 amendment 1 — ⚠⚠ A FOURTH `attempts = 0` instance, on a different accession, a different tranche and a different failure mode; and the 2,691 / 2,690 seam is a MECHANISM correction, not a missing row
+
+- **Date:** 2026-09-11 · **Status:** ⚠ **OPEN.** The parent stays open; this narrows clause 3 and closes nothing.
+- ⚠ **Sub-entry beneath its parent, consuming NO integer** — the `D-099 amendment 1` precedent.
+- **How known (`D-016`):** read-only SQL against production 2026-09-11 through the owner-held
+  `flyctl mpg proxy`, role **`schema_admin`**, PostgreSQL **16.14 Percona**, repo `main` at
+  **`ffea42e`**. ⚠ The tunnel was write-capable for its lifetime and **nothing was written** —
+  recorded because a read whose role could have written is a different object from one that could not.
+
+**1 — THE FOURTH INSTANCE, AND IT IS NOT THE SAME SHAPE AS THE OTHER THREE.**
+
+Clause 3 of the parent records `attempts = 0` as a **third** instance, beside two stale
+`claimed_open` failures, and states it is **not established** whether the counter is wrong or is
+incremented on a path those failures did not take. **A fourth is now measured, and it discriminates
+between those two explanations better than the first three could:**
+
+| | parent's instance | this amendment's |
+|---|---|---|
+| id / accession | **57** / `P11717` (IGF2R) | **2015** / `P55073` (DIO3) |
+| `cohort_tranche` | 0 — cohort-82 | **3 — census** |
+| `structure_source` | `''` (empty string) | **`esmfold_local`** |
+| failure | `CUDA OOM folding 2491 aa at chunk_size=32` | `unexpected fold failure: Unable to create tensor…` |
+| class | a memory ceiling | ⚠ **`F-033`'s class** — an untokenisable residue surfacing as a tensor-shape complaint |
+| `attempts` | **0** | **0** |
+
+⚠⚠ **The two failures share NO path except the counter.** One is an allocator OOM on a rental-tier
+cohort row; the other is a tokeniser rejection on a local-tier census row with a populated
+`structure_source`. **They fail in different code, on different tiers, in different populations —
+and both record zero attempts.** ⚠ That is evidence **against** *"the counter is incremented on a
+path this failure did not take"* and **for** *"the counter does not record the attempt"*, because
+two disjoint paths would both have to miss the same increment.
+
+⚠ **Stated as evidence, not as a ruling.** `n = 2` of the four are now characterised well enough to
+compare; the other two (`claimed_open`) are **not re-measured here** and the parent's *"not
+established"* stands until they are. **What changes is that the question is now answerable** —
+the parent could not distinguish the explanations and this pair begins to.
+
+**2 — ⚠⚠ THE 2,691 / 2,690 SEAM: THE ACCESSION WAS RIGHT, THE MECHANISM WAS NOT.**
+
+A derivation circulated as *"2,691 planned − 1 never folded = 2,690 **recorded**"*, naming `P55073`.
+**The accession is correct. The mechanism is not, and the difference is the whole point of the
+partition discipline `F-042` exists for:**
+
+> ⚠⚠ **2,691 rows ARE recorded.** `P55073` has a `protein_analyses` row. What it lacks is a
+> **`pdb_path`**, because the fold **failed**. Nothing is missing from the table.
+
+**Measured, by tranche, key = `protein_analyses` rows:**
+
+| cohort_tranche | rows | `pdb_path` non-NULL | `pae_json_path` non-NULL |
+|---|---|---|---|
+| 1 | 1,307 | 1,307 | **0** |
+| 2 | 535 | 535 | **0** |
+| 3 | 517 | **516** | **0** |
+| 4 | 332 | 332 | **0** |
+| **census 1–4** | **2,691** | **2,690** | **0** |
+
+**So both figures are right and they count different things:**
+
+> **2,691 = RECORDED rows. 2,690 = FOLDED rows.** `F-042`'s 2,690 denominator is **folded**, never
+> **planned**, and the one-row gap now has a **named cause** rather than a plausible story.
+
+⚠ **Why this matters beyond bookkeeping.** *"One row never folded"* and *"one row folded and lost
+its artifact"* imply different repairs, and a re-fold campaign sized on the wrong one would look
+correct and be off by a row in the direction nobody checks. **A denominator gap with no named cause
+is exactly what `F-042`'s partition discipline exists to prevent.**
+
+⚠ **Independent support, and it is not a second measurement.** `scripts/census_ingest.py` already
+excludes untokenisable residues as a **named category before any write** under `D-085` — `P55073`'s
+exact failure mode, pre-guarded. **That is corroboration from the code, not confirmation from the
+data**, and it does not promote the derivation to a measurement; the SQL above does that.
+
+**3 — WHAT THIS AMENDMENT DOES NOT CLAIM.**
+
+- ⚠ **Not that the counter is defective.** Two disjoint paths recording zero is evidence; the
+  increment site has **not** been read, and the two `claimed_open` instances have **not** been
+  re-measured.
+- ⚠ **Not that `P55073` should be re-folded, repaired, or deleted.** It is a measurement.
+- ⚠ **Not that any recorded `pdb_path` resolves.** ⚠⚠ **A path is not a file.** The counts above are
+  **recorded**, never **resolved**, and conflating the two is the trap in its original form.
+- ⚠ **Not that the parent's clause 1 or 2 is affected.** The full-chain attribution and the
+  *"2,491 vs 2,264"* finding are untouched by this.
 
 ---
 
