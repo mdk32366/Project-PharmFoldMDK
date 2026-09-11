@@ -21,6 +21,17 @@ sys.path.insert(0, str(REPO))
 
 from scripts import task3_run2_folds as T   # noqa: E402
 
+#: ⚠⚠ `data/census/spancache/` is GITIGNORED BY DESIGN (`.gitignore:236`, `data/census/*cache/`),
+#: so CI never has it and the two tests that build REAL payloads cannot run there. They are
+#: skipped with a named reason rather than weakened to run everywhere — ⚠ **and the machine that
+#: will actually run the campaign has the cache, so they are exercised exactly where the campaign
+#: is.** Everything else here, the owner gate included, runs on every platform.
+HAS_SPANCACHE = (REPO / "data" / "census" / "spancache" / "Q8WXF7.json").is_file()
+needs_spancache = pytest.mark.skipif(
+    not HAS_SPANCACHE,
+    reason="data/census/spancache/ is a local artifact (gitignored); this assertion runs on the "
+           "campaign machine, not on CI")
+
 
 # ── the population ──────────────────────────────────────────────────────────────────────────
 
@@ -75,6 +86,7 @@ def test_a_selection_of_the_wrong_size_is_refused(monkeypatch):
     assert "not 20" in str(e.value)
 
 
+@needs_spancache
 def test_every_payload_satisfies_the_claim_contract_before_any_write():
     """⚠⚠ Ten jobs were once written whose `inference_settings` lacked `model_revision`: the dry
     run passed because it never called the contract it was writing for, and `/claim` stranded all
@@ -226,10 +238,18 @@ def test_vram_recovery_says_unmeasured_rather_than_recovers_when_nothing_was_rea
 
 def test_enqueue_without_the_owner_flag_never_builds_an_engine(monkeypatch, capsys):
     """⚠⚠ The dry run must not so much as connect. `DATABASE_URL` is deliberately absent here, so
-    a code path that reached the database would raise KeyError rather than pass quietly."""
+    a code path that reached the database would raise KeyError rather than pass quietly.
+
+    ⚠ Payloads are INJECTED rather than built from the span cache, so the guard that matters most
+    — never write without the flag — runs on every platform including CI, instead of being
+    skipped wherever a local artifact happens to be missing."""
     def _boom():
         raise AssertionError("the dry run built a database engine")
 
+    fake = [{"accession": "Q8WXF7",
+             "meta": {"fold_length": 1, "cohort_tranche": 1, "tier": "local"},
+             "inference_settings": {"model_revision": "x"}}]
+    monkeypatch.setattr(T, "run2_payloads", lambda: fake)
     monkeypatch.setattr(T, "_engine", _boom)
     monkeypatch.delenv("DATABASE_URL", raising=False)
     assert T.main(["--enqueue"]) == 0
