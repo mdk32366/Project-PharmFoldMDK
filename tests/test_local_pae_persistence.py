@@ -174,6 +174,16 @@ def test_run_actually_wires_the_route_into_the_fold_path():
     def fake_run_worker(client, fold_callable, worker_id, **kw):
         captured["fold_callable"] = fold_callable
 
+    def _fit_preflight(length, dtype, chunk_size, *, requirement_mib, margin_mib, **_):
+        # ⚠⚠ run() now DEFAULTS to the real gate, and `preflight` refuses when free
+        # VRAM cannot be read - which is every CI box. This test is about WIRING, not about
+        # gating, so it injects a FIT rather than leaving the default to refuse. The gate's
+        # own refusals are asserted in tests/test_worker_preflight_gate.py.
+        from core.vram_guard import FIT, Preflight
+        return Preflight(outcome=FIT, length=length, dtype=dtype, chunk_size=chunk_size,
+                         free_mib=7043, total_mib=8151, required_mib=requirement_mib,
+                         margin_mib=margin_mib, memory_fraction=0.85, layers={}, detail="")
+
     monkeypatch_target = worker_main.build_client
     worker_main.build_client = lambda cfg: _FakeClient()          # noqa: E731
     try:
@@ -181,7 +191,8 @@ def test_run_actually_wires_the_route_into_the_fold_path():
                                        worker_id="w", artifact_dir=None)
         worker_main.run(cfg,
                         fold_fn=_fold_returning([[0.0, 2.0], [2.0, 0.0]]),
-                        run_worker_fn=fake_run_worker)
+                        run_worker_fn=fake_run_worker,
+                        preflight_fn=_fit_preflight)
     finally:
         worker_main.build_client = monkeypatch_target
 
