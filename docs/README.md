@@ -377,6 +377,96 @@ So the rule is not "be careful" — it is:
 
 ---
 
+## Method note: a guard that is already red reports nothing, and a baseline diff over failure NAMES cannot see it
+
+Learned on 2026-09-11, from **four instances in one session — three found in the code by READING,
+one caught in the WRITING, and none by running.** ⚠ The common property is not that the guards were
+wrong. It is that **each could not fail in the direction it claimed to protect**, so each was
+structurally incapable of reporting the defect it existed for.
+
+**⚠⚠ THE METHOD DEFECT, STATED FIRST, BECAUSE IT IS THE REUSABLE PART.**
+
+A regression check of the shape *"run the suite on this branch, diff the failing test NAMES against
+a baseline, treat the difference as my regressions"* is **not a regression check.**
+
+> **It cannot distinguish *fails for the same reason* from *fails for a NEW reason*.** A test that
+> was already red absorbs a new defect silently, and the diff comes back empty.
+
+That is how instance 1 below reached CI: the guard was **red on the developer's platform and green
+on CI's**, so it sat in the "pre-existing failures" bucket of exactly such a diff, and a real
+regression hid inside it. ⚠ **It is `F-034`'s shape turned on the harness** — *the verification would
+have triggered the failure it was built to verify against.*
+
+**The three instances.**
+
+1. **`tests/test_d143_track_b_structural_only.py` — platform-divergent, always.** It pinned the exact
+   list of files permitted to carry a retired string, building that list with
+   `str(path.relative_to(ROOT))`. On Windows that yields `docs\decisions.md`; the expected values
+   are `/`-separated. ⚠ **The assertion could never pass on one platform and never fail on the other.**
+   When `D-156` moved the entries out of `docs/README.md`, the carrier changed — and **only CI saw
+   it.** Fixed by `as_posix()` **and** by correcting the carrier; both landed at `ffea42e`.
+
+2. **`tests/test_census_accession_route.py` — every assertion textual.** The file exists for exactly
+   one behaviour: an accession present in **both** populations must resolve to its **census** row
+   (`D-081`), and a cohort-only accession must be refused rather than served. Every assertion read
+   source text — `'"cohort"' in src`, `"D-081" in src`, and `callable(resolve_census_accession)`,
+   which asserts the function **exists** and never what it **returns**. ⚠ **Not one called the
+   resolver.** `F-054` verbatim, sitting on top of behaviour that happens to be correct.
+   ⚠⚠ **Proven, not argued:** removing the population filter from `resolve_census_accession` — the
+   realistic mistake — makes it serve the **cohort** row (id 4 where census id 2027 is correct), and
+   **all seven string assertions stay GREEN.**
+
+3. **A `@pytest.mark.parametrize` whose parameters are never used.** In the same file,
+   `test_the_resolver_normalises_what_a_person_actually_pastes` is parametrised over two accessions
+   and **uses neither** — both cases run identical source-text assertions. ⚠ **The parametrisation is
+   decorative**, and a reader counting cases would credit it with coverage it does not have.
+
+4. ⚠⚠ **A FOURTH, AND IT IS THE ONLY ONE THAT NEVER SHIPPED — because this note already existed.**
+   Task 2's repair added `pae_post_fn` to the local fold path, and the danger was not the unit but
+   the **wiring**: every unit test passes while `run()` never hands the route to the fold path,
+   leaving a correct function production never calls — `F-054`'s shape exactly. The first guard
+   written for it asserted
+   `"pae_post_fn=client.persist_pae" in inspect.getsource(worker_main.run)`.
+   ⚠ **That is instance 2's defect, hours after instance 2 was written up here.** It was replaced
+   before commit with a behavioural guard that captures the callable `run()` hands the loop and
+   invokes it, and the replacement was **proven by revert**: removing the wiring reddens it at the
+   assertion.
+
+   > ⚠ **Recorded as an instance rather than quietly fixed, because it is the only evidence here
+   > about whether writing this down changes anything.** Three were found in code by reading.
+   > **This one was caught in the writing, by a author who had just written the note** — which is
+   > the weakest possible test of the note and still the only one available. ⚠ **It says nothing
+   > about whether the habit survives the week.**
+
+**⚠ What follows, and what deliberately does not.**
+
+- **Prefer the check that can fail.** Before trusting a guard, ask what change would make it red —
+  and if the honest answer is *"none that matter"*, it is documentation with an `assert` in it.
+- **A baseline diff must compare failure CAUSES, not names** — or be treated as what it is: a
+  smoke test that a branch did not make things obviously worse.
+- ⚠ **`A-017` clause (c) is the same rule one level down:** *the fixture must contain a case where
+  correct and incorrect differ.* Instances 2 and 3 are that clause failing at file scope rather than
+  at fixture scope.
+- ⚠⚠ **NO FRAMEWORK IS BUILT FOR THIS, AND THAT IS A DECISION** (`D-074` decision 3 — *do not answer
+  a finding with a framework that becomes a second thing to drift*). This note is the remedy.
+
+**⚠ `F-050`'s status, stated because these three bear on it.** **`F-050` is RESERVED for the
+guard-direction sweep — the audit of whether each guard fails in the direction it claims to protect
+— and it is STILL UNWRITTEN.** It has been reserved since 2026-08-06 and deliberately not taken.
+
+> ⚠⚠ **Four unbidden instances in one session is evidence FOR that sweep.** None was found by
+> looking for it; each surfaced while doing something else. **That is the argument for a sweep and
+> also the reason to distrust the count** — an unbidden sample is drawn from what happened to be
+> read, so **four is a floor, never a rate, and the denominator is unknown.**
+>
+> ⚠ **And the four are not one population.** Instances 1–3 are guards that **shipped and ran red
+> or vacuous for weeks**; instance 4 **never shipped**. A sweep would find the first kind and can
+> never find the second. **Counting them together overstates what a sweep would recover** — the
+> sweep's real target is three.
+
+⚠ **The sweep is NOT started here**, and this note does not authorise it. It records the count, the
+three instances, and the fact that the reserved integer still resolves to nothing.
+
 ## Log (newest first)
 
 > ⚠⚠ **THE ENTRIES HAVE MOVED (`D-156`, 2026-09-11).** This README keeps the **rules**, the
