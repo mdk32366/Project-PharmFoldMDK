@@ -266,5 +266,7 @@ def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
     pointer = check_next_free_pointer(
         LOG.read_text(encoding="utf-8"), RESERVED.read_text(encoding="utf-8")
     )
-    assert pointer == 68  # D-156 reserved F-067 and moved the pointer in the same commit
-    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 66
+    assert pointer == 70  # F-068 spent 068 and 069 and moved the pointer in the same commit
+    # F-068 (the fold-path asymmetry) and F-069 (the short-span population) were spent
+    # 2026-09-11; the pointer moved to 070 in the same commit. ADDED by name, not relaxed.
+    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 69

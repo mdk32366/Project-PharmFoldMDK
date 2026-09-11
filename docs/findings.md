@@ -16,6 +16,157 @@
 
 ## Log (newest first)
 
+### F-069 — ⚠⚠ Four instruments have tripped over one population and each recorded it separately: a 1-residue "extracellular span" is not a foldable protein, and the span pipeline treats it as one
+
+- **Date:** 2026-09-11 · **Status:** ⚠ **OPEN, and ⚠⚠ WRITTEN-NOT-REPAIRED.** It must not be
+  repaired before Run B freezes — the spans are inputs to the folded set `D-075`'s anchor rests on,
+  and changing them moves the anchor. **Alongside category E, for the same reason.**
+- **How known (`D-016`):** four independent measurements, listed below with their own keys. ⚠ **No
+  new fetch and no new fold was run for this entry** — it joins observations that already existed.
+
+**⚠⚠ THE ENTRY IS ABOUT THE SPAN PIPELINE. Folding, the viewer and PAE are the instruments that
+tripped over it, not the subject.** Each was recorded where it was found, and the population
+underneath them was never named.
+
+**1 — `F-048` (2026-08-19).** For **58** census proteins the V2 span is a short extracellular loop
+**inside** a larger transmembrane domain — the annotation and the span describe different objects.
+⚠ **All 58 are folded and live on the browsable census surface, the shortest a FIVE-residue span**,
+and `D-094`'s mount preconditions have never been checked against that case.
+
+**2 — the manifest itself.** Key: `data/census/census_manifest.v7.csv`, tranches 1–4, n = 2,691.
+
+| span | rows | share |
+|---|---|---|
+| ≤ 30 aa | **525** | 19.5% |
+| ≤ 20 aa | 293 | 10.9% |
+| ≤ 5 aa | 73 | 2.7% |
+| **== 1 aa** | **10** | 0.4% |
+
+**3 — the viewer (walked live, 2026-09-11).** Key: four accessions on `pharmfoldmdk.fly.dev`.
+Spans **1** (`Q9H902`) and **3** (`Q8N8F6`) render an **EMPTY panel**; spans **8** (`O60725`) and
+**24** (`Q96LB2`) render. ⚠ **The endpoint serves a valid PDB in every case** — the 1-residue
+payload is `200`, 690 bytes, **one CA atom** — so this is a representation gap, not a load failure:
+3Dmol cannot spline a backbone from one atom. **37 rows certainly affected (spans 1–3), up to 99 if
+4–7 also fail; the boundary between 4 and 8 is UNMEASURED.**
+
+**4 — PAE at L = 1.** ⚠ **PENDING, and pre-registered rather than guessed.** PAE is a *pairwise*
+matrix; at L = 1 there is no pair. **Pre-registered by the owner before the measurement:** if the
+re-fold of `Q8WXF7` (1 aa) emits **no PAE**, the 1-residue rows cannot serve the campaign's stated
+purpose — determinism **and** PAE — and leave it; if PAE is emitted as a degenerate **1×1** matrix,
+they stay and the comparison has substrate. **The n = 20 timing sample answers it.**
+
+---
+
+**⚠⚠ WHAT JOINS THEM.** A fold ran, a structure was served, a profile was computed and a viewer was
+mounted **for objects that are one to three amino acids long**. Each instrument behaved correctly
+in isolation and none asked whether the input was a protein. **The pipeline has no notion of a span
+too short to be a molecule**, so every stage downstream inherits one.
+
+⚠ **The cost is not the ten rows.** It is that **525 rows — 19.5% of the census — sit in a band
+where "folded" has been treated as meaning the same thing it means at 400 aa**, and the census
+surface says `Structure served` for all of them.
+
+**⚠ WHAT THIS ENTRY DOES NOT CLAIM.**
+- ⚠⚠ **Not that a threshold is known.** Where a span stops being a molecule is **not measured
+  here**, and picking one now — after seeing which rows fall outside it — is what pre-registration
+  exists to prevent (`F-055`'s shape).
+- ⚠ **Not that the 525 are wrong.** A 24-residue span folds and renders; the finding is that
+  nothing distinguishes it from a 1-residue one.
+- ⚠ **Not that the viewer is the defect** — it is instrument 3. ⚠ And its own defect is separate
+  and narrower: the panel is **silently** empty, with no named reason, while the confidence bar
+  renders directly below it.
+- ⚠ **Not that any of these rows should be removed from the census.** That is a scope ruling and it
+  is the owner's.
+- ⚠ **Not a repair, and not an authorisation for one.**
+
+**Relied on by:** ⚠ the Task 3 sample, which deliberately retains `Q8WXF7` (1 aa) and `Q9Y3E0`
+(2 aa) so instrument 4 reports at n = 20 rather than at n = 2,572.
+
+---
+
+### F-068 — ⚠⚠ The production-writing fold path had neither safety property the measurement path has — and the disqualifying fact is that **both omissions were already written down in `ARCHITECTURE.md`, on `main`, and read as design notes rather than gaps**
+
+- **Date:** 2026-09-11 · **Status:** ⚠ **OPEN.** It closes when the writing path no longer exhibits
+  the asymmetry — `D-074`: a finding against an instrument stays open until the instrument no
+  longer exhibits the problem. ⚠ **A fix exists on a branch; a branch is not a closure.**
+- **How known (`D-016`):** `grep -rn "preflight\|vram_guard" worker/main.py worker/orchestrator.py
+  worker/runner.py` at `main` `5085ba6` returns **nothing**; `scripts/rb_local_tile_folds.py`'s
+  module docstring states its own DB refusal; `ARCHITECTURE.md:835` read in full.
+
+**THE ASYMMETRY, IN ONE SENTENCE.** **The only fold path that can write rows has no envelope gate
+and no per-fold process topology; the only path that has both cannot write.**
+
+| | writes the DB | envelope gate | process-per-fold |
+|---|---|---|---|
+| `scripts/rb_local_tile_folds.py` | ❌ **refuses by start-up assert** — imports nothing from `db/` | ✅ `preflight(requirement_mib=6357)` | ✅ `D-105`, child exits per tile |
+| `worker/main.py` → `fold_from_spec` | ✅ claim → upload → complete | ❌ **none** | ❌ one persistent child |
+
+⚠ **`F-042`'s shape one layer down.** That finding named *a guard placed where the money is, not
+where the data is*. This is **a guard placed where the MEASUREMENT is, not where the WRITES are.**
+
+⚠⚠ **EVERY WORKER-PATH FOLD ON THIS HOST HAS RUN UNGATED.** Stated plainly and not softened: the
+census was folded through the path with no preflight, on the card `F-063` records bugchecking its
+host.
+
+---
+
+**⚠⚠ THE DISQUALIFYING FACT, AND IT IS NOT THAT NOBODY NOTICED.**
+
+`ARCHITECTURE.md:835` — on `main`, in the **VRAM guard** row, today and for weeks — contains both
+halves:
+
+> *"⚠ The fold loop still does not consult the guard (`F-049`; RB, not RA)."*
+
+> *"The child is **persistent, one per worker** — `_MODEL_CACHE` is per-process, so a child per
+> fold would reload 8.4 GB every time."*
+
+**They were visible. They were written down, in the architecture document, in the row that exists
+to describe this very subsystem. Nobody read them as gaps.**
+
+⚠ **This refutes the framing the finding was first given** — that the omissions *"were not visible
+until something tried to use the writing path at scale."* They were visible to anyone who opened
+the file. **What was missing was not the information; it was the reading.**
+
+**⚠⚠ AND THE SECOND CLAUSE IS THE WORSE HALF.** It states the *reason* for the topology — weight
+reload cost — and **does not connect it to `F-064`, which was OPEN at the time and says the exact
+opposite**: in-process release does **not** restore free for the next preflight (7,043 → 1,649 MiB
+after a successful fold, recovering only on process exit).
+
+> **So the document holds the design rationale and the open finding that contradicts it, in the
+> same file, unjoined.** That is not an undocumented gap. **It is a documented one wearing a
+> parenthetical.**
+
+---
+
+**⚠ WHAT THIS DOES TO `F-050`, AND IT STRENGTHENS RATHER THAN WEAKENS THE CASE.**
+
+A guard-direction sweep hunts for guards that cannot fail in the direction they claim to protect.
+⚠⚠ **Here the stated limitation of a documented capability WAS the defect — so a sweep looking for
+a missing guard would have walked past a sentence that names the missing guard.** `F-050` stays
+RESERVED and unwritten; this is evidence for it and a warning about its method.
+
+**⚠ Recorded as a Planner error, because the original text asserted invisibility and the evidence
+was in a file the Planner held and had not read.** `AMENDMENT 6` §3.1's *"neither omission was
+visible"* is **withdrawn on evidence**. ⚠ **Seventh instance today of reasoning about this
+repository instead of reading it** — and the standing refusal on `[L]`-and-unpromoted
+justifications exists for exactly this.
+
+---
+
+**WHAT THIS ENTRY DOES NOT CLAIM.**
+- ⚠ **Not that the folds already run are wrong.** Ungated is not the same as incorrect; the census
+  folded. What is unmeasured is how close any of them came.
+- ⚠ **Not that the persistent child was a mistake when it was made.** Weight-reload cost is real
+  and the rationale is sound in isolation. **The defect is that it was never rejoined to `F-064`.**
+- ⚠ **Not closed by the branch that repairs it.** `D-074` — the instrument must stop exhibiting it,
+  and that is measured after the fix lands, not asserted by it.
+- ⚠ **Not a claim about the rental tier.** This is the local worker path on this host.
+
+**Relied on by:** `D-157`'s residual on campaign cost · the Task 3 timing sample, whose per-fold
+weight reload is a direct consequence of repairing the second half.
+
+---
+
 ### F-066 — The IGF2R failure recorded as a card ceiling was a fold of the full chain, 227 residues longer than the ECD span the pipeline slices; and the attempt counter recorded zero attempts
 
 - **Date:** 2026-09-02 · **Status:** ⚠ **OPEN.** It closes when the record states what job 57 actually attempted, **or** when the attribution is corrected wherever it is carried.
