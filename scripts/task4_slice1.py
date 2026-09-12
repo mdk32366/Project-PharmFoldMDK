@@ -172,21 +172,38 @@ def enqueue(owner: bool) -> int:
         payloads.append(p)
     print(f"{len(payloads)} payloads built and validated against the claim contract.")
 
-    if not owner:
-        print("\nDRY RUN - nothing was written. Re-run with --i-am-the-owner to write.")
-        return 0
-
     from sqlalchemy.orm import Session                 # noqa: PLC0415
     from db.models import JobRecord, ProteinAnalysis   # noqa: PLC0415
 
     written = []
     with Session(_engine()) as s:
+        # ⚠⚠ THE BAND OVERLAPS TASK 3's TWENTY BY EXACTLY FOUR, AND THAT IS ARITHMETIC,
+        # NOT A DEFECT. The stratified sample drew 4 rows from 251-384, and those four were
+        # folded as Run 2 on 2026-09-12 with artifacts of 199-246 KB. Re-folding them would give
+        # one accession TWO Run 2 rows, breaking the generation partition the campaign rests on
+        # - the two-rows-per-accession hazard AMENDMENT 5 section 4.3 names.
+        #
+        # ⚠ The BAND is still 346 and `the_band()` still enforces that. What is ENQUEUED is
+        # the complement, and the arithmetic is printed rather than assumed.
         already = _existing_run2(s, list(by_acc))
-        if already:
-            print(f"\nREFUSING: {len(already)} of the {EXPECTED_N} already carry a Run "
-                  f"{RUN_LABEL} job: {sorted(already)[:8]}...", file=sys.stderr)
+        todo = [p for p in payloads if p["accession"] not in already]
+        print(f"\nband {BAND[0]}-{BAND[1]}: {len(payloads)} rows")
+        print(f"  already carry a Run {RUN_LABEL} row (Task 3 sample): {len(already)} "
+              f"-> {sorted(already)}")
+        print(f"  to enqueue: {len(todo)}")
+        if len(todo) + len(already) != EXPECTED_N:
+            print(f"REFUSING: {len(todo)} + {len(already)} != {EXPECTED_N}.", file=sys.stderr)
             return 1
-        for p in payloads:
+        if not todo:
+            print("nothing to enqueue; the band is already covered.")
+            return 0
+        # ⚠ The owner gate sits AFTER the arithmetic, deliberately. A count you only see once
+        # you have committed is a count the dry run did not check - AMENDMENT 8 section 3.2's
+        # rule, and the overlap with Task 3 is exactly what a reader needs before authorising.
+        if not owner:
+            print("\nDRY RUN - nothing was written. Re-run with --i-am-the-owner to write.")
+            return 0
+        for p in todo:
             a = ProteinAnalysis(input_type="uniprot", input_value=p["accession"],
                                 structure_source="esmfold_local", ranking_run_id=None,
                                 cohort_tranche=p["meta"]["cohort_tranche"], meta=p["meta"])
@@ -206,6 +223,7 @@ def enqueue(owner: bool) -> int:
     ENQUEUED_JSON.write_text(json.dumps(written, indent=2), encoding="utf-8")
     print(f"\nWROTE {len(written)} Run {RUN_LABEL} rows. ids {written[0]['job_id']}"
           f"-{written[-1]['job_id']}, enumerated in {_rel(ENQUEUED_JSON)}")
+    print(f"⚠ band coverage: {len(written)} new + {len(already)} already folded = {EXPECTED_N}")
     return 0
 
 
@@ -316,8 +334,12 @@ def fold(owner: bool) -> int:
               file=sys.stderr)
         return 1
     enqueued = {int(e["job_id"]): e for e in json.loads(ENQUEUED_JSON.read_text(encoding="utf-8"))}
-    if len(enqueued) != EXPECTED_N:
-        print(f"refusing: {len(enqueued)} enqueued ids, not {EXPECTED_N}.", file=sys.stderr)
+    # ⚠ The fold folds what was ENQUEUED. The band bound of 346 lives in `the_band()`; the
+    # enqueue writes only the rows that lacked a Run 2 row, so this count is the complement and
+    # must not be re-asserted as 346.
+    if not enqueued or len(enqueued) > EXPECTED_N:
+        print(f"refusing: {len(enqueued)} enqueued ids is not a subset of the band.",
+              file=sys.stderr)
         return 1
 
     ok, why = cuda_ready()

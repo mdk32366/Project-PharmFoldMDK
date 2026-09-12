@@ -203,3 +203,34 @@ def test_the_free_mib_recorded_is_the_gates_own_reading(tmp_path, monkeypatch):
     row = list(csv.DictReader(open(S.PROGRESS_CSV, encoding="utf-8")))[0]
     assert row["free_mib_before"] == "7043"
     assert row["peak_allocated_mib"] == "6000"
+
+
+# ── the overlap with Task 3's twenty ────────────────────────────────────────────────────────
+
+def test_the_band_overlaps_task_3s_sample_by_exactly_four():
+    """⚠⚠ ARITHMETIC, NOT A DEFECT, AND IT MUST NOT SURPRISE ANYONE TWICE.
+
+    The stratified sample drew 4 rows from 251-384 and they were folded as Run 2 on 2026-09-12.
+    Enqueuing the band whole would give those four accessions a SECOND Run 2 row, which breaks the
+    generation partition the campaign rests on. The band bound stays 346; the enqueue writes the
+    complement.
+    """
+    import json
+
+    enq = REPO / "data" / "control" / "task3_run2" / "enqueued.json"
+    if not (HAS_MANIFEST and enq.is_file()):
+        pytest.skip("needs the manifest and Task 3's enumeration")
+    twenty = {e["accession"] for e in json.loads(enq.read_text(encoding="utf-8"))}
+    band = {r["accession"] for r in S.the_band()}
+    overlap = band & twenty
+    assert len(overlap) == 4, f"expected 4 rows in both, got {sorted(overlap)}"
+    assert overlap == {"O43556", "Q8N0V5", "Q8N3G9", "Q9H2X3"}
+    assert len(band - twenty) == 342, "the complement is what gets enqueued"
+
+
+def test_the_band_bound_is_unmoved_by_the_overlap():
+    """⚠ A-017 (c). The fix must not be 'relax the band to 342' — the band is still 346 and
+    `the_band()` still refuses anything else. Only the ENQUEUE writes a subset."""
+    assert S.EXPECTED_N == 346
+    if HAS_MANIFEST:
+        assert len(S.the_band()) == 346
