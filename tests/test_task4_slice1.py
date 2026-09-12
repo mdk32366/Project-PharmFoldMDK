@@ -128,7 +128,11 @@ class _Result:
 
 
 def _fold_into(r, monkeypatch, *, bytes_, pae_found=True, raises=False):
-    """Drive one fold through `after_fold`, with the surface probe injected."""
+    """Drive one fold through `after_fold`, with the surface probe injected.
+
+    ⚠ The probe is DEFERRED BY ONE FOLD, so fold N writes fold N-1's row. Callers that want a row
+    on disk must drive one more fold, or call `flush(r)`.
+    """
     def _probe(base, artifact, analysis_id):
         if raises:
             raise SystemExit("cannot reach the surface")
@@ -142,12 +146,20 @@ def _fold_into(r, monkeypatch, *, bytes_, pae_found=True, raises=False):
     r.after_fold(spec, _Result(pae=[[0.0]]))
 
 
+def flush(r):
+    """What the `finally` block does: probe and write the row still held."""
+    if r._held is not None:
+        r._probe_and_write(r._held)
+        r._held = None
+
+
 def test_three_consecutive_unlanded_artifacts_stop_the_campaign(tmp_path, monkeypatch):
     """⚠⚠ THE ELEVEN EMPTY ROWS ARE WHY THIS EXISTS. A broken persistence path will not fix
     itself over the next 300 folds."""
     r = _run(346, tmp_path)
     for _ in range(S.FATAL_STREAK):
         _fold_into(r, monkeypatch, bytes_=0)
+    flush(r)                      # the deferral holds one; the streak needs all three probed
     assert r.should_stop() is True
     assert "persistence path is broken" in r.stop_reason
 
@@ -158,6 +170,7 @@ def test_a_single_bad_fold_does_NOT_stop_the_campaign(tmp_path, monkeypatch):
     r = _run(346, tmp_path)
     _fold_into(r, monkeypatch, bytes_=0)
     _fold_into(r, monkeypatch, bytes_=199140)          # recovers
+    flush(r)
     assert r.fatal_streak == 0
     assert r.should_stop() is False
 
@@ -169,6 +182,7 @@ def test_an_UNREACHABLE_SURFACE_is_a_named_category_and_not_a_fatal(tmp_path, mo
     r = _run(346, tmp_path)
     for _ in range(S.FATAL_STREAK + 2):
         _fold_into(r, monkeypatch, bytes_=None, raises=True)
+    flush(r)
     assert r.fatal_streak == 0
     assert r.should_stop() is False
     assert all(v.startswith("surface_unreachable") for v in r.verdicts)
@@ -179,6 +193,7 @@ def test_a_pae_that_does_not_resolve_is_its_own_verdict(tmp_path, monkeypatch):
     structure that lands without its PAE is a different answer and gets a different word."""
     r = _run(346, tmp_path)
     _fold_into(r, monkeypatch, bytes_=199140, pae_found=False)
+    flush(r)
     assert r.verdicts == ["pae_did_not_resolve"]
 
 
@@ -189,9 +204,10 @@ def test_progress_is_on_disk_after_each_fold_not_at_the_end(tmp_path, monkeypatc
     nothing at all if it dies at hour four."""
     r = _run(346, tmp_path)
     _fold_into(r, monkeypatch, bytes_=199140)
+    _fold_into(r, monkeypatch, bytes_=199140)          # writes the first
     rows = list(csv.DictReader(open(S.PROGRESS_CSV, encoding="utf-8")))
     assert len(rows) == 1 and rows[0]["verdict"] == "ok"
-    _fold_into(r, monkeypatch, bytes_=199140)
+    flush(r)                                            # writes the second
     assert len(list(csv.DictReader(open(S.PROGRESS_CSV, encoding="utf-8")))) == 2
 
 
@@ -200,6 +216,7 @@ def test_the_free_mib_recorded_is_the_gates_own_reading(tmp_path, monkeypatch):
     r = _run(346, tmp_path)
     r.rec._last_pf = type("P", (), {"length": 300, "free_mib": 7043, "required_mib": 6357})()
     _fold_into(r, monkeypatch, bytes_=199140)
+    flush(r)
     row = list(csv.DictReader(open(S.PROGRESS_CSV, encoding="utf-8")))[0]
     assert row["free_mib_before"] == "7043"
     assert row["peak_allocated_mib"] == "6000"
@@ -234,3 +251,55 @@ def test_the_band_bound_is_unmoved_by_the_overlap():
     assert S.EXPECTED_N == 346
     if HAS_MANIFEST:
         assert len(S.the_band()) == 346
+
+
+# ── the defect that stopped a healthy campaign at fold 3 ────────────────────────────────────
+
+def test_the_probe_is_DEFERRED_because_the_upload_has_not_happened_yet(tmp_path, monkeypatch):
+    """⚠⚠ THE REGRESSION, AND IT COST A HEALTHY RUN.
+
+    `run_worker`'s loop is claim -> FOLD -> upload -> complete, and this tool's callable IS the
+    fold. Probing the serving surface inside it asks about an artifact that has not been uploaded
+    yet: on 2026-09-12 the first three folds read **0 bytes** and the fatal streak stopped the
+    campaign. Those three structures were **159-171 KB** once they landed.
+
+    ⚠ PAE read fine throughout, because `pae_post_fn` fires INSIDE the fold, before the upload —
+    and that asymmetry is exactly what made the wrong reading look like a real defect.
+    """
+    r = _run(346, tmp_path)
+    _fold_into(r, monkeypatch, bytes_=199140)
+    # nothing is written yet: the row is HELD until the next fold, by which point its upload
+    # is a full fold-cycle old
+    assert list(csv.DictReader(open(S.PROGRESS_CSV, encoding="utf-8"))) == []
+    assert r._held is not None and r.done == 1, "the fold still counts immediately"
+    _fold_into(r, monkeypatch, bytes_=199140)
+    assert len(list(csv.DictReader(open(S.PROGRESS_CSV, encoding="utf-8")))) == 1
+
+
+def test_the_last_fold_is_flushed_so_the_record_is_not_short_by_one(tmp_path, monkeypatch):
+    """⚠ A-017 (c) for the deferral: holding a row is only correct if something releases it."""
+    r = _run(346, tmp_path)
+    _fold_into(r, monkeypatch, bytes_=199140)
+    flush(r)
+    rows = list(csv.DictReader(open(S.PROGRESS_CSV, encoding="utf-8")))
+    assert len(rows) == 1 and rows[0]["verdict"] == "ok"
+    assert r._held is None
+
+
+def test_a_RESUMED_run_counts_the_folds_already_recorded(tmp_path, monkeypatch):
+    """⚠⚠ Without this a resumed run can never reach its own target: 342 rows, 3 already folded,
+    `done` restarting at 0 means it stops at 339 and idles out instead of finishing."""
+    S.OUT_DIR = tmp_path
+    S.PROGRESS_CSV = tmp_path / "progress.csv"
+    with open(S.PROGRESS_CSV, "w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=S.PROGRESS_COLUMNS)
+        w.writeheader()
+        for i in range(3):
+            w.writerow({"fold_index": i + 1, "accession": f"A{i}", "verdict": "ok"})
+    allowed = {1000 + i: {"accession": f"B{i:04d}", "analysis_id": 2000 + i, "span_aa": 300}
+               for i in range(5)}
+    r = S.SliceRun(allowed, "http://surface")
+    assert r.done == 3, "a resumed run must start from what is already recorded"
+    assert r.should_stop() is False
+    r.done = 5
+    assert r.should_stop() is True

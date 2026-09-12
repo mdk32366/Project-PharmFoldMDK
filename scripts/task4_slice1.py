@@ -240,12 +240,29 @@ class SliceRun:
         self.last_progress = time.time()
         self.fatal_streak = 0
         self.stop_reason: Optional[str] = None
-        self.done = 0
         self.verdicts: list[str] = []
+        # !! THE PROBE IS DEFERRED BY ONE FOLD, AND THAT IS THE POINT.
+        # `run_worker`'s loop is claim -> FOLD -> upload -> complete, and this callable IS the
+        # fold. Probing the serving surface here asks about an artifact that has not been
+        # uploaded yet: the first run read 0 bytes on three healthy folds (159-171 KB once they
+        # landed) and the fatal streak stopped a campaign that was working. PAE read fine
+        # throughout because `pae_post_fn` fires INSIDE the fold, before the upload - which is
+        # exactly the asymmetry that made the wrong reading look plausible.
+        # So each row is held and probed when the NEXT fold completes, by which point its upload
+        # is ~35 s old. Progress therefore lags by one fold and the final row is flushed at the
+        # end.
+        self._held: Optional[dict[str, Any]] = None
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         if not PROGRESS_CSV.is_file():
             with open(PROGRESS_CSV, "w", newline="", encoding="utf-8") as fh:
                 csv.DictWriter(fh, fieldnames=PROGRESS_COLUMNS).writeheader()
+            self.done = 0
+        else:
+            # ! RESUME. The rows already recorded are folds already done, so the completion
+            # count must start from them or a resumed run can never reach its own target and
+            # would idle out instead of finishing.
+            with open(PROGRESS_CSV, encoding="utf-8") as fh:
+                self.done = sum(1 for _ in csv.DictReader(fh))
 
     # ⚠ Appended per fold, never buffered to the end.
     def _append(self, row: dict[str, Any]) -> None:
@@ -263,9 +280,31 @@ class SliceRun:
         # ⚠⚠ THE PERSISTENCE CHECK, FROM THE SERVING SURFACE, PER FOLD. No tunnel needed, which is
         # what lets it run unattended. `column_null` vs `file_missing` needs the DB and is left to
         # --report; what is fatal here is simply that the artifact did not land.
+        row = {
+            "fold_index": self.done + 1, "accession": e["accession"], "job_id": spec.job_id,
+            "analysis_id": e["analysis_id"], "span_aa": r["span_aa"],
+            "wall_seconds": r["wall_seconds"], "free_mib_before": r["free_mib_before"],
+            "requirement_mib": r["requirement_mib"],
+            "peak_allocated_mib": peak.get("max_allocated_mib"),
+            "peak_reserved_mib": peak.get("max_reserved_mib"),
+            "emitted_pae": r["emitted_pae"],
+            "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        }
+        self.done += 1
+        self.last_progress = time.time()
+        print(f"[{self.done:>3}/{len(self.allowed)}] {e['accession']:<9} {r['span_aa']:>4} aa  "
+              f"wall={r['wall_seconds']:>7.2f}s  free={r['free_mib_before']} MiB  folded",
+              flush=True)
+        held, self._held = self._held, row
+        if held is not None:
+            self._probe_and_write(held)
+
+    def _probe_and_write(self, row: dict[str, Any]) -> None:
+        """Probe one row's artifacts on the serving surface and append it to the record."""
+        aid = row["analysis_id"]
         try:
-            _found_s, n_bytes = _head_served(self.base_url, "structure", e["analysis_id"])
-            found_p, _n = _head_served(self.base_url, "pae", e["analysis_id"])
+            _found_s, n_bytes = _head_served(self.base_url, "structure", aid)
+            found_p, _n = _head_served(self.base_url, "pae", aid)
             probe_ok = True
         except SystemExit as exc:
             # ⚠ A connection failure is a NAMED CATEGORY, never a fold failure. `refused_no_
@@ -288,22 +327,11 @@ class SliceRun:
             self.fatal_streak += 1
 
         self.verdicts.append(verdict)
-        self.done += 1
-        self.last_progress = time.time()
-        self._append({
-            "fold_index": self.done, "accession": e["accession"], "job_id": spec.job_id,
-            "analysis_id": e["analysis_id"], "span_aa": r["span_aa"],
-            "wall_seconds": r["wall_seconds"], "free_mib_before": r["free_mib_before"],
-            "requirement_mib": r["requirement_mib"],
-            "peak_allocated_mib": peak.get("max_allocated_mib"),
-            "peak_reserved_mib": peak.get("max_reserved_mib"),
-            "emitted_pae": r["emitted_pae"], "served_structure_bytes": n_bytes,
-            "served_pae": found_p, "verdict": verdict,
-            "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        })
-        print(f"[{self.done:>3}/{len(self.allowed)}] {e['accession']:<9} {r['span_aa']:>4} aa  "
-              f"wall={r['wall_seconds']:>7.2f}s  free={r['free_mib_before']} MiB  "
-              f"bytes={n_bytes}  {verdict}", flush=True)
+        row["served_structure_bytes"] = n_bytes
+        row["served_pae"] = found_p
+        row["verdict"] = verdict
+        self._append(row)
+        print(f"      -> {row['accession']:<9} bytes={n_bytes}  {verdict}", flush=True)
 
         if self.fatal_streak >= FATAL_STREAK:
             self.stop_reason = (f"{self.fatal_streak} consecutive folds whose artifact did not "
@@ -385,6 +413,11 @@ def fold(owner: bool) -> int:
         run_worker(client, _fold_one, config.worker_id, poll_interval=config.poll_interval,
                    tier=worker_tier(), should_stop=run.should_stop)
     finally:
+        # ! The last fold is still held, unprobed. Flush it or the record is short by one and the
+        # final row never gets a verdict.
+        if run._held is not None:
+            run._probe_and_write(run._held)
+            run._held = None
         print(f"\nSTOPPED: {run.stop_reason or 'the loop returned'}")
         print(f"{run.done} of {len(enqueued)} folded; record in {_rel(PROGRESS_CSV)}")
     return 0 if run.done == len(enqueued) else 1
