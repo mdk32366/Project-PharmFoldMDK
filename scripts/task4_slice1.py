@@ -144,7 +144,7 @@ def enumerate_slice() -> int:
     sel = [r for r in population() if r["band"] == f"{BAND[0]}-{BAND[1]}"]
     print(f"\ncross-check against the projector's own population: {len(sel)} "
           f"({'AGREES' if len(sel) == len(rows) else 'DISAGREES'})")
-    print("⚠ The twenty projected 5.12 h for this band at a mean of 53.2 s per fold.")
+    print("! The twenty projected 5.12 h for this band at a mean of 53.2 s per fold.")
     print("\nno database was touched. --enqueue writes; the owner is at the keyboard for that.")
     return 0
 
@@ -223,7 +223,7 @@ def enqueue(owner: bool) -> int:
     ENQUEUED_JSON.write_text(json.dumps(written, indent=2), encoding="utf-8")
     print(f"\nWROTE {len(written)} Run {RUN_LABEL} rows. ids {written[0]['job_id']}"
           f"-{written[-1]['job_id']}, enumerated in {_rel(ENQUEUED_JSON)}")
-    print(f"⚠ band coverage: {len(written)} new + {len(already)} already folded = {EXPECTED_N}")
+    print(f"! band coverage: {len(written)} new + {len(already)} already folded = {EXPECTED_N}")
     return 0
 
 
@@ -354,10 +354,10 @@ def fold(owner: bool) -> int:
         if PROGRESS_CSV.is_file() else 0
     print(f"slice 1: band {BAND[0]}-{BAND[1]}, {len(enqueued)} rows, surface {base}")
     if already:
-        print(f"⚠ RESUMING: {already} fold(s) already in {_rel(PROGRESS_CSV)}. The queue holds "
+        print(f"! RESUMING: {already} fold(s) already in {_rel(PROGRESS_CSV)}. The queue holds "
               f"the rest pending, so a restart costs one fold, not {already}.")
-    print(f"stop conditions: all folded · {FATAL_STREAK} consecutive unlanded artifacts · "
-          f"{IDLE_STOP_S//60} min idle · {MAX_WALL_S//3600} h wall")
+    print(f"stop conditions: all folded | {FATAL_STREAK} consecutive unlanded artifacts | "
+          f"{IDLE_STOP_S//60} min idle | {MAX_WALL_S//3600} h wall")
 
     if not owner:
         print("\nDRY RUN - no fold ran. Re-run with --i-am-the-owner to fold.")
@@ -407,7 +407,7 @@ def report() -> int:
     if free:
         print(f"\n2 - FREE VRAM at the gate: first {free[0]}, lowest {min(free)}, last {free[-1]} "
               f"MiB over {len(free)} folds")
-        print("    ⚠ a downward drift across 346 folds is a finding F-064 would want")
+        print("    ! a downward drift across 346 folds is a finding F-064 would want")
 
     walls = [float(r["wall_seconds"]) for r in rows if r["wall_seconds"]]
     if walls:
@@ -416,10 +416,10 @@ def report() -> int:
               f"(min {min(walls):.1f}, max {max(walls):.1f})")
         print(f"    the twenty projected 53.2 s for this band -> {mean/53.2:.2f}x")
         print(f"    band total: {mean*EXPECTED_N/3600:.2f} h against the projected 5.12 h")
-        print("    ⚠ a material divergence re-scopes the remaining ~2,226 and is a finding about")
+        print("    ! a material divergence re-scopes the remaining ~2,226 and is a finding about")
         print("      the projector, which exists because an earlier estimate was out by an order")
         print("      of magnitude.")
-    print("\n⚠ SLICE 2 IS NOT AUTHORISED. Report the harvest; the owner rules (AMENDMENT 9 §4.3).")
+    print("\n! SLICE 2 IS NOT AUTHORISED. Report the harvest; the owner rules (AMENDMENT 9 section 4.3).")
     return 0
 
 
