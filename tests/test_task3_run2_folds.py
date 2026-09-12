@@ -531,3 +531,170 @@ def test_requeue_is_keyed_on_JOB_ID_and_never_on_accession():
     # turns on `"` vs `'` is testing the unparser.
     assert "j.status == 'complete'" in body, "a complete job must never be reset"
     assert "'pending'" in body and "attempts = 0" in body
+
+
+# ── AMENDMENT 8 §3: --requeue must reach `complete`-with-an-EMPTY-artifact ───────────────────
+#
+# ⚠⚠ WHY THE OLD PREDICATE WAS RIGHT IN GENERAL AND WRONG HERE. `--requeue` skipped `complete`
+# because requeue must never destroy a good fold. The eleven are `complete` AND carry a
+# `pdb_path` whose served artifact is ZERO BYTES — finished work that finished nothing. A `--fold`
+# against that state folds nine correctly and leaves eleven zero-byte structures in production
+# looking done.
+
+def _Job(jid, status, pdb_path="/data/artifacts/x/structure.pdb", analysis_id=None):
+    """⚠⚠ THE PRODUCTION TYPE, not an invented one.
+
+    The first version of this fixture was a hand-rolled class carrying a `pdb_path` attribute.
+    `JobRecord` HAS NO SUCH COLUMN — `pdb_path` is on `protein_analyses` — so the predicate saw
+    `None` on every real row, probed nothing and selected nothing, while these tests passed.
+    ⚠ **That is the fixture-replacing-its-subject pattern from this morning's method note,
+    committed hours after writing it.** The fixture is now the same `QueueRow` production builds
+    from its join, so it cannot carry a field the query does not supply.
+    """
+    return T.QueueRow(id=jid, status=status, analysis_id=analysis_id if analysis_id is not None
+                      else jid, pdb_path=pdb_path)
+
+
+def _empty_for(ids):
+    """`artifact_is_empty` that reports the given analysis ids as empty and nothing else."""
+    def _pred(analysis_id):
+        return analysis_id in ids
+    return _pred
+
+
+def test_a_complete_job_whose_served_artifact_is_EMPTY_is_requeued():
+    """⚠⚠ THE WHOLE POINT OF THE CHANGE. Eleven rows are `complete` with zero-byte artifacts."""
+    jobs = [_Job(3698, "complete"), _Job(3699, "complete")]
+    got = T.requeue_candidates(jobs, artifact_is_empty=_empty_for({3698, 3699}))
+    assert [j.id for j in got] == [3698, 3699], (
+        "a complete job with a zero-byte artifact is finished work that finished nothing")
+
+
+def test_a_complete_job_whose_artifact_HAS_CONTENT_is_left_alone():
+    """⚠⚠ A-017 (c), and it is the clause that stops this being 'requeue everything'.
+
+    The fixture holds BOTH kinds and asserts only the empty one is selected. A fixture with only
+    empty rows would pass under a predicate that matches every complete job — which would destroy
+    good folds, the exact thing the original `complete` skip existed to prevent.
+    """
+    jobs = [_Job(1, "complete"), _Job(2, "complete")]
+    got = T.requeue_candidates(jobs, artifact_is_empty=_empty_for({2}))
+    assert [j.id for j in got] == [2], "a complete job with real bytes must never be reset"
+
+
+def test_failed_and_claimed_still_requeue_exactly_as_before():
+    """⚠ §3.4 — this EXTENDS the predicate, it does not replace it. Both must pass before and
+    after the change, or the fix is a different tool wearing the same name."""
+    jobs = [_Job(1, "failed"), _Job(2, "claimed"), _Job(3, "pending")]
+    got = T.requeue_candidates(jobs, artifact_is_empty=_empty_for(set()))
+    assert [j.id for j in got] == [1, 2, 3]
+
+
+def test_a_complete_job_with_NO_pdb_path_is_not_probed_and_not_selected():
+    """⚠ The predicate is `complete` + a path + an empty artifact. A complete row with no path at
+    all is a different condition and is reported rather than silently swept in — and it must not
+    cause an HTTP probe, which would be a request about an artifact that was never claimed."""
+    probed = []
+
+    def _pred(analysis_id):
+        probed.append(analysis_id)
+        return True
+
+    jobs = [_Job(1, "complete", pdb_path=None)]
+    got = T.requeue_candidates(jobs, artifact_is_empty=_pred)
+    assert got == []
+    assert probed == [], "a row with no pdb_path must not be probed"
+
+
+def test_the_surface_probe_answers_both_questions_from_one_head(monkeypatch):
+    """⚠ §3.1 — reuse the machinery, do not write a second check. One HEAD, two readings:
+    `exists` for `check_fold_persistence`, and zero-bytes for the requeue predicate."""
+    calls = []
+
+    def _fake_head(base, artifact, analysis_id):
+        calls.append((artifact, analysis_id))
+        return {"structure": (True, 0), "pae": (True, 4096)}[artifact]
+
+    monkeypatch.setattr(T, "_head_served", _fake_head)
+    assert T._served_structure_is_empty("http://x")(1) is True
+    assert T._served_pae_exists("http://x")(1) is True
+    assert calls == [("structure", 1), ("pae", 1)]
+
+
+def test_a_404_is_not_EMPTY_in_the_sense_this_predicate_selects_on(monkeypatch):
+    """⚠ A-017 (c). `200` with zero bytes and `404` are different conditions. Treating a 404 as
+    empty would requeue rows whose artifact was never served at all — a different defect needing
+    a different answer."""
+    monkeypatch.setattr(T, "_head_served", lambda b, a, i: (False, 0))
+    assert T._served_structure_is_empty("http://x")(1) is False
+
+
+def test_a_served_artifact_with_bytes_is_not_empty(monkeypatch):
+    monkeypatch.setattr(T, "_head_served", lambda b, a, i: (True, 22398))
+    assert T._served_structure_is_empty("http://x")(1) is False
+
+
+def test_the_probe_measures_the_BODY_and_not_a_header():
+    """⚠⚠ GET, NOT HEAD, AND THE BYTES RATHER THAN THE CLAIM ABOUT THEM.
+
+    `HEAD /api/analyses/{id}/structure` answers **405, allow: GET** — the route is declared
+    `@read_router.get`, so a HEAD probe learns nothing about any row and the first version of this
+    refused all twenty on the 405. And the body is measured rather than `Content-Length` trusted:
+    the bytes that reach a reader are the thing in question; a header is a claim about them.
+    """
+    import urllib.request
+
+    class _R:
+        status = 200
+        headers = {"Content-Length": "99999"}      # ⚠ a header that LIES
+
+        def read(self): return b""                 # ...about an empty body
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    seen = {}
+    orig = urllib.request.urlopen
+
+    def _fake(req, *a, **k):
+        seen["method"] = req.get_method()
+        return _R()
+
+    urllib.request.urlopen = _fake
+    try:
+        found, n = T._head_served("http://x", "structure", 1)
+    finally:
+        urllib.request.urlopen = orig
+    assert seen["method"] == "GET", "HEAD is answered 405 by this route"
+    assert (found, n) == (True, 0), "the body is empty however large the header claims"
+
+
+def test_a_5xx_raises_rather_than_reporting_the_artifact_empty():
+    """⚠ An outage is not an empty file. Returning `(True, 0)` here would requeue every row on a
+    bad minute."""
+    import urllib.error
+    import urllib.request
+
+    import pytest as _pytest
+
+    orig = urllib.request.urlopen
+
+    def _boom(*a, **k):
+        raise urllib.error.HTTPError("http://x", 503, "Service Unavailable", {}, None)
+
+    urllib.request.urlopen = _boom
+    try:
+        with _pytest.raises(SystemExit) as e:
+            T._head_served("http://x", "structure", 1)
+        assert "503" in str(e.value)
+    finally:
+        urllib.request.urlopen = orig
+
+
+def test_jobs_has_no_pdb_path_column_which_is_why_the_query_joins():
+    """⚠⚠ THE REASON THE JOIN EXISTS, PINNED. If `pdb_path` ever moves onto `jobs`, this goes red
+    and the join can be reconsidered deliberately rather than discovered by a silent `None`."""
+    from db.models import JobRecord, ProteinAnalysis
+
+    cols = {c.name for c in JobRecord.__table__.columns}
+    assert "pdb_path" not in cols, "jobs has no pdb_path; a job-only query cannot answer this"
+    assert "pdb_path" in {c.name for c in ProteinAnalysis.__table__.columns}
