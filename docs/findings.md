@@ -305,6 +305,63 @@ surface says `Structure served` for all of them.
 
 ---
 
+#### F-069 amendment 1 — ⚠⚠ Instrument 4 reports: PAE at L = 1 is a **degenerate 1×1 matrix**, `[[14.4886]]`, and it LANDED — so the pre-registered rule resolves to **KEEP**, and the 1-residue rows stay in the campaign
+
+- **Date:** 2026-09-12 · **Status:** ⚠ **`F-069` stays OPEN and stays WRITTEN-NOT-REPAIRED.**
+  This discharges one instrument's pending clause; it does not repair the span pipeline, and the
+  freeze until Run B is unchanged.
+- **Amends:** `F-069`, whose instrument 4 read *"PAE at L = 1 — ⚠ PENDING, and pre-registered
+  rather than guessed."* ⚠ **Sub-entry beneath its parent, consuming NO integer.**
+- **How known (`D-016`):** `Q8WXF7` (1 aa) re-folded 2026-09-12 through the writing path at
+  `4a3a4e3` as fold 1 of the 20, owner at the keyboard; PAE read back **from the serving surface**
+  at `GET /api/analyses/3698/pae`, 42 bytes.
+
+**THE PRE-REGISTRATION, QUOTED BEFORE THE RESULT SO THE ORDER IS CHECKABLE.** `F-069` recorded,
+**before the measurement**, that *"if the re-fold of `Q8WXF7` (1 aa) emits **no PAE**, the
+1-residue rows cannot serve the campaign's stated purpose — determinism **and** PAE — and leave
+it; if PAE is emitted as a degenerate **1×1** matrix, they stay and the comparison has
+substrate."*
+
+**THE RESULT.**
+
+```
+GET /api/analyses/3698/pae   ->  200, 42 bytes
+[[14.488597869873047]]                       # 1 x 1
+```
+
+⚠ **Both halves, because either alone passes the wrong fold** (`core.fold_persistence_check`'s
+whole point): the fold **emitted** PAE, and the persistence check against the serving surface
+returns **`ok`** — the column is non-NULL *and* the path resolves. **`no_pae_emitted` did not
+occur for any of the twenty; all twenty are `ok`.**
+
+> ⚠⚠ **THE RULE RESOLVES TO KEEP. The 1-residue rows stay in the campaign, and the determinism
+> comparison has substrate at L = 1.** ⚠ **This binds the 37 rows at spans 1–3 and, if the 4–7
+> boundary ever resolves that way, up to 99** — which is exactly why it was pre-registered: the
+> decision was made before anyone could see which rows it would keep.
+
+**⚠⚠ AND THE RULE WAS NOT SPENT ON 2026-09-11, WHICH IS WHY THIS READING IS WORTH ANYTHING.**
+That run reported `pae = NO` on **every** fold, **including 37 aa** — because the child returned
+no result at all (`F-068 amendment 1`), so nothing produced PAE anywhere. ⚠ **Applying the rule
+then would have read a pipeline defect as a biological fact** and removed a population on the
+strength of a bug. The rule was held; this is its first and only application.
+
+**WHAT THIS AMENDMENT DOES NOT CLAIM.**
+- ⚠⚠ **Not that a 1×1 PAE is meaningful as a confidence.** PAE is *pairwise*; at L = 1 there is
+  one diagonal cell and no pair. ⚠ **What the rule tested was whether the campaign's comparison
+  has SUBSTRATE at L = 1 — whether there is a value to compare — and there is.** Whether
+  `14.4886` says anything about the molecule is a different question and is not answered here.
+- ⚠ **Not that the viewer gap is closed.** `F-070` stands: the panel is still silently empty at
+  spans 1 and 3, and the text landed while the cartoon gap did not.
+- ⚠ **Not that the short-span population is repaired.** `F-069` is written-not-repaired until Run
+  B freezes; **this entry keeps rows in a campaign, it does not change a span.**
+- ⚠ **Not a determinism result.** Run 2 now exists for these twenty; **Run 1 vs Run 2 is a
+  separate reading and has not been made.**
+
+**Relied on by:** `D-157 amendment 1`'s band 1–10 population, which retains its 1- and 2-residue
+rows on this outcome.
+
+---
+
 ### F-068 — ⚠⚠ The production-writing fold path had neither safety property the measurement path has — and the disqualifying fact is that **both omissions were already written down in `ARCHITECTURE.md`, on `main`, and read as design notes rather than gaps**
 
 - **Date:** 2026-09-11 · **Status:** ⚠ **OPEN.** It closes when the writing path no longer exhibits

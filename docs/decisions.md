@@ -105,6 +105,89 @@ with these 2,572 · ⚠ **none new.**
 
 ---
 
+#### D-157 amendment 1 — The cost residual is MEASURED: **16.96 hours over the 2,572**, as the sum of its bands — and the entry's own warning is confirmed, not merely allowed for: **wall time is FLAT from 1 to 44 aa, so in the three shortest bands cost is set by PROCESS COUNT, not by span length**
+
+- **Date:** 2026-09-12 · **Status:** Accepted. ⚠⚠ **A MEASUREMENT, NOT A CAMPAIGN
+  AUTHORISATION.** Task 4's 2,572 still requires (iii), which is unbuilt.
+- **Amends:** `D-157`, whose residual read *"the campaign's cost is not yet known and span length
+  may not set it … the 20-fold sample measures it; nothing here projects it."* ⚠ **Sub-entry
+  beneath its parent, consuming NO integer.**
+- **How known (`D-016`):** the 20-fold stratified sample, folded 2026-09-12 through the writing
+  path at `4a3a4e3`, owner at the keyboard, under `AMENDMENT 5` §4.2's express exception.
+  Per-fold wall time recorded by `scripts/task3_run2_folds.py` and projected by
+  `scripts/task3_timing_sample.py --project` — ⚠ **one projector, and this entry computes no
+  second one.**
+
+**THE PROJECTION, AS THE SUM OF ITS BANDS. ⚠ The total is not a figure in its own right and must
+not be quoted without this table.**
+
+| band | population | measured | mean s | band hours | share |
+|---|---|---|---|---|---|
+| 1–10 | 130 | 4 | 16.6 | 0.60 | 3.5% |
+| 11–30 | 395 | 4 | 16.5 | 1.81 | 10.7% |
+| 31–100 | 1,101 | 4 | 16.5 | 5.05 | 29.8% |
+| 101–250 | 600 | 4 | 26.3 | 4.38 | 25.8% |
+| **251–384** | **346** | 4 | **53.2** | **5.12** | **30.2%** |
+| **TOTAL** | **2,572** | **20** | | **16.96 h** | |
+
+⚠ **The naive sample-mean projection reads 18.46 hours — 1.1× the band-weighted figure.** Printed
+beside it deliberately: *the gap is the error the band weights exist to prevent*, and it is small
+here **only because the sample happens to be flat across most of its range.** ⚠⚠ **A small gap is
+not evidence the weighting was unnecessary** — it is one draw.
+
+---
+
+**⚠⚠ THE RESIDUAL IS CONFIRMED, AND THAT IS THE ENTRY'S REAL RESULT.**
+
+`D-157` warned that the per-fold 8.4 GB weight reload might dominate the short bands, in which
+case *"cost is set by process count, not by span length."* **Measured:**
+
+| span | 1 | 2 | 7 | 9 | 13 | 18 | 22 | 27 | 37 | 38 | 44 | 120 | 214 | 315 | 377 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **wall s** | 17.2 | 16.3 | 16.6 | 16.5 | 16.7 | 16.3 | 16.5 | 16.6 | 16.6 | 16.8 | 16.4 | 18.4 | 28.2 | 47.6 | 65.7 |
+
+> ⚠⚠ **A 44-residue fold costs what a 1-residue fold costs.** From 1 to 44 aa the wall time is
+> **flat at ~16.5 s**, and the fold itself is a rounding error inside it — what is being timed is
+> the process: spawn, 8.4 GB of weights, exit. **Length only starts to matter past ~120 aa.**
+
+**Consequences, stated rather than discovered later.**
+- **The three shortest bands are 1,626 of 2,572 rows — 63.2% of the census — and 7.45 hours, 44%
+  of the total, at a per-fold cost that is almost entirely fixed.** ⚠ **Shortening the short
+  spans would not make the campaign cheaper; folding fewer PROCESSES would.**
+- ⚠ **This is the price of the property, not a defect.** `F-064` measured that in-process release
+  does not restore free; `D-105`'s per-fold child is what buys the recovery, and the reload is
+  what the recovery costs. **The two are one decision and must be quoted together.**
+- ⚠ **It bears on Task 4 and is not a licence for it.** A batching design that amortised the
+  reload across several short folds would trade back exactly the property `F-064` bought — ⚠ **and
+  that trade is an owner ruling, not an optimisation.**
+
+**⚠ WHAT THIS AMENDMENT DOES NOT CLAIM.**
+- ⚠⚠ **Not that 16.96 hours is what Task 4 will cost.** It is four folds per band on one card on
+  one day, projected over a population; **n = 4 per band supports a scale, not a schedule.**
+- ⚠ **Not that the 119 excluded rows are cheap to add.** They are excluded on `F-063`/`F-064`,
+  both OPEN, and no timing here touches them.
+- ⚠ **Not a measurement of determinism.** This run wrote the Run 2 generation; **the comparison
+  against Run 1 is a separate reading and is not made here.**
+
+---
+
+**⚠ PROVENANCE OF THE 2026-09-11 NUMBERS, AND WHAT IS LOST — recorded because a later reader will
+find two runs and needs to know which is which.**
+
+The first attempt on 2026-09-11 folded **eleven** rows before it was stopped. ⚠⚠ **Its per-fold
+`peak_vram` and `wall_s` never reached the database, and the cause is the same defect** — the
+child's return value was their carrier too (`F-068 amendment 1`). They survive only in that run's
+console output: `free_before = 7,043 MiB` at all eleven, wall **33.66 s** then **18.1–20.5 s**,
+and the completion timestamps corroborate the intervals independently (21:30:38 → 21:34:25, each
+claim within 0.1 s of the prior completion).
+
+⚠ **Per-fold `peak_vram` for that run is LOST and is not worth chasing** — it is the least
+important of the three, and the clean run records it for all twenty. ⚠⚠ **Nothing in this
+amendment is computed from the 2026-09-11 figures**; they are recorded so that a reader who finds
+them does not mistake them for this projection's inputs.
+
+---
+
 ### D-156 — The five KEEL documents become five files: `decisions.md`, `findings.md` and `assumptions.md` take the `D-`/`F-`/`A-` entries out of this README, the next-free pointer gains the two namespaces it never had — and the disqualifying fact is that **the citation invariant has never once read the code**, so 71 `A-` citations in shipped Python pointed at entries that did not exist, for 38 days, behind a green gate
 
 - **Date:** 2026-09-11
