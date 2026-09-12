@@ -257,7 +257,14 @@ class FoldRecorder:
     def __init__(self, allowed: dict[int, str]) -> None:
         self.allowed = allowed                  # job_id -> accession, the 20 and no others
         self.rows: list[dict[str, Any]] = []
+        #: ⚠ Every job this run TOOK, whether it folded, refused or failed. The stop condition
+        #: counts this and never `len(self.rows)` — see the note at `should_stop`.
+        self.attempts = 0
         self._last_pf: Any = None
+
+    def attempted(self, job_id: int) -> None:
+        """Called for every claimed job, BEFORE the outcome is known."""
+        self.attempts += 1
 
     def preflight(self, real):
         def _pf(length, dtype, chunk_size, **kw):
@@ -317,6 +324,7 @@ def make_fold_callable(rec: "FoldRecorder", pae_post_fn, fold_fn, preflight_fn):
     behaviourally against both rather than by comparing source text.
     """
     def _fold_one(spec):
+        rec.attempted(spec.job_id)
         t0 = time.time()
         result = fold_from_spec_ref()(spec, fold_fn,
                                       pae_post_fn=pae_post_fn,
@@ -335,6 +343,31 @@ def fold_from_spec_ref():
     """Indirection so the seam is importable without pulling `worker.main` at module import."""
     from worker.main import fold_from_spec                # noqa: PLC0415
     return fold_from_spec
+
+
+def cuda_ready() -> tuple[bool, str]:
+    """Can THIS interpreter fold? ⚠⚠ CHECKED BEFORE THE FIRST CLAIM, NOT DISCOVERED ON IT.
+
+    ⚠ Learned by spending twenty of them. The run was started under the interpreter on `PATH`,
+    which carries **`torch 2.13.0+cpu`**: `torch.cuda.is_available()` is False, so `preflight`
+    could not read free VRAM, every fold was correctly REFUSED as `refused_no_measurement` — and
+    `run_worker` reported each refusal as a deterministic failure, marking all twenty `failed`
+    without a single fold being attempted. The GPU was idle at 7,899 MiB free throughout.
+
+    ⚠⚠ **The gate behaved exactly as designed; the campaign was started in a process that could
+    never satisfy it.** This is the precondition that was checkable before anything was spent and
+    was not checked — the class this repository keeps recording, one layer out from the fold.
+    """
+    try:
+        import torch                                    # noqa: PLC0415
+    except Exception as exc:                            # pragma: no cover - environment
+        return False, f"torch does not import here ({exc})"
+    if not torch.cuda.is_available():
+        return False, (f"torch {torch.__version__} in {sys.executable} reports "
+                       f"cuda.is_available() = False. A CPU build cannot fold and cannot read "
+                       f"free VRAM, so every preflight would refuse with refused_no_measurement "
+                       f"and every job would be marked failed without a fold being attempted.")
+    return True, f"torch {torch.__version__}, cuda available"
 
 
 def worker_tier() -> str:
@@ -404,6 +437,14 @@ def fold(owner: bool) -> int:
     print("  (a NULL-tier or other-tier pending job is NOT counted here - the claim's own "
           "predicate is strict, so nothing else is reachable from this run.)")
 
+    ok, why = cuda_ready()
+    print(f"interpreter check: {why}")
+    if not ok:
+        print(f"REFUSING: {why}", file=sys.stderr)
+        print("Run this under the CUDA interpreter (.venv/Scripts/python.exe on this host).",
+              file=sys.stderr)
+        return 1
+
     if not owner:
         print("\nDRY RUN - no fold ran. Re-run with --i-am-the-owner to fold.")
         return 0
@@ -422,12 +463,62 @@ def fold(owner: bool) -> int:
         run_worker(client, _fold_one, config.worker_id,
                    poll_interval=config.poll_interval,
                    tier=tier,
-                   should_stop=lambda: len(rec.rows) >= SAMPLE_N)
+                   # ⚠⚠ ATTEMPTS, NOT RECORDINGS. `rec.rows` only grows on a fold that
+                   # RETURNED; a refused fold records nothing, so counting rows meant a run in
+                   # which everything refused could never reach its own stop condition. It
+                   # didn't: twenty refusals left the loop polling an empty queue until it was
+                   # killed by hand. A stop condition unreachable in the failure case is not a
+                   # stop condition.
+                   should_stop=lambda: rec.attempts >= SAMPLE_N)
     finally:
         # ⚠ Written even on a mid-run stop. A campaign that dies at fold 11 and records nothing
         # has cost eleven folds and bought nothing.
         path = rec.write()
         print(f"\nrecorded {len(rec.rows)} fold(s) to {_rel(path)}")
+    return 0
+
+
+def requeue(owner: bool) -> int:
+    """Put the twenty back to `pending` after a run that failed them without folding.
+
+    ⚠⚠ BY JOB ID, NEVER BY ACCESSION. `core.enqueue.requeue_jobs` keys on the accession, and
+    every one of these twenty has TWO jobs — the Run 1 original and this campaign's Run 2 row.
+    Requeuing by accession would reach a Run 1 job as well if it were ever non-complete, which is
+    `F-024` exactly: a non-unique match taking a row nobody asked for. These ids are held in
+    `enqueued.json` and nothing else is touched.
+    """
+    if not ENQUEUED_JSON.is_file():
+        print(f"refusing: {_rel(ENQUEUED_JSON)} does not exist.", file=sys.stderr)
+        return 1
+    enqueued = {int(e["job_id"]): e for e in json.loads(ENQUEUED_JSON.read_text(encoding="utf-8"))}
+
+    from sqlalchemy import select                        # noqa: PLC0415
+    from sqlalchemy.orm import Session                   # noqa: PLC0415
+
+    from db.models import JobRecord                      # noqa: PLC0415
+
+    with Session(_engine()) as s:
+        jobs = s.scalars(select(JobRecord).where(JobRecord.id.in_(list(enqueued)))).all()
+        if len(jobs) != len(enqueued):
+            print(f"refusing: found {len(jobs)} of {len(enqueued)} job rows.", file=sys.stderr)
+            return 1
+        # ⚠ A COMPLETE job is never reset - requeue must not destroy a good fold.
+        complete = [j.id for j in jobs if j.status == "complete"]
+        todo = [j for j in jobs if j.status != "complete"]
+        print(f"{len(todo)} job(s) to requeue; {len(complete)} already complete and left alone.")
+        for j in todo:
+            print(f"  job {j.id} ({enqueued[j.id]['accession']}): {j.status} -> pending")
+        if not owner:
+            print("\nDRY RUN - nothing was written. Re-run with --i-am-the-owner.")
+            return 0
+        for j in todo:
+            j.status = "pending"
+            j.error = None
+            j.worker_id = None
+            j.claimed_at = None
+            j.attempts = 0          # a deliberate operator retry gets a full budget (D-044)
+        s.commit()
+    print(f"\nrequeued {len(todo)} job(s).")
     return 0
 
 
@@ -575,6 +666,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="python scripts/task3_run2_folds.py")
     ap.add_argument("--enqueue", action="store_true", help="write the 20 Run 2 rows")
     ap.add_argument("--fold", action="store_true", help="fold them under the gate, recording")
+    ap.add_argument("--requeue", action="store_true",
+                    help="put the twenty back to pending after a run that failed them")
     ap.add_argument("--report", action="store_true", help="the three answers")
     ap.add_argument("--persistence", action="store_true", help="the four outcomes, from the DB")
     ap.add_argument("--i-am-the-owner", dest="owner", action="store_true",
@@ -584,6 +677,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         return enqueue(args.owner)
     if args.fold:
         return fold(args.owner)
+    if args.requeue:
+        return requeue(args.owner)
     if args.persistence:
         return persistence(args.owner)
     if args.report:

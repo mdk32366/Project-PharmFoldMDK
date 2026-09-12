@@ -413,3 +413,121 @@ def test_the_guard_asks_the_same_tier_the_run_will_pass_to_run_worker(monkeypatc
     assert _claimable(eng, T.worker_tier()) == {2: "L"}
     monkeypatch.setenv("WORKER_TIER", "rental")
     assert _claimable(eng, T.worker_tier()) == {1: "R"}
+
+
+# ── the two defects the first run exposed, and it cost twenty jobs to find them ─────────────
+
+def test_the_stop_condition_counts_ATTEMPTS_so_a_run_that_refuses_everything_terminates():
+    """⚠⚠ THE DEFECT THAT LEFT THE LOOP POLLING FOREVER.
+
+    `rec.rows` only grows on a fold that RETURNED. Every fold in the first run was refused by the
+    gate, so nothing was ever recorded, `len(rec.rows)` stayed 0, and the stop condition could
+    never be reached — the loop polled an empty queue until it was killed by hand.
+
+    ⚠ A stop condition that is unreachable in the failure case is not a stop condition.
+    """
+    rec = T.FoldRecorder({i: "A%02d" % i for i in range(1, 21)})
+    for job_id in range(1, 21):
+        rec.attempted(job_id)          # claimed, then refused: nothing is ever recorded
+    assert rec.rows == [], "the premise: a refused fold records nothing"
+    assert rec.attempts == T.SAMPLE_N
+    assert rec.attempts >= T.SAMPLE_N, "the stop condition must be reachable with zero recordings"
+
+
+def test_attempts_and_rows_agree_when_folds_actually_succeed():
+    """⚠ A-017 (c) partner: counting attempts must not stop counting successes. If `attempted`
+    were never called on the success path, the stop condition would over-run past twenty."""
+    rec = T.FoldRecorder({1: "Q8WXF7"})
+    rec.attempted(1)
+    rec.record(_Spec(1, "M"), _Result(pae=[[0.0]]), 1.0)
+    assert rec.attempts == 1 and len(rec.rows) == 1
+
+
+def _fake_torch(available, version="2.x.y+test"):
+    """A stand-in `torch` module, injected into `sys.modules`.
+
+    ⚠⚠ CI HAS NO TORCH AT ALL, and the first version of these two tests did `import torch` —
+    green on the campaign machine, `ModuleNotFoundError` on CI. The same platform-divergence
+    shape as the span cache, one file along. Injecting the module tests all THREE branches of
+    `cuda_ready` on every platform, including the one no real machine here can produce: torch
+    missing entirely.
+    """
+    import types
+
+    mod = types.ModuleType("torch")
+    mod.__version__ = version
+    mod.cuda = types.SimpleNamespace(is_available=lambda: available)
+    return mod
+
+
+def test_a_cpu_only_interpreter_is_refused_before_a_single_job_is_claimed(monkeypatch):
+    """⚠⚠ LEARNED BY SPENDING TWENTY JOBS.
+
+    The first run was started under the interpreter on PATH — `torch 2.13.0+cpu`. `preflight`
+    could not read free VRAM, every fold was correctly refused as `refused_no_measurement`, and
+    `run_worker` reported each refusal as a deterministic failure: all twenty marked `failed`
+    with **no fold attempted** and the GPU idle at 7,899 MiB free throughout.
+
+    ⚠ The gate behaved exactly as designed. The campaign was started in a process that could
+    never satisfy it, and that was checkable before anything was spent.
+    """
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch(available=False, version="2.13.0+cpu"))
+    ok, why = T.cuda_ready()
+    assert ok is False
+    assert "cuda.is_available() = False" in why
+    assert "2.13.0+cpu" in why
+    assert "failed without a fold being attempted" in why, (
+        "the refusal must say what it COSTS, not only what is wrong")
+
+
+def test_a_cuda_interpreter_passes_the_same_check(monkeypatch):
+    """⚠ A-017 (c). Without this, `cuda_ready` returning False unconditionally would pass above."""
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch(available=True, version="2.11.0+cu128"))
+    ok, why = T.cuda_ready()
+    assert ok is True and "cuda available" in why
+
+
+def test_an_interpreter_with_no_torch_at_all_is_refused_and_says_so(monkeypatch):
+    """⚠ The third branch, which no machine in this project can produce on demand — CI is the
+    only place it occurs naturally, and injecting it means it is covered everywhere."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _no_torch(name, *a, **kw):
+        if name == "torch":
+            raise ModuleNotFoundError("No module named 'torch'")
+        return real_import(name, *a, **kw)
+
+    monkeypatch.delitem(sys.modules, "torch", raising=False)
+    monkeypatch.setattr(builtins, "__import__", _no_torch)
+    ok, why = T.cuda_ready()
+    assert ok is False and "does not import here" in why
+
+
+def test_requeue_is_keyed_on_JOB_ID_and_never_on_accession():
+    """⚠⚠ F-024. Each of the twenty accessions has TWO jobs — the Run 1 original and this
+    campaign's Run 2 row — so `core.enqueue.requeue_jobs`, which keys on the accession, could
+    reach a Run 1 job. This one takes the ids from `enqueued.json` and nothing else.
+
+    ⚠ A source assertion, and it is named as the weaker kind: what it pins is the ABSENCE of a
+    call, which no behavioural test can observe without the production rows this must not touch.
+    """
+    import ast
+    import inspect
+
+    # ⚠⚠ THE DOCSTRING IS STRIPPED FIRST, AND THAT IS THE POINT. The first version of this test
+    # asserted `"requeue_jobs" not in body` and went red against its OWN docstring, which names
+    # the function precisely to explain why it is not called. A source guard that matches its own
+    # documentation is measuring the comment, not the code.
+    tree = ast.parse(inspect.getsource(T.requeue))
+    fn = tree.body[0]
+    stripped = ast.unparse(ast.Module(body=fn.body[1:], type_ignores=[]))
+    assert "requeue_jobs" not in stripped, (
+        "requeue_jobs keys on the accession and would reach Run 1")
+    body = stripped
+    assert "JobRecord.id.in_(" in body
+    # ⚠ `ast.unparse` normalises quote style, so the check must not depend on it - a guard that
+    # turns on `"` vs `'` is testing the unparser.
+    assert "j.status == 'complete'" in body, "a complete job must never be reset"
+    assert "'pending'" in body and "attempts = 0" in body
