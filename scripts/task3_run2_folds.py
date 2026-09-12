@@ -43,7 +43,7 @@ import os
 import pathlib
 import sys
 import time
-from typing import Any, Optional
+from typing import Any, NamedTuple, Optional
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
@@ -478,6 +478,62 @@ def fold(owner: bool) -> int:
     return 0
 
 
+class QueueRow(NamedTuple):
+    """One job joined to its analysis. ⚠ `pdb_path` is on `protein_analyses`, not on `jobs`."""
+
+    id: int
+    status: str
+    analysis_id: int
+    pdb_path: Optional[str]
+
+
+#: The statuses a requeue has always reset. ⚠ `complete` is deliberately absent: requeue must
+#: never destroy a good fold.
+REQUEUABLE_STATUSES = ("failed", "claimed", "pending")
+
+
+def requeue_candidates(jobs, *, artifact_is_empty):
+    """Which of these jobs should go back to `pending`.
+
+    ``jobs`` are `QueueRow`s — ⚠⚠ **a JOIN, because `pdb_path` is on `protein_analyses` and
+    `jobs` does not have the column at all.** Passing `JobRecord`s here made
+    `getattr(j, "pdb_path", None)` `None` on every row, so nothing was probed and nothing was
+    selected; `§3.2`'s report-before-write is what caught it, expecting eleven and printing zero.
+    ⚠ And the test fixture had *invented* the attribute — **the fixture-replacing-its-subject
+    pattern from this morning's method note, committed hours after writing it.**
+    ``artifact_is_empty`` is a predicate on the analysis id, **injected so the caller decides
+    where emptiness is established** — the same shape `check_fold_persistence` uses for `exists`,
+    and for the same reason: the artifact lives on the Fly volume, so a local `os.path` check
+    would misreport every row.
+
+    **Two populations, and the second is why this function exists.**
+
+    1. Anything **not** `complete` — `failed`, `claimed`, `pending`. ⚠ Unchanged behaviour: this
+       EXTENDS the predicate, it does not replace it.
+    2. ⚠⚠ **`complete` WITH a `pdb_path` WHOSE SERVED ARTIFACT IS EMPTY.** Eleven rows reached
+       that state when the child returned no fold: `run_worker` uploaded
+       `FoldResult(pdb="", …)`, marked the job complete, and the serving surface now answers
+       `200` with **zero bytes**. **Finished work that finished nothing.**
+
+    ⚠ **Skipping `complete` is right in general and wrong here**, which is why the emptiness is
+    established rather than assumed: a `complete` row with real bytes is a good fold and requeuing
+    it would destroy one.
+
+    ⚠ **Not by id range and not by `run == 2`.** A hardcoded `3698..3708` is a one-off that is
+    wrong the next time, and `run == 2` will match rows that folded correctly as soon as any do.
+    ⚠ **A `complete` row with NO `pdb_path` is a different condition** — it is neither selected
+    nor probed here, because a probe for an artifact that was never claimed asks the surface a
+    question about nothing.
+    """
+    out = []
+    for j in jobs:
+        if j.status != "complete":
+            out.append(j)
+        elif getattr(j, "pdb_path", None) and artifact_is_empty(j.analysis_id):
+            out.append(j)
+    return out
+
+
 def requeue(owner: bool) -> int:
     """Put the twenty back to `pending` after a run that failed them without folding.
 
@@ -497,21 +553,41 @@ def requeue(owner: bool) -> int:
 
     from db.models import JobRecord                      # noqa: PLC0415
 
+    from db.models import ProteinAnalysis                # noqa: PLC0415
+
     with Session(_engine()) as s:
-        jobs = s.scalars(select(JobRecord).where(JobRecord.id.in_(list(enqueued)))).all()
-        if len(jobs) != len(enqueued):
-            print(f"refusing: found {len(jobs)} of {len(enqueued)} job rows.", file=sys.stderr)
+        # ⚠ JOINED: `pdb_path` lives on `protein_analyses`. `jobs` has no such column, so a
+        # job-only query cannot answer the question this predicate asks.
+        joined = s.execute(
+            select(JobRecord, ProteinAnalysis.pdb_path)
+            .join(ProteinAnalysis, ProteinAnalysis.id == JobRecord.analysis_id)
+            .where(JobRecord.id.in_(list(enqueued)))).all()
+        if len(joined) != len(enqueued):
+            print(f"refusing: found {len(joined)} of {len(enqueued)} job rows.", file=sys.stderr)
             return 1
-        # ⚠ A COMPLETE job is never reset - requeue must not destroy a good fold.
-        complete = [j.id for j in jobs if j.status == "complete"]
-        todo = [j for j in jobs if j.status != "complete"]
-        print(f"{len(todo)} job(s) to requeue; {len(complete)} already complete and left alone.")
-        for j in todo:
-            print(f"  job {j.id} ({enqueued[j.id]['accession']}): {j.status} -> pending")
+        jobs = [j for j, _p in joined]
+        rows = [QueueRow(id=j.id, status=j.status, analysis_id=j.analysis_id, pdb_path=p)
+                for j, p in joined]
+        by_id = {j.id: j for j in jobs}
+        base = os.environ.get("TRANSPORT_URL", "https://pharmfoldmdk.fly.dev")
+        is_empty = _served_structure_is_empty(base)
+        print(f"establishing artifact emptiness against the SERVING SURFACE at {base} "
+              f"(never this filesystem)")
+        todo = requeue_candidates(rows, artifact_is_empty=is_empty)
+        todo_ids = {r.id for r in todo}
+        left = [r for r in rows if r.id not in todo_ids]
+        print(f"\n{len(todo)} job(s) to requeue; {len(left)} left alone.")
+        for j in sorted(todo, key=lambda j: j.id):
+            why = ("complete, served artifact is ZERO BYTES" if j.status == "complete"
+                   else j.status)
+            print(f"  job {j.id} ({enqueued[j.id]['accession']}): {why} -> pending")
+        for j in sorted(left, key=lambda j: j.id):
+            print(f"  job {j.id} ({enqueued[j.id]['accession']}): {j.status}, left alone")
         if not owner:
             print("\nDRY RUN - nothing was written. Re-run with --i-am-the-owner.")
             return 0
-        for j in todo:
+        for r in todo:
+            j = by_id[r.id]
             j.status = "pending"
             j.error = None
             j.worker_id = None
@@ -584,35 +660,66 @@ def report() -> int:
     return 0
 
 
-def _served_pae_exists(base_url: str):
-    """⚠⚠ `exists` MUST ASK THE SERVING SURFACE, NOT THIS LAPTOP.
+def _head_served(base_url: str, artifact: str, analysis_id: int):
+    """Fetch one served artifact and measure it. Returns ``(found, n_bytes)``.
+    ⚠ ONE probe, two questions.
 
-    `check_fold_persistence`'s default is `os.path.isfile`, which is right for a local campaign
-    and **catastrophically wrong here**: the PAE lives on the Fly volume, so a local check would
-    return `file_missing` for all twenty — a fabricated FATAL that stops a healthy campaign.
-    ⚠ Asking `GET /api/analyses/{id}/pae` is also the stronger question: a file the volume holds
-    but the surface will not serve is not persisted in any sense a reader can use.
+    ⚠⚠ **GET, NOT HEAD, AND THAT IS MEASURED RATHER THAN ASSUMED.** `HEAD
+    /api/analyses/{id}/structure` answers **`405 Method Not Allowed`, `allow: GET`** — the route
+    is declared `@read_router.get`. A HEAD-based probe therefore learns nothing about any row,
+    and the first version of this refused all twenty on the 405.
+
+    ⚠⚠ IT MUST ASK THE SERVING SURFACE, NOT THIS LAPTOP. The artifacts live on the Fly volume, so
+    an `os.path` check here would misreport every row — `check_fold_persistence`'s default of
+    `os.path.isfile` is right for a local campaign and catastrophically wrong for this one.
+    ⚠ Asking the surface is also the stronger question: a file the volume holds but the surface
+    will not serve is not persisted in any sense a reader can use.
+
+    ⚠ **A 5xx or an unreachable host RAISES.** Returning "missing" or "empty" for an outage would
+    turn a bad minute into a fabricated verdict on twenty rows.
     """
     import urllib.error          # noqa: PLC0415
     import urllib.request        # noqa: PLC0415
 
+    url = f"{base_url.rstrip('/')}/api/analyses/{analysis_id}/{artifact}"
+    req = urllib.request.Request(url, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            if not 200 <= r.status < 300:
+                return False, 0
+            # ⚠ The BODY is read and measured rather than trusting `Content-Length`. The bytes
+            # that reach a reader are the thing in question, and a header is a claim about them.
+            return True, len(r.read())
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return False, 0
+        raise SystemExit(f"refusing: {url} returned {e.code}; that is not an answer about the "
+                         f"artifact.")
+    except urllib.error.URLError as e:
+        raise SystemExit(f"refusing: cannot reach {url} ({e.reason}). An unreachable surface is "
+                         f"an absent measurement, not a missing file.")
+
+
+def _served_pae_exists(base_url: str):
+    """Does the PAE resolve on the serving surface? (`check_fold_persistence`'s `exists`.)"""
     def _exists(analysis_id: int) -> bool:
-        url = f"{base_url.rstrip('/')}/api/analyses/{analysis_id}/pae"
-        req = urllib.request.Request(url, method="HEAD")
-        try:
-            with urllib.request.urlopen(req, timeout=30) as r:
-                return 200 <= r.status < 300
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                return False
-            # ⚠ A 5xx is NOT "the file is missing". Returning False here would turn an outage
-            # into `file_missing` on every row and read as a persistence defect.
-            raise SystemExit(f"refusing: {url} returned {e.code}; that is not an answer about "
-                             f"whether the PAE resolves.")
-        except urllib.error.URLError as e:
-            raise SystemExit(f"refusing: cannot reach {url} ({e.reason}). An unreachable surface "
-                             f"is an absent measurement, not a missing file.")
+        found, _n = _head_served(base_url, "pae", analysis_id)
+        return found
     return _exists
+
+
+def _served_structure_is_empty(base_url: str):
+    """⚠⚠ Is the served STRUCTURE zero bytes? The eleven answer `200` with nothing behind it.
+
+    ⚠ `200` + zero bytes is the worst shape an absence can take — it reads as success at every
+    layer above it, which is exactly how eleven rows came to look like finished work.
+    ⚠ A **404** is NOT empty-in-this-sense: no artifact was served at all, which is a different
+    condition and is not what this predicate selects on.
+    """
+    def _is_empty(analysis_id: int) -> bool:
+        found, n = _head_served(base_url, "structure", analysis_id)
+        return bool(found) and n == 0
+    return _is_empty
 
 
 def persistence(owner: bool) -> int:
