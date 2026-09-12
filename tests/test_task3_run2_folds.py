@@ -443,6 +443,23 @@ def test_attempts_and_rows_agree_when_folds_actually_succeed():
     assert rec.attempts == 1 and len(rec.rows) == 1
 
 
+def _fake_torch(available, version="2.x.y+test"):
+    """A stand-in `torch` module, injected into `sys.modules`.
+
+    ⚠⚠ CI HAS NO TORCH AT ALL, and the first version of these two tests did `import torch` —
+    green on the campaign machine, `ModuleNotFoundError` on CI. The same platform-divergence
+    shape as the span cache, one file along. Injecting the module tests all THREE branches of
+    `cuda_ready` on every platform, including the one no real machine here can produce: torch
+    missing entirely.
+    """
+    import types
+
+    mod = types.ModuleType("torch")
+    mod.__version__ = version
+    mod.cuda = types.SimpleNamespace(is_available=lambda: available)
+    return mod
+
+
 def test_a_cpu_only_interpreter_is_refused_before_a_single_job_is_claimed(monkeypatch):
     """⚠⚠ LEARNED BY SPENDING TWENTY JOBS.
 
@@ -454,23 +471,38 @@ def test_a_cpu_only_interpreter_is_refused_before_a_single_job_is_claimed(monkey
     ⚠ The gate behaved exactly as designed. The campaign was started in a process that could
     never satisfy it, and that was checkable before anything was spent.
     """
-    import torch
-
-    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch(available=False, version="2.13.0+cpu"))
     ok, why = T.cuda_ready()
     assert ok is False
     assert "cuda.is_available() = False" in why
+    assert "2.13.0+cpu" in why
     assert "failed without a fold being attempted" in why, (
         "the refusal must say what it COSTS, not only what is wrong")
 
 
 def test_a_cuda_interpreter_passes_the_same_check(monkeypatch):
     """⚠ A-017 (c). Without this, `cuda_ready` returning False unconditionally would pass above."""
-    import torch
-
-    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch(available=True, version="2.11.0+cu128"))
     ok, why = T.cuda_ready()
     assert ok is True and "cuda available" in why
+
+
+def test_an_interpreter_with_no_torch_at_all_is_refused_and_says_so(monkeypatch):
+    """⚠ The third branch, which no machine in this project can produce on demand — CI is the
+    only place it occurs naturally, and injecting it means it is covered everywhere."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _no_torch(name, *a, **kw):
+        if name == "torch":
+            raise ModuleNotFoundError("No module named 'torch'")
+        return real_import(name, *a, **kw)
+
+    monkeypatch.delitem(sys.modules, "torch", raising=False)
+    monkeypatch.setattr(builtins, "__import__", _no_torch)
+    ok, why = T.cuda_ready()
+    assert ok is False and "does not import here" in why
 
 
 def test_requeue_is_keyed_on_JOB_ID_and_never_on_accession():
