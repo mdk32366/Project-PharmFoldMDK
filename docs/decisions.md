@@ -188,6 +188,56 @@ them does not mistake them for this projection's inputs.
 
 ---
 
+#### D-157 amendment 2 — ⚠⚠ THREE express exceptions to §4.2 in two days, and the PATTERN is the thing worth recording rather than the three authorisations
+
+- **Date:** 2026-09-12 · **Status:** Accepted as a record. ⚠ **This authorises nothing** and
+  narrows nothing already authorised.
+- **Amends:** `D-157`, which scopes the Run 2 campaign at 2,572. ⚠ **Sub-entry beneath its parent,
+  consuming NO integer.**
+- **How known (`D-016`):** the three orders, read: `AMENDMENT 5` §4.2, `AMENDMENT 8` §2, and
+  `AMENDMENT 9` §1.
+
+**THE THREE, IN ORDER, WITH WHAT EACH SAID ABOUT ITS OWN GENERALITY.**
+
+| # | when | scope | what the order itself said |
+|---|---|---|---|
+| 1 | 2026-09-11 | the `run: 1` backfill, 3,656 rows | owner at the keyboard; it *"rides along with nothing"* |
+| 2 | 2026-09-11 | Task 3's **20** timing rows | ⚠ *"does not generalise and **must not be cited** as precedent for the campaign"* |
+| 3 | 2026-09-12 | Task 4 slice 1, **342** rows | ⚠ *"for THIS SLICE ONLY"*; `(iii)` *"is not retired; it is unbuilt and deferred"* |
+
+**⚠⚠ EACH WAS RULED SEPARATELY, EACH WAS DEFENSIBLE, AND EACH DISCLAIMED THE NEXT. That is
+exactly the shape a drift takes when nobody is drifting.** No one authorisation is the error, and
+that is why the sequence rather than any member of it is what is recorded here.
+
+> **The arithmetic, stated because it is the part nobody quotes:** the rule is *fold to staging,
+> production load separate* — `(iii)`. In two days the exceptions to it have written **20**, then
+> **342** rows straight to production, plus a 3,656-row backfill. ⚠ **`(iii)` has never once been
+> exercised, and it remains unbuilt.** A rule that has been excepted at every opportunity and
+> implemented at none is not a constraint; **it is a note about an intention.**
+
+**⚠ WHAT IS GENUINELY DIFFERENT ABOUT EXCEPTION 3, kept because the reasoning was good.** Run 2
+rows are structurally invisible to the scorer (`ranking_run_id = None`, and `fit_scorer` selects
+**by** run id); the `run` label held its blast radius on its first real incident, containing
+eleven empty rows to a generation no census read looks at; the empty-artifact predicate now exists
+and is red-tested; and `(iii)`'s own justification — *a half-written production table of
+thousands* — is bounded by a 342-row enumeration held on disk by id.
+
+**⚠ AND WHAT STANDS AGAINST IT, which the order recorded and this entry keeps:** Task 3 produced
+**two distinct failure modes in two attempts**. `(iii)` was not chosen carelessly.
+
+**Consequences, stated rather than discovered later.**
+- ⚠⚠ **The remaining ~2,226 rows require a fresh ruling.** Slice 2 is not authorised by slice 1
+  having gone well; *"if it harvests OK let's do another tranche"* is an **intent**, not a
+  standing authorisation. **Do not chain slices.**
+- ⚠ **A fourth exception should be read against this table, not against its own merits alone.**
+  The test is no longer *"is this one justified?"* — all three were — but ⚠ **"is `(iii)` ever
+  going to be built, and if not, should it stop being the rule?"** That is an owner question and
+  is not answered here.
+- ⚠ **Nothing in this entry re-opens the three.** They are ruled, the rows are written, and the
+  campaign's evidence depends on them.
+
+---
+
 ### D-156 — The five KEEL documents become five files: `decisions.md`, `findings.md` and `assumptions.md` take the `D-`/`F-`/`A-` entries out of this README, the next-free pointer gains the two namespaces it never had — and the disqualifying fact is that **the citation invariant has never once read the code**, so 71 `A-` citations in shipped Python pointed at entries that did not exist, for 38 days, behind a green gate
 
 - **Date:** 2026-09-11
@@ -17340,6 +17390,37 @@ transfer to the query that will be frozen.
 > **⚠⚠ THIS IS WHAT THE CALIBRATION WAS FOR.** The amendment said: *if the ratio is flat, the
 > reasoning is wrong and that outcome is acceptable; discovering it after the freeze is not.*
 > **It is flat. It was found before the freeze. The pre-registration did its job.**
+
+---
+
+**⚠⚠ OWNER RULING ON THE RESULT, 2026-09-12: the mechanism is REPLACED, and the replacement is
+recorded as post-hoc rather than written in as though it had always been there.**
+
+The owner ruled, after seeing the calibration, that the two-arm split stands on the **measured**
+mechanism instead of the refuted one:
+
+| | |
+|---|---|
+| **Refuted, and retained above so the record shows what was believed** | *tagged undercount is largest for famous targets; the error is anti-correlated with the measurand* — ⚠ **rho = +0.026, not monotone, flat against `n_pdb`** |
+| **Ruled in its place** | ⚠ **symbol ambiguity varies across the cohort, and the two queries resolve it differently** — median ratio **1.17**, max **4.70**, and the largest undercounts fall on `PODXL` and `TNFRSF10C`, both with **zero** solved structures |
+
+**⚠⚠ THE ORIGINAL REASONING IS NOT DELETED, AND THAT IS DELIBERATE.** An amendment that quietly
+swaps its justification leaves a reader unable to tell a pre-registration from a post-hoc one.
+**The sequence is on the record: reasoning stated → calibration run → reasoning refuted → owner
+ruled a replacement, dated.** ⚠ **A substitution the reader can see is a correction; the same
+substitution made silently is the fishing `D-075` exists to prevent.**
+
+⚠ **What the replacement does NOT buy.** The refuted mechanism claimed the tagged arm's error was
+**directional** — pushing famous targets into the low-attention stratum, and therefore biasing the
+control in a knowable direction. ⚠⚠ **Ambiguity breadth carries no such direction**, so the
+disagreement clause loses its predicted sign: a divergence between the arms remains a finding
+about the proxy, but **it no longer implies which arm is the conservative one.** That is a real
+reduction in what `D-075` can conclude, and it is stated here rather than absorbed.
+
+⚠ **Both arms are still kept, and not because the new mechanism rescues the old conclusion** —
+they are kept because they demonstrably measure different things (1.00 to 4.70 across the cohort)
+and because **dropping the arm that looks worse after seeing the data is the one move this
+pre-registration exists to forbid.**
 
 ---
 
