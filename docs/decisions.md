@@ -17170,6 +17170,179 @@ annotation is a curated model of the protein, **and** HPA immunofluorescence loc
 assay-plus-interpretation. **Neither instrument is ground truth, which is why corroboration is the
 claim and confirmation is not.**
 
+#### D-075 amendment 2 — Three-arm attention control: the popularity proxy splits into a **tagged** and an **untagged** PubMed arm beside `pdb_present`, the disagreeing arm is a FINDING rather than an outlier, and `AND (protein OR gene)` is dropped from both
+
+- **Date:** 2026-09-12 · **Status:** ⚠ **PROPOSED — the owner has ruled the design; this is the
+  log record of that ruling.** ⚠⚠ **`D-075` remains a pre-registration and remains void if code
+  precedes it.** Ruled **before any freeze**, which is the only window in which amending a
+  pre-registration is a correction rather than fishing.
+- ⚠ **Numbered 2, not 1.** The order drafting this called it *amendment 1*; `D-075 amendment 1`
+  was written 2026-08-20 (the fourth, upstream confound — which sequence was folded at all).
+  **Measured against the log, not against the prose that proposed it**, which is the same rule
+  the `D-`/`F-`/`A-` integers take. ⚠ **Sub-entry beneath its parent, consuming NO integer.**
+- **Amends:** Decision 3 (the popularity-matched control) and its proxy table; Decision 4's
+  interpretation table is **extended, not replaced**.
+- **How known (`D-016`):** the owner's ruling, transcribed. ⚠ **No measurement is claimed by this
+  entry** — the calibration that tests its central reasoning is a separate read, reported
+  separately, and is required **before** the freeze.
+
+**⚠ WHAT DID NOT CHANGE, listed because an amendment that does not say so invites the reader to
+assume the rest moved too.** Decision 0's baseline and its three fragility properties · Decision
+1's feature set · Decision 2's confidence-blind biting fixture · the `pdb_present` proxy · the
+frozen-before-run discipline · the byte-identical re-run requirement · the Branch A / Branch B
+outcomes · `D-041` decision 4's no-threshold rule.
+
+---
+
+**THE PROXY TABLE, replacing Decision 3's two-row version.**
+
+| Proxy | Definition | Source | Character |
+|---|---|---|---|
+| **`pdb_present`** | 1 if the target has an experimentally solved structure in the PDB, else 0 | RCSB / UniProt xref, frozen date recorded | binary, low-noise, **unchanged** |
+| **`pub_count_tagged`** | PubMed hits for `SYMBOL[Title/Abstract]` — literal string match, no MeSH expansion | PubMed eutils, frozen query + date | ⚠ **sees ~17% of the HER2 literature; the undercount is largest for famous targets, so the error is ANTI-CORRELATED with the measurand** — disclosed, not hidden |
+| **`pub_count_atm`** | PubMed hits, untagged, MeSH Automatic Term Mapping — the gene concept, not the string | PubMed eutils, frozen query + date | ⚠ **ATM inflates symbols that are ordinary English words** — disclosed, not hidden |
+
+⚠⚠ **THREE ARMS, RUN SEPARATELY, NEVER AVERAGED INTO ONE BLESSED NUMBER.** Separate keys,
+separate bounds, separate null counts in the snapshot.
+
+**⚠ `AND (protein OR gene)` IS DROPPED FROM BOTH PUBMED ARMS.** It discards **46%** of results on
+whether two specific words appear in the abstract — ⚠⚠ **a word-presence filter presenting itself
+as a semantic one**, which is `F-047`'s class: wrong-but-plausible. It is indefensible on its own
+terms and its removal is not a tuning choice.
+
+---
+
+**WHY THREE ARMS RATHER THAN PICKING ONE, and the reasoning is falsifiable rather than aesthetic.**
+
+The cancer and ADC literature overwhelmingly writes `HER2`, not `ERBB2`. The tagged arm sees
+~17% of it, and ⚠⚠ **that undercount is not random noise — it is largest exactly where attention
+is greatest**, pushing famous targets toward the low-attention stratum and **flattening the very
+contrast the control exists to detect.** An error anti-correlated with the measurand is worse
+than a noisy one.
+
+Untagged ATM handles the synonym problem without 82 curation decisions — ⚠ **and those decisions
+would import curator-familiarity bias, which is the same confound wearing a lab coat.**
+
+**But the tagged arm is KEPT, not replaced**, and that is the load-bearing half:
+
+> ⚠⚠ **The tagged arm's weakness is itself a measurement.** If the two arms diverge sharply on
+> well-known targets and agree on obscure ones, the fame-correlation hypothesis is confirmed **by
+> measurement rather than by reasoning**. ⚠ **A sensitivity pair that reveals its own instrument
+> properties is worth more than one arm chosen by taste** — and choosing by taste is what a
+> pre-registration exists to forbid.
+
+---
+
+**AMENDMENT TO DECISION 4 — the disagreement clause.** Decision 4's table gains these rows;
+everything already in it stands.
+
+| Outcome | Reading |
+|---|---|
+| **All three arms survive** | The strongest form — the geometric signal separates from attention under **both** proxy methods and **both** query strategies |
+| **Two of three survive** | ⚠ **Qualified survival, reported AS qualified** — and **which** arm fails names the residual confound candidate |
+| **`pdb_present` survives; both `pub_count` arms do not** | The axis separates from experimental-structure attention but **not** from literature density — an informative split, reported as one |
+| **`pub_count_tagged` and `pub_count_atm` disagree** | ⚠⚠ **The disagreeing arm is a FINDING ABOUT THE PROXY, not an outlier to discard.** It measures how much the proxy's own construction drives the result, which is worth more than either arm alone |
+| **All three vanish** | Confound strengthened across both proxy methods → **Branch B**, reported prominently |
+
+⚠⚠ **THE DISAGREEING ARM IS NEVER DROPPED. Dropping the unfriendly arm after seeing it is
+precisely the fishing `D-075` exists to prevent**, and it is the one failure this design cannot
+recover from after the fact.
+⚠ **Decision 0's three fragility properties travel with every cell above**, unchanged.
+
+---
+
+**⚠ THE CALIBRATION IS REQUIRED BEFORE THE FREEZE, AND ITS RESULT MAY SHRINK THIS ENTRY.**
+
+This amendment introduces two PubMed arms with different coverage profiles on the strength of a
+stated mechanism. That mechanism is testable now: tagged-vs-untagged counts across all 82 cohort
+targets, and whether the ratio tracks an independent attention signal.
+
+> ⚠⚠ **If the ratio is FLAT, the fame-correlation reasoning is wrong and the disagreement clause
+> shrinks accordingly. That outcome is acceptable. Discovering it AFTER the freeze is not.**
+
+⚠ It is a read on the **query**, not a Run B result, and is legitimate before the freeze. **The
+freeze follows the calibration's report; they are not simultaneous.**
+
+**WHAT THIS AMENDMENT DOES NOT DO.**
+- ⚠ **It does not run, build or schedule anything.** `geom_proxy` remains unbuilt and unrun, and
+  `D-075` remains void if code precedes it.
+- ⚠ **It does not choose between the arms**, now or later.
+- ⚠⚠ **It does not soften what goes on the snapshot's face:** *the proxies are frozen KNOWING Run
+  A survived.* That sentence is not moved to a footnote by this or any amendment.
+
+---
+
+**⚠⚠ THE CALIBRATION HAS RUN, AND IT DOES NOT SUPPORT THE MECHANISM ABOVE. Recorded here, against
+the clause it bears on, rather than in a report nobody re-reads.**
+
+- **Date:** 2026-09-12 · **How known (`D-016`):** both arms fetched for all **82** cohort symbols
+  via `scripts/attention_calibration.py --run` — `PUBMED_ENDPOINT` verbatim from
+  `scripts/attention_control.py`, `AND (protein OR gene)` dropped from both arms per this
+  amendment, NCBI's 3 req/s respected. Independent attention signal: `n_pdb`, the PDB entry count
+  per accession, measured 2026-09-11 and carried as `data/derived/cohort82_pdb_coverage.csv`.
+  ⚠ **A failed fetch returns `None`, never `0`** — 0 of 82 were null.
+
+**THE CLAIM UNDER TEST**, as this amendment states it: *the tagged undercount is largest for
+famous targets*, so `atm / tagged` should **rise** with an independent measure of fame.
+
+| measure | value |
+|---|---|
+| Spearman **rho(ratio, n_pdb)** | ⚠⚠ **+0.026** |
+| mean ratio by `n_pdb` quartile, low → high | **1.40 · 1.31 · 1.56 · 1.31** — not monotone |
+| mean ratio, the **10 most** PDB entries | **1.409** |
+| mean ratio, the **10 fewest** PDB entries | **1.420** |
+| ratio range | 1.00 – 4.70, median **1.17** |
+
+> ⚠⚠ **THE RATIO IS FLAT AGAINST FAME.** The ten most-solved targets and the ten least-solved
+> have the same mean ratio to three significant figures — **1.409 against 1.420**, and if
+> anything it tilts the wrong way.
+
+**⚠⚠ AND THE REASONING GENERALISED FROM ONE EXAMPLE, WHICH THE DATA NAMES.**
+
+| symbol | ratio | `n_pdb` | |
+|---|---|---|---|
+| **PDGFRB** | **4.70** | 8 | the largest undercount in the cohort |
+| **PODXL** | **3.36** | ⚠ **0** | second largest, and **no solved structure at all** |
+| **TNFRSF10C** | **3.10** | ⚠ **0** | third, likewise |
+| **ERBB2** | 2.31 | 63 | ⚠ **the case the amendment was reasoned from — 5th of 82** |
+| **EGFR** | 1.43 | **385** | ⚠⚠ **the most-solved target in the cohort ranks 26th** |
+| **CD3G** | **1.00** | 38 | tagged and untagged identical, 38 structures |
+
+**What actually drives the ratio is SYNONYM BREADTH, not attention.** `PODXL` (podocalyxin),
+`TNFRSF10C` (DcR1 / TRAIL-R3) and `PDGFRB` expand widely under MeSH; `CD3G` does not expand at
+all. ⚠ **Two of the three largest undercounts have ZERO solved structures**, which is the
+opposite of the stated mechanism.
+
+⚠ **The motivating figure does not reproduce either.** This amendment cites the tagged arm seeing
+*~17%* of the HER2 literature; under the query it actually specifies, `ERBB2` tagged is **43%** of
+untagged (11,474 of 26,515). The ~17% was measured against a different denominator and does not
+transfer to the query that will be frozen.
+
+---
+
+**WHAT THIS DOES AND DOES NOT CHANGE. ⚠ The measurement is Code's; the design is the owner's.**
+
+- ⚠⚠ **The stated justification for the disagreement clause is NOT SUPPORTED**, and by this
+  amendment's own terms *"the disagreement clause shrinks accordingly."* **Whether and how far it
+  shrinks is an owner ruling and is not made here.**
+- ⚠ **It is NOT an argument for dropping either arm.** The arms still differ — median ratio 1.17,
+  max 4.70 — so they still measure different things; what is refuted is **why** they differ.
+  ⚠⚠ **Dropping the tagged arm on this result would be the fishing `D-075` exists to prevent**,
+  and this entry is not a licence for it.
+- ⚠ **The two-arm design may well survive on a different justification** — *symbol ambiguity
+  varies across the cohort and the two queries resolve it differently* is a defensible reason to
+  keep both, and it is **measured** rather than reasoned. But it is a different claim from the one
+  written above, and substituting it silently would be rewriting a pre-registration after seeing
+  data.
+- ⚠ **Nothing is frozen by this.** No enrichment was computed, no fold touched. **The freeze
+  follows this report; they are not simultaneous.**
+
+> **⚠⚠ THIS IS WHAT THE CALIBRATION WAS FOR.** The amendment said: *if the ratio is flat, the
+> reasoning is wrong and that outcome is acceptable; discovering it after the freeze is not.*
+> **It is flat. It was found before the freeze. The pre-registration did its job.**
+
+---
+
 ### D-074 — A finding against an instrument is not closed until the instrument no longer exhibits it — or carries, in itself, the statement of what it gets wrong
 
 - **Date:** 2026-07-30
