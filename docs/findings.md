@@ -388,6 +388,88 @@ weight reload is a direct consequence of repairing the second half.
 
 ---
 
+#### F-068 amendment 1 — ⚠⚠ A THIRD instance of the same shape, found by RUNNING the writing path; and the gate's first live save, which is the other half of the same day
+
+- **Date:** 2026-09-12 · **Status:** ⚠ **The finding stays OPEN.** The third instance is repaired
+  on a branch, and `D-074` is unchanged: a branch is not a closure.
+- **Amends:** `F-068`, which recorded two instances — the missing envelope gate and the missing
+  per-fold topology. ⚠ **Sub-entry beneath its parent, consuming NO integer.**
+- **How known (`D-016`):** the 20-fold Run 2 sample was run on 2026-09-11 and **stopped by hand at
+  fold 11**; `GET /api/analyses/{3698,3706}/structure` read live; `worker/rb_tile_child.py` read in
+  full. ⚠ **No new fold was run for this entry.**
+
+**INSTANCE 3 — THE CHILD NEVER RETURNED THE FOLD.**
+
+`one_shot_child_main` puts `{ok, wall_s, peak_vram}` on its queue and nothing else.
+`process_per_fold_fn` reads `rec.get("result")`, gets `None`, and builds
+`FoldResult(pdb="", plddt=[], pae=None)`. `run_worker` uploads that and marks the job complete.
+
+| measured | |
+|---|---|
+| jobs completed before the run was stopped | **11** (3698–3708) |
+| `GET /api/analyses/3698/structure` | ⚠⚠ **`200`, ZERO BYTES** |
+| `mean_plddt` on all eleven | `NULL` |
+| `pae` on all eleven | `NULL` |
+
+⚠⚠ **The same shape as instances 1 and 2, and it is now a pattern rather than a coincidence: a
+component built for the MEASUREMENT path, adopted by the WRITING path, missing the property the
+writing path needs.** The child withholds the result **deliberately** — the measurement path
+writes its artifacts *in* the child and reads only timing and peak. **Nothing was wrong with it
+until something that needed the fold itself called it.**
+
+> ⚠ **What generalises is not "check the child".** It is that `F-068` names a MIGRATION, and a
+> migration inherits every assumption the original made about its own caller. **Two of the three
+> instances were invisible to reading and visible on the first real run.**
+
+**⚠⚠ AND THE TEST COULD NOT HAVE CAUGHT IT, WHICH IS ITS OWN NOTE** —
+`tests/test_worker_process_per_fold.py`'s stub **invented** a `{"result": {…}}` key, and a test
+named `test_the_full_fold_result_comes_back_across_the_boundary` passed against it. **That is
+`A-017` inverted and it is recorded separately** (⚠ *a fixture that replaced its subject* is a
+different defect from `F-050`'s *guards that cannot fail*, and merging them would blur the
+denominator).
+
+---
+
+**⚠⚠ THE OTHER HALF OF THE SAME DAY, AND IT BELONGS HERE RATHER THAN NOWHERE: THE GATE'S FIRST
+LIVE SAVE.**
+
+The first attempt at the same 20 folds ran under the interpreter on `PATH` — **`torch
+2.13.0+cpu`**. `torch.cuda.is_available()` is `False` there, so `preflight` could not read free
+VRAM and returned `refused_no_measurement`. **All twenty were routed out before the GPU. Nothing
+was folded, nothing was written, and the card sat idle at 7,899 MiB free throughout.**
+
+> ⚠⚠ **This is the gate `F-068` exists about, doing on its first live outing exactly what it was
+> landed for: refusing on an ABSENT measurement rather than assuming.** `requirement_mib=None`
+> being a refusal and not a permission is not a stylistic preference — it is the difference
+> between twenty no-ops and twenty folds on a card whose free VRAM nobody could read.
+
+⚠ **Stated with its limit.** The gate did not detect the CPU interpreter; it detected an absent
+measurement, which that interpreter happens to produce. **The precondition was checkable in
+advance and was not checked** — `scripts/task3_run2_folds.py` now refuses on it before the first
+claim, and *that* is the repair.
+
+⚠ **Two costs, named rather than folded into the save:** twenty jobs were marked `failed` by
+`run_worker`'s deterministic-failure path, and the run polled an empty queue until it was killed
+because the stop condition counted **recorded** folds and a refused fold records nothing.
+
+---
+
+**WHAT THIS AMENDMENT DOES NOT CLAIM.**
+- ⚠ **Not that `F-068` may close.** Three instances, one repaired on a branch, and `D-074` wants
+  the instrument to stop exhibiting it — measured after the fix lands, not asserted by it.
+- ⚠ **Not that the eleven rows are harmless.** They are `complete` with empty artifacts and they
+  need a disposition; ⚠ **they are invisible to every census read only because they carry
+  `run: 2`**, which is the partition doing its job on its first real incident and not a reason to
+  leave them.
+- ⚠⚠ **Not that the run's measurements are void.** Free VRAM read **7,043 MiB at every one of
+  folds 1–11**, equal to at-rest — `D-105`'s topology on the writing path delivers exactly what
+  `F-064` measured the absence of, and **that is now measured rather than assumed.**
+- ⚠ **Not a claim about PAE at L = 1.** `pae = NO` on every fold **including 37 aa**, because
+  nothing returned PAE at all. ⚠⚠ **`Q8WXF7`'s pre-registered rule was NOT applied and remains
+  unspent** — applying it would have read a pipeline defect as a biological fact.
+
+---
+
 ### F-066 — The IGF2R failure recorded as a card ceiling was a fold of the full chain, 227 residues longer than the ECD span the pipeline slices; and the attempt counter recorded zero attempts
 
 - **Date:** 2026-09-02 · **Status:** ⚠ **OPEN.** It closes when the record states what job 57 actually attempted, **or** when the attribution is corrected wherever it is carried.

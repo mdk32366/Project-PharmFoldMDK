@@ -407,6 +407,19 @@ have triggered the failure it was built to verify against.*
    When `D-156` moved the entries out of `docs/README.md`, the carrier changed — and **only CI saw
    it.** Fixed by `as_posix()` **and** by correcting the carrier; both landed at `ffea42e`.
 
+   > ⚠⚠ **PLATFORM DIVERGENCE IS NOW AT THREE, AND THE LAST TWO WERE AUTHORED BY THE PARTY THAT
+   > WROTE THIS NOTE.** (2) `tests/test_task3_run2_folds.py` depended on
+   > `data/census/spancache/`, which `.gitignore:236` excludes by design — green here, red on CI.
+   > (3) the same file's interpreter tests did `import torch`, and **CI has no torch at all**.
+   > ⚠ **The useful half of (3) is what the repair bought**: injecting a stand-in module covers
+   > the *"torch missing entirely"* branch — **the one CI actually exercises, and the one that was
+   > previously untested** — so the fix ends better than the state before the failure rather than
+   > merely back at it.
+   > ⚠ **The common shape is a test that reads the MACHINE rather than the repository**: a
+   > tracked file, an untracked cache, an installed package. **Two of the three were caught only
+   > because CI is a different machine**, which is the argument for not making CI resemble the
+   > developer's box.
+
 2. **`tests/test_census_accession_route.py` — every assertion textual.** The file exists for exactly
    one behaviour: an accession present in **both** populations must resolve to its **census** row
    (`D-081`), and a cohort-only accession must be refused rather than served. Every assertion read
@@ -525,6 +538,60 @@ guard-direction sweep — the audit of whether each guard fails in the direction
 
 ⚠ **The sweep is NOT started here**, and this note does not authorise it. It records the count, the
 three instances, and the fact that the reserved integer still resolves to nothing.
+
+## Method note: a fixture that REPLACES its subject — and why this is not `F-050`
+
+Learned on 2026-09-12, from a test that passed for eleven production rows.
+
+`tests/test_worker_process_per_fold.py` injected a child stub returning
+`{"result": {"pdb": …, "plddt": …, "pae": …}}`. The **real** child,
+`worker/rb_tile_child.py::one_shot_child_main`, returns `{ok, wall_s, peak_vram}` and **no
+result at all** — deliberately, because on the measurement path the artifacts are written *in*
+the child. There was a test named **`test_the_full_fold_result_comes_back_across_the_boundary`**.
+It passed. Production shipped `FoldResult(pdb="", plddt=[], pae=None)` and uploaded **eleven
+empty structures**, each returning `200` with zero bytes from the serving surface.
+
+**⚠⚠ THE DISTINCTION, AND IT IS THE WHOLE POINT OF WRITING THIS SEPARATELY.**
+
+> **`F-050`'s population is guards that CANNOT FAIL** — a check whose assertion could not go red
+> in the direction it claims to protect.
+>
+> **This one CAN fail, and does, and is still worthless** — because what it is asserting about is
+> not the thing that runs. ⚠ **The fixture did not fail to reach the code under test. It REPLACED
+> the code under test with a producer that behaves as the test wished.**
+
+⚠ `A-017` says the fixture must reach the code under test. **This is that clause inverted**, and
+the inversion is not visible from inside the test: every assertion is behavioural, every one runs,
+and the test goes red if the *parent's* unpacking breaks. What it cannot see is that no such
+record is ever produced.
+
+⚠⚠ **DO NOT MERGE THE TWO POPULATIONS.** `F-050`'s sweep target is a count of guards that cannot
+fail; adding fixtures-that-replaced-their-subject to it would blur a denominator that already has
+three populations and one floor. **This is a fourth shape and it gets its own name.**
+
+**⚠ THE REMEDY IS STRUCTURAL, NOT A STRONGER ASSERTION.** A sharper `assert` on an invented
+record is a sharper claim about the invention. The repair was to make the fixture **produced by
+the real subject**:
+
+- the test drives the **real** `one_shot_child_main`, with **only the GPU fold faked** — the one
+  part CI genuinely cannot have;
+- the record it emits is then handed to the **parent's own unpacking expression**, so producer
+  and consumer are tested against one artifact that cannot drift;
+- and the record is round-tripped through `pickle`, because the real boundary is a
+  multiprocessing queue — ⚠ **a dict of lists crosses it and a dataclass does not cross as
+  itself**, which an in-process shape assertion would never have discovered.
+
+**⚠ WHAT TO ASK, WHEN A TEST INJECTS A PRODUCER.** Not *"is this fixture realistic?"* — realism
+is a judgement and it was satisfied here. Ask: **"what produces this shape in production, and has
+anything ever run that code?"** If the answer is a literal in the test file, the test is evidence
+about the literal.
+
+⚠ **The counter-case, so this does not read as an argument against stubs.** The stub in that same
+file that proves **a new process per fold** is sound: what it stands in for is a *process*, and
+the property under test — a different PID each call, dead before the next preflight — is the
+harness's own, not the child's. **A stub is safe exactly where the assertion does not depend on
+what the stub invented.**
+
 
 ## Log (newest first)
 
