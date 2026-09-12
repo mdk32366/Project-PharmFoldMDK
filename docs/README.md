@@ -452,6 +452,27 @@ have triggered the failure it was built to verify against.*
    > the weakest possible test of the note and still the only one available. ⚠ **It says nothing
    > about whether the habit survives the week.**
 
+   > ⚠⚠ **AND IT HAPPENED AGAIN ON 2026-09-12, AFTER COMMITTING 342 PRODUCTION ROWS.**
+   > `scripts/task4_slice1.py`'s confirmation line was `print(f"⚠ band coverage: …")`. The commit
+   > had already succeeded and `enqueued.json` was already written when `cp1252` refused the
+   > glyph, so **the rows were real and the tool had simply lost the ability to say so** — and the
+   > operator reported, reasonably, that nothing had been written. ⚠ **That is worse than a
+   > silent failure: it reported the OPPOSITE of the truth.**
+   >
+   > ⚠⚠ **FOUR INSTANCES, AND THE FIRST THREE WERE ALL WRITTEN DOWN.** The lesson is in
+   > `worker/main.py`'s comment, in the backfill's own commit, and in this note. **Prose did not
+   > prevent the fourth**, so the remedy is now a guard:
+   > **`tests/test_printed_strings_are_ascii.py`** walks the AST of the operator scripts and fails
+   > on any non-ASCII string reachable from `print()`, testing what **cp1252 and cp437 can
+   > encode** rather than merely whether the text is ASCII. ⚠ It is fed the exact line that killed
+   > the enqueue as its `A-017` (c) case, and it deliberately does **not** check docstrings or
+   > comments — those are read in an editor with no codepage problem, and a guard that strips the
+   > reasoning out of the files costs more than the defect.
+   >
+   > ⚠ **The note and the guard cite each other on purpose.** A method note with no enforcement is
+   > what produced instances two through four; a guard with no note is a rule nobody can read the
+   > reason for.
+
 5. ⚠⚠ **A FIFTH, AND IT COULD ONLY BE FOUND BY RUNNING — WHICH IS A NEW POPULATION.**
    `scripts/backfill_run_label.py` printed a `⚠` glyph in a **printed string** and died with
    `UnicodeEncodeError` on cp1252 **before reporting anything** — in a repository that already
@@ -503,6 +524,16 @@ see a defect that only a console produces.**
   > only to REPORT offenders or as a dict key compared against itself. Remaining of instance 1's
   > shape: ZERO** — `test_d143` was the one, and it is fixed. ⚠ **This is a grep with a stated
   > shape, not a sweep**, and it says nothing about guards that diverge for any other reason.
+- ⚠⚠ **REPORT BEFORE WRITE, AND IT HAS NOW OUT-CAUGHT EVERY ASSERTION IN THIS CAMPAIGN.** A tool
+  that changes production should **enumerate what it would change and stop**, so the count can be
+  confirmed against an expected one before anything moves. On 2026-09-12 that single discipline
+  caught, in one day: the `--requeue` predicate printing **0** candidates where **11** was
+  required — which surfaced **two** live defects behind green tests (`F-068 amendment 2`) — and
+  the slice-1 enqueue refusing because four of its 346 already carried a clean Run 2 row, which
+  would otherwise have written a second Run 2 row per accession and broken the generation
+  partition the campaign rests on. ⚠ **A guard that runs after committing is not a guard**, and
+  the expected count has to be stated *before* the run, or the report is a number with nothing to
+  disagree with.
 - ⚠ **A revert proof mutates the tree, so it needs COMMITTED OR STASHED state first.** One line,
   not a finding: `git checkout <file>` during a revert proof on 2026-09-11 discarded every
   uncommitted change in that file, and the work had to be re-applied from memory. ⚠⚠ **This is
