@@ -15,6 +15,7 @@ wrong process (same invariant as `worker/ceiling_climb_child.py`).
 from __future__ import annotations
 
 import multiprocessing as mp
+import dataclasses
 import time
 from typing import Any, Optional
 
@@ -46,6 +47,27 @@ def one_shot_child_main(payload: dict[str, Any], res_q) -> None:  # pragma: no c
         if out_dir:
             write_artifacts(result, out_dir)
         rec.update(ok=True, wall_s=round(time.time() - t0, 2))
+        # ⚠⚠ THE WRITING PATH NEEDS THE FOLD ITSELF; THE MEASUREMENT PATH DOES NOT, AND MUST NOT
+        # BE MADE TO CARRY IT. `scripts/rb_local_tile_folds.py` writes its artifacts HERE, in the
+        # child, and reads only timing and peak — so returning a full PDB, per-residue pLDDT and
+        # an L x L PAE through the queue on every tile would be a cost it never asked for.
+        #
+        # ⚠ Opt-in, because this child was built for that path and adopted by the other.
+        # `worker.main.process_per_fold_fn` reads `rec["result"]`; without this key it built
+        # `FoldResult(pdb="", plddt=[], pae=None)` and ELEVEN EMPTY STRUCTURES were uploaded to
+        # production and marked complete — `GET /api/analyses/3698/structure` returned 200 with
+        # zero bytes. `F-068`'s shape a THIRD time: a component built for the measurement path,
+        # adopted by the writing path, missing the property the writing path needs.
+        #
+        # ⚠ Packed as PLAIN DATA. `FoldProvenance` is a dataclass and the parent rebuilds it with
+        # `FoldProvenance(**prov)`, so it must cross as a dict, not as itself.
+        if payload.get("return_result"):
+            rec["result"] = {
+                "pdb": result.pdb,
+                "plddt": result.plddt,
+                "pae": result.pae,
+                "provenance": dataclasses.asdict(result.provenance) if result.provenance else None,
+            }
     except Exception as e:  # noqa: BLE001 — the child must never die on a fold
         rec.update(
             ok=False,

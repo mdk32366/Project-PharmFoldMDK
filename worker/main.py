@@ -158,6 +158,13 @@ def process_per_fold_fn(*, child_target: Optional[Callable[..., Any]] = None,
             "ecd_start": kw.get("ecd_start"),
             "ecd_end": kw.get("ecd_end"),
             "memory_fraction": memory_fraction,
+            # ⚠⚠ THE WRITING PATH MUST ASK. `one_shot_child_main` returns timing and peak only
+            # unless this is set, because the MEASUREMENT path writes its artifacts in the child
+            # and must not be made to ship a PDB, per-residue pLDDT and an L x L PAE through a
+            # queue it never reads. Without this key the unpacking below built
+            # `FoldResult(pdb="", plddt=[], pae=None)` and eleven empty structures were uploaded
+            # to production and marked complete.
+            "return_result": True,
         }
         t0 = time.time()
         spawn_kw: dict[str, Any] = {"target": child_target}
