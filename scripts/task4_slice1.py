@@ -232,9 +232,13 @@ def enqueue(owner: bool) -> int:
 class SliceRun:
     """The unattended campaign's state: progress on disk, and every stop condition reachable."""
 
-    def __init__(self, allowed: dict[int, dict], base_url: str) -> None:
+    def __init__(self, allowed: dict[int, dict], base_url: str, *,
+                 progress_csv: Optional[pathlib.Path] = None) -> None:
         self.allowed = allowed
         self.base_url = base_url
+        # ! Resolved at construction, not at import, so a caller with its own campaign writes its
+        # own record - and slice 1's tests, which monkeypatch the module constant, still work.
+        self.progress = progress_csv or PROGRESS_CSV
         self.rec = FoldRecorder({jid: e["accession"] for jid, e in allowed.items()})
         self.started = time.time()
         self.last_progress = time.time()
@@ -252,21 +256,21 @@ class SliceRun:
         # is ~35 s old. Progress therefore lags by one fold and the final row is flushed at the
         # end.
         self._held: Optional[dict[str, Any]] = None
-        OUT_DIR.mkdir(parents=True, exist_ok=True)
-        if not PROGRESS_CSV.is_file():
-            with open(PROGRESS_CSV, "w", newline="", encoding="utf-8") as fh:
+        self.progress.parent.mkdir(parents=True, exist_ok=True)
+        if not self.progress.is_file():
+            with open(self.progress, "w", newline="", encoding="utf-8") as fh:
                 csv.DictWriter(fh, fieldnames=PROGRESS_COLUMNS).writeheader()
             self.done = 0
         else:
             # ! RESUME. The rows already recorded are folds already done, so the completion
             # count must start from them or a resumed run can never reach its own target and
             # would idle out instead of finishing.
-            with open(PROGRESS_CSV, encoding="utf-8") as fh:
+            with open(self.progress, encoding="utf-8") as fh:
                 self.done = sum(1 for _ in csv.DictReader(fh))
 
     # ⚠ Appended per fold, never buffered to the end.
     def _append(self, row: dict[str, Any]) -> None:
-        with open(PROGRESS_CSV, "a", newline="", encoding="utf-8") as fh:
+        with open(self.progress, "a", newline="", encoding="utf-8") as fh:
             csv.DictWriter(fh, fieldnames=PROGRESS_COLUMNS).writerow(row)
 
     def after_fold(self, spec, result) -> None:
@@ -399,7 +403,8 @@ def fold(owner: bool) -> int:
     run = SliceRun(enqueued, base)
     config = config_from_env()
     client = build_client(config)
-    inner = make_fold_callable(run.rec, client.persist_pae, process_per_fold_fn(), real_preflight)
+    inner = make_fold_callable(run.rec, client.persist_pae, process_per_fold_fn(),
+                               real_preflight, total=len(enqueued))
 
     def _fold_one(spec):
         # ⚠ ONE assembly, reused. `make_fold_callable` is the seam pinned against `worker.main`'s

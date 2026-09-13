@@ -311,7 +311,7 @@ class FoldRecorder:
         return FOLDS_CSV
 
 
-def make_fold_callable(rec: "FoldRecorder", pae_post_fn, fold_fn, preflight_fn):
+def make_fold_callable(rec: "FoldRecorder", pae_post_fn, fold_fn, preflight_fn, total=None):
     """The fold callable `run_worker` drives — ⚠ ASSEMBLED FROM `worker.main`'s PARTS, NOT REBUILT.
 
     ⚠⚠ THIS IS THE ONE PLACE THIS SCRIPT COULD DIVERGE FROM PRODUCTION, so it is extracted and
@@ -331,7 +331,11 @@ def make_fold_callable(rec: "FoldRecorder", pae_post_fn, fold_fn, preflight_fn):
                                       preflight_fn=rec.preflight(preflight_fn))
         rec.record(spec, result, time.time() - t0)
         r = rec.rows[-1]
-        print(f"[{r['fold_index']:>2}/{SAMPLE_N}] {r['accession']:<12} {r['span_aa']:>4} aa  "
+        # ! The denominator is the CALLER's population, not this module's SAMPLE_N. Slice 1's log
+        # read "[ 6/20]" beside its own "[ 6/342]" because this was hardcoded to the Task 3
+        # sample - a wrong number in a log line that a reader has no way to discount.
+        print(f"[{r['fold_index']:>2}/{total or SAMPLE_N}] {r['accession']:<12} "
+              f"{r['span_aa']:>4} aa  "
               f"wall={r['wall_seconds']:>7.2f}s  free_before={r['free_mib_before']} MiB  "
               f"peak={r['peak_vram_mib']} MiB  pae={'yes' if r['emitted_pae'] else 'NO'}",
               flush=True)
