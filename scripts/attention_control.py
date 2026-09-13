@@ -52,6 +52,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Optional
@@ -69,6 +70,105 @@ PUBMED_ENDPOINT = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 UNIPROT_ENDPOINT = "https://rest.uniprot.org/uniprotkb/{accession}.json"
 
 PROXY_NAMES = ("pdb_present", "pub_count")
+
+# ── D-075 amendment 2: the three arms. `AND (protein OR gene)` is DROPPED from both PubMed
+# arms - it discarded 46% of results on whether two specific words appear in an abstract, a
+# word-presence filter presenting as a semantic one (F-047's class). The template above is
+# retained unchanged because an existing snapshot records it; these are the arms that will be
+# frozen from here. ──
+PUBMED_TAGGED_TEMPLATE = "{symbol}[Title/Abstract]"
+PUBMED_ATM_TEMPLATE = "{symbol}"
+#: NCBI allows 3 requests/second without a key.
+NCBI_DELAY_S = 0.40
+PROXY_NAMES_V2 = ("pdb_present", "pub_count_tagged", "pub_count_atm")
+
+
+def parse_pdb_present(body: bytes) -> int:
+    """1 if UniProt lists an experimentally solved PDB structure, else 0. PURE and STRICT.
+
+    !! THE NEGATIVE CASE IS THE HARD ONE AND IT IS PINNED TO A RECORDED RESPONSE. `E2RYF6` has
+    `uniProtKBCrossReferences` PRESENT with 55 entries and ZERO of them PDB. So:
+
+      - "is the key missing?"          -> wrong, it is there
+      - "is the list empty?"           -> wrong, it has 55 entries
+      - "any structure database?"      -> !! WRONG, and dangerously: E2RYF6 carries an
+                                          AlphaFoldDB entry, and AlphaFold is a PREDICTION, not
+                                          a solved structure (`A-014`)
+
+    ! It RAISES on a malformed body rather than returning 0. Turning garbage into a zero is how
+    a parse failure becomes a low-attention stratum - the fetcher converts the raise into `None`,
+    which is a different value with a different meaning, and that separation is the whole point.
+    """
+    doc = json.loads(body.decode("utf-8"))
+    xrefs = doc["uniProtKBCrossReferences"]
+    return 1 if any(x.get("database") == "PDB" for x in xrefs) else 0
+
+
+def parse_pub_count(body: bytes) -> int:
+    """The esearch hit count. PURE and STRICT, pinned to a recorded esearch response.
+
+    ! `esearchresult.count` arrives as a STRING in the eutils JSON, which is why this converts
+    explicitly rather than trusting the type.
+    """
+    doc = json.loads(body.decode("utf-8"))
+    return int(doc["esearchresult"]["count"])
+
+
+def _urlopen(url: str, timeout: float = 60.0):
+    """The default opener. ! Standard library only - the freeze must be reproducible from a
+    checkout, and this module is excluded from the serving image."""
+    import urllib.request                                    # noqa: PLC0415
+
+    return urllib.request.urlopen(url, timeout=timeout)
+
+
+def _fetch(url: str, parse, *, opener=None, sleep=None):
+    """Fetch, parse, and turn EVERY failure into `None`.
+
+    !! `None` IS NOT `0`, AND THAT IS THE TRAP THIS WHOLE DESIGN EXISTS AROUND. A genuine zero -
+    a target with no solved structure, a symbol with no literature - is a real measurement and
+    belongs in the low-attention stratum. A fetch that failed belongs nowhere. Returning 0 for
+    both would push every network failure into the stratum the control is trying to measure, and
+    would do it silently.
+
+    ! The delay comes BEFORE the request so the first call in a loop waits too. 82 targets x 2
+    PubMed arms is 164 calls against a 3 req/s limit, and a throttled run records real absences
+    as fetch failures.
+    """
+    (sleep or time.sleep)(NCBI_DELAY_S)
+    try:
+        with (opener or _urlopen)(url, timeout=60.0) as r:
+            body = r.read()
+        return parse(body)
+    except Exception:                                        # noqa: BLE001 - every failure is None
+        return None
+
+
+def fetch_pdb_present(accession, *, opener=None, sleep=None):
+    """0 / 1 / None for one accession. ! `None` only on failure; a real absence is `0`."""
+    return _fetch(UNIPROT_ENDPOINT.format(accession=accession), parse_pdb_present,
+                  opener=opener, sleep=sleep)
+
+
+def _esearch_url(term: str) -> str:
+    import urllib.parse                                      # noqa: PLC0415
+
+    params = urllib.parse.urlencode({"db": "pubmed", "term": term, "retmode": "json",
+                                     "retmax": 0})
+    return f"{PUBMED_ENDPOINT}?{params}"
+
+
+def fetch_pub_count_tagged(symbol, *, opener=None, sleep=None):
+    """`SYMBOL[Title/Abstract]` - a literal string match, no MeSH expansion."""
+    return _fetch(_esearch_url(PUBMED_TAGGED_TEMPLATE.format(symbol=symbol)), parse_pub_count,
+                  opener=opener, sleep=sleep)
+
+
+def fetch_pub_count_atm(symbol, *, opener=None, sleep=None):
+    """Bare `SYMBOL` - ! no field tag, so MeSH Automatic Term Mapping resolves the gene CONCEPT
+    rather than matching the STRING."""
+    return _fetch(_esearch_url(PUBMED_ATM_TEMPLATE.format(symbol=symbol)), parse_pub_count,
+                  opener=opener, sleep=sleep)
 
 
 # ── pure: the matched control ────────────────────────────────────────────────
