@@ -217,3 +217,158 @@ def test_the_fetchers_use_the_standard_library_only():
     src = (REPO / "scripts" / "attention_control.py").read_text(encoding="utf-8")
     for banned in ("import requests", "import httpx", "import aiohttp"):
         assert banned not in src
+
+
+# ── the three-arm snapshot (D-075 amendment 2) ──────────────────────────────────────────────
+
+TARGETS = [("ERBB2", "P04626"), ("MUC22", "E2RYF6"), ("BROKEN", "X00000")]
+
+
+def _snap(**over):
+    """Build a three-arm snapshot with injected fetchers. `BROKEN` fails every arm."""
+    def pdb(acc):
+        return None if acc == "X00000" else (1 if acc == "P04626" else 0)
+
+    def tagged(sym):
+        return None if sym == "BROKEN" else {"ERBB2": 11474, "MUC22": 12}[sym]
+
+    def atm(sym):
+        return None if sym == "BROKEN" else {"ERBB2": 26515, "MUC22": 31}[sym]
+
+    kw = dict(frozen_date="2026-09-12", fetch_pdb_present=pdb,
+              fetch_pub_count_tagged=tagged, fetch_pub_count_atm=atm)
+    kw.update(over)
+    return A.build_snapshot(TARGETS, **kw)
+
+
+def test_the_snapshot_carries_three_proxies_separately_never_merged():
+    snap = _snap()
+    assert A.PROXY_NAMES == ("pdb_present", "pub_count_tagged", "pub_count_atm")
+    assert snap["proxy_names"] == list(A.PROXY_NAMES)
+    e = next(t for t in snap["targets"] if t["symbol"] == "ERBB2")
+    assert e["pdb_present"] == 1
+    assert e["pub_count_tagged"] == 11474
+    assert e["pub_count_atm"] == 26515
+    assert "pub_count" not in e, "the merged two-arm key must not survive the amendment"
+
+
+def test_the_snapshot_records_BOTH_query_strings_and_neither_carries_the_dropped_clause():
+    """⚠⚠ GATE 3. The query on the snapshot's face must be the query the fetchers SEND. If they
+    differ the snapshot is not frozen — it records a query that was not run."""
+    snap = _snap()
+    assert snap["pubmed_query_tagged"] == A.PUBMED_TAGGED_TEMPLATE == "{symbol}[Title/Abstract]"
+    assert snap["pubmed_query_atm"] == A.PUBMED_ATM_TEMPLATE == "{symbol}"
+    for q in (snap["pubmed_query_tagged"], snap["pubmed_query_atm"]):
+        assert "protein" not in q and "gene" not in q, "the dropped AND clause is still on the face"
+
+
+def test_the_recorded_query_is_what_the_fetcher_actually_requests():
+    """⚠ Gate 3 proven behaviourally rather than by comparing two constants to each other: the
+    URL the fetcher builds must contain the term the snapshot claims."""
+    import urllib.parse
+
+    op = _opener(_body("pubmed_ERBB2_tagged.json"))
+    A.fetch_pub_count_tagged("ERBB2", opener=op, sleep=lambda s: None)
+    sent = urllib.parse.parse_qs(urllib.parse.urlparse(op.seen[0]).query)["term"][0]
+    assert sent == _snap()["pubmed_query_tagged"].format(symbol="ERBB2")
+
+    op2 = _opener(_body("pubmed_ERBB2_untagged.json"))
+    A.fetch_pub_count_atm("ERBB2", opener=op2, sleep=lambda s: None)
+    sent2 = urllib.parse.parse_qs(urllib.parse.urlparse(op2.seen[0]).query)["term"][0]
+    assert sent2 == _snap()["pubmed_query_atm"].format(symbol="ERBB2")
+
+
+def test_the_sentence_is_on_the_snapshots_face_verbatim():
+    """⚠⚠ Unsoftened, not footnoted, not dropped."""
+    assert _snap()["note"] == "The proxies are frozen KNOWING Run A survived."
+
+
+def test_each_proxy_has_its_OWN_bound():
+    bounds = _snap()["bounds"]
+    assert set(bounds) == set(A.PROXY_NAMES)
+    assert "one bit" in bounds["pdb_present"]
+    assert "literal" in bounds["pub_count_tagged"].lower()
+    assert "automatic term mapping" in bounds["pub_count_atm"].lower()
+
+
+def test_a_failed_fetch_is_a_NULL_WITH_A_REASON_per_arm_and_never_a_zero():
+    """⚠⚠ Separate null counts, separate reasons. A failure recorded as 0 lands in the
+    low-attention stratum — the stratum the control exists to measure."""
+    snap = _snap()
+    broken = next(t for t in snap["targets"] if t["symbol"] == "BROKEN")
+    for p in A.PROXY_NAMES:
+        assert broken[p] is None
+        assert p in broken["null_reasons"]
+    ok = next(t for t in snap["targets"] if t["symbol"] == "MUC22")
+    assert ok["pdb_present"] == 0 and "null_reasons" not in ok, "a genuine zero is not a null"
+
+
+def test_the_snapshot_reports_a_null_count_per_proxy():
+    """⚠ A high null rate is a result about the instrument, so it must be readable without
+    re-deriving it from the rows."""
+    counts = _snap()["null_counts"]
+    assert counts == {"pdb_present": 1, "pub_count_tagged": 1, "pub_count_atm": 1}
+
+
+def test_the_snapshot_carries_its_face_and_n_targets():
+    snap = _snap()
+    assert snap["frozen_date"] == "2026-09-12"
+    assert snap["n_targets"] == 3
+    assert snap["uniprot_endpoint"] == A.UNIPROT_ENDPOINT
+    assert snap["pubmed_endpoint"] == A.PUBMED_ENDPOINT
+
+
+def test_build_snapshot_takes_no_clock():
+    """⚠ A date recorded by accident is not a freeze (D-075 dec 3)."""
+    import inspect
+    src = inspect.getsource(A.build_snapshot)
+    for banned in ("datetime.now", "date.today", "time.time", "utcnow"):
+        assert banned not in src
+
+
+# ── stratify across three arms ──────────────────────────────────────────────────────────────
+
+def _rows():
+    R = A.TargetRow
+    # ⚠⚠ THE NUMBERS ARE CHOSEN SO THE TWO ARMS PARTITION THE ROWS COMPLETELY DIFFERENTLY, and
+    # so that taking the MEDIAN from one arm while comparing VALUES from the other is visible:
+    #   tagged [10, 50, 100] -> median  50 -> low {B, C}, high {A}
+    #   atm    [60, 70,  80] -> median  70 -> low {A, B}, high {C}
+    # A fixture whose partitions merely differ on one row can still pass an implementation that
+    # reads one arm's median against another arm's values - that mutation was run and NOT caught
+    # by the first version of this fixture.
+    return [R("A", 0.9, 1, pdb_present=1, pub_count_tagged=100, pub_count_atm=60),
+            R("B", 0.5, 0, pdb_present=0, pub_count_tagged=10, pub_count_atm=70),
+            R("C", 0.7, 1, pdb_present=1, pub_count_tagged=50, pub_count_atm=80),
+            R("D", 0.2, 0, pdb_present=None, pub_count_tagged=None, pub_count_atm=None)]
+
+
+@pytest.mark.parametrize("proxy", ["pdb_present", "pub_count_tagged", "pub_count_atm"])
+def test_all_three_arms_stratify_and_keep_the_unknown_stratum(proxy):
+    strata = A.stratify(_rows(), proxy)
+    assert "unknown" in strata and [r.symbol for r in strata["unknown"]] == ["D"]
+    assert sum(len(v) for v in strata.values()) == 4, "no row is dropped"
+
+
+def test_the_two_pubmed_arms_split_at_their_OWN_medians():
+    """⚠⚠ THE ASSERTION THAT STOPS THE ARMS BEING ONE MEASUREMENT TWICE, and it asserts the WHOLE
+    partition rather than one row.
+
+    ⚠ Its first version checked only where `C` landed, and a falsification pass proved that
+    version VACUOUS: an implementation taking the median from the tagged arm while comparing the
+    named arm's values produced the same answer for `C` and was not caught. Each arm's median must
+    come from that arm's own values, and only a full-partition assertion sees the difference.
+    """
+    def members(strata, key):
+        return {r.symbol for r in strata.get(key, [])}
+
+    tagged = A.stratify(_rows(), "pub_count_tagged")
+    atm = A.stratify(_rows(), "pub_count_atm")
+    assert members(tagged, "pub_low") == {"B", "C"} and members(tagged, "pub_high") == {"A"}
+    assert members(atm, "pub_low") == {"A", "B"} and members(atm, "pub_high") == {"C"}
+
+
+def test_an_unknown_proxy_is_still_refused():
+    with pytest.raises(ValueError) as e:
+        A.stratify(_rows(), "pub_count")
+    assert "pub_count" in str(e.value)

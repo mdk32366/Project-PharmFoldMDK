@@ -69,7 +69,7 @@ PUBMED_QUERY_TEMPLATE = '{symbol}[Title/Abstract] AND (protein[Title/Abstract] O
 PUBMED_ENDPOINT = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 UNIPROT_ENDPOINT = "https://rest.uniprot.org/uniprotkb/{accession}.json"
 
-PROXY_NAMES = ("pdb_present", "pub_count")
+PROXY_NAMES = ("pdb_present", "pub_count_tagged", "pub_count_atm")
 
 # ── D-075 amendment 2: the three arms. `AND (protein OR gene)` is DROPPED from both PubMed
 # arms - it discarded 46% of results on whether two specific words appear in an abstract, a
@@ -182,6 +182,8 @@ class TargetRow:
     label: int                        # Group B positive (1) or not (0)
     pdb_present: Optional[int] = None
     pub_count: Optional[int] = None
+    pub_count_tagged: Optional[int] = None
+    pub_count_atm: Optional[int] = None
 
 
 @dataclass
@@ -226,12 +228,16 @@ def stratify(rows: list[TargetRow], proxy: str, *, n_bins: int = 2) -> dict[str,
         for r in known:
             strata.setdefault("pdb_absent" if r.pdb_present == 0 else "pdb_present", []).append(r)
     else:
-        counts = sorted(r.pub_count for r in known)          # type: ignore[misc]
+        # ! Each PubMed arm splits at ITS OWN median, computed over the rows present. The two
+        # arms measure different things, so a target can sit in the low stratum under one and the
+        # high stratum under the other - and that disagreement is a finding about the proxy, not
+        # a fault to reconcile.
+        counts = sorted(getattr(r, proxy) for r in known)
         if counts:
             mid = len(counts) // 2
             median = counts[mid] if len(counts) % 2 else (counts[mid - 1] + counts[mid]) / 2
             for r in known:
-                key = "pub_low" if r.pub_count <= median else "pub_high"   # type: ignore[operator]
+                key = "pub_low" if getattr(r, proxy) <= median else "pub_high"
                 strata.setdefault(key, []).append(r)
     if unknown:
         strata["unknown"] = unknown
@@ -271,42 +277,118 @@ def build_snapshot(
     *,
     frozen_date: str,
     fetch_pdb_present: Callable[[str], Optional[int]],
-    fetch_pub_count: Callable[[str], Optional[int]],
+    fetch_pub_count_tagged: Callable[[str], Optional[int]],
+    fetch_pub_count_atm: Callable[[str], Optional[int]],
 ) -> dict:
-    """Assemble the frozen proxy snapshot. **The fetchers are injected**, so the assembly logic is
-    fixture-testable with zero network access — the same seam `worker/orchestrator.py` uses for its
-    transport (D-030). A fetcher returning `None` records a null with a reason; it never guesses.
+    """Assemble the frozen three-arm proxy snapshot (`D-075 amendment 2`).
 
-    `frozen_date` is passed in rather than read from the clock, so a test can pin it and the caller
-    must state it explicitly — a date recorded by accident is not a freeze.
+    **The fetchers are injected**, so the assembly is fixture-testable with zero network access -
+    the same seam `worker/orchestrator.py` uses for its transport (D-030).
+
+    !! THREE ARMS, RECORDED SEPARATELY, NEVER MERGED INTO ONE FIELD. Separate keys, separate
+    bounds, separate null counts. Averaging them would produce one blessed number out of three
+    measurements that disagree by construction, and the disagreement is the point.
+
+    ! A fetcher returning `None` records a null WITH A REASON and never guesses. A genuine zero -
+    no solved structure, no literature - is a real measurement; conflating the two would push
+    every fetch failure into the low-attention stratum, which is the stratum the control exists
+    to measure.
+
+    ! `frozen_date` is PASSED, never read from a clock. A date recorded by accident is not a
+    freeze.
     """
+    arms = {
+        "pdb_present": fetch_pdb_present,
+        "pub_count_tagged": fetch_pub_count_tagged,
+        "pub_count_atm": fetch_pub_count_atm,
+    }
     entries = []
+    null_counts = {name: 0 for name in PROXY_NAMES}
     for symbol, accession in targets:
-        pdb = fetch_pdb_present(accession)
-        pubs = fetch_pub_count(symbol)
-        entry = {"symbol": symbol, "accession": accession,
-                 "pdb_present": pdb, "pub_count": pubs}
-        missing = [k for k in ("pdb_present", "pub_count") if entry[k] is None]
+        entry = {"symbol": symbol, "accession": accession}
+        # ! pdb_present is keyed on the ACCESSION and the PubMed arms on the SYMBOL - they are
+        # different identifiers for the same target and passing one where the other is expected
+        # would silently query the wrong thing.
+        entry["pdb_present"] = arms["pdb_present"](accession)
+        entry["pub_count_tagged"] = arms["pub_count_tagged"](symbol)
+        entry["pub_count_atm"] = arms["pub_count_atm"](symbol)
+        missing = [k for k in PROXY_NAMES if entry[k] is None]
+        for k in missing:
+            null_counts[k] += 1
         if missing:
             entry["null_reasons"] = {k: "source returned no usable value at freeze time"
                                      for k in missing}
         entries.append(entry)
     return {
         "frozen_date": frozen_date,
-        "pubmed_query_template": PUBMED_QUERY_TEMPLATE,
+        # !! THE SENTENCE, ON THE FACE, UNSOFTENED. It is not a footnote and it is not optional:
+        # the proxies were chosen and frozen AFTER Run A's result was known, and a reader who
+        # does not know that cannot weigh what follows.
+        "note": "The proxies are frozen KNOWING Run A survived.",
+        # ! Both query strings verbatim. The snapshot records the query that was RUN; if this
+        # disagrees with what the fetchers send, the snapshot is not frozen - it describes a
+        # query nobody executed.
+        "pubmed_query_tagged": PUBMED_TAGGED_TEMPLATE,
+        "pubmed_query_atm": PUBMED_ATM_TEMPLATE,
         "pubmed_endpoint": PUBMED_ENDPOINT,
         "uniprot_endpoint": UNIPROT_ENDPOINT,
         "proxy_names": list(PROXY_NAMES),
         "bounds": {
             "pdb_present": "one bit; a target with 40 structures and one with a single fragment "
-                           "are indistinguishable",
-            "pub_count": "raw hit count; conflates gene-symbol ambiguity, research era and "
-                         "disease prevalence. A weak attention proxy, as F-005 already records "
-                         "of the evidence score.",
+                           "are indistinguishable. AlphaFold does NOT count - it is a prediction, "
+                           "not a solved structure (A-014).",
+            "pub_count_tagged": "literal string match on SYMBOL[Title/Abstract], no MeSH "
+                                "expansion; misses synonym usage entirely - the community writes "
+                                "HER2 where the record says ERBB2.",
+            "pub_count_atm": "untagged, resolved by MeSH Automatic Term Mapping - the gene "
+                             "concept rather than the string; inflates symbols that are ordinary "
+                             "English words.",
         },
+        # ! A high null rate is a RESULT ABOUT THE INSTRUMENT, so it is readable here rather than
+        # re-derived from the rows by whoever thinks to look.
+        "null_counts": null_counts,
         "n_targets": len(entries),
         "targets": entries,
     }
+
+
+def cohort_targets() -> list[tuple[str, str]]:
+    """The 82 as `(symbol, accession)`. ! Read from the mapping artifact, never re-derived - the
+    same file `core.adc_reference` keys on, so the freeze and the labels cannot disagree about
+    which cohort they mean."""
+    import csv                                              # noqa: PLC0415
+
+    path = REPO / "data" / "cohort_82_mapping.csv"
+    with open(path, encoding="utf-8") as fh:
+        return [(r["symbol"], r["accession"]) for r in csv.DictReader(fh) if r.get("accession")]
+
+
+def deployed_scores_and_labels(
+    ranking_url: str = "https://pharmfoldmdk.fly.dev/api/ranking",
+) -> tuple[dict[str, float], set[str]]:
+    """`(scores, labels)` for the control.
+
+    ! Scores are READ from the SERVED ranking - `target_scores` via `/api/ranking`, the
+    pre-registered run - and never recomputed (`D-075` dec 5). Recomputing them here would make
+    the control a measurement of this script rather than of the deployed model.
+
+    ! Labels are Group B, COMPUTED BY JOIN through `core.adc_reference` rather than typed
+    (`D-040`), and mapped back to symbols because the control keys on symbol.
+    """
+    import urllib.request                                   # noqa: PLC0415
+
+    from core.adc_reference import (cohort_accessions, group_b_accessions,   # noqa: PLC0415
+                                    load_mapping, cohort_symbol_to_accession)
+
+    with urllib.request.urlopen(ranking_url, timeout=60) as r:
+        doc = json.loads(r.read().decode("utf-8"))
+    rows = doc if isinstance(doc, list) else (doc.get("rows") or doc.get("results") or [])
+    scores = {row["gene"]: float(row["score"]) for row in rows}
+
+    gb = group_b_accessions(load_mapping(), cohort_accessions())
+    by_symbol = cohort_symbol_to_accession()
+    labels = {sym for sym, acc in by_symbol.items() if acc in gb}
+    return scores, labels
 
 
 def load_snapshot(path: Path = SNAPSHOT) -> dict:
@@ -340,7 +422,8 @@ def rows_from(snapshot: dict, scores: dict[str, float], labels: set[str]) -> lis
             structural_score=scores[symbol],
             label=1 if symbol in labels else 0,
             pdb_present=entry.get("pdb_present"),
-            pub_count=entry.get("pub_count"),
+            pub_count_tagged=entry.get("pub_count_tagged"),
+            pub_count_atm=entry.get("pub_count_atm"),
         ))
     return rows
 
@@ -379,17 +462,47 @@ def run(argv: Optional[list[str]] = None) -> int:
                         help="permit overwriting an existing snapshot (recorded, never silent)")
     parser.add_argument("--control", action="store_true",
                         help="run the matched control from the frozen snapshot (never queries)")
+    parser.add_argument("--frozen-date", dest="frozen_date", default="2026-09-12",
+                        help="the freeze date, PASSED not clocked (D-075 dec 3)")
     parser.add_argument("--proxy", choices=list(PROXY_NAMES),
                         help="which frozen proxy to match on; run each separately")
     args = parser.parse_args(argv)
 
     if args.freeze:
-        print("--freeze performs live queries and is an OWNER-AUTHORISED run (D-075: no run in "
-              "the implementing PR). Wire the fetchers and invoke build_snapshot() deliberately.")
+        # !! THE REFUSAL COMES FIRST. A silent re-freeze would unfreeze the pre-registration, and
+        # the check must happen before a single query is sent.
         if SNAPSHOT.exists() and not args.refreeze:
             print(f"REFUSED: {SNAPSHOT} already exists. A silent re-freeze would unfreeze the "
                   f"pre-registration; pass --refreeze to overwrite deliberately.")
             return 2
+        targets = cohort_targets()
+        print(f"FREEZING {len(targets)} targets, three arms, {NCBI_DELAY_S}s between calls.")
+        print(f"  pdb_present      {UNIPROT_ENDPOINT}")
+        print(f"  pub_count_tagged {PUBMED_TAGGED_TEMPLATE}")
+        print(f"  pub_count_atm    {PUBMED_ATM_TEMPLATE}")
+        snap = build_snapshot(
+            targets,
+            # ! PASSED, never clocked. A date recorded by accident is not a freeze.
+            frozen_date=args.frozen_date,
+            fetch_pdb_present=fetch_pdb_present,
+            fetch_pub_count_tagged=fetch_pub_count_tagged,
+            fetch_pub_count_atm=fetch_pub_count_atm,
+        )
+        SNAPSHOT.parent.mkdir(parents=True, exist_ok=True)
+        SNAPSHOT.write_text(json.dumps(snap, indent=2, sort_keys=True), encoding="utf-8")
+        # !! CONFIRM THE WRITE FROM THE FILESYSTEM, NOT FROM REACHING THIS LINE. The previous
+        # version of this branch exited 0 having written nothing.
+        if not SNAPSHOT.exists() or SNAPSHOT.stat().st_size == 0:
+            print(f"REFUSED: {SNAPSHOT} was not written.")
+            return 2
+        print(f"wrote {SNAPSHOT} ({SNAPSHOT.stat().st_size:,} bytes)")
+        print(f"frozen_date {snap['frozen_date']} | n_targets {snap['n_targets']}")
+        # ! NULL COUNTS BEFORE ANYTHING IS INTERPRETED. A high null rate is a result about the
+        # instrument, not noise to absorb.
+        print("null counts per proxy:")
+        for name, n in snap["null_counts"].items():
+            print(f"  {name:<18}{n:>4} of {snap['n_targets']}")
+        print(snap["note"])
         return 0
 
     if args.control:
@@ -402,8 +515,11 @@ def run(argv: Optional[list[str]] = None) -> int:
         except FileNotFoundError as exc:
             print(f"REFUSED: {exc}")
             return 2
-        print(f"loaded frozen snapshot ({snapshot.get('frozen_date')}); supply the deployed scores "
-              f"and labels to rows_from() to compute the control.")
+        scores, labels = deployed_scores_and_labels()
+        rows = rows_from(snapshot, scores, labels)
+        print(f"frozen snapshot {snapshot.get('frozen_date')} | {len(rows)} rows joined to the "
+              f"served ranking | {sum(r.label for r in rows)} Group B positives")
+        print(format_report(matched_enrichment(rows, args.proxy), args.proxy, snapshot))
         return 0
 
     parser.print_help()
