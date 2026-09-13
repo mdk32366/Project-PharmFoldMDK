@@ -16,6 +16,101 @@
 
 ## Log (newest first)
 
+### F-072 — ⚠⚠ Branch A: the structural enrichment SURVIVES popularity-matching on all three frozen attention proxies — and the disqualifying fact is that **the two PubMed arms disagree by 2-of-12 and the amendment's own explanation for why they should disagree was refuted by measurement six hours before the freeze**
+
+- **Date:** 2026-09-12 · **Status:** ⚠ **RULED — Branch A, by the owner (Matt Kelly), 2026-09-12.**
+  ⚠⚠ **This entry RECORDS the ruling; it does not derive it.** The Branch A / Branch B call is
+  reserved to the owner by `D-075` decision 4, and Code is barred from writing it.
+- **How known (`D-016`):** `data/attention_proxies.json`, frozen 2026-09-12 over **82 targets**,
+  three arms, **zero nulls on every arm**; joined to the **served** `/api/ranking` — read, never
+  recomputed (`D-075` dec 5) — and to Group B computed by join (`D-040`). Each arm run
+  **separately** and each **confirmed byte-identical on re-run**.
+
+**THE THREE ARMS, NEVER AVERAGED.** The triple is median / mean / count ≥ 0.5 over the positives'
+**within-stratum** percentiles.
+
+| arm | median | mean | ≥ 0.5 | low stratum | high stratum |
+|---|---|---|---|---|---|
+| **`pdb_present`** | **0.6564** | **0.6615** | **10-of-12** | 0.5833 (n=18, 4 pos) | 0.7007 (n=38, 8 pos) |
+| **`pub_count_tagged`** | 0.5893 | 0.6310 | 9-of-12 | 0.5536 (n=28, 4 pos) | 0.6696 (n=28, 8 pos) |
+| **`pub_count_atm`** | **0.5357** | **0.5923** | **7-of-12** | 0.5417 (n=28, 3 pos) | 0.6091 (n=28, 9 pos) |
+| **`geom_proxy` UNMATCHED (the anchor)** | 0.6607 | 0.6324 | 8-of-12 | — | — |
+
+⚠ **Positives sit higher in the HIGH-attention stratum in all three arms.** Matching on attention
+did not flatten the enrichment; that is the observation Branch A was ruled on.
+
+---
+
+**⚠⚠ THE DISQUALIFYING FACT, AND IT IS NOT THAT THE ARMS DISAGREE.**
+
+They do — `pub_count_atm` is the weakest on all three statistics and falls **below** the unmatched
+anchor on count (7 against 8). `D-075 amendment 2` anticipated disagreement and ruled that **the
+disagreeing arm is a finding about the proxy, never an outlier to discard.** So far, so designed.
+
+**The problem is what the disagreement can be read as.** Amendment 2 justified the two-arm split
+on a stated mechanism: *the tagged arm undercounts famous targets, so its error is
+anti-correlated with the measurand.* ⚠⚠ **That mechanism was tested across all 82 targets six
+hours before the freeze and REFUTED** — Spearman **rho = +0.026** against PDB entry count, quartile
+means **1.40 / 1.31 / 1.56 / 1.31**, and the two largest undercounts falling on `PODXL` and
+`TNFRSF10C`, both with **zero** solved structures. The owner replaced it with **symbol ambiguity**,
+which is measured and defensible.
+
+> ⚠⚠ **AND AMBIGUITY CARRIES NO DIRECTION.** The refuted mechanism predicted *which* arm would be
+> conservative. Its replacement does not. **So `pub_count_atm` reading lower than `pub_count_tagged`
+> cannot be attributed to either arm being the safer one** — the ordering is uninterpreted, and
+> saying "the stricter arm still survives" would be reading a sign the evidence no longer carries.
+
+⚠ **This is recorded as a limit on the reading, not as an objection to the ruling.** All three arms
+were reported, none was dropped, and the owner ruled on the full set with the disagreement visible.
+
+---
+
+**⚠ WHAT BRANCH A DOES AND DOES NOT MEAN HERE.**
+
+- ⚠⚠ **The proxies were frozen KNOWING Run A survived**, and that sentence is on the snapshot's
+  face by ruling. **It is not a footnote and it travels with every citation of this entry.** The
+  control is a strong test of a *pre-registered* prediction only to the extent that the proxy
+  choice preceded the result — and it did not. **What preceded the result is the INTERPRETATION
+  TABLE (`D-075` decision 4), frozen before these numbers existed**, which is what makes the
+  ruling a reading rather than a rationalisation.
+- ⚠ **Not a claim about clinical suitability.** `D-079` dec 1 is untouched: nothing here scores,
+  ranks, or promotes any protein.
+- ⚠ **Not a claim that attention is excluded.** Decision 4's wording is *"substantially
+  excluded"*, and three proxies are three instruments, not a proof.
+
+**⚠⚠ DECISION 0's THREE FRAGILITY PROPERTIES TRAVEL WITH EVERY CELL ABOVE, unchanged and not
+softened by the ruling:**
+- **the n = 12 median is not a stable anchor** — twelve positives, and one moving row moves it;
+- **the count turns on one rank step** — `10-of-12`, `9-of-12`, `7-of-12` are each a single
+  target away from their neighbours;
+- **the gap is ten finest increments** — the separations here are small on the scale the
+  instrument can resolve.
+
+**⚠ THE DENOMINATOR, STATED RATHER THAN LEFT TO BE INFERRED.** 56 of the 82 joined to the served
+ranking; **26 were skipped because they carry no structural score — skipped, never fabricated.**
+⚠ **All 12 Group B positives are present**, so no arm's count is over a reduced positive set.
+⚠ **Zero nulls on all three proxies**, so no low-attention stratum contains a disguised fetch
+failure — which is the one way this control fails silently.
+
+---
+
+**WHAT THIS ENTRY DOES NOT CLAIM.**
+- ⚠ **Not that the two PubMed arms measure the same thing.** They demonstrably do not — ratios run
+  1.00 to 4.70 across the cohort — and their disagreement here is the designed output of that.
+- ⚠ **Not that `pdb_present` is the best arm because it is the strongest.** Picking the arm with
+  the friendliest number is the fishing `D-075` exists to forbid; it is reported first because it
+  is the binary, low-noise proxy, not because it won.
+- ⚠⚠ **Not a licence to re-run anything.** The snapshot is frozen; `--refreeze` is barred; a
+  second control run over new proxies is a new pre-registration.
+
+**Consequences.** ⚠ The freeze has completed and the verdict is ruled, so by the terms the orders
+set, **`F-069` (the short-span population), `F-070` (the silently empty viewer) and category E
+cease to be frozen as written-not-repaired.** ⚠⚠ **That lifts a bar; it does not authorise a
+repair** — each still needs its own scoping, and `D-075`'s anchor now rests on a frozen set that a
+span change would move.
+
+---
+
 ### F-071 — ⚠⚠ "Category E" is the `no_topology` breakout: the 13 have been a NAMED, PARTITIONED, SERVED disposition since `D-024`, `held_out == no_topology == 13` exactly — and the Group B claim attached to them does not survive the join, because the roster's `is_group_b` is blank on all 82 rows and **cannot hold a value**
 
 - **Date:** 2026-09-11 · **Status:** ⚠ **OPEN, and ⚠⚠ WRITTEN-NOT-REPAIRED. It MUST NOT be
