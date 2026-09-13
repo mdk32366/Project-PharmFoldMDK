@@ -1,0 +1,34 @@
+[
+  {
+    "file": "uniprot_E2RYF6.json",
+    "url": "https://rest.uniprot.org/uniprotkb/E2RYF6.json",
+    "captured": "2026-09-12",
+    "n_crossrefs": 55,
+    "n_pdb": 0,
+    "n_alphafolddb": 1,
+    "why": "negative: cross-references present, zero PDB"
+  },
+  {
+    "file": "uniprot_P04626.json",
+    "url": "https://rest.uniprot.org/uniprotkb/P04626.json",
+    "captured": "2026-09-12",
+    "n_crossrefs": 461,
+    "n_pdb": 63,
+    "n_alphafolddb": 1,
+    "why": "positive: ERBB2, PDB cross-references present"
+  },
+  {
+    "file": "pubmed_ERBB2_tagged.json",
+    "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=ERBB2%5BTitle%2FAbstract%5D&retmode=json&retmax=0",
+    "captured": "2026-09-12",
+    "term": "ERBB2[Title/Abstract]",
+    "count": "11474"
+  },
+  {
+    "file": "pubmed_ERBB2_untagged.json",
+    "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=ERBB2&retmode=json&retmax=0",
+    "captured": "2026-09-12",
+    "term": "ERBB2",
+    "count": "26515"
+  }
+]
