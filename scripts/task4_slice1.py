@@ -229,6 +229,45 @@ def enqueue(owner: bool) -> int:
 
 # ── the unattended fold ─────────────────────────────────────────────────────────────────────
 
+def strangers(session, allowed, tier: str) -> dict[int, str]:
+    """Claimable jobs OUTSIDE this campaign's population. Empty means clear to start.
+
+    !! WHY THIS EXISTS. `run_worker` claims the next job of its TIER, not "one of mine". A
+    bounded slice is only bounded if nothing else is claimable when it starts - and slice 2's
+    517-row campaign was bounded by a MANUAL check run at 05:42, which is the discipline a guard
+    exists to replace. Task 3's runner had this; neither slice inherited it.
+
+    ! THE PREDICATE IS THE CLAIM'S OWN, AND IT IS TIER-STRICT RATHER THAN NULL-ONLY. That was the
+    original error, corrected in the Task 3 runner: `core/queue.py` filters
+    `status = 'pending' AND tier = :tier`, so a NULL-tier job is claimed by nobody - and a pending
+    `rental` job is exactly as unreachable from a local worker, for the same reason. Blocking on
+    either would refuse on a job that could never have been folded; the three `tier: None` mucins
+    are the standing example.
+    """
+    from scripts.task3_run2_folds import _claimable_pending    # noqa: PLC0415 - one predicate
+
+    return {jid: acc for jid, acc in _claimable_pending(session, tier).items()
+            if jid not in allowed}
+
+
+def refuse_on_strangers(allowed, tier: str) -> int:
+    """0 if clear to start, 1 if a claimable stranger is queued. Prints either way."""
+    from sqlalchemy.orm import Session                          # noqa: PLC0415
+
+    with Session(_engine()) as s:
+        found = strangers(s, set(allowed), tier)
+    if found:
+        print(f"REFUSING: {len(found)} claimable pending job(s) outside this population "
+              f"({sorted(found.items())[:5]}). run_worker claims the next job of its TIER, not "
+              f"'one of mine' - starting now could fold a stranger into a bounded slice.",
+              file=sys.stderr)
+        return 1
+    print(f"queue check: no claimable job outside the population at tier={tier!r}")
+    print("  (a NULL-tier or other-tier pending job is NOT counted - the claim's own predicate "
+          "is strict, so nothing else is reachable from this run.)")
+    return 0
+
+
 class SliceRun:
     """The unattended campaign's state: progress on disk, and every stop condition reachable."""
 
@@ -379,6 +418,9 @@ def fold(owner: bool) -> int:
     if not ok:
         print(f"REFUSING: {why}", file=sys.stderr)
         print("Run under the CUDA interpreter (.venv/Scripts/python.exe).", file=sys.stderr)
+        return 1
+
+    if refuse_on_strangers(enqueued, worker_tier()):
         return 1
 
     base = os.environ.get("TRANSPORT_URL", "https://pharmfoldmdk.fly.dev")

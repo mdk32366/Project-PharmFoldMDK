@@ -56,7 +56,12 @@ from scripts.task3_run2_folds import (          # noqa: E402 — REUSE, do not r
     make_fold_callable,
     worker_tier,
 )
-from scripts.task4_slice1 import SliceRun, PROGRESS_COLUMNS   # noqa: E402 — the debugged machinery
+from scripts.task4_slice1 import (   # noqa: E402 — the debugged machinery, shared not copied
+    PROGRESS_COLUMNS,
+    SliceRun,
+    refuse_on_strangers,
+    strangers,
+)
 
 #: ⚠⚠ THE HARD BOUND, IN THE TOOL RATHER THAN IN THE INVOCATION.
 BAND = (1, 30)
@@ -236,6 +241,9 @@ def fold(owner: bool) -> int:
     if not ok:
         print(f"REFUSING: {why}", file=sys.stderr)
         print("Run under the CUDA interpreter (.venv/Scripts/python.exe).", file=sys.stderr)
+        return 1
+
+    if refuse_on_strangers(enqueued, worker_tier()):
         return 1
 
     base = os.environ.get("TRANSPORT_URL", "https://pharmfoldmdk.fly.dev")
