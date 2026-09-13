@@ -1,0 +1,600 @@
+{
+  "bounds": {
+    "pdb_present": "one bit; a target with 40 structures and one with a single fragment are indistinguishable. AlphaFold does NOT count - it is a prediction, not a solved structure (A-014).",
+    "pub_count_atm": "untagged, resolved by MeSH Automatic Term Mapping - the gene concept rather than the string; inflates symbols that are ordinary English words.",
+    "pub_count_tagged": "literal string match on SYMBOL[Title/Abstract], no MeSH expansion; misses synonym usage entirely - the community writes HER2 where the record says ERBB2."
+  },
+  "frozen_date": "2026-09-12",
+  "n_targets": 82,
+  "note": "The proxies are frozen KNOWING Run A survived.",
+  "null_counts": {
+    "pdb_present": 0,
+    "pub_count_atm": 0,
+    "pub_count_tagged": 0
+  },
+  "proxy_names": [
+    "pdb_present",
+    "pub_count_tagged",
+    "pub_count_atm"
+  ],
+  "pubmed_endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+  "pubmed_query_atm": "{symbol}",
+  "pubmed_query_tagged": "{symbol}[Title/Abstract]",
+  "targets": [
+    {
+      "accession": "P78536",
+      "pdb_present": 1,
+      "pub_count_atm": 3207,
+      "pub_count_tagged": 2360,
+      "symbol": "ADAM17"
+    },
+    {
+      "accession": "P55064",
+      "pdb_present": 1,
+      "pub_count_atm": 1411,
+      "pub_count_tagged": 1307,
+      "symbol": "AQP5"
+    },
+    {
+      "accession": "Q01814",
+      "pdb_present": 0,
+      "pub_count_atm": 189,
+      "pub_count_tagged": 112,
+      "symbol": "ATP2B2"
+    },
+    {
+      "accession": "O00478",
+      "pdb_present": 1,
+      "pub_count_atm": 64,
+      "pub_count_tagged": 64,
+      "symbol": "BTN3A3"
+    },
+    {
+      "accession": "Q9BY67",
+      "pdb_present": 1,
+      "pub_count_atm": 686,
+      "pub_count_tagged": 478,
+      "symbol": "CADM1"
+    },
+    {
+      "accession": "Q5ZPR3",
+      "pdb_present": 1,
+      "pub_count_atm": 1156,
+      "pub_count_tagged": 682,
+      "symbol": "CD276"
+    },
+    {
+      "accession": "P09693",
+      "pdb_present": 1,
+      "pub_count_atm": 153,
+      "pub_count_tagged": 153,
+      "symbol": "CD3G"
+    },
+    {
+      "accession": "P19397",
+      "pdb_present": 1,
+      "pub_count_atm": 309,
+      "pub_count_tagged": 292,
+      "symbol": "CD53"
+    },
+    {
+      "accession": "P42081",
+      "pdb_present": 1,
+      "pub_count_atm": 14234,
+      "pub_count_tagged": 12462,
+      "symbol": "CD86"
+    },
+    {
+      "accession": "Q9H5V8",
+      "pdb_present": 0,
+      "pub_count_atm": 348,
+      "pub_count_tagged": 335,
+      "symbol": "CDCP1"
+    },
+    {
+      "accession": "P55287",
+      "pdb_present": 0,
+      "pub_count_atm": 561,
+      "pub_count_tagged": 329,
+      "symbol": "CDH11"
+    },
+    {
+      "accession": "P51801",
+      "pdb_present": 0,
+      "pub_count_atm": 259,
+      "pub_count_tagged": 187,
+      "symbol": "CLCNKB"
+    },
+    {
+      "accession": "O95832",
+      "pdb_present": 0,
+      "pub_count_atm": 1600,
+      "pub_count_tagged": 892,
+      "symbol": "CLDN1"
+    },
+    {
+      "accession": "P07333",
+      "pdb_present": 1,
+      "pub_count_atm": 3076,
+      "pub_count_tagged": 2964,
+      "symbol": "CSF1R"
+    },
+    {
+      "accession": "O95196",
+      "pdb_present": 0,
+      "pub_count_atm": 47,
+      "pub_count_tagged": 27,
+      "symbol": "CSPG5"
+    },
+    {
+      "accession": "P32302",
+      "pdb_present": 0,
+      "pub_count_atm": 2368,
+      "pub_count_tagged": 2216,
+      "symbol": "CXCR5"
+    },
+    {
+      "accession": "P24530",
+      "pdb_present": 1,
+      "pub_count_atm": 877,
+      "pub_count_tagged": 794,
+      "symbol": "EDNRB"
+    },
+    {
+      "accession": "P00533",
+      "pdb_present": 1,
+      "pub_count_atm": 153469,
+      "pub_count_tagged": 107015,
+      "symbol": "EGFR"
+    },
+    {
+      "accession": "Q9UJA9",
+      "pdb_present": 1,
+      "pub_count_atm": 31,
+      "pub_count_tagged": 30,
+      "symbol": "ENPP5"
+    },
+    {
+      "accession": "P49961",
+      "pdb_present": 0,
+      "pub_count_atm": 507,
+      "pub_count_tagged": 289,
+      "symbol": "ENTPD1"
+    },
+    {
+      "accession": "P54764",
+      "pdb_present": 1,
+      "pub_count_atm": 846,
+      "pub_count_tagged": 753,
+      "symbol": "EPHA4"
+    },
+    {
+      "accession": "P04626",
+      "pdb_present": 1,
+      "pub_count_atm": 26515,
+      "pub_count_tagged": 11474,
+      "symbol": "ERBB2"
+    },
+    {
+      "accession": "Q5VUB5",
+      "pdb_present": 0,
+      "pub_count_atm": 12,
+      "pub_count_tagged": 12,
+      "symbol": "FAM171A1"
+    },
+    {
+      "accession": "Q9NYQ8",
+      "pdb_present": 0,
+      "pub_count_atm": 148,
+      "pub_count_tagged": 144,
+      "symbol": "FAT2"
+    },
+    {
+      "accession": "P22607",
+      "pdb_present": 1,
+      "pub_count_atm": 4214,
+      "pub_count_tagged": 3947,
+      "symbol": "FGFR3"
+    },
+    {
+      "accession": "P17948",
+      "pdb_present": 1,
+      "pub_count_atm": 4274,
+      "pub_count_tagged": 2825,
+      "symbol": "FLT1"
+    },
+    {
+      "accession": "Q6ZNA5",
+      "pdb_present": 0,
+      "pub_count_atm": 9,
+      "pub_count_tagged": 9,
+      "symbol": "FRRS1"
+    },
+    {
+      "accession": "Q8TDU6",
+      "pdb_present": 1,
+      "pub_count_atm": 823,
+      "pub_count_tagged": 336,
+      "symbol": "GPBAR1"
+    },
+    {
+      "accession": "P35052",
+      "pdb_present": 1,
+      "pub_count_atm": 336,
+      "pub_count_tagged": 329,
+      "symbol": "GPC1"
+    },
+    {
+      "accession": "P51810",
+      "pdb_present": 0,
+      "pub_count_atm": 230,
+      "pub_count_tagged": 171,
+      "symbol": "GPR143"
+    },
+    {
+      "accession": "Q9UPC5",
+      "pdb_present": 1,
+      "pub_count_atm": 109,
+      "pub_count_tagged": 109,
+      "symbol": "GPR34"
+    },
+    {
+      "accession": "Q8IYL9",
+      "pdb_present": 1,
+      "pub_count_atm": 206,
+      "pub_count_tagged": 151,
+      "symbol": "GPR65"
+    },
+    {
+      "accession": "Q05586",
+      "pdb_present": 1,
+      "pub_count_atm": 554,
+      "pub_count_tagged": 466,
+      "symbol": "GRIN1"
+    },
+    {
+      "accession": "Q14CZ8",
+      "pdb_present": 1,
+      "pub_count_atm": 106,
+      "pub_count_tagged": 86,
+      "symbol": "HEPACAM"
+    },
+    {
+      "accession": "P11717",
+      "pdb_present": 1,
+      "pub_count_atm": 1131,
+      "pub_count_tagged": 1114,
+      "symbol": "IGF2R"
+    },
+    {
+      "accession": "P06213",
+      "pdb_present": 1,
+      "pub_count_atm": 1968,
+      "pub_count_tagged": 1720,
+      "symbol": "INSR"
+    },
+    {
+      "accession": "P18084",
+      "pdb_present": 1,
+      "pub_count_atm": 238,
+      "pub_count_tagged": 227,
+      "symbol": "ITGB5"
+    },
+    {
+      "accession": "P78504",
+      "pdb_present": 1,
+      "pub_count_atm": 2190,
+      "pub_count_tagged": 1465,
+      "symbol": "JAG1"
+    },
+    {
+      "accession": "Q9BTN0",
+      "pdb_present": 0,
+      "pub_count_atm": 10,
+      "pub_count_tagged": 8,
+      "symbol": "LRFN3"
+    },
+    {
+      "accession": "Q6PJG9",
+      "pdb_present": 0,
+      "pub_count_atm": 27,
+      "pub_count_tagged": 19,
+      "symbol": "LRFN4"
+    },
+    {
+      "accession": "O75581",
+      "pdb_present": 1,
+      "pub_count_atm": 1612,
+      "pub_count_tagged": 1493,
+      "symbol": "LRP6"
+    },
+    {
+      "accession": "Q6UXK5",
+      "pdb_present": 0,
+      "pub_count_atm": 56,
+      "pub_count_tagged": 45,
+      "symbol": "LRRN1"
+    },
+    {
+      "accession": "Q8ND94",
+      "pdb_present": 0,
+      "pub_count_atm": 9,
+      "pub_count_tagged": 9,
+      "symbol": "LRRN4CL"
+    },
+    {
+      "accession": "Q9GZU1",
+      "pdb_present": 1,
+      "pub_count_atm": 435,
+      "pub_count_tagged": 242,
+      "symbol": "MCOLN1"
+    },
+    {
+      "accession": "Q16819",
+      "pdb_present": 1,
+      "pub_count_atm": 57,
+      "pub_count_tagged": 57,
+      "symbol": "MEP1A"
+    },
+    {
+      "accession": "Q12866",
+      "pdb_present": 1,
+      "pub_count_atm": 1624,
+      "pub_count_tagged": 1365,
+      "symbol": "MERTK"
+    },
+    {
+      "accession": "P50281",
+      "pdb_present": 1,
+      "pub_count_atm": 2435,
+      "pub_count_tagged": 1950,
+      "symbol": "MMP14"
+    },
+    {
+      "accession": "Q13421",
+      "pdb_present": 1,
+      "pub_count_atm": 1052,
+      "pub_count_tagged": 518,
+      "symbol": "MSLN"
+    },
+    {
+      "accession": "Q8WXI7",
+      "pdb_present": 1,
+      "pub_count_atm": 1721,
+      "pub_count_tagged": 896,
+      "symbol": "MUC16"
+    },
+    {
+      "accession": "P13591",
+      "pdb_present": 1,
+      "pub_count_atm": 1364,
+      "pub_count_tagged": 614,
+      "symbol": "NCAM1"
+    },
+    {
+      "accession": "Q96NY8",
+      "pdb_present": 1,
+      "pub_count_atm": 724,
+      "pub_count_tagged": 684,
+      "symbol": "NECTIN4"
+    },
+    {
+      "accession": "Q04721",
+      "pdb_present": 1,
+      "pub_count_atm": 2399,
+      "pub_count_tagged": 2193,
+      "symbol": "NOTCH2"
+    },
+    {
+      "accession": "Q99650",
+      "pdb_present": 0,
+      "pub_count_atm": 424,
+      "pub_count_tagged": 393,
+      "symbol": "OSMR"
+    },
+    {
+      "accession": "O60245",
+      "pdb_present": 1,
+      "pub_count_atm": 162,
+      "pub_count_tagged": 151,
+      "symbol": "PCDH7"
+    },
+    {
+      "accession": "P09619",
+      "pdb_present": 1,
+      "pub_count_atm": 6866,
+      "pub_count_tagged": 1461,
+      "symbol": "PDGFRB"
+    },
+    {
+      "accession": "O00592",
+      "pdb_present": 0,
+      "pub_count_atm": 883,
+      "pub_count_tagged": 263,
+      "symbol": "PODXL"
+    },
+    {
+      "accession": "P23471",
+      "pdb_present": 1,
+      "pub_count_atm": 361,
+      "pub_count_tagged": 192,
+      "symbol": "PTPRZ1"
+    },
+    {
+      "accession": "Q15858",
+      "pdb_present": 1,
+      "pub_count_atm": 936,
+      "pub_count_tagged": 508,
+      "symbol": "SCN9A"
+    },
+    {
+      "accession": "P37088",
+      "pdb_present": 1,
+      "pub_count_atm": 352,
+      "pub_count_tagged": 226,
+      "symbol": "SCNN1A"
+    },
+    {
+      "accession": "Q7Z5N4",
+      "pdb_present": 0,
+      "pub_count_atm": 76,
+      "pub_count_tagged": 75,
+      "symbol": "SDK1"
+    },
+    {
+      "accession": "Q3KNW5",
+      "pdb_present": 0,
+      "pub_count_atm": 34,
+      "pub_count_tagged": 30,
+      "symbol": "SLC10A6"
+    },
+    {
+      "accession": "Q9UP95",
+      "pdb_present": 1,
+      "pub_count_atm": 26,
+      "pub_count_tagged": 26,
+      "symbol": "SLC12A4"
+    },
+    {
+      "accession": "Q9BXP2",
+      "pdb_present": 0,
+      "pub_count_atm": 28,
+      "pub_count_tagged": 22,
+      "symbol": "SLC12A9"
+    },
+    {
+      "accession": "Q9BXS9",
+      "pdb_present": 1,
+      "pub_count_atm": 305,
+      "pub_count_tagged": 282,
+      "symbol": "SLC26A6"
+    },
+    {
+      "accession": "Q9NRM0",
+      "pdb_present": 1,
+      "pub_count_atm": 518,
+      "pub_count_tagged": 358,
+      "symbol": "SLC2A9"
+    },
+    {
+      "accession": "Q13433",
+      "pdb_present": 0,
+      "pub_count_atm": 106,
+      "pub_count_tagged": 63,
+      "symbol": "SLC39A6"
+    },
+    {
+      "accession": "P08195",
+      "pdb_present": 1,
+      "pub_count_atm": 616,
+      "pub_count_tagged": 557,
+      "symbol": "SLC3A2"
+    },
+    {
+      "accession": "Q8N4M1",
+      "pdb_present": 0,
+      "pub_count_atm": 12,
+      "pub_count_tagged": 12,
+      "symbol": "SLC44A3"
+    },
+    {
+      "accession": "Q53GD3",
+      "pdb_present": 0,
+      "pub_count_atm": 77,
+      "pub_count_tagged": 56,
+      "symbol": "SLC44A4"
+    },
+    {
+      "accession": "Q5BKX6",
+      "pdb_present": 1,
+      "pub_count_atm": 27,
+      "pub_count_tagged": 27,
+      "symbol": "SLC45A4"
+    },
+    {
+      "accession": "Q9NQ40",
+      "pdb_present": 1,
+      "pub_count_atm": 152,
+      "pub_count_tagged": 110,
+      "symbol": "SLC52A3"
+    },
+    {
+      "accession": "Q99835",
+      "pdb_present": 1,
+      "pub_count_atm": 4601,
+      "pub_count_tagged": 3748,
+      "symbol": "SMO"
+    },
+    {
+      "accession": "Q99523",
+      "pdb_present": 1,
+      "pub_count_atm": 390,
+      "pub_count_tagged": 390,
+      "symbol": "SORT1"
+    },
+    {
+      "accession": "O15455",
+      "pdb_present": 1,
+      "pub_count_atm": 6789,
+      "pub_count_tagged": 6519,
+      "symbol": "TLR3"
+    },
+    {
+      "accession": "Q6UXF1",
+      "pdb_present": 0,
+      "pub_count_atm": 15,
+      "pub_count_tagged": 15,
+      "symbol": "TMEM108"
+    },
+    {
+      "accession": "Q9NV96",
+      "pdb_present": 1,
+      "pub_count_atm": 94,
+      "pub_count_tagged": 62,
+      "symbol": "TMEM30A"
+    },
+    {
+      "accession": "O14798",
+      "pdb_present": 0,
+      "pub_count_atm": 220,
+      "pub_count_tagged": 71,
+      "symbol": "TNFRSF10C"
+    },
+    {
+      "accession": "O95858",
+      "pdb_present": 1,
+      "pub_count_atm": 52,
+      "pub_count_tagged": 51,
+      "symbol": "TSPAN15"
+    },
+    {
+      "accession": "O60637",
+      "pdb_present": 0,
+      "pub_count_atm": 42,
+      "pub_count_tagged": 39,
+      "symbol": "TSPAN3"
+    },
+    {
+      "accession": "O75954",
+      "pdb_present": 0,
+      "pub_count_atm": 47,
+      "pub_count_tagged": 46,
+      "symbol": "TSPAN9"
+    },
+    {
+      "accession": "Q16880",
+      "pdb_present": 0,
+      "pub_count_atm": 111,
+      "pub_count_tagged": 97,
+      "symbol": "UGT8"
+    },
+    {
+      "accession": "O75841",
+      "pdb_present": 0,
+      "pub_count_atm": 100,
+      "pub_count_tagged": 56,
+      "symbol": "UPK1B"
+    }
+  ],
+  "uniprot_endpoint": "https://rest.uniprot.org/uniprotkb/{accession}.json"
+}
