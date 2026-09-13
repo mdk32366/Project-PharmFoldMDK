@@ -14005,9 +14005,15 @@ the protein, and its silence about these ten is the model's silence, not the mol
 
 #### D-095 amendment 3 — ⚠⚠ Eight of the ten `no_domains` rows DO have annotation, from a source already in the tree; and the `tile_cut_kind` vocabulary the disclosure argument rests on has never been emitted
 
-- **Date:** 2026-09-11 · **Status:** ⚠ **PROPOSED — written, not ruled.** Owner ruling required.
-  ⚠⚠ **Landing it does not rule it.** Until the owner rules, it is citable as a PROPOSAL and its
-  §1/§2 measurements are citable as measurements; **its dispositions are not.**
+- **Date:** 2026-09-11 · **Status:** ⚠⚠ **RULED IN — Matt Kelly, 2026-09-12. No repairs
+  authorised.** Both claims stand as written: the InterPro coverage finding (§1) and the
+  `whole_run` constant (§2).
+  ⚠ **THE RULING AUTHORISES NO BUILD.** The `tile_cut_kind` vocabulary gap and the InterPro
+  finding are **disclosures for the paper's methods section, not build orders** — and §4's MUC22
+  disposition remains unmade.
+  ⚠ *Landed 2026-09-11 as PROPOSED (`ac63059`, PR #290); ruled the following day. The proposal
+  window is on the record rather than collapsed into the ruling, because which came first is what
+  distinguishes a ruling from a rationalisation.*
 - **Amends:** `D-095 amendment 2`, which ruled the fifth `tile_cut_kind` value
   `unannotated_interior`. ⚠ **Sub-entry beneath its parent, consuming NO integer** — the
   `D-099 amendment 1` precedent, as used by `D-095 amendment 1` itself.

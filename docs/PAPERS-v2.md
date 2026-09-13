@@ -316,13 +316,14 @@ project's own pipeline.
 triples above, and the qualification on the `pub_count_atm` arm, which is a limit on the reading
 rather than an objection to the ruling.
 
-**⚠ `D-095` amendment 3 — ⚠⚠ PROPOSED, NOT RULED.** Eight of the ten `no_domains` rows carry
-InterPro domain-like features **wholly inside the folded span**, so amendment 2's stated basis
-survives for `LCT` alone; and all **1,532** `tranche6_tiles.csv` rows carry
-`tile_cut_kind = whole_run`, ⚠ **none of the five ruled values was ever emitted**. Landed
-2026-09-11 (`ac63059`, PR #290) and **citable**. ⚠⚠ **The owner ruling is still outstanding** —
-nothing here may be cited as ruled. These bear on the tranche-6 methods description and on the
-tile-legibility claim under `D-094`.
+**⚠⚠ `D-095` amendment 3 — RULED IN, Matt Kelly, 2026-09-12. No repairs authorised.** Eight of
+the ten `no_domains` rows carry InterPro domain-like features **wholly inside the folded span**, so
+amendment 2's stated basis survives for `LCT` alone; and all **1,532** `tranche6_tiles.csv` rows
+carry `tile_cut_kind = whole_run`, ⚠ **none of the five ruled values was ever emitted**. ⚠ **The
+ruling authorises no build** — both are disclosures for the methods section, and §4's MUC22
+disposition remains unmade. These bear on the tranche-6 methods description and on the
+tile-legibility claim under `D-094`, ⚠⚠ **which is a `D-094` MOUNT PRECONDITION that nothing
+currently satisfies.**
 
 ### ⚠⚠ Open before submission — updated
 
