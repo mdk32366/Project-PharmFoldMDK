@@ -188,6 +188,79 @@ them does not mistake them for this projection's inputs.
 
 ---
 
+#### D-157 amendment 3 — ⚠⚠ Slice 1 completed 342/342 and the projector's total was RIGHT BY COINCIDENCE: fold time over-estimated 7.5%, transport omitted 9.5%, two offsetting errors landing within 0.4% — so the remaining ~2,226 rows need a TRANSPORT TERM, not the projector's track record
+
+- **Date:** 2026-09-12 · **Status:** Accepted. ⚠ **A measurement and a correction to an
+  instrument. It authorises no fold** — slice 2 requires a fresh owner ruling.
+- **Amends:** `D-157 amendment 1`, which measured the cost residual from the 20-fold sample.
+  ⚠ **Sub-entry beneath its parent, consuming NO integer.**
+- **How known (`D-016`):** Task 4 slice 1, band 251–384, **342 folds** run 2026-09-12 through the
+  writing path, recorded per fold in `data/control/task4_slice1/progress.csv`. Production
+  confirms **342 `complete`**, `pdb_path` and `pae_json_path` set on all 342.
+
+**THE RUN.**
+
+| | |
+|---|---|
+| folded | **342 of 342**, clean stop on *all rows folded* |
+| verdicts | `ok` **339** · `ok_probed_too_early` **3** · ⚠ **failures 0** |
+| served artifacts | **154,833 – 253,734 bytes**, ⚠ **zero zero-byte rows** |
+| max span | **384** — none above the cap |
+| tunnel drops | **0**; `surface_unreachable` verdicts **0** |
+
+**⚠⚠ FREE VRAM WAS IDENTICAL, NOT MERELY STABLE. 342 readings, ONE distinct value: 7,043 MiB**,
+first gate to last. `D-105`'s per-fold topology delivers the property `F-064` measured the absence
+of, and it is now measured across **342 consecutive folds** rather than 20.
+
+---
+
+**⚠⚠ THE PROJECTOR RESULT, AND IT IS THE SHARPEST THING IN THIS RUN.**
+
+| | |
+|---|---|
+| projected (`amendment 1`) | **5.12 h** at 53.2 s/fold |
+| **elapsed** | **5.14 h** |
+| fold time only | mean **49.5 s**, median 47.6, range 33.6–75.8 → 4.70 h |
+| pace including transport | **54.2 s/fold** |
+
+> **The total is within 0.4%. It is right for two reasons that nearly cancel, and a model that is
+> accurate by coincidence of offsetting errors is not a validated model.**
+
+| error | size | direction |
+|---|---|---|
+| fold time **over**-estimated (53.2 projected vs 49.5 measured) | **−7.5%** | makes the projection too high |
+| transport **omitted entirely** — claim, upload, complete, ~4.7 s/fold | **+9.5%** | makes it too low |
+| net | **+1.9% per fold**, −0.4% on the total | — |
+
+⚠⚠ **The projector models FOLD TIME AND NOTHING ELSE.** Had the 20-row sample been representative
+of fold time — which is the only thing it was built to estimate — **the projection would have come
+in ~9% LOW**, because the transport term does not exist in it at all. ⚠ **The accuracy is not
+evidence the instrument works; it is evidence that two mistakes were similar in size.**
+
+**Consequences, stated rather than discovered later.**
+- ⚠⚠ **Any projection over the remaining ~2,226 rows must carry an explicit transport term.**
+  Measured here at **4.7 s/fold** over 342 folds on this host and this surface — ⚠ and it is a
+  *per-fold constant*, not a fraction of fold time, so it grows with **process count**, which is
+  the same arithmetic `amendment 1` found for the weight reload.
+- ⚠ **`amendment 1`'s headline 16.96 h for the 2,572 is therefore LOW.** Adding 4.7 s × 2,572
+  gives **+3.36 h → ≈ 20.3 h**, and that figure inherits every caveat `amendment 1` already
+  carries: it is four folds per band projected over a population, and **n = 4 per band supports a
+  scale, not a schedule.**
+- ⚠ **This band is now measured, not projected**, and its own row can be quoted directly: **342
+  folds, 5.14 h, 54.2 s/fold wall.**
+
+**⚠ WHAT THIS AMENDMENT DOES NOT CLAIM.**
+- ⚠ **Not that the projector is wrong to model fold time.** Separating fold cost from transport
+  cost is the right decomposition; **the defect is that only one half was ever computed** and the
+  total was presented as though it were the whole.
+- ⚠⚠ **Not that slice 1's pace generalises.** 251–384 aa is the band where wall time is **not**
+  flat; the bands below 44 aa are reload-dominated and their transport fraction is proportionally
+  **larger**, not smaller.
+- ⚠ **Not an authorisation.** Slice 2 needs a fresh owner ruling, and *"if it harvests OK let's do
+  another tranche"* is an intent, not a standing authorisation.
+
+---
+
 #### D-157 amendment 2 — ⚠⚠ THREE express exceptions to §4.2 in two days, and the PATTERN is the thing worth recording rather than the three authorisations
 
 - **Date:** 2026-09-12 · **Status:** Accepted as a record. ⚠ **This authorises nothing** and
