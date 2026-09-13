@@ -527,6 +527,87 @@ because the stop condition counted **recorded** folds and a refused fold records
 
 ---
 
+#### F-068 amendment 2 — ⚠⚠ A FOURTH and FIFTH instance, both in one guard, both caught by report-before-write rather than by the guard itself — and one of them is this session's own method note, committed hours after it was written
+
+- **Date:** 2026-09-12 · **Status:** ⚠ **`F-068` stays OPEN.** Both instances are repaired; the
+  finding closes when the instrument stops exhibiting the class, not when an instance is fixed
+  (`D-074`).
+- **Amends:** `F-068`, which recorded three instances — the missing envelope gate, the missing
+  per-fold topology, and the child that returned no result. ⚠ **Sub-entry beneath its parent,
+  consuming NO integer.**
+- **How known (`D-016`):** both surfaced while extending `--requeue` to reach
+  `complete`-with-an-empty-artifact (`AMENDMENT 8` §3). ⚠ **Neither was found by reading the
+  diff.** The dry run printed **0** where the count had to be **11**, and that discrepancy is what
+  sent anyone looking.
+
+---
+
+**INSTANCE 4 — `HEAD` IS ANSWERED `405`, SO THE PROBE LEARNED NOTHING ABOUT ANY ROW.**
+
+The emptiness probe sent `HEAD /api/analyses/{id}/structure`. The route is declared
+`@read_router.get`, and the live surface answers:
+
+```
+HTTP/1.1 405 Method Not Allowed
+allow: GET
+```
+
+⚠ **A probe that cannot address its endpoint is not a strict probe, it is a blind one.** The
+first version raised on the 405 — which is the right failure — but only because a 5xx-and-not-404
+branch happened to exist. **Nothing in it was about HEAD.**
+
+⚠⚠ **The repair is `GET` and the BODY, not `Content-Length`.** The bytes that reach a reader are
+the thing in question; a header is a *claim about* them, and a truncated response lies. A test
+drives the probe with a header advertising 99,999 bytes over an empty body and requires the
+answer **0**.
+
+---
+
+**INSTANCE 5 — `pdb_path` IS ON `protein_analyses`, AND `jobs` HAS NO SUCH COLUMN.**
+
+`requeue_candidates` was handed `JobRecord`s and asked `getattr(j, "pdb_path", None)`. That is
+`None` on every row of that type, forever — so **nothing was probed and nothing was selected**,
+and the report printed `0` candidates against an expected `11`.
+
+> ⚠⚠ **THE FIXTURE HAD INVENTED THE FIELD.** The test's `_Job` was a hand-rolled class carrying a
+> `pdb_path` attribute the production type does not have. The tests passed. **That is the
+> fixture-replacing-its-subject pattern — and this session's method note on exactly that was
+> written and committed HOURS EARLIER the same morning.**
+
+⚠ **Recorded with that timing rather than without it**, because the interval is the finding: a
+lesson written down, merged, and then re-committed by its own author inside a single working day.
+**Naming a defect does not inoculate against it.** The repair is structural — the fixture is now
+the `QueueRow` production builds from its join, so it *cannot* carry a field the query does not
+supply — and a test pins **why the join exists** by asserting `jobs` has no `pdb_path` column.
+
+---
+
+**⚠⚠ WHAT ACTUALLY CAUGHT THEM, AND IT WAS NOT A TEST.**
+
+Both guards were green. Both defects were live. What surfaced them was `AMENDMENT 8` §3.2's
+requirement that the tool **enumerate what it would requeue and stop**, so the count could be
+confirmed as 11 before anything moved.
+
+> **The dry run printed `0`. Eleven was expected. That single discrepancy is the whole detection
+> mechanism**, and neither defect was visible in the diff, in review, or in a passing suite.
+>
+> ⚠ **A guard that runs after committing is not a guard.** Report-before-write is cheap, it is
+> boring, and it has now caught more real defects in this campaign than any assertion has.
+
+⚠ **It also caught the band overlap the same day** — the slice-1 enqueue refusing when four of
+the 346 already carried a clean Run 2 row — which would otherwise have written a second Run 2 row
+per accession and broken the generation partition the campaign rests on.
+
+**WHAT THIS AMENDMENT DOES NOT CLAIM.**
+- ⚠ **Not that the class is now understood well enough to prevent.** Five instances, and the last
+  two were authored by the party that had just documented the pattern.
+- ⚠ **Not that tests are the wrong instrument.** Instance 5's repair *is* a test — the point is
+  that it had to be made structural, because a fixture that invents its subject cannot be fixed by
+  asserting harder against the invention.
+- ⚠ **Not a closure.** `D-074`: the instrument must stop exhibiting it.
+
+---
+
 ### F-066 — The IGF2R failure recorded as a card ceiling was a fold of the full chain, 227 residues longer than the ECD span the pipeline slices; and the attempt counter recorded zero attempts
 
 - **Date:** 2026-09-02 · **Status:** ⚠ **OPEN.** It closes when the record states what job 57 actually attempted, **or** when the attribution is corrected wherever it is carried.
