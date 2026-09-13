@@ -28,22 +28,26 @@ from scripts.attention_control import (
 
 def _rows() -> list[TargetRow]:
     """Twelve targets. Positives sit HIGH within both attention strata, so a correct control
-    reports surviving enrichment — the fixture is built to make a flattening bug visible."""
+    reports surviving enrichment — the fixture is built to make a flattening bug visible.
+
+    ⚠ Every row carries a `pub_count_atm` DISTINCT from its `pub_count_tagged`. Degenerate copies
+    would make the atm parametrisation silently re-test the tagged arm, which is the shape a
+    falsification pass caught in the sibling file."""
     return [
         # pdb-present stratum: positives high
-        TargetRow("PA", 0.91, 1, pdb_present=1, pub_count=900),
-        TargetRow("PB", 0.83, 1, pdb_present=1, pub_count=750),
-        TargetRow("NA", 0.22, 0, pdb_present=1, pub_count=810),
-        TargetRow("NB", 0.31, 0, pdb_present=1, pub_count=640),
-        TargetRow("NC", 0.18, 0, pdb_present=1, pub_count=705),
+        TargetRow("PA", 0.91, 1, pdb_present=1, pub_count_tagged=900, pub_count_atm=1400),
+        TargetRow("PB", 0.83, 1, pdb_present=1, pub_count_tagged=750, pub_count_atm=800),
+        TargetRow("NA", 0.22, 0, pdb_present=1, pub_count_tagged=810, pub_count_atm=1210),
+        TargetRow("NB", 0.31, 0, pdb_present=1, pub_count_tagged=640, pub_count_atm=700),
+        TargetRow("NC", 0.18, 0, pdb_present=1, pub_count_tagged=705, pub_count_atm=990),
         # pdb-absent stratum: positives also high
-        TargetRow("PC", 0.77, 1, pdb_present=0, pub_count=120),
-        TargetRow("PD", 0.69, 1, pdb_present=0, pub_count=95),
-        TargetRow("ND", 0.24, 0, pdb_present=0, pub_count=140),
-        TargetRow("NE", 0.13, 0, pdb_present=0, pub_count=60),
-        TargetRow("NF", 0.29, 0, pdb_present=0, pub_count=110),
-        TargetRow("NG", 0.35, 0, pdb_present=0, pub_count=88),
-        TargetRow("NH", 0.41, 0, pdb_present=0, pub_count=75),
+        TargetRow("PC", 0.77, 1, pdb_present=0, pub_count_tagged=120, pub_count_atm=260),
+        TargetRow("PD", 0.69, 1, pdb_present=0, pub_count_tagged=95, pub_count_atm=100),
+        TargetRow("ND", 0.24, 0, pdb_present=0, pub_count_tagged=140, pub_count_atm=155),
+        TargetRow("NE", 0.13, 0, pdb_present=0, pub_count_tagged=60, pub_count_atm=210),
+        TargetRow("NF", 0.29, 0, pdb_present=0, pub_count_tagged=110, pub_count_atm=118),
+        TargetRow("NG", 0.35, 0, pdb_present=0, pub_count_tagged=88, pub_count_atm=140),
+        TargetRow("NH", 0.41, 0, pdb_present=0, pub_count_tagged=75, pub_count_atm=300),
     ]
 
 
@@ -68,28 +72,37 @@ def test_pdb_present_yields_exactly_two_strata():
     assert len(strata["pdb_present"]) == 5 and len(strata["pdb_absent"]) == 7
 
 
-def test_pub_count_splits_at_its_own_median_not_a_magic_number():
-    """The continuous proxy is cut at the median of the data present (D-041 dec 4: no threshold
-    invented for the occasion). Both strata must be non-empty and together cover every row."""
-    strata = stratify(_rows(), "pub_count")
+@pytest.mark.parametrize("proxy", ["pub_count_tagged", "pub_count_atm"])
+def test_a_pubmed_arm_splits_at_its_own_median_not_a_magic_number(proxy):
+    """The continuous proxies are cut at the median of the data present (D-041 dec 4: no threshold
+    invented for the occasion). Both strata must be non-empty and together cover every row.
+
+    ! Parametrised over BOTH arms since `D-075 amendment 2`: each splits on its own values, and a
+    test that exercised only one would leave the other unasserted."""
+    strata = stratify(_rows(), proxy)
     assert set(strata) == {"pub_low", "pub_high"}
     assert len(strata["pub_low"]) + len(strata["pub_high"]) == len(_rows())
-    assert min(r.pub_count for r in strata["pub_high"]) > max(r.pub_count for r in strata["pub_low"])
+    assert min(getattr(r, proxy) for r in strata["pub_high"]) \
+        > max(getattr(r, proxy) for r in strata["pub_low"])
 
 
 def test_a_missing_proxy_becomes_a_named_unknown_stratum_never_dropped():
     """D-027: a missing value is null-with-a-reason, never imputed and never silently excluded.
     An `unknown` stratum must appear and carry the row, so it is reported rather than vanishing."""
-    rows = _rows() + [TargetRow("PX", 0.55, 1, pdb_present=None, pub_count=None)]
+    rows = _rows() + [TargetRow("PX", 0.55, 1, pdb_present=None, pub_count_tagged=None)]
     strata = stratify(rows, "pdb_present")
     assert "unknown" in strata and [r.symbol for r in strata["unknown"]] == ["PX"]
     assert sum(len(v) for v in strata.values()) == len(rows)
 
 
-def test_only_the_two_named_proxies_are_permitted():
-    """D-075 dec 3 / §3 bite 5: no third proxy without a new dated entry. Refused in code."""
-    assert sorted(PROXY_NAMES) == ["pdb_present", "pub_count"]
-    for bad in ("citation_count", "grant_dollars", "", "pdb_count"):
+def test_only_the_three_named_proxies_are_permitted():
+    """D-075 dec 3: no further proxy without a new dated entry. Refused in code.
+
+    !! `pub_count` is in the refused list DELIBERATELY. `D-075 amendment 2` split it into a tagged
+    and an untagged arm, and a caller still asking for the merged name is asking for a measurement
+    that no longer exists - it must fail loudly rather than resolve to one of the two."""
+    assert sorted(PROXY_NAMES) == ["pdb_present", "pub_count_atm", "pub_count_tagged"]
+    for bad in ("citation_count", "grant_dollars", "", "pdb_count", "pub_count"):
         with pytest.raises(ValueError):
             stratify(_rows(), bad)
 
@@ -125,8 +138,8 @@ def test_a_stratum_with_no_positives_reports_null_not_zero():
 def test_control_is_byte_identical_across_runs():
     """D-075's test surface: 'Re-running the control with the same frozen inputs is
     byte-identical.' Asserted on the serialised results, not just on a float compare."""
-    a = matched_enrichment(_rows(), "pub_count")
-    b = matched_enrichment(_rows(), "pub_count")
+    a = matched_enrichment(_rows(), "pub_count_tagged")
+    b = matched_enrichment(_rows(), "pub_count_tagged")
     dump = lambda rs: json.dumps([r.__dict__ for r in rs], sort_keys=True)  # noqa: E731
     assert dump(a) == dump(b)
 
@@ -153,11 +166,14 @@ def test_snapshot_records_query_date_and_bounds():
         [("PA", "P11111"), ("PB", "P22222")],
         frozen_date="2026-08-01",
         fetch_pdb_present=lambda acc: 1,
-        fetch_pub_count=lambda sym: 42,
+        fetch_pub_count_tagged=lambda sym: 42,
+        fetch_pub_count_atm=lambda sym: 84,
     )
     assert snap["frozen_date"] == "2026-08-01"
-    assert snap["pubmed_query_template"] == PUBMED_QUERY_TEMPLATE
-    assert set(snap["bounds"]) == {"pdb_present", "pub_count"}      # the instrument's own limits
+    # ! BOTH query strings, because the snapshot records what was RUN and there are now two
+    # PubMed queries. A snapshot carrying one would describe half its own provenance.
+    assert snap["pubmed_query_tagged"] and snap["pubmed_query_atm"]
+    assert set(snap["bounds"]) == set(PROXY_NAMES)                  # the instrument's own limits
     assert snap["n_targets"] == 2
 
 
@@ -168,11 +184,14 @@ def test_snapshot_records_a_failed_fetch_as_null_with_a_reason():
         [("PA", "P11111")],
         frozen_date="2026-08-01",
         fetch_pdb_present=lambda acc: None,
-        fetch_pub_count=lambda sym: None,
+        fetch_pub_count_tagged=lambda sym: None,
+        fetch_pub_count_atm=lambda sym: None,
     )
     entry = snap["targets"][0]
-    assert entry["pdb_present"] is None and entry["pub_count"] is None
-    assert set(entry["null_reasons"]) == {"pdb_present", "pub_count"}
+    assert all(entry[p] is None for p in PROXY_NAMES)
+    assert set(entry["null_reasons"]) == set(PROXY_NAMES)
+    # ! and the per-arm tally, so a high null rate is readable as a result about the instrument
+    assert snap["null_counts"] == {p: 1 for p in PROXY_NAMES}
 
 
 def test_snapshot_builder_takes_no_clock_so_the_date_is_stated_not_captured():
@@ -180,7 +199,7 @@ def test_snapshot_builder_takes_no_clock_so_the_date_is_stated_not_captured():
     a re-freeze look identical to the original; stating it forces the caller to mean it."""
     with pytest.raises(TypeError):
         build_snapshot([("PA", "P1")], fetch_pdb_present=lambda a: 1,   # type: ignore[call-arg]
-                       fetch_pub_count=lambda s: 1)
+                       fetch_pub_count_tagged=lambda s: 1)
 
 
 def test_control_refuses_to_run_without_a_frozen_snapshot(tmp_path):
@@ -207,7 +226,8 @@ def test_report_states_the_proxy_bound_alongside_the_numbers():
     """D-074 dec 3: an instrument cited as provenance carries its own statement of what it gets
     wrong. The rendered report must show the proxy's bound and the freeze date, not just results."""
     snap = build_snapshot([("PA", "P1")], frozen_date="2026-08-01",
-                          fetch_pdb_present=lambda a: 1, fetch_pub_count=lambda s: 7)
+                          fetch_pdb_present=lambda a: 1, fetch_pub_count_tagged=lambda s: 7,
+                          fetch_pub_count_atm=lambda s: 9)
     text = format_report(matched_enrichment(_rows(), "pdb_present"), "pdb_present", snap)
     assert "2026-08-01" in text
     assert "bound:" in text and "fragment" in text          # the pdb_present limitation, printed
