@@ -1,0 +1,4 @@
+fold_index,accession,job_id,analysis_id,span_aa,wall_seconds,free_mib_before,requirement_mib,peak_allocated_mib,peak_reserved_mib,emitted_pae,served_structure_bytes,served_pae,verdict,at
+1,Q7Z4J2,4047,4048,253,34.76,7043,6357,5801,6154,True,,True,ok_probed_too_early,2026-09-12T09:40:20
+2,Q86WC4,4048,4049,253,36.25,7043,6357,5801,6142,True,,True,ok_probed_too_early,2026-09-12T09:40:58
+3,Q96KA5,4049,4050,253,35.98,7043,6357,5801,6142,True,,True,ok_probed_too_early,2026-09-12T09:41:34

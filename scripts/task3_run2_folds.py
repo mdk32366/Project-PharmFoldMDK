@@ -234,7 +234,7 @@ def enqueue(owner: bool) -> int:
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ENQUEUED_JSON.write_text(json.dumps(written, indent=2), encoding="utf-8")
-    print(f"\nWROTE {len(written)} Run {RUN_LABEL} rows. ⚠ The ids, so the population is "
+    print(f"\nWROTE {len(written)} Run {RUN_LABEL} rows. ! The ids, so the population is "
           f"ENUMERABLE rather than described:")
     for w in written:
         print(f"  {w['accession']:<12} analysis_id={w['analysis_id']:<8} job_id={w['job_id']:<8} "
@@ -642,7 +642,7 @@ def report() -> int:
     print("2 - BAND-WEIGHTED PROJECTION")
     print(f"    python scripts/task3_timing_sample.py --project "
           f"{_rel(FOLDS_CSV)}")
-    print("    ⚠ ONE projector. This script does not compute a second one.\n")
+    print("    ! ONE projector. This script does not compute a second one.\n")
 
     print("3 - PAE AT L = 1, AND THE PRE-REGISTERED RULE")
     tiny = [r for r in rows if int(r["span_aa"]) == 1]
@@ -651,7 +651,7 @@ def report() -> int:
     for r in tiny:
         emitted = str(r["emitted_pae"]).lower() == "true"
         print(f"    {r['accession']}: the fold {'EMITTED' if emitted else 'emitted NO'} PAE.")
-        print("    ⚠ That is what the fold produced. Whether it LANDED is the four-outcome check")
+        print("    ! That is what the fold produced. Whether it LANDED is the four-outcome check")
         print("      below, against the database - a produced-but-unpersisted PAE is the two-gate")
         print("      defect Task 2 repaired, and it reads as success from here.")
     print()
