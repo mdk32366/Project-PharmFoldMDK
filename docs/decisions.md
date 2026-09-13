@@ -238,10 +238,13 @@ in ~9% LOW**, because the transport term does not exist in it at all. ⚠ **The 
 evidence the instrument works; it is evidence that two mistakes were similar in size.**
 
 **Consequences, stated rather than discovered later.**
-- ⚠⚠ **Any projection over the remaining ~2,226 rows must carry an explicit transport term.**
-  Measured here at **4.7 s/fold** over 342 folds on this host and this surface — ⚠ and it is a
-  *per-fold constant*, not a fraction of fold time, so it grows with **process count**, which is
-  the same arithmetic `amendment 1` found for the weight reload.
+- ⚠⚠ **RETRACTED BY `amendment 4` — READ THAT BEFORE USING THIS BULLET.** It read: *any
+  projection over the remaining ~2,226 rows must carry an explicit transport term, measured here
+  at 4.7 s/fold, and it is a per-fold CONSTANT rather than a fraction of fold time.* ⚠ **The
+  constant does not exist.** Slice 2 measured **0.7 s/fold** in band 1–30 against this band's
+  4.7 — a factor of 6.7 — so this was a single-band measurement presented as a property of the
+  pipeline. **The transport term is real and must be carried; its VALUE is per-band and must be
+  measured, never inherited.**
 - ⚠ **`amendment 1`'s headline 16.96 h for the 2,572 is therefore LOW.** Adding 4.7 s × 2,572
   gives **+3.36 h → ≈ 20.3 h**, and that figure inherits every caveat `amendment 1` already
   carries: it is four folds per band projected over a population, and **n = 4 per band supports a
@@ -258,6 +261,90 @@ evidence the instrument works; it is evidence that two mistakes were similar in 
   **larger**, not smaller.
 - ⚠ **Not an authorisation.** Slice 2 needs a fresh owner ruling, and *"if it harvests OK let's do
   another tranche"* is an intent, not a standing authorisation.
+
+---
+
+#### D-157 amendment 4 — ⚠⚠ RETRACTION: transport is **NOT** a per-fold constant. Amendment 3 fitted 4.7 s/fold to one band and called it additive; slice 2 measured **0.7 s/fold** in another — and the "right total, wrong in both halves" pattern has now happened **TWICE**
+
+- **Date:** 2026-09-12 · **Status:** Accepted. ⚠ **Owner endorsement: Matt Kelly, 2026-09-12.**
+  ⚠ **It authorises no fold.**
+- **Amends:** `D-157 amendment 3`, and ⚠⚠ **explicitly RETRACTS one of its claims** rather than
+  quietly correcting it. **Sub-entry beneath its parent, consuming NO integer.**
+- **How known (`D-016`):** slice 1, **342 folds**, band 251–384; slice 2, **517 folds**, band 1–30.
+  Both recorded per fold in `data/control/task4_slice{1,2}/progress.csv`.
+
+---
+
+**⚠⚠ WHAT IS RETRACTED, IN THE WORDS THAT WERE WRITTEN.**
+
+`D-157 amendment 3` said transport is *"a **per-fold constant**, not a fraction of fold time, so it
+grows with **process count**"* and projected the remaining rows by adding **4.7 s × n**. ⚠⚠ **That
+is withdrawn.** It was a single-band measurement presented as a property of the pipeline.
+
+| band | rows | transport measured |
+|---|---|---|
+| **251–384 aa** (slice 1) | 342 | **4.7 s/fold** |
+| **1–30 aa** (slice 2) | 517 | **0.7 s/fold** |
+
+**A factor of 6.7 between two bands is not a constant.**
+
+> ⚠⚠ **AND THE ERROR IS `D-157`'S OWN LESSON ONE LEVEL DOWN.** This entry exists because a
+> **440 aa ceiling measured on an A6000 was applied to a Blackwell** — `F-062`'s finding, applied
+> to the card `F-062` was written about. **Amendment 3 fitted a number to one regime and carried
+> it to another, inside the entry that records exactly that mistake.** Recorded plainly; it is the
+> third instance of this shape in the campaign's own arithmetic.
+
+**⚠ THE CANDIDATE EXPLANATION, STATED AS A CANDIDATE.** Slice 1's artifacts ran **154,833 –
+253,734 bytes**; slice 2's ran **366 – 22,803**. Transport is claim + **upload** + complete, so
+**upload time proportional to artifact size** would produce exactly this ordering. ⚠⚠ **This is
+NOT measured.** Nothing here timed the upload separately from the claim or the completion, and a
+plausible mechanism that fits two points is the kind of story amendment 3 was already wrong to
+tell. **It is written down so the next band can test it, not so it can be assumed.**
+
+---
+
+**⚠⚠ THE PATTERN, WHICH IS THE METHODOLOGICAL FINDING AND MATTERS MORE THAN EITHER NUMBER.**
+
+| | projected | elapsed | error |
+|---|---|---|---|
+| **slice 1** | 5.12 h | **5.14 h** | **+0.4%** |
+| **slice 2** | 3.10 h | **2.85 h** | **−8.1%** |
+
+Both within ~8%. ⚠ **Both by offsetting errors, and in opposite directions:**
+
+- **slice 1** over-estimated fold time by **7.5%** and omitted transport entirely (**+9.5%**);
+- **slice 2** *under*-estimated fold time by **~15%** (16.5 s projected against 19.3 s measured)
+  and *over*-estimated transport by **4 s/fold**.
+
+> ⚠⚠ **A PROJECTOR THAT IS ACCURATE BY COINCIDENCE OF OPPOSING ERRORS IS NOT A VALIDATED MODEL —
+> EVEN WHEN IT IS RIGHT TWICE.** Two hits from two cancelling pairs is evidence about the
+> arithmetic's symmetry, not about the arithmetic. ⚠ **A third band agreeing would not change
+> that**, and the only thing that would is measuring the two terms separately and having each
+> hold.
+
+---
+
+**THE CORRECTED CONSEQUENCE.**
+- ⚠⚠ **The remaining ~1,701 rows need a transport term measured PER BAND**, never carried from
+  slice 1. ⚠ **Drop 4.7 s/fold as a general constant wherever it appears** — it is a 251–384 aa
+  measurement.
+- ⚠ **Any projection over them is a band-weighted ESTIMATE with two unvalidated terms**, and must
+  be reported with that stated rather than as a figure.
+- ⚠ **Slice 3 must state which transport value it uses and where that value came from** — measured
+  for 31–100 aa, or extrapolated and from which band. **Not silently inherited.**
+- ⚠ `amendment 1`'s **16.96 h** and `amendment 3`'s **≈20.3 h** for the 2,572 are **both**
+  superseded: the first omits transport, the second adds a constant that does not exist. **No
+  total for the full campaign is stated here**, because a third wrong number would be worse than
+  none.
+
+**⚠ WHAT THIS AMENDMENT DOES NOT CLAIM.**
+- ⚠ **Not that the decomposition is wrong.** Separating fold cost from transport cost is still the
+  right shape; **what was wrong was treating one measurement of the second term as its value
+  everywhere.**
+- ⚠ **Not that artifact size IS the driver.** Two bands, one candidate mechanism, no isolation of
+  the upload step.
+- ⚠⚠ **Not that slice 2's own numbers are a new constant.** 0.7 s/fold is a 1–30 aa measurement
+  and carrying *it* forward would repeat this amendment's subject in the opposite direction.
 
 ---
 
@@ -14005,9 +14092,15 @@ the protein, and its silence about these ten is the model's silence, not the mol
 
 #### D-095 amendment 3 — ⚠⚠ Eight of the ten `no_domains` rows DO have annotation, from a source already in the tree; and the `tile_cut_kind` vocabulary the disclosure argument rests on has never been emitted
 
-- **Date:** 2026-09-11 · **Status:** ⚠ **PROPOSED — written, not ruled.** Owner ruling required.
-  ⚠⚠ **Landing it does not rule it.** Until the owner rules, it is citable as a PROPOSAL and its
-  §1/§2 measurements are citable as measurements; **its dispositions are not.**
+- **Date:** 2026-09-11 · **Status:** ⚠⚠ **RULED IN — Matt Kelly, 2026-09-12. No repairs
+  authorised.** Both claims stand as written: the InterPro coverage finding (§1) and the
+  `whole_run` constant (§2).
+  ⚠ **THE RULING AUTHORISES NO BUILD.** The `tile_cut_kind` vocabulary gap and the InterPro
+  finding are **disclosures for the paper's methods section, not build orders** — and §4's MUC22
+  disposition remains unmade.
+  ⚠ *Landed 2026-09-11 as PROPOSED (`ac63059`, PR #290); ruled the following day. The proposal
+  window is on the record rather than collapsed into the ruling, because which came first is what
+  distinguishes a ruling from a rationalisation.*
 - **Amends:** `D-095 amendment 2`, which ruled the fifth `tile_cut_kind` value
   `unannotated_interior`. ⚠ **Sub-entry beneath its parent, consuming NO integer** — the
   `D-099 amendment 1` precedent, as used by `D-095 amendment 1` itself.

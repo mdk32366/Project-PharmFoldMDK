@@ -1,36 +1,32 @@
 #!/usr/bin/env python3
-"""Task 4 — bounded slice 2: bands **1–30**, n = **525**. Unsupervised, like slice 1.
+"""Task 4 — bounded slice 3: band **31–100**, n = **1,101**. Unsupervised, like slices 1 and 2.
 
-    python scripts/task4_slice2.py --enumerate                    # reports, writes NOTHING
-    python scripts/task4_slice2.py --enqueue --i-am-the-owner     # writes the Run 2 rows
-    python scripts/task4_slice2.py --fold --i-am-the-owner        # folds them, unattended
-    python scripts/task4_slice2.py --report                       # the harvest, no tunnel needed
+    python scripts/task4_slice3.py --enumerate                    # reports, writes NOTHING
+    python scripts/task4_slice3.py --enqueue --i-am-the-owner     # writes the Run 2 rows
+    python scripts/task4_slice3.py --fold --i-am-the-owner        # folds them, unattended
+    python scripts/task4_slice3.py --report                       # the harvest, no tunnel needed
 
-⚠⚠ **SLICE 2 ONLY. SLICE 3 REQUIRES A FRESH OWNER RULING — do not chain slices.** Each bounded
-slice has been ruled separately (`D-157 amendment 2` records why the pattern matters: three
-express exceptions to §4.2 in two days, each defensible, each disclaiming the next).
+⚠⚠ **SLICE 3 ONLY. SLICE 4 REQUIRES A FRESH OWNER RULING — do not chain slices.**
 
-**⚠ THE MACHINERY IS IMPORTED FROM SLICE 1, NOT COPIED.** `SliceRun` — the stop conditions, the
-deferred surface probe, the per-fold progress record — is the part that was debugged in
-production across 342 folds, and a second copy is how two campaigns diverge under one name
-(`F-046`). This module supplies the band, the projection and the paths; everything else is the
-same object.
+⚠ **The machinery is imported from slice 1**, not copied — `SliceRun` and the stranger guard both.
+A second copy is how two campaigns diverge under one name (`F-046`).
 
-**⚠⚠ WHAT SLICE 1 LEARNED, AND THIS INHERITS WITHOUT RE-LEARNING IT:**
+**⚠⚠ THIS SLICE'S TRANSPORT TERM IS UNMEASURED, AND THAT IS DECLARED RATHER THAN ESTIMATED.**
 
-- **the probe is deferred by one fold** — `run_worker`'s loop is claim → fold → upload → complete,
-  so probing inside the fold asks about an artifact that has not been uploaded yet. Slice 1 read
-  **0 bytes on three healthy folds** (159–171 KB once they landed) and the fatal streak stopped a
-  working campaign;
-- ⚠ **`GET`, never `HEAD`** — the route is `@read_router.get` and answers **405** to HEAD;
-- ⚠ **the body is measured, not `Content-Length`** — a header is a claim about the bytes;
-- ⚠ **an unreachable surface is a named category, never a fold failure**;
-- ⚠ **every stop condition is reachable**, including when nothing is succeeding;
-- ⚠ **ASCII only in printed strings** — `cp1252` cannot encode `⚠`, and a confirmation line that
-  dies takes the report with it while the write has already happened.
+`D-157 amendment 4` retracted the "per-fold constant" framing: transport measured **4.7 s/fold**
+in band 251–384 and **0.7 s/fold** in band 1–30 — a factor of **6.7**. Band 31–100 sits between
+them, ⚠⚠ **and two points do not licence an interpolation** — that is amendment 4's whole subject,
+and carrying either value here would repeat the mistake the amendment exists to retract.
 
-⚠ **The fold needs NO TUNNEL.** The worker talks to Fly over HTTPS; `DATABASE_URL` is for
-`--enqueue` only. ⚠ **`--report` reads the progress file and needs neither.**
+> **So the projection below is FOLD-TIME ONLY, stated as a floor**, and this campaign is what
+> measures the missing term: `(elapsed − fold_time) / n_folds`, reported per band on completion.
+
+⚠ **Inherited without re-learning** (slices 1 and 2 paid for each of these): the surface probe
+deferred by one fold · `GET` never `HEAD` (405) · the body measured, not `Content-Length` · an
+unreachable surface as a named category, never a fold failure · every stop condition reachable ·
+ASCII-only printed strings · the stranger guard called before the first claim.
+
+⚠ **The fold needs NO TUNNEL.** `DATABASE_URL` is for `--enqueue` only; `--report` needs neither.
 """
 
 from __future__ import annotations
@@ -60,23 +56,22 @@ from scripts.task4_slice1 import (   # noqa: E402 — the debugged machinery, sh
     PROGRESS_COLUMNS,
     SliceRun,
     refuse_on_strangers,
-    strangers,
 )
 
 #: ⚠⚠ THE HARD BOUND, IN THE TOOL RATHER THAN IN THE INVOCATION.
-BAND = (1, 30)
-EXPECTED_N = 525
-#: The two sub-bands, kept separate because their per-fold costs differ and the projection is
-#: reported per band. ⚠ They are NOT separate populations — the slice is one enqueue.
-SUB_BANDS = ((1, 10, 130, 16.6), (11, 30, 395, 16.5))
-#: ⚠ Measured over slice 1's 342 folds: claim + upload + complete, a PER-FOLD CONSTANT rather
-#: than a fraction of fold time (`D-157 amendment 3`). The projector omitted it entirely and was
-#: right only by coincidence of two offsetting errors.
-TRANSPORT_S = 4.7
+BAND = (31, 100)
+EXPECTED_N = 1101
+#: Fold time only, from slice 1's own 31–100 sample. ⚠ The flat-through-~44 aa observation makes
+#: this a reasonable floor for the band's lower half and a weaker one above it.
+FOLD_S = 16.5
+#: ⚠⚠ DELIBERATELY ABSENT. Slice 1 measured 4.7 s/fold at 251–384; slice 2 measured 0.7 at 1–30.
+#: `D-157 amendment 4` retracts the constant framing, so there is no value to carry here and none
+#: is invented. This campaign MEASURES it.
+TRANSPORT_S = None
 
 assert BAND[1] <= CAP_AA, "the band's ceiling is above the measured-safe envelope"
 
-OUT_DIR = REPO / "data" / "control" / "task4_slice2"
+OUT_DIR = REPO / "data" / "control" / "task4_slice3"
 ENUMERATION_JSON = OUT_DIR / "enumeration.json"
 ENQUEUED_JSON = OUT_DIR / "enqueued.json"
 PROGRESS_CSV = OUT_DIR / "progress.csv"
@@ -85,12 +80,7 @@ PROGRESS_CSV = OUT_DIR / "progress.csv"
 # ── the population ──────────────────────────────────────────────────────────────────────────
 
 def the_band() -> list[dict[str, Any]]:
-    """The 525, enumerated from the manifest. ⚠ Refuses on any count but `EXPECTED_N`.
-
-    ⚠⚠ A slice of 523 is a different population than the one ruled on, and the projection it
-    will be compared against was computed over 525. Resolve the disagreement rather than
-    override it.
-    """
+    """The 1,101, enumerated from the manifest. ⚠ Refuses on any count but `EXPECTED_N`."""
     lo, hi = BAND
     rows = []
     with open(REPO / "data" / "census" / "census_manifest.v7.csv", encoding="utf-8") as fh:
@@ -112,41 +102,43 @@ def the_band() -> list[dict[str, Any]]:
     return sorted(rows, key=lambda r: (r["span"], r["accession"]))
 
 
-def projection() -> tuple[float, list[str]]:
-    """The corrected projection: fold time PLUS the per-fold transport constant, per sub-band."""
-    lines, total = [], 0.0
-    for lo, hi, n, fold_s in SUB_BANDS:
-        secs = (fold_s + TRANSPORT_S) * n
-        total += secs
-        lines.append(f"  band {lo}-{hi:<3} {n:>4} rows x ({fold_s} + {TRANSPORT_S}) s "
-                     f"= {secs/3600:.2f} h")
-    return total, lines
+def projection(n: int = EXPECTED_N) -> dict[str, Any]:
+    """Fold-time-only, stated as a FLOOR with the missing term named.
+
+    ⚠⚠ Returns no single figure for elapsed. `D-157 amendment 4`: the transport term is per-band
+    and this band's is unmeasured, so an elapsed number here would be an estimate wearing a
+    measurement's clothes.
+    """
+    return {
+        "n": n,
+        "fold_s": FOLD_S,
+        "fold_only_h": FOLD_S * n / 3600,
+        "transport_s": TRANSPORT_S,
+        "transport_status": "UNMEASURED for band 31-100; NOT carried from 251-384 (4.7 s) or "
+                            "1-30 (0.7 s) - D-157 amendment 4",
+        "elapsed_h": None,
+    }
 
 
 def enumerate_slice() -> int:
-    """Count it, cross-check it, project it, write it to disk. ⚠ No database, no write to it."""
     rows = the_band()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ENUMERATION_JSON.write_text(json.dumps(rows, indent=2), encoding="utf-8")
 
     from collections import Counter
     spans = [r["span"] for r in rows]
-    lo10 = sum(1 for s in spans if s <= 10)
     print(f"band {BAND[0]}-{BAND[1]} inclusive, tranches 1-4: {len(rows)} rows "
           f"(expected {EXPECTED_N})")
-    print(f"  sub-bands  : 1-10 {lo10} | 11-30 {len(rows)-lo10}   (expected 130 | 395)")
     print(f"  by tranche : {dict(Counter(r['tranche'] for r in rows))}")
     print(f"  span range : {min(spans)} - {max(spans)}   mean {sum(spans)/len(spans):.1f}")
     print(f"  written to : {_rel(ENUMERATION_JSON)}")
 
-    total, lines = projection()
-    print("\ncorrected projection (D-157 amendment 3: transport is a PER-FOLD CONSTANT,")
-    print("additive to fold time rather than a fraction of it):")
-    for line in lines:
-        print(line)
-    print(f"  TOTAL {total/3600:.2f} h")
-    print("\n! Wall time is flat at ~16.5 s fold-only through ~44 aa - reload dominates, so in")
-    print("  this band cost is set by PROCESS COUNT rather than by span length.")
+    p = projection()
+    print(f"\nprojection: FOLD TIME ONLY, {p['fold_s']} s x {p['n']} = "
+          f"{p['fold_only_h']:.2f} h  -- A FLOOR, NOT AN ESTIMATE OF ELAPSED")
+    print(f"  transport: {p['transport_status']}")
+    print("  !! Two measured points do not licence an interpolation. This campaign measures the")
+    print("     missing term as (elapsed - fold_time) / n_folds and reports it per band.")
     print("\nno database was touched. --enqueue writes; the owner is at the keyboard for that.")
     return 0
 
@@ -179,10 +171,8 @@ def enqueue(owner: bool) -> int:
 
     written = []
     with Session(_engine()) as s:
-        # ⚠⚠ THE BAND OVERLAPS TASK 3's TWENTY, AND THAT IS ARITHMETIC RATHER THAN A DEFECT. The
-        # stratified sample drew 4 rows from 1-10 and 4 from 11-30. Re-folding them would give one
-        # accession TWO Run 2 rows, breaking the generation partition the campaign rests on.
-        # ⚠ The BAND stays 525; what is ENQUEUED is the complement, and the arithmetic is printed.
+        # ⚠ The band overlaps Task 3's twenty; what is ENQUEUED is the complement. The BAND stays
+        # 1,101 and the arithmetic is printed rather than assumed.
         already = _existing_run2(s, list(by_acc))
         todo = [p for p in payloads if p["accession"] not in already]
         print(f"\nband {BAND[0]}-{BAND[1]}: {len(payloads)} rows")
@@ -243,17 +233,21 @@ def fold(owner: bool) -> int:
         print("Run under the CUDA interpreter (.venv/Scripts/python.exe).", file=sys.stderr)
         return 1
 
+    # ⚠⚠ The stranger guard, before the first claim. `run_worker` claims the next job of its TIER,
+    # not "one of mine".
     if refuse_on_strangers(enqueued, worker_tier()):
         return 1
 
     base = os.environ.get("TRANSPORT_URL", "https://pharmfoldmdk.fly.dev")
     run = SliceRun(enqueued, base, progress_csv=PROGRESS_CSV)
-    print(f"slice 2: band {BAND[0]}-{BAND[1]}, {len(enqueued)} rows, surface {base}")
+    print(f"slice 3: band {BAND[0]}-{BAND[1]}, {len(enqueued)} rows, surface {base}")
     if run.done:
-        print(f"! RESUMING: {run.done} fold(s) already in {_rel(PROGRESS_CSV)}. The queue holds "
-              f"the rest pending, so a restart costs one fold, not {run.done}.")
+        print(f"! RESUMING: {run.done} fold(s) already in {_rel(PROGRESS_CSV)}.")
     print("stop conditions: all folded | 3 consecutive unlanded artifacts | 20 min idle | "
           "10 h wall")
+    p = projection(len(enqueued))
+    print(f"projection: {p['fold_only_h']:.2f} h of FOLD TIME - a floor. Transport for this band "
+          f"is unmeasured and this run is what measures it.")
 
     if not owner:
         print("\nDRY RUN - no fold ran. Re-run with --i-am-the-owner to fold.")
@@ -278,7 +272,6 @@ def fold(owner: bool) -> int:
         run_worker(client, _fold_one, config.worker_id, poll_interval=config.poll_interval,
                    tier=worker_tier(), should_stop=run.should_stop)
     finally:
-        # ⚠ The last fold is still held, unprobed. Flush it or the record is short by one.
         if run._held is not None:
             run._probe_and_write(run._held)
             run._held = None
@@ -307,29 +300,33 @@ def report() -> int:
               f"last {free[-1]} MiB over {len(free)} folds "
               f"({'CONSTANT' if len(set(free)) == 1 else 'VARIES'})")
 
+    b = [int(r["served_structure_bytes"]) for r in rows if r["served_structure_bytes"]]
+    if b:
+        print(f"\n3 - SERVED ARTIFACTS: {min(b):,} - {max(b):,} bytes")
+
     walls = [float(r["wall_seconds"]) for r in rows if r["wall_seconds"]]
     if walls:
-        # ⚠ Per sub-band, because the projection was made per sub-band and a single mean would
-        # hide which half it got wrong.
-        print(f"\n3 - WALL TIME vs the corrected projection")
-        for lo, hi, n, fold_s in SUB_BANDS:
-            got = [float(r["wall_seconds"]) for r in rows
-                   if r["span_aa"] and lo <= int(r["span_aa"]) <= hi]
-            if not got:
-                continue
-            mean = sum(got) / len(got)
-            print(f"    band {lo}-{hi:<3} n={len(got):>4}  fold mean {mean:>5.1f}s "
-                  f"(projected {fold_s}s)  -> {mean/fold_s:.2f}x")
-        total, _ = projection()
-        print(f"    projected total {total/3600:.2f} h over {EXPECTED_N} rows")
-        print("    ! elapsed vs projected needs the timestamps; fold time alone omits transport,")
-        print("      which is the error D-157 amendment 3 records.")
-    print("\n! SLICE 3 IS NOT AUTHORISED. Report the harvest; the owner rules.")
+        import datetime
+        ts = [datetime.datetime.fromisoformat(r["at"]) for r in rows if r["at"]]
+        fold_only = sum(walls)
+        print(f"\n4 - WALL TIME, fold and elapsed reported SEPARATELY so the transport term")
+        print(f"    for this band can be derived rather than assumed:")
+        print(f"    fold time mean {fold_only/len(walls):>5.1f}s  total {fold_only/3600:.2f} h")
+        if len(ts) > 1:
+            elapsed = (ts[-1] - ts[0]).total_seconds()
+            per_fold = (elapsed - fold_only) / max(1, len(ts) - 1)
+            print(f"    elapsed        {elapsed/3600:>5.2f} h  ({ts[0].strftime('%H:%M')} -> "
+                  f"{ts[-1].strftime('%H:%M')})")
+            print(f"    !! TRANSPORT for band {BAND[0]}-{BAND[1]}: "
+                  f"(elapsed - fold_time) / n = {per_fold:.1f} s/fold")
+            print(f"    compare: 4.7 s/fold at 251-384, 0.7 s/fold at 1-30. This is a THIRD")
+            print(f"    measured point, not a confirmation of either.")
+    print("\n! SLICE 4 IS NOT AUTHORISED. Report the harvest; the owner rules.")
     return 0
 
 
 def main(argv: Optional[list[str]] = None) -> int:
-    ap = argparse.ArgumentParser(prog="python scripts/task4_slice2.py")
+    ap = argparse.ArgumentParser(prog="python scripts/task4_slice3.py")
     ap.add_argument("--enumerate", dest="enumerate_", action="store_true",
                     help="count the band, project it, write it to disk. No DB write.")
     ap.add_argument("--enqueue", action="store_true", help="write the Run 2 rows")

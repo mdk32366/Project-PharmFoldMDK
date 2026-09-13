@@ -1,6 +1,7 @@
-# PAPERS — the claim register (RE-ISSUE v2, 2026-08-04)
+# PAPERS — the claim register (RE-ISSUE v2, 2026-08-04; amended 2026-09-12)
 
 > **Supersedes the first issue, which never reached the repository.** ⟡ marks v2 changes.
+> ⚠⚠ marks 2026-09-12 amendments.
 >
 > **What this is.** Two candidate papers with different claims, different gates, and different
 > evidence. Without a register, F-entries get silently recruited to whichever paper is being written
@@ -14,16 +15,65 @@
 
 ## P-001 — The structural axis (Phase 1)
 
-- **Status:** Evidence complete pending one run. **Branch undecided.**
-- **The gate:** **D-075.** The run selects the claim; the claim has not been made.
-- **The claim, both branches, pre-committed at equal prominence (D-075 Decision 4):**
-  - **Branch A** — a structure-derived axis for ADC target prioritization is orthogonal to
-    expression and robust to confidence confounds.
-  - **Branch B** — predicted-structure confidence confounds structure-based target prioritization:
-    a cautionary analysis.
+- **⚠⚠ Status:** **BRANCH A RULED — Matt Kelly, 2026-09-12.** Evidence complete. Writing phase.
+- **⚠⚠ The gate:** **`D-075` CLEARED.** Run B frozen 2026-09-12, `data/attention_proxies.json`
+  written and confirmed from the filesystem; all three control arms run separately and each
+  confirmed byte-identical on re-run. **The gate is no longer open.**
+- **The claim, both branches, pre-committed at equal prominence (D-075 Decision 4) — ⚠ retained
+  as written, because which branch was pre-committed is part of the evidence that the ruling is a
+  reading rather than a rationalisation:**
+  - **⚠⚠ Branch A — RULED** — a structure-derived axis for ADC target prioritization is orthogonal
+    to expression and robust to confidence confounds.
+  - **Branch B — not taken** — predicted-structure confidence confounds structure-based target
+    prioritization: a cautionary analysis.
+- **⚠⚠ The ruling is QUALIFIED, and the qualification is not a footnote.** The `pdb_present` arm
+  moves toward the anchor on all three statistics; the two PubMed arms disagree; and the
+  disagreement is a finding about the proxy's construction rather than an objection to the call.
+  **Decision 0's fragility properties travel with every cell of the result.**
 - **Draws on:** F-004 · F-005 · F-006 · F-008 · F-009 · D-075 · D-041/D-060.
 - **⚠ Reserved:** F-009's over-claim guard is P-001's and it binds. *The comparator has blind spots*
   stays strictly separate from *our scorer fills them.*
+
+### ⚠⚠ Run B triples — verbatim, for the methods section
+
+| arm | median | mean | ≥ 0.5 | against the anchor |
+|---|---|---|---|---|
+| `geom_proxy` unmatched (anchor) | 0.6607 | 0.6324 | 8-of-12 | — |
+| `no_plddt` baseline (F-005) | 0.5625 | 0.5893 | 6-of-12 | — |
+| **`pdb_present`** | 0.6564 | 0.6615 | 10-of-12 | toward the anchor on all three |
+| **`pub_count_tagged`** | 0.5893 | 0.6310 | 9-of-12 | mean and count toward the anchor |
+| **`pub_count_atm`** | 0.5357 | 0.5923 | 7-of-12 | ⚠ **mixed — see below** |
+
+- **Null counts: 0 of 82 on all three arms.** No result rests on an absent measurement, and no
+  low-attention stratum contains a disguised fetch failure.
+- **56 of 82** targets joined to the served ranking; **26 skipped for having no structural score —
+  skipped, never fabricated.** ⚠ **All 12 Group B positives are present**, so no arm's count is
+  taken over a reduced positive set.
+
+**⚠⚠ THE `pub_count_atm` ARM AGAINST THE `no_plddt` BASELINE, ON THE FULL TRIPLE.** Its **median**
+(0.5357) sits **below** the baseline's 0.5625. ⚠ **Its mean (0.5923 against 0.5893) and its count
+(7-of-12 against 6-of-12) sit ABOVE it.** One statistic of three is below; two are above.
+
+> ⚠⚠ **Reporting only the median here would be the single-statistic reading `D-075` forbids in
+> terms** — *judge on the explicit triple, never one statistic*. The honest statement is that the
+> ATM arm is **mixed against the baseline**, not below it.
+
+**⚠⚠ THE PubMed ARM DISAGREEMENT CANNOT BE READ AS "EVEN THE STRICTER ARM SURVIVES."** The
+mechanism that predicted *which* arm would be conservative — a fame-correlated undercount in the
+tagged arm — was tested across all 82 targets **before the freeze** and found **flat**: Spearman
+**rho = +0.026**, quartile means 1.40 / 1.31 / 1.56 / 1.31, and the two largest undercounts on
+`PODXL` and `TNFRSF10C`, **both with zero solved structures**. The owner replaced the mechanism
+with **symbol ambiguity**, which is measured — ⚠ **and ambiguity carries no direction.** The
+disagreement is real; **its sign carries no warrant.** Stated in the methods section, not a
+footnote.
+
+**⚠ Decision 0's three fragility properties, attached specifically to the `pub_count_atm` count:**
+the n = 12 median is not a stable anchor; the count turns on one rank step; the gap is ten finest
+increments. **7-of-12 is one rank step from 8-of-12.**
+
+**⚠ Provenance that travels with every citation of this result:** *the proxies are frozen KNOWING
+Run A survived*, and that sentence is on the snapshot's face by ruling. What preceded the result
+is the **interpretation table** (`D-075` Decision 4), frozen before these numbers existed.
 
 ### ⟡ Two additions from 2026-08-04, both about the method rather than the result
 
@@ -224,6 +274,85 @@ direction.**
 **⚠ What this amendment does NOT do** — it does not change `P-001`'s claim · does not re-open the
 pre-registration · ⚠⚠ **does not report a correlation coefficient over four rows** · and does not
 treat *underpowered* as a null result. ***It is an absence of power, not an absence of effect.***
+
+---
+
+### ⚠⚠ New findings from 2026-09-11/12 that bear on the paper
+
+**⚠⚠ `F-068` — the fold-path asymmetry, documented and misread.** The writing path's missing VRAM
+gate and non-`D-105` topology were **both already written in `ARCHITECTURE.md:835`**, on `main`,
+as parentheticals inside a capability description rather than as gaps — *"the fold loop still does
+not consult the guard"* and the persistent-child rationale, the latter never joined to `F-064`,
+which was OPEN in the same file and says the opposite. ⚠⚠ **Every worker-path fold on this host
+ran ungated before 2026-09-12.**
+
+⚠ **`D-105`'s topology is now measured rather than assumed:** free VRAM read **7,043 MiB at every
+one of 342 + 517 consecutive folds — one distinct value.** ⚠⚠ **The methods section must record
+that the structural scoring runs predate this topology reaching the writing path**, because the
+census folds those scores rest on were produced under the earlier regime.
+
+**⚠⚠ `F-069` — the short-span population.** Four instruments tripping over one population:
+`F-048`'s 58 rows; **525 census rows ≤ 30 aa (19.5%)**, ten at `span_aa = 1`; the viewer rendering
+empty for spans 1–3; and PAE at L = 1. ⚠ **A finding about the SPAN PIPELINE, not a limitation of
+folding** — a 1-residue extracellular span is not a foldable protein. ⚠ Its pre-registered
+question resolved: PAE at L = 1 is a **degenerate 1×1 matrix** (`[[14.4886]]`) and it **landed**,
+so the 1-residue rows **stay** in the campaign.
+
+**⚠⚠ `F-070` — the viewer's silent empty panel.** Spans 1–3 render an empty panel with **no error
+and no placeholder**, while the confidence bar renders directly below it. ⚠ **The endpoint serves
+a valid PDB in every case** (1-residue = `200`, 690 bytes, one CA atom) — a representation gap,
+not a load failure. **37 rows certainly affected; up to 99 if spans 4–7 also fail; the boundary
+between 4 and 8 is UNMEASURED.** ⚠ Four accessions were walked, which is a positive control for
+the working case and **not a survey**.
+
+**⚠⚠ `F-071` — category E, the 13 cohort targets with no extracellular span.** They are
+`coverage()['no_topology']`, `held_out` since `D-024` — ⚠ **a named, partitioned, served
+disposition, not an undiscovered population.** Two causes, not one: twelve rows record no span,
+and `SDK1` records a span it never measured. ⚠⚠ **Group B ∩ the 13 is EMPTY**, and the real gap is
+a **labels** gap — `anetumab` occurs **zero times** in the ADC reference. `F-009`'s shape on the
+project's own pipeline.
+
+**⚠⚠ `F-072` — the Run B result (Branch A).** The three-arm attention control survived. See the
+triples above, and the qualification on the `pub_count_atm` arm, which is a limit on the reading
+rather than an objection to the ruling.
+
+**⚠⚠ `D-095` amendment 3 — RULED IN, Matt Kelly, 2026-09-12. No repairs authorised.** Eight of
+the ten `no_domains` rows carry InterPro domain-like features **wholly inside the folded span**, so
+amendment 2's stated basis survives for `LCT` alone; and all **1,532** `tranche6_tiles.csv` rows
+carry `tile_cut_kind = whole_run`, ⚠ **none of the five ruled values was ever emitted**. ⚠ **The
+ruling authorises no build** — both are disclosures for the methods section, and §4's MUC22
+disposition remains unmade. These bear on the tranche-6 methods description and on the
+tile-legibility claim under `D-094`, ⚠⚠ **which is a `D-094` MOUNT PRECONDITION that nothing
+currently satisfies.**
+
+### ⚠⚠ Open before submission — updated
+
+- ⚠⚠ **The Run B triples and their interpretation**, written into methods and results, with the
+  `pub_count_atm` arm reported **on the full triple** — mixed against the `no_plddt` baseline, not
+  below it.
+- ⚠⚠ **The PubMed arm disagreement stated plainly**: the refuted mechanism named, the sign carrying
+  no warrant, recorded as a **limit on the reading** and not a footnote.
+- ⚠⚠ **`F-068`'s consequence for the methods section** — the structural scoring runs predate the
+  `D-105` topology reaching the writing path.
+- ⚠⚠ **`tile_cut_kind = whole_run` on all 1,532 tiles** — cut legibility is a `D-094` **mount
+  precondition** and nothing records a cut kind. Carried in the methods section, or the
+  precondition is unmet on the live surface.
+- ⚠⚠ **`F-069` / `F-070` / `F-071`** — span-pipeline limitations, viewer silence, and the category
+  E labels gap. **Disclosures for the limitations section; none is a paper-blocker.** ⚠ Repair is
+  unblocked by the freeze, but ⚠⚠ **`D-075`'s anchor now rests on a frozen set that a span change
+  would move.**
+- **Systematic lit review** (PRISMA-grade).
+- **Site4Drug and PNAS 2026** verified.
+- **n = 12 power section.**
+- **Method-novelty language** dropped in favour of *"first honest measurement of an under-explored
+  axis."*
+- ⟡ **The commensurability limitation** written to Grok's steelman.
+- ⟡ **The corrected red-then-green formulation.**
+- **PAE absent from the 2,690 census folds** (`F-042`) — the census never had per-pair confidence.
+  ⚠ Run 2 is recovering it; **the status at time of submission must be stated**, not assumed
+  complete.
+- **`P-001` commensurability ruling** (`P-001 amendment 2`'s third outcome, `underpowered` at
+  n = 4) — ⚠ **still pending.**
 
 ---
 
