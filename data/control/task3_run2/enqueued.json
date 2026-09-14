@@ -1,0 +1,122 @@
+[
+  {
+    "accession": "Q8WXF7",
+    "analysis_id": 3698,
+    "job_id": 3698,
+    "span_aa": 1
+  },
+  {
+    "accession": "Q9Y3E0",
+    "analysis_id": 3699,
+    "job_id": 3699,
+    "span_aa": 2
+  },
+  {
+    "accession": "Q86Y82",
+    "analysis_id": 3700,
+    "job_id": 3700,
+    "span_aa": 7
+  },
+  {
+    "accession": "Q8TB68",
+    "analysis_id": 3701,
+    "job_id": 3701,
+    "span_aa": 9
+  },
+  {
+    "accession": "Q0VDE8",
+    "analysis_id": 3702,
+    "job_id": 3702,
+    "span_aa": 13
+  },
+  {
+    "accession": "Q9ULK5",
+    "analysis_id": 3703,
+    "job_id": 3703,
+    "span_aa": 18
+  },
+  {
+    "accession": "Q9BRY0",
+    "analysis_id": 3704,
+    "job_id": 3704,
+    "span_aa": 22
+  },
+  {
+    "accession": "A6ND48",
+    "analysis_id": 3705,
+    "job_id": 3705,
+    "span_aa": 27
+  },
+  {
+    "accession": "Q8NGZ5",
+    "analysis_id": 3706,
+    "job_id": 3706,
+    "span_aa": 37
+  },
+  {
+    "accession": "P47883",
+    "analysis_id": 3707,
+    "job_id": 3707,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q9H2H9",
+    "analysis_id": 3708,
+    "job_id": 3708,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NH07",
+    "analysis_id": 3709,
+    "job_id": 3709,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q17RY6",
+    "analysis_id": 3710,
+    "job_id": 3710,
+    "span_aa": 120
+  },
+  {
+    "accession": "Q6UX15",
+    "analysis_id": 3711,
+    "job_id": 3711,
+    "span_aa": 214
+  },
+  {
+    "accession": "Q6UXG8",
+    "analysis_id": 3712,
+    "job_id": 3712,
+    "span_aa": 222
+  },
+  {
+    "accession": "A5X5Y0",
+    "analysis_id": 3713,
+    "job_id": 3713,
+    "span_aa": 223
+  },
+  {
+    "accession": "Q8N3G9",
+    "analysis_id": 3714,
+    "job_id": 3714,
+    "span_aa": 315
+  },
+  {
+    "accession": "O43556",
+    "analysis_id": 3715,
+    "job_id": 3715,
+    "span_aa": 317
+  },
+  {
+    "accession": "Q9H2X3",
+    "analysis_id": 3716,
+    "job_id": 3716,
+    "span_aa": 329
+  },
+  {
+    "accession": "Q8N0V5",
+    "analysis_id": 3717,
+    "job_id": 3717,
+    "span_aa": 377
+  }
+]
