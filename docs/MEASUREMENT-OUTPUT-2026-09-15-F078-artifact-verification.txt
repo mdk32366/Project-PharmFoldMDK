@@ -1,0 +1,78 @@
+verifying ALL 36 against the VOLUME (the artifact is the evidence; the CSV is the index)
+
+  job   acc       analysis  csv_bytes   served  verdict
+  4870  Q3KNW5        4871      16566        0  MISSING
+  4871  Q6DWJ6        4872      17376        0  MISSING
+  4872  Q6ZMZ3        4873      18996        0  MISSING
+  4873  Q8NGV7        4874      19158        0  MISSING
+  4874  Q96CP7        4875      19887        0  MISSING
+  4875  Q96PE5        4876      16566        0  MISSING
+  4876  Q96PG2        4877      20130        0  MISSING
+  4877  Q9BYW1        4878      18996        0  MISSING
+  4878  Q9HBA0        4879      17781        0  MISSING
+  4879  Q9NRX5        4880      17457        0  MISSING
+  4880  B0YJ81        4881      20940        0  MISSING
+  4881  O94823        4882      18753        0  MISSING
+  4882  P03999        4883      20130        0  MISSING
+  4883  P29274        4884      17619        0  MISSING
+  4884  P36383        4885      19077        0  MISSING
+  4885  P49810        4886      19887        0  MISSING
+  4886  P59534        4887      19239        0  MISSING
+  4887  P60893        4888      20211        0  MISSING
+  4888  Q13585        4889      18024        0  MISSING
+  4889  Q5T1S8        4890      18591        0  MISSING
+  4890  Q6Y1H2        4891      20454        0  MISSING
+  4891  Q7LBE3        4892      18429        0  MISSING
+  4892  Q8IXM6        4893      17781        0  MISSING
+  4893  Q8NEW7        4894      19968        0  MISSING
+  4894  Q8NF91        4895      19401        0  MISSING
+  4895  Q8NH55        4896      19158        0  MISSING
+  4896  Q8WXH0        4897      19644        0  MISSING
+  4897  Q96CH1        4898      18591        0  MISSING
+  4898  Q9BTX1        4899      18024        0  MISSING
+  4899  Q9BXA5        4900      20454        0  MISSING
+  4900  Q9H1C0        4901      21588        0  MISSING
+  4901  Q9HBW0        4902      20373        0  MISSING
+  4902  Q9NPC1        4903      15351        0  MISSING
+  4903  Q9NRP0        4904      19077        0  MISSING
+  4904  Q9NRX6        4905      20292        0  MISSING
+  4905  Q9UBD6        4906      22803        0  MISSING
+
+  RECONCILABLE (artifact resolves, non-zero, bytes match CSV): 0 of 36
+  FAILED  -> option 1 (re-fold) for those rows alone      : 36
+      (4870, 'Q3KNW5', 'artifact absent')
+      (4871, 'Q6DWJ6', 'artifact absent')
+      (4872, 'Q6ZMZ3', 'artifact absent')
+      (4873, 'Q8NGV7', 'artifact absent')
+      (4874, 'Q96CP7', 'artifact absent')
+      (4875, 'Q96PE5', 'artifact absent')
+      (4876, 'Q96PG2', 'artifact absent')
+      (4877, 'Q9BYW1', 'artifact absent')
+      (4878, 'Q9HBA0', 'artifact absent')
+      (4879, 'Q9NRX5', 'artifact absent')
+      (4880, 'B0YJ81', 'artifact absent')
+      (4881, 'O94823', 'artifact absent')
+      (4882, 'P03999', 'artifact absent')
+      (4883, 'P29274', 'artifact absent')
+      (4884, 'P36383', 'artifact absent')
+      (4885, 'P49810', 'artifact absent')
+      (4886, 'P59534', 'artifact absent')
+      (4887, 'P60893', 'artifact absent')
+      (4888, 'Q13585', 'artifact absent')
+      (4889, 'Q5T1S8', 'artifact absent')
+      (4890, 'Q6Y1H2', 'artifact absent')
+      (4891, 'Q7LBE3', 'artifact absent')
+      (4892, 'Q8IXM6', 'artifact absent')
+      (4893, 'Q8NEW7', 'artifact absent')
+      (4894, 'Q8NF91', 'artifact absent')
+      (4895, 'Q8NH55', 'artifact absent')
+      (4896, 'Q8WXH0', 'artifact absent')
+      (4897, 'Q96CH1', 'artifact absent')
+      (4898, 'Q9BTX1', 'artifact absent')
+      (4899, 'Q9BXA5', 'artifact absent')
+      (4900, 'Q9H1C0', 'artifact absent')
+      (4901, 'Q9HBW0', 'artifact absent')
+      (4902, 'Q9NPC1', 'artifact absent')
+      (4903, 'Q9NRP0', 'artifact absent')
+      (4904, 'Q9NRX6', 'artifact absent')
+      (4905, 'Q9UBD6', 'artifact absent')

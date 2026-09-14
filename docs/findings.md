@@ -16,6 +16,148 @@
 
 ## Log (newest first)
 
+### F-078 — ⚠⚠ 37 folds were lost from BOTH stores at the backup boundary, and four separate answers walked past them — the first of them because a verification probe returned success for a reason unrelated to what it claimed to test
+
+- **Date:** 2026-09-15 · **Status:** ⚠ **OPEN** until the 37 are re-folded and the timezone
+  convention is marked at source.
+- **How known (`D-016`):** a three-way comparison — database state, on-disk record, artifact bytes
+  on the volume — over every population with an enumeration, plus a full sweep of the run 1 census.
+  Read-only, one tunnel bound by name per `D-162` rule 5, artifacts probed over HTTPS.
+
+**The loss.** 37 rows of `task4_slice2`: **36 `pending` + 1 `claimed`**, all `attempts = 0`, all
+`pdb_path` NULL, **all with no artifact on the volume.** Their folds ran and were measured.
+
+---
+
+#### 1. ⚠⚠ The defect that would have caused a bad write, and it is first because it nearly did
+
+The 37 were first reported as **reconcilable from the volume**, on the strength of *"5 of 5 sampled
+return HTTP 200"*. **That probe proved nothing.** It requested
+`GET /api/census/{accession}` — the census row, which returns **200 for any protein in the census**
+whether or not a Run 2 artifact was ever written. It was never a question about the artifact.
+
+⚠ **An owner-gated reconciliation write for 37 rows was ruled and scoped on that result.** Had it
+run, it would have marked 37 rows complete against artifacts that do not exist.
+
+The correct probe is `GET /api/analyses/{id}/structure`, and **its behaviour was calibrated before
+use rather than assumed**:
+
+| case | result |
+|---|---|
+| artifact present (analysis 4869) | `found=True, bytes=18186` |
+| artifact absent (analysis 999999, 0) | `found=False, bytes=0` |
+| 5xx or unreachable | **RAISES** — an outage cannot be reported as loss |
+
+⚠ **The control that should have accompanied the original sample:** seven rows the database calls
+`complete` return bytes matching `progress.csv` **exactly**, including job 4868 — the last row before
+the boundary. Only then does `bytes=0` on the 37 mean absence.
+
+⚠⚠ **This defect has a Planner instance as well as Code's.** The order read *"verify all 36, not 5"*
+and *"the artifact is the evidence"* — both correct — and was then applied to a probe result whose
+endpoint was never interrogated, because it had been **reported** as artifact evidence. **A correct
+instruction applied to an unexamined object.** The same failure at two stations, which is why it
+leads this entry rather than sitting in a list.
+
+#### 2. A matching set is not a matching state
+
+`§E` ordered the enumerations reconciled *"by accession and job id, not by count"* — *a matching total
+is not a matching set*. Correct, and **insufficient**. The `§E` pass compared **identity** and found
+20/20, 342/342, 517/517, **zero missing**, and concluded the window was empty but for one surviving
+write.
+
+⚠⚠ **All 37 lost rows were present the whole time.** A `pending` row and a `complete` row with the
+same id reconcile perfectly under an identity comparison. The rule has a third rung:
+
+> **A matching total is not a matching set. A matching set is not a matching state.**
+
+Carried into `D-162` as the corrected form.
+
+#### 3. Two timestamp conventions, one quantity, no marker
+
+`progress.csv` writes **naive local time**; the database is **tz-aware UTC**; nothing declares
+either. Read as UTC, the 37 folds appear at 08:25–08:37 — *seven hours before* the backup, and
+therefore impossible to have lost.
+
+⚠ **The offset was MEASURED, not assumed**, against rows present in both stores:
+
+| file | n | median delta | spread |
+|---|---|---|---|
+| `task4_slice1/progress.csv` | 342 | **25,202.4 s** | 25,201–25,207 |
+| `task4_slice2/progress.csv` | 480 | **25,201.7 s** | 25,201–25,204 |
+
+**7h 00m to within seconds** (the residual is write latency). Converted, the 37 ran
+**15:25:15–15:37:02Z** — starting **42 seconds after the backup**. ⚠ Slice 1 shares the convention, so
+it was unmarked everywhere, not only in the file where it was found.
+
+#### 4. The boundary, reported directly
+
+| population | n | db complete + artifact | lost | latest artifact |
+|---|---|---|---|---|
+| run 1 census | **3,656** | **3,651** | **0** | 2026-09-06 |
+| `task3_run2` | 20 | 20 | 0 | 2026-09-12 15:28 |
+| `task4_slice1` | 342 | 342 | 0 | 2026-09-12 21:48 |
+| **`task4_slice2`** | 517 | **480** | **37** | **2026-09-13 15:24:36.578Z** |
+
+⚠ The full census sweep resolved **3,651 present / 5 absent / 0 unresolved**, and the 5 absent are
+**exactly** the 5 rows the database does not call complete (2 `failed` — `P11717` per `F-066`,
+`P55073` per `F-033`; 3 `pending`). **No db-complete row anywhere is missing its artifact.**
+
+**The cut is a single instant and it runs through both stores:**
+
+```
+job 4868  completed 15:24:36.578Z   artifact 18,186 bytes   SURVIVED
+job 4869  claimed   15:24:36.642Z   artifact absent         LOST   (+64 ms)
+job 4870  folded    15:25:15Z       artifact absent         LOST
+ ...
+job 4905  folded    15:37:02Z       artifact absent         LOST
+```
+
+⚠ **Zero rows lost before the boundary; zero kept after it.** The loss is **contiguous**, not
+scattered — the database and the volume were recovered to the same instant and 12 minutes of work
+sits on the wrong side of it. ⚠ **The 1 `claimed` row is not a separate case:** job 4869 was claimed
+64 ms after 4868 completed and never finished. It is the first casualty, not an anomaly.
+
+#### 5. ⚠ The scope question, answered — and one residual that cannot be
+
+*Which other reconciliations, entries or measured claims compared `progress.csv` against the
+database?*
+
+- **No code does.** Every file that reads `progress.csv` (`task4_slice{1,2,3}.py` and their tests)
+  contains **zero** references to `completed_at` / `claimed_at` / `created_at`. Measured.
+- ✅ **`D-157 amendment 4`'s transport terms are unaffected**, and the reason is structural rather
+  than lucky: `elapsed = ts[-1] - ts[0]` is an **interval between two `progress.csv` timestamps**,
+  and a constant offset cancels in a difference. **4.7 s/fold and 0.7 s/fold stand.** The `517`
+  in its provenance line is a count of **folds performed**, which is true; only the database's
+  record of 37 of them is gone, and that entry now says so.
+- ⚠ **`F-073`'s truncation window is a residual.** It states 16:38:09Z–17:26:17Z from *"the suite's
+  own duration and the output file's mtime"* — **a local filesystem clock presented as `Z`**, the
+  same unmarked convention, and the artifact is no longer present to re-derive from. It reconciles
+  (backup 15:24:33Z = 08:24 local, mid-fold; truncation 16:38:09Z = 09:38 local, an hour after the
+  fold ended), so it is **recorded with its provenance named rather than corrected on a guess**.
+
+#### 6. What worked, recorded with equal weight
+
+- ⚠⚠ **The stranger guard caught this, on its first live exercise.** `--preflight` refused slice 3
+  because 36 claimable pending jobs sat outside its population. **Nothing else in the system was
+  looking**, and four separate answers — two Planner, two Code — had already passed over the loss.
+- ⚠ **`_head_served`'s fail-loud design prevented a fabricated loss.** Analysis 2995 returned a
+  transient **500** mid-sweep; the probe refuses to call a 5xx an answer. It returns **200 with
+  526,542 bytes** on retry. Reported as absence, it would have been a 3,652nd phantom.
+  ⚠ **And the harness got that wrong first:** it caught `Exception`, but the probe raises
+  `SystemExit`, which is not one, so the sweep died rather than continuing. The design was right and
+  the consumer was wrong — the sweep now retries 5xx three times and never converts one to absence.
+
+#### 7. What this does NOT touch
+
+✅ **The census is intact and the paper's population is unaffected.** 3,651 of 3,651 complete run 1
+rows hold their artifacts. The loss is confined to **Run 2 instrument measurement**, which `D-161`
+records as not growing the paper's population, not entering `F-004`, and not bearing on `F-072`.
+
+- **Assumptions relied on:** that the served surface is a faithful witness to the volume — held by
+  the calibration in §1 and by 3,651 positive controls, and the stronger question in any case
+  (`_head_served`: *a file the volume holds but the surface will not serve is not persisted in any
+  sense a reader can use*).
+
 ### F-076 — ⚠⚠ Five tests asserted tile geometry while the input to that geometry was read from a GITIGNORED cache — so the same assertions asserted different science on different machines, green in CI and red locally, and the difference was read for two days as a numeric disagreement
 
 - **Date:** 2026-09-15 · **Status:** ⚠ **CLOSED for the test surface; OPEN as a question about the

@@ -169,6 +169,29 @@ them into the log is what converts an intention into a gate.**
 predates 2026-08-17 and needs both incidents. Folding it into a log entry would be a third place for
 the same content to drift.
 
+#### D-162 amendment 2 — the reconciliation rule gains its third rung, and two rules that were already written are added
+
+- **Date:** 2026-09-15 · **Consumes no integer.** · Occasioned by `F-078`.
+
+**6. A matching total is not a matching set. A matching set is not a matching state.**
+
+⚠⚠ The first two clauses were `§E`'s and they were right. They were also **insufficient in exactly
+the way that hid 37 lost folds**: every one of those rows was present, by id and by accession, in
+both stores. Identity reconciled perfectly. Only `status` differed. ⚠ A reconciliation that compares
+existence and not state will report a clean bill on a database that has lost every completion it
+ever recorded.
+
+**7. A verification probe states what a success proves, and what it would return if the thing were
+absent.** ⚠ `GET /api/census/{accession}` returns 200 for any census protein and was read as
+evidence that a Run 2 artifact existed. **Calibrate the negative case before trusting the positive
+one** — and pair it with a control on rows already known to be good.
+
+**8. Anything outside version control that determines a landed artifact is a defect on the same
+footing as a single-copy enumeration.** ⚠ `.gitattributes` (byte-pinned files), `§J` (the
+enumerations), `data/census/spancache` (`F-076`'s tile geometry) and the session documents in a
+Downloads folder are four faces of one rule. ⚠ **Rule 6 candidate raised by the Planner on
+2026-09-15 and landed here on the fourth instance**, because four is no longer a coincidence.
+
 #### D-162 amendment 1 — a fifth standing rule: a port number is not a cluster identity
 
 - **Date:** 2026-09-15 · **Consumes no integer.** · **Owner ruling, 2026-09-15.**
@@ -347,7 +370,13 @@ exists to catch. The tier clause is `F-046`'s — a guard checking `local` while
 
 #### 5. ⚠ A named residual
 
-**Slice 1's and slice 2's `fold()` are NOT split.** Both campaigns are complete, so neither has a
+**Slice 1's and slice 2's `fold()` are NOT split.** ⚠⚠ **CORRECTED 2026-09-15:** this read
+*"both campaigns are complete"*. **Slice 1 is complete. SLICE 2 IS NOT** — the database holds
+**480 complete, 1 claimed, 36 pending** of its 517, because 37 folds landed after the
+2026-09-13 15:24:33Z backup boundary and were lost from BOTH the database and the volume
+(`F-078`). The 517 folds did happen and were measured; what did not survive is the record of 37 of
+them. ⚠ Past tense and dated rather than deleted — the statement was true of the folds and false of
+the record, and a reader needs to know which half failed. Neither has a
 remaining run — but **if either is ever re-run it re-creates the hazard**. The shared machinery is
 available to them and the residual is written into slice 1's header rather than left for a reader
 to find. ⚠ **Slice 4's runner does not exist yet and must be written with the split from its first
@@ -923,6 +952,14 @@ evidence the instrument works; it is evidence that two mistakes were similar in 
   quietly correcting it. **Sub-entry beneath its parent, consuming NO integer.**
 - **How known (`D-016`):** slice 1, **342 folds**, band 251–384; slice 2, **517 folds**, band 1–30.
   Both recorded per fold in `data/control/task4_slice{1,2}/progress.csv`.
+- ⚠⚠ **NOTE ADDED 2026-09-15 (`F-078`), and it does NOT change the figures above.** 37 of slice 2's
+  517 folds were lost from the database and the volume at the 15:24:33Z backup boundary, so the
+  database now records 480 complete / 1 claimed / 36 pending. **All 517 folds occurred and were
+  measured** — `progress.csv` carries every one with `verdict = ok` — and **the 0.7 s/fold term is
+  unaffected**, because it is an INTERVAL between two `progress.csv` timestamps
+  (`elapsed = ts[-1] - ts[0]`), and an interval is immune to the loss of rows from a different
+  store and to the file's unmarked timezone. ⚠ The count is a count of folds performed, not of
+  database rows surviving; those two were the same number until 2026-09-13 and are not now.
 
 ---
 
@@ -935,7 +972,10 @@ is withdrawn.** It was a single-band measurement presented as a property of the 
 | band | rows | transport measured |
 |---|---|---|
 | **251–384 aa** (slice 1) | 342 | **4.7 s/fold** |
-| **1–30 aa** (slice 2) | 517 | **0.7 s/fold** |
+| **1–30 aa** (slice 2) | 517 ⚠ | **0.7 s/fold** |
+
+⚠ **517 = folds PERFORMED and measured.** Since 2026-09-15 the database records only 480 of them
+as complete (`F-078`); the measurement is unaffected — see the note on this amendment's provenance.
 
 **A factor of 6.7 between two bands is not a constant.**
 
