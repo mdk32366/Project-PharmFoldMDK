@@ -1399,6 +1399,31 @@ S-002 Q1, now testable against a config that genuinely fits.
   (D-018): its pure logic (provenance, pLDDT rescale, truncation recording) is unit-tested on
   the gate, while the GPU-bound `fold` auto-skips without torch+CUDA (`@pytest.mark.gpu`) and is
   validated on a GPU host — there is no GPU CI runner.
+- **⚠⚠ Destructive-test safety — the suite must prove its target is disposable (KEEL V8-a,
+  rewritten by D-158):** `tests/conftest.py`'s `pg_engine` fixture runs
+  `TRUNCATE TABLE jobs, protein_analyses, ranking_runs RESTART IDENTITY CASCADE` on **every test
+  that uses it**. That is correct for isolation and carries one assumption — that `DATABASE_URL`
+  names an expendable database. **The assumption failed twice:** 2026-08-17 (`protein_analyses`
+  2,771 → 1) and 2026-09-13 (4,535 → 1, 19 tests, 2,887.94 s, uninterrupted).
+  - **The first guard compared the URL's host against an allowlist of expendable hostnames, and
+    that mechanism could not be made correct.** `fly mpg proxy` presents production at
+    `127.0.0.1`, and loopback could not be removed from the list because the genuinely disposable
+    databases are on loopback too. It named its own blind spot in its own docstring and the suite
+    ran for 27 more days.
+  - **D-158 moves the trust from the URL to the database.** The target must carry
+    `keel_disposable_marker`; `tests/_db_safety.refusal_reason()` probes for it and **fails closed**
+    when it cannot decide. A tunnel faithfully reports the contents of whatever it points at, which
+    is exactly why it defeated a hostname check and cannot defeat this one.
+  - **The marker is created by CI** (a `gate.yml` step between `alembic upgrade head` and pytest)
+    **and by `scripts/keel_mark_disposable.py`** — and by **no migration**, asserted over every
+    revision file. A migration would put the marker into production on the next upgrade and
+    **invert the guard silently**. That condition is registered as `A-031`.
+  - **Two bypasses were deleted rather than narrowed:** the unconditional `CI=true` allowance
+    (`CI` is set by many tools, so a developer shell carrying it plus a tunnel was the incident
+    with the guard asleep), and the constant-sentence override, now bound to one host and database
+    so it cannot be a blanket and cannot survive being set once and forgotten.
+  - **The guard runs at `pytest_configure`, not `pytest_collection_modifyitems`** — the late hook
+    fires after every test module is imported.
 - **Reproducibility (course expectation):** pin model weights/versions, seed where
   relevant, and record any training/fine-tuning config so results can be reproduced.
   - Serving-tier deps are locked and hash-verified in CI (D-013 Amendment A).

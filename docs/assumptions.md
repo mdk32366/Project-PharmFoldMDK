@@ -385,6 +385,37 @@ Python in this repository is **not** the population the assumption is about:
 run.** Promoting this entry on the grep alone would be the `[L]`-used-as-`[M]` error this project
 recorded twice on 2026-09-11.
 
+### A-031 — a marker created outside the migration chain does not reach production
+
+- **Registered:** 2026-09-15 · **Status:** ⚠ **ASSUMED, at a named scope. Not held, not tested by
+  the write that relies on it.**
+
+> **The whole of `D-158` rests here.** The suite is permitted to `TRUNCATE` a database **because
+> that database carries `keel_disposable_marker`**. If the marker ever reaches production, the guard
+> does not merely stop working — it **inverts**, and authorises the truncation it exists to refuse.
+
+- **Relied on by:** `D-158`, on every run of the test suite against any Postgres target.
+- **What breaks if false:** ⚠⚠ a third truncation of production, by a guard reporting success.
+  Worse than no guard, because a guard that says *permitted* is read as evidence.
+- **The test — and ⚠ it covers ONE of the three paths:**
+  `tests/test_d158_positive_identity_guard.py::test_NO_migration_creates_the_marker` reads every
+  file in `db/migrations/versions/` and asserts none mentions the marker. That closes the
+  **`alembic upgrade head`** path, which is the one that would have fired automatically and
+  silently.
+- ⚠⚠ **The two paths it does NOT close, named rather than left to be discovered:**
+  1. **A human with `psql` and production credentials** can create the table by hand. Nothing in
+     this repository can prevent that, and no assertion here should pretend to.
+  2. **A restore or a dump/load that carries the marker between databases.** ⚠ This is not
+     hypothetical in this project: `kyzl60xz9zyrpj9g` exists *because* production was restored from
+     a backup on 2026-09-13. **If a marked disposable database were ever restored into a production
+     cluster, the marker would travel with it.** The direction that actually occurred — production
+     restored into a new cluster — is safe, because production never carried the marker.
+- **What would promote this to HELD:** a check that runs against the live database on deploy and
+  refuses to serve if the marker is present — turning the assumption into an enforced invariant on
+  the production side rather than a property asserted only in the test tree. ⚠ **That check does
+  not exist**, and this entry stays `ASSUMED` until it does. Claiming `HELD` on the migrations test
+  alone would be the `[L]`-used-as-`[M]` error recorded twice on 2026-09-11.
+
 ## 5. The feeding mechanism, measured
 
 KEEL-4 §5.1 is the load-bearing claim of the whole design: *"Every decision entry carries an

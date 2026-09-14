@@ -1,11 +1,35 @@
 # KEEL V8 — destructive operations: prevention, and recovery
 
-> **Proposed amendment.** ⚠ **V8-a is implemented** (`tests/_db_safety.py`, D-092). **V8-b below is
-> proposed and not yet written into any tooling** — it is a rule for a human and an agent to follow,
-> and it is deliberately *not* automated, for the reason in §3.
+> ## ⚠⚠ V8-a's MECHANISM IS SUPERSEDED BY `D-158` (2026-09-15). READ THAT ENTRY FIRST.
+>
+> **This document describes the guard as written after 2026-08-17. That guard failed on
+> 2026-09-13** — `protein_analyses` **4,535 → 1** — because it decided on the URL's hostname and a
+> `fly mpg proxy` tunnel presents production at `127.0.0.1`. ⚠ **The hole is the one §2 below
+> names of itself**, in the paragraph beginning *"Necessary and not sufficient"*.
+>
+> ⚠ **Two specifics on this page are now WRONG and must not be acted on:**
+> - **The override is no longer `PHARMFOLD_ALLOW_DESTRUCTIVE_DB=i-know-this-truncates`.** That bare
+>   sentence is a blanket — pasted into an `.env` once it authorises the truncation of every
+>   database that file will ever name. It is now bound to a single target:
+>   `i-know-this-truncates:<host>/<database>`.
+> - **`CI=true` no longer bypasses the guard at all.** It was deleted, not narrowed.
+>
+> ⚠ **The V8-a INTENT is unchanged and is not retreated from** — *the suite runs only where the data
+> is expendable*. What changed is what answers the question: the target database must now carry
+> `keel_disposable_marker`, because a tunnel faithfully reports the contents of whatever it points
+> at and therefore cannot lie about this the way it lied about the address.
+>
+> **The page is kept rather than rewritten** — it is the record of what was believed on 2026-08-18,
+> and `D-074` asks for the residual to be visible rather than tidied away.
+>
+> **Proposed amendment.** ⚠ **V8-a is implemented** (`tests/_db_safety.py`, D-092; mechanism
+> replaced by D-158). **V8-b below is still proposed and not yet written into any tooling** — it is
+> a rule for a human and an agent to follow, and it is deliberately *not* automated, for the reason
+> in §3. ⚠ V8-b remains explicitly out of scope for `D-158`: a backup makes recovery reliable and
+> does nothing about prevention.
 >
 > **Occasioned by:** the destruction of the production database on 2026-08-17 and its recovery from
-> a backup **nobody had verified existed**.
+> a backup **nobody had verified existed** — and, 27 days later, its destruction again.
 
 ---
 

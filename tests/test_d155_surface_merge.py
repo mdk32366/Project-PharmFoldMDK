@@ -260,7 +260,11 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
     # wave removes its own number from this set and adds the name, which is the flip this file
     # has already made at 145, 146, 147, 152 and 154. Never relaxed to a `>=`.
-    assert not ({158, 159, 160, 161, 162, 163} & set(ids)), (
+    # ⚠ D-158 is SPENT by the positive-identity database safety guard: NAMED here rather
+    # than barred, and the band it leaves behind keeps the bar. A name is ADDED and nothing
+    # is relaxed — the flip this file has already made at 145, 146, 147, 152 and 154.
+    assert 158 in ids, "D-158 claimed this integer (the positive-identity guard)"
+    assert not ({159, 160, 161, 162, 163} & set(ids)), (
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG
     assert "\n### D-164" not in LOG, (

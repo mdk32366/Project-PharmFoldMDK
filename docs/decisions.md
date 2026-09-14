@@ -16,6 +16,137 @@
 
 ## Log (newest first)
 
+### D-158 — The test suite stops trusting the ADDRESS of a database and starts requiring the database to PROVE it is disposable — and the disqualifying fact is that **the guard this replaces named its own blind spot, in its own docstring, and the suite ran for 27 more days**
+
+- **Date:** 2026-09-15
+- **Status:** Accepted. ⚠⚠ **BLOCKING — nothing in the 2026-09-15 wave runs until this is
+  merged with CI green** (`ORDERS-Code-2026-09-15-rev3.md` §B).
+- **Supersedes:** the hostname-allowlist mechanism of KEEL V8-a, written after 2026-08-17.
+  ⚠ **The V8-a INTENT is unchanged and is not being retreated from** — *the suite runs only where
+  the data is expendable*. Only the thing that answers the question changes.
+
+**The decision.** `tests/_db_safety.refusal_reason()` no longer reads the host out of
+`DATABASE_URL`. It asks the target database whether it carries `keel_disposable_marker`, and
+refuses when the answer is no or cannot be obtained.
+
+---
+
+#### 1. Why the mechanism had to change rather than be narrowed
+
+`TRUNCATE TABLE jobs, protein_analyses, ranking_runs RESTART IDENTITY CASCADE` has destroyed
+production **twice**, on one signature:
+
+| date | loss | how the target was reached |
+|---|---|---|
+| 2026-08-17 | `protein_analyses` **2,771 → 1** | `.env` sourced, production host in `DATABASE_URL` |
+| 2026-09-13 | `protein_analyses` **4,535 → 1** | `fly mpg proxy` tunnel — **`127.0.0.1:16380`** |
+
+⚠⚠ **The second firing went through the guard written for the first.** The allowlist held
+`localhost`, `127.0.0.1`, `::1`, `postgres`, `db` — and it **had to**, because the genuinely
+disposable databases are on loopback. There was no narrower list that admits a developer's local
+Postgres and rejects a tunnel, **because a tunnel to production is loopback by construction.** A
+mechanism that cannot be made correct is not tuned; it is replaced.
+
+⚠ **The disqualifying fact, stated first.** The old file's own docstring read: *"a tunnel to
+production looks exactly like localhost … this guard is necessary and not sufficient."* The hole
+was **written down, read, and quoted in Code's 2026-09-13 report**, and was never escalated. The
+same sentence appears a **third** time, in `scripts/taskb_pae_inventory.py`'s header: *"A tunnel to
+production looks exactly like localhost, and KEEL V8-a walks straight through this configuration."*
+**Three written records, zero escalations.** That is `D-074` applied to a safety instrument for the
+first time, and it is the corollary this incident bought.
+
+#### 2. The mechanism chosen, and the two rejected with the counterexample each fails
+
+⚠ **A positive identity check** — the target must prove it is disposable, rather than fail to
+look dangerous.
+
+| candidate | verdict | the counterexample it fails |
+|---|---|---|
+| **Row-count ceiling** (*a production database never holds fewer than N rows*) | **REJECTED** | ⚠⚠ A freshly restored or mid-migration production database is empty or nearly so. The rule green-lights the suite against production **on exactly the day you are restoring it** — the afternoon of 2026-09-13, while the restore into `kyzl60xz9zyrpj9g` was in flight. The one day it must not fail is the one day it does. |
+| **`PHARMFOLD_TEST_DB=disposable` env var** | **REJECTED** | It lives in the same file class that armed **both** incidents. Nothing stops it being pasted into `.env` on the first inconvenient Tuesday, and this project already ships the proof: the file's own docstring argued *"a flag someone can flick is a flag someone flicks by habit"* — while shipping a flag of that shape. ⚠ *The friction is the point* is the right instinct and the wrong location: friction in the environment is friction a developer removes once. |
+| **Marker table** (`keel_disposable_marker`) | **ACCEPTED** | ⚠⚠ The only candidate that is a property of **the database itself** rather than of the shell, the URL, or the environment. **A tunnel faithfully reports the contents of whatever it points at** — which is precisely why it defeated a hostname check and precisely why it cannot defeat this one. |
+
+#### 3. ⚠⚠ The two gates that sat IN FRONT of the host check, and are now gone
+
+The old `refusal_reason()` returned *permitted* at four gates; the host check was the **last**.
+Replacing only the fourth would have left a positive-identity check with two environment-variable
+bypasses ahead of it, **which is not a positive-identity check** — it could have merged, gone CI
+green, and still permitted the run that truncated production.
+
+1. **`CI=true` — DELETED outright.** Once CI creates the marker on its own service container the
+   bypass buys nothing, and it costs the entire property: `CI` is exported by a great many tools,
+   so a developer shell that happened to carry it, plus a tunnel, is 2026-09-13 with the new guard
+   installed and asleep. ⚠ CI now passes the *real* check — `gate.yml` runs
+   `scripts/keel_mark_disposable.py` between `alembic upgrade head` and pytest, and the order is
+   asserted.
+2. **The override — KEPT, and bound to its target.** Removing it entirely would mean the guard
+   gets *patched* instead of overridden, which is worse and less visible. The property it had to
+   hold is that it **cannot survive being set once and forgotten**: the value is now
+   `i-know-this-truncates:<host>/<database>`, so it authorises exactly one target and stops working
+   the moment that target moves. ⚠ **And the refusal never assembles a working value** — it states
+   the form. A refusal that prints the bypass is a refusal that teaches the bypass, and the old one
+   printed it in full.
+
+#### 4. The conditions attached, each load-bearing
+
+- ⚠⚠ **No migration may create the marker**, asserted over every file in
+  `db/migrations/versions/`. If one did, the first `alembic upgrade head` against production would
+  make production look disposable and **the guard would silently invert** — permitting exactly what
+  it exists to refuse. **This is the assumption registered as `A-031`**, and it is the single point
+  on which the mechanism rests.
+- **A failed probe fails closed.** Cannot connect, cannot read, cannot decide ⇒ refuse. ⚠ And it
+  is **not rescuable by the override**: if an undecidable target could be overridden, the override
+  would become the standing way past every flaky connection.
+- **The probe is injectable** — `refusal_reason(env=None, probe=None)`, default doing the real
+  query. ⚠ *A guard nobody can test is a guard nobody can trust* survives the rewrite; every
+  assertion in `tests/test_d158_positive_identity_guard.py` states a database without owning one.
+- **The probe sets `connect_timeout`.** The guard now does I/O, and a guard that hangs is one people
+  learn to skip.
+- **The hook moved to `pytest_configure`.** `pytest_collection_modifyitems` fires *after* every test
+  module is imported. Nothing in this suite does database work at import today — which is exactly
+  when the class is cheap to close rather than expensive to discover.
+- **`db_host` is kept, and for a stated reason** (not inertia): the refusal must name the target it
+  refused, so the parser has a real caller and its `@`-in-password test stays meaningful.
+
+#### 5. How known (`D-016`) — the revert proof, and ⚠ the one that is OWED
+
+**The failure-red, captured against the guard as it stood at `530f782`:**
+
+```
+DISPOSABLE_HOSTS = ('localhost', '127.0.0.1', '::1', 'postgres', 'db')
+URL under test   = postgresql+psycopg://fly-user:secret@127.0.0.1:16380/pharmfoldmdk
+refusal_reason() = None
+AssertionError: a tunnel to production presents as 127.0.0.1 and MUST be refused
+```
+
+⚠ **That is a failure-red, not an error-red:** the old guard was *reached*, it *answered*, and it
+answered **permitted** for the exact URL shape that truncated production. An `ImportError` would
+have discharged nothing.
+
+⚠⚠ **THE END-TO-END REVERT PROOF IS OWED, AND IT IS OWED DELIBERATELY.** §B.5 asks for a
+tunnel-connected production database being refused *by a real suite run*. Producing it before merge
+requires running pytest with `DATABASE_URL` set — **the proximate cause of 2026-09-13, and forbidden
+by the standing prohibitions until this entry is merged.** Chasing the proof would mean performing
+the prohibited act in order to certify the fix for the prohibited act. **It is therefore recorded as
+owed rather than quietly skipped, and it is the owner's first acceptance step after merge:** open
+the tunnel, run one `pytest` with `DATABASE_URL` set, and capture the refusal. ⚠ Until that runs,
+what is proven is the unit behaviour and the wiring — not the live path.
+
+#### 6. What this entry does NOT do
+
+- ⚠ **It does not verify backups.** A backup makes *recovery* reliable and does nothing about
+  *prevention*; installing it here would file the incident as solved while the hole stayed open.
+  That remains KEEL **V8-b**, a separate amendment on purpose.
+- ⚠ **It does not protect the enqueue path.** A campaign script builds its own engine and never
+  consults this guard at all. That is `D-159`, and it is a different hazard with a different vector
+  — conflating the two is how `§3.2` was called for twice, endorsed twice, and never landed.
+- ⚠ **It does not unarm a shell.** `D-160` splits the fold so a long unattended run stops holding a
+  database handle it does not need.
+
+- **Assumptions relied on:** `A-031` (a marker created outside the migration chain does not reach
+  production), `A-016` (any red proves the assertion bites), `A-017` (the fixture reaches the code
+  under test).
+
 ### D-157 — The Run 2 census re-fold's real scope is **2,572, not 2,691**, because the 440 ceiling is card-bound and does not apply to this host — and the disqualifying fact is that **`F-062`'s own finding was applied to the card `F-062` was written about**, by the party that wrote it
 
 - **Date:** 2026-09-11
