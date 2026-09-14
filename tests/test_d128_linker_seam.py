@@ -127,7 +127,7 @@ def _coincident_pair(*, a_span=(1, 50), b_span=(20, 75)):
 
 def _tree_digest(root: Path) -> dict[str, str]:
     return {
-        str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+        p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in sorted(root.rglob("*"))
         if p.is_file()
     }
@@ -590,7 +590,7 @@ def test_d128_writes_nothing_outside_its_own_tree(tmp_path):
     """Served stays assembler: this path cannot flip or touch anything it reads."""
     a, b, assembler, d125, d126, d127 = _all_four_trees(tmp_path)
     before = {
-        str(p.relative_to(tmp_path)): hashlib.sha256(p.read_bytes()).hexdigest()
+        p.relative_to(tmp_path).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in sorted(tmp_path.rglob("*"))
         if p.is_file()
     }
@@ -600,7 +600,7 @@ def test_d128_writes_nothing_outside_its_own_tree(tmp_path):
         d126_dir=d126.out_dir, d127_dir=d127.out_dir,
     )
     after = {
-        str(p.relative_to(tmp_path)): hashlib.sha256(p.read_bytes()).hexdigest()
+        p.relative_to(tmp_path).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in sorted(tmp_path.rglob("*"))
         if p.is_file()
     }

@@ -16,6 +16,75 @@
 
 ## Log (newest first)
 
+### D-164 — The served cost stamp names WHICH envelope produced it, because neither ceiling moves — and the disqualifying fact is that the stamp already named a ceiling, just not the one the campaign actually ran at
+
+- **Date:** 2026-09-15 · **Status:** Accepted. **Owner ruling, 2026-09-15.**
+- **Closes `F-074`** under that entry's own second stated condition.
+
+**The ruling, in the owner's words:** *"Neither ceiling moves. 440 is the measured fold-clean bound;
+384 is the campaign's conservative operating cap. Both are legitimate, differently derived, and
+collapsing one into the other destroys the information that they were measured separately. What's
+wrong is that a served census row presents a cost stamp without saying which envelope produced it."*
+
+---
+
+#### 1. ⚠ A correction to `F-074`'s implied remedy, found while implementing it
+
+`F-074` closes when *"the served surface names which ceiling it is quoting"* — and **the stamp
+already did.** `cost_recipe` has always rendered
+`local NVIDIA Blackwell, 8 GB VRAM at dtype=int8, chunk_size=64: local <= 440 aa, over-ceiling >= 630 aa`.
+
+⚠⚠ **So the gap is narrower and sharper than the finding stated it.** The stamp names the **measured
+fold-clean bound** and is silent on the **campaign's operating cap**. A reader sees `local` with a
+ceiling attached, and reasonably infers the row was folded or will be. **For the 119 rows in
+385–440 that inference is wrong**, and nothing on the surface contradicted it.
+
+The remedy is therefore not *name the ceiling* — it is **distinguish the two numbers**.
+
+#### 2. What lands
+
+`cost_block()` gains four fields beside the five it had:
+
+| field | value | why |
+|---|---|---|
+| `cost_ceiling_aa` | `440` | the measured bound, as a number rather than only inside prose |
+| `cost_campaign_cap_aa` | `384` | the cap the Run 2 campaign operates at |
+| `cost_outside_campaign` | bool | `True` exactly on the `F-074` gap |
+| `cost_campaign_note` | sentence | what the gap MEANS, on the row, in the same visual frame |
+
+⚠ The note on a gap row says it plainly: *local by the measured envelope, outside the campaign's
+cap … no campaign script will fold it. **Cost is not coverage.***
+
+⚠ **`tests/test_d137_census_cost_column.py`'s exact key-set assertion was widened by ADDING the
+four names**, never relaxed to a subset check — a `>=` there would pass on a stamp that had quietly
+dropped `cost_axis`.
+
+#### 3. ⚠⚠ One home for the cap, because this IS the two-paths defect
+
+The owner named the class and it is the right one: **`F-074` is *two paths to one quantity*, in the
+quantity that decides what gets folded** — and it survived a month precisely because **both paths
+were individually correct**. Neither number was a bug. That is what made it invisible.
+
+So `CAMPAIGN_CAP_AA` now lives in `core/foldability.py`, and
+**`scripts/task3_run2_folds.CAP_AA` imports it rather than restating `384`.** A second literal
+beside the first is exactly how this class reproduces, and the project has catalogued it ten times.
+
+#### 4. ⚠ Owed to the paper, and not dischargeable here
+
+**The methods section must disclose that the cost stamp is computed at 440 while the campaign
+operated at 384, with 119 tranche-4 rows in the gap.** The owner placed it alongside the
+`tile_cut_kind = whole_run` disclosure and the shape is identical: **a served surface computed on a
+basis the run did not use.** Recorded as owed; the methods section is owner-and-Planner work.
+
+#### 5. What this does NOT do
+
+- ⚠ **No ceiling moves.** Moving `local_bound` to 384 would re-tier 119 rows on a live surface and
+  contradict `F-062`'s measurement of the other card; moving `CAP_AA` to 440 would authorise folds
+  beyond this host's measured envelope, against `F-063` and `F-064`, both OPEN.
+- ⚠ **No row is re-costed.** Every `cost` verdict is byte-identical to before; four fields are
+  added beside them.
+- ⚠ **No row is folded**, and `D-161`'s slice 4 ruling at 600 rows is untouched.
+
 ### D-163 — KEEL V10 is adopted: context becomes a precondition rather than an assumption
 
 - **Date:** 2026-09-15
@@ -99,6 +168,41 @@ them into the log is what converts an intention into a gate.**
 ⚠ **Tracked separately and deliberately NOT folded in here:** the **Lessons Learned** document
 predates 2026-08-17 and needs both incidents. Folding it into a log entry would be a third place for
 the same content to drift.
+
+#### D-162 amendment 1 — a fifth standing rule: a port number is not a cluster identity
+
+- **Date:** 2026-09-15 · **Consumes no integer.** · **Owner ruling, 2026-09-15.**
+
+**5. A port number is not a cluster identity. Bind by name, corroborate by Direct IP, one tunnel at
+a time, and close it when done.**
+
+⚠⚠ **The failure this prevents was live on this machine on 2026-09-15**, and it was found on the
+way to fixing something else. Three `flyctl` proxies were listening — **16380, 16381, 16382** — left
+from the recovery work, with no session attached and no record of what they reached. `.env` pointed
+`DATABASE_URL` at **16380**, and **16380 has named BOTH clusters at different times**: the prework's
+standing recipe uses it for `kyzl60xz9zyrpj9g`, and `scripts/taskb_pae_inventory.py`'s header uses it
+for `zp2wjrej9lwodn4q`.
+
+⚠ **The available failure was not a broken guard — it was an INVERTED one.** The next step in the
+plan was `scripts/keel_mark_live_cluster.py`, which writes to whatever `DATABASE_URL` resolves to.
+Had it resolved through a stale proxy to the forensic cluster, the **live-cluster marker would have
+landed in `zp2wjrej9lwodn4q`** — after which `D-159` **passes on the forensic cluster and refuses on
+the live one**, and the first thing it does is wave an enqueue into the record the standing
+prohibitions forbid connecting to at all. **Silent, correctly typed, wrong.** `F-047`'s class,
+wearing the new guard.
+
+**The recipe, which is now the rule:**
+
+1. Kill every stale proxy first. One tunnel at a time.
+2. Open it **bound by cluster name**, never by reusing a port someone else opened.
+3. **Corroborate the destination**: `fly mpg proxy` prints `remote [<addr>]:5432`, and
+   `fly mpg status <cluster>` prints `Direct IP`. **They must match.** On 2026-09-15 both read
+   `fdaa:62:76d9:0:1::9`, which is how the live cluster was proven rather than assumed.
+2. Run the one thing. **Close the tunnel.** Verify nothing is listening.
+
+⚠ This rule came out of Code's own mitigation during `D-158`'s step-1a proof, where it was
+improvised because three unattributable tunnels were in the way. **Improvised once is a workaround;
+written down is a gate** — which is `§H`'s whole argument.
 
 ### D-161 — Slice 4 is ruled IN at **600 rows**, not the 735 the arithmetic suggested — and the disqualifying fact is that **the "1–10 remainder" the orders scoped it against does not exist**
 
@@ -3296,6 +3400,52 @@ is not a free one** — which is the whole purpose of that file.
   bytes, and `--load` needs a `DATABASE_URL` that only Fly holds. **The image gives the loader
   its code; it does not give it a credential, and that separation is deliberate** — it is the
   same reason `D-144` recorded `result_status: not_run` rather than claiming a rank.
+
+#### D-145 amendment 1 — from a caution into a convention: a repo-scanning check excludes its own source BY CONSTRUCTION
+
+- **Date:** 2026-09-15 · **Consumes no integer.** · **Owner ruling, 2026-09-15.**
+
+`D-145` recorded, of itself, that a guard which holds a pattern as *data* while searching for that
+pattern will match itself. It was written as a caution to be remembered.
+
+⚠⚠ **It fired FOUR times in the 2026-09-15 wave alone**, across two authors and four unrelated
+files:
+
+1. a conftest check for `pytest_collection_modifyitems` matched the docstring explaining why that
+   hook had been abandoned;
+2. a bootstrap check for `alembic` matched the sentence saying the marker must never arrive by
+   migration;
+3. a proof script's forbidden-word list matched **itself**, because the list contained the words;
+4. the same script's `import pytest` check matched the docstring promising there isn't one.
+
+**Four instances says the pattern is structural, not incidental.** Any detector that scans the
+repository will match its own source unless it is built not to.
+
+**The convention:** repo-scanning checks go through `tests/_repo_scan.py`, whose
+`sources_to_scan()` **excludes the caller's own source by default**. A check that has to *remember*
+to exclude itself is a check that will forget.
+
+#### ⚠ And the second half, which is the same lesson pointing outward
+
+The owner's ruling on the standing local reds: *"the guards rglobbing the repo root and tripping
+over gitignored paths is a detector scoped to what its author could see — the exact lesson
+`.gitattributes` records about itself."*
+
+- **`ROOT.rglob(...)` walks ignored trees.** On this machine that is 27 GB of real fold artifacts
+  plus ops debris from 2026-09-05. `D-139`'s guard asserts *"if a tree is ever **checked in**, this
+  test fails"* — and `rglob` was never the instrument for that sentence. It now reads tracked files,
+  which is what its own docstring always described.
+- **`str(Path)` yields backslashes on Windows.** Three checks compared a logical path against a
+  forward-slash literal: green on the deployment platform, red on the author's other machine. Now
+  `as_posix()`.
+
+⚠ **Measured:** the standing local baseline went **34 → 19 → 10 → 5 red** across this wave.
+⚠⚠ **The remaining five are NOT this class and are deliberately untouched:**
+`tests/test_hold48_tiles.py` (4) and `tests/test_hold48_stitch_readiness.py` (1) disagree with the
+code on **tile boundaries** — `(1, 1608, 1608)` where the test expects `(1, 1656, 1656)`, a
+difference of 48 on a module called `hold48`. That is a numeric disagreement, not an environment
+artifact, it is **pre-existing on `main`**, and CI is green on it. **It needs its own ruling and is
+not something to fix blind.**
 
 ### D-144 — The offline census ranking stops being a spreadsheet: `structural_score` lands in the DB and on its own route, three factors and no invented fifth — and the disqualifying fact is that no run was loaded here, because no database reached this build
 

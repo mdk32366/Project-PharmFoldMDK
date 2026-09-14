@@ -91,7 +91,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from core.foldability import LOCAL, OVER_CEILING, RENTAL, describe
+from core.foldability import CAMPAIGN_CAP_AA, LOCAL, OVER_CEILING, RENTAL, describe
+from core.foldability import outside_campaign_cap as _outside_campaign_cap
 from core.foldability import envelope as _envelope
 from core.manifest import LOCAL_CEILING, FoldCeiling
 
@@ -121,6 +122,21 @@ COST_LABEL = {
 #: ⚠⚠ THE STATEMENT D-077 DEC 1 REFUSAL 2 REQUIRES, and it travels with the datum rather
 #: than sitting in a doc. A cost class beside a census of ADC targets, unlabelled, is an
 #: invitation to read cheap as good.
+#: ⚠⚠ `D-164` / `F-074`. The cost stamp is computed at the MEASURED ceiling; the campaign runs at
+#: a lower cap. These two sentences are what stop a reader inferring a fold from a `local` verdict.
+COST_WITHIN_CAMPAIGN = (
+    "This span is inside the Run 2 campaign's operating cap, so a `local` verdict here and the "
+    "campaign's own population agree."
+)
+COST_OUTSIDE_CAMPAIGN = (
+    "⚠ LOCAL BY THE MEASURED ENVELOPE, OUTSIDE THE CAMPAIGN'S CAP. The cost verdict above is "
+    "computed at the measured fold-clean ceiling; the Run 2 campaign operates at a lower cap "
+    "because F-063 reached highest_ok = 384 and the host bugchecked before 392 was written "
+    "(F-064 is the post-fold headroom collapse; both OPEN). So this row is affordable to fold on "
+    "the measured card and is NOT in the campaign's population, and no campaign script will fold "
+    "it. Cost is not coverage."
+)
+
 COST_AXIS = (
     "COMPUTE COST, NOT SUITABILITY. This column says where this protein's extracellular "
     "span can be folded at the measured recipe — what it costs to compute. It says nothing "
@@ -200,12 +216,24 @@ def cost_block(span_aa: Any, ceiling: FoldCeiling = LOCAL_CEILING) -> dict[str, 
     `cost_axis` is D-077 dec 1 refusal 2's statement, and `cost_recipe` is D-016's provenance.
     """
     verdict = cost_for_span(span_aa, ceiling)
+    span = _whole_residues(span_aa)
+    # ⚠⚠ D-164: THE STAMP NAMES WHICH ENVELOPE PRODUCED IT. `cost_recipe` already said
+    # "local <= 440 aa" — the measured fold-clean bound — and said nothing about the cap the
+    # campaign actually operates at (384). A reader saw `local` and reasonably inferred the row
+    # gets folded. For the 119 rows in 385–440 that inference is wrong, and `F-074` is the finding.
+    # ⚠ Neither number moves (owner ruling, 2026-09-15): both are correct and differently derived,
+    # and collapsing one into the other destroys the information that they were measured apart.
+    outside = bool(span is not None and _outside_campaign_cap(span, ceiling=ceiling))
     return {
         "cost": verdict,
         "cost_label": COST_LABEL[verdict],
         "cost_note": COST_MEANING[verdict],
         "cost_axis": COST_AXIS,
         "cost_recipe": cost_recipe(ceiling),
+        "cost_ceiling_aa": ceiling.local_bound,
+        "cost_campaign_cap_aa": CAMPAIGN_CAP_AA,
+        "cost_outside_campaign": outside,
+        "cost_campaign_note": COST_OUTSIDE_CAMPAIGN if outside else COST_WITHIN_CAMPAIGN,
     }
 
 

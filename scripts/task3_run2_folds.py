@@ -52,7 +52,10 @@ sys.path.insert(0, str(REPO))
 SAMPLE_N = 20
 #: ⚠ `F-063` reached `highest_ok = 384` and the host BUGCHECKED before 392 was written. `F-064`
 #: is the post-fold headroom collapse. Both OPEN. This is a hard stop, not a preference.
-CAP_AA = 384
+#: ⚠⚠ **IMPORTED, NOT RESTATED (`D-164`).** A second literal `384` beside the one in
+#: `core.foldability` is exactly how `F-074`'s two-paths-to-one-quantity class reproduces, and this
+#: is the quantity that decides what gets folded.
+from core.foldability import CAMPAIGN_CAP_AA as CAP_AA   # noqa: E402
 #: The generation this campaign writes. `run: 1` is every existing census row (3,656 of 3,656).
 RUN_LABEL = 2
 

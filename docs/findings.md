@@ -81,6 +81,23 @@ today"* is a scope claim, and a scope claim is exactly the kind this register ex
   said *local on a 440-class card; this host caps at 384* would close this entry without moving
   either number.
 
+#### F-074 amendment 1 — CLOSED by `D-164`, and the remedy the finding named was already half-present
+
+- **Date:** 2026-09-15 · **Consumes no integer.** · **Status: ✅ CLOSED.**
+
+`F-074` closes when *"the served surface names which ceiling it is quoting"*. ⚠ **Implementing that
+revealed the stamp already named one** — `cost_recipe` has always rendered `local <= 440 aa`. The
+defect was narrower: it named the **measured** bound and was silent on the **campaign's operating
+cap**, so `local` read as *will be folded* for 119 rows that never will be.
+
+**`D-164` closes it by distinguishing the two numbers on the row** rather than by naming one, and by
+giving the cap a single home so the two-paths class cannot reproduce.
+
+⚠ **The owner's framing is carried into the entry and is the more useful half of this finding:**
+this is *two paths to one quantity*, the project's most-repeated defect class, and **it survived
+because both paths were individually correct.** A defect made of two correct things is invisible to
+every check that asks whether either one is right.
+
 ### F-073 — ⚠⚠ The production database was truncated by the test suite for the SECOND time, on the same signature, through the guard written for the first — and the disqualifying fact is that **the guard named its own blind spot, in its own source, and was read aloud in a report five hours earlier**
 
 - **Date:** 2026-09-15 (the incident: **2026-09-13**) · **Status:** ⚠ **CLOSED on prevention**
