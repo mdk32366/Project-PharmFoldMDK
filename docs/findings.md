@@ -16,6 +16,71 @@
 
 ## Log (newest first)
 
+### F-074 — ⚠ The campaign and the foldability instrument disagree about what "local" means by 56 residues, and the 119 rows in the gap are served to users as locally foldable while no campaign script will ever fold them
+
+- **Date:** 2026-09-15 · **Status:** ⚠ **OPEN.** It closes when the two definitions are reconciled,
+  or when the served surface names which ceiling it is quoting.
+- **Ruled an `F-` rather than an `A-` by the owner's instruction**, and the reasoning holds: this is
+  not something being taken for granted going forward — it is a **measured property of the
+  instrument as it stands**, on a live surface, today.
+- **How known (`D-016`):** enumeration over `data/census/census_manifest.v7.csv` against
+  `core.foldability.envelope` and `core.manifest.LOCAL_CEILING`, working tree at `b665df5`. No
+  database was touched.
+
+---
+
+#### 1. The two ceilings
+
+| source | value | what it means |
+|---|---|---|
+| `core.manifest.LOCAL_CEILING.local_bound` | **440** | the measured-success envelope of the card `F-062` was written about |
+| `scripts/task3_run2_folds.CAP_AA` | **384** | the campaign's cap, **card-bound to THIS host** (`D-157`) |
+
+⚠ **Both are correct, and that is what makes this the wrong-but-plausible class.** Neither number is
+a mistake. `D-157` ruled the campaign's population at **2,572** precisely *because* the 440 ceiling
+does not apply to this host.
+
+#### 2. The measurement
+
+| population | rows |
+|---|---|
+| tranche 1–4 carrying a span | **2,691** |
+| `span_aa ≤ 384` — the campaign (slices 1–4) | **2,572** |
+| **385–440 — the gap** | **119** |
+| `> 440` — genuinely rental / over-ceiling | **0** |
+
+⚠⚠ **Three facts sharpen this beyond a rounding difference:**
+
+1. **All 119 are `envelope() == local`.** Not some — all.
+2. **All 119 are tranche 4.** The gap is not spread across the census; it is one tranche's tail.
+3. **There are ZERO rows above 440.** So `D-157`'s "named remainder" of 119 and this gap are **the
+   same 119 rows**, and the remainder is *entirely* composed of rows the instrument calls local.
+
+#### 3. ⚠⚠ Why "harmless today" was the wrong answer
+
+It was first reported as a latent inconsistency, on the grounds that the campaign scripts use
+`CAP_AA` and never call `envelope()`. **The scripts do not, but the SERVED SURFACE does.**
+
+`app/read_routes.py` applies `apply_cost(rows)` to the census list, and `app/census_cost_read.py`
+resolves that stamp through `core.foldability.envelope` against `LOCAL_CEILING`. **Every census row
+served carries a cost stamp computed at 440.** So those 119 rows are published as locally foldable,
+and the campaign that would fold them refuses them by construction.
+
+⚠ **Any statement that the campaign covers the local-foldable census is false by 119 rows**, and
+`D-016` requires an absence to be a named category with a cause rather than a low number. *"Harmless
+today"* is a scope claim, and a scope claim is exactly the kind this register exists to refuse.
+
+#### 4. What this entry does NOT do
+
+- ⚠ **It does not change a ceiling.** Moving `local_bound` to 384 would silently re-tier 119 rows
+  on a live surface and contradict `F-062`'s measurement of the other card; moving `CAP_AA` to 440
+  would authorise folds beyond the envelope this host has measured. **Neither is Code's call.**
+- ⚠ **It does not fold anything.** The 119 are not added to any slice. `D-161` ruled slice 4 at
+  600 rows in band 101–250, and that ruling is untouched.
+- ⚠ It does not claim the served stamp is *wrong* — only that it is **unqualified**. A stamp that
+  said *local on a 440-class card; this host caps at 384* would close this entry without moving
+  either number.
+
 ### F-073 — ⚠⚠ The production database was truncated by the test suite for the SECOND time, on the same signature, through the guard written for the first — and the disqualifying fact is that **the guard named its own blind spot, in its own source, and was read aloud in a report five hours earlier**
 
 - **Date:** 2026-09-15 (the incident: **2026-09-13**) · **Status:** ⚠ **CLOSED on prevention**
@@ -2408,6 +2473,53 @@ empty-block counts GUESSED the payload keys — `rows`/`tumour`/`normal` against
 ⚠⚠ **A wrong key returning a clean, uniform, plausible answer, caught because the uniformity was too
 good rather than by any check.** ***A result that is suspiciously tidy is evidence about the query,
 not about the data.***
+
+#### F-047 amendment 5 — ⚠⚠ Member 15 recurred a THIRD time, at TWELVE times the scale, and the reason it was invisible is that the local suite had been red for a month
+
+- **Date:** 2026-09-15 · **Consumes no integer** (sub-entry beneath `F-047`, on the
+  `D-099 amendment 1` precedent).
+- **How known (`D-016`):** every tracked file under `data/` hashed twice — as checked out, and
+  LF-normalised — against every 64-hex sha256 pinned in `core/`, `scripts/`, `app/`, `db/` and in
+  the provenance sidecars. Working tree at `b665df5`.
+
+**`F-047 amendment 2` recorded member 15 recurring on a data artifact on 2026-08-20.** The fix added
+**three** files to `.gitattributes`. ⚠ **Twelve more were pinned and uncovered**, and the note
+written beside that fix states the lesson in its own words:
+
+> *a rule applied to one directory and not another is not a rule*
+
+**The twelve:** `data/burden/seer_us_cancer_burden.v1.csv`, `census_manifest{,.v2,…,.v7}.csv`
+(seven), `spans_annex.v2.csv`, `spans_surface.v2.csv`, `tranche6_runs.csv`, and the surfaceome
+LFS-pointer file.
+
+⚠ **The blobs are intact and nothing edited them.**
+`git cat-file -p :data/burden/seer_us_cancer_burden.v1.csv` hashes to the pinned `ed4ad609…` and
+contains no CRLF at all; the working copy hashed `d2bb2aa0…`. **Git rewrote them on checkout and the
+pin then failed on disk** — which reads as tampering rather than as configuration, exactly as the
+2026-08-19 note predicted.
+
+#### ⚠⚠ The finding is NOT the twelve files. It is why nobody noticed.
+
+`168` tracked files under `data/` are checked out CRLF, so the condition was ordinary and invisible.
+The visible symptom was **~34 red in the local suite while CI was green** — a standing failure set
+that had been explained away as "a Windows thing". ⚠ **A baseline nobody can tell has drifted is not
+a baseline:** the thirty-fifth failure would have arrived looking exactly like the other
+thirty-four, and on 2026-09-15 a real regression *did* arrive in that noise and was only separated
+from it by diffing failure sets before and after.
+
+⚠ **That diffing is a workaround, not a fix.** It requires remembering to do it.
+
+#### What landed with this amendment
+
+- The twelve files are `-text` in `.gitattributes`, under the existing narrow rule. ⚠ **Still not a
+  blanket rule** — the 2026-08-19 note declines that for `docs/**` with a stated reason and that
+  reasoning is untouched.
+- `tests/test_pinned_artifacts_are_eol_protected.py` asserts **(a)** every `-text` data artifact is
+  free of CRLF *in this clone*, and **(b)** no tracked `data/` file is pinned-and-drifting while
+  unlisted. ⚠ **(b) is the one that would have caught all three instances**, and it enumerates from
+  the tree rather than from a list somebody has to maintain.
+- ⚠ **No content changed.** The staged diff is `.gitattributes` alone; the twelve blobs were already
+  LF in the index and only the working-tree bytes moved.
 
 ### F-048 — For 58 census proteins the V2 span is a short extracellular loop INSIDE a larger transmembrane domain, and the annotation and the span are describing different objects
 
