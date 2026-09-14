@@ -258,15 +258,25 @@ def test_pointer_one_past_the_highest_spent_heading_is_accepted():
 
 
 def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
-    """⚠ FIXTURE 4: the tree itself. Pointer F-073, highest spent F-072.
+    """⚠ FIXTURE 4: the tree itself. Pointer F-074, highest spent F-072, F-073 RESERVED.
 
     ⚠ This is the only case that touches disk, and it does so through the SAME pure function, so
     the tree is checked by the code the fixtures proved rather than by a second implementation.
+
+    ⚠⚠ **This fixture still pins the pointer's VALUE, which is the defect `_f062_pointer_invariant`
+    was written to remove** — and the pin has now gone red for the second reason in its history: not
+    a spend, but a RESERVATION. The value is moved rather than relaxed, because the three fixtures
+    above already check the RULE on synthetic strings and this one exists to state what the tree
+    actually says. ⚠ **Reserved is not free:** `F-073` has a row in `docs/RESERVED.md` for the
+    2026-09-13 truncation finding, so the lowest integer available to a new writer is 74 — the same
+    reading of "next free" that let `D-153` skip the `D-152` hold and point straight at 154.
     """
     pointer = check_next_free_pointer(
         LOG.read_text(encoding="utf-8"), RESERVED.read_text(encoding="utf-8")
     )
-    assert pointer == 73  # F-072 spent 072 and moved the pointer in the same commit
+    # ⚠ 74, not 73: F-072 spent 072 and moved the pointer in the same commit, then the 2026-09-15
+    # incident-closeout wave RESERVED F-073 and moved it again in the commit that reserved it.
+    assert pointer == 74
     # Spent 2026-09-11, each with the pointer moved in its own commit: F-068 (the fold-path
     # asymmetry) and F-069 (the short-span population) together, then F-070 (the silently empty
     # structure panel), then F-071 (category E is the no_topology breakout). F-072 (Branch A,
