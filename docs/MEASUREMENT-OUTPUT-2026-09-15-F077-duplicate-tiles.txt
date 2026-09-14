@@ -1,0 +1,29 @@
+================================================================================
+F-077 - DUPLICATE TILE IDENTITIES: byte-identity BEFORE anything collapses them
+================================================================================
+  A duplicate is either wasted compute (identical bytes) or TWO DIFFERENT ANSWERS for one
+  tile identity. Which it is has never been established, and collapsing first would
+  destroy the evidence that decides it.
+
+-- Q8WWQ8  tile 1-1656   x2
+     job 3675  analysis 3675  completed 2026-09-04 23:37:19.339101+00:00
+        plddt 59.66  bytes 1011732  sha256 2c5a80c7126eccca...
+     job 3696  analysis 3696  completed 2026-09-05 02:34:28.060475+00:00
+        plddt 59.66  bytes 1011732  sha256 2c5a80c7126eccca...
+     => BYTE-IDENTICAL. Wasted compute; either copy is the tile.
+
+-- Q9NYQ8  tile 1529-3184   x2
+     job 3674  analysis 3674  completed 2026-09-04 23:29:16.150029+00:00
+        plddt 64.27  bytes 1041945  sha256 87b4477d4ba26f3f...
+     job 3695  analysis 3695  completed 2026-09-05 02:26:25.308049+00:00
+        plddt 64.27  bytes 1041945  sha256 87b4477d4ba26f3f...
+     => BYTE-IDENTICAL. Wasted compute; either copy is the tile.
+
+-- Q9P273  tile 1-1656   x2
+     job 3673  analysis 3673  completed 2026-09-04 23:21:12.581232+00:00
+        plddt 60.29  bytes 1035465  sha256 8e10627102bea252...
+     job 3693  analysis 3693  completed 2026-09-05 02:18:22.795684+00:00
+        plddt 60.29  bytes 1035465  sha256 8e10627102bea252...
+     => BYTE-IDENTICAL. Wasted compute; either copy is the tile.
+
+(read-only)

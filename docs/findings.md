@@ -16,6 +16,53 @@
 
 ## Log (newest first)
 
+### F-077 — ✅ The three duplicated tile identities are BYTE-IDENTICAL: wasted compute, not two answers — and the re-fold is evidence the fold path is deterministic
+
+- **Date:** 2026-09-15 · **Status:** ✅ **CLOSED on measurement.** No artifact is ambiguous.
+- **How known (`D-016`):** both artifacts of each pair fetched from the live surface and hashed.
+  Read-only, one tunnel bound by name per `D-162` rule 5, closed after.
+
+Three hold-48 parents carry the same `parent + tile_start + tile_end` folded twice:
+
+| parent | tile | jobs | completed | bytes | sha256 | pLDDT |
+|---|---|---|---|---|---|---|
+| `Q9P273` | 1–1656 | 3673 / 3693 | 23:21:12 / 02:18:22 | **1,035,465** both | `8e106271…` both | 60.29 both |
+| `Q9NYQ8` | 1529–3184 | 3674 / 3695 | 23:29:16 / 02:26:25 | **1,041,945** both | `87b4477d…` both | 64.27 both |
+| `Q8WWQ8` | 1–1656 | 3675 / 3696 | 23:37:19 / 02:34:28 | **1,011,732** both | `2c5a80c7…` both | 59.66 both |
+
+**Every pair is byte-identical.** ⚠ **So the duplicate is wasted compute and either copy is the
+tile.** Nothing downstream is ambiguous, and no disposition has to choose between two answers.
+
+#### 1. ⚠ The question this was opened to answer, and why it had to be measured first
+
+A duplicated tile identity is **either** wasted compute **or two different answers for one tile** —
+and **collapsing them before measuring would have destroyed the evidence that decides which.**
+The owner's ruling on `F-078` made the same point from the other side: manufacturing 36 more
+duplicates to avoid a database write would have been *"36 more instances of an unmeasured defect."*
+This is that measurement.
+
+#### 2. ⚠⚠ The reassuring half, which is the larger finding
+
+**Identical bytes from two folds three hours apart is a determinism result.** `D-060` records *no
+RNG* in the fitting path; this shows the **fold** path carries the same property end to end — same
+input, same weights, same bytes, including the pLDDT to two decimals.
+
+⚠ That is worth more than the defect it was opened for: **it means a re-fold is a safe repair
+everywhere else in this project.** `F-078`'s 37 lost folds can be re-folded without creating a
+second, divergent answer — which is exactly the property the re-fold disposition assumes and which
+had not been demonstrated until now.
+
+#### 3. ⚠ The cause, named but not repaired
+
+The three pairs are separated by a consistent **~2 h 57 m** (23:21→02:18, 23:29→02:26,
+23:37→02:34). **That is a re-run of a wave, not three independent retries.** Something re-emitted a
+batch roughly three hours after the first pass.
+
+⚠ **Not chased here**, because the artifacts are identical and nothing is at risk. It is recorded
+so that a future duplicate is read against this pattern rather than investigated from scratch, and
+so that the emitter's idempotence is understood to be **unproven** — the folds were idempotent; the
+*enqueue* evidently was not.
+
 ### F-078 — ⚠⚠ 37 folds were lost from BOTH stores at the backup boundary, and four separate answers walked past them — the first of them because a verification probe returned success for a reason unrelated to what it claimed to test
 
 - **Date:** 2026-09-15 · **Status:** ⚠ **OPEN** until the 37 are re-folded and the timezone
