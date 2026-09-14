@@ -379,25 +379,32 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     # and `### D-157` takes the bar. Never relaxed to a `>=`.
     assert 156 in ids, "D-156 claimed this integer"
     # D-157 spent 157 (the Run 2 scope correction: 2,572 not 2,691): ADDED by name, and
-    # `### D-158` takes the bar. Never relaxed to a `>=`.
+    # `### D-164` takes the bar. Never relaxed to a `>=`.
     assert 157 in ids, "D-157 claimed this integer"
-    assert 148 not in ids and 158 not in ids
+    assert 148 not in ids and 164 not in ids
+    # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
+    # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
+    # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
+    # wave removes its own number from this set and adds the name, which is the flip this file
+    # has already made at 145, 146, 147, 152 and 154. Never relaxed to a `>=`.
+    assert not ({158, 159, 160, 161, 162, 163} & set(ids)), (
+        "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until "
         "that Spec claims it by name — never admitted by a `>=`")
     # ⚠⚠ D-154 SPENT the integer this guard barred (the live-surface review ship), so
-    # it is NAMED here rather than barred and `### D-158` takes the next-free bar. This is the
+    # it is NAMED here rather than barred and `### D-164` takes the next-free bar. This is the
     # widening D-145 fixed the shape of: a name is ADDED and nothing becomes a `>=`.
     assert "\n### D-154 — Every UI surface walked on the live site" in LOG, (
         "D-154 was spent by the live-surface review ship, so it must be NAMED here rather "
         "than barred")
     # ⚠⚠ D-155 SPENT the integer this guard barred (the surface-merge ship), so it is NAMED
-    # here rather than barred and `### D-158` takes the next-free bar. A name is ADDED and
+    # here rather than barred and `### D-164` takes the next-free bar. A name is ADDED and
     # nothing becomes a `>=` — the widening D-145 fixed the shape of.
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
-    assert "\n### D-158" not in LOG, (
-        "D-158 is the next free integer and must stay unspent until an entry claims it by "
+    assert "\n### D-164" not in LOG, (
+        "D-164 is the next free integer and must stay unspent until an entry claims it by "
         "name — never admitted by a `>=`")
 
 
@@ -427,7 +434,7 @@ def test_the_reserved_map_retires_151_marker_safe_and_the_pointer_moves_here():
     # 148 remains the trafficking hold. So *"next free"* means the lowest AVAILABLE integer,
     # 154 — and 152 joins the loop below, which is a hold being named as unavailable rather
     # than a bar being relaxed.
-    assert "Next free `D-` integer: **`D-158`**" in RESERVED
+    assert "Next free `D-` integer: **`D-164`**" in RESERVED
     for spent in ("D-147", "D-148", "D-149", "D-150", "D-151", "D-152", "D-153"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED, (
             f"the pointer still names {spent}, which would hand a spent or held integer "

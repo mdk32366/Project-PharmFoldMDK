@@ -249,15 +249,22 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert 155 in ids, "this entry did not claim its own integer"
     assert 154 in ids and 152 in ids, "the entries this one builds on must still be named"
     # ⚠ 156 is ADDED as SPENT by the KEEL five-document split entry — the FIFTEENTH resolution
-    # by enumeration and never by a `>=`; `### D-158` now takes the bar. 148 stays a held hole.
+    # by enumeration and never by a `>=`; `### D-164` now takes the bar. 148 stays a held hole.
     assert 156 in ids, "D-156 claimed this integer when it split the log into five documents"
     # D-157 spent 157 (the Run 2 scope correction: 2,572 not 2,691): ADDED by name, and
-    # `### D-158` takes the bar. Never relaxed to a `>=`.
+    # `### D-164` takes the bar. Never relaxed to a `>=`.
     assert 157 in ids, "D-157 claimed this integer"
-    assert 148 not in ids and 158 not in ids
+    assert 148 not in ids and 164 not in ids
+    # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
+    # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
+    # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
+    # wave removes its own number from this set and adds the name, which is the flip this file
+    # has already made at 145, 146, 147, 152 and 154. Never relaxed to a `>=`.
+    assert not ({158, 159, 160, 161, 162, 163} & set(ids)), (
+        "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG
-    assert "\n### D-158" not in LOG, (
-        "D-158 is the next free integer and must stay unspent until an entry claims it by name — "
+    assert "\n### D-164" not in LOG, (
+        "D-164 is the next free integer and must stay unspent until an entry claims it by name — "
         "never admitted by a `>=`")
 
 
@@ -267,7 +274,7 @@ def test_the_reserved_map_retires_155_marker_safe_and_the_pointer_moves_here():
     assert "WRITTEN" in row and "Original reservation text" in row
     assert re.search(r"^\| \*\*D-156\*\*", RESERVED, re.M), "the bar moved to 156 with no row"
     assert not re.search(r"^\| ~~\*\*D-15[56]\*\*~~", RESERVED, re.M)
-    assert "Next free `D-` integer: **`D-158`**" in RESERVED
+    assert "Next free `D-` integer: **`D-164`**" in RESERVED
     for spent in ("D-152", "D-153", "D-154", "D-155"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED
 
