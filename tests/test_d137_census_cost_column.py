@@ -213,7 +213,14 @@ def test_every_row_carries_the_axis_statement_and_the_ceiling_recipe():
     consumer has to remember the bar. ⚠ D-016 / D-077 dec 3: a cost claim without its recipe is
     not checkable, because the same span is affordable at int8 and not at fp16."""
     block = cost_block(300)
-    assert set(block) == {"cost", "cost_label", "cost_note", "cost_axis", "cost_recipe"}
+    # ⚠⚠ WIDENED AT `D-164` BY ADDING THE NAMES, never by relaxing to a subset check.
+    # The four new fields are `F-074`'s closure: the stamp is computed at the MEASURED
+    # ceiling (440) while the campaign operates at a lower cap (384), and a reader who saw
+    # only `local` reasonably inferred a fold that will never happen for 119 rows.
+    # ⚠ A `>=` here would pass on a stamp that had quietly dropped `cost_axis`.
+    assert set(block) == {"cost", "cost_label", "cost_note", "cost_axis", "cost_recipe",
+                          "cost_ceiling_aa", "cost_campaign_cap_aa",
+                          "cost_outside_campaign", "cost_campaign_note"}
     assert block["cost"] == LOCAL
     axis = _plain(block["cost_axis"])
     assert "not suitability" in axis

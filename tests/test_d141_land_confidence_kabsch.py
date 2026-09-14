@@ -33,6 +33,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+from _repo_scan import tracked_dirs_named
 
 from app.served_path_policy import (
     D126_SERVED_PASS_SUBSET,
@@ -339,7 +340,11 @@ def test_landing_never_writes_the_assembler_dir_or_the_d125_kabsch_tree(tmp_path
     assert sorted(p.name for p in d125.iterdir()) == ["stitched.pdb"]
     assert sorted(p.name for p in assembler.iterdir()) == ["stitched.pdb"]
     written = {
-        str(p.relative_to(dest)) for p in dest.rglob("*") if p.is_file()
+    # ⚠ `as_posix()` / separator-normalised: these compare a LOGICAL path against a
+    # forward-slash literal. `str(Path)` yields backslashes on Windows, so the check was
+    # green on the deployment platform and red on the author's other machine — the same
+    # 'scoped to what its author could see' shape as the walks above (`D-145 amendment 1`).
+        p.relative_to(dest).as_posix() for p in dest.rglob("*") if p.is_file()
     }
     new = {w for w in written if w.startswith("confidence_kabsch/")}
     assert written - new == {f"{PASS_PARENT}/stitched.pdb", f"kabsch/{PASS_PARENT}/stitched.pdb"}
@@ -543,7 +548,13 @@ def test_the_hard_stops_are_stated_where_an_operator_will_read_them():
 
 def test_no_confidence_kabsch_tree_is_created_inside_the_repository_by_this_suite():
     """⚠ D-139's committed-tree guard, restated where a fixture would break it."""
-    trees = [p for p in ROOT.rglob("confidence_kabsch") if p.is_dir() and ".git" not in p.parts]
+    # ⚠⚠ TRACKED FILES, NOT `ROOT.rglob` (`D-145 amendment 1`). This check's own docstring says
+    # "if a tree is ever CHECKED IN" — and `rglob` walks gitignored trees too, including the 27 GB
+    # of real fold artifacts under `data/artifacts/` and whatever ops debris is left there. It was
+    # failing on `confidence_kabsch` directories from 2026-09-05 ops runs that were never committed
+    # and never will be. A detector scoped to what its author could see is the defect
+    # `.gitattributes` records about itself.
+    trees = tracked_dirs_named("confidence_kabsch")
     assert trees == [], f"a confidence_kabsch tree exists in the repo: {trees}"
     assert "tmp_path" in Path(__file__).read_text(encoding="utf-8")
     # ⚠ RULE LINES only. The first draft of this check read the whole file and was

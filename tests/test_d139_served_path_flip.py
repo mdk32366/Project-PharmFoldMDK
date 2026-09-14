@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from _repo_scan import tracked_dirs_named
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -426,7 +427,11 @@ def test_an_eligible_parent_with_an_accepted_tree_is_served_d126(tmp_path):
     assert block["eligible"] is True
     assert block["not_flipped_reason"] is None
     assert block["persist_stem"] == f"confidence_kabsch/{PASS_PARENT}"
-    assert block["served_pdb_path"].endswith(
+    # ⚠ `as_posix()` / separator-normalised: these compare a LOGICAL path against a
+    # forward-slash literal. `str(Path)` yields backslashes on Windows, so the check was
+    # green on the deployment platform and red on the author's other machine — the same
+    # 'scoped to what its author could see' shape as the walks above (`D-145 amendment 1`).
+    assert block["served_pdb_path"].replace("\\", "/").endswith(
         f"confidence_kabsch/{PASS_PARENT}/stitched.pdb"
     )
     assert block["download_stem"] == "stitched_confidence_kabsch"
@@ -551,10 +556,13 @@ def test_no_confidence_kabsch_tree_is_committed_so_nothing_flips_here():
     because the D-126 OPS output was never committed. If a tree is ever checked
     in, this test fails and whoever did it must say so in the log.
     """
-    trees = [
-        p for p in ROOT.rglob("confidence_kabsch")
-        if p.is_dir() and ".git" not in p.parts
-    ]
+    # ⚠⚠ TRACKED FILES, NOT `ROOT.rglob` (`D-145 amendment 1`). This check's own docstring says
+    # "if a tree is ever CHECKED IN" — and `rglob` walks gitignored trees too, including the 27 GB
+    # of real fold artifacts under `data/artifacts/` and whatever ops debris is left there. It was
+    # failing on `confidence_kabsch` directories from 2026-09-05 ops runs that were never committed
+    # and never will be. A detector scoped to what its author could see is the defect
+    # `.gitattributes` records about itself.
+    trees = tracked_dirs_named("confidence_kabsch")
     assert trees == [], f"a confidence_kabsch tree is now committed: {trees}"
     # And the honesty surfaces say the number out loud.
     assert "zero are" in _flat(METHOD_MD).lower()

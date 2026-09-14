@@ -76,6 +76,33 @@ OVER_CEILING = "over_ceiling"
 
 VERDICTS = (LOCAL, RENTAL, OVER_CEILING)
 
+#: ⚠⚠ THE CAMPAIGN'S OPERATING CAP, AND IT IS NOT THE SAME NUMBER AS THE CEILING (`D-164`).
+#:
+#: `LOCAL_CEILING.local_bound` is **440** — the measured fold-clean bound for the card `F-062` was
+#: written about. This is **384** — the cap the Run 2 campaign actually operates at, because
+#: `F-063` reached `highest_ok = 384` and the host BUGCHECKED before 392 was written, and `F-064`
+#: is the post-fold headroom collapse. Both findings are OPEN.
+#:
+#: ⚠ **Both numbers are correct and they are differently derived.** `D-164` declines to collapse
+#: one into the other, because doing so destroys the information that they were measured
+#: separately — which is the whole reason the disagreement was findable.
+#:
+#: ⚠⚠ **ONE HOME.** `scripts/task3_run2_folds.CAP_AA` imports this rather than restating it.
+#: `F-074` is the two-paths-to-one-quantity class in the quantity that decides what gets folded,
+#: and a second literal `384` is how that class reproduces.
+CAMPAIGN_CAP_AA = 384
+
+
+def outside_campaign_cap(span_aa: int, cap: int = CAMPAIGN_CAP_AA,
+                         ceiling: FoldCeiling = LOCAL_CEILING) -> bool:
+    """`True` for a span the instrument calls `local` that the campaign will nevertheless refuse.
+
+    ⚠ This is the `F-074` gap, and on the 2026-09-15 census it is **119 rows, all tranche 4,
+    spans 385-439**, with **zero** rows above the 440 ceiling — so the gap and `D-157`'s named
+    remainder are the same rows.
+    """
+    return envelope(span_aa, ceiling) == LOCAL and span_aa > cap
+
 
 def envelope(span_aa: int, ceiling: FoldCeiling = LOCAL_CEILING) -> str:
     """Where a target of `span_aa` residues can be folded, at the measured recipe.
