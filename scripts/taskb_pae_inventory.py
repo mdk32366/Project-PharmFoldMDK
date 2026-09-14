@@ -4,7 +4,9 @@
 DDL/DML. Every statement is a bare `SELECT`. A self-check below refuses to run if that stops being
 true, so the guarantee is enforced rather than asserted.
 
-⚠ Run ONLY while the owner's `fly mpg proxy zp2wjrej9lwodn4q -p 16380` is up, and run NOTHING ELSE
+⚠⚠ **THE CLUSTER ID BELOW WAS CORRECTED 2026-09-15.** This header used to say `fly mpg proxy zp2wjrej9lwodn4q -p 16380`, and **`zp2wjrej9lwodn4q` is now the FORENSIC RECORD of the 2026-09-13 truncation** — do not connect to it, do not destroy it. The live cluster is `kyzl60xz9zyrpj9g`.
+⚠ `D-162` rule 5: bind the proxy BY NAME, corroborate the destination against `fly mpg status`'s Direct IP, one tunnel at a time, and close it when done. A port number is not a cluster identity — 16380 named both clusters at different times, and this header is one of the two places that made that true.
+⚠ Run ONLY while `fly mpg proxy kyzl60xz9zyrpj9g -p 16391` is up, and run NOTHING ELSE
 while it is. A tunnel to production looks exactly like localhost, and KEEL V8-a walks straight
 through this configuration. The window is the hazard, not the query.
 

@@ -20,7 +20,11 @@ kept deliberately, as the forensic record of 2026-09-13, and it satisfies **any*
 and contains **every** anchor row, because the live cluster was restored *from its backup*. A
 check built only on population would wave an enqueue straight into the forensic record.
 
-⚠ **And this is not theoretical: `.env` still sets `MPG_CLUSTER=zp2wjrej9lwodn4q`.** The single
+⚠ **And this was not theoretical: until 2026-09-15 `.env` set `MPG_CLUSTER=zp2wjrej9lwodn4q`** —
+corrected to `kyzl60xz9zyrpj9g` that day, and verified: `.env` now holds **zero** references to the
+forensic cluster. ⚠ The hazard is recorded in the past tense ON PURPOSE rather than deleted: it is
+why this check exists, and a guard whose stated reason has been edited away is a guard someone
+later argues is redundant. The single
 artefact most likely to point a tunnel at the wrong cluster is the one a population check cannot
 see. So identity is asked **first**, and the floor second.
 

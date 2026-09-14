@@ -1,0 +1,10 @@
+F-076 SECTION 4 - CLASSIFICATION WITH DUPLICATE TILE IDENTITIES COLLAPSED
+(the same parent+start+end folded twice is ONE tile identity, not a geometry)
+
+   parents with tiles: 45
+
+   1+2 cold==warm (no snap)         4
+   2 MATCHES WARM-NOW               41
+
+   CATEGORY 3 IS EMPTY once duplicates are collapsed.
+   Every landed hold-48 tiling is reproducible from a known cache state.

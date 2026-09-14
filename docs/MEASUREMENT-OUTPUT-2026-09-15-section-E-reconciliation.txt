@@ -1,0 +1,122 @@
+==============================================================================
+SECTION E - STATE RECONCILIATION. READ-ONLY.
+==============================================================================
+
+cluster marker           : 'kyzl60xz9zyrpj9g'
+current_database()       : 'pharmfoldmdk'
+
+protein_analyses         : 4535
+jobs                     : 4535
+max(protein_analyses.id) : 4906
+cohort_tranche > 0       : 4455
+
+------------------------------------------------------------------------------
+2. THE WINDOW: backup 15:24:33Z -> truncation 16:38:09Z (73 minutes)
+------------------------------------------------------------------------------
+   The restore is FROM the 15:24:33Z backup, so anything written in the window is
+   absent BY CONSTRUCTION. The question is what SHOULD be there and is not.
+
+   max(protein_analyses.created_at) : 2026-09-13 04:12:15.683798+00:00
+   rows created INSIDE the window   : 0
+   rows created AFTER the truncation: 0
+   (non-zero 'after' = written since recovery, which is expected and fine)
+
+------------------------------------------------------------------------------
+3. ON-DISK ENUMERATIONS vs THE RESTORED DATABASE (by accession AND job id)
+------------------------------------------------------------------------------
+
+   task3_run2     on disk: 20 job ids, 20 accessions
+                  present : 20 job ids, 20 accessions
+                  MISSING : 0 job ids, 0 accessions
+
+   task4_slice1   on disk: 342 job ids, 342 accessions
+                  present : 342 job ids, 342 accessions
+                  MISSING : 0 job ids, 0 accessions
+
+   task4_slice2   on disk: 517 job ids, 517 accessions
+                  present : 517 job ids, 517 accessions
+                  MISSING : 0 job ids, 0 accessions
+
+   task4_slice3   enqueued.json ABSENT on disk (expected - never enqueued)
+
+------------------------------------------------------------------------------
+4. ARTIFACT PATHS (a restored DB pointing at absent artifacts looks like success)
+------------------------------------------------------------------------------
+   rows carrying pdb_path   : 4493
+   rows carrying mean_plddt : 4493
+   rows carrying pae_json   : 1803
+   NOTE: the artifacts live on the FLY VOLUME, not on this machine, so byte
+   resolution is checked against the served surface, not the local filesystem.
+
+------------------------------------------------------------------------------
+5. RUN PARTITION
+------------------------------------------------------------------------------
+   run = 1        : 3656
+   run = 2        : 879
+
+==============================================================================
+F-076 SECTION 4 - LANDED HOLD-48 TILE GEOMETRY, cold vs warm
+==============================================================================
+
+   tile jobs found in the database: 109
+   distinct parents with tiles    : 45
+
+   accession   landed                       verdict
+   O75096      [(1, 1656), (1548, 1705)]    2 MATCHES WARM-NOW
+   O75443      [(1, 1644), (1529, 2068)]    2 MATCHES WARM-NOW
+   O75445      [(1, 1656), (1529, 3178),    2 MATCHES WARM-NOW
+   P08922      [(1, 1629), (1529, 1832)]    2 MATCHES WARM-NOW
+   P08F94      [(1, 1636), (1547, 3184),    2 MATCHES WARM-NOW
+   P09848      [(1, 1656), (1529, 1863)]    1+2 cold==warm (no snap)
+   P11717      [(1, 1608), (1468, 2264)]    2 MATCHES WARM-NOW
+   P17927      [(1, 1656), (1546, 1930)]    2 MATCHES WARM-NOW
+   P46531      [(1, 1656), (1513, 1717)]    2 MATCHES WARM-NOW
+   P98161      [(1, 1656), (1528, 3051)]    2 MATCHES WARM-NOW
+   P98164      [(1, 1656), (1538, 3167),    2 MATCHES WARM-NOW
+   Q07954      [(1, 1650), (1529, 3184),    2 MATCHES WARM-NOW
+   Q14517      [(1, 1646), (1529, 3184),    2 MATCHES WARM-NOW
+   Q58EX2      [(1, 1656), (1479, 1912)]    2 MATCHES WARM-NOW
+   Q5SZK8      [(1, 1656), (1575, 3067)]    2 MATCHES WARM-NOW
+   Q5VYJ5      [(1, 1645), (1487, 2045)]    2 MATCHES WARM-NOW
+   Q6N022      [(1, 1647), (1540, 2403)]    2 MATCHES WARM-NOW
+   Q6UVK1      [(1, 1650), (1534, 2195)]    2 MATCHES WARM-NOW
+   Q6V0I7      [(1, 1656), (1529, 3184),    2 MATCHES WARM-NOW
+   Q6V1P9      [(1, 1656), (1553, 2919)]    2 MATCHES WARM-NOW
+   Q7Z408      [(1, 1617), (1553, 3187),    2 MATCHES WARM-NOW
+   Q7Z7M0      [(1, 1652), (1543, 2620)]    2 MATCHES WARM-NOW
+   Q86WI1      [(1, 1629), (1529, 3154),    2 MATCHES WARM-NOW
+   Q86XX4      [(1, 1656), (1533, 3184),    2 MATCHES WARM-NOW
+   Q8IZF6      [(1, 1656), (1529, 2713)]    1+2 cold==warm (no snap)
+   Q8TDW7      [(1, 1656), (1529, 3184),    2 MATCHES WARM-NOW
+   Q8TDX9      [(1, 1656), (1571, 1748)]    2 MATCHES WARM-NOW
+   Q8TEM1      [(1, 1656), (1529, 1782)]    1+2 cold==warm (no snap)
+   Q8WWQ8      [(1, 1656), (1, 1656), (15   3 *** MATCHES NEITHER ***
+                 cold: [(1, 1656), (1529, 2439)]
+                 warm: [(1, 1656), (1535, 2439)]
+   Q8WXG9      [(1, 1636), (1515, 3143),    2 MATCHES WARM-NOW
+   Q92673      [(1, 1656), (1568, 2056)]    2 MATCHES WARM-NOW
+   Q96JQ0      [(1, 1607), (1504, 2898)]    2 MATCHES WARM-NOW
+   Q96PZ7      [(1, 1656), (1533, 3184),    2 MATCHES WARM-NOW
+   Q9H251      [(1, 1611), (1504, 3041)]    2 MATCHES WARM-NOW
+   Q9HCU4      [(1, 1656), (1540, 2349)]    2 MATCHES WARM-NOW
+   Q9NT68      [(1, 1656), (1514, 2374)]    2 MATCHES WARM-NOW
+   Q9NY15      [(1, 1656), (1514, 2453)]    2 MATCHES WARM-NOW
+   Q9NYQ6      [(1, 1656), (1529, 2448)]    1+2 cold==warm (no snap)
+   Q9NYQ7      [(1, 1656), (1482, 2508)]    2 MATCHES WARM-NOW
+   Q9NYQ8      [(1, 1642), (1529, 3184),    3 *** MATCHES NEITHER ***
+                 cold: [(1, 1656), (1529, 3184), (3057, 4030)]
+                 warm: [(1, 1642), (1529, 3184), (3095, 4030)]
+   Q9NZR2      [(1, 1636), (1546, 3200),    2 MATCHES WARM-NOW
+   Q9P273      [(1, 1656), (1, 1656), (15   3 *** MATCHES NEITHER ***
+                 cold: [(1, 1656), (1529, 2368)]
+                 warm: [(1, 1656), (1511, 2368)]
+   Q9UKZ4      [(1, 1656), (1519, 2380)]    2 MATCHES WARM-NOW
+   Q9UMZ3      [(1, 1646), (1543, 1912)]    2 MATCHES WARM-NOW
+   Q9Y493      [(1, 1656), (1518, 2740)]    2 MATCHES WARM-NOW
+
+   -- classification --
+   1+2 cold==warm (no snap)       4
+   2 MATCHES WARM-NOW             38
+   3 *** MATCHES NEITHER ***      3
+
+(no write of any kind was issued)

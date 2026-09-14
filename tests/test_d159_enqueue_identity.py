@@ -10,7 +10,7 @@ duplicate of the guard already being written. Two hazards, two vectors, two guar
 check_and_is_still_refused`.** The old cluster `zp2wjrej9lwodn4q` holds the same census population —
 the live cluster was restored *from its backup* — so it satisfies **any** floor and contains **every**
 anchor row. A check built only on population would wave an enqueue straight into the forensic
-record. ⚠ And `.env` still sets `MPG_CLUSTER=zp2wjrej9lwodn4q`, so the artefact most likely to point
+record. ⚠ And until 2026-09-15 `.env` set `MPG_CLUSTER=zp2wjrej9lwodn4q`, so the artefact most likely to point
 a tunnel at the wrong cluster is the one a population check cannot see.
 """
 
