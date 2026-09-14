@@ -136,3 +136,65 @@ docs/P-001-amendment-N-pooled-comparator.md -text
 docs/DRAFT-D-093-amendment-N-pooling-surface-contract-SUPERSEDED-02d7856a.md -text
 docs/ORDERS-Code-directional-or-dilution.md -text
 docs/P-001-amendment-2-underpowered.md -text
+
+# -- 2026-09-15 -- THE SAME DEFECT, A THIRD TIME, AT TWELVE TIMES THE SCALE (F-047 amendment 5) --
+#
+# !! The 2026-08-20 note above says of the 2026-08-19 rule: "a rule applied to one directory and
+# not another is not a rule". It then widened the rule to THREE files under data/census and
+# stopped. Twelve other hash-pinned artifacts were already in the tree, or landed later, and none
+# was covered.
+#
+# ! Measured 2026-09-15 over every tracked file under data/: 168 are checked out CRLF, and of
+# those TWELVE carry a pinned sha256 that matches only their LF bytes. The blobs are intact --
+# `git cat-file -p :data/burden/seer_us_cancer_burden.v1.csv` hashes to the pinned ed4ad609...
+# and contains no CRLF at all. Nothing has touched these files. Git rewrites them on checkout
+# and the pin then fails on disk.
+#
+# !! THE COST WAS NOT A FAILING TEST, IT WAS A FAILING TEST NOBODY COULD READ. The local suite
+# stood at ~34 red on Windows while CI was green, so the 35th failure arrives looking like the
+# other 34. A baseline nobody can tell has drifted is not a baseline.
+#
+# ! Scope is still NOT a blanket rule -- the 2026-08-19 note declines that for docs/** and that
+# reasoning stands. This covers exactly the artifacts a pinned sha256 is asserted over, and
+# tests/test_pinned_artifacts_are_eol_protected.py enumerates them from the tree and fails if one
+# is unlisted, so a fourth recurrence cannot be silent.
+data/burden/seer_us_cancer_burden.v1.csv   -text
+data/census/census_manifest.csv            -text
+data/census/census_manifest.v2.csv         -text
+data/census/census_manifest.v3.csv         -text
+data/census/census_manifest.v4.csv         -text
+data/census/census_manifest.v5.csv         -text
+data/census/census_manifest.v6.csv         -text
+data/census/census_manifest.v7.csv         -text
+data/census/spans_annex.v2.csv             -text
+data/census/spans_surface.v2.csv           -text
+data/census/tranche6_runs.csv              -text
+data/census/table_S3_surfaceome.xlsx.LFS-POINTER-NOT-THE-TABLE -text
+
+# -- and the same defect on byte-pinned SOURCE modules, which is where the other 19 red were --
+#
+# !! Stopping at data/ would have been the 2026-08-20 mistake a third time. Measured the same way:
+# fourteen tracked source files carry a sha256 pinned in tests/, and ALL FOURTEEN were drifting.
+#
+# ! The symptom is a wrong-but-plausible failure message, which is why it survived a month:
+#   test_d130_residual_rmsd.py said "core/hold48_kabsch.py was edited" while `git status` said
+#   clean and the index blob hashed to exactly the pinned value. Nothing edited it. The test was
+#   hashing CRLF bytes against an LF pin, and reporting that as an edit.
+#
+# ! These pins exist to prove a PR did NOT touch a sibling module. A guard that cries "edited" on
+# every clean checkout is a guard people learn to ignore -- which is the same failure mode as the
+# standing 34-red baseline, one layer down.
+app/census_structural_read.py                    -text
+app/linker_seam_path_read.py                     -text
+app/phase5_named_refuse.py                       -text
+core/census_structural.py                        -text
+core/hold48_confidence_kabsch.py                 -text
+core/hold48_kabsch.py                            -text
+core/hold48_linker_seam.py                       -text
+core/hold48_piecewise_kabsch.py                  -text
+core/hold48_stitch.py                            -text
+core/scorer.py                                   -text
+db/migrations/versions/0012_census_structural_rank.py -text
+scripts/census_structural_rank.py                -text
+scripts/tranche6_runs.py                         -text
+ui/src/components/MethodNote.jsx                 -text
