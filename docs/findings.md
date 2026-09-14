@@ -157,6 +157,72 @@ records as not growing the paper's population, not entering `F-004`, and not bea
   the calibration in §1 and by 3,651 positive controls, and the stronger question in any case
   (`_head_served`: *a file the volume holds but the surface will not serve is not persisted in any
   sense a reader can use*).
+#### F-078 amendment 1 — the scope question CLOSES rather than survives; the partial `git add` is rule 6's fifth instance; and order B's restore is recorded as OWED before the write that creates the debt
+
+- **Date:** 2026-09-15 · **Consumes no integer.**
+
+#### 1. ✅ The scope question is CLOSED, not merely survived
+
+The parent entry records that `D-157 amendment 4`'s transport terms are unaffected. ⚠ **The reason
+is stronger than "checked and clean", and the entry should say so, or a later reader re-opens it.**
+
+`elapsed = ts[-1] - ts[0]` is an **INTERVAL between two `progress.csv` timestamps**. An unmarked
+timezone is a constant offset, and **a constant offset cancels in a difference.** The convention
+therefore **cannot reach** an interval-derived quantity — not "did not happen to", but *cannot*.
+
+⚠ So the question *"which other measured claims compared the two sources?"* resolves structurally:
+**no code mixes the clocks** (measured: every file reading `progress.csv` has zero DB-clock
+references), and **the quantities derived from `progress.csv` alone are intervals**, which are
+immune by construction. `D-157 amendment 4` needs no revisit. The only residual is `F-073`'s
+truncation window, which is an **absolute** time taken from a file mtime — and absolute times are
+exactly what the convention does reach, which is why that one stays named.
+
+#### 2. ⚠ The partial `git add` is `D-162` rule 6's FIFTH instance, not a separate lesson
+
+`F-078`'s own commit staged `docs` and `scripts` and **not `tests`**, so the f062 pointer pins never
+landed. The working tree passed 2,611 tests; **the commit went red in CI.**
+
+⚠⚠ **That is rule 6's exact shape — state outside what the guard examines determining the result.**
+Every check in this project runs against the **working tree**; the thing that ships is the
+**commit**; and nothing local compares them. Alongside `.gitattributes` (bytes outside the
+checkout), `§J` (enumerations outside version control), the **spancache** (`F-076`, tile geometry
+outside version control) and the **session documents in a Downloads folder**, this is the fifth
+face of one rule. **Five instances is a property of the project, not a run of bad luck.**
+
+⚠ Recorded here rather than given its own integer, because giving it one would obscure that it is
+the same defect.
+
+#### 3. ⚠⚠ ORDER B's RESTORE, RECORDED AS OWED — before the write that creates the debt
+
+**Owner ruling, 2026-09-15: order B, with the restore recorded as owed before the fold starts.**
+This section is that record, and it is written **first**.
+
+Slice 3's 1,097 and slice 2's 37 are both `pending`/`local`, and `run_worker` claims the next job of
+its **tier** — so only one bounded population may be claimable at a time. Order B makes the 37
+NULL-tier so slice 3 can fold now:
+
+| | writes | if the restore is forgotten |
+|---|---|---|
+| A — repair first | 2,194 | the campaign **stalls visibly** |
+| **B — slice 3 first** | **74** | ⚠⚠ **silent** |
+
+**THE DEBT, in full:**
+
+1. `job 4869`: `status` `'claimed'` → `'pending'` (claimed 64 ms before the cut, never completed)
+2. `jobs 4869–4905`: `tier` `NULL` → `'local'` (37 rows)
+3. `--preflight`, then fold them as their own bounded population
+4. **Done looks like slice 2 reading 517/517.**
+
+⚠⚠ **Why this needed more than a note.** A NULL-tier job is claimable by nobody and
+`refuse_on_strangers` **deliberately does not count one** — so nothing in this system will ever raise
+its hand about these rows. A mitigation that is itself a thing someone must remember to read would
+reproduce the defect the parent entry is about.
+
+**So the notice is printed by `scripts/task4_slice3.py --report`** — the command run at the moment
+the fold ends — and `tests/test_f078_owed_restore.py` asserts it is still wired in, still names the
+rows, still names both writes in order, and still explains why nothing else is watching.
+⚠ **That test is deleted in the commit that pays the debt**, and its removal is the record.
+
 
 ### F-076 — ⚠⚠ Five tests asserted tile geometry while the input to that geometry was read from a GITIGNORED cache — so the same assertions asserted different science on different machines, green in CI and red locally, and the difference was read for two days as a numeric disagreement
 

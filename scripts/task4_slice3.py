@@ -396,7 +396,40 @@ def report() -> int:
             print(f"    compare: 4.7 s/fold at 251-384, 0.7 s/fold at 1-30. This is a THIRD")
             print(f"    measured point, not a confirmation of either.")
     print("\n! SLICE 4 IS NOT AUTHORISED. Report the harvest; the owner rules.")
+    owed_restore_notice()
     return 0
+
+
+#: !! THE OWED RESTORE, PRINTED WHERE THE OPERATOR WILL ACTUALLY BE (F-078 amendment 1).
+#: Order B set slice 2's 37 lost rows to tier NULL so slice 3's 1,097 could be the only claimable
+#: population. A NULL-tier job is claimable by NOBODY and `refuse_on_strangers` deliberately does
+#: not count one - so if the restore is forgotten it is forgotten SILENTLY, and slice 2 stays
+#: 480/517 for ever. That is the same shape as everything F-078 records: a loss no check watches.
+#: ! So the reminder lives in `--report`, the command run at the moment the fold ends, rather than
+#: in a document someone has to remember to open.
+OWED_RESTORE = [
+    "",
+    "=" * 78,
+    "!! OWED, AND NOT YET DONE: RESTORE SLICE 2's 37 (F-078, order B)",
+    "=" * 78,
+    "  Before slice 3 folded, jobs 4869-4905 were set tier NULL so this slice could be the only",
+    "  claimable population. They are slice 2 folds LOST at the 2026-09-13 15:24:33Z backup",
+    "  boundary - no artifact, no database record - and they are still owed a re-fold.",
+    "",
+    "    1. job 4869: status 'claimed' -> 'pending'   (it was claimed 64 ms before the cut)",
+    "    2. jobs 4869-4905: tier NULL -> 'local'      (37 rows)",
+    "    3. then --preflight and fold them as their own bounded population",
+    "",
+    "  ! A NULL-tier job is claimed by nobody and the stranger guard does not count it, so",
+    "  nothing else in this system will ever raise its hand about these rows. This notice IS",
+    "  the guard. Do not delete it until the 37 are folded and slice 2 reads 517/517.",
+    "=" * 78,
+]
+
+
+def owed_restore_notice() -> None:
+    for line in OWED_RESTORE:
+        print(line)
 
 
 def main(argv: Optional[list[str]] = None) -> int:

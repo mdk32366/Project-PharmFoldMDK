@@ -1,0 +1,6584 @@
+[
+  {
+    "accession": "A6NDH6",
+    "analysis_id": 4918,
+    "job_id": 4917,
+    "span_aa": 31
+  },
+  {
+    "accession": "A6NHG9",
+    "analysis_id": 4919,
+    "job_id": 4918,
+    "span_aa": 31
+  },
+  {
+    "accession": "A6NKK0",
+    "analysis_id": 4920,
+    "job_id": 4919,
+    "span_aa": 31
+  },
+  {
+    "accession": "P08173",
+    "analysis_id": 4921,
+    "job_id": 4920,
+    "span_aa": 31
+  },
+  {
+    "accession": "P0C628",
+    "analysis_id": 4922,
+    "job_id": 4921,
+    "span_aa": 31
+  },
+  {
+    "accession": "P25103",
+    "analysis_id": 4923,
+    "job_id": 4922,
+    "span_aa": 31
+  },
+  {
+    "accession": "P32249",
+    "analysis_id": 4924,
+    "job_id": 4923,
+    "span_aa": 31
+  },
+  {
+    "accession": "P43088",
+    "analysis_id": 4925,
+    "job_id": 4924,
+    "span_aa": 31
+  },
+  {
+    "accession": "P46094",
+    "analysis_id": 4926,
+    "job_id": 4925,
+    "span_aa": 31
+  },
+  {
+    "accession": "P49019",
+    "analysis_id": 4927,
+    "job_id": 4926,
+    "span_aa": 31
+  },
+  {
+    "accession": "P49238",
+    "analysis_id": 4928,
+    "job_id": 4927,
+    "span_aa": 31
+  },
+  {
+    "accession": "P59540",
+    "analysis_id": 4929,
+    "job_id": 4928,
+    "span_aa": 31
+  },
+  {
+    "accession": "P59541",
+    "analysis_id": 4930,
+    "job_id": 4929,
+    "span_aa": 31
+  },
+  {
+    "accession": "P98196",
+    "analysis_id": 4931,
+    "job_id": 4930,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q13639",
+    "analysis_id": 4932,
+    "job_id": 4931,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q6TCH4",
+    "analysis_id": 4933,
+    "job_id": 4932,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q6UXU6",
+    "analysis_id": 4934,
+    "job_id": 4933,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q7Z602",
+    "analysis_id": 4935,
+    "job_id": 4934,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q8IVQ6",
+    "analysis_id": 4936,
+    "job_id": 4935,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q8N609",
+    "analysis_id": 4937,
+    "job_id": 4936,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q8N6M3",
+    "analysis_id": 4938,
+    "job_id": 4937,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q8NHB1",
+    "analysis_id": 4939,
+    "job_id": 4938,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q8TCT9",
+    "analysis_id": 4940,
+    "job_id": 4939,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q8WWT9",
+    "analysis_id": 4941,
+    "job_id": 4940,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q969N4",
+    "analysis_id": 4942,
+    "job_id": 4941,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q96KK3",
+    "analysis_id": 4943,
+    "job_id": 4942,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q96LB0",
+    "analysis_id": 4944,
+    "job_id": 4943,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q99946",
+    "analysis_id": 4945,
+    "job_id": 4944,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q9BSE2",
+    "analysis_id": 4946,
+    "job_id": 4945,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q9BXC0",
+    "analysis_id": 4947,
+    "job_id": 4946,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q9BZD2",
+    "analysis_id": 4948,
+    "job_id": 4947,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q9H342",
+    "analysis_id": 4949,
+    "job_id": 4948,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q9HA82",
+    "analysis_id": 4950,
+    "job_id": 4949,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q9UBY5",
+    "analysis_id": 4951,
+    "job_id": 4950,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q9Y271",
+    "analysis_id": 4952,
+    "job_id": 4951,
+    "span_aa": 31
+  },
+  {
+    "accession": "Q9Y6H8",
+    "analysis_id": 4953,
+    "job_id": 4952,
+    "span_aa": 31
+  },
+  {
+    "accession": "A6NET4",
+    "analysis_id": 4954,
+    "job_id": 4953,
+    "span_aa": 32
+  },
+  {
+    "accession": "A6NIJ9",
+    "analysis_id": 4955,
+    "job_id": 4954,
+    "span_aa": 32
+  },
+  {
+    "accession": "A6NJZ3",
+    "analysis_id": 4956,
+    "job_id": 4955,
+    "span_aa": 32
+  },
+  {
+    "accession": "A6NM76",
+    "analysis_id": 4957,
+    "job_id": 4956,
+    "span_aa": 32
+  },
+  {
+    "accession": "O00574",
+    "analysis_id": 4958,
+    "job_id": 4957,
+    "span_aa": 32
+  },
+  {
+    "accession": "P0C629",
+    "analysis_id": 4959,
+    "job_id": 4958,
+    "span_aa": 32
+  },
+  {
+    "accession": "P11169",
+    "analysis_id": 4960,
+    "job_id": 4959,
+    "span_aa": 32
+  },
+  {
+    "accession": "P17302",
+    "analysis_id": 4961,
+    "job_id": 4960,
+    "span_aa": 32
+  },
+  {
+    "accession": "P21452",
+    "analysis_id": 4962,
+    "job_id": 4961,
+    "span_aa": 32
+  },
+  {
+    "accession": "P35462",
+    "analysis_id": 4963,
+    "job_id": 4962,
+    "span_aa": 32
+  },
+  {
+    "accession": "P41231",
+    "analysis_id": 4964,
+    "job_id": 4963,
+    "span_aa": 32
+  },
+  {
+    "accession": "P51681",
+    "analysis_id": 4965,
+    "job_id": 4964,
+    "span_aa": 32
+  },
+  {
+    "accession": "P59543",
+    "analysis_id": 4966,
+    "job_id": 4965,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q14330",
+    "analysis_id": 4967,
+    "job_id": 4966,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q15035",
+    "analysis_id": 4968,
+    "job_id": 4967,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q15842",
+    "analysis_id": 4969,
+    "job_id": 4968,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q495M3",
+    "analysis_id": 4970,
+    "job_id": 4969,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q495N2",
+    "analysis_id": 4971,
+    "job_id": 4970,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q5QJU3",
+    "analysis_id": 4972,
+    "job_id": 4971,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q5T442",
+    "analysis_id": 4973,
+    "job_id": 4972,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q7Z2H8",
+    "analysis_id": 4974,
+    "job_id": 4973,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q8N4L1",
+    "analysis_id": 4975,
+    "job_id": 4974,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q8N697",
+    "analysis_id": 4976,
+    "job_id": 4975,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q8NCL8",
+    "analysis_id": 4977,
+    "job_id": 4976,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q8NER1",
+    "analysis_id": 4978,
+    "job_id": 4977,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q8NGJ2",
+    "analysis_id": 4979,
+    "job_id": 4978,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q8TCB6",
+    "analysis_id": 4980,
+    "job_id": 4979,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q92536",
+    "analysis_id": 4981,
+    "job_id": 4980,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q99679",
+    "analysis_id": 4982,
+    "job_id": 4981,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q9NQ84",
+    "analysis_id": 4983,
+    "job_id": 4982,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q9NYW2",
+    "analysis_id": 4984,
+    "job_id": 4983,
+    "span_aa": 32
+  },
+  {
+    "accession": "Q9P2U7",
+    "analysis_id": 4985,
+    "job_id": 4984,
+    "span_aa": 32
+  },
+  {
+    "accession": "A6NCV1",
+    "analysis_id": 4986,
+    "job_id": 4985,
+    "span_aa": 33
+  },
+  {
+    "accession": "A6NDL8",
+    "analysis_id": 4987,
+    "job_id": 4986,
+    "span_aa": 33
+  },
+  {
+    "accession": "A6NL08",
+    "analysis_id": 4988,
+    "job_id": 4987,
+    "span_aa": 33
+  },
+  {
+    "accession": "P0C604",
+    "analysis_id": 4989,
+    "job_id": 4988,
+    "span_aa": 33
+  },
+  {
+    "accession": "P0C623",
+    "analysis_id": 4990,
+    "job_id": 4989,
+    "span_aa": 33
+  },
+  {
+    "accession": "P11166",
+    "analysis_id": 4991,
+    "job_id": 4990,
+    "span_aa": 33
+  },
+  {
+    "accession": "P15421",
+    "analysis_id": 4992,
+    "job_id": 4991,
+    "span_aa": 33
+  },
+  {
+    "accession": "P20292",
+    "analysis_id": 4993,
+    "job_id": 4992,
+    "span_aa": 33
+  },
+  {
+    "accession": "P29033",
+    "analysis_id": 4994,
+    "job_id": 4993,
+    "span_aa": 33
+  },
+  {
+    "accession": "P34972",
+    "analysis_id": 4995,
+    "job_id": 4994,
+    "span_aa": 33
+  },
+  {
+    "accession": "P49685",
+    "analysis_id": 4996,
+    "job_id": 4995,
+    "span_aa": 33
+  },
+  {
+    "accession": "P59542",
+    "analysis_id": 4997,
+    "job_id": 4996,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q12772",
+    "analysis_id": 4998,
+    "job_id": 4997,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q5JX69",
+    "analysis_id": 4999,
+    "job_id": 4998,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q5JX71",
+    "analysis_id": 5000,
+    "job_id": 4999,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q6U736",
+    "analysis_id": 5001,
+    "job_id": 5000,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q8IXF9",
+    "analysis_id": 5002,
+    "job_id": 5001,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q8N6U8",
+    "analysis_id": 5003,
+    "job_id": 5002,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q8NDX2",
+    "analysis_id": 5004,
+    "job_id": 5003,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q8NFJ5",
+    "analysis_id": 5005,
+    "job_id": 5004,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q8NGR9",
+    "analysis_id": 5006,
+    "job_id": 5005,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q8TDS4",
+    "analysis_id": 5007,
+    "job_id": 5006,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q8TDT2",
+    "analysis_id": 5008,
+    "job_id": 5007,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q96N19",
+    "analysis_id": 5009,
+    "job_id": 5008,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q96RI9",
+    "analysis_id": 5010,
+    "job_id": 5009,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q9BUF7",
+    "analysis_id": 5011,
+    "job_id": 5010,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q9BZW2",
+    "analysis_id": 5012,
+    "job_id": 5011,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q9H8X9",
+    "analysis_id": 5013,
+    "job_id": 5012,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q9NQ11",
+    "analysis_id": 5014,
+    "job_id": 5013,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q9NTQ9",
+    "analysis_id": 5015,
+    "job_id": 5014,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q9NYW7",
+    "analysis_id": 5016,
+    "job_id": 5015,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q9P2U8",
+    "analysis_id": 5017,
+    "job_id": 5016,
+    "span_aa": 33
+  },
+  {
+    "accession": "Q9UKL4",
+    "analysis_id": 5018,
+    "job_id": 5017,
+    "span_aa": 33
+  },
+  {
+    "accession": "A6NND4",
+    "analysis_id": 5019,
+    "job_id": 5018,
+    "span_aa": 34
+  },
+  {
+    "accession": "O14804",
+    "analysis_id": 5020,
+    "job_id": 5019,
+    "span_aa": 34
+  },
+  {
+    "accession": "O60503",
+    "analysis_id": 5021,
+    "job_id": 5020,
+    "span_aa": 34
+  },
+  {
+    "accession": "O95136",
+    "analysis_id": 5022,
+    "job_id": 5021,
+    "span_aa": 34
+  },
+  {
+    "accession": "P29275",
+    "analysis_id": 5023,
+    "job_id": 5022,
+    "span_aa": 34
+  },
+  {
+    "accession": "P32246",
+    "analysis_id": 5024,
+    "job_id": 5023,
+    "span_aa": 34
+  },
+  {
+    "accession": "P35414",
+    "analysis_id": 5025,
+    "job_id": 5024,
+    "span_aa": 34
+  },
+  {
+    "accession": "P51582",
+    "analysis_id": 5026,
+    "job_id": 5025,
+    "span_aa": 34
+  },
+  {
+    "accession": "P51677",
+    "analysis_id": 5027,
+    "job_id": 5026,
+    "span_aa": 34
+  },
+  {
+    "accession": "P57088",
+    "analysis_id": 5028,
+    "job_id": 5027,
+    "span_aa": 34
+  },
+  {
+    "accession": "P59551",
+    "analysis_id": 5029,
+    "job_id": 5028,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q6IFG1",
+    "analysis_id": 5030,
+    "job_id": 5029,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q86TM6",
+    "analysis_id": 5031,
+    "job_id": 5030,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q86UW2",
+    "analysis_id": 5032,
+    "job_id": 5031,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q8IUW5",
+    "analysis_id": 5033,
+    "job_id": 5032,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q8N2U0",
+    "analysis_id": 5034,
+    "job_id": 5033,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q8NBV8",
+    "analysis_id": 5035,
+    "job_id": 5034,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q8NFU0",
+    "analysis_id": 5036,
+    "job_id": 5035,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q8NHX9",
+    "analysis_id": 5037,
+    "job_id": 5036,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q8WY07",
+    "analysis_id": 5038,
+    "job_id": 5037,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q96P68",
+    "analysis_id": 5039,
+    "job_id": 5038,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q96RI8",
+    "analysis_id": 5040,
+    "job_id": 5039,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q9BY10",
+    "analysis_id": 5041,
+    "job_id": 5040,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q9NYV8",
+    "analysis_id": 5042,
+    "job_id": 5041,
+    "span_aa": 34
+  },
+  {
+    "accession": "Q9NYW1",
+    "analysis_id": 5043,
+    "job_id": 5042,
+    "span_aa": 34
+  },
+  {
+    "accession": "O43511",
+    "analysis_id": 5044,
+    "job_id": 5043,
+    "span_aa": 35
+  },
+  {
+    "accession": "P30559",
+    "analysis_id": 5045,
+    "job_id": 5044,
+    "span_aa": 35
+  },
+  {
+    "accession": "P32248",
+    "analysis_id": 5046,
+    "job_id": 5045,
+    "span_aa": 35
+  },
+  {
+    "accession": "P34995",
+    "analysis_id": 5047,
+    "job_id": 5046,
+    "span_aa": 35
+  },
+  {
+    "accession": "P47901",
+    "analysis_id": 5048,
+    "job_id": 5047,
+    "span_aa": 35
+  },
+  {
+    "accession": "P51685",
+    "analysis_id": 5049,
+    "job_id": 5048,
+    "span_aa": 35
+  },
+  {
+    "accession": "P55085",
+    "analysis_id": 5050,
+    "job_id": 5049,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q53FP2",
+    "analysis_id": 5051,
+    "job_id": 5050,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q5J8M3",
+    "analysis_id": 5052,
+    "job_id": 5051,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q6PEY0",
+    "analysis_id": 5053,
+    "job_id": 5052,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q86SP6",
+    "analysis_id": 5054,
+    "job_id": 5053,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q8NB49",
+    "analysis_id": 5055,
+    "job_id": 5054,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q8NGJ8",
+    "analysis_id": 5056,
+    "job_id": 5055,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q8NGT1",
+    "analysis_id": 5057,
+    "job_id": 5056,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q8NGU1",
+    "analysis_id": 5058,
+    "job_id": 5057,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q8TD43",
+    "analysis_id": 5059,
+    "job_id": 5058,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q8WTX9",
+    "analysis_id": 5060,
+    "job_id": 5059,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q96P66",
+    "analysis_id": 5061,
+    "job_id": 5060,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q96RI0",
+    "analysis_id": 5062,
+    "job_id": 5061,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q96RN1",
+    "analysis_id": 5063,
+    "job_id": 5062,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q9GZN0",
+    "analysis_id": 5064,
+    "job_id": 5063,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q9NRM0",
+    "analysis_id": 5065,
+    "job_id": 5064,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q9UGQ3",
+    "analysis_id": 5066,
+    "job_id": 5065,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q9UHI7",
+    "analysis_id": 5067,
+    "job_id": 5066,
+    "span_aa": 35
+  },
+  {
+    "accession": "Q9ULQ1",
+    "analysis_id": 5068,
+    "job_id": 5067,
+    "span_aa": 35
+  },
+  {
+    "accession": "A6NMU1",
+    "analysis_id": 5069,
+    "job_id": 5068,
+    "span_aa": 36
+  },
+  {
+    "accession": "A6NNB3",
+    "analysis_id": 5070,
+    "job_id": 5069,
+    "span_aa": 36
+  },
+  {
+    "accession": "O14842",
+    "analysis_id": 5071,
+    "job_id": 5070,
+    "span_aa": 36
+  },
+  {
+    "accession": "O95007",
+    "analysis_id": 5072,
+    "job_id": 5071,
+    "span_aa": 36
+  },
+  {
+    "accession": "O95221",
+    "analysis_id": 5073,
+    "job_id": 5072,
+    "span_aa": 36
+  },
+  {
+    "accession": "O95222",
+    "analysis_id": 5074,
+    "job_id": 5073,
+    "span_aa": 36
+  },
+  {
+    "accession": "P04201",
+    "analysis_id": 5075,
+    "job_id": 5074,
+    "span_aa": 36
+  },
+  {
+    "accession": "P08100",
+    "analysis_id": 5076,
+    "job_id": 5075,
+    "span_aa": 36
+  },
+  {
+    "accession": "P0C7T3",
+    "analysis_id": 5077,
+    "job_id": 5076,
+    "span_aa": 36
+  },
+  {
+    "accession": "P14672",
+    "analysis_id": 5078,
+    "job_id": 5077,
+    "span_aa": 36
+  },
+  {
+    "accession": "P30954",
+    "analysis_id": 5079,
+    "job_id": 5078,
+    "span_aa": 36
+  },
+  {
+    "accession": "P35575",
+    "analysis_id": 5080,
+    "job_id": 5079,
+    "span_aa": 36
+  },
+  {
+    "accession": "P47211",
+    "analysis_id": 5081,
+    "job_id": 5080,
+    "span_aa": 36
+  },
+  {
+    "accession": "P47898",
+    "analysis_id": 5082,
+    "job_id": 5081,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q0VAQ4",
+    "analysis_id": 5083,
+    "job_id": 5082,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q13606",
+    "analysis_id": 5084,
+    "job_id": 5083,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q6IEU7",
+    "analysis_id": 5085,
+    "job_id": 5084,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q6IF63",
+    "analysis_id": 5086,
+    "job_id": 5085,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q6IFH4",
+    "analysis_id": 5087,
+    "job_id": 5086,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q6PXP3",
+    "analysis_id": 5088,
+    "job_id": 5087,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8N0Y5",
+    "analysis_id": 5089,
+    "job_id": 5088,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8N5K1",
+    "analysis_id": 5090,
+    "job_id": 5089,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGF1",
+    "analysis_id": 5091,
+    "job_id": 5090,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGF7",
+    "analysis_id": 5092,
+    "job_id": 5091,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGH5",
+    "analysis_id": 5093,
+    "job_id": 5092,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGH8",
+    "analysis_id": 5094,
+    "job_id": 5093,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGH9",
+    "analysis_id": 5095,
+    "job_id": 5094,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGI0",
+    "analysis_id": 5096,
+    "job_id": 5095,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGI1",
+    "analysis_id": 5097,
+    "job_id": 5096,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGI2",
+    "analysis_id": 5098,
+    "job_id": 5097,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGI3",
+    "analysis_id": 5099,
+    "job_id": 5098,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGJ3",
+    "analysis_id": 5100,
+    "job_id": 5099,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGJ4",
+    "analysis_id": 5101,
+    "job_id": 5100,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGJ5",
+    "analysis_id": 5102,
+    "job_id": 5101,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGJ6",
+    "analysis_id": 5103,
+    "job_id": 5102,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGJ7",
+    "analysis_id": 5104,
+    "job_id": 5103,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGJ9",
+    "analysis_id": 5105,
+    "job_id": 5104,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGK0",
+    "analysis_id": 5106,
+    "job_id": 5105,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGK1",
+    "analysis_id": 5107,
+    "job_id": 5106,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGK2",
+    "analysis_id": 5108,
+    "job_id": 5107,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGK3",
+    "analysis_id": 5109,
+    "job_id": 5108,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGK4",
+    "analysis_id": 5110,
+    "job_id": 5109,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGK6",
+    "analysis_id": 5111,
+    "job_id": 5110,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGK9",
+    "analysis_id": 5112,
+    "job_id": 5111,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGL0",
+    "analysis_id": 5113,
+    "job_id": 5112,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGL1",
+    "analysis_id": 5114,
+    "job_id": 5113,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGL2",
+    "analysis_id": 5115,
+    "job_id": 5114,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGL3",
+    "analysis_id": 5116,
+    "job_id": 5115,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGL4",
+    "analysis_id": 5117,
+    "job_id": 5116,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGM8",
+    "analysis_id": 5118,
+    "job_id": 5117,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGP3",
+    "analysis_id": 5119,
+    "job_id": 5118,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGP4",
+    "analysis_id": 5120,
+    "job_id": 5119,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGP6",
+    "analysis_id": 5121,
+    "job_id": 5120,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGP8",
+    "analysis_id": 5122,
+    "job_id": 5121,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGR4",
+    "analysis_id": 5123,
+    "job_id": 5122,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGR6",
+    "analysis_id": 5124,
+    "job_id": 5123,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGV0",
+    "analysis_id": 5125,
+    "job_id": 5124,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGW1",
+    "analysis_id": 5126,
+    "job_id": 5125,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NGY7",
+    "analysis_id": 5127,
+    "job_id": 5126,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH18",
+    "analysis_id": 5128,
+    "job_id": 5127,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH53",
+    "analysis_id": 5129,
+    "job_id": 5128,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH54",
+    "analysis_id": 5130,
+    "job_id": 5129,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH56",
+    "analysis_id": 5131,
+    "job_id": 5130,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH57",
+    "analysis_id": 5132,
+    "job_id": 5131,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH59",
+    "analysis_id": 5133,
+    "job_id": 5132,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH60",
+    "analysis_id": 5134,
+    "job_id": 5133,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH63",
+    "analysis_id": 5135,
+    "job_id": 5134,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH64",
+    "analysis_id": 5136,
+    "job_id": 5135,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH69",
+    "analysis_id": 5137,
+    "job_id": 5136,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH76",
+    "analysis_id": 5138,
+    "job_id": 5137,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH83",
+    "analysis_id": 5139,
+    "job_id": 5138,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NH85",
+    "analysis_id": 5140,
+    "job_id": 5139,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NHA6",
+    "analysis_id": 5141,
+    "job_id": 5140,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NHB7",
+    "analysis_id": 5142,
+    "job_id": 5141,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NHB8",
+    "analysis_id": 5143,
+    "job_id": 5142,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NHC4",
+    "analysis_id": 5144,
+    "job_id": 5143,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8NHC7",
+    "analysis_id": 5145,
+    "job_id": 5144,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8WZ92",
+    "analysis_id": 5146,
+    "job_id": 5145,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q8WZ94",
+    "analysis_id": 5147,
+    "job_id": 5146,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q96G79",
+    "analysis_id": 5148,
+    "job_id": 5147,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q96J66",
+    "analysis_id": 5149,
+    "job_id": 5148,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q96R08",
+    "analysis_id": 5150,
+    "job_id": 5149,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q96R54",
+    "analysis_id": 5151,
+    "job_id": 5150,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q96RB7",
+    "analysis_id": 5152,
+    "job_id": 5151,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q96RD2",
+    "analysis_id": 5153,
+    "job_id": 5152,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q96RD3",
+    "analysis_id": 5154,
+    "job_id": 5153,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9BQ49",
+    "analysis_id": 5155,
+    "job_id": 5154,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9BXE9",
+    "analysis_id": 5156,
+    "job_id": 5155,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9H255",
+    "analysis_id": 5157,
+    "job_id": 5156,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9H2C8",
+    "analysis_id": 5158,
+    "job_id": 5157,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9H339",
+    "analysis_id": 5159,
+    "job_id": 5158,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9H340",
+    "analysis_id": 5160,
+    "job_id": 5159,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9H343",
+    "analysis_id": 5161,
+    "job_id": 5160,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9H344",
+    "analysis_id": 5162,
+    "job_id": 5161,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9H346",
+    "analysis_id": 5163,
+    "job_id": 5162,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9NP94",
+    "analysis_id": 5164,
+    "job_id": 5163,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9NYV7",
+    "analysis_id": 5165,
+    "job_id": 5164,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9UGF5",
+    "analysis_id": 5166,
+    "job_id": 5165,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9UGF6",
+    "analysis_id": 5167,
+    "job_id": 5166,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9UGH3",
+    "analysis_id": 5168,
+    "job_id": 5167,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9Y5P0",
+    "analysis_id": 5169,
+    "job_id": 5168,
+    "span_aa": 36
+  },
+  {
+    "accession": "Q9Y5P1",
+    "analysis_id": 5170,
+    "job_id": 5169,
+    "span_aa": 36
+  },
+  {
+    "accession": "A3KFT3",
+    "analysis_id": 5171,
+    "job_id": 5170,
+    "span_aa": 37
+  },
+  {
+    "accession": "A6NF89",
+    "analysis_id": 5172,
+    "job_id": 5171,
+    "span_aa": 37
+  },
+  {
+    "accession": "A6NH00",
+    "analysis_id": 5173,
+    "job_id": 5172,
+    "span_aa": 37
+  },
+  {
+    "accession": "O14581",
+    "analysis_id": 5174,
+    "job_id": 5173,
+    "span_aa": 37
+  },
+  {
+    "accession": "O15438",
+    "analysis_id": 5175,
+    "job_id": 5174,
+    "span_aa": 37
+  },
+  {
+    "accession": "O43315",
+    "analysis_id": 5176,
+    "job_id": 5175,
+    "span_aa": 37
+  },
+  {
+    "accession": "O60403",
+    "analysis_id": 5177,
+    "job_id": 5176,
+    "span_aa": 37
+  },
+  {
+    "accession": "O60404",
+    "analysis_id": 5178,
+    "job_id": 5177,
+    "span_aa": 37
+  },
+  {
+    "accession": "O60412",
+    "analysis_id": 5179,
+    "job_id": 5178,
+    "span_aa": 37
+  },
+  {
+    "accession": "O60431",
+    "analysis_id": 5180,
+    "job_id": 5179,
+    "span_aa": 37
+  },
+  {
+    "accession": "O76000",
+    "analysis_id": 5181,
+    "job_id": 5180,
+    "span_aa": 37
+  },
+  {
+    "accession": "O76001",
+    "analysis_id": 5182,
+    "job_id": 5181,
+    "span_aa": 37
+  },
+  {
+    "accession": "O76002",
+    "analysis_id": 5183,
+    "job_id": 5182,
+    "span_aa": 37
+  },
+  {
+    "accession": "O76099",
+    "analysis_id": 5184,
+    "job_id": 5183,
+    "span_aa": 37
+  },
+  {
+    "accession": "O76100",
+    "analysis_id": 5185,
+    "job_id": 5184,
+    "span_aa": 37
+  },
+  {
+    "accession": "O95006",
+    "analysis_id": 5186,
+    "job_id": 5185,
+    "span_aa": 37
+  },
+  {
+    "accession": "O95013",
+    "analysis_id": 5187,
+    "job_id": 5186,
+    "span_aa": 37
+  },
+  {
+    "accession": "O95047",
+    "analysis_id": 5188,
+    "job_id": 5187,
+    "span_aa": 37
+  },
+  {
+    "accession": "O95918",
+    "analysis_id": 5189,
+    "job_id": 5188,
+    "span_aa": 37
+  },
+  {
+    "accession": "P0C7T2",
+    "analysis_id": 5190,
+    "job_id": 5189,
+    "span_aa": 37
+  },
+  {
+    "accession": "P14416",
+    "analysis_id": 5191,
+    "job_id": 5190,
+    "span_aa": 37
+  },
+  {
+    "accession": "P21730",
+    "analysis_id": 5192,
+    "job_id": 5191,
+    "span_aa": 37
+  },
+  {
+    "accession": "P23634",
+    "analysis_id": 5193,
+    "job_id": 5192,
+    "span_aa": 37
+  },
+  {
+    "accession": "P25929",
+    "analysis_id": 5194,
+    "job_id": 5193,
+    "span_aa": 37
+  },
+  {
+    "accession": "P30953",
+    "analysis_id": 5195,
+    "job_id": 5194,
+    "span_aa": 37
+  },
+  {
+    "accession": "P33032",
+    "analysis_id": 5196,
+    "job_id": 5195,
+    "span_aa": 37
+  },
+  {
+    "accession": "P33527",
+    "analysis_id": 5197,
+    "job_id": 5196,
+    "span_aa": 37
+  },
+  {
+    "accession": "P41968",
+    "analysis_id": 5198,
+    "job_id": 5197,
+    "span_aa": 37
+  },
+  {
+    "accession": "P48145",
+    "analysis_id": 5199,
+    "job_id": 5198,
+    "span_aa": 37
+  },
+  {
+    "accession": "P57773",
+    "analysis_id": 5200,
+    "job_id": 5199,
+    "span_aa": 37
+  },
+  {
+    "accession": "P58173",
+    "analysis_id": 5201,
+    "job_id": 5200,
+    "span_aa": 37
+  },
+  {
+    "accession": "P58180",
+    "analysis_id": 5202,
+    "job_id": 5201,
+    "span_aa": 37
+  },
+  {
+    "accession": "P58181",
+    "analysis_id": 5203,
+    "job_id": 5202,
+    "span_aa": 37
+  },
+  {
+    "accession": "P58182",
+    "analysis_id": 5204,
+    "job_id": 5203,
+    "span_aa": 37
+  },
+  {
+    "accession": "P59922",
+    "analysis_id": 5205,
+    "job_id": 5204,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q01814",
+    "analysis_id": 5206,
+    "job_id": 5205,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q15612",
+    "analysis_id": 5207,
+    "job_id": 5206,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q15615",
+    "analysis_id": 5208,
+    "job_id": 5207,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q15617",
+    "analysis_id": 5209,
+    "job_id": 5208,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q15619",
+    "analysis_id": 5210,
+    "job_id": 5209,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q15620",
+    "analysis_id": 5211,
+    "job_id": 5210,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q15622",
+    "analysis_id": 5212,
+    "job_id": 5211,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q16720",
+    "analysis_id": 5213,
+    "job_id": 5212,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q5BKT4",
+    "analysis_id": 5214,
+    "job_id": 5213,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q5I7T1",
+    "analysis_id": 5215,
+    "job_id": 5214,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q5JQS5",
+    "analysis_id": 5216,
+    "job_id": 5215,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q5JRS4",
+    "analysis_id": 5217,
+    "job_id": 5216,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q5T4T1",
+    "analysis_id": 5218,
+    "job_id": 5217,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q5TZ20",
+    "analysis_id": 5219,
+    "job_id": 5218,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6IEV9",
+    "analysis_id": 5220,
+    "job_id": 5219,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6IEY1",
+    "analysis_id": 5221,
+    "job_id": 5220,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6IEZ7",
+    "analysis_id": 5222,
+    "job_id": 5221,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6IF00",
+    "analysis_id": 5223,
+    "job_id": 5222,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6IF42",
+    "analysis_id": 5224,
+    "job_id": 5223,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6IF82",
+    "analysis_id": 5225,
+    "job_id": 5224,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6IF99",
+    "analysis_id": 5226,
+    "job_id": 5225,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6ZMG9",
+    "analysis_id": 5227,
+    "job_id": 5226,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q6ZP29",
+    "analysis_id": 5228,
+    "job_id": 5227,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q71RS6",
+    "analysis_id": 5229,
+    "job_id": 5228,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q7Z3T1",
+    "analysis_id": 5230,
+    "job_id": 5229,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8IWV1",
+    "analysis_id": 5231,
+    "job_id": 5230,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8IXE1",
+    "analysis_id": 5232,
+    "job_id": 5231,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8N0Y3",
+    "analysis_id": 5233,
+    "job_id": 5232,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8N146",
+    "analysis_id": 5234,
+    "job_id": 5233,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8N148",
+    "analysis_id": 5235,
+    "job_id": 5234,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8N162",
+    "analysis_id": 5236,
+    "job_id": 5235,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8N349",
+    "analysis_id": 5237,
+    "job_id": 5236,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8N628",
+    "analysis_id": 5238,
+    "job_id": 5237,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NE00",
+    "analysis_id": 5239,
+    "job_id": 5238,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG75",
+    "analysis_id": 5240,
+    "job_id": 5239,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG76",
+    "analysis_id": 5241,
+    "job_id": 5240,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG77",
+    "analysis_id": 5242,
+    "job_id": 5241,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG80",
+    "analysis_id": 5243,
+    "job_id": 5242,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG81",
+    "analysis_id": 5244,
+    "job_id": 5243,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG83",
+    "analysis_id": 5245,
+    "job_id": 5244,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG85",
+    "analysis_id": 5246,
+    "job_id": 5245,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG92",
+    "analysis_id": 5247,
+    "job_id": 5246,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG95",
+    "analysis_id": 5248,
+    "job_id": 5247,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG97",
+    "analysis_id": 5249,
+    "job_id": 5248,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG98",
+    "analysis_id": 5250,
+    "job_id": 5249,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NG99",
+    "analysis_id": 5251,
+    "job_id": 5250,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGA2",
+    "analysis_id": 5252,
+    "job_id": 5251,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGA5",
+    "analysis_id": 5253,
+    "job_id": 5252,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGA6",
+    "analysis_id": 5254,
+    "job_id": 5253,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGA8",
+    "analysis_id": 5255,
+    "job_id": 5254,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGB4",
+    "analysis_id": 5256,
+    "job_id": 5255,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGB6",
+    "analysis_id": 5257,
+    "job_id": 5256,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGB8",
+    "analysis_id": 5258,
+    "job_id": 5257,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGB9",
+    "analysis_id": 5259,
+    "job_id": 5258,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGC2",
+    "analysis_id": 5260,
+    "job_id": 5259,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGC3",
+    "analysis_id": 5261,
+    "job_id": 5260,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGC4",
+    "analysis_id": 5262,
+    "job_id": 5261,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGC5",
+    "analysis_id": 5263,
+    "job_id": 5262,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGC6",
+    "analysis_id": 5264,
+    "job_id": 5263,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGC9",
+    "analysis_id": 5265,
+    "job_id": 5264,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGD0",
+    "analysis_id": 5266,
+    "job_id": 5265,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGD1",
+    "analysis_id": 5267,
+    "job_id": 5266,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGD2",
+    "analysis_id": 5268,
+    "job_id": 5267,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGD3",
+    "analysis_id": 5269,
+    "job_id": 5268,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGD4",
+    "analysis_id": 5270,
+    "job_id": 5269,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGD5",
+    "analysis_id": 5271,
+    "job_id": 5270,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGE0",
+    "analysis_id": 5272,
+    "job_id": 5271,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGE1",
+    "analysis_id": 5273,
+    "job_id": 5272,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGE2",
+    "analysis_id": 5274,
+    "job_id": 5273,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGE3",
+    "analysis_id": 5275,
+    "job_id": 5274,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGE5",
+    "analysis_id": 5276,
+    "job_id": 5275,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGE8",
+    "analysis_id": 5277,
+    "job_id": 5276,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGE9",
+    "analysis_id": 5278,
+    "job_id": 5277,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGF6",
+    "analysis_id": 5279,
+    "job_id": 5278,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGF8",
+    "analysis_id": 5280,
+    "job_id": 5279,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGF9",
+    "analysis_id": 5281,
+    "job_id": 5280,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGG0",
+    "analysis_id": 5282,
+    "job_id": 5281,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGG4",
+    "analysis_id": 5283,
+    "job_id": 5282,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGG5",
+    "analysis_id": 5284,
+    "job_id": 5283,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGG6",
+    "analysis_id": 5285,
+    "job_id": 5284,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGG8",
+    "analysis_id": 5286,
+    "job_id": 5285,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGI4",
+    "analysis_id": 5287,
+    "job_id": 5286,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGI6",
+    "analysis_id": 5288,
+    "job_id": 5287,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGI7",
+    "analysis_id": 5289,
+    "job_id": 5288,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGJ0",
+    "analysis_id": 5290,
+    "job_id": 5289,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGJ1",
+    "analysis_id": 5291,
+    "job_id": 5290,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGK5",
+    "analysis_id": 5292,
+    "job_id": 5291,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGL7",
+    "analysis_id": 5293,
+    "job_id": 5292,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGL9",
+    "analysis_id": 5294,
+    "job_id": 5293,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGM1",
+    "analysis_id": 5295,
+    "job_id": 5294,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGM9",
+    "analysis_id": 5296,
+    "job_id": 5295,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGN0",
+    "analysis_id": 5297,
+    "job_id": 5296,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGN1",
+    "analysis_id": 5298,
+    "job_id": 5297,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGN3",
+    "analysis_id": 5299,
+    "job_id": 5298,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGN4",
+    "analysis_id": 5300,
+    "job_id": 5299,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGN5",
+    "analysis_id": 5301,
+    "job_id": 5300,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGN6",
+    "analysis_id": 5302,
+    "job_id": 5301,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGN7",
+    "analysis_id": 5303,
+    "job_id": 5302,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGN8",
+    "analysis_id": 5304,
+    "job_id": 5303,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGP0",
+    "analysis_id": 5305,
+    "job_id": 5304,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGP2",
+    "analysis_id": 5306,
+    "job_id": 5305,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGQ2",
+    "analysis_id": 5307,
+    "job_id": 5306,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGQ5",
+    "analysis_id": 5308,
+    "job_id": 5307,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGQ6",
+    "analysis_id": 5309,
+    "job_id": 5308,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGS1",
+    "analysis_id": 5310,
+    "job_id": 5309,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGS4",
+    "analysis_id": 5311,
+    "job_id": 5310,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGS5",
+    "analysis_id": 5312,
+    "job_id": 5311,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGS7",
+    "analysis_id": 5313,
+    "job_id": 5312,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGS8",
+    "analysis_id": 5314,
+    "job_id": 5313,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGS9",
+    "analysis_id": 5315,
+    "job_id": 5314,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGT0",
+    "analysis_id": 5316,
+    "job_id": 5315,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGT2",
+    "analysis_id": 5317,
+    "job_id": 5316,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGT5",
+    "analysis_id": 5318,
+    "job_id": 5317,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGT7",
+    "analysis_id": 5319,
+    "job_id": 5318,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGU2",
+    "analysis_id": 5320,
+    "job_id": 5319,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGX0",
+    "analysis_id": 5321,
+    "job_id": 5320,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGX1",
+    "analysis_id": 5322,
+    "job_id": 5321,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGX2",
+    "analysis_id": 5323,
+    "job_id": 5322,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGX3",
+    "analysis_id": 5324,
+    "job_id": 5323,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGX5",
+    "analysis_id": 5325,
+    "job_id": 5324,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGX8",
+    "analysis_id": 5326,
+    "job_id": 5325,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGX9",
+    "analysis_id": 5327,
+    "job_id": 5326,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGY1",
+    "analysis_id": 5328,
+    "job_id": 5327,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGY5",
+    "analysis_id": 5329,
+    "job_id": 5328,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGY6",
+    "analysis_id": 5330,
+    "job_id": 5329,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGY9",
+    "analysis_id": 5331,
+    "job_id": 5330,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGZ0",
+    "analysis_id": 5332,
+    "job_id": 5331,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGZ3",
+    "analysis_id": 5333,
+    "job_id": 5332,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGZ4",
+    "analysis_id": 5334,
+    "job_id": 5333,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGZ6",
+    "analysis_id": 5335,
+    "job_id": 5334,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NGZ9",
+    "analysis_id": 5336,
+    "job_id": 5335,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH01",
+    "analysis_id": 5337,
+    "job_id": 5336,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH02",
+    "analysis_id": 5338,
+    "job_id": 5337,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH03",
+    "analysis_id": 5339,
+    "job_id": 5338,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH04",
+    "analysis_id": 5340,
+    "job_id": 5339,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH05",
+    "analysis_id": 5341,
+    "job_id": 5340,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH09",
+    "analysis_id": 5342,
+    "job_id": 5341,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH10",
+    "analysis_id": 5343,
+    "job_id": 5342,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH16",
+    "analysis_id": 5344,
+    "job_id": 5343,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH19",
+    "analysis_id": 5345,
+    "job_id": 5344,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH21",
+    "analysis_id": 5346,
+    "job_id": 5345,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH37",
+    "analysis_id": 5347,
+    "job_id": 5346,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH41",
+    "analysis_id": 5348,
+    "job_id": 5347,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH42",
+    "analysis_id": 5349,
+    "job_id": 5348,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH43",
+    "analysis_id": 5350,
+    "job_id": 5349,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH49",
+    "analysis_id": 5351,
+    "job_id": 5350,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH50",
+    "analysis_id": 5352,
+    "job_id": 5351,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH51",
+    "analysis_id": 5353,
+    "job_id": 5352,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH70",
+    "analysis_id": 5354,
+    "job_id": 5353,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH72",
+    "analysis_id": 5355,
+    "job_id": 5354,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH73",
+    "analysis_id": 5356,
+    "job_id": 5355,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH74",
+    "analysis_id": 5357,
+    "job_id": 5356,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH79",
+    "analysis_id": 5358,
+    "job_id": 5357,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH80",
+    "analysis_id": 5359,
+    "job_id": 5358,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NH87",
+    "analysis_id": 5360,
+    "job_id": 5359,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NHA4",
+    "analysis_id": 5361,
+    "job_id": 5360,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8NHC8",
+    "analysis_id": 5362,
+    "job_id": 5361,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q8WZ84",
+    "analysis_id": 5363,
+    "job_id": 5362,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96KK4",
+    "analysis_id": 5364,
+    "job_id": 5363,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96PS8",
+    "analysis_id": 5365,
+    "job_id": 5364,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R09",
+    "analysis_id": 5366,
+    "job_id": 5365,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R27",
+    "analysis_id": 5367,
+    "job_id": 5366,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R28",
+    "analysis_id": 5368,
+    "job_id": 5367,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R30",
+    "analysis_id": 5369,
+    "job_id": 5368,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R45",
+    "analysis_id": 5370,
+    "job_id": 5369,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R47",
+    "analysis_id": 5371,
+    "job_id": 5370,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R67",
+    "analysis_id": 5372,
+    "job_id": 5371,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R69",
+    "analysis_id": 5373,
+    "job_id": 5372,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96R72",
+    "analysis_id": 5374,
+    "job_id": 5373,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96RA2",
+    "analysis_id": 5375,
+    "job_id": 5374,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96RC9",
+    "analysis_id": 5376,
+    "job_id": 5375,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96RD0",
+    "analysis_id": 5377,
+    "job_id": 5376,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q96RD1",
+    "analysis_id": 5378,
+    "job_id": 5377,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9GZK3",
+    "analysis_id": 5379,
+    "job_id": 5378,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9GZK4",
+    "analysis_id": 5380,
+    "job_id": 5379,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9GZK6",
+    "analysis_id": 5381,
+    "job_id": 5380,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9GZK7",
+    "analysis_id": 5382,
+    "job_id": 5381,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9GZM6",
+    "analysis_id": 5383,
+    "job_id": 5382,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9H1D0",
+    "analysis_id": 5384,
+    "job_id": 5383,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9H205",
+    "analysis_id": 5385,
+    "job_id": 5384,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9H207",
+    "analysis_id": 5386,
+    "job_id": 5385,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9H208",
+    "analysis_id": 5387,
+    "job_id": 5386,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9H209",
+    "analysis_id": 5388,
+    "job_id": 5387,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9H210",
+    "analysis_id": 5389,
+    "job_id": 5388,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9H2C5",
+    "analysis_id": 5390,
+    "job_id": 5389,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9NQA5",
+    "analysis_id": 5391,
+    "job_id": 5390,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9NQN1",
+    "analysis_id": 5392,
+    "job_id": 5391,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9NYW0",
+    "analysis_id": 5393,
+    "job_id": 5392,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9NYW6",
+    "analysis_id": 5394,
+    "job_id": 5393,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9NZP0",
+    "analysis_id": 5395,
+    "job_id": 5394,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9NZP2",
+    "analysis_id": 5396,
+    "job_id": 5395,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9P1Q5",
+    "analysis_id": 5397,
+    "job_id": 5396,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9P1W3",
+    "analysis_id": 5398,
+    "job_id": 5397,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9UGF7",
+    "analysis_id": 5399,
+    "job_id": 5398,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9UKL2",
+    "analysis_id": 5400,
+    "job_id": 5399,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9Y3N9",
+    "analysis_id": 5401,
+    "job_id": 5400,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9Y4A9",
+    "analysis_id": 5402,
+    "job_id": 5401,
+    "span_aa": 37
+  },
+  {
+    "accession": "Q9Y585",
+    "analysis_id": 5403,
+    "job_id": 5402,
+    "span_aa": 37
+  },
+  {
+    "accession": "A4D2G3",
+    "analysis_id": 5404,
+    "job_id": 5403,
+    "span_aa": 38
+  },
+  {
+    "accession": "O14520",
+    "analysis_id": 5405,
+    "job_id": 5404,
+    "span_aa": 38
+  },
+  {
+    "accession": "O43749",
+    "analysis_id": 5406,
+    "job_id": 5405,
+    "span_aa": 38
+  },
+  {
+    "accession": "O75712",
+    "analysis_id": 5407,
+    "job_id": 5406,
+    "span_aa": 38
+  },
+  {
+    "accession": "O95371",
+    "analysis_id": 5408,
+    "job_id": 5407,
+    "span_aa": 38
+  },
+  {
+    "accession": "O95377",
+    "analysis_id": 5409,
+    "job_id": 5408,
+    "span_aa": 38
+  },
+  {
+    "accession": "O95452",
+    "analysis_id": 5410,
+    "job_id": 5409,
+    "span_aa": 38
+  },
+  {
+    "accession": "P08034",
+    "analysis_id": 5411,
+    "job_id": 5410,
+    "span_aa": 38
+  },
+  {
+    "accession": "P08908",
+    "analysis_id": 5412,
+    "job_id": 5411,
+    "span_aa": 38
+  },
+  {
+    "accession": "P28221",
+    "analysis_id": 5413,
+    "job_id": 5412,
+    "span_aa": 38
+  },
+  {
+    "accession": "P30518",
+    "analysis_id": 5414,
+    "job_id": 5413,
+    "span_aa": 38
+  },
+  {
+    "accession": "P30550",
+    "analysis_id": 5415,
+    "job_id": 5414,
+    "span_aa": 38
+  },
+  {
+    "accession": "P30968",
+    "analysis_id": 5416,
+    "job_id": 5415,
+    "span_aa": 38
+  },
+  {
+    "accession": "P34982",
+    "analysis_id": 5417,
+    "job_id": 5416,
+    "span_aa": 38
+  },
+  {
+    "accession": "P35346",
+    "analysis_id": 5418,
+    "job_id": 5417,
+    "span_aa": 38
+  },
+  {
+    "accession": "P47881",
+    "analysis_id": 5419,
+    "job_id": 5418,
+    "span_aa": 38
+  },
+  {
+    "accession": "P47884",
+    "analysis_id": 5420,
+    "job_id": 5419,
+    "span_aa": 38
+  },
+  {
+    "accession": "P47887",
+    "analysis_id": 5421,
+    "job_id": 5420,
+    "span_aa": 38
+  },
+  {
+    "accession": "P47888",
+    "analysis_id": 5422,
+    "job_id": 5421,
+    "span_aa": 38
+  },
+  {
+    "accession": "P47890",
+    "analysis_id": 5423,
+    "job_id": 5422,
+    "span_aa": 38
+  },
+  {
+    "accession": "P47893",
+    "analysis_id": 5424,
+    "job_id": 5423,
+    "span_aa": 38
+  },
+  {
+    "accession": "P49281",
+    "analysis_id": 5425,
+    "job_id": 5424,
+    "span_aa": 38
+  },
+  {
+    "accession": "P51572",
+    "analysis_id": 5426,
+    "job_id": 5425,
+    "span_aa": 38
+  },
+  {
+    "accession": "P52569",
+    "analysis_id": 5427,
+    "job_id": 5426,
+    "span_aa": 38
+  },
+  {
+    "accession": "P58170",
+    "analysis_id": 5428,
+    "job_id": 5427,
+    "span_aa": 38
+  },
+  {
+    "accession": "P61073",
+    "analysis_id": 5429,
+    "job_id": 5428,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q13948",
+    "analysis_id": 5430,
+    "job_id": 5429,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q5BJF2",
+    "analysis_id": 5431,
+    "job_id": 5430,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q6NUJ2",
+    "analysis_id": 5432,
+    "job_id": 5431,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q7Z3F1",
+    "analysis_id": 5433,
+    "job_id": 5432,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q7Z5H5",
+    "analysis_id": 5434,
+    "job_id": 5433,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGA1",
+    "analysis_id": 5435,
+    "job_id": 5434,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGC8",
+    "analysis_id": 5436,
+    "job_id": 5435,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGF3",
+    "analysis_id": 5437,
+    "job_id": 5436,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGN2",
+    "analysis_id": 5438,
+    "job_id": 5437,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGQ3",
+    "analysis_id": 5439,
+    "job_id": 5438,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGQ4",
+    "analysis_id": 5440,
+    "job_id": 5439,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGR3",
+    "analysis_id": 5441,
+    "job_id": 5440,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGR5",
+    "analysis_id": 5442,
+    "job_id": 5441,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGR8",
+    "analysis_id": 5443,
+    "job_id": 5442,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGS0",
+    "analysis_id": 5444,
+    "job_id": 5443,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGS2",
+    "analysis_id": 5445,
+    "job_id": 5444,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGS3",
+    "analysis_id": 5446,
+    "job_id": 5445,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGT9",
+    "analysis_id": 5447,
+    "job_id": 5446,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NGU4",
+    "analysis_id": 5448,
+    "job_id": 5447,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NH92",
+    "analysis_id": 5449,
+    "job_id": 5448,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NH93",
+    "analysis_id": 5450,
+    "job_id": 5449,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8NHA8",
+    "analysis_id": 5451,
+    "job_id": 5450,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q8TDB8",
+    "analysis_id": 5452,
+    "job_id": 5451,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q96AW1",
+    "analysis_id": 5453,
+    "job_id": 5452,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q96NT5",
+    "analysis_id": 5454,
+    "job_id": 5453,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q96Q80",
+    "analysis_id": 5455,
+    "job_id": 5454,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q96R48",
+    "analysis_id": 5456,
+    "job_id": 5455,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q96R84",
+    "analysis_id": 5457,
+    "job_id": 5456,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q9BUN8",
+    "analysis_id": 5458,
+    "job_id": 5457,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q9H237",
+    "analysis_id": 5459,
+    "job_id": 5458,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q9NQR9",
+    "analysis_id": 5460,
+    "job_id": 5459,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q9NYW3",
+    "analysis_id": 5461,
+    "job_id": 5460,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q9P0I2",
+    "analysis_id": 5462,
+    "job_id": 5461,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q9P296",
+    "analysis_id": 5463,
+    "job_id": 5462,
+    "span_aa": 38
+  },
+  {
+    "accession": "Q9Y5Y3",
+    "analysis_id": 5464,
+    "job_id": 5463,
+    "span_aa": 38
+  },
+  {
+    "accession": "A2RUT3",
+    "analysis_id": 5465,
+    "job_id": 5464,
+    "span_aa": 39
+  },
+  {
+    "accession": "O00155",
+    "analysis_id": 5466,
+    "job_id": 5465,
+    "span_aa": 39
+  },
+  {
+    "accession": "O00398",
+    "analysis_id": 5467,
+    "job_id": 5466,
+    "span_aa": 39
+  },
+  {
+    "accession": "P04035",
+    "analysis_id": 5468,
+    "job_id": 5467,
+    "span_aa": 39
+  },
+  {
+    "accession": "P13945",
+    "analysis_id": 5469,
+    "job_id": 5468,
+    "span_aa": 39
+  },
+  {
+    "accession": "P25024",
+    "analysis_id": 5470,
+    "job_id": 5469,
+    "span_aa": 39
+  },
+  {
+    "accession": "P30825",
+    "analysis_id": 5471,
+    "job_id": 5470,
+    "span_aa": 39
+  },
+  {
+    "accession": "P32418",
+    "analysis_id": 5472,
+    "job_id": 5471,
+    "span_aa": 39
+  },
+  {
+    "accession": "P36956",
+    "analysis_id": 5473,
+    "job_id": 5472,
+    "span_aa": 39
+  },
+  {
+    "accession": "P40879",
+    "analysis_id": 5474,
+    "job_id": 5473,
+    "span_aa": 39
+  },
+  {
+    "accession": "P50391",
+    "analysis_id": 5475,
+    "job_id": 5474,
+    "span_aa": 39
+  },
+  {
+    "accession": "P51679",
+    "analysis_id": 5476,
+    "job_id": 5475,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q12908",
+    "analysis_id": 5477,
+    "job_id": 5476,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q12912",
+    "analysis_id": 5478,
+    "job_id": 5477,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q13183",
+    "analysis_id": 5479,
+    "job_id": 5478,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q8NGY2",
+    "analysis_id": 5480,
+    "job_id": 5479,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q8NH40",
+    "analysis_id": 5481,
+    "job_id": 5480,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q8NH61",
+    "analysis_id": 5482,
+    "job_id": 5481,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q969M2",
+    "analysis_id": 5483,
+    "job_id": 5482,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q969V1",
+    "analysis_id": 5484,
+    "job_id": 5483,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q96A59",
+    "analysis_id": 5485,
+    "job_id": 5484,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q99463",
+    "analysis_id": 5486,
+    "job_id": 5485,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q9BUM1",
+    "analysis_id": 5487,
+    "job_id": 5486,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q9BWQ6",
+    "analysis_id": 5488,
+    "job_id": 5487,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q9UHQ4",
+    "analysis_id": 5489,
+    "job_id": 5488,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q9Y5N1",
+    "analysis_id": 5490,
+    "job_id": 5489,
+    "span_aa": 39
+  },
+  {
+    "accession": "Q9Y6M5",
+    "analysis_id": 5491,
+    "job_id": 5490,
+    "span_aa": 39
+  },
+  {
+    "accession": "A6NHA9",
+    "analysis_id": 5492,
+    "job_id": 5491,
+    "span_aa": 40
+  },
+  {
+    "accession": "O95470",
+    "analysis_id": 5493,
+    "job_id": 5492,
+    "span_aa": 40
+  },
+  {
+    "accession": "P02730",
+    "analysis_id": 5494,
+    "job_id": 5493,
+    "span_aa": 40
+  },
+  {
+    "accession": "P0C7N5",
+    "analysis_id": 5495,
+    "job_id": 5494,
+    "span_aa": 40
+  },
+  {
+    "accession": "P25106",
+    "analysis_id": 5496,
+    "job_id": 5495,
+    "span_aa": 40
+  },
+  {
+    "accession": "P46663",
+    "analysis_id": 5497,
+    "job_id": 5496,
+    "span_aa": 40
+  },
+  {
+    "accession": "P48050",
+    "analysis_id": 5498,
+    "job_id": 5497,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q13607",
+    "analysis_id": 5499,
+    "job_id": 5498,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q5T3F8",
+    "analysis_id": 5500,
+    "job_id": 5499,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q6PJW8",
+    "analysis_id": 5501,
+    "job_id": 5500,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q6ZPB5",
+    "analysis_id": 5502,
+    "job_id": 5501,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q86VZ5",
+    "analysis_id": 5503,
+    "job_id": 5502,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q8NG84",
+    "analysis_id": 5504,
+    "job_id": 5503,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q92847",
+    "analysis_id": 5505,
+    "job_id": 5504,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q969W9",
+    "analysis_id": 5506,
+    "job_id": 5505,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q96G23",
+    "analysis_id": 5507,
+    "job_id": 5506,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q99500",
+    "analysis_id": 5508,
+    "job_id": 5507,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q9H1Y3",
+    "analysis_id": 5509,
+    "job_id": 5508,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q9H228",
+    "analysis_id": 5510,
+    "job_id": 5509,
+    "span_aa": 40
+  },
+  {
+    "accession": "Q9H341",
+    "analysis_id": 5511,
+    "job_id": 5510,
+    "span_aa": 40
+  },
+  {
+    "accession": "A6NGY5",
+    "analysis_id": 5512,
+    "job_id": 5511,
+    "span_aa": 41
+  },
+  {
+    "accession": "A6NL26",
+    "analysis_id": 5513,
+    "job_id": 5512,
+    "span_aa": 41
+  },
+  {
+    "accession": "A6NMZ5",
+    "analysis_id": 5514,
+    "job_id": 5513,
+    "span_aa": 41
+  },
+  {
+    "accession": "O95665",
+    "analysis_id": 5515,
+    "job_id": 5514,
+    "span_aa": 41
+  },
+  {
+    "accession": "P0C7N8",
+    "analysis_id": 5516,
+    "job_id": 5515,
+    "span_aa": 41
+  },
+  {
+    "accession": "P22001",
+    "analysis_id": 5517,
+    "job_id": 5516,
+    "span_aa": 41
+  },
+  {
+    "accession": "P28336",
+    "analysis_id": 5518,
+    "job_id": 5517,
+    "span_aa": 41
+  },
+  {
+    "accession": "P32238",
+    "analysis_id": 5519,
+    "job_id": 5518,
+    "span_aa": 41
+  },
+  {
+    "accession": "P32247",
+    "analysis_id": 5520,
+    "job_id": 5519,
+    "span_aa": 41
+  },
+  {
+    "accession": "P46091",
+    "analysis_id": 5521,
+    "job_id": 5520,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q01726",
+    "analysis_id": 5522,
+    "job_id": 5521,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q6PI25",
+    "analysis_id": 5523,
+    "job_id": 5522,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q7RTM1",
+    "analysis_id": 5524,
+    "job_id": 5523,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8IY34",
+    "analysis_id": 5525,
+    "job_id": 5524,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8NFK1",
+    "analysis_id": 5526,
+    "job_id": 5525,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8NGG1",
+    "analysis_id": 5527,
+    "job_id": 5526,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8NGH3",
+    "analysis_id": 5528,
+    "job_id": 5527,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8NGV6",
+    "analysis_id": 5529,
+    "job_id": 5528,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8NGY0",
+    "analysis_id": 5530,
+    "job_id": 5529,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8NGY3",
+    "analysis_id": 5531,
+    "job_id": 5530,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8TBE1",
+    "analysis_id": 5532,
+    "job_id": 5531,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q8TDV0",
+    "analysis_id": 5533,
+    "job_id": 5532,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q92887",
+    "analysis_id": 5534,
+    "job_id": 5533,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q96L42",
+    "analysis_id": 5535,
+    "job_id": 5534,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q9H3S5",
+    "analysis_id": 5536,
+    "job_id": 5535,
+    "span_aa": 41
+  },
+  {
+    "accession": "Q9H6R6",
+    "analysis_id": 5537,
+    "job_id": 5536,
+    "span_aa": 41
+  },
+  {
+    "accession": "P13637",
+    "analysis_id": 5538,
+    "job_id": 5537,
+    "span_aa": 42
+  },
+  {
+    "accession": "P35212",
+    "analysis_id": 5539,
+    "job_id": 5538,
+    "span_aa": 42
+  },
+  {
+    "accession": "P37287",
+    "analysis_id": 5540,
+    "job_id": 5539,
+    "span_aa": 42
+  },
+  {
+    "accession": "P41597",
+    "analysis_id": 5541,
+    "job_id": 5540,
+    "span_aa": 42
+  },
+  {
+    "accession": "P46089",
+    "analysis_id": 5542,
+    "job_id": 5541,
+    "span_aa": 42
+  },
+  {
+    "accession": "P49279",
+    "analysis_id": 5543,
+    "job_id": 5542,
+    "span_aa": 42
+  },
+  {
+    "accession": "P49286",
+    "analysis_id": 5544,
+    "job_id": 5543,
+    "span_aa": 42
+  },
+  {
+    "accession": "P55344",
+    "analysis_id": 5545,
+    "job_id": 5544,
+    "span_aa": 42
+  },
+  {
+    "accession": "P57738",
+    "analysis_id": 5546,
+    "job_id": 5545,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q14439",
+    "analysis_id": 5547,
+    "job_id": 5546,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q15761",
+    "analysis_id": 5548,
+    "job_id": 5547,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q2QL34",
+    "analysis_id": 5549,
+    "job_id": 5548,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q5R3K3",
+    "analysis_id": 5550,
+    "job_id": 5549,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8N127",
+    "analysis_id": 5551,
+    "job_id": 5550,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8NGA0",
+    "analysis_id": 5552,
+    "job_id": 5551,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8NGI8",
+    "analysis_id": 5553,
+    "job_id": 5552,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8NGI9",
+    "analysis_id": 5554,
+    "job_id": 5553,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8NGZ2",
+    "analysis_id": 5555,
+    "job_id": 5554,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8NH48",
+    "analysis_id": 5556,
+    "job_id": 5555,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8NH89",
+    "analysis_id": 5557,
+    "job_id": 5556,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8NH90",
+    "analysis_id": 5558,
+    "job_id": 5557,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q8NHC5",
+    "analysis_id": 5559,
+    "job_id": 5558,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q96AG4",
+    "analysis_id": 5560,
+    "job_id": 5559,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q96G91",
+    "analysis_id": 5561,
+    "job_id": 5560,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q96MC6",
+    "analysis_id": 5562,
+    "job_id": 5561,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q9NPB9",
+    "analysis_id": 5563,
+    "job_id": 5562,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q9NS75",
+    "analysis_id": 5564,
+    "job_id": 5563,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q9NZP5",
+    "analysis_id": 5565,
+    "job_id": 5564,
+    "span_aa": 42
+  },
+  {
+    "accession": "Q9Y5Y4",
+    "analysis_id": 5566,
+    "job_id": 5565,
+    "span_aa": 42
+  },
+  {
+    "accession": "A0PJK1",
+    "analysis_id": 5567,
+    "job_id": 5566,
+    "span_aa": 43
+  },
+  {
+    "accession": "O00421",
+    "analysis_id": 5568,
+    "job_id": 5567,
+    "span_aa": 43
+  },
+  {
+    "accession": "P21462",
+    "analysis_id": 5569,
+    "job_id": 5568,
+    "span_aa": 43
+  },
+  {
+    "accession": "P21918",
+    "analysis_id": 5570,
+    "job_id": 5569,
+    "span_aa": 43
+  },
+  {
+    "accession": "P25089",
+    "analysis_id": 5571,
+    "job_id": 5570,
+    "span_aa": 43
+  },
+  {
+    "accession": "P30874",
+    "analysis_id": 5572,
+    "job_id": 5571,
+    "span_aa": 43
+  },
+  {
+    "accession": "P32745",
+    "analysis_id": 5573,
+    "job_id": 5572,
+    "span_aa": 43
+  },
+  {
+    "accession": "P57103",
+    "analysis_id": 5574,
+    "job_id": 5573,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q12809",
+    "analysis_id": 5575,
+    "job_id": 5574,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q6GV28",
+    "analysis_id": 5576,
+    "job_id": 5575,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q6IFN5",
+    "analysis_id": 5577,
+    "job_id": 5576,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q8NEB5",
+    "analysis_id": 5578,
+    "job_id": 5577,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q8NGC7",
+    "analysis_id": 5579,
+    "job_id": 5578,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q8NGH6",
+    "analysis_id": 5580,
+    "job_id": 5579,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q8NGH7",
+    "analysis_id": 5581,
+    "job_id": 5580,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q8NGQ1",
+    "analysis_id": 5582,
+    "job_id": 5581,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q8NGR1",
+    "analysis_id": 5583,
+    "job_id": 5582,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q8NHC6",
+    "analysis_id": 5584,
+    "job_id": 5583,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q8TDU9",
+    "analysis_id": 5585,
+    "job_id": 5584,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q96CE8",
+    "analysis_id": 5586,
+    "job_id": 5585,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q99677",
+    "analysis_id": 5587,
+    "job_id": 5586,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q99808",
+    "analysis_id": 5588,
+    "job_id": 5587,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q9GZQ4",
+    "analysis_id": 5589,
+    "job_id": 5588,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q9GZQ6",
+    "analysis_id": 5590,
+    "job_id": 5589,
+    "span_aa": 43
+  },
+  {
+    "accession": "Q9UBM1",
+    "analysis_id": 5591,
+    "job_id": 5590,
+    "span_aa": 43
+  },
+  {
+    "accession": "B2RN74",
+    "analysis_id": 5592,
+    "job_id": 5591,
+    "span_aa": 44
+  },
+  {
+    "accession": "O75388",
+    "analysis_id": 5593,
+    "job_id": 5592,
+    "span_aa": 44
+  },
+  {
+    "accession": "P0C617",
+    "analysis_id": 5594,
+    "job_id": 5593,
+    "span_aa": 44
+  },
+  {
+    "accession": "P0C645",
+    "analysis_id": 5595,
+    "job_id": 5594,
+    "span_aa": 44
+  },
+  {
+    "accession": "P22459",
+    "analysis_id": 5596,
+    "job_id": 5595,
+    "span_aa": 44
+  },
+  {
+    "accession": "P48230",
+    "analysis_id": 5597,
+    "job_id": 5596,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q49SQ1",
+    "analysis_id": 5598,
+    "job_id": 5597,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q7Z3C6",
+    "analysis_id": 5599,
+    "job_id": 5598,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q86VY9",
+    "analysis_id": 5600,
+    "job_id": 5599,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q8NG94",
+    "analysis_id": 5601,
+    "job_id": 5600,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q8WUX1",
+    "analysis_id": 5602,
+    "job_id": 5601,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q96AM1",
+    "analysis_id": 5603,
+    "job_id": 5602,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q99705",
+    "analysis_id": 5604,
+    "job_id": 5603,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q9BZJ8",
+    "analysis_id": 5605,
+    "job_id": 5604,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q9H252",
+    "analysis_id": 5606,
+    "job_id": 5605,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q9NS40",
+    "analysis_id": 5607,
+    "job_id": 5606,
+    "span_aa": 44
+  },
+  {
+    "accession": "Q9Y2T5",
+    "analysis_id": 5608,
+    "job_id": 5607,
+    "span_aa": 44
+  },
+  {
+    "accession": "A6NM03",
+    "analysis_id": 5609,
+    "job_id": 5608,
+    "span_aa": 45
+  },
+  {
+    "accession": "A6NMS3",
+    "analysis_id": 5610,
+    "job_id": 5609,
+    "span_aa": 45
+  },
+  {
+    "accession": "O43194",
+    "analysis_id": 5611,
+    "job_id": 5610,
+    "span_aa": 45
+  },
+  {
+    "accession": "P04839",
+    "analysis_id": 5612,
+    "job_id": 5611,
+    "span_aa": 45
+  },
+  {
+    "accession": "P21439",
+    "analysis_id": 5613,
+    "job_id": 5612,
+    "span_aa": 45
+  },
+  {
+    "accession": "P35368",
+    "analysis_id": 5614,
+    "job_id": 5613,
+    "span_aa": 45
+  },
+  {
+    "accession": "P48146",
+    "analysis_id": 5615,
+    "job_id": 5614,
+    "span_aa": 45
+  },
+  {
+    "accession": "P49146",
+    "analysis_id": 5616,
+    "job_id": 5615,
+    "span_aa": 45
+  },
+  {
+    "accession": "P50052",
+    "analysis_id": 5617,
+    "job_id": 5616,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q2M3M2",
+    "analysis_id": 5618,
+    "job_id": 5617,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q5NUL3",
+    "analysis_id": 5619,
+    "job_id": 5618,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q5VTY9",
+    "analysis_id": 5620,
+    "job_id": 5619,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q8N350",
+    "analysis_id": 5621,
+    "job_id": 5620,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q8N5C1",
+    "analysis_id": 5622,
+    "job_id": 5621,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q8NGF0",
+    "analysis_id": 5623,
+    "job_id": 5622,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q8NGP9",
+    "analysis_id": 5624,
+    "job_id": 5623,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q8NGX6",
+    "analysis_id": 5625,
+    "job_id": 5624,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q96RD7",
+    "analysis_id": 5626,
+    "job_id": 5625,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q99680",
+    "analysis_id": 5627,
+    "job_id": 5626,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q9NV12",
+    "analysis_id": 5628,
+    "job_id": 5627,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q9UNW8",
+    "analysis_id": 5629,
+    "job_id": 5628,
+    "span_aa": 45
+  },
+  {
+    "accession": "Q9UQ05",
+    "analysis_id": 5630,
+    "job_id": 5629,
+    "span_aa": 45
+  },
+  {
+    "accession": "O14894",
+    "analysis_id": 5631,
+    "job_id": 5630,
+    "span_aa": 46
+  },
+  {
+    "accession": "O43613",
+    "analysis_id": 5632,
+    "job_id": 5631,
+    "span_aa": 46
+  },
+  {
+    "accession": "O60478",
+    "analysis_id": 5633,
+    "job_id": 5632,
+    "span_aa": 46
+  },
+  {
+    "accession": "O95800",
+    "analysis_id": 5634,
+    "job_id": 5633,
+    "span_aa": 46
+  },
+  {
+    "accession": "P21453",
+    "analysis_id": 5635,
+    "job_id": 5634,
+    "span_aa": 46
+  },
+  {
+    "accession": "P28222",
+    "analysis_id": 5636,
+    "job_id": 5635,
+    "span_aa": 46
+  },
+  {
+    "accession": "P31391",
+    "analysis_id": 5637,
+    "job_id": 5636,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q1EHB4",
+    "analysis_id": 5638,
+    "job_id": 5637,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q8N5B7",
+    "analysis_id": 5639,
+    "job_id": 5638,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q8NGA4",
+    "analysis_id": 5640,
+    "job_id": 5639,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q8NGB2",
+    "analysis_id": 5641,
+    "job_id": 5640,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q8NH81",
+    "analysis_id": 5642,
+    "job_id": 5641,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q8WWX8",
+    "analysis_id": 5643,
+    "job_id": 5642,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q969F8",
+    "analysis_id": 5644,
+    "job_id": 5643,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q96P65",
+    "analysis_id": 5645,
+    "job_id": 5644,
+    "span_aa": 46
+  },
+  {
+    "accession": "Q9H8P0",
+    "analysis_id": 5646,
+    "job_id": 5645,
+    "span_aa": 46
+  },
+  {
+    "accession": "P05023",
+    "analysis_id": 5647,
+    "job_id": 5646,
+    "span_aa": 47
+  },
+  {
+    "accession": "P08913",
+    "analysis_id": 5648,
+    "job_id": 5647,
+    "span_aa": 47
+  },
+  {
+    "accession": "P11836",
+    "analysis_id": 5649,
+    "job_id": 5648,
+    "span_aa": 47
+  },
+  {
+    "accession": "P30408",
+    "analysis_id": 5650,
+    "job_id": 5649,
+    "span_aa": 47
+  },
+  {
+    "accession": "P32245",
+    "analysis_id": 5651,
+    "job_id": 5650,
+    "span_aa": 47
+  },
+  {
+    "accession": "P41143",
+    "analysis_id": 5652,
+    "job_id": 5651,
+    "span_aa": 47
+  },
+  {
+    "accession": "P51684",
+    "analysis_id": 5653,
+    "job_id": 5652,
+    "span_aa": 47
+  },
+  {
+    "accession": "P61619",
+    "analysis_id": 5654,
+    "job_id": 5653,
+    "span_aa": 47
+  },
+  {
+    "accession": "Q8NFN8",
+    "analysis_id": 5655,
+    "job_id": 5654,
+    "span_aa": 47
+  },
+  {
+    "accession": "Q969W1",
+    "analysis_id": 5656,
+    "job_id": 5655,
+    "span_aa": 47
+  },
+  {
+    "accession": "Q96DS6",
+    "analysis_id": 5657,
+    "job_id": 5656,
+    "span_aa": 47
+  },
+  {
+    "accession": "Q9BY21",
+    "analysis_id": 5658,
+    "job_id": 5657,
+    "span_aa": 47
+  },
+  {
+    "accession": "Q9H9S3",
+    "analysis_id": 5659,
+    "job_id": 5658,
+    "span_aa": 47
+  },
+  {
+    "accession": "Q9HA72",
+    "analysis_id": 5660,
+    "job_id": 5659,
+    "span_aa": 47
+  },
+  {
+    "accession": "Q9NRA2",
+    "analysis_id": 5661,
+    "job_id": 5660,
+    "span_aa": 47
+  },
+  {
+    "accession": "P18825",
+    "analysis_id": 5662,
+    "job_id": 5661,
+    "span_aa": 48
+  },
+  {
+    "accession": "P25025",
+    "analysis_id": 5663,
+    "job_id": 5662,
+    "span_aa": 48
+  },
+  {
+    "accession": "P41146",
+    "analysis_id": 5664,
+    "job_id": 5663,
+    "span_aa": 48
+  },
+  {
+    "accession": "P47775",
+    "analysis_id": 5665,
+    "job_id": 5664,
+    "span_aa": 48
+  },
+  {
+    "accession": "P51686",
+    "analysis_id": 5666,
+    "job_id": 5665,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q674R7",
+    "analysis_id": 5667,
+    "job_id": 5666,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q7Z3Q1",
+    "analysis_id": 5668,
+    "job_id": 5667,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q86UE4",
+    "analysis_id": 5669,
+    "job_id": 5668,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q86UW1",
+    "analysis_id": 5670,
+    "job_id": 5669,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q8N3F9",
+    "analysis_id": 5671,
+    "job_id": 5670,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q8NE79",
+    "analysis_id": 5672,
+    "job_id": 5671,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q99678",
+    "analysis_id": 5673,
+    "job_id": 5672,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q99788",
+    "analysis_id": 5674,
+    "job_id": 5673,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q9H2W1",
+    "analysis_id": 5675,
+    "job_id": 5674,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q9P1P5",
+    "analysis_id": 5676,
+    "job_id": 5675,
+    "span_aa": 48
+  },
+  {
+    "accession": "Q9UPR5",
+    "analysis_id": 5677,
+    "job_id": 5676,
+    "span_aa": 48
+  },
+  {
+    "accession": "O14494",
+    "analysis_id": 5678,
+    "job_id": 5677,
+    "span_aa": 49
+  },
+  {
+    "accession": "O95259",
+    "analysis_id": 5679,
+    "job_id": 5678,
+    "span_aa": 49
+  },
+  {
+    "accession": "P08183",
+    "analysis_id": 5680,
+    "job_id": 5679,
+    "span_aa": 49
+  },
+  {
+    "accession": "Q13733",
+    "analysis_id": 5681,
+    "job_id": 5680,
+    "span_aa": 49
+  },
+  {
+    "accession": "Q5VZR4",
+    "analysis_id": 5682,
+    "job_id": 5681,
+    "span_aa": 49
+  },
+  {
+    "accession": "Q96QK8",
+    "analysis_id": 5683,
+    "job_id": 5682,
+    "span_aa": 49
+  },
+  {
+    "accession": "Q9BPV8",
+    "analysis_id": 5684,
+    "job_id": 5683,
+    "span_aa": 49
+  },
+  {
+    "accession": "A6NM45",
+    "analysis_id": 5685,
+    "job_id": 5684,
+    "span_aa": 50
+  },
+  {
+    "accession": "C9JDP6",
+    "analysis_id": 5686,
+    "job_id": 5685,
+    "span_aa": 50
+  },
+  {
+    "accession": "O00590",
+    "analysis_id": 5687,
+    "job_id": 5686,
+    "span_aa": 50
+  },
+  {
+    "accession": "O14495",
+    "analysis_id": 5688,
+    "job_id": 5687,
+    "span_aa": 50
+  },
+  {
+    "accession": "O95977",
+    "analysis_id": 5689,
+    "job_id": 5688,
+    "span_aa": 50
+  },
+  {
+    "accession": "P56746",
+    "analysis_id": 5690,
+    "job_id": 5689,
+    "span_aa": 50
+  },
+  {
+    "accession": "Q14714",
+    "analysis_id": 5691,
+    "job_id": 5690,
+    "span_aa": 50
+  },
+  {
+    "accession": "Q8NGE7",
+    "analysis_id": 5692,
+    "job_id": 5691,
+    "span_aa": 50
+  },
+  {
+    "accession": "Q92633",
+    "analysis_id": 5693,
+    "job_id": 5692,
+    "span_aa": 50
+  },
+  {
+    "accession": "Q9BVC6",
+    "analysis_id": 5694,
+    "job_id": 5693,
+    "span_aa": 50
+  },
+  {
+    "accession": "Q9BXS9",
+    "analysis_id": 5695,
+    "job_id": 5694,
+    "span_aa": 50
+  },
+  {
+    "accession": "O15551",
+    "analysis_id": 5696,
+    "job_id": 5695,
+    "span_aa": 51
+  },
+  {
+    "accession": "O94886",
+    "analysis_id": 5697,
+    "job_id": 5696,
+    "span_aa": 51
+  },
+  {
+    "accession": "P47900",
+    "analysis_id": 5698,
+    "job_id": 5697,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q8N0U8",
+    "analysis_id": 5699,
+    "job_id": 5698,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q8N7P3",
+    "analysis_id": 5700,
+    "job_id": 5699,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q8NGG7",
+    "analysis_id": 5701,
+    "job_id": 5700,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q8NH06",
+    "analysis_id": 5702,
+    "job_id": 5701,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q8TCT6",
+    "analysis_id": 5703,
+    "job_id": 5702,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q8TDI8",
+    "analysis_id": 5704,
+    "job_id": 5703,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q8TDV2",
+    "analysis_id": 5705,
+    "job_id": 5704,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q9BQB6",
+    "analysis_id": 5706,
+    "job_id": 5705,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q9H598",
+    "analysis_id": 5707,
+    "job_id": 5706,
+    "span_aa": 51
+  },
+  {
+    "accession": "Q9HCX4",
+    "analysis_id": 5708,
+    "job_id": 5707,
+    "span_aa": 51
+  },
+  {
+    "accession": "P04000",
+    "analysis_id": 5709,
+    "job_id": 5708,
+    "span_aa": 52
+  },
+  {
+    "accession": "P04001",
+    "analysis_id": 5710,
+    "job_id": 5709,
+    "span_aa": 52
+  },
+  {
+    "accession": "P37288",
+    "analysis_id": 5711,
+    "job_id": 5710,
+    "span_aa": 52
+  },
+  {
+    "accession": "P46092",
+    "analysis_id": 5712,
+    "job_id": 5711,
+    "span_aa": 52
+  },
+  {
+    "accession": "P50993",
+    "analysis_id": 5713,
+    "job_id": 5712,
+    "span_aa": 52
+  },
+  {
+    "accession": "Q68DH5",
+    "analysis_id": 5714,
+    "job_id": 5713,
+    "span_aa": 52
+  },
+  {
+    "accession": "Q6W5P4",
+    "analysis_id": 5715,
+    "job_id": 5714,
+    "span_aa": 52
+  },
+  {
+    "accession": "Q86SS6",
+    "analysis_id": 5716,
+    "job_id": 5715,
+    "span_aa": 52
+  },
+  {
+    "accession": "Q86TG1",
+    "analysis_id": 5717,
+    "job_id": 5716,
+    "span_aa": 52
+  },
+  {
+    "accession": "Q86XJ0",
+    "analysis_id": 5718,
+    "job_id": 5717,
+    "span_aa": 52
+  },
+  {
+    "accession": "Q9HBL7",
+    "analysis_id": 5719,
+    "job_id": 5718,
+    "span_aa": 52
+  },
+  {
+    "accession": "O14493",
+    "analysis_id": 5720,
+    "job_id": 5719,
+    "span_aa": 53
+  },
+  {
+    "accession": "O95471",
+    "analysis_id": 5721,
+    "job_id": 5720,
+    "span_aa": 53
+  },
+  {
+    "accession": "O95484",
+    "analysis_id": 5722,
+    "job_id": 5721,
+    "span_aa": 53
+  },
+  {
+    "accession": "O95622",
+    "analysis_id": 5723,
+    "job_id": 5722,
+    "span_aa": 53
+  },
+  {
+    "accession": "O95832",
+    "analysis_id": 5724,
+    "job_id": 5723,
+    "span_aa": 53
+  },
+  {
+    "accession": "P04920",
+    "analysis_id": 5725,
+    "job_id": 5724,
+    "span_aa": 53
+  },
+  {
+    "accession": "P43115",
+    "analysis_id": 5726,
+    "job_id": 5725,
+    "span_aa": 53
+  },
+  {
+    "accession": "P49682",
+    "analysis_id": 5727,
+    "job_id": 5726,
+    "span_aa": 53
+  },
+  {
+    "accession": "P56747",
+    "analysis_id": 5728,
+    "job_id": 5727,
+    "span_aa": 53
+  },
+  {
+    "accession": "P56748",
+    "analysis_id": 5729,
+    "job_id": 5728,
+    "span_aa": 53
+  },
+  {
+    "accession": "P56856",
+    "analysis_id": 5730,
+    "job_id": 5729,
+    "span_aa": 53
+  },
+  {
+    "accession": "P56880",
+    "analysis_id": 5731,
+    "job_id": 5730,
+    "span_aa": 53
+  },
+  {
+    "accession": "P57739",
+    "analysis_id": 5732,
+    "job_id": 5731,
+    "span_aa": 53
+  },
+  {
+    "accession": "Q6P9G4",
+    "analysis_id": 5733,
+    "job_id": 5732,
+    "span_aa": 53
+  },
+  {
+    "accession": "Q86VE9",
+    "analysis_id": 5734,
+    "job_id": 5733,
+    "span_aa": 53
+  },
+  {
+    "accession": "Q8N6F1",
+    "analysis_id": 5735,
+    "job_id": 5734,
+    "span_aa": 53
+  },
+  {
+    "accession": "Q8NGL6",
+    "analysis_id": 5736,
+    "job_id": 5735,
+    "span_aa": 53
+  },
+  {
+    "accession": "Q8NGW6",
+    "analysis_id": 5737,
+    "job_id": 5736,
+    "span_aa": 53
+  },
+  {
+    "accession": "Q96RD6",
+    "analysis_id": 5738,
+    "job_id": 5737,
+    "span_aa": 53
+  },
+  {
+    "accession": "Q9H7F0",
+    "analysis_id": 5739,
+    "job_id": 5738,
+    "span_aa": 53
+  },
+  {
+    "accession": "O43614",
+    "analysis_id": 5740,
+    "job_id": 5739,
+    "span_aa": 54
+  },
+  {
+    "accession": "O43688",
+    "analysis_id": 5741,
+    "job_id": 5740,
+    "span_aa": 54
+  },
+  {
+    "accession": "P13866",
+    "analysis_id": 5742,
+    "job_id": 5741,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q02223",
+    "analysis_id": 5743,
+    "job_id": 5742,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q8NFJ6",
+    "analysis_id": 5744,
+    "job_id": 5743,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q8NGF4",
+    "analysis_id": 5745,
+    "job_id": 5744,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q8NGU9",
+    "analysis_id": 5746,
+    "job_id": 5745,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q8NHS3",
+    "analysis_id": 5747,
+    "job_id": 5746,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q8TAF8",
+    "analysis_id": 5748,
+    "job_id": 5747,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q96QD8",
+    "analysis_id": 5749,
+    "job_id": 5748,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q9BQG1",
+    "analysis_id": 5750,
+    "job_id": 5749,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q9NYM4",
+    "analysis_id": 5751,
+    "job_id": 5750,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q9UKP6",
+    "analysis_id": 5752,
+    "job_id": 5751,
+    "span_aa": 54
+  },
+  {
+    "accession": "Q9Y320",
+    "analysis_id": 5753,
+    "job_id": 5752,
+    "span_aa": 54
+  },
+  {
+    "accession": "P32239",
+    "analysis_id": 5754,
+    "job_id": 5753,
+    "span_aa": 55
+  },
+  {
+    "accession": "P32302",
+    "analysis_id": 5755,
+    "job_id": 5754,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q0D2K0",
+    "analysis_id": 5756,
+    "job_id": 5755,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q6XYQ8",
+    "analysis_id": 5757,
+    "job_id": 5756,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q8NGG3",
+    "analysis_id": 5758,
+    "job_id": 5757,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q8NGS6",
+    "analysis_id": 5759,
+    "job_id": 5758,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q8NH67",
+    "analysis_id": 5760,
+    "job_id": 5759,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q9H0R3",
+    "analysis_id": 5761,
+    "job_id": 5760,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q9HCF6",
+    "analysis_id": 5762,
+    "job_id": 5761,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q9UM00",
+    "analysis_id": 5763,
+    "job_id": 5762,
+    "span_aa": 55
+  },
+  {
+    "accession": "Q9Y5I7",
+    "analysis_id": 5764,
+    "job_id": 5763,
+    "span_aa": 55
+  },
+  {
+    "accession": "O00254",
+    "analysis_id": 5765,
+    "job_id": 5764,
+    "span_aa": 56
+  },
+  {
+    "accession": "P30872",
+    "analysis_id": 5766,
+    "job_id": 5765,
+    "span_aa": 56
+  },
+  {
+    "accession": "P41595",
+    "analysis_id": 5767,
+    "job_id": 5766,
+    "span_aa": 56
+  },
+  {
+    "accession": "P56749",
+    "analysis_id": 5768,
+    "job_id": 5767,
+    "span_aa": 56
+  },
+  {
+    "accession": "P60201",
+    "analysis_id": 5769,
+    "job_id": 5768,
+    "span_aa": 56
+  },
+  {
+    "accession": "Q8NBM4",
+    "analysis_id": 5770,
+    "job_id": 5769,
+    "span_aa": 56
+  },
+  {
+    "accession": "Q8NFZ6",
+    "analysis_id": 5771,
+    "job_id": 5770,
+    "span_aa": 56
+  },
+  {
+    "accession": "Q8TBG9",
+    "analysis_id": 5772,
+    "job_id": 5771,
+    "span_aa": 56
+  },
+  {
+    "accession": "Q9GZP7",
+    "analysis_id": 5773,
+    "job_id": 5772,
+    "span_aa": 56
+  },
+  {
+    "accession": "Q9H490",
+    "analysis_id": 5774,
+    "job_id": 5773,
+    "span_aa": 56
+  },
+  {
+    "accession": "Q9HC07",
+    "analysis_id": 5775,
+    "job_id": 5774,
+    "span_aa": 56
+  },
+  {
+    "accession": "O00337",
+    "analysis_id": 5776,
+    "job_id": 5775,
+    "span_aa": 57
+  },
+  {
+    "accession": "O15218",
+    "analysis_id": 5777,
+    "job_id": 5776,
+    "span_aa": 57
+  },
+  {
+    "accession": "O43808",
+    "analysis_id": 5778,
+    "job_id": 5777,
+    "span_aa": 57
+  },
+  {
+    "accession": "P04921",
+    "analysis_id": 5779,
+    "job_id": 5778,
+    "span_aa": 57
+  },
+  {
+    "accession": "P08247",
+    "analysis_id": 5780,
+    "job_id": 5779,
+    "span_aa": 57
+  },
+  {
+    "accession": "P08588",
+    "analysis_id": 5781,
+    "job_id": 5780,
+    "span_aa": 57
+  },
+  {
+    "accession": "P21579",
+    "analysis_id": 5782,
+    "job_id": 5781,
+    "span_aa": 57
+  },
+  {
+    "accession": "P41145",
+    "analysis_id": 5783,
+    "job_id": 5782,
+    "span_aa": 57
+  },
+  {
+    "accession": "P46695",
+    "analysis_id": 5784,
+    "job_id": 5783,
+    "span_aa": 57
+  },
+  {
+    "accession": "P55011",
+    "analysis_id": 5785,
+    "job_id": 5784,
+    "span_aa": 57
+  },
+  {
+    "accession": "Q12893",
+    "analysis_id": 5786,
+    "job_id": 5785,
+    "span_aa": 57
+  },
+  {
+    "accession": "Q86XR5",
+    "analysis_id": 5787,
+    "job_id": 5786,
+    "span_aa": 57
+  },
+  {
+    "accession": "Q8NGV5",
+    "analysis_id": 5788,
+    "job_id": 5787,
+    "span_aa": 57
+  },
+  {
+    "accession": "Q8NH00",
+    "analysis_id": 5789,
+    "job_id": 5788,
+    "span_aa": 57
+  },
+  {
+    "accession": "Q9H7Z7",
+    "analysis_id": 5790,
+    "job_id": 5789,
+    "span_aa": 57
+  },
+  {
+    "accession": "Q9NUN5",
+    "analysis_id": 5791,
+    "job_id": 5790,
+    "span_aa": 57
+  },
+  {
+    "accession": "A0ZSE6",
+    "analysis_id": 5792,
+    "job_id": 5791,
+    "span_aa": 58
+  },
+  {
+    "accession": "P31639",
+    "analysis_id": 5793,
+    "job_id": 5792,
+    "span_aa": 58
+  },
+  {
+    "accession": "Q8N695",
+    "analysis_id": 5794,
+    "job_id": 5793,
+    "span_aa": 58
+  },
+  {
+    "accession": "Q8NBW4",
+    "analysis_id": 5795,
+    "job_id": 5794,
+    "span_aa": 58
+  },
+  {
+    "accession": "Q8TDS5",
+    "analysis_id": 5796,
+    "job_id": 5795,
+    "span_aa": 58
+  },
+  {
+    "accession": "P78369",
+    "analysis_id": 5797,
+    "job_id": 5796,
+    "span_aa": 59
+  },
+  {
+    "accession": "Q5T7P8",
+    "analysis_id": 5798,
+    "job_id": 5797,
+    "span_aa": 59
+  },
+  {
+    "accession": "Q8NFF2",
+    "analysis_id": 5799,
+    "job_id": 5798,
+    "span_aa": 59
+  },
+  {
+    "accession": "Q96T83",
+    "analysis_id": 5800,
+    "job_id": 5799,
+    "span_aa": 59
+  },
+  {
+    "accession": "Q9BZD7",
+    "analysis_id": 5801,
+    "job_id": 5800,
+    "span_aa": 59
+  },
+  {
+    "accession": "Q9UNL2",
+    "analysis_id": 5802,
+    "job_id": 5801,
+    "span_aa": 59
+  },
+  {
+    "accession": "O14944",
+    "analysis_id": 5803,
+    "job_id": 5802,
+    "span_aa": 60
+  },
+  {
+    "accession": "O43306",
+    "analysis_id": 5804,
+    "job_id": 5803,
+    "span_aa": 60
+  },
+  {
+    "accession": "O75508",
+    "analysis_id": 5805,
+    "job_id": 5804,
+    "span_aa": 60
+  },
+  {
+    "accession": "P25101",
+    "analysis_id": 5806,
+    "job_id": 5805,
+    "span_aa": 60
+  },
+  {
+    "accession": "P30411",
+    "analysis_id": 5807,
+    "job_id": 5806,
+    "span_aa": 60
+  },
+  {
+    "accession": "P55017",
+    "analysis_id": 5808,
+    "job_id": 5807,
+    "span_aa": 60
+  },
+  {
+    "accession": "Q13936",
+    "analysis_id": 5809,
+    "job_id": 5808,
+    "span_aa": 60
+  },
+  {
+    "accession": "Q8NG78",
+    "analysis_id": 5810,
+    "job_id": 5809,
+    "span_aa": 60
+  },
+  {
+    "accession": "Q92911",
+    "analysis_id": 5811,
+    "job_id": 5810,
+    "span_aa": 60
+  },
+  {
+    "accession": "Q96DD7",
+    "analysis_id": 5812,
+    "job_id": 5811,
+    "span_aa": 60
+  },
+  {
+    "accession": "Q9BS91",
+    "analysis_id": 5813,
+    "job_id": 5812,
+    "span_aa": 60
+  },
+  {
+    "accession": "Q9NZG7",
+    "analysis_id": 5814,
+    "job_id": 5813,
+    "span_aa": 60
+  },
+  {
+    "accession": "O15431",
+    "analysis_id": 5815,
+    "job_id": 5814,
+    "span_aa": 61
+  },
+  {
+    "accession": "P0C7N1",
+    "analysis_id": 5816,
+    "job_id": 5815,
+    "span_aa": 61
+  },
+  {
+    "accession": "P25116",
+    "analysis_id": 5817,
+    "job_id": 5816,
+    "span_aa": 61
+  },
+  {
+    "accession": "Q9UPC5",
+    "analysis_id": 5818,
+    "job_id": 5817,
+    "span_aa": 61
+  },
+  {
+    "accession": "P49683",
+    "analysis_id": 5819,
+    "job_id": 5818,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q16563",
+    "analysis_id": 5820,
+    "job_id": 5819,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q6UX98",
+    "analysis_id": 5821,
+    "job_id": 5820,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q8N9I0",
+    "analysis_id": 5822,
+    "job_id": 5821,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q8NGC1",
+    "analysis_id": 5823,
+    "job_id": 5822,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q8NGR2",
+    "analysis_id": 5824,
+    "job_id": 5823,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q8TCW9",
+    "analysis_id": 5825,
+    "job_id": 5824,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q8WWG1",
+    "analysis_id": 5826,
+    "job_id": 5825,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q96HA9",
+    "analysis_id": 5827,
+    "job_id": 5826,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q99527",
+    "analysis_id": 5828,
+    "job_id": 5827,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q9NP59",
+    "analysis_id": 5829,
+    "job_id": 5828,
+    "span_aa": 62
+  },
+  {
+    "accession": "Q9NQ40",
+    "analysis_id": 5830,
+    "job_id": 5829,
+    "span_aa": 62
+  },
+  {
+    "accession": "O14668",
+    "analysis_id": 5831,
+    "job_id": 5830,
+    "span_aa": 63
+  },
+  {
+    "accession": "P45844",
+    "analysis_id": 5832,
+    "job_id": 5831,
+    "span_aa": 63
+  },
+  {
+    "accession": "Q16570",
+    "analysis_id": 5833,
+    "job_id": 5832,
+    "span_aa": 63
+  },
+  {
+    "accession": "Q5SNT2",
+    "analysis_id": 5834,
+    "job_id": 5833,
+    "span_aa": 63
+  },
+  {
+    "accession": "Q9HC58",
+    "analysis_id": 5835,
+    "job_id": 5834,
+    "span_aa": 63
+  },
+  {
+    "accession": "O15165",
+    "analysis_id": 5836,
+    "job_id": 5835,
+    "span_aa": 64
+  },
+  {
+    "accession": "O95342",
+    "analysis_id": 5837,
+    "job_id": 5836,
+    "span_aa": 64
+  },
+  {
+    "accession": "P53801",
+    "analysis_id": 5838,
+    "job_id": 5837,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q13304",
+    "analysis_id": 5839,
+    "job_id": 5838,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q13488",
+    "analysis_id": 5840,
+    "job_id": 5839,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q3ZCQ3",
+    "analysis_id": 5841,
+    "job_id": 5840,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q4KMZ8",
+    "analysis_id": 5842,
+    "job_id": 5841,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q8NGG2",
+    "analysis_id": 5843,
+    "job_id": 5842,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q8TEB9",
+    "analysis_id": 5844,
+    "job_id": 5843,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q96P67",
+    "analysis_id": 5845,
+    "job_id": 5844,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q9H172",
+    "analysis_id": 5846,
+    "job_id": 5845,
+    "span_aa": 64
+  },
+  {
+    "accession": "Q9Y5S1",
+    "analysis_id": 5847,
+    "job_id": 5846,
+    "span_aa": 64
+  },
+  {
+    "accession": "P31641",
+    "analysis_id": 5848,
+    "job_id": 5847,
+    "span_aa": 65
+  },
+  {
+    "accession": "P48995",
+    "analysis_id": 5849,
+    "job_id": 5848,
+    "span_aa": 65
+  },
+  {
+    "accession": "P51674",
+    "analysis_id": 5850,
+    "job_id": 5849,
+    "span_aa": 65
+  },
+  {
+    "accession": "Q01959",
+    "analysis_id": 5851,
+    "job_id": 5850,
+    "span_aa": 65
+  },
+  {
+    "accession": "Q8IU68",
+    "analysis_id": 5852,
+    "job_id": 5851,
+    "span_aa": 65
+  },
+  {
+    "accession": "Q96H72",
+    "analysis_id": 5853,
+    "job_id": 5852,
+    "span_aa": 65
+  },
+  {
+    "accession": "Q9HB89",
+    "analysis_id": 5854,
+    "job_id": 5853,
+    "span_aa": 65
+  },
+  {
+    "accession": "Q9NSD5",
+    "analysis_id": 5855,
+    "job_id": 5854,
+    "span_aa": 65
+  },
+  {
+    "accession": "Q9UBN4",
+    "analysis_id": 5856,
+    "job_id": 5855,
+    "span_aa": 65
+  },
+  {
+    "accession": "P31645",
+    "analysis_id": 5857,
+    "job_id": 5856,
+    "span_aa": 66
+  },
+  {
+    "accession": "Q6NUT2",
+    "analysis_id": 5858,
+    "job_id": 5857,
+    "span_aa": 66
+  },
+  {
+    "accession": "P11168",
+    "analysis_id": 5859,
+    "job_id": 5858,
+    "span_aa": 67
+  },
+  {
+    "accession": "P20309",
+    "analysis_id": 5860,
+    "job_id": 5859,
+    "span_aa": 67
+  },
+  {
+    "accession": "P23975",
+    "analysis_id": 5861,
+    "job_id": 5860,
+    "span_aa": 67
+  },
+  {
+    "accession": "P30531",
+    "analysis_id": 5862,
+    "job_id": 5861,
+    "span_aa": 67
+  },
+  {
+    "accession": "P30989",
+    "analysis_id": 5863,
+    "job_id": 5862,
+    "span_aa": 67
+  },
+  {
+    "accession": "Q6NVV3",
+    "analysis_id": 5864,
+    "job_id": 5863,
+    "span_aa": 67
+  },
+  {
+    "accession": "Q7Z5B4",
+    "analysis_id": 5865,
+    "job_id": 5864,
+    "span_aa": 67
+  },
+  {
+    "accession": "O43193",
+    "analysis_id": 5866,
+    "job_id": 5865,
+    "span_aa": 68
+  },
+  {
+    "accession": "P35372",
+    "analysis_id": 5867,
+    "job_id": 5866,
+    "span_aa": 68
+  },
+  {
+    "accession": "Q7RTT9",
+    "analysis_id": 5868,
+    "job_id": 5867,
+    "span_aa": 68
+  },
+  {
+    "accession": "P48651",
+    "analysis_id": 5869,
+    "job_id": 5868,
+    "span_aa": 69
+  },
+  {
+    "accession": "Q13286",
+    "analysis_id": 5870,
+    "job_id": 5869,
+    "span_aa": 69
+  },
+  {
+    "accession": "Q15760",
+    "analysis_id": 5871,
+    "job_id": 5870,
+    "span_aa": 69
+  },
+  {
+    "accession": "Q9H6L5",
+    "analysis_id": 5872,
+    "job_id": 5871,
+    "span_aa": 69
+  },
+  {
+    "accession": "Q9P0T7",
+    "analysis_id": 5873,
+    "job_id": 5872,
+    "span_aa": 69
+  },
+  {
+    "accession": "Q9Y5Y9",
+    "analysis_id": 5874,
+    "job_id": 5873,
+    "span_aa": 69
+  },
+  {
+    "accession": "Q8IZF0",
+    "analysis_id": 5875,
+    "job_id": 5874,
+    "span_aa": 70
+  },
+  {
+    "accession": "Q9NX61",
+    "analysis_id": 5876,
+    "job_id": 5875,
+    "span_aa": 70
+  },
+  {
+    "accession": "O00526",
+    "analysis_id": 5877,
+    "job_id": 5876,
+    "span_aa": 71
+  },
+  {
+    "accession": "O43653",
+    "analysis_id": 5878,
+    "job_id": 5877,
+    "span_aa": 71
+  },
+  {
+    "accession": "P48029",
+    "analysis_id": 5879,
+    "job_id": 5878,
+    "span_aa": 71
+  },
+  {
+    "accession": "Q15758",
+    "analysis_id": 5880,
+    "job_id": 5879,
+    "span_aa": 71
+  },
+  {
+    "accession": "Q16572",
+    "analysis_id": 5881,
+    "job_id": 5880,
+    "span_aa": 71
+  },
+  {
+    "accession": "Q8NEA5",
+    "analysis_id": 5882,
+    "job_id": 5881,
+    "span_aa": 71
+  },
+  {
+    "accession": "Q9ULD8",
+    "analysis_id": 5883,
+    "job_id": 5882,
+    "span_aa": 71
+  },
+  {
+    "accession": "P02724",
+    "analysis_id": 5884,
+    "job_id": 5883,
+    "span_aa": 72
+  },
+  {
+    "accession": "Q16739",
+    "analysis_id": 5885,
+    "job_id": 5884,
+    "span_aa": 72
+  },
+  {
+    "accession": "Q3SXP7",
+    "analysis_id": 5886,
+    "job_id": 5885,
+    "span_aa": 72
+  },
+  {
+    "accession": "Q9NUD9",
+    "analysis_id": 5887,
+    "job_id": 5886,
+    "span_aa": 72
+  },
+  {
+    "accession": "Q9UHM6",
+    "analysis_id": 5888,
+    "job_id": 5887,
+    "span_aa": 72
+  },
+  {
+    "accession": "P48065",
+    "analysis_id": 5889,
+    "job_id": 5888,
+    "span_aa": 73
+  },
+  {
+    "accession": "Q4G0N0",
+    "analysis_id": 5890,
+    "job_id": 5889,
+    "span_aa": 73
+  },
+  {
+    "accession": "Q6U841",
+    "analysis_id": 5891,
+    "job_id": 5890,
+    "span_aa": 73
+  },
+  {
+    "accession": "Q9UI40",
+    "analysis_id": 5892,
+    "job_id": 5891,
+    "span_aa": 73
+  },
+  {
+    "accession": "O95857",
+    "analysis_id": 5893,
+    "job_id": 5892,
+    "span_aa": 74
+  },
+  {
+    "accession": "P46095",
+    "analysis_id": 5894,
+    "job_id": 5893,
+    "span_aa": 74
+  },
+  {
+    "accession": "P48066",
+    "analysis_id": 5895,
+    "job_id": 5894,
+    "span_aa": 74
+  },
+  {
+    "accession": "Q9H222",
+    "analysis_id": 5896,
+    "job_id": 5895,
+    "span_aa": 74
+  },
+  {
+    "accession": "Q9UNQ0",
+    "analysis_id": 5897,
+    "job_id": 5896,
+    "span_aa": 74
+  },
+  {
+    "accession": "Q9Y487",
+    "analysis_id": 5898,
+    "job_id": 5897,
+    "span_aa": 74
+  },
+  {
+    "accession": "A0AVI2",
+    "analysis_id": 5899,
+    "job_id": 5898,
+    "span_aa": 75
+  },
+  {
+    "accession": "P01135",
+    "analysis_id": 5900,
+    "job_id": 5899,
+    "span_aa": 75
+  },
+  {
+    "accession": "P19397",
+    "analysis_id": 5901,
+    "job_id": 5900,
+    "span_aa": 75
+  },
+  {
+    "accession": "P24530",
+    "analysis_id": 5902,
+    "job_id": 5901,
+    "span_aa": 75
+  },
+  {
+    "accession": "Q8NH94",
+    "analysis_id": 5903,
+    "job_id": 5902,
+    "span_aa": 75
+  },
+  {
+    "accession": "Q9UI33",
+    "analysis_id": 5904,
+    "job_id": 5903,
+    "span_aa": 75
+  },
+  {
+    "accession": "O43869",
+    "analysis_id": 5905,
+    "job_id": 5904,
+    "span_aa": 76
+  },
+  {
+    "accession": "P13987",
+    "analysis_id": 5906,
+    "job_id": 5905,
+    "span_aa": 76
+  },
+  {
+    "accession": "Q8N1N2",
+    "analysis_id": 5907,
+    "job_id": 5906,
+    "span_aa": 76
+  },
+  {
+    "accession": "A0PJX4",
+    "analysis_id": 5908,
+    "job_id": 5907,
+    "span_aa": 77
+  },
+  {
+    "accession": "O60636",
+    "analysis_id": 5909,
+    "job_id": 5908,
+    "span_aa": 77
+  },
+  {
+    "accession": "P35410",
+    "analysis_id": 5910,
+    "job_id": 5909,
+    "span_aa": 77
+  },
+  {
+    "accession": "P43007",
+    "analysis_id": 5911,
+    "job_id": 5910,
+    "span_aa": 77
+  },
+  {
+    "accession": "P48067",
+    "analysis_id": 5912,
+    "job_id": 5911,
+    "span_aa": 77
+  },
+  {
+    "accession": "Q14210",
+    "analysis_id": 5913,
+    "job_id": 5912,
+    "span_aa": 77
+  },
+  {
+    "accession": "Q6UWI4",
+    "analysis_id": 5914,
+    "job_id": 5913,
+    "span_aa": 77
+  },
+  {
+    "accession": "Q8N114",
+    "analysis_id": 5915,
+    "job_id": 5914,
+    "span_aa": 77
+  },
+  {
+    "accession": "Q8TDM5",
+    "analysis_id": 5916,
+    "job_id": 5915,
+    "span_aa": 77
+  },
+  {
+    "accession": "Q99884",
+    "analysis_id": 5917,
+    "job_id": 5916,
+    "span_aa": 77
+  },
+  {
+    "accession": "Q9BSN7",
+    "analysis_id": 5918,
+    "job_id": 5917,
+    "span_aa": 77
+  },
+  {
+    "accession": "Q9UBN1",
+    "analysis_id": 5919,
+    "job_id": 5918,
+    "span_aa": 77
+  },
+  {
+    "accession": "Q96FM1",
+    "analysis_id": 5920,
+    "job_id": 5919,
+    "span_aa": 78
+  },
+  {
+    "accession": "Q96RJ3",
+    "analysis_id": 5921,
+    "job_id": 5920,
+    "span_aa": 78
+  },
+  {
+    "accession": "Q9HAS3",
+    "analysis_id": 5922,
+    "job_id": 5921,
+    "span_aa": 78
+  },
+  {
+    "accession": "Q01118",
+    "analysis_id": 5923,
+    "job_id": 5922,
+    "span_aa": 79
+  },
+  {
+    "accession": "Q06432",
+    "analysis_id": 5924,
+    "job_id": 5923,
+    "span_aa": 79
+  },
+  {
+    "accession": "Q15858",
+    "analysis_id": 5925,
+    "job_id": 5924,
+    "span_aa": 79
+  },
+  {
+    "accession": "Q6GPH6",
+    "analysis_id": 5926,
+    "job_id": 5925,
+    "span_aa": 79
+  },
+  {
+    "accession": "Q8NGC0",
+    "analysis_id": 5927,
+    "job_id": 5926,
+    "span_aa": 79
+  },
+  {
+    "accession": "Q8TEY5",
+    "analysis_id": 5928,
+    "job_id": 5927,
+    "span_aa": 79
+  },
+  {
+    "accession": "Q9BX84",
+    "analysis_id": 5929,
+    "job_id": 5928,
+    "span_aa": 79
+  },
+  {
+    "accession": "Q9NW15",
+    "analysis_id": 5930,
+    "job_id": 5929,
+    "span_aa": 79
+  },
+  {
+    "accession": "Q9Y328",
+    "analysis_id": 5931,
+    "job_id": 5930,
+    "span_aa": 79
+  },
+  {
+    "accession": "O95867",
+    "analysis_id": 5932,
+    "job_id": 5931,
+    "span_aa": 80
+  },
+  {
+    "accession": "P28223",
+    "analysis_id": 5933,
+    "job_id": 5932,
+    "span_aa": 80
+  },
+  {
+    "accession": "Q12999",
+    "analysis_id": 5934,
+    "job_id": 5933,
+    "span_aa": 80
+  },
+  {
+    "accession": "Q16553",
+    "analysis_id": 5935,
+    "job_id": 5934,
+    "span_aa": 80
+  },
+  {
+    "accession": "Q6UXB3",
+    "analysis_id": 5936,
+    "job_id": 5935,
+    "span_aa": 80
+  },
+  {
+    "accession": "Q92537",
+    "analysis_id": 5937,
+    "job_id": 5936,
+    "span_aa": 81
+  },
+  {
+    "accession": "Q9BZJ6",
+    "analysis_id": 5938,
+    "job_id": 5937,
+    "span_aa": 81
+  },
+  {
+    "accession": "Q9NSD7",
+    "analysis_id": 5939,
+    "job_id": 5938,
+    "span_aa": 81
+  },
+  {
+    "accession": "P42857",
+    "analysis_id": 5940,
+    "job_id": 5939,
+    "span_aa": 82
+  },
+  {
+    "accession": "Q9UQD0",
+    "analysis_id": 5941,
+    "job_id": 5940,
+    "span_aa": 82
+  },
+  {
+    "accession": "P34969",
+    "analysis_id": 5942,
+    "job_id": 5941,
+    "span_aa": 83
+  },
+  {
+    "accession": "Q9HB14",
+    "analysis_id": 5943,
+    "job_id": 5942,
+    "span_aa": 83
+  },
+  {
+    "accession": "Q9Y6R1",
+    "analysis_id": 5944,
+    "job_id": 5943,
+    "span_aa": 83
+  },
+  {
+    "accession": "A6NKX4",
+    "analysis_id": 5945,
+    "job_id": 5944,
+    "span_aa": 84
+  },
+  {
+    "accession": "O95868",
+    "analysis_id": 5946,
+    "job_id": 5945,
+    "span_aa": 84
+  },
+  {
+    "accession": "P04234",
+    "analysis_id": 5947,
+    "job_id": 5946,
+    "span_aa": 84
+  },
+  {
+    "accession": "P21926",
+    "analysis_id": 5948,
+    "job_id": 5947,
+    "span_aa": 84
+  },
+  {
+    "accession": "P29371",
+    "analysis_id": 5949,
+    "job_id": 5948,
+    "span_aa": 84
+  },
+  {
+    "accession": "Q14524",
+    "analysis_id": 5950,
+    "job_id": 5949,
+    "span_aa": 85
+  },
+  {
+    "accession": "Q8TDN2",
+    "analysis_id": 5951,
+    "job_id": 5950,
+    "span_aa": 85
+  },
+  {
+    "accession": "Q12791",
+    "analysis_id": 5952,
+    "job_id": 5951,
+    "span_aa": 86
+  },
+  {
+    "accession": "P35070",
+    "analysis_id": 5953,
+    "job_id": 5952,
+    "span_aa": 87
+  },
+  {
+    "accession": "Q5XXA6",
+    "analysis_id": 5954,
+    "job_id": 5953,
+    "span_aa": 87
+  },
+  {
+    "accession": "Q9NYX4",
+    "analysis_id": 5955,
+    "job_id": 5954,
+    "span_aa": 87
+  },
+  {
+    "accession": "Q05940",
+    "analysis_id": 5956,
+    "job_id": 5955,
+    "span_aa": 88
+  },
+  {
+    "accession": "Q695T7",
+    "analysis_id": 5957,
+    "job_id": 5956,
+    "span_aa": 88
+  },
+  {
+    "accession": "Q6UW88",
+    "analysis_id": 5958,
+    "job_id": 5957,
+    "span_aa": 88
+  },
+  {
+    "accession": "Q6ZP80",
+    "analysis_id": 5959,
+    "job_id": 5958,
+    "span_aa": 88
+  },
+  {
+    "accession": "Q96N87",
+    "analysis_id": 5960,
+    "job_id": 5959,
+    "span_aa": 88
+  },
+  {
+    "accession": "Q9NPD7",
+    "analysis_id": 5961,
+    "job_id": 5960,
+    "span_aa": 88
+  },
+  {
+    "accession": "O94772",
+    "analysis_id": 5962,
+    "job_id": 5961,
+    "span_aa": 89
+  },
+  {
+    "accession": "Q9NY91",
+    "analysis_id": 5963,
+    "job_id": 5962,
+    "span_aa": 89
+  },
+  {
+    "accession": "O60896",
+    "analysis_id": 5964,
+    "job_id": 5963,
+    "span_aa": 90
+  },
+  {
+    "accession": "P34998",
+    "analysis_id": 5965,
+    "job_id": 5964,
+    "span_aa": 90
+  },
+  {
+    "accession": "Q9Y672",
+    "analysis_id": 5966,
+    "job_id": 5965,
+    "span_aa": 90
+  },
+  {
+    "accession": "A8MUP6",
+    "analysis_id": 5967,
+    "job_id": 5966,
+    "span_aa": 91
+  },
+  {
+    "accession": "P24557",
+    "analysis_id": 5968,
+    "job_id": 5967,
+    "span_aa": 91
+  },
+  {
+    "accession": "P43003",
+    "analysis_id": 5969,
+    "job_id": 5968,
+    "span_aa": 91
+  },
+  {
+    "accession": "P43005",
+    "analysis_id": 5970,
+    "job_id": 5969,
+    "span_aa": 91
+  },
+  {
+    "accession": "Q9H295",
+    "analysis_id": 5971,
+    "job_id": 5970,
+    "span_aa": 91
+  },
+  {
+    "accession": "Q5H943",
+    "analysis_id": 5972,
+    "job_id": 5971,
+    "span_aa": 92
+  },
+  {
+    "accession": "Q8NER5",
+    "analysis_id": 5973,
+    "job_id": 5972,
+    "span_aa": 92
+  },
+  {
+    "accession": "Q9GZN6",
+    "analysis_id": 5974,
+    "job_id": 5973,
+    "span_aa": 92
+  },
+  {
+    "accession": "Q9NP91",
+    "analysis_id": 5975,
+    "job_id": 5974,
+    "span_aa": 92
+  },
+  {
+    "accession": "A6NK97",
+    "analysis_id": 5976,
+    "job_id": 5975,
+    "span_aa": 93
+  },
+  {
+    "accession": "P36897",
+    "analysis_id": 5977,
+    "job_id": 5976,
+    "span_aa": 93
+  },
+  {
+    "accession": "P43004",
+    "analysis_id": 5978,
+    "job_id": 5977,
+    "span_aa": 93
+  },
+  {
+    "accession": "Q4KMQ2",
+    "analysis_id": 5979,
+    "job_id": 5978,
+    "span_aa": 93
+  },
+  {
+    "accession": "Q8TCC7",
+    "analysis_id": 5980,
+    "job_id": 5979,
+    "span_aa": 93
+  },
+  {
+    "accession": "Q9Y267",
+    "analysis_id": 5981,
+    "job_id": 5980,
+    "span_aa": 93
+  },
+  {
+    "accession": "O43657",
+    "analysis_id": 5982,
+    "job_id": 5981,
+    "span_aa": 94
+  },
+  {
+    "accession": "P09693",
+    "analysis_id": 5983,
+    "job_id": 5982,
+    "span_aa": 94
+  },
+  {
+    "accession": "Q8N0W7",
+    "analysis_id": 5984,
+    "job_id": 5983,
+    "span_aa": 94
+  },
+  {
+    "accession": "Q8TBP5",
+    "analysis_id": 5985,
+    "job_id": 5984,
+    "span_aa": 94
+  },
+  {
+    "accession": "Q96QE2",
+    "analysis_id": 5986,
+    "job_id": 5985,
+    "span_aa": 94
+  },
+  {
+    "accession": "O14817",
+    "analysis_id": 5987,
+    "job_id": 5986,
+    "span_aa": 95
+  },
+  {
+    "accession": "O95528",
+    "analysis_id": 5988,
+    "job_id": 5987,
+    "span_aa": 95
+  },
+  {
+    "accession": "P25100",
+    "analysis_id": 5989,
+    "job_id": 5988,
+    "span_aa": 95
+  },
+  {
+    "accession": "P19075",
+    "analysis_id": 5990,
+    "job_id": 5989,
+    "span_aa": 96
+  },
+  {
+    "accession": "P54219",
+    "analysis_id": 5991,
+    "job_id": 5990,
+    "span_aa": 96
+  },
+  {
+    "accession": "Q13530",
+    "analysis_id": 5992,
+    "job_id": 5991,
+    "span_aa": 96
+  },
+  {
+    "accession": "Q14118",
+    "analysis_id": 5993,
+    "job_id": 5992,
+    "span_aa": 96
+  },
+  {
+    "accession": "Q8N2G4",
+    "analysis_id": 5994,
+    "job_id": 5993,
+    "span_aa": 96
+  },
+  {
+    "accession": "Q9H2J7",
+    "analysis_id": 5995,
+    "job_id": 5994,
+    "span_aa": 96
+  },
+  {
+    "accession": "O60706",
+    "analysis_id": 5996,
+    "job_id": 5995,
+    "span_aa": 97
+  },
+  {
+    "accession": "O75954",
+    "analysis_id": 5997,
+    "job_id": 5996,
+    "span_aa": 97
+  },
+  {
+    "accession": "P37023",
+    "analysis_id": 5998,
+    "job_id": 5997,
+    "span_aa": 97
+  },
+  {
+    "accession": "Q6ZNR0",
+    "analysis_id": 5999,
+    "job_id": 5998,
+    "span_aa": 97
+  },
+  {
+    "accession": "Q9Y226",
+    "analysis_id": 6000,
+    "job_id": 5999,
+    "span_aa": 97
+  },
+  {
+    "accession": "A8MVS5",
+    "analysis_id": 6001,
+    "job_id": 6000,
+    "span_aa": 98
+  },
+  {
+    "accession": "P19634",
+    "analysis_id": 6002,
+    "job_id": 6001,
+    "span_aa": 98
+  },
+  {
+    "accession": "P53794",
+    "analysis_id": 6003,
+    "job_id": 6002,
+    "span_aa": 98
+  },
+  {
+    "accession": "Q8N9F7",
+    "analysis_id": 6004,
+    "job_id": 6003,
+    "span_aa": 98
+  },
+  {
+    "accession": "Q9UGP8",
+    "analysis_id": 6005,
+    "job_id": 6004,
+    "span_aa": 98
+  },
+  {
+    "accession": "Q99250",
+    "analysis_id": 6006,
+    "job_id": 6005,
+    "span_aa": 99
+  },
+  {
+    "accession": "A1KXE4",
+    "analysis_id": 6007,
+    "job_id": 6006,
+    "span_aa": 100
+  },
+  {
+    "accession": "B8ZZ34",
+    "analysis_id": 6008,
+    "job_id": 6007,
+    "span_aa": 100
+  },
+  {
+    "accession": "P35498",
+    "analysis_id": 6009,
+    "job_id": 6008,
+    "span_aa": 100
+  },
+  {
+    "accession": "Q19T08",
+    "analysis_id": 6010,
+    "job_id": 6009,
+    "span_aa": 100
+  },
+  {
+    "accession": "Q8TD20",
+    "analysis_id": 6011,
+    "job_id": 6010,
+    "span_aa": 100
+  },
+  {
+    "accession": "Q9BYT9",
+    "analysis_id": 6012,
+    "job_id": 6011,
+    "span_aa": 100
+  },
+  {
+    "accession": "Q9H015",
+    "analysis_id": 6013,
+    "job_id": 6012,
+    "span_aa": 100
+  },
+  {
+    "accession": "Q9NY46",
+    "analysis_id": 6014,
+    "job_id": 6013,
+    "span_aa": 100
+  }
+]
