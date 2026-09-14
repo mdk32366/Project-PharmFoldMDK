@@ -489,6 +489,80 @@ what is proven is the unit behaviour and the wiring — not the live path.
   production), `A-016` (any red proves the assertion bites), `A-017` (the fixture reaches the code
   under test).
 
+#### D-158 amendment 1 — ⚠⚠ The owed revert proof is SPLIT, because attempting a prohibited act to certify the guard against it is itself a destructive operation — and step 1a is now DISCHARGED against live production
+
+- **Date:** 2026-09-15 · **Consumes no integer** (sub-entry beneath `D-158`).
+- **Owner ruling, 2026-09-15.** The original entry recorded the end-to-end proof as *owed* and named
+  the owner's first acceptance step as: tunnel up, one `pytest` with `DATABASE_URL` set, capture the
+  refusal. ⚠ **The owner refused that framing, and was right.**
+
+> If the guard has a defect, the failure mode is **silent permission followed by `TRUNCATE`**, and
+> that is the third truncation in a month. **KEEL-2 Step C5** — the four-question recovery-readiness
+> check before any destructive operation — applies, because *attempting a prohibited act to certify
+> a guard is a destructive operation.*
+
+⚠ The original entry reasoned correctly that the proof requires performing the act it certifies
+against, and then drew the wrong conclusion from it: *do it carefully on production*. **Carefully is
+not a control.**
+
+---
+
+#### The split
+
+| step | target | destructive? | status |
+|---|---|---|---|
+| **1a** | **live production**, through a real tunnel | **no** — one `SELECT`, no pytest, no conftest, no `TRUNCATE` anywhere in the path | ✅ **DISCHARGED** |
+| **1b** | a **scratch restore** of `backup_1789312967_d0f89bdd9e16aed5` | yes — the full suite with `DATABASE_URL` set | ⚠ **OWED** |
+
+**Together they certify both halves with nothing at risk:** 1a proves the guard makes the right
+decision *about the exact target*; 1b proves the *mechanism* aborts a real run, on a
+production-shaped database that carries the population, lacks the marker, and has zero stake.
+
+#### Step 1a — how known (`D-016`)
+
+`docs/REVERT-PROOF-D-158-1a-live-production-refused.txt`, produced by
+`scripts/d158_proof_1a_live_refusal.py` on 2026-09-15.
+
+```
+target url : postgresql+psycopg://pharmfoldmdk-app:<redacted>@127.0.0.1:16390/pharmfoldmdk
+marker present: False
+REFUSING TO RUN: DATABASE_URL points at 'pharmfoldmdk' on host '127.0.0.1', and it does not
+carry the 'keel_disposable_marker' marker, so it is not a disposable database.
+```
+
+⚠ **The script proves its own non-destructiveness** before it connects: it greps its own body for
+`TRUNCATE`/`DELETE`/`DROP`/`ALTER`/`INSERT`/`UPDATE` and for a pytest import, and refuses to run if
+it finds any. It reads `.env` by **parsing** it, never by sourcing it, and never prints the
+credential.
+
+#### ⚠⚠ Two findings the proof produced on its way to passing
+
+1. **THREE `flyctl` proxies were already listening on this machine** — ports **16380, 16381,
+   16382** — left from the 2026-09-13/14 recovery work, and **nothing about a tunnel says which
+   cluster it reaches.** `.env` points `DATABASE_URL` at 16380. Probing through one of them could
+   have certified this proof **against the forensic cluster** and reported success.
+   ⚠ So the proof opened its **own** proxy, bound by name to `kyzl60xz9zyrpj9g`, on a port it
+   controlled — and corroborated the target independently: the proxy reported
+   `Proxying localhost:16390 to remote [fdaa:62:76d9:0:1::9]:5432`, which is the **Direct IP**
+   `fly mpg status kyzl60xz9zyrpj9g` reports. **The tunnel's destination was proven, not assumed.**
+   ⚠ **The three stale tunnels are still open and are a standing hazard**: an armed shell is a
+   precondition of both incidents, and these are armed sockets with no session attached.
+2. **The script's own self-check found itself, twice.** The first version listed
+   `"TRUNCATE"`, `"DELETE"`, … as whole literals and fired on its own source; the second scanned the
+   whole file for `import pytest` and fired on the docstring that promises there isn't one.
+   ⚠ **That is `D-145`'s recorded trap for the third and fourth time in this wave** — a guard that
+   holds a pattern as data while searching for that pattern. The needles are now split and the scan
+   is scoped to the body below the docstring. Recorded rather than quietly worked around, because
+   the repetition *is* the finding: this class is not rare and it is not a slip.
+
+#### What remains owed
+
+**Step 1b.** ⚠ It creates and destroys a Fly cluster, so it is an owner decision with a cost, not
+something Code does on the way past. Until it runs, what is proven is: the unit behaviour, the
+wiring, the CI path (the `postgres` job now creates the marker and runs the suite against it with
+`DATABASE_URL` set and **no `CI=true` bypass**), and — now — **the live refusal.** What is not proven
+is that `pytest_configure` aborts a real collection against a production-shaped target.
+
 ### D-157 — The Run 2 census re-fold's real scope is **2,572, not 2,691**, because the 440 ceiling is card-bound and does not apply to this host — and the disqualifying fact is that **`F-062`'s own finding was applied to the card `F-062` was written about**, by the party that wrote it
 
 - **Date:** 2026-09-11

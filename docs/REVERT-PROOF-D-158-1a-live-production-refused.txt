@@ -1,0 +1,35 @@
+==============================================================================
+D-158 REVERT PROOF -- STEP 1a -- non-destructive, LIVE PRODUCTION
+==============================================================================
+target url    : postgresql+psycopg://pharmfoldmdk-app:<redacted>@127.0.0.1:16390/pharmfoldmdk
+host          : 127.0.0.1   (a tunnel: this is what defeated the old guard)
+database      : pharmfoldmdk
+marker sought : 'keel_disposable_marker'
+
+-- 1. what the probe sees on the real production database --
+   marker present: False
+
+-- 2. the guard's verdict, called exactly as conftest calls it --
+
+
+REFUSING TO RUN: DATABASE_URL points at 'pharmfoldmdk' on host '127.0.0.1', and it does not carry the 'keel_disposable_marker' marker, so it is not a disposable database.
+  This suite TRUNCATEs jobs, protein_analyses and ranking_runs on every test that uses
+  the `pg_engine` fixture. It has destroyed production TWICE, on the same signature:
+    2026-08-17  protein_analyses 2,771 -> 1
+    2026-09-13  protein_analyses 4,535 -> 1   (a tunnel makes production look local)
+  A tunnel presents production at 127.0.0.1, so the ADDRESS proves nothing and is no
+  longer consulted. Only the database itself can answer, and this one did not.
+
+  Run the gate WITHOUT `.env` sourced, or point DATABASE_URL at a throwaway database
+  marked with `python scripts/keel_mark_disposable.py`.
+  Override only if you mean it, and only for one named target:
+    PHARMFOLD_ALLOW_DESTRUCTIVE_DB=i-know-this-truncates:<host>/<database>
+
+-- 3. what this proves, and what it does not --
+   PROVEN: the live production database, reached through a real `fly mpg proxy` tunnel at
+           127.0.0.1, is REFUSED by the guard that conftest consults. This is the exact
+           decision D-158 exists to make, certified against the exact target.
+   NOT PROVEN HERE: that pytest's collection hook aborts the run. That is step 1b, and it
+           belongs on a scratch restore with zero stake -- never on this database.
+
+RESULT: REFUSED. Step 1a passes.
