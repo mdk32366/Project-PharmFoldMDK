@@ -66,6 +66,31 @@ def _const_pae(n: int, value: float) -> list[list[float]]:
     return [[value] * n for _ in range(n)]
 
 
+@pytest.fixture(autouse=True)
+def _pin_domain_ends(monkeypatch):
+    """⚠⚠ PIN THE SNAP SOURCE. These tests assert UNSNAPPED window geometry — the arithmetic
+    their own comments spell out (`L=2500 -> 1656 + 972`).
+
+    `plan_tiles` reads domain ends from `data/census/spancache`, which is **gitignored**
+    (`.gitignore:236`). So on a fresh clone the cache is empty and the tests assert what they say;
+    on any machine that has fetched spans the snap fires and IGF2R tiles at `1-1608 / 1468-2264`
+    instead of `1-1656 / 1529-2264`. **The same five assertions asserted different geometry on
+    different machines**, green in CI and red locally, for as long as the cache had been populated.
+
+    ⚠ 1608 is a REAL domain end and the snap is working exactly as designed — nothing here is a
+    bug in `core/hold48.py`, and `core/hold48.py:647` already warns that a mismatched snap "can
+    invent a different expected". The defect is a test that left the input to a scientific quantity
+    unpinned.
+
+    ⚠ Not `UNIPROT_CACHE`-patched: `cache_dir` defaults bind at def time, so patching the constant
+    would silently miss every call site. The LOOKUP is patched instead.
+    ⚠ `test_domain_snap_moves_an_internal_edge_within_64` passes its own `domain_ends` and takes
+    the other branch, so the snap itself is still exercised.
+    """
+    monkeypatch.setattr("core.hold48.domain_ends_span_relative",
+                        lambda **kw: (), raising=True)
+
+
 def _igf2r_row() -> Hold48Row:
     return next(r for r in tileable_rows() if r.accession == IGF2R_ACCESSION)
 
