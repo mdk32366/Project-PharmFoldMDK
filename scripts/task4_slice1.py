@@ -30,10 +30,25 @@ after ~13:00. So every failure mode has to be survivable *or* stop cleanly:
 - **progress is written as it goes**, never only at the end — a five-hour run that reports on
   completion tells the owner nothing at 13:00 and nothing if it dies at hour four.
 
-⚠ **The fold needs NO TUNNEL.** The worker talks to Fly over HTTPS — claim, upload, complete,
-`persist_pae` — and the preflight and the GPU are local. `DATABASE_URL` is needed for
-`--enumerate`'s cross-check, `--enqueue` and `--report` only. **A dropped tunnel cannot interrupt
-the fold**, which is the single biggest thing that makes this survivable unattended.
+⚠⚠ **THIS HEADER WAS FALSE FROM 2026-09-13 TO 2026-09-15, AND THE CORRECTION IS `D-160`.** It said,
+without qualification, *"the fold needs NO TUNNEL"*. **PR #306 added the stranger guard to the fold
+path** — `refuse_on_strangers` → `_engine()` → `os.environ["DATABASE_URL"]`, a subscript — so from
+that moment `--fold` raised `KeyError` without a tunnel. ⚠ An operator trusting this paragraph hits
+that error, and the nearest fix to hand is `source .env`, **re-arming the shell for the whole
+unattended run** — the condition both truncation incidents required.
+
+⚠ **The fold LOOP genuinely needs no tunnel**, and that part was always true: the worker talks to
+Fly over HTTPS — claim, upload, complete, `persist_pae` — and the VRAM preflight and the GPU are
+local. **A dropped tunnel cannot interrupt the fold**, which is the single biggest thing that makes
+this survivable unattended. `DATABASE_URL` is needed for `--enumerate`'s cross-check, `--enqueue`,
+`--report` and the stranger check only.
+
+⚠⚠ **SLICE 1 IS COMPLETE (342 folds, 2026-09-12) AND ITS `fold()` IS DELIBERATELY NOT SPLIT.**
+`D-160` splits **slice 3's** invocation into `--preflight` (tunnel-armed, seconds) and `--fold`
+(clean shell, hours), and `scripts/task4_slice3.py` is where that lives. Slice 1's runner keeps the
+old single-shell shape because it has no remaining run — **but if it is ever re-run, it re-creates
+the hazard**, and that residual is named here rather than left for a reader to discover. The shared
+machinery below (`write_clearance`, `clearance_refusal`, `fold_shell_refusal`) is available to it.
 """
 
 from __future__ import annotations
@@ -174,9 +189,16 @@ def enqueue(owner: bool) -> int:
 
     from sqlalchemy.orm import Session                 # noqa: PLC0415
     from db.models import JobRecord, ProteinAnalysis   # noqa: PLC0415
+    from core.db_identity import assert_campaign_target   # noqa: PLC0415 - D-159
 
     written = []
     with Session(_engine()) as s:
+        # ⚠⚠ D-159: ASK THE DATABASE WHICH DATABASE IT IS, BEFORE WRITING A SINGLE ROW.
+        # The engine came from DATABASE_URL and a tunnel does not say which cluster it reaches.
+        # ⚠ A population floor alone cannot do this: the forensic cluster zp2wjrej9lwodn4q holds
+        # the same census (the live one was restored from its backup) and would pass every count.
+        # Raises WrongDatabase before the first INSERT; one home, every caller (F-046).
+        assert_campaign_target(s.connection())
         # ⚠⚠ THE BAND OVERLAPS TASK 3's TWENTY BY EXACTLY FOUR, AND THAT IS ARITHMETIC,
         # NOT A DEFECT. The stratified sample drew 4 rows from 251-384, and those four were
         # folded as Run 2 on 2026-09-12 with artifacts of 199-246 KB. Re-folding them would give
@@ -266,6 +288,103 @@ def refuse_on_strangers(allowed, tier: str) -> int:
     print("  (a NULL-tier or other-tier pending job is NOT counted - the claim's own predicate "
           "is strict, so nothing else is reachable from this run.)")
     return 0
+
+
+# -- D-160: the fold-shell split ---------------------------------------------------------------
+#
+# !! THE HAZARD THIS CLOSES. `fold()` used to call `refuse_on_strangers` itself, and that reaches
+# `_engine()` -> `os.environ["DATABASE_URL"]`. So the fold could not START without a tunnel-armed
+# shell, and then that shell stayed armed for the TEN HOURS of unattended folding. Both truncation
+# incidents required exactly that condition: a correct script in an armed shell.
+#
+# ! And the script headers said the opposite - "the fold needs NO TUNNEL" - written before PR #306
+# added the stranger guard on 2026-09-13 and never updated. An operator following the header hits a
+# KeyError whose nearest fix is `source .env`, which re-arms the shell. A stale header in a
+# safety-relevant file is worse than no header.
+#
+# ! `os.environ.pop` was considered and REJECTED as the whole answer: it protects the process and
+# not the shell, and the shell is the hazard. The invocation is split instead, so the armed shell
+# lives for seconds and the long one is never armed at all.
+
+#: !! A clearance older than this is not a clearance. `run_worker` claims the next job of its TIER,
+#: not "one of mine", so a stranger enqueued between the check and the fold is exactly what the
+#: guard exists to catch - and an hour is already generous for "walk to the other shell".
+CLEARANCE_MAX_AGE_S = 3600
+
+
+def clearance_path(out_dir: pathlib.Path) -> pathlib.Path:
+    return out_dir / "stranger_clearance.json"
+
+
+def write_clearance(out_dir: pathlib.Path, tier: str, enqueued_ids) -> pathlib.Path:
+    """Record that the stranger check passed, for THIS tier and THIS exact population."""
+    rec = {"cleared_at": time.time(),
+           "cleared_at_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+           "tier": tier,
+           "job_ids": sorted(int(j) for j in enqueued_ids)}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = clearance_path(out_dir)
+    path.write_text(json.dumps(rec, indent=2), encoding="utf-8")
+    return path
+
+
+def verify_clearance(record, enqueued_ids, tier: str, age_s: float) -> Optional[str]:
+    """`None` if the clearance stands, else the sentence explaining the refusal. PURE.
+
+    ! Injectable age and record, so every refusal below is asserted without a clock or a file - a
+    guard nobody can test is a guard nobody can trust.
+    """
+    if record is None:
+        return ("no stranger clearance on disk. Run `--preflight` in the tunnel-armed shell first, "
+                "then fold in a clean one.")
+    if age_s > CLEARANCE_MAX_AGE_S:
+        return (f"the stranger clearance is {age_s / 60:.0f} minutes old, over the "
+                f"{CLEARANCE_MAX_AGE_S // 60}-minute bound. A stale clear is not a clear: a job "
+                f"enqueued since then would be claimable by this run. Re-run `--preflight`.")
+    if record.get("tier") != tier:
+        return (f"the clearance was taken at tier {record.get('tier')!r} and this run claims at "
+                f"{tier!r}. F-046: a guard that checks one tier while the run claims another is "
+                f"protecting a queue that will not be drained.")
+    cleared = {int(j) for j in record.get("job_ids", [])}
+    want = {int(j) for j in enqueued_ids}
+    if cleared != want:
+        extra, missing = sorted(cleared - want)[:5], sorted(want - cleared)[:5]
+        return (f"the clearance covers a different population: {len(cleared)} ids cleared, "
+                f"{len(want)} to fold (cleared-not-wanted {extra}, wanted-not-cleared {missing}). "
+                f"Re-run `--preflight` against the population you are actually folding.")
+    return None
+
+
+def clearance_refusal(out_dir: pathlib.Path, enqueued_ids, tier: str,
+                      now: Optional[float] = None) -> Optional[str]:
+    """Read the clearance off disk and verify it. Touches no database and no network."""
+    path = clearance_path(out_dir)
+    if not path.is_file():
+        return verify_clearance(None, enqueued_ids, tier, 0.0)
+    rec = json.loads(path.read_text(encoding="utf-8"))
+    age = (time.time() if now is None else now) - float(rec.get("cleared_at", 0))
+    return verify_clearance(rec, enqueued_ids, tier, age)
+
+
+def fold_shell_refusal(env) -> Optional[str]:
+    """!! `None` if this shell is safe to fold in, else the refusal. PURE.
+
+    ! It REFUSES rather than popping. Popping would unset the variable for this process and leave
+    the shell armed for every other command the operator runs during the ten hours - including a
+    stray `pytest`, which is the proximate cause of 2026-09-13. Refusing makes the operator open a
+    clean shell, which is the property D-160 is actually buying.
+    """
+    if env.get("DATABASE_URL"):
+        return "\n".join([
+            "REFUSING: DATABASE_URL is set in this shell. The fold does not need it - the worker",
+            "  talks to Fly over HTTPS - and an armed shell held open for hours of unattended",
+            "  folding is the condition BOTH truncation incidents required (2026-08-17,",
+            "  2026-09-13).",
+            "  Run `--preflight` in the armed shell, then fold in a clean one carrying only",
+            "  WORKER_AUTH_TOKEN (and TRANSPORT_URL if not the default).",
+            "  Do NOT `source .env` here: it holds four keys and two of them are the hazard.",
+        ])
+    return None
 
 
 class SliceRun:

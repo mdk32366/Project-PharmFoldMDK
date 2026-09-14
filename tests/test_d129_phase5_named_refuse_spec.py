@@ -525,7 +525,7 @@ def test_d129_is_the_next_free_decision_id():
     # 158–163 for the 2026-09-15 incident-closeout wave, and `### D-164` now takes the bar.
     # **148 stays absent** — the trafficking hold is unchanged.
         130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149,
-        150, 151, 152, 153, 154, 155, 156, 157, 158
+        150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160
     ], (
         f"⚠ 156 is ADDED by the KEEL five-document split entry — the FIFTEENTH resolution by "
         f"enumeration and never by a `>=`; `### D-164` now takes the bar. ⚠ The list itself is "

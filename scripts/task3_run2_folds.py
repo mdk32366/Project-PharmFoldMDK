@@ -199,6 +199,13 @@ def enqueue(owner: bool) -> int:
 
     written = []
     with Session(_engine()) as s:
+        from core.db_identity import assert_campaign_target   # noqa: PLC0415 - D-159
+        # ⚠⚠ D-159: ASK THE DATABASE WHICH DATABASE IT IS, BEFORE WRITING A SINGLE ROW.
+        # The engine came from DATABASE_URL and a tunnel does not say which cluster it reaches.
+        # ⚠ A population floor alone cannot do this: the forensic cluster zp2wjrej9lwodn4q holds
+        # the same census (the live one was restored from its backup) and would pass every count.
+        # Raises WrongDatabase before the first INSERT; one home, every caller (F-046).
+        assert_campaign_target(s.connection())
         already = _existing_run2(s, accs)
         if already:
             print(f"\nREFUSING: {len(already)} of the {SAMPLE_N} already carry a Run {RUN_LABEL} "
