@@ -522,17 +522,17 @@ def test_d129_is_the_next_free_decision_id():
     # is what tells a spent id from a free one, and it is the only reason an entry about the test
     # suite's database guard had to open this file. ⚠ **The SEVENTH reserved integer to be SPENT
     # rather than skipped**, and the first of six reserved in one commit: `docs/RESERVED.md` held
-    # 158–163 for the 2026-09-15 incident-closeout wave, and `### D-165` now takes the bar.
+    # 158–163 for the 2026-09-15 incident-closeout wave, and `### D-166` now takes the bar.
     # **148 stays absent** — the trafficking hold is unchanged.
         130, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149,
-        150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164
+        150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165
     ], (
         f"⚠ 156 is ADDED by the KEEL five-document split entry — the FIFTEENTH resolution by "
-        f"enumeration and never by a `>=`; `### D-165` now takes the bar. ⚠ The list itself is "
+        f"enumeration and never by a `>=`; `### D-166` now takes the bar. ⚠ The list itself is "
         f"now read from `docs/decisions.md`, not `docs/README.md`, and that is the same entry's "
         f"doing. "
         f"⚠ 155 is ADDED by the surface-merge entry — the FOURTEENTH resolution by "
-        f"enumeration and never by a `>=`; `### D-165` now takes the bar. "
+        f"enumeration and never by a `>=`; `### D-166` now takes the bar. "
         f"⚠ 154 is ADDED by the live-surface review entry — the THIRTEENTH resolution by "
         f"enumeration and never by a `>=`. Spending 154 reddened the previous form BY DESIGN, "
         f"which is what tells a spent id from a free one; `### D-155` now takes the bar. "
@@ -660,17 +660,17 @@ def test_d129_is_the_next_free_decision_id():
         "name here — never admitted by a `>=`'"
     )
     # ⚠⚠ D-154 SPENT the integer this guard barred (the live-surface review ship), so
-    # it is NAMED here rather than barred and `### D-165` takes the next-free bar. This is the
+    # it is NAMED here rather than barred and `### D-166` takes the next-free bar. This is the
     # widening D-145 fixed the shape of: a name is ADDED and nothing becomes a `>=`.
     assert "\n### D-154 — Every UI surface walked on the live site" in LOG, (
         "D-154 was spent by the live-surface review ship, so it must be NAMED here rather "
         "than barred")
     # ⚠⚠ D-155 SPENT the integer this guard barred (the surface-merge ship), so it is NAMED
-    # here rather than barred and `### D-165` takes the next-free bar. A name is ADDED and
+    # here rather than barred and `### D-166` takes the next-free bar. A name is ADDED and
     # nothing becomes a `>=` — the widening D-145 fixed the shape of.
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
-    assert "\n### D-165" not in LOG, (
+    assert "\n### D-166" not in LOG, (
         "D-164 is the next free integer and must stay unspent until an entry claims it "
         "by name here — never admitted by a `>=`"
     )

@@ -16,6 +16,72 @@
 
 ## Log (newest first)
 
+### D-165 — Tile geometry is pinned so a fresh clone plans what a warm machine plans — 24 KB of DERIVED ends travel with the repository, and the 243 MB they came from does not
+
+- **Date:** 2026-09-15
+- **Status:** Accepted. **Closes `F-076`'s root cause** (owner ruling, 2026-09-15: *"pin the cache"*).
+
+**The decision.** `data/census/hold48_domain_ends.v1.json` holds the derived domain ends for every
+hold-48 accession, and `core.hold48.domain_ends_span_relative` **consults it before the cache**.
+
+---
+
+#### 1. The defect, restated as a property rather than an incident
+
+`plan_tiles` derived tile edges from `data/census/spancache`, **which is gitignored**
+(`.gitignore:236`). So the function returned real ends on a machine that had fetched UniProt spans
+and `()` on a fresh clone — and **the same parent planned two different tilings depending on who
+ran it.**
+
+⚠ The function's own docstring already said *"Empty when the cache file is absent — CI has no
+spancache (gitignored). A missing cache is a category, not a fetch."* **The gap was written down;
+the consequence was not drawn.** That is `D-162` rule 3's shape — a documented blind spot is a
+blocking defect, not a comment — applied to a determinism property rather than a safety one.
+
+#### 2. ⚠ Why a pin and not the cache
+
+| | |
+|---|---|
+| the cache | **243 MB**, 4,990 raw UniProt entry JSONs, re-fetchable upstream |
+| what planning uses | the **derived** ends: 48 accessions, **24 KB** |
+
+Committing 243 MB of upstream payload to make a 24 KB derivation reproducible is the wrong trade.
+**The pin is the derivation, and the derivation is what determines the artifact.**
+
+#### 3. The key is (accession, span_start, span_end), and that is load-bearing
+
+⚠⚠ **A pin keyed on accession alone would silently carry stale ends across a span change.**
+`F-069` / `F-071` span repairs are live and unblocked. With the span in the key, a repair makes the
+pin stop applying, the cache answers instead, and the disagreement is visible rather than absorbed.
+
+⚠ `_pinned_domain_ends` returns **`None`** to fall through and **`()`** for *looked and found none*.
+Those are different answers and collapsing them would reintroduce the original ambiguity.
+
+#### 4. ⚠ The pin does not become unbypassable
+
+An explicit `domain_ends=` still overrides it. `tests/test_hold48_tiles.py` asserts the unsnapped
+window arithmetic that way (`F-076`'s fix), and that must keep working — otherwise the pin would
+silently redefine what those tests measure.
+
+#### 5. How known (`D-016`)
+
+**The property, measured:** with `cache_dir` pointed at an empty directory — a fresh clone — every
+tileable hold-48 row now plans **identically** to a warm machine. IGF2R: `(1,1608) (1468,2264)`
+both ways, where before the pin an empty cache gave `(1,1656) (1529,2264)`.
+
+`tests/test_d165_spancache_pin.py` asserts coverage of all 48, the span-keying, fresh-clone
+equality across every tileable row, that an explicit override still wins, and — **skipped where the
+cache is absent, which is CI** — that the pin still agrees with the source it was derived from.
+⚠ **A machine that cannot see the source cannot testify about it**, so that check skips rather than
+passing vacuously.
+
+⚠ **Drift is a finding, not a re-pin.** If a re-fetched UniProt changes a domain boundary, the pin
+and the cache disagree, and `scripts/pin_hold48_domain_ends.py --check` reports it. **Re-pinning
+without asking why would move the geometry of landed tiles.**
+
+- **Relates:** `F-076` (the defect), `F-077` (what the duplicates turned out to be), `D-162` rule 8
+  (state outside version control that determines a landed artifact).
+
 ### D-164 — The served cost stamp names WHICH envelope produced it, because neither ceiling moves — and the disqualifying fact is that the stamp already named a ceiling, just not the one the campaign actually ran at
 
 - **Date:** 2026-09-15 · **Status:** Accepted. **Owner ruling, 2026-09-15.**

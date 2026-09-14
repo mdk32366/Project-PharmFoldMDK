@@ -311,6 +311,32 @@ def _assert_cover(windows: Sequence[tuple[int, int]], length: int) -> None:
         )
 
 
+#: ⚠ `D-165` — the committed pin. 243 MB of raw UniProt entries are gitignored; these 24 KB of
+#: DERIVED ends are what planning actually needs, and they travel with the repository.
+PINNED_DOMAIN_ENDS = _ROOT / "data" / "census" / "hold48_domain_ends.v1.json"
+_PINNED_CACHE: Optional[dict] = None
+
+
+def _pinned_domain_ends(accession: str, span_start: int, span_end: int):
+    """The pinned ends for this exact (accession, span), or `None` to fall through.
+
+    ⚠ Returns `None` rather than `()` when the pin does not cover the key — the two are different
+    answers. `()` means *looked and found none*; `None` means *this pin has nothing to say*.
+    """
+    global _PINNED_CACHE
+    if _PINNED_CACHE is None:
+        if PINNED_DOMAIN_ENDS.is_file():
+            import json  # noqa: PLC0415
+            _PINNED_CACHE = json.loads(
+                PINNED_DOMAIN_ENDS.read_text(encoding="utf-8")).get("entries", {})
+        else:
+            _PINNED_CACHE = {}
+    row = _PINNED_CACHE.get(accession)
+    if not row or row.get("span_start") != span_start or row.get("span_end") != span_end:
+        return None
+    return tuple(row.get("domain_ends") or ())
+
+
 def domain_ends_span_relative(
     *,
     accession: str,
@@ -320,9 +346,22 @@ def domain_ends_span_relative(
 ) -> tuple[int, ...]:
     """UniProt ``Domain``/``Repeat`` ends mapped onto the folded span (1-based).
 
-    Empty when the cache file is absent — CI has no spancache (gitignored). A
-    missing cache is a category, not a fetch.
+    ⚠⚠ **THE PIN IS CONSULTED FIRST (`D-165`).** `data/census/hold48_domain_ends.v1.json` holds
+    the derived ends for every hold-48 accession, so **tile geometry is deterministic from a fresh
+    clone.** Before the pin existed this function returned `()` on any machine without the
+    spancache and the real ends on any machine with it — so the SAME parent planned two different
+    tilings depending on who ran it, which is `F-076`.
+
+    ⚠ The pin is keyed by accession **and** span bounds. A span repair (`F-069` / `F-071`) changes
+    the key, the pin stops applying, and the cache answers instead — which is right: stale ends
+    must not be reused across a span change.
+
+    ⚠ Falls back to the local spancache, then to `()`. `()` is still a category (no cache, no pin),
+    not a fetch failure.
     """
+    pinned = _pinned_domain_ends(accession, span_start, span_end)
+    if pinned is not None:
+        return pinned
     path = cache_dir / f"{accession}.json"
     if not path.is_file():
         return ()
