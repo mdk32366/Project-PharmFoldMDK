@@ -128,9 +128,15 @@ the opposite of what the attention mechanism predicts.
 Three frozen proxies, each run separately, **each confirmed byte-identical on re-run**. Triples and
 the arm-by-arm reading are in **methods §3**; the result is stated here.
 
-**The structural enrichment survives popularity-matching on all three proxies.** `pdb_present` moves
-toward the anchor on **all three** statistics (10-of-12 on the count). The two PubMed arms disagree
-by 2-of-12.
+**The structural enrichment survives popularity-matching on all three proxies**, and **that — all
+three, not the best of three — is the result.** `pdb_present` moves toward the anchor on all three
+statistics (10-of-12 on the count); the two PubMed arms disagree by 2-of-12.
+
+⚠⚠ **The strongest arm numerically is the weakest evidentially, and the paper says so in both
+places** (methods §1). The proxy set was chosen knowing Run A had survived, and **a solved-structure
+proxy is the one a team in that position would most naturally reach for.** So `pdb_present`'s
+10-of-12 is **not** the headline; the headline is that the enrichment survives **every** arm,
+including the one whose construction nobody would have chosen to flatter it.
 
 ⚠⚠ **The ruling is QUALIFIED and the qualification is not a footnote.** The disagreement is a
 finding about **the proxy's construction**, not an objection to the call — and because the mechanism
