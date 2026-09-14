@@ -389,9 +389,15 @@ def test_d130_is_the_next_free_decision_id():
     # `### D-131` does for the other kind of hole. **The two holes have different causes and the
     # list distinguishes them in prose, because an unexplained gap in an enumerated set reads as an
     # oversight to the next reader.**
+    # ⚠⚠ Widened again at **D-158** — to `[…, 156, 157, 158]` — by enumeration, for the
+    # SIXTEENTH time, and never by a `>=`. Spending 158 reddened the previous form BY DESIGN, which
+    # is what tells a spent id from a free one. ⚠ **The SEVENTH reserved integer to be SPENT rather
+    # than skipped**, and the first of six reserved in one commit: `docs/RESERVED.md` held 158–163
+    # for the 2026-09-15 incident-closeout wave, and `### D-164` now takes the bar.
+    # **148 stays absent** — the trafficking hold is unchanged.
     assert [i for i in ids if i > 130] == [
         132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149,
-        150, 151, 152, 153, 154, 155, 156, 157
+        150, 151, 152, 153, 154, 155, 156, 157, 158
     ], (
         f"⚠ 155 is ADDED by the surface-merge entry — the FOURTEENTH resolution by "
         f"enumeration and never by a `>=`; `### D-164` now takes the bar. "

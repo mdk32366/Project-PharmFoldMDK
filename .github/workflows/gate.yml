@@ -92,6 +92,19 @@ jobs:
           python -m pip install --require-hashes -r requirements-dev.lock
       - name: Apply migrations (alembic upgrade head — the real chain, NOT create_all)
         run: python -m alembic upgrade head
+      # ⚠⚠ D-158: mark the service container DISPOSABLE. The suite's guard no longer trusts a
+      # hostname — a `fly mpg proxy` tunnel puts PRODUCTION on 127.0.0.1, which is why the old
+      # allowlist could not be narrowed into correctness — so CI must satisfy the same positive
+      # check as every other target. ⚠ This step is what makes deleting the old `CI=true` bypass
+      # safe: the bypass returned "permitted" before anything was examined, and `CI` is set by a
+      # great many tools.
+      # ⚠ ORDER IS LOAD-BEARING and is asserted by tests/test_d158_positive_identity_guard.py:
+      # AFTER `alembic upgrade head` (the marker lives in the migrated schema) and BEFORE pytest
+      # (the guard runs at pytest_configure, before a single module is imported).
+      # ⚠ Created HERE and by scripts/keel_mark_disposable.py — by NO migration. A migration would
+      # put the marker into production on its next upgrade and invert the guard silently (A-031).
+      - name: Mark the CI database disposable (keel_disposable_marker — never a migration)
+        run: python scripts/keel_mark_disposable.py
       - name: Postgres integration tests
         run: python -m pytest -m postgres -q
 

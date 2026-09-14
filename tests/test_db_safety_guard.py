@@ -1,8 +1,20 @@
-"""KEEL V8-a — the guard that would have prevented 2026-08-17.
+"""KEEL V8-a — the properties of the guard that OUTLIVED its mechanism.
 
-⚠ The suite must refuse to run when `DATABASE_URL` points at a database whose data is not
-expendable. The previous guard pointed the wrong way: `pg_engine` skips *unless* Postgres is
-reachable, so **production credentials armed it**.
+⚠⚠ **This file used to test a hostname allowlist. `D-158` deleted that mechanism**, because a
+`fly mpg proxy` tunnel presents production at `127.0.0.1` and loopback could not be removed from the
+list — the genuinely disposable databases are on loopback too. The positive-identity guard that
+replaced it, and the full regression, live in `tests/test_d158_positive_identity_guard.py`.
+
+⚠ **What was removed, recorded rather than left to a diff.** Four assertions went with the
+mechanism: that a named production host is refused *because it is not on the list*; that every
+entry on the list is allowed; that `CI=true` is permitted unconditionally; and that the override is
+the bare sentence `i-know-this-truncates`. ⚠⚠ **The third and fourth were not merely superseded —
+they were asserting the two bypasses that sat IN FRONT of the host check**, and `D-158` deletes the
+first and binds the second to a named target. A test that pins a hole open is not a test worth
+carrying forward.
+
+⚠ **What stays here is what is mechanism-independent**, and each earned its place by catching
+something real.
 """
 
 from __future__ import annotations
@@ -13,73 +25,38 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "tests"))
 
-from _db_safety import DISPOSABLE_HOSTS, OVERRIDE_ENV, OVERRIDE_VALUE, db_host, refusal_reason  # noqa: E402
-
-PROD = "postgresql://fly-user:secret@pgbouncer.zp2wjrej9lwodn4q.flympg.net/pharmfoldmdk"
-LOCAL = "postgresql+psycopg://fly-user:secret@localhost:16380/pharmfoldmdk"
+from _db_safety import db_host, refusal_reason  # noqa: E402
 
 
-def test_it_refuses_the_exact_url_that_destroyed_production():
-    """⚠⚠ THE REGRESSION, named. This is the shape `.env` had on 2026-08-17."""
-    reason = refusal_reason({"DATABASE_URL": PROD})
-    assert reason is not None
-    assert "REFUSING TO RUN" in reason
-    assert "pgbouncer.zp2wjrej9lwodn4q.flympg.net" in reason
+def _no_marker(url):              # noqa: ARG001
+    return False
 
 
-def test_the_refusal_says_what_the_suite_would_have_done():
-    """⚠ A refusal that does not name TRUNCATE teaches the reader to override it."""
-    reason = refusal_reason({"DATABASE_URL": PROD})
-    assert "TRUNCATE" in reason
-    assert "2026-08-17" in reason, "the refusal should cite the incident, not just assert a rule"
-
-
-def test_no_database_url_is_the_ordinary_local_gate():
-    """⚠ The common case must not need an override, or the override becomes habitual."""
-    assert refusal_reason({}) is None
-
-
-def test_a_loopback_proxy_is_allowed():
-    assert refusal_reason({"DATABASE_URL": LOCAL}) is None
-    for host in DISPOSABLE_HOSTS:
-        # ⚠ IPv6 arrives bracketed in a real URL; both forms must be recognised.
-        h = f"[{host}]" if ":" in host else host
-        assert refusal_reason({"DATABASE_URL": f"postgresql://u:p@{h}:5432/db"}) is None
-
-
-def test_ci_is_allowed_because_its_database_is_a_service_container():
-    assert refusal_reason({"DATABASE_URL": PROD, "CI": "true"}) is None
-
-
-def test_the_override_must_be_a_sentence_not_a_flag():
-    """⚠ `1`/`true` are what people set by habit. The value has to be meant."""
-    assert refusal_reason({"DATABASE_URL": PROD, OVERRIDE_ENV: "1"}) is not None
-    assert refusal_reason({"DATABASE_URL": PROD, OVERRIDE_ENV: "true"}) is not None
-    assert refusal_reason({"DATABASE_URL": PROD, OVERRIDE_ENV: OVERRIDE_VALUE}) is None
-
-
-def test_an_unparseable_url_is_treated_as_NOT_disposable():
-    """⚠ Fail closed. A URL we cannot read is not a URL we can vouch for."""
-    assert refusal_reason({"DATABASE_URL": "not a url at all"}) is not None
-
+# ── the parser, which still has a caller ────────────────────────────────────────────────────────
 
 def test_the_host_parser_is_not_fooled_by_a_password_containing_an_at_sign():
-    """⚠ A password with `@` in it would otherwise shift the parsed host, and a misparse here
-    fails OPEN in the worst case — reading a production host as something disposable."""
+    """⚠ A password with `@` in it would otherwise shift the parsed host.
+
+    ⚠⚠ **This survives `D-158` for a stated reason rather than by inertia** (§B.7): the host no
+    longer decides anything, but the refusal must still NAME the target it refused, so `db_host`
+    has a real caller. Had the rewrite left it callerless, the function and this test would have
+    gone together — a test guarding code nothing calls is the defect this project catalogues.
+    """
     assert db_host("postgresql://user:p@ss@prod.example.net/db") == "prod.example.net"
-    assert refusal_reason({"DATABASE_URL": "postgresql://user:p@ss@prod.example.net/db"}) is not None
+    reason = refusal_reason({"DATABASE_URL": "postgresql://user:p@ss@prod.example.net/db"},
+                            probe=_no_marker)
+    assert reason is not None
+    assert "prod.example.net" in reason, "the refusal did not name the host it refused"
 
 
-def test_conftest_actually_wires_the_guard_in():
-    """⚠ A guard that exists but is never called is a comment. Asserted over the source, so it
-    survives the implementation being rewritten."""
-    src = (REPO / "tests" / "conftest.py").read_text(encoding="utf-8")
-    assert "refusal_reason" in src, "conftest does not consult the guard"
-    assert "pytest_collection_modifyitems" in src, "the guard is not hooked into collection"
-    assert "UsageError" in src, "the guard does not FAIL the run — a skip is what let this happen"
+def test_an_ipv6_loopback_is_parsed_and_named_rather_than_mangled():
+    """⚠ IPv6 arrives bracketed. The bracketed branch is first because alternation is ordered —
+    the bare branch matches a lone `[` and yields an empty host."""
+    assert db_host("postgresql://u:p@[::1]:5432/db") == "::1"
 
 
-# ── ⚠ every .env variant must be ignored, not just the file called `.env` ────────────────────────
+# ── the secret-hygiene guard, wholly independent of any mechanism ───────────────────────────────
+
 def test_every_env_variant_is_gitignored_not_just_dot_env():
     """⚠⚠ On 2026-08-17 a backup named `.env.env.bak-precluster-swap` was created during a cluster
     swap. It held the OLD production database password and was **not ignored** — one unscoped

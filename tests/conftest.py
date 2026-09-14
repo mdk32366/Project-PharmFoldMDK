@@ -13,18 +13,22 @@ import sqlite3
 
 import pytest
 
-# ⚠⚠ KEEL V8-a: the suite refuses to run against a database that is not disposable.
-# The reasoning, the incident it comes from, and the loopback caveat live in
+# ⚠⚠ KEEL V8-a / D-158: the suite refuses to run unless the DATABASE proves it is disposable.
+# The reasoning, both incidents, and why a hostname cannot decide this live in
 # `tests/_db_safety.py` — kept there because a guard nobody can test is a guard nobody can
-# trust, and `refusal_reason()` is pure and env-injectable so it HAS tests.
+# trust, and `refusal_reason()` is pure but for an injectable probe, so it HAS tests.
 from _db_safety import refusal_reason  # noqa: E402
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_configure(config):
+    """⚠⚠ **`pytest_configure`, NOT `pytest_collection_modifyitems` (D-158).** The old hook fires
+    AFTER every test module has been imported, so module-level database work would run before the
+    guard could speak. Nothing in this suite does that today, which is exactly when the class is
+    cheap to close rather than expensive to discover.
+    """
     reason = refusal_reason()
     if reason:
-        # ⚠ A hard collection error, never a skip — a skip is what let a destructive suite
-        # look harmless.
+        # ⚠ A hard error, never a skip — a skip is what let a destructive suite look harmless.
         raise pytest.UsageError(reason)
 
 

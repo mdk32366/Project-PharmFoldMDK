@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "<stdin>", line 14, in <module>
+AssertionError: a tunnel to production presents as 127.0.0.1 and MUST be refused -- this is the exact configuration that truncated production on 2026-08-17 and again on 2026-09-13
+D-158 REVERT PROOF -- the guard as it stands at 530f782
+DISPOSABLE_HOSTS = ('localhost', '127.0.0.1', '::1', 'postgres', 'db')
+URL under test   = postgresql+psycopg://fly-user:secret@127.0.0.1:16380/pharmfoldmdk
+refusal_reason() = None
+
+
+>>> FAILURE-RED, at the assertion. The guard was REACHED and ANSWERED None.
+>>> Not an ImportError, not a collection crash: the guard permitted the run.
