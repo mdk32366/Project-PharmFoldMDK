@@ -488,7 +488,11 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
     assert 158 in ids, "D-158 claimed this integer (the positive-identity guard)"
     assert 159 in ids, "D-159 claimed this integer (the enqueue-path identity check)"
     assert 160 in ids, "D-160 claimed this integer (the fold-shell split)"
-    assert not ({161, 162, 163} & set(ids)), (
+    # ⚠ 161/162/163 are SPENT by the slice 4 ruling, the standing rules and the KEEL V10
+    # adoption: NAMED here rather than barred. The reserved band is exhausted and the
+    # next-free bar at 164 is now the only bar. Never relaxed to a `>=`.
+    assert {161, 162, 163} <= set(ids), "a reserved integer in the wave went unwritten"
+    assert 164 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "

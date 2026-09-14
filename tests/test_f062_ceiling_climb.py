@@ -281,4 +281,7 @@ def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
     # asymmetry) and F-069 (the short-span population) together, then F-070 (the silently empty
     # structure panel), then F-071 (category E is the no_topology breakout). F-072 (Branch A,
     # owner-ruled) followed on 2026-09-12. ADDED by name, not relaxed.
-    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 72
+    # ⚠ 73, not 72: `F-073` — the 2026-09-13 truncation finding — was written by the 2026-09-15
+    # incident-closeout wave, spending the integer this file had been watching stay reserved. The
+    # pin is MOVED by name, never relaxed to a `>=`, which is what tells a spent id from a free one.
+    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 73

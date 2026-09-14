@@ -16,6 +16,112 @@
 
 ## Log (newest first)
 
+### F-073 — ⚠⚠ The production database was truncated by the test suite for the SECOND time, on the same signature, through the guard written for the first — and the disqualifying fact is that **the guard named its own blind spot, in its own source, and was read aloud in a report five hours earlier**
+
+- **Date:** 2026-09-15 (the incident: **2026-09-13**) · **Status:** ⚠ **CLOSED on prevention**
+  (`D-158`, `D-159`, `D-160` merged), ⚠⚠ **OPEN on the end-to-end revert proof**, which is owed and
+  is `D-158`'s first acceptance step after merge.
+- **How known (`D-016`):** the suite's own duration and the output file's mtime; `fly mpg` backup
+  and restore output; `/api/census/summary` read from the live app after recovery; the campaign
+  enumerations on disk; and the working tree at `530f782`.
+
+**The loss.** `protein_analyses` **4,535 → 1**. `jobs` **4,535 → 1**. `ranking_runs`,
+`target_scores` and `ranking_results` to **0** by `CASCADE`. Started **2026-09-13 16:38:09Z**,
+finished **17:26:17Z** — **19 tests, 2,887.94 s, uninterrupted.**
+
+---
+
+#### 1. The chain — five links, and not one of them alone is the defect
+
+1. **`tests/conftest.py:74`** — `TRUNCATE TABLE jobs, protein_analyses, ranking_runs RESTART
+   IDENTITY CASCADE`, on every test using `pg_engine`. ⚠ **Correct for test isolation.** It carries
+   one assumption: that `DATABASE_URL` names a disposable database.
+2. **`tests/_db_safety.py`** — the guard written after **2026-08-17** (2,771 → 1). It compared the
+   URL's host against an allowlist.
+3. ⚠⚠ **`127.0.0.1` was on that allowlist, and it had to be** — the genuinely disposable databases
+   are on loopback. **The guard named this in its own docstring:** *"a tunnel to production looks
+   exactly like localhost … this guard is necessary and not sufficient."*
+4. **The tunnel** put a production `DATABASE_URL` at `127.0.0.1:16380` into the shell.
+5. **The suite ran in that shell.**
+
+⚠ **The mechanism could not have been narrowed into correctness.** There is no shorter list of
+trusted hostnames that admits a developer's local Postgres and rejects a tunnel, because **a tunnel
+to production is loopback by construction**. That is why `D-158` replaces the mechanism rather than
+tightening it.
+
+#### 2. ⚠⚠ The blind spot was written down THREE times and escalated NONE
+
+| where | what it said |
+|---|---|
+| `tests/_db_safety.py` docstring | *"a tunnel to production looks exactly like localhost … necessary and not sufficient"* |
+| Code's report, 2026-09-13, hours before the run | quoted the above to the Planner |
+| `scripts/taskb_pae_inventory.py:7` | *"A tunnel to production looks exactly like localhost, and KEEL V8-a walks straight through this configuration"* |
+
+⚠ **The third was found on 2026-09-15 while reviewing the orders**, and it had been sitting in the
+tree since 2026-08-18. **Three written records, zero escalations.** This is `D-074` applied to a
+**safety** instrument for the first time, and it is the corollary the incident bought: *a guard that
+names its own failure mode has generated a finding against itself, and that finding BLOCKS the work
+the guard protects.*
+
+#### 3. Every unexplained observation, resolved, so nobody re-derives them
+
+- **The surviving reference tables** — not in the `TRUNCATE` list and holding no foreign key to it.
+- **`ranking_runs` / `target_scores` / `ranking_results` at 0** — the `CASCADE`, not a second event.
+- **`n_dead_tup = 1`** — the last test's parent row, written after the final truncate.
+- **Slice 3's dry run reporting 1,101 instead of 1,097** — the four Run 2 rows that made the
+  difference were themselves destroyed. ⚠ **Neither number should be carried forward**; the
+  to-enqueue count is re-derived against the restored database.
+
+#### 4. ⚠⚠ Error accounting. Named, not softened.
+
+**Second firing of one signature** — 2026-08-17 and 2026-09-13 — **through the guard's own
+documented blind spot, both times.**
+
+**Planner, on the day:**
+1. The blind spot was quoted in Code's report, read, and **not escalated as blocking** before the
+   suite ran again. The Planner called for the enqueue-path identity check twice and **never once
+   for the hostname fix.**
+2. Claimed the enqueues went over HTTPS. **Wrong** — `enqueue()` calls `_engine()` →
+   `DATABASE_URL` → the tunnel.
+3. Claimed `zp2wjrej9lwodn4q` was Sentinel's cluster. **Wrong** — it was PharmFoldMDK's.
+4. Claimed the 73-minute backup window was empty. **Unverified belief stated as fact.**
+5. Recommended a full `fly deploy` after `fly mpg attach` had already set the secret. **The rebuild
+   ran 26,000+ seconds on a 20.91 GB context and had to be killed.** An `--image` redeploy took
+   under a minute and was correct from the start.
+
+**Planner, in revision 2 of the 2026-09-15 orders — the same class, inside the document written to
+prevent it:**
+6. §0 asserted slice 3 was **enqueued**. It was **enumerated**;
+   `data/control/task4_slice3/` holds `enumeration.json` and nothing else. ⚠ **The same document's
+   §E ordered Code not to inherit a Planner belief.**
+7. §0 asserted the slice 3 fold needs no tunnel, **flagged the claim as needing verification, and
+   wrote it into a safety instruction anyway.** It was false: PR #306 had put the stranger guard on
+   the fold path. **Flagging a check is not performing one.**
+8. §B ordered the fourth gate of `refusal_reason()` replaced and said nothing about the two in front
+   of it. As written it could have merged, gone CI green, and **still permitted the exact run that
+   truncated production.**
+
+#### 5. ⚠ What WORKED, recorded with equal weight
+
+- **Hourly backups were on and healthy.** Without them this is unrecoverable. `backup_1789312967_
+  d0f89bdd9e16aed5`, 2026-09-13T15:24:33Z.
+- **Code stopped at the four checks** rather than pushing through. **Three of four failed and
+  nothing was written.**
+- **The enumerations were on disk**, so the population survived the database. ⚠ Two of the three
+  were untracked single copies until `§J` committed them on 2026-09-15 — *what worked was closer to
+  luck than the record suggested.*
+- **The `run` label**, landed 2026-09-12, **contained the blast radius on its first real incident.**
+- ⚠⚠ **The recovery apparatus worked. The prevention apparatus did not.** Both are true and the
+  second is the one that matters.
+
+#### 6. What closed it
+
+`D-158` (identity, not address) · `D-159` (the enqueue path asks which database it holds) ·
+`D-160` (the armed shell and the ten-hour shell are never the same) · `D-162` (the standing rules
+enter the repository) · `A-031` (the assumption `D-158` rests on).
+
+⚠ **OPEN until the end-to-end revert proof runs.** See `D-158` §5.
+
 ### F-072 — ⚠⚠ Branch A: the structural enrichment SURVIVES popularity-matching on all three frozen attention proxies — and the disqualifying fact is that **the two PubMed arms disagree by 2-of-12 and the amendment's own explanation for why they should disagree was refuted by measurement six hours before the freeze**
 
 - **Date:** 2026-09-12 · **Status:** ⚠ **RULED — Branch A, by the owner (Matt Kelly), 2026-09-12.**
