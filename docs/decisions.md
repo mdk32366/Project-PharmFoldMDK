@@ -16,6 +16,154 @@
 
 ## Log (newest first)
 
+### D-163 — KEEL V10 is adopted: context becomes a precondition rather than an assumption
+
+- **Date:** 2026-09-15
+- **Status:** Accepted — **adopted by the owner**, scheduled in
+  `ORDERS-Code-2026-09-14-incident-closeout.md` §4. ⚠ **This entry RECORDS the adoption; it does not
+  make it.**
+- ⚠⚠ **The six V10 documents exist in project outputs and are NOT in this repository.** That is a
+  live instance of the very principle being adopted, and it is recorded rather than tidied away.
+
+**The lesson.**
+
+> **Context is a precondition, not an assumption.**
+
+Every KEEL discipline governs *what you do*. **None governed what environment you were in when you
+did it.** The distinction between a production shell and a development shell existed only in the
+operator's head — and on 2026-09-13 it stopped existing there for the length of one command.
+
+**The corollary, and it is the one with teeth:**
+
+> ⚠⚠ **A guard that names its own failure mode has generated a finding against itself. Under
+> `D-074` that finding BLOCKS all work the guard is meant to protect until it is closed.**
+
+---
+
+**What V10 changes**
+
+- **Principle 1 — recovery clause.** The recovery apparatus and the prevention apparatus are
+  different systems and are healthy or sick independently. On 2026-09-13 one worked and one did not.
+- **Principle 5 — positive-identity clause.** A safety check must require the protected thing to
+  **prove** it is safe to touch, never merely fail to look dangerous. ⚠ **This and `D-158` are the
+  same claim in two places**; each cites the other.
+- **Principle 6 — the `D-074` corollary** above.
+- **New closing section — Recovery Access**, on three problems the incident exposed: listing
+  backups, holding a recovery credential, and the one-flag redeploy.
+- **KEEL-2 Step 16** — create a recovery credential on day one, store it in a password manager,
+  **never in an env file**.
+- **KEEL-2 Step C5** — a four-question recovery-readiness check before any destructive operation.
+
+⚠ **What this entry does not do:** it does not bring the six documents into the repository. Until
+that happens the adoption is recorded here and the artefacts live elsewhere, which is exactly the
+gap `D-162` closes for the standing rules. **Named, not resolved.**
+
+### D-162 — The four standing rules stop living in a Downloads folder — and the disqualifying fact is that **two of the recorded Planner errors are not "the rule was unknown" but "the rule existed and nobody was bound by it"**
+
+- **Date:** 2026-09-15
+- **Status:** Accepted. Standing.
+
+⚠⚠ **KEEL Principle 8: continuity lives in the repository, never in the conversation.** These four
+rules were established or confirmed on 2026-09-14 and existed **only** in `CLOSEOUT-2026-09-14.md`
+and `PREWORK-next-session.md` — session documents, outside the repository. **A rule that exists only
+in a session document is one lost laptop from being a rule nobody knows.**
+
+⚠ **This is not bookkeeping.** Planner errors 5 and 6 of the closeout are both *the rule existed
+and nobody was bound by it*: the guard's documented blind spot was read and not escalated, and the
+enqueue-path check was called for twice and endorsed twice without being required to land. **Writing
+them into the log is what converts an intention into a gate.**
+
+---
+
+1. **Never run `pytest` in a shell where `.env` has been sourced.** ⚠ This is the proximate cause
+   of 2026-09-13 and of 2026-08-17. `D-158` now refuses such a run, but the rule survives the guard:
+   defence in depth means the habit and the mechanism, not the mechanism alone.
+2. **`--image` redeploy before a full rebuild, for secret-change deploys.** ⚠ Measured, not
+   asserted: on 2026-09-13 the full rebuild ran **26,000+ seconds on a 20.91 GB context and had to
+   be killed**; the `--image` redeploy took **under a minute**. A rebuild recompiles nothing that a
+   secret change touches.
+3. ⚠⚠ **A documented blind spot in a safety system is a blocking defect under `D-074`, not a
+   comment.** `tests/_db_safety.py` named the tunnel hole in its own source, and the suite ran for
+   **27 more days**. The same sentence sits a third time in `scripts/taskb_pae_inventory.py:7`.
+   **Three written records, zero escalations.** `D-074` says a finding against an instrument stays
+   open until the instrument no longer exhibits the problem; **it had never been applied to a
+   SAFETY instrument**, and it should have been.
+4. **Use `127.0.0.1`, not `localhost`, in `DATABASE_URL` for tunnel connections** (IPv6 resolution).
+   ⚠ **State the tension rather than leaving a reader to reconcile it:** rule 4 makes the connection
+   *work*, while `127.0.0.1` sitting on the guard's trusted list is the hole that fired twice.
+   **After `D-158` they are no longer in tension** — the address decides nothing at all, so the
+   right address to connect with is simply the one that resolves. ✅ The `.env` change itself is
+   already done (2026-09-14 07:45). ⚠ `MPG_CLUSTER` is **not** — it still names the forensic
+   cluster, which is why `D-159` asserts cluster identity rather than population alone.
+
+⚠ **Tracked separately and deliberately NOT folded in here:** the **Lessons Learned** document
+predates 2026-08-17 and needs both incidents. Folding it into a log entry would be a third place for
+the same content to drift.
+
+### D-161 — Slice 4 is ruled IN at **600 rows**, not the 735 the arithmetic suggested — and the disqualifying fact is that **the "1–10 remainder" the orders scoped it against does not exist**
+
+- **Date:** 2026-09-15
+- **Status:** ⚠ **RULED IN by the owner (Matt Kelly), 2026-09-15**, scope corrected by enumeration.
+  ⚠⚠ **This entry RECORDS the ruling and corrects its arithmetic; it does not authorise a fold.**
+  Slice 4 still needs its own enqueue behind `D-159` and a runner carrying `D-160`'s split from its
+  first commit.
+- **How known (`D-016`):** enumeration over `data/census/census_manifest.v7.csv` (committed),
+  cross-read against the on-disk slice enumerations and `core/foldability`. **No database was
+  touched.**
+
+**Scope.** Band **101–250**, tranches 1–4, local tier, **Run 2**. ⚠ **Instrument measurement only** —
+it does not grow the paper's population, does not enter `F-004`, and does not bear on `F-072`.
+**Buys** the per-band transport term and VRAM constancy across the remaining band. **Costs** owner
+hours and an **unmeasured** wall time.
+
+---
+
+#### 1. ⚠ The Planner's figure was arithmetic, and it was wrong
+
+*Roughly 735 rows* came from subtracting slices 1–3 from `D-137`'s `local` total of 2,691 — **two
+committed numbers, not an enumeration.** The orders recorded it *"only so it can be contradicted."*
+
+**The enumeration says 600**, and every band reconciles to `D-157`'s table with a delta of zero:
+
+| band | counted | D-157 | Δ | span range | mean |
+|---|---|---|---|---|---|
+| 1–10 | 130 | 130 | 0 | 1–10 | 5.3 |
+| 11–30 | 395 | 395 | 0 | 11–30 | 21.8 |
+| 31–100 | 1,101 | 1,101 | 0 | 31–100 | 47.3 |
+| **101–250** | **600** | **600** | **0** | **101–250** | **174.6** |
+| 251–384 | 346 | 346 | 0 | 253–384 | 317.3 |
+| **TOTAL** | **2,572** | **2,572** | **0** | | |
+
+#### 2. ⚠⚠ There is no "1–10 remainder"
+
+The orders scoped slice 4 as *"bands 101–250 and the 1–10 remainder."* Band 1–10 holds **130** rows;
+slice 2's band was (1, 30) and enumerated all **525 = 130 + 395**. Of the 130, **four** are absent
+from slice 2's enqueued set — `Q8WXF7` (1 aa), `Q9Y3E0` (2), `Q86Y82` (7), `Q8TB68` (9) — and **all
+four are Task 3 twenty rows**, already folded under Run 2.
+
+Slice 2 enumerated 525 and enqueued 517; **all eight of that difference are in the Task 3 twenty**,
+correctly excluded so no accession carries two Run 2 rows. **The remainder was the overlap, seen
+from the other side.**
+
+#### 3. The band, and what is not in it
+
+- **600 rows**, span 101–250, mean **174.6**, median **178**.
+- By tranche: **t2 = 216, t3 = 384**. ⚠ No tranche 1 or tranche 4 row falls in this band.
+- **Rows whose envelope is not `local` under `core/foldability`: ZERO.**
+- ⚠ The **to-enqueue** count is *not* stated here. It requires reading Run 2 rows from the
+  database, which is behind `D-159`, and **1,097/1,101 are the precedent for why a stale count must
+  not be carried forward.**
+
+#### 4. ⚠ A residual found by the enumeration, raised and not taken
+
+`core/manifest.LOCAL_CEILING.local_bound = 440`, while the campaign caps at `CAP_AA = 384`. So
+`core.foldability.envelope()` calls spans **385–440 `local`** which `D-157` rules out as card-bound —
+**two notions of "local" differing by 56 aa**, with **119 rows above the campaign cap**.
+
+Nothing is wrong today: the campaign scripts use `CAP_AA` and never `envelope()`. But this is the
+two-paths-to-one-quantity class (`F-014`, `F-046`) **in the quantity that decides what gets folded**.
+⚠ **No integer is claimed for it here** — it is reported for a ruling rather than absorbed.
+
 ### D-160 — The armed shell and the ten-hour shell are never the same shell — and the disqualifying fact is that **the script header promising the opposite would have sent the operator straight back to `source .env`**
 
 - **Date:** 2026-09-15

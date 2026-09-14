@@ -774,7 +774,11 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     assert 158 in ids, "D-158 claimed this integer (the positive-identity guard)"
     assert 159 in ids, "D-159 claimed this integer (the enqueue-path identity check)"
     assert 160 in ids, "D-160 claimed this integer (the fold-shell split)"
-    assert not ({161, 162, 163} & set(ids)), (
+    # ⚠ 161/162/163 are SPENT by the slice 4 ruling, the standing rules and the KEEL V10
+    # adoption: NAMED here rather than barred. The reserved band is exhausted and the
+    # next-free bar at 164 is now the only bar. Never relaxed to a `>=`.
+    assert {161, 162, 163} <= set(ids), "a reserved integer in the wave went unwritten"
+    assert 164 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     # the two entries this one is built beside, NAMED so a rename cannot pass silently
     assert re.search(r"^### D-146 — Track B stops denying the surface it is served on", LOG, re.M)
