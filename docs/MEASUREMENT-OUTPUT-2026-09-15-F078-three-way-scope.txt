@@ -1,0 +1,88 @@
+======================================================================================
+F-078 SCOPE - three-way: DATABASE state / ON-DISK record / ARTIFACT on the volume
+======================================================================================
+backup boundary: 2026-09-13T15:24:33+00:00
+jobs in database: 5632
+  task3_run2     enqueued.json    20   progress.csv     0
+  task4_slice1   enqueued.json   342   progress.csv   342
+  task4_slice2   enqueued.json   517   progress.csv   517
+  task4_slice3   enqueued.json  1097   progress.csv     0
+
+-- timezone offset, MEASURED per file against rows present in both --
+  task3_run2     no overlap with completed DB rows - offset UNDETERMINED, assuming 0
+  task4_slice1   n=342   median delta   25202.4s -> csv is UTC-7 (local); converting csv + 7h = UTC   [spread 25201..25207s]
+  task4_slice2   n=480   median delta   25201.7s -> csv is UTC-7 (local); converting csv + 7h = UTC   [spread 25201..25204s]
+  task4_slice3   no overlap with completed DB rows - offset UNDETERMINED, assuming 0
+
+probing 2180 rows (all enumerated Run 2, plus 204 stratified Run 1 census)
+   ... 100/2180
+   ... 200/2180
+   ... 300/2180
+   ... 400/2180
+   ... 500/2180
+   ... 600/2180
+   ... 700/2180
+   ... 800/2180
+   ... 900/2180
+   ... 1000/2180
+   ... 1100/2180
+   ... 1200/2180
+   ... 1300/2180
+   ... 1400/2180
+   ... 1500/2180
+   ... 1600/2180
+   ... 1700/2180
+   ... 1800/2180
+   ... 1900/2180
+   ... 2000/2180
+   ... 2100/2180
+
+======================================================================================
+THREE-WAY, per population
+======================================================================================
+
+census run 1  (n=204)
+   db complete AND artifact present : 204
+   db complete BUT artifact MISSING : 0
+   artifact present BUT db not done : 0
+   on-disk folded BUT db not done   : 0
+   neither db-done nor artifact     : 0
+   LATEST completion WITH artifact  : 2026-09-06 00:34:28.899343+00:00  (job 3120)
+   EARLIEST completion WITHOUT      : none carry completed_at
+
+task3_run2  (n=20)
+   db complete AND artifact present : 0
+   db complete BUT artifact MISSING : 0
+   artifact present BUT db not done : 0
+   on-disk folded BUT db not done   : 0
+   neither db-done nor artifact     : 0
+   LATEST completion WITH artifact  : 2026-09-12 15:28:15.997161+00:00  (job 3717)
+   EARLIEST completion WITHOUT      : none carry completed_at
+
+task4_slice1  (n=342)
+   db complete AND artifact present : 342
+   db complete BUT artifact MISSING : 0
+   artifact present BUT db not done : 0
+   on-disk folded BUT db not done   : 0
+   neither db-done nor artifact     : 0
+   LATEST completion WITH artifact  : 2026-09-12 21:48:31.682111+00:00  (job 4388)
+   EARLIEST completion WITHOUT      : none carry completed_at
+
+task4_slice2  (n=517)
+   db complete AND artifact present : 480
+   db complete BUT artifact MISSING : 0
+   artifact present BUT db not done : 0
+   on-disk folded BUT db not done   : 37
+   neither db-done nor artifact     : 37
+   LATEST completion WITH artifact  : 2026-09-13 15:24:36.578268+00:00  (job 4868)
+   EARLIEST completion WITHOUT      : none carry completed_at
+
+task4_slice3  (n=1097)
+   db complete AND artifact present : 0
+   db complete BUT artifact MISSING : 0
+   artifact present BUT db not done : 0
+   on-disk folded BUT db not done   : 0
+   neither db-done nor artifact     : 1097
+   EARLIEST completion WITHOUT      : none carry completed_at
+
+(read-only; no write of any kind was issued)

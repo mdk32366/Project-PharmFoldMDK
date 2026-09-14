@@ -1,0 +1,30 @@
+FULL CENSUS SWEEP - run=1, every row, calibrated probe
+  probe GET /api/analyses/{id}/structure:
+    present -> bytes=N | absent -> bytes=0 | 5xx/unreachable -> RAISES (SystemExit)
+  A 5xx is retried 3x with backoff and NEVER recorded as absence.
+  (analysis 2995 returned a transient 500 on the first pass and 200/526542 on retry.)
+  rows: 3656   db: {'complete': 3651, 'failed': 2, 'pending': 3}
+
+   ... 500/3656  present 499  absent 1  unresolved 0
+   ... 1000/3656  present 999  absent 1  unresolved 0
+   ... 1500/3656  present 1499  absent 1  unresolved 0
+   ... 2000/3656  present 1999  absent 1  unresolved 0
+   ... 2500/3656  present 2498  absent 2  unresolved 0
+   ... 3000/3656  present 2998  absent 2  unresolved 0
+   ... 3500/3656  present 3495  absent 5  unresolved 0
+
+RESULT
+  artifacts present : 3651
+  artifacts absent  : 5
+  unresolved (5xx x3): 0
+
+  absent by db status: {'failed': 2, 'pending': 3}
+
+  *** db-complete BUT artifact absent: 0 ***
+
+  non-complete (expected absent):
+      57 P11717 failed
+      2015 P55073 failed
+      3072 Q685J3 pending
+      3073 Q8WXI7 pending
+      3451 Q9UKN1 pending
