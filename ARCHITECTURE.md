@@ -1424,6 +1424,29 @@ S-002 Q1, now testable against a config that genuinely fits.
     so it cannot be a blanket and cannot survive being set once and forgotten.
   - **The guard runs at `pytest_configure`, not `pytest_collection_modifyitems`** — the late hook
     fires after every test module is imported.
+- **⚠⚠ Campaign-write safety — every enqueue asks which database it holds (D-159):** `D-158`
+  guards the *test suite*; it does nothing for the campaign scripts, which each build an engine from
+  `DATABASE_URL` and write. `core/db_identity.assert_campaign_target()` runs before the first write
+  in `task4_slice1/2/3.py` and `task3_run2_folds.py`, and raises `WrongDatabase` having written
+  nothing.
+  - **Identity first, population second.** The target must carry `keel_live_cluster` naming
+    `kyzl60xz9zyrpj9g`. ⚠⚠ **A population floor cannot do this job alone:** the forensic cluster
+    `zp2wjrej9lwodn4q` holds the same census — the live cluster was restored from its backup — so it
+    passes every count and every anchor. `.env` still names it in `MPG_CLUSTER`.
+  - **The floor is a floor** — `count(protein_analyses WHERE cohort_tranche > 0) >= 3400` plus the
+    anchor row `O75899` — **never an equality**, because the campaign moves those numbers and a
+    stale equality is a check that gets commented out.
+  - **The live marker is written once, by the owner**, with
+    `scripts/keel_mark_live_cluster.py --i-am-the-owner`. ⚠ Until it runs, every enqueue is refused.
+  - **One home, every caller (`F-046`)** — no script restates the floor or the cluster id.
+- **⚠⚠ Fold-shell split — the armed shell and the ten-hour shell are never the same (D-160):**
+  `scripts/task4_slice3.py` runs as `--preflight` (tunnel-armed, seconds: CUDA check, stranger
+  check, writes a dated clearance) and `--fold` (clean shell, hours). ⚠ `--fold` **refuses** if
+  `DATABASE_URL` is set — the fold loop talks to Fly over HTTPS and needs only
+  `WORKER_AUTH_TOKEN`, and an armed shell held open for an unattended run is the condition both
+  truncation incidents required. The clearance is refused unless fresh (≤ 1 h), same tier, and
+  covering the exact population: **a stale clear is not a clear.** ⚠ Slice 1 and slice 2 are
+  complete and unsplit — a named residual, recorded in slice 1's header.
 - **Reproducibility (course expectation):** pin model weights/versions, seed where
   relevant, and record any training/fine-tuning config so results can be reproduced.
   - Serving-tier deps are locked and hash-verified in CI (D-013 Amendment A).

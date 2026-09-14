@@ -391,7 +391,9 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     # than barred, and the band it leaves behind keeps the bar. A name is ADDED and nothing
     # is relaxed — the flip this file has already made at 145, 146, 147, 152 and 154.
     assert 158 in ids, "D-158 claimed this integer (the positive-identity guard)"
-    assert not ({159, 160, 161, 162, 163} & set(ids)), (
+    assert 159 in ids, "D-159 claimed this integer (the enqueue-path identity check)"
+    assert 160 in ids, "D-160 claimed this integer (the fold-shell split)"
+    assert not ({161, 162, 163} & set(ids)), (
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until "

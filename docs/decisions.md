@@ -16,6 +16,200 @@
 
 ## Log (newest first)
 
+### D-160 — The armed shell and the ten-hour shell are never the same shell — and the disqualifying fact is that **the script header promising the opposite would have sent the operator straight back to `source .env`**
+
+- **Date:** 2026-09-15
+- **Status:** Accepted. ⚠⚠ **BLOCKING for any fold** (`ORDERS-Code-2026-09-15-rev3.md` §I).
+- **Occasioned by:** a claim in `§0` of revision 2 of those orders, flagged for verification and
+  verified against the source. **The claim was false.**
+
+**The decision.** `scripts/task4_slice3.py` splits into `--preflight` (tunnel-armed, seconds) and
+`--fold` (clean shell, hours). `--fold` refuses outright if `DATABASE_URL` is set.
+
+---
+
+#### 1. ⚠⚠ What the source actually said
+
+`fold()` called `refuse_on_strangers(enqueued, worker_tier())` before the loop. That opens
+`Session(_engine())`, and `_engine()` is:
+
+```python
+return create_engine(normalize_db_url(os.environ["DATABASE_URL"]), future=True)
+```
+
+**A subscript, not a `.get()`.** Without `DATABASE_URL` the fold raised `KeyError` and never
+started. **So the fold had to be launched from a tunnel-armed shell — and then that shell stayed
+armed for the ten hours of unattended folding.**
+
+⚠ **The header said the opposite, in bold, in two files:** *"The fold needs NO TUNNEL.
+`DATABASE_URL` is for `--enqueue` only."* True when written; false from the moment **PR #306** added
+the stranger guard to the fold path on 2026-09-13, and updated in neither file.
+
+⚠⚠ **And the failure mode of that sentence is the incident.** An operator who trusts it hits a
+`KeyError` at the start of a ten-hour run. The nearest fix to hand is `source .env`. That re-arms
+the shell — and a stray `pytest` in an armed shell is the proximate cause of 2026-09-13. **A safety
+instruction that is false in the direction of the hazard is worse than no instruction**, because it
+manufactures the recovery move that causes the harm.
+
+#### 2. Why `os.environ.pop` is not the answer
+
+It was the obvious fix and it is a half one: **it protects the process and leaves the shell armed**
+for every other command the operator runs during those hours. The shell is the hazard. So the
+invocation is split instead, and the armed shell lives for seconds.
+
+⚠ `--fold` **REFUSES** on a set `DATABASE_URL` rather than popping it. Refusing is strictly
+stronger: popping would let the fold proceed *from* an armed shell, which is the state being
+eliminated. The orders said *assert absent, and pop if present*; asserting absence **is** the
+refusal, and the entry records the divergence rather than quietly implementing the weaker half.
+
+#### 3. The two halves
+
+| | shell | duration | needs |
+|---|---|---|---|
+| `--preflight` | **tunnel-armed** | seconds | `DATABASE_URL` — CUDA check, stranger check, writes the clearance |
+| `--fold` | **clean** | hours | `WORKER_AUTH_TOKEN` (and `TRANSPORT_URL` if not the default) |
+
+⚠⚠ **The stranger guard was not dropped — it MOVED, and a test asserts both halves of that.**
+Asserting only that the fold stopped calling it would be satisfied by deleting the check, which is
+the failure the pair prevents.
+
+**The clearance is refused unless it is fresh (≤ 1 h), taken at the same tier, and covers the exact
+population.** ⚠ *A stale clear is not a clear*: `run_worker` claims the next job of its **tier**,
+not *one of mine*, so a stranger enqueued between the check and the fold is precisely what the guard
+exists to catch. The tier clause is `F-046`'s — a guard checking `local` while the run claims
+`rental` protects a queue that will not be drained.
+
+#### 4. How known (`D-016`)
+
+- **The `KeyError` is read off the source**, not inferred: `scripts/task4_slice3.py:238` →
+  `scripts/task4_slice1.py:253-257` → `scripts/task3_run2_folds.py:153-159`.
+- **Four reds, each at the assertion:** armed shell, missing clearance, stale clearance, mismatched
+  population — plus a fifth for a mismatched tier.
+- **Observed:** `--fold` in a shell carrying `DATABASE_URL` now prints the refusal and exits 1
+  before touching anything.
+- ⚠ **A false pass caught while writing the tests, and recorded because it is the entry's own
+  subject.** The header assertion first looked for the word *"preflight"* — and slice 1's header
+  already said *"the preflight and the GPU are local"*, meaning the **VRAM** preflight. The guard
+  passed on a header that was still false. It now requires the flag `--preflight`. **A guard
+  satisfied by an unrelated word is a guard that reports success.**
+
+#### 5. ⚠ A named residual
+
+**Slice 1's and slice 2's `fold()` are NOT split.** Both campaigns are complete, so neither has a
+remaining run — but **if either is ever re-run it re-creates the hazard**. The shared machinery is
+available to them and the residual is written into slice 1's header rather than left for a reader
+to find. ⚠ **Slice 4's runner does not exist yet and must be written with the split from its first
+commit** (§D), not retrofitted.
+
+- **Assumptions relied on:** that an hour is a safe bound on the clearance — it is a **judgement,
+  not a measurement**, chosen because nothing enqueues without `D-159` and the owner is at the
+  keyboard for the enqueue. If unattended enqueues ever become possible, this bound is the thing to
+  revisit first.
+
+### D-159 — Every campaign write asks the database which database it is, before it writes — and the disqualifying fact is that **a population floor would have waved an enqueue straight into the forensic record of the incident that produced it**
+
+- **Date:** 2026-09-15
+- **Status:** Accepted. ⚠⚠ **BLOCKING for any enqueue, including slice 3's**
+  (`ORDERS-Code-2026-09-15-rev3.md` §C).
+- **Depends on:** `D-158` for the marker convention — **same mechanism class, opposite polarity**,
+  and deliberately not a second invention.
+
+**The decision.** `core/db_identity.assert_campaign_target()` runs before the first write of every
+campaign script. It asserts **cluster identity** and **population**, in that order, and raises
+`WrongDatabase` having written nothing.
+
+---
+
+#### 1. ⚠ Why this is not `D-158` again, and why saying so matters
+
+`D-158` guards the **test suite**. The campaign scripts never consult it: `task4_slice1.py`,
+`task4_slice2.py`, `task4_slice3.py` and `task3_run2_folds.py` each call `_engine()`, build a
+session from `DATABASE_URL`, and **write without asking what they are holding.**
+
+⚠⚠ **This check was called for twice and endorsed twice — 2026-08-17 and 2026-09-13 — and never
+landed**, because each time it came up it looked like a duplicate of the guard already being
+written. That is the whole cost of a bad hazard map: *"the guards"* protecting *"the campaign"*
+collapses two vectors into one and the second never gets built. **Two hazards, two vectors, two
+guards**, and the entry says so in its own first section so the next reader cannot re-collapse them.
+
+#### 2. ⚠⚠ The disqualifying fact: a population floor cannot see the wrong cluster
+
+The obvious check is *does this database hold the census?* It is necessary and it is not the
+question that matters.
+
+**The old cluster `zp2wjrej9lwodn4q` is a production database holding the same population.** It is
+kept deliberately as the forensic record of 2026-09-13, and **the live cluster was restored from its
+backup** — so it satisfies **any** floor and contains **every** anchor row that predates the restore.
+A guard built on population alone returns *permitted* against it.
+
+⚠ **And this is not a thought experiment. `.env` still sets `MPG_CLUSTER=zp2wjrej9lwodn4q`.** The
+single artefact most likely to point a tunnel at the wrong cluster is precisely the one a population
+check cannot detect. An enqueue landing there would write into the evidence of the incident that
+produced the guard.
+
+**So identity is asked FIRST.** A refusal that leads with *"3,467 rows found"* reads like success,
+and the most dangerous wrong target would be the one reported last.
+
+#### 3. The two assertions
+
+| # | assertion | what it catches | what it CANNOT catch |
+|---|---|---|---|
+| 1 | **Cluster identity** — target carries `keel_live_cluster` naming `kyzl60xz9zyrpj9g` | the forensic cluster, a fresh cluster, any restore | a database deliberately marked by hand |
+| 2 | **Population floor** — `count(protein_analyses WHERE cohort_tranche > 0) >= 3400`, plus anchor `O75899` | a truncated or half-restored target | the wrong cluster (see the row above) |
+
+⚠ **A floor, never an equality against 3,463 or 4,535.** The campaign moves those numbers by
+design, and **a stale equality is a check that gets commented out the first time it is wrong** —
+which is exactly how a guard becomes a comment. (`cohort_tranche` is nullable, so `> 0` correctly
+excludes `NULL`.)
+
+⚠ **The two failures are reported differently, and the difference is the point.** A low count on a
+target that *is* marked live is **not a wrong target — it is a DAMAGED one**, and the refusal says
+so rather than sending the operator off to fix their environment. That is the 2026-09-13 shape.
+
+#### 4. ⚠ The marker has to be WRITTEN, and that is an owner step
+
+`scripts/keel_mark_live_cluster.py`, `--i-am-the-owner`, once, against the live cluster. **It is the
+only production write in this wave.** ⚠ It refuses a target already marked forensic, refuses one
+whose population does not look like the restored campaign database, and prints what it believes
+before it does anything.
+
+⚠⚠ **Until that runs, every enqueue is refused.** That is the correct direction for a guard to
+fail, and it is why the bootstrap ships inside this entry rather than being discovered later as a
+missing step — which is what `§C.1.2` of the orders would otherwise have left open: it specified
+the marker and ordered nobody to create it.
+
+⚠ **What the bootstrap cannot do, stated plainly:** it cannot verify the cluster id independently.
+A tunnel does not tell you which cluster it reaches — that is the entire problem this marker exists
+to solve. **The operator's confirmation IS the evidence**, which is why the flag is
+`--i-am-the-owner` and not a default.
+
+#### 5. One home, every caller (`F-046`)
+
+The check lives in `core/db_identity.py` and the four scripts call it. ⚠ A fourth copy in a fourth
+script is the defect class this project has already catalogued — three straddle predicates under one
+name — and a test asserts that **no script restates the floor or the cluster id**.
+
+#### 6. How known (`D-016`)
+
+- **Red-first, and the red is the forensic case:**
+  `test_the_forensic_cluster_passes_every_population_check_and_is_still_refused` constructs an
+  identity that **passes the floor and carries the anchor**, and asserts refusal. Population-only
+  logic returns *permitted* on that fixture.
+- **⚠ The raise happens BEFORE any write, asserted over the connection rather than the exception.**
+  A recording double captures every statement; the test asserts no `INSERT`/`UPDATE`/`DELETE`
+  reached it. *A test proving only the raise does not discharge this.*
+- **⚠ A defect caught by writing the test:** the first draft queried
+  `protein_analyses.census_accession`. **There is no such column** — the accession lives in
+  `input_value`, which is how `_existing_run2` matches it. The guard would have raised on every
+  call and been "fixed" by deleting it. An assertion now pins the column.
+- **Wiring is asserted by ORDER, not by presence:** the call must precede the first `s.add(` in the
+  same file, or it is decoration.
+
+- **Assumptions relied on:** that the forensic cluster's backup predates the marker write — true by
+  construction, since the marker is created after the 2026-09-14 restore and the forensic cluster
+  has been read-only since. `A-031`'s reasoning applies unchanged to this marker's absence from the
+  migration chain.
+
 ### D-158 — The test suite stops trusting the ADDRESS of a database and starts requiring the database to PROVE it is disposable — and the disqualifying fact is that **the guard this replaces named its own blind spot, in its own docstring, and the suite ran for 27 more days**
 
 - **Date:** 2026-09-15

@@ -176,9 +176,16 @@ def enqueue(owner: bool) -> int:
 
     from sqlalchemy.orm import Session                 # noqa: PLC0415
     from db.models import JobRecord, ProteinAnalysis   # noqa: PLC0415
+    from core.db_identity import assert_campaign_target   # noqa: PLC0415 - D-159
 
     written = []
     with Session(_engine()) as s:
+        # ⚠⚠ D-159: ASK THE DATABASE WHICH DATABASE IT IS, BEFORE WRITING A SINGLE ROW.
+        # The engine came from DATABASE_URL and a tunnel does not say which cluster it reaches.
+        # ⚠ A population floor alone cannot do this: the forensic cluster zp2wjrej9lwodn4q holds
+        # the same census (the live one was restored from its backup) and would pass every count.
+        # Raises WrongDatabase before the first INSERT; one home, every caller (F-046).
+        assert_campaign_target(s.connection())
         # ⚠⚠ THE BAND OVERLAPS TASK 3's TWENTY, AND THAT IS ARITHMETIC RATHER THAN A DEFECT. The
         # stratified sample drew 4 rows from 1-10 and 4 from 11-30. Re-folding them would give one
         # accession TWO Run 2 rows, breaking the generation partition the campaign rests on.

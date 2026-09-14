@@ -26,7 +26,23 @@ deferred by one fold · `GET` never `HEAD` (405) · the body measured, not `Cont
 unreachable surface as a named category, never a fold failure · every stop condition reachable ·
 ASCII-only printed strings · the stranger guard called before the first claim.
 
-⚠ **The fold needs NO TUNNEL.** `DATABASE_URL` is for `--enqueue` only; `--report` needs neither.
+⚠⚠ **THE FOLD IS SPLIT INTO TWO SHELLS (`D-160`), AND THE HEADER THAT USED TO SIT HERE WAS FALSE.**
+It read *"the fold needs NO TUNNEL; `DATABASE_URL` is for `--enqueue` only"*. That was true when it
+was written and stopped being true on 2026-09-13, when **PR #306 added the stranger guard to the
+fold path** — `refuse_on_strangers` → `_engine()` → `os.environ["DATABASE_URL"]`, a subscript, so
+the fold raised `KeyError` without a tunnel. ⚠ An operator following the old header hit that error
+and the nearest fix to hand was `source .env`, **re-arming the shell for ten unattended hours** —
+the condition both truncation incidents required. A stale header in a safety-relevant file is worse
+than no header.
+
+    --preflight   TUNNEL-ARMED. Seconds. CUDA check, stranger check, writes the clearance.
+    --fold        CLEAN SHELL. Hours. Refuses if DATABASE_URL is set, or the clearance is
+                  missing, stale (> 1 h), taken at another tier, or covers another population.
+
+⚠ **The fold LOOP genuinely needs no tunnel** — `base = TRANSPORT_URL or https://pharmfoldmdk.fly.dev`,
+`config_from_env()` resolves `transport_url` + `auth_token` only, and `run_worker` claims, uploads
+and completes over HTTPS. `--report` reads `progress.csv` and touches nothing. ⚠ The fold shell
+needs `WORKER_AUTH_TOKEN` exported — **never `source .env`**, which also carries `DATABASE_URL`.
 """
 
 from __future__ import annotations
@@ -55,7 +71,10 @@ from scripts.task3_run2_folds import (          # noqa: E402 — REUSE, do not r
 from scripts.task4_slice1 import (   # noqa: E402 — the debugged machinery, shared not copied
     PROGRESS_COLUMNS,
     SliceRun,
+    clearance_refusal,
+    fold_shell_refusal,
     refuse_on_strangers,
+    write_clearance,
 )
 
 #: ⚠⚠ THE HARD BOUND, IN THE TOOL RATHER THAN IN THE INVOCATION.
@@ -168,9 +187,16 @@ def enqueue(owner: bool) -> int:
 
     from sqlalchemy.orm import Session                 # noqa: PLC0415
     from db.models import JobRecord, ProteinAnalysis   # noqa: PLC0415
+    from core.db_identity import assert_campaign_target   # noqa: PLC0415 - D-159
 
     written = []
     with Session(_engine()) as s:
+        # ⚠⚠ D-159: ASK THE DATABASE WHICH DATABASE IT IS, BEFORE WRITING A SINGLE ROW.
+        # The engine came from DATABASE_URL and a tunnel does not say which cluster it reaches.
+        # ⚠ A population floor alone cannot do this: the forensic cluster zp2wjrej9lwodn4q holds
+        # the same census (the live one was restored from its backup) and would pass every count.
+        # Raises WrongDatabase before the first INSERT; one home, every caller (F-046).
+        assert_campaign_target(s.connection())
         # ⚠ The band overlaps Task 3's twenty; what is ENQUEUED is the complement. The BAND stays
         # 1,101 and the arithmetic is printed rather than assumed.
         already = _existing_run2(s, list(by_acc))
@@ -216,6 +242,14 @@ def enqueue(owner: bool) -> int:
 # ── the unattended fold ─────────────────────────────────────────────────────────────────────
 
 def fold(owner: bool) -> int:
+    # ⚠⚠ D-160: THIS SHELL MUST NOT BE ARMED, AND THAT IS THE VERY FIRST THING CHECKED. An armed
+    # shell is the defect itself, so the operator learns it in the first second rather than after
+    # three other refusals have sent them looking somewhere else.
+    shell = fold_shell_refusal(os.environ)
+    if shell:
+        print(shell, file=sys.stderr)
+        return 1
+
     if not ENQUEUED_JSON.is_file():
         print(f"refusing: {_rel(ENQUEUED_JSON)} does not exist. Run --enqueue first.",
               file=sys.stderr)
@@ -233,10 +267,15 @@ def fold(owner: bool) -> int:
         print("Run under the CUDA interpreter (.venv/Scripts/python.exe).", file=sys.stderr)
         return 1
 
-    # ⚠⚠ The stranger guard, before the first claim. `run_worker` claims the next job of its TIER,
-    # not "one of mine".
-    if refuse_on_strangers(enqueued, worker_tier()):
+    # ⚠⚠ The stranger guard's VERDICT, carried from `--preflight`'s armed shell. The check itself
+    # needs a database; this run must not have one. `run_worker` claims the next job of its TIER,
+    # not "one of mine", so the clearance is bound to the tier AND the exact population AND is
+    # refused once stale - a stale clear is not a clear.
+    stale = clearance_refusal(OUT_DIR, enqueued, worker_tier())
+    if stale:
+        print(f"REFUSING: {stale}", file=sys.stderr)
         return 1
+    print(f"stranger clearance: fresh, tier={worker_tier()!r}, {len(enqueued)} ids")
 
     base = os.environ.get("TRANSPORT_URL", "https://pharmfoldmdk.fly.dev")
     run = SliceRun(enqueued, base, progress_csv=PROGRESS_CSV)
@@ -278,6 +317,41 @@ def fold(owner: bool) -> int:
         print(f"\nSTOPPED: {run.stop_reason or 'the loop returned'}")
         print(f"{run.done} of {len(enqueued)} folded; record in {_rel(PROGRESS_CSV)}")
     return 0 if run.done == len(enqueued) else 1
+
+
+def preflight() -> int:
+    """⚠ D-160 step one: the TUNNEL-ARMED half, and it runs in seconds rather than hours.
+
+    Confirms the interpreter, runs the stranger check against the database, and writes the
+    clearance the clean-shell `--fold` will demand. ⚠ Close this shell afterwards.
+    """
+    if not ENQUEUED_JSON.is_file():
+        print(f"refusing: {_rel(ENQUEUED_JSON)} does not exist. Run --enqueue first.",
+              file=sys.stderr)
+        return 1
+    enqueued = {int(e["job_id"]): e for e in json.loads(ENQUEUED_JSON.read_text(encoding="utf-8"))}
+
+    ok, why = cuda_ready()
+    print(f"interpreter check: {why}")
+    if not ok:
+        print(f"REFUSING: {why}", file=sys.stderr)
+        return 1
+
+    tier = worker_tier()
+    if refuse_on_strangers(enqueued, tier):
+        return 1
+
+    path = write_clearance(OUT_DIR, tier, enqueued)
+    print(f"\nclearance written: {_rel(path)}  (valid 1 hour, tier={tier!r}, "
+          f"{len(enqueued)} ids)")
+    # ! ASCII-only in printed strings, inherited from slices 1 and 2 and asserted by
+    # tests/test_task4_slice3.py::test_printed_strings_stay_ascii. The console this runs on is not
+    # UTF-8, and a warning that raises UnicodeEncodeError is a warning nobody reads.
+    print("\n!! CLOSE THIS SHELL. Fold in a clean one:")
+    print("    export WORKER_AUTH_TOKEN=...      # and TRANSPORT_URL if not the default")
+    print("    python scripts/task4_slice3.py --fold --i-am-the-owner")
+    print("!! Do NOT `source .env` there - it carries DATABASE_URL, and this fold runs for hours.")
+    return 0
 
 
 # ── harvest ─────────────────────────────────────────────────────────────────────────────────
@@ -330,7 +404,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--enumerate", dest="enumerate_", action="store_true",
                     help="count the band, project it, write it to disk. No DB write.")
     ap.add_argument("--enqueue", action="store_true", help="write the Run 2 rows")
-    ap.add_argument("--fold", action="store_true", help="fold them, unattended")
+    ap.add_argument("--preflight", action="store_true",
+                    help="D-160: tunnel-armed stranger check; writes the clearance. Seconds.")
+    ap.add_argument("--fold", action="store_true", help="fold them, unattended. CLEAN shell.")
     ap.add_argument("--report", action="store_true", help="the harvest, no tunnel needed")
     ap.add_argument("--i-am-the-owner", dest="owner", action="store_true")
     args = ap.parse_args(argv)
@@ -338,6 +414,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         return enumerate_slice()
     if args.enqueue:
         return enqueue(args.owner)
+    if args.preflight:
+        return preflight()
     if args.fold:
         return fold(args.owner)
     if args.report:

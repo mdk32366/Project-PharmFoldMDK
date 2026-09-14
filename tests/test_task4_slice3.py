@@ -97,14 +97,34 @@ def test_slice_3_imports_the_machinery_rather_than_redefining_it():
     assert "class SliceRun" not in src and "def strangers" not in src
 
 
-def test_the_fold_calls_the_stranger_guard_before_any_claim():
-    """⚠⚠ The gate on this slice's enqueue. A guard that exists and is never called is the manual
-    check with extra steps."""
+def test_the_stranger_guard_still_gates_every_claim_across_the_D_160_shell_split():
+    """⚠⚠ The gate on this slice's fold. A guard that exists and is never called is the manual
+    check with extra steps.
+
+    ⚠ **`D-160` MOVED this call; it did not remove it.** The stranger check reaches `_engine()` and
+    therefore `DATABASE_URL`, so leaving it in `fold()` forced the fold to start from a
+    tunnel-armed shell — and that shell then stayed armed for the whole unattended run, which is
+    the condition both truncation incidents required.
+
+    ⚠⚠ **Both halves are asserted, and that is the point.** Checking only that `fold` stopped
+    calling the guard would be satisfied by deleting the guard outright, which is a worse outcome
+    than the one this test was originally written to prevent.
+    """
     import inspect
-    src = inspect.getsource(S3.fold)
-    assert "refuse_on_strangers(" in src
-    assert src.index("refuse_on_strangers(") < src.index("run_worker("), \
-        "the guard must run BEFORE the loop that claims"
+    fold_src = inspect.getsource(S3.fold)
+    pre_src = inspect.getsource(S3.preflight)
+
+    # the check happens, in the tunnel-armed half, before anything is recorded
+    assert "refuse_on_strangers(" in pre_src, "the stranger guard was dropped, not moved"
+    assert pre_src.index("refuse_on_strangers(") < pre_src.index("write_clearance("), \
+        "the clearance must record a check that has already passed"
+
+    # and the claiming half consumes that verdict, before the loop that claims
+    assert "refuse_on_strangers(" not in fold_src, \
+        "the fold still reaches the database guard, so its shell must be armed again"
+    assert "clearance_refusal(" in fold_src, "the fold does not consume the preflight's verdict"
+    assert fold_src.index("clearance_refusal(") < fold_src.index("run_worker("), \
+        "the clearance must be verified BEFORE the loop that claims"
 
 
 def test_each_slice_writes_its_own_progress_record():
