@@ -1,0 +1,3002 @@
+[
+  {
+    "accession": "A6NDX4",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "O60895",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "O76082",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "P08962",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "P41587",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "P41732",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "Q5BIV9",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "Q75V66",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8N9W7",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9UIG8",
+    "span": 101,
+    "tranche": 2
+  },
+  {
+    "accession": "O00341",
+    "span": 102,
+    "tranche": 2
+  },
+  {
+    "accession": "O60635",
+    "span": 102,
+    "tranche": 2
+  },
+  {
+    "accession": "Q1HG43",
+    "span": 102,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9Y345",
+    "span": 102,
+    "tranche": 2
+  },
+  {
+    "accession": "O60931",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "P22794",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "P36896",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "Q04771",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "Q496H8",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6UXU4",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "Q92959",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96EP9",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96L08",
+    "span": 103,
+    "tranche": 2
+  },
+  {
+    "accession": "O94956",
+    "span": 104,
+    "tranche": 2
+  },
+  {
+    "accession": "Q969I6",
+    "span": 104,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9NQ90",
+    "span": 104,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9UN76",
+    "span": 104,
+    "tranche": 2
+  },
+  {
+    "accession": "Q4U2R8",
+    "span": 105,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6IWH7",
+    "span": 105,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9H1V8",
+    "span": 105,
+    "tranche": 2
+  },
+  {
+    "accession": "O60637",
+    "span": 106,
+    "tranche": 2
+  },
+  {
+    "accession": "Q14571",
+    "span": 106,
+    "tranche": 2
+  },
+  {
+    "accession": "Q1HG44",
+    "span": 106,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96KC8",
+    "span": 106,
+    "tranche": 2
+  },
+  {
+    "accession": "O15244",
+    "span": 107,
+    "tranche": 2
+  },
+  {
+    "accession": "O15245",
+    "span": 107,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8IVM8",
+    "span": 107,
+    "tranche": 2
+  },
+  {
+    "accession": "A1A5B4",
+    "span": 108,
+    "tranche": 2
+  },
+  {
+    "accession": "P46721",
+    "span": 108,
+    "tranche": 2
+  },
+  {
+    "accession": "Q02643",
+    "span": 108,
+    "tranche": 2
+  },
+  {
+    "accession": "G3V0H7",
+    "span": 109,
+    "tranche": 2
+  },
+  {
+    "accession": "O60883",
+    "span": 109,
+    "tranche": 2
+  },
+  {
+    "accession": "P48509",
+    "span": 109,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6ZQN7",
+    "span": 109,
+    "tranche": 2
+  },
+  {
+    "accession": "Q86UG4",
+    "span": 109,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96BD0",
+    "span": 109,
+    "tranche": 2
+  },
+  {
+    "accession": "P04216",
+    "span": 110,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9C0K1",
+    "span": 110,
+    "tranche": 2
+  },
+  {
+    "accession": "P11912",
+    "span": 111,
+    "tranche": 2
+  },
+  {
+    "accession": "P32241",
+    "span": 111,
+    "tranche": 2
+  },
+  {
+    "accession": "P47871",
+    "span": 111,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9NSA0",
+    "span": 111,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9NXW2",
+    "span": 111,
+    "tranche": 2
+  },
+  {
+    "accession": "Q13621",
+    "span": 112,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6UWJ8",
+    "span": 112,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9NPD5",
+    "span": 112,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9NYB5",
+    "span": 112,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9Y6L6",
+    "span": 112,
+    "tranche": 2
+  },
+  {
+    "accession": "Q10589",
+    "span": 113,
+    "tranche": 2
+  },
+  {
+    "accession": "Q13324",
+    "span": 113,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8N130",
+    "span": 113,
+    "tranche": 2
+  },
+  {
+    "accession": "O75192",
+    "span": 114,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8TBM8",
+    "span": 114,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9BY07",
+    "span": 114,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6T423",
+    "span": 115,
+    "tranche": 2
+  },
+  {
+    "accession": "Q7L1W4",
+    "span": 115,
+    "tranche": 2
+  },
+  {
+    "accession": "P21554",
+    "span": 116,
+    "tranche": 2
+  },
+  {
+    "accession": "P27037",
+    "span": 116,
+    "tranche": 2
+  },
+  {
+    "accession": "P43220",
+    "span": 116,
+    "tranche": 2
+  },
+  {
+    "accession": "O14931",
+    "span": 117,
+    "tranche": 2
+  },
+  {
+    "accession": "P48546",
+    "span": 117,
+    "tranche": 2
+  },
+  {
+    "accession": "Q16602",
+    "span": 117,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8WVN6",
+    "span": 117,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9UHW9",
+    "span": 117,
+    "tranche": 2
+  },
+  {
+    "accession": "O00322",
+    "span": 118,
+    "tranche": 2
+  },
+  {
+    "accession": "P27701",
+    "span": 118,
+    "tranche": 2
+  },
+  {
+    "accession": "Q16558",
+    "span": 118,
+    "tranche": 2
+  },
+  {
+    "accession": "Q68CJ9",
+    "span": 118,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6IA17",
+    "span": 118,
+    "tranche": 2
+  },
+  {
+    "accession": "Q86UF1",
+    "span": 118,
+    "tranche": 2
+  },
+  {
+    "accession": "A6NLE4",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "A8MXK1",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "P13385",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "P35499",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "P47872",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "P49190",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "P62079",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "Q13705",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6UX27",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8NG11",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96FV3",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96SJ8",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9Y666",
+    "span": 119,
+    "tranche": 2
+  },
+  {
+    "accession": "O75871",
+    "span": 120,
+    "tranche": 2
+  },
+  {
+    "accession": "Q17RY6",
+    "span": 120,
+    "tranche": 2
+  },
+  {
+    "accession": "Q495A1",
+    "span": 120,
+    "tranche": 2
+  },
+  {
+    "accession": "Q496J9",
+    "span": 120,
+    "tranche": 2
+  },
+  {
+    "accession": "Q70SY1",
+    "span": 120,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96GC9",
+    "span": 120,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9Y6W8",
+    "span": 120,
+    "tranche": 2
+  },
+  {
+    "accession": "O75121",
+    "span": 121,
+    "tranche": 2
+  },
+  {
+    "accession": "O95858",
+    "span": 121,
+    "tranche": 2
+  },
+  {
+    "accession": "P13224",
+    "span": 121,
+    "tranche": 2
+  },
+  {
+    "accession": "P40198",
+    "span": 121,
+    "tranche": 2
+  },
+  {
+    "accession": "P51571",
+    "span": 121,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8NET5",
+    "span": 121,
+    "tranche": 2
+  },
+  {
+    "accession": "O75841",
+    "span": 122,
+    "tranche": 2
+  },
+  {
+    "accession": "P30988",
+    "span": 122,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9UP95",
+    "span": 122,
+    "tranche": 2
+  },
+  {
+    "accession": "Q08722",
+    "span": 123,
+    "tranche": 2
+  },
+  {
+    "accession": "Q5PT55",
+    "span": 123,
+    "tranche": 2
+  },
+  {
+    "accession": "Q5VTT2",
+    "span": 123,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6ISU1",
+    "span": 123,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9H6D8",
+    "span": 123,
+    "tranche": 2
+  },
+  {
+    "accession": "O43889",
+    "span": 124,
+    "tranche": 2
+  },
+  {
+    "accession": "P25189",
+    "span": 124,
+    "tranche": 2
+  },
+  {
+    "accession": "Q13873",
+    "span": 124,
+    "tranche": 2
+  },
+  {
+    "accession": "Q7L1I2",
+    "span": 124,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8NI32",
+    "span": 124,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96BA8",
+    "span": 124,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96DB9",
+    "span": 124,
+    "tranche": 2
+  },
+  {
+    "accession": "O95866",
+    "span": 125,
+    "tranche": 2
+  },
+  {
+    "accession": "Q01151",
+    "span": 125,
+    "tranche": 2
+  },
+  {
+    "accession": "Q16653",
+    "span": 125,
+    "tranche": 2
+  },
+  {
+    "accession": "Q7Z692",
+    "span": 125,
+    "tranche": 2
+  },
+  {
+    "accession": "B4DS77",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "O95976",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "P16410",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "P34741",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "P40967",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96PL5",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9H2X9",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9NPA1",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9UKY0",
+    "span": 126,
+    "tranche": 2
+  },
+  {
+    "accession": "O95297",
+    "span": 127,
+    "tranche": 2
+  },
+  {
+    "accession": "Q15043",
+    "span": 127,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6UWV2",
+    "span": 127,
+    "tranche": 2
+  },
+  {
+    "accession": "Q7Z6A9",
+    "span": 127,
+    "tranche": 2
+  },
+  {
+    "accession": "Q86W47",
+    "span": 127,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9BSA4",
+    "span": 127,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9HBJ8",
+    "span": 127,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9Y691",
+    "span": 127,
+    "tranche": 2
+  },
+  {
+    "accession": "O60487",
+    "span": 128,
+    "tranche": 2
+  },
+  {
+    "accession": "O60939",
+    "span": 128,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96BF3",
+    "span": 128,
+    "tranche": 2
+  },
+  {
+    "accession": "O95436",
+    "span": 129,
+    "tranche": 2
+  },
+  {
+    "accession": "P36894",
+    "span": 129,
+    "tranche": 2
+  },
+  {
+    "accession": "P55082",
+    "span": 129,
+    "tranche": 2
+  },
+  {
+    "accession": "Q3KNT9",
+    "span": 129,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9C0H2",
+    "span": 129,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9H313",
+    "span": 129,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9UNG2",
+    "span": 129,
+    "tranche": 2
+  },
+  {
+    "accession": "P11049",
+    "span": 130,
+    "tranche": 2
+  },
+  {
+    "accession": "Q7L0J3",
+    "span": 130,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8IV16",
+    "span": 130,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9H2Y9",
+    "span": 130,
+    "tranche": 2
+  },
+  {
+    "accession": "P40259",
+    "span": 131,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8IXA5",
+    "span": 131,
+    "tranche": 2
+  },
+  {
+    "accession": "P0CG37",
+    "span": 132,
+    "tranche": 2
+  },
+  {
+    "accession": "P18433",
+    "span": 132,
+    "tranche": 2
+  },
+  {
+    "accession": "P41586",
+    "span": 132,
+    "tranche": 2
+  },
+  {
+    "accession": "Q13145",
+    "span": 132,
+    "tranche": 2
+  },
+  {
+    "accession": "Q16671",
+    "span": 132,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8IWT1",
+    "span": 132,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9UHP7",
+    "span": 132,
+    "tranche": 2
+  },
+  {
+    "accession": "P23510",
+    "span": 133,
+    "tranche": 2
+  },
+  {
+    "accession": "Q04671",
+    "span": 133,
+    "tranche": 2
+  },
+  {
+    "accession": "O14975",
+    "span": 134,
+    "tranche": 2
+  },
+  {
+    "accession": "O95971",
+    "span": 134,
+    "tranche": 2
+  },
+  {
+    "accession": "P10747",
+    "span": 134,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9NY72",
+    "span": 134,
+    "tranche": 2
+  },
+  {
+    "accession": "O15120",
+    "span": 136,
+    "tranche": 2
+  },
+  {
+    "accession": "O43497",
+    "span": 136,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96E93",
+    "span": 136,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8TDQ1",
+    "span": 137,
+    "tranche": 2
+  },
+  {
+    "accession": "Q969Z4",
+    "span": 137,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9Y5U5",
+    "span": 137,
+    "tranche": 2
+  },
+  {
+    "accession": "P26717",
+    "span": 138,
+    "tranche": 2
+  },
+  {
+    "accession": "Q03395",
+    "span": 138,
+    "tranche": 2
+  },
+  {
+    "accession": "Q07108",
+    "span": 138,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9HAV5",
+    "span": 138,
+    "tranche": 2
+  },
+  {
+    "accession": "Q04900",
+    "span": 139,
+    "tranche": 2
+  },
+  {
+    "accession": "Q07699",
+    "span": 139,
+    "tranche": 2
+  },
+  {
+    "accession": "P26715",
+    "span": 140,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8N131",
+    "span": 140,
+    "tranche": 2
+  },
+  {
+    "accession": "P23942",
+    "span": 141,
+    "tranche": 2
+  },
+  {
+    "accession": "Q99075",
+    "span": 141,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9H665",
+    "span": 141,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9NS68",
+    "span": 141,
+    "tranche": 2
+  },
+  {
+    "accession": "P0C7V7",
+    "span": 142,
+    "tranche": 2
+  },
+  {
+    "accession": "P67812",
+    "span": 143,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96BY9",
+    "span": 143,
+    "tranche": 2
+  },
+  {
+    "accession": "P26718",
+    "span": 144,
+    "tranche": 2
+  },
+  {
+    "accession": "P37173",
+    "span": 144,
+    "tranche": 2
+  },
+  {
+    "accession": "P52798",
+    "span": 144,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6GTX8",
+    "span": 144,
+    "tranche": 2
+  },
+  {
+    "accession": "Q86SU0",
+    "span": 144,
+    "tranche": 2
+  },
+  {
+    "accession": "Q86WA9",
+    "span": 144,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9BY50",
+    "span": 144,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8N386",
+    "span": 145,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9P0X4",
+    "span": 145,
+    "tranche": 2
+  },
+  {
+    "accession": "Q15116",
+    "span": 146,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8IX05",
+    "span": 146,
+    "tranche": 2
+  },
+  {
+    "accession": "Q07444",
+    "span": 147,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6UXZ3",
+    "span": 147,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8NC54",
+    "span": 147,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8TCT8",
+    "span": 147,
+    "tranche": 2
+  },
+  {
+    "accession": "Q96FE7",
+    "span": 147,
+    "tranche": 2
+  },
+  {
+    "accession": "Q9Y5X5",
+    "span": 147,
+    "tranche": 2
+  },
+  {
+    "accession": "O43567",
+    "span": 148,
+    "tranche": 2
+  },
+  {
+    "accession": "P25445",
+    "span": 148,
+    "tranche": 2
+  },
+  {
+    "accession": "P61009",
+    "span": 148,
+    "tranche": 2
+  },
+  {
+    "accession": "Q15363",
+    "span": 148,
+    "tranche": 2
+  },
+  {
+    "accession": "P10966",
+    "span": 149,
+    "tranche": 2
+  },
+  {
+    "accession": "Q6ZSJ9",
+    "span": 149,
+    "tranche": 2
+  },
+  {
+    "accession": "Q8TCT7",
+    "span": 149,
+    "tranche": 2
+  },
+  {
+    "accession": "A6NJW9",
+    "span": 152,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7Z601",
+    "span": 152,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y3B3",
+    "span": 153,
+    "tranche": 3
+  },
+  {
+    "accession": "A6NMD0",
+    "span": 154,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5VZ72",
+    "span": 154,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8NBL3",
+    "span": 154,
+    "tranche": 3
+  },
+  {
+    "accession": "P09564",
+    "span": 155,
+    "tranche": 3
+  },
+  {
+    "accession": "P32970",
+    "span": 155,
+    "tranche": 3
+  },
+  {
+    "accession": "D3W0D1",
+    "span": 156,
+    "tranche": 3
+  },
+  {
+    "accession": "Q496F6",
+    "span": 156,
+    "tranche": 3
+  },
+  {
+    "accession": "Q86YD5",
+    "span": 156,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NZC2",
+    "span": 156,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UBN6",
+    "span": 156,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8IW00",
+    "span": 157,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NUM4",
+    "span": 157,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y3Q3",
+    "span": 157,
+    "tranche": 3
+  },
+  {
+    "accession": "P49771",
+    "span": 158,
+    "tranche": 3
+  },
+  {
+    "accession": "P20645",
+    "span": 159,
+    "tranche": 3
+  },
+  {
+    "accession": "Q12918",
+    "span": 159,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96HH4",
+    "span": 159,
+    "tranche": 3
+  },
+  {
+    "accession": "Q03431",
+    "span": 160,
+    "tranche": 3
+  },
+  {
+    "accession": "P01732",
+    "span": 161,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UQ28",
+    "span": 161,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NY25",
+    "span": 161,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UNE0",
+    "span": 161,
+    "tranche": 3
+  },
+  {
+    "accession": "F2Z333",
+    "span": 162,
+    "tranche": 3
+  },
+  {
+    "accession": "Q06495",
+    "span": 162,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96JW4",
+    "span": 162,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9H7M9",
+    "span": 162,
+    "tranche": 3
+  },
+  {
+    "accession": "O43921",
+    "span": 163,
+    "tranche": 3
+  },
+  {
+    "accession": "P20827",
+    "span": 163,
+    "tranche": 3
+  },
+  {
+    "accession": "Q07011",
+    "span": 163,
+    "tranche": 3
+  },
+  {
+    "accession": "Q08708",
+    "span": 163,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UGN4",
+    "span": 163,
+    "tranche": 3
+  },
+  {
+    "accession": "Q92956",
+    "span": 164,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UHE5",
+    "span": 164,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UHF3",
+    "span": 164,
+    "tranche": 3
+  },
+  {
+    "accession": "O14836",
+    "span": 165,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7Z7H5",
+    "span": 165,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8IUH8",
+    "span": 165,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96N66",
+    "span": 165,
+    "tranche": 3
+  },
+  {
+    "accession": "Q86XT9",
+    "span": 166,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BVG9",
+    "span": 166,
+    "tranche": 3
+  },
+  {
+    "accession": "A6NL88",
+    "span": 167,
+    "tranche": 3
+  },
+  {
+    "accession": "Q86XS8",
+    "span": 167,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NQ60",
+    "span": 167,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7Z402",
+    "span": 168,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7Z404",
+    "span": 168,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UW56",
+    "span": 169,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8TED1",
+    "span": 169,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y3A6",
+    "span": 169,
+    "tranche": 3
+  },
+  {
+    "accession": "O43291",
+    "span": 170,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NZS9",
+    "span": 170,
+    "tranche": 3
+  },
+  {
+    "accession": "B0FP48",
+    "span": 171,
+    "tranche": 3
+  },
+  {
+    "accession": "O95944",
+    "span": 171,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96AD5",
+    "span": 171,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NRZ7",
+    "span": 171,
+    "tranche": 3
+  },
+  {
+    "accession": "P26842",
+    "span": 172,
+    "tranche": 3
+  },
+  {
+    "accession": "P32971",
+    "span": 172,
+    "tranche": 3
+  },
+  {
+    "accession": "Q16581",
+    "span": 172,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8ND94",
+    "span": 172,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96K49",
+    "span": 172,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NZS2",
+    "span": 172,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UKJ0",
+    "span": 172,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9ULC0",
+    "span": 172,
+    "tranche": 3
+  },
+  {
+    "accession": "O95838",
+    "span": 173,
+    "tranche": 3
+  },
+  {
+    "accession": "P25942",
+    "span": 173,
+    "tranche": 3
+  },
+  {
+    "accession": "Q53GD3",
+    "span": 174,
+    "tranche": 3
+  },
+  {
+    "accession": "Q68DV7",
+    "span": 174,
+    "tranche": 3
+  },
+  {
+    "accession": "Q86VR2",
+    "span": 174,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9ULK6",
+    "span": 174,
+    "tranche": 3
+  },
+  {
+    "accession": "P14616",
+    "span": 175,
+    "tranche": 3
+  },
+  {
+    "accession": "P31994",
+    "span": 175,
+    "tranche": 3
+  },
+  {
+    "accession": "Q13261",
+    "span": 175,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7L5L3",
+    "span": 175,
+    "tranche": 3
+  },
+  {
+    "accession": "Q93038",
+    "span": 175,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9P126",
+    "span": 175,
+    "tranche": 3
+  },
+  {
+    "accession": "Q86SQ3",
+    "span": 176,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9H2A7",
+    "span": 176,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9ULV1",
+    "span": 176,
+    "tranche": 3
+  },
+  {
+    "accession": "P01375",
+    "span": 177,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6P4Q7",
+    "span": 178,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8IWA5",
+    "span": 178,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96MH6",
+    "span": 178,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UKJ1",
+    "span": 178,
+    "tranche": 3
+  },
+  {
+    "accession": "P48023",
+    "span": 179,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8WW62",
+    "span": 179,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96S06",
+    "span": 179,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9HD20",
+    "span": 179,
+    "tranche": 3
+  },
+  {
+    "accession": "P12319",
+    "span": 180,
+    "tranche": 3
+  },
+  {
+    "accession": "P31995",
+    "span": 181,
+    "tranche": 3
+  },
+  {
+    "accession": "P34910",
+    "span": 181,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8TDQ0",
+    "span": 181,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96EX2",
+    "span": 181,
+    "tranche": 3
+  },
+  {
+    "accession": "P19438",
+    "span": 182,
+    "tranche": 3
+  },
+  {
+    "accession": "P52803",
+    "span": 182,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BXN2",
+    "span": 182,
+    "tranche": 3
+  },
+  {
+    "accession": "O60353",
+    "span": 183,
+    "tranche": 3
+  },
+  {
+    "accession": "O75015",
+    "span": 183,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8NCS7",
+    "span": 183,
+    "tranche": 3
+  },
+  {
+    "accession": "Q92637",
+    "span": 183,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NPG1",
+    "span": 183,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y6Q6",
+    "span": 183,
+    "tranche": 3
+  },
+  {
+    "accession": "P12318",
+    "span": 184,
+    "tranche": 3
+  },
+  {
+    "accession": "P06729",
+    "span": 185,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UXN8",
+    "span": 185,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6ZS10",
+    "span": 185,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NP99",
+    "span": 185,
+    "tranche": 3
+  },
+  {
+    "accession": "P43489",
+    "span": 186,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8N614",
+    "span": 186,
+    "tranche": 3
+  },
+  {
+    "accession": "P19256",
+    "span": 187,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BZM4",
+    "span": 187,
+    "tranche": 3
+  },
+  {
+    "accession": "P35613",
+    "span": 188,
+    "tranche": 3
+  },
+  {
+    "accession": "O75631",
+    "span": 189,
+    "tranche": 3
+  },
+  {
+    "accession": "P21583",
+    "span": 189,
+    "tranche": 3
+  },
+  {
+    "accession": "P43307",
+    "span": 189,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BZM6",
+    "span": 190,
+    "tranche": 3
+  },
+  {
+    "accession": "P01903",
+    "span": 191,
+    "tranche": 3
+  },
+  {
+    "accession": "P52797",
+    "span": 191,
+    "tranche": 3
+  },
+  {
+    "accession": "Q13586",
+    "span": 191,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UXZ0",
+    "span": 191,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BZM5",
+    "span": 191,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y287",
+    "span": 191,
+    "tranche": 3
+  },
+  {
+    "accession": "P06340",
+    "span": 192,
+    "tranche": 3
+  },
+  {
+    "accession": "P08637",
+    "span": 192,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5VY80",
+    "span": 192,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6ZMH5",
+    "span": 192,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9HBV2",
+    "span": 192,
+    "tranche": 3
+  },
+  {
+    "accession": "P01909",
+    "span": 193,
+    "tranche": 3
+  },
+  {
+    "accession": "P09326",
+    "span": 193,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UNN8",
+    "span": 193,
+    "tranche": 3
+  },
+  {
+    "accession": "P01906",
+    "span": 194,
+    "tranche": 3
+  },
+  {
+    "accession": "P20036",
+    "span": 194,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NPF0",
+    "span": 194,
+    "tranche": 3
+  },
+  {
+    "accession": "O43462",
+    "span": 195,
+    "tranche": 3
+  },
+  {
+    "accession": "O95150",
+    "span": 195,
+    "tranche": 3
+  },
+  {
+    "accession": "P08069",
+    "span": 195,
+    "tranche": 3
+  },
+  {
+    "accession": "P51654",
+    "span": 195,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UX82",
+    "span": 195,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8TD07",
+    "span": 195,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9H9P2",
+    "span": 195,
+    "tranche": 3
+  },
+  {
+    "accession": "P04440",
+    "span": 196,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BY14",
+    "span": 196,
+    "tranche": 3
+  },
+  {
+    "accession": "P05538",
+    "span": 197,
+    "tranche": 3
+  },
+  {
+    "accession": "P36941",
+    "span": 197,
+    "tranche": 3
+  },
+  {
+    "accession": "P01911",
+    "span": 198,
+    "tranche": 3
+  },
+  {
+    "accession": "P01920",
+    "span": 198,
+    "tranche": 3
+  },
+  {
+    "accession": "P13762",
+    "span": 198,
+    "tranche": 3
+  },
+  {
+    "accession": "P13765",
+    "span": 198,
+    "tranche": 3
+  },
+  {
+    "accession": "P79483",
+    "span": 198,
+    "tranche": 3
+  },
+  {
+    "accession": "Q30154",
+    "span": 198,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6H3X3",
+    "span": 198,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UWN0",
+    "span": 198,
+    "tranche": 3
+  },
+  {
+    "accession": "P13598",
+    "span": 199,
+    "tranche": 3
+  },
+  {
+    "accession": "Q15768",
+    "span": 199,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UWN5",
+    "span": 199,
+    "tranche": 3
+  },
+  {
+    "accession": "P28068",
+    "span": 200,
+    "tranche": 3
+  },
+  {
+    "accession": "Q08334",
+    "span": 201,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5QGZ9",
+    "span": 201,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BQ51",
+    "span": 201,
+    "tranche": 3
+  },
+  {
+    "accession": "P34925",
+    "span": 202,
+    "tranche": 3
+  },
+  {
+    "accession": "P41217",
+    "span": 202,
+    "tranche": 3
+  },
+  {
+    "accession": "P46059",
+    "span": 202,
+    "tranche": 3
+  },
+  {
+    "accession": "P52799",
+    "span": 202,
+    "tranche": 3
+  },
+  {
+    "accession": "Q504Y0",
+    "span": 202,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8IZK6",
+    "span": 202,
+    "tranche": 3
+  },
+  {
+    "accession": "Q99835",
+    "span": 202,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y2Y6",
+    "span": 202,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BXS4",
+    "span": 203,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UXL0",
+    "span": 204,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8NBN3",
+    "span": 204,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NQ25",
+    "span": 204,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UIB8",
+    "span": 204,
+    "tranche": 3
+  },
+  {
+    "accession": "P41273",
+    "span": 205,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96DU3",
+    "span": 205,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9ULW2",
+    "span": 205,
+    "tranche": 3
+  },
+  {
+    "accession": "P24071",
+    "span": 206,
+    "tranche": 3
+  },
+  {
+    "accession": "Q14002",
+    "span": 206,
+    "tranche": 3
+  },
+  {
+    "accession": "Q15256",
+    "span": 206,
+    "tranche": 3
+  },
+  {
+    "accession": "Q3KPI0",
+    "span": 206,
+    "tranche": 3
+  },
+  {
+    "accession": "Q86YD3",
+    "span": 206,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UJQ1",
+    "span": 206,
+    "tranche": 3
+  },
+  {
+    "accession": "O00144",
+    "span": 207,
+    "tranche": 3
+  },
+  {
+    "accession": "P04156",
+    "span": 207,
+    "tranche": 3
+  },
+  {
+    "accession": "P24394",
+    "span": 207,
+    "tranche": 3
+  },
+  {
+    "accession": "P28067",
+    "span": 207,
+    "tranche": 3
+  },
+  {
+    "accession": "Q14CZ8",
+    "span": 207,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8NC01",
+    "span": 207,
+    "tranche": 3
+  },
+  {
+    "accession": "Q969X5",
+    "span": 207,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y6U7",
+    "span": 207,
+    "tranche": 3
+  },
+  {
+    "accession": "A6ND01",
+    "span": 208,
+    "tranche": 3
+  },
+  {
+    "accession": "P33681",
+    "span": 208,
+    "tranche": 3
+  },
+  {
+    "accession": "Q401N2",
+    "span": 208,
+    "tranche": 3
+  },
+  {
+    "accession": "Q70Z44",
+    "span": 208,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7Z6M3",
+    "span": 208,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8IU57",
+    "span": 208,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BZW8",
+    "span": 208,
+    "tranche": 3
+  },
+  {
+    "accession": "P15328",
+    "span": 209,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7Z403",
+    "span": 209,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9HC73",
+    "span": 209,
+    "tranche": 3
+  },
+  {
+    "accession": "O14798",
+    "span": 210,
+    "tranche": 3
+  },
+  {
+    "accession": "P16471",
+    "span": 210,
+    "tranche": 3
+  },
+  {
+    "accession": "P57087",
+    "span": 210,
+    "tranche": 3
+  },
+  {
+    "accession": "P98172",
+    "span": 210,
+    "tranche": 3
+  },
+  {
+    "accession": "Q14773",
+    "span": 210,
+    "tranche": 3
+  },
+  {
+    "accession": "Q16348",
+    "span": 210,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BX67",
+    "span": 210,
+    "tranche": 3
+  },
+  {
+    "accession": "P36544",
+    "span": 211,
+    "tranche": 3
+  },
+  {
+    "accession": "Q86XK7",
+    "span": 211,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BT76",
+    "span": 211,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9P0V8",
+    "span": 211,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y624",
+    "span": 211,
+    "tranche": 3
+  },
+  {
+    "accession": "P02708",
+    "span": 212,
+    "tranche": 3
+  },
+  {
+    "accession": "Q13467",
+    "span": 212,
+    "tranche": 3
+  },
+  {
+    "accession": "Q2HXU8",
+    "span": 212,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9GZU1",
+    "span": 212,
+    "tranche": 3
+  },
+  {
+    "accession": "P14207",
+    "span": 213,
+    "tranche": 3
+  },
+  {
+    "accession": "P17787",
+    "span": 213,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8N387",
+    "span": 213,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8N6P7",
+    "span": 213,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9GZZ6",
+    "span": 213,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9HBE5",
+    "span": 213,
+    "tranche": 3
+  },
+  {
+    "accession": "P14784",
+    "span": 214,
+    "tranche": 3
+  },
+  {
+    "accession": "Q13651",
+    "span": 214,
+    "tranche": 3
+  },
+  {
+    "accession": "Q15825",
+    "span": 214,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UX15",
+    "span": 214,
+    "tranche": 3
+  },
+  {
+    "accession": "Q99795",
+    "span": 214,
+    "tranche": 3
+  },
+  {
+    "accession": "P29965",
+    "span": 215,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NPH5",
+    "span": 215,
+    "tranche": 3
+  },
+  {
+    "accession": "O00220",
+    "span": 216,
+    "tranche": 3
+  },
+  {
+    "accession": "P47870",
+    "span": 216,
+    "tranche": 3
+  },
+  {
+    "accession": "P78380",
+    "span": 216,
+    "tranche": 3
+  },
+  {
+    "accession": "Q05901",
+    "span": 216,
+    "tranche": 3
+  },
+  {
+    "accession": "Q13410",
+    "span": 216,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6Q8B3",
+    "span": 216,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9BRR3",
+    "span": 216,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UGM1",
+    "span": 216,
+    "tranche": 3
+  },
+  {
+    "accession": "O76024",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "O95264",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "P48551",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "Q13291",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5XG99",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7Z3D4",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8N109",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8NHK3",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9H6B4",
+    "span": 217,
+    "tranche": 3
+  },
+  {
+    "accession": "O00591",
+    "span": 218,
+    "tranche": 3
+  },
+  {
+    "accession": "P07510",
+    "span": 218,
+    "tranche": 3
+  },
+  {
+    "accession": "P30926",
+    "span": 218,
+    "tranche": 3
+  },
+  {
+    "accession": "P46098",
+    "span": 218,
+    "tranche": 3
+  },
+  {
+    "accession": "P78310",
+    "span": 218,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96A28",
+    "span": 218,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y275",
+    "span": 218,
+    "tranche": 3
+  },
+  {
+    "accession": "O00478",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "P01589",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "P13726",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "P16871",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "P32297",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "P78410",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "Q04844",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5DX21",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5SQ64",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96AP7",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96KV6",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y5Y7",
+    "span": 219,
+    "tranche": 3
+  },
+  {
+    "accession": "B6A8C7",
+    "span": 220,
+    "tranche": 3
+  },
+  {
+    "accession": "P18505",
+    "span": 220,
+    "tranche": 3
+  },
+  {
+    "accession": "P38484",
+    "span": 220,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UXE8",
+    "span": 220,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7KYR7",
+    "span": 220,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96IQ7",
+    "span": 220,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NZQ7",
+    "span": 220,
+    "tranche": 3
+  },
+  {
+    "accession": "P11230",
+    "span": 221,
+    "tranche": 3
+  },
+  {
+    "accession": "P28472",
+    "span": 221,
+    "tranche": 3
+  },
+  {
+    "accession": "P47869",
+    "span": 221,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8N7C0",
+    "span": 221,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8WXA8",
+    "span": 221,
+    "tranche": 3
+  },
+  {
+    "accession": "Q99706",
+    "span": 221,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UHF4",
+    "span": 221,
+    "tranche": 3
+  },
+  {
+    "accession": "O75311",
+    "span": 222,
+    "tranche": 3
+  },
+  {
+    "accession": "P08138",
+    "span": 222,
+    "tranche": 3
+  },
+  {
+    "accession": "P23415",
+    "span": 222,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UXG8",
+    "span": 222,
+    "tranche": 3
+  },
+  {
+    "accession": "A5X5Y0",
+    "span": 223,
+    "tranche": 3
+  },
+  {
+    "accession": "P14415",
+    "span": 223,
+    "tranche": 3
+  },
+  {
+    "accession": "P43681",
+    "span": 223,
+    "tranche": 3
+  },
+  {
+    "accession": "P54709",
+    "span": 223,
+    "tranche": 3
+  },
+  {
+    "accession": "Q02297",
+    "span": 223,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8WWF5",
+    "span": 223,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96CC6",
+    "span": 223,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NZC3",
+    "span": 223,
+    "tranche": 3
+  },
+  {
+    "accession": "O75084",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "P04233",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "P42081",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "P43626",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "P43627",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "P43628",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "P43631",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "P43632",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "P48169",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "Q07001",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "Q14332",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "Q14952",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "Q14953",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "Q14954",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "Q16445",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5VW38",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8IZF4",
+    "span": 224,
+    "tranche": 3
+  },
+  {
+    "accession": "O00481",
+    "span": 225,
+    "tranche": 3
+  },
+  {
+    "accession": "P14867",
+    "span": 226,
+    "tranche": 3
+  },
+  {
+    "accession": "P19235",
+    "span": 226,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UN42",
+    "span": 226,
+    "tranche": 3
+  },
+  {
+    "accession": "A6NI73",
+    "span": 227,
+    "tranche": 3
+  },
+  {
+    "accession": "O14764",
+    "span": 227,
+    "tranche": 3
+  },
+  {
+    "accession": "Q13563",
+    "span": 227,
+    "tranche": 3
+  },
+  {
+    "accession": "A8MVZ5",
+    "span": 228,
+    "tranche": 3
+  },
+  {
+    "accession": "H3BV60",
+    "span": 228,
+    "tranche": 3
+  },
+  {
+    "accession": "P15260",
+    "span": 228,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5JTV8",
+    "span": 228,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6PCB8",
+    "span": 228,
+    "tranche": 3
+  },
+  {
+    "accession": "P23416",
+    "span": 229,
+    "tranche": 3
+  },
+  {
+    "accession": "P31644",
+    "span": 229,
+    "tranche": 3
+  },
+  {
+    "accession": "P56937",
+    "span": 229,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UXG3",
+    "span": 229,
+    "tranche": 3
+  },
+  {
+    "accession": "P07306",
+    "span": 230,
+    "tranche": 3
+  },
+  {
+    "accession": "Q01113",
+    "span": 230,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6PJF5",
+    "span": 230,
+    "tranche": 3
+  },
+  {
+    "accession": "P07307",
+    "span": 232,
+    "tranche": 3
+  },
+  {
+    "accession": "P18827",
+    "span": 232,
+    "tranche": 3
+  },
+  {
+    "accession": "P30532",
+    "span": 232,
+    "tranche": 3
+  },
+  {
+    "accession": "Q16585",
+    "span": 232,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9P0L9",
+    "span": 232,
+    "tranche": 3
+  },
+  {
+    "accession": "A6NDV4",
+    "span": 233,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8WVV5",
+    "span": 233,
+    "tranche": 3
+  },
+  {
+    "accession": "Q92629",
+    "span": 233,
+    "tranche": 3
+  },
+  {
+    "accession": "P16150",
+    "span": 234,
+    "tranche": 3
+  },
+  {
+    "accession": "P51164",
+    "span": 234,
+    "tranche": 3
+  },
+  {
+    "accession": "Q92508",
+    "span": 234,
+    "tranche": 3
+  },
+  {
+    "accession": "P20333",
+    "span": 235,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7Z7D3",
+    "span": 235,
+    "tranche": 3
+  },
+  {
+    "accession": "P18507",
+    "span": 236,
+    "tranche": 3
+  },
+  {
+    "accession": "Q15762",
+    "span": 236,
+    "tranche": 3
+  },
+  {
+    "accession": "O76036",
+    "span": 237,
+    "tranche": 3
+  },
+  {
+    "accession": "P55073",
+    "span": 237,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8TD46",
+    "span": 237,
+    "tranche": 3
+  },
+  {
+    "accession": "O75144",
+    "span": 238,
+    "tranche": 3
+  },
+  {
+    "accession": "Q15822",
+    "span": 238,
+    "tranche": 3
+  },
+  {
+    "accession": "Q68D85",
+    "span": 238,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UWI2",
+    "span": 238,
+    "tranche": 3
+  },
+  {
+    "accession": "Q8N1C3",
+    "span": 238,
+    "tranche": 3
+  },
+  {
+    "accession": "Q93070",
+    "span": 238,
+    "tranche": 3
+  },
+  {
+    "accession": "O15354",
+    "span": 239,
+    "tranche": 3
+  },
+  {
+    "accession": "Q99928",
+    "span": 239,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UKB5",
+    "span": 239,
+    "tranche": 3
+  },
+  {
+    "accession": "P28476",
+    "span": 240,
+    "tranche": 3
+  },
+  {
+    "accession": "P31785",
+    "span": 240,
+    "tranche": 3
+  },
+  {
+    "accession": "Q12770",
+    "span": 240,
+    "tranche": 3
+  },
+  {
+    "accession": "P05026",
+    "span": 241,
+    "tranche": 3
+  },
+  {
+    "accession": "Q14165",
+    "span": 241,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6UXB4",
+    "span": 241,
+    "tranche": 3
+  },
+  {
+    "accession": "Q96LD1",
+    "span": 241,
+    "tranche": 3
+  },
+  {
+    "accession": "A8MPY1",
+    "span": 242,
+    "tranche": 3
+  },
+  {
+    "accession": "P16422",
+    "span": 242,
+    "tranche": 3
+  },
+  {
+    "accession": "P20138",
+    "span": 242,
+    "tranche": 3
+  },
+  {
+    "accession": "P21854",
+    "span": 243,
+    "tranche": 3
+  },
+  {
+    "accession": "Q6ZMC9",
+    "span": 244,
+    "tranche": 3
+  },
+  {
+    "accession": "Q7RTY9",
+    "span": 244,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9NU53",
+    "span": 245,
+    "tranche": 3
+  },
+  {
+    "accession": "P10912",
+    "span": 246,
+    "tranche": 3
+  },
+  {
+    "accession": "P34903",
+    "span": 246,
+    "tranche": 3
+  },
+  {
+    "accession": "P48167",
+    "span": 246,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9H756",
+    "span": 246,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9Y6M0",
+    "span": 246,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9HCN6",
+    "span": 247,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UN88",
+    "span": 247,
+    "tranche": 3
+  },
+  {
+    "accession": "P09758",
+    "span": 248,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9H461",
+    "span": 248,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9H5I5",
+    "span": 248,
+    "tranche": 3
+  },
+  {
+    "accession": "O14788",
+    "span": 249,
+    "tranche": 3
+  },
+  {
+    "accession": "O15118",
+    "span": 249,
+    "tranche": 3
+  },
+  {
+    "accession": "Q5T2D2",
+    "span": 250,
+    "tranche": 3
+  },
+  {
+    "accession": "Q86Y34",
+    "span": 250,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9H8M5",
+    "span": 250,
+    "tranche": 3
+  },
+  {
+    "accession": "Q9UP38",
+    "span": 250,
+    "tranche": 3
+  }
+]
