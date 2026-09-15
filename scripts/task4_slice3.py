@@ -396,48 +396,49 @@ def report() -> int:
             print(f"    compare: 4.7 s/fold at 251-384, 0.7 s/fold at 1-30. This is a THIRD")
             print(f"    measured point, not a confirmation of either.")
     print("\n! SLICE 4 IS NOT AUTHORISED. Report the harvest; the owner rules.")
-    owed_restore_notice()
+    f078_paid_notice()
     return 0
 
 
-#: !! THE OWED RESTORE, PRINTED WHERE THE OPERATOR WILL ACTUALLY BE (F-078 amendment 1).
+#: !! THE HISTORY, KEPT, AND THE PROHIBITION THAT OUTLIVES IT (F-078 amendments 1, 2 and 3).
 #: Order B set slice 2's 37 lost rows to tier NULL so slice 3's 1,097 could be the only claimable
 #: population. A NULL-tier job is claimable by NOBODY and `refuse_on_strangers` deliberately does
-#: not count one - so if the restore is forgotten it is forgotten SILENTLY, and slice 2 stays
-#: 480/517 for ever. That is the same shape as everything F-078 records: a loss no check watches.
-#: ! So the reminder lives in `--report`, the command run at the moment the fold ends, rather than
-#: in a document someone has to remember to open.
+#: not count one - so while the debt stood, it stood SILENTLY, and this notice was the only guard.
 #: !! F-078 amendment 2 (2026-09-15): the 37 FOLDS were never lost - only their database rows. The
-#: artifacts are on the volume, identity 37/37. The steps this notice used to print (restore the
-#: tier, re-fold) would overwrite them, so it now says the opposite. The debt is still silent.
-OWED_RESTORE = [
+#: artifacts were on the volume all along, identity 37/37. The steps this notice used to print
+#: (restore the tier, re-fold) would have OVERWRITTEN them.
+#: !! F-078 amendment 3 / D-167 (2026-09-15): the owner ruled RE-ATTACH and ran it. The debt is
+#: PAID - the database witness reads 480 -> 517 - so the notice now records what was done. ! The
+#: re-fold prohibition is NOT lifted with it: the verified bytes are what those rows point at.
+F078_PAID_NOTICE = [
     "",
     "=" * 78,
-    "!! OWED, AND NOT YET DONE: SLICE 2's 37 (F-078 amendments 1 and 2)",
+    "PAID 2026-09-15: SLICE 2's 37 ARE RE-ATTACHED (D-167; F-078 amendment 3)",
     "=" * 78,
-    "  Jobs 4869-4905 were set tier NULL on 2026-09-15 so slice 3 could be the only claimable",
-    "  population. Their DATABASE rows were lost at the 2026-09-13 cut: job 4868 completed",
-    "  15:24:36.578Z and survived; job 4869 was claimed 64 ms later and did not.",
+    "  Jobs 4869-4905 lost their DATABASE rows at the 2026-09-13 cut: job 4868 completed",
+    "  15:24:36.578Z and survived; job 4869 was claimed 64 ms later and its row did not.",
+    "  Their folds were never lost - all 37 artifacts were on the volume, identity 37/37",
+    "  (scripts/f078_identity_check.py).",
     "",
-    "  !! THEIR FOLDS WERE NOT LOST (F-078 amendment 2). All 37 artifacts are on the volume;",
-    "  sizes match progress.csv 37/37 and identity is 37/37 (scripts/f078_identity_check.py).",
+    "  The owner ruled RE-ATTACH and ran it on 2026-09-15: the 37 rows were linked to those",
+    "  artifacts. No GPU, nothing became claimable, and progress.csv's fold measurements",
+    "  stay the measurements.",
     "",
-    "  !! DO NOT RE-FOLD THEM, AND DO NOT RUN f078_null_tier_the_37.py --restore.",
+    "  WITNESS - the DATABASE, never this file's progress.csv (F-080):",
+    "    python scripts/d167_reattach.py --url <tunnel> --witness",
+    "    jobs 4389-4905, complete AND pdb_path IS NOT NULL: 480 before -> 517 after.",
+    "",
+    "  !! STILL FORBIDDEN, AND IT OUTLIVES THE DEBT:",
+    "  DO NOT RE-FOLD THE 37, AND DO NOT RUN f078_null_tier_the_37.py --restore.",
     "  A re-fold uploads into the same /data/artifacts/{job_id}/ directories and overwrites",
-    "  the verified bytes. The script refuses --restore for exactly that reason.",
-    "",
-    "  Owed instead: the OWNER rules re-attach (link the existing artifacts to the 37 rows)",
-    "  or re-fold. The rows stay tier NULL until that ruling is written.",
-    "",
-    "  ! A NULL-tier job is claimed by nobody and the stranger guard does not count it, so",
-    "  nothing else in this system will ever raise its hand about these rows. This notice IS",
-    "  the guard. Do not delete it until slice 2 reads 517/517.",
+    "  the verified bytes those rows now point at. --restore stays refused, and",
+    "  tests/test_f078_restore_refused.py pins the refusal.",
     "=" * 78,
 ]
 
 
-def owed_restore_notice() -> None:
-    for line in OWED_RESTORE:
+def f078_paid_notice() -> None:
+    for line in F078_PAID_NOTICE:
         print(line)
 
 
