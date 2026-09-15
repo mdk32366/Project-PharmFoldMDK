@@ -1462,6 +1462,13 @@ S-002 Q1, now testable against a config that genuinely fits.
     Dockerfile's rule that a writing script's machinery does not ship to the production host.
     `--witness` is `F-080`'s database count (480 before, 517 after); `--revert` restores
     `state_before.json` exactly.
+  - **The post-sitting read (`D-167`, ORDERS A8.3).** `scripts/d167_phase_e_read.py` is read-only by
+    the database (the same `read_only_transaction`), role preamble then `D-159`, and classifies the
+    run-1 census against a table registered **before** the read: the collapse deleted rows inside that
+    key, so `3,651 − 3` is the expected reading and the unchanged `3,651` is a stop. It also measures
+    what the sitting only implied — `DUPLICATES_SQL` empty, identity-keyed census equal to row-keyed,
+    the keep rows intact and the dropped rows absent — and writes `data/control/d167/phase_e_read.json`
+    once, with its sha256. Printed output is ASCII.
   - **Identity first, population second.** The target must carry `keel_live_cluster` naming
     `kyzl60xz9zyrpj9g`. ⚠⚠ **A population floor cannot do this job alone:** the forensic cluster
     `zp2wjrej9lwodn4q` holds the same census — the live cluster was restored from its backup — so it
