@@ -201,6 +201,33 @@ def test_collapse_refuses_during_a_live_fold(live_db, monkeypatch, capsys):
 
 
 @pytest.mark.postgres
+def test_collapse_refuses_when_a_job_names_a_dropped_row_as_its_json_parent(live_db, monkeypatch,
+                                                                            capsys):
+    """⚠ `ORDERS` A2.1. The catalog sees DECLARED foreign keys only. `inference_settings->>
+    'parent_job_id'` points at `jobs.id` from inside JSON and no constraint declares it, so a
+    `pg_constraint` enumeration is blind to it by construction. It is checked by name, as a
+    non-constraint reference. Negative control: `test_collapse_dry_run_proceeds_on_the_marked_
+    database`, where no job names a drop row."""
+    url = live_db.url.render_as_string(hide_password=False)
+    with live_db.begin() as c:
+        aid = c.execute(text(
+            "INSERT INTO protein_analyses (input_type, input_value, metadata) "
+            "VALUES ('uniprot', 'P-CHILD', '{}') RETURNING id")).scalar_one()
+        c.execute(text(
+            "INSERT INTO jobs (id, analysis_id, status, attempts, inference_settings) "
+            "VALUES (9002, :a, 'complete', 1, CAST('{\"parent_job_id\": 3693, \"tile_index\": 5}' "
+            "AS jsonb))"), {"a": aid})
+    before = _counts(live_db)
+
+    rc = _run(["--url", url], monkeypatch)
+
+    out = capsys.readouterr().out
+    assert rc == 1, f"a job names a dropped row as its parent and the dry run returned {rc!r}"
+    assert _counts(live_db) == before
+    assert "9002" in out and "parent_job_id" in out, "the refusal does not name the JSON reference"
+
+
+@pytest.mark.postgres
 def test_collapse_refuses_when_another_table_references_a_dropped_row(live_db, monkeypatch, capsys):
     """⚠ A delete that fails on a foreign key mid-transaction is safe; one that cascades is not, and
     the dry run is the only place to find out before the owner's run. The references are

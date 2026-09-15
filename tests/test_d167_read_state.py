@@ -158,6 +158,28 @@ def test_the_state_is_written_once_with_its_sha256(tmp_path):
     assert json.loads(target.read_text(encoding="utf-8")) == {"a": [1], "b": 2}
 
 
+def test_task3_overlap_is_computed_from_the_rows_given():
+    """⚠ `ORDERS` A2.2: key 3 (`run = 2` + span 1-30) also counts Task 3's Run-2 rows in that band,
+    which slice 2's enqueue excluded. The overlap is computed from the committed file IN THE RUN —
+    never a hard-coded 8 — so a synthetic file must give a synthetic answer."""
+    import scripts.d167_read_state as r
+
+    fn = getattr(r, "task3_overlap_ids", None)
+    assert fn is not None, "the read has no task3_overlap_ids: the Task 3 overlap is not computed"
+    rows = [{"job_id": 11, "span_aa": 1}, {"job_id": 12, "span_aa": 30}, {"job_id": 13, "span_aa": 31},
+            {"job_id": 10, "span_aa": 0}, {"job_id": 14, "span_aa": "27"}]
+    assert fn(rows, (1, 30)) == [11, 12, 14]
+    assert fn([], (1, 30)) == []
+
+
+def test_the_task3_file_the_overlap_reads_is_the_committed_one():
+    import scripts.d167_read_state as r
+
+    path = getattr(r, "TASK3_ENQUEUED_JSON", None)
+    assert path == REPO / "data" / "control" / "task3_run2" / "enqueued.json"
+    assert path.is_file()
+
+
 def test_main_prints_the_sha256_and_records_the_commit():
     src = SCRIPT.read_text(encoding="utf-8")
     assert 'print(f"sha256  : {sha}")' in src
@@ -219,10 +241,53 @@ def test_the_read_measures_the_seeded_state(seeded, tmp_path):
                 "4. jobs rows, id 4869-4905", "4. of those, status = 'complete'",
                 "4. of those, analysis pdb_path IS NOT NULL", "4. of those, tier IS NULL",
                 "4. control 4866-4868, status = 'complete' AND pdb_path IS NOT NULL",
-                "5. the three keys agree on the folded count",
+                KEYS_1_2_AGREE, KEY3_MINUS_KEY2,
                 "7. rows outside the collapse referencing its drop rows",
+                JSON_PARENT_REFS,
                 "8. jobs with status = 'claimed'"):
         assert exp[key]["met"], (key, exp[key])
     assert not exp["9. alembic_version"]["met"]
     assert not exp["6. DUPLICATES_SQL"]["met"]
     assert {v["complete_and_pdb_path"] for v in state["slice2"].values()} == {3}
+    assert state["task3_overlap"]["ids_complete_in_db"] == []
+
+
+#: ⚠ The expectation keys A2.2 introduces, named once so the two end-to-end tests cannot drift apart.
+KEYS_1_2_AGREE = "5. keys 1 and 2 agree (id range, enqueued.json)"
+KEY3_MINUS_KEY2 = ("5. key 3 minus key 2 equals task3_overlap "
+                   "(Task 3 Run-2 rows in band 1-30, complete with pdb_path)")
+JSON_PARENT_REFS = ("7. jobs naming a drop row as inference_settings parent_job_id "
+                    "(no declared constraint)")
+
+
+@pytest.mark.postgres
+def test_a_task3_row_in_band_is_a_named_category_not_a_disagreement(seeded, tmp_path):
+    """⚠⚠ A2.2. One Task 3 Run-2 row in band 1-30, complete with a path — job 3698, span 1, exactly
+    as `data/control/task3_run2/enqueued.json` lists it. Key 3 now exceeds keys 1-2 by one.
+
+    ⚠ The OLD expectation ("the three keys agree") FAILS on this state — shown below from the measured
+    counts — and the NEW one passes, because the difference is the overlap the committed file
+    predicts rather than an unexplained disagreement."""
+    from scripts.d167_read_state import main
+
+    with seeded.begin() as c:
+        c.execute(text(
+            "INSERT INTO protein_analyses (id, input_type, input_value, metadata, pdb_path) "
+            "VALUES (103698, 'uniprot', 'Q-T3', CAST('{\"span_aa\": 1}' AS jsonb), "
+            "'/data/artifacts/3698/structure.pdb')"))
+        c.execute(text(
+            "INSERT INTO jobs (id, analysis_id, status, attempts, tier, inference_settings) "
+            "VALUES (3698, 103698, 'complete', 1, 'local', CAST('{\"run\": 2}' AS jsonb))"))
+
+    out = tmp_path / "state_before.json"
+    main(["--url", seeded.url.render_as_string(hide_password=False), "--out", str(out)])
+    state = json.loads(out.read_text(encoding="utf-8"))
+    exp = {e["key"]: e for e in state["expectations"]}
+    counts = [v["complete_and_pdb_path"] for v in state["slice2"].values()]
+
+    assert len(set(counts)) != 1, f"the old three-key agreement would NOT fail here: {counts}"
+    assert exp[KEYS_1_2_AGREE]["met"], exp[KEYS_1_2_AGREE]
+    assert exp[KEY3_MINUS_KEY2]["met"], exp[KEY3_MINUS_KEY2]
+    assert exp[KEY3_MINUS_KEY2]["measured"] == 1
+    assert state["task3_overlap"]["ids_complete_in_db"] == [3698]
+    assert len(state["task3_overlap"]["ids_in_band"]) >= 1
