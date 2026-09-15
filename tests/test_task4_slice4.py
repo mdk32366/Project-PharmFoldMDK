@@ -115,13 +115,14 @@ def test_the_stranger_guard_gates_the_claim_and_the_shell_split_holds():
         "the clean-shell check is not the first thing fold() does")
 
 
-def test_the_owed_restore_notice_survives_into_this_slice():
-    """⚠⚠ The 37 are still owed. The notice is the only thing in the system that will ever raise
-    its hand about them, because a NULL-tier job is claimable by nobody and the stranger guard
-    deliberately does not count one."""
-    assert "OWED, AND NOT YET DONE" in SRC
+def test_the_paid_notice_replaced_the_owed_one_in_this_slice():
+    """⚠⚠ `F-078` amendment 3: the 37 are re-attached (`D-167`) and slice 2 reads 517 on the database
+    witness. The OWED notice is gone; the PAID notice names the rows, the witness and what must
+    still never be done to them."""
+    assert "OWED, AND NOT YET DONE" not in SRC
+    assert "F078_PAID_NOTICE" in SRC
     assert "4869" in SRC and "4905" in SRC
-    assert "517/517" in SRC
+    assert "517" in SRC and "DO NOT RE-FOLD" in SRC
 
 
 def test_the_notice_states_the_cut_from_the_DATABASE_not_the_backup_label():
@@ -145,8 +146,10 @@ def test_printed_strings_stay_ascii():
     assert not bad, f"non-ASCII in printed strings: {bad}"
 
 
-def test_the_OWED_RESTORE_lines_are_ascii_too():
+def test_the_F078_PAID_NOTICE_lines_are_ascii_too():
     """⚠ They are printed by `--report` at the end of a long unattended run, which is the worst
     possible moment for an encoding error."""
-    bad = [ln for ln in slice4.OWED_RESTORE if any(ord(c) > 127 for c in ln)]
-    assert not bad, f"non-ASCII in the owed-restore notice: {bad}"
+    notice = getattr(slice4, "F078_PAID_NOTICE", None)
+    assert notice is not None, "task4_slice4 has no F078_PAID_NOTICE"
+    bad = [ln for ln in notice if any(ord(c) > 127 for c in ln)]
+    assert not bad, f"non-ASCII in the paid notice: {bad}"
