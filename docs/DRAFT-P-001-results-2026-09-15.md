@@ -134,9 +134,11 @@ statistics (10-of-12 on the count); the two PubMed arms disagree by 2-of-12.
 
 ⚠⚠ **The strongest arm numerically is the weakest evidentially, and the paper says so in both
 places** (methods §1). The proxy set was chosen knowing Run A had survived, and **a solved-structure
-proxy is the one a team in that position would most naturally reach for.** So `pdb_present`'s
-10-of-12 is **not** the headline; the headline is that the enrichment survives **every** arm,
-including the one whose construction nobody would have chosen to flatter it.
+proxy is the one a team in that position would most naturally reach for** — so `pdb_present` carries
+the **least** evidential weight of the three, for the reason §1 gives.
+
+⚠ **The result does not depend on it.** The enrichment survives **all three** arms, and that — not
+the best of three, and not the strongest of three — is what is claimed.
 
 ⚠⚠ **The ruling is QUALIFIED and the qualification is not a footnote.** The disagreement is a
 finding about **the proxy's construction**, not an objection to the call — and because the mechanism

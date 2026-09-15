@@ -16,11 +16,24 @@
 
 ## Log (newest first)
 
-### F-077 — ✅ The three duplicated tile identities are BYTE-IDENTICAL: wasted compute, not two answers — and the re-fold is evidence the fold path is deterministic
+### F-077 — ✅ The FOLD path is deterministic end to end — same input, same weights, same bytes — and it was learned from three duplicated tile identities that turned out to be byte-identical: wasted compute, not two answers
 
 - **Date:** 2026-09-15 · **Status:** ✅ **CLOSED on measurement.** No artifact is ambiguous.
+  ⚠⚠ **§3's stated cause is WRONG and amendment 1 replaces it** — the ~2 h 57 m it reasoned
+  from is the fold queue draining, not the emitter. The corrected mechanism is `D-166`.
+  ⚠ **§1 and §2 are untouched and the determinism result is unaffected.**
 - **How known (`D-016`):** both artifacts of each pair fetched from the live surface and hashed.
   Read-only, one tunnel bound by name per `D-162` rule 5, closed after.
+
+> **THE FINDING:** ⚠⚠ **the fold path is deterministic** — the same span, the same weights and the
+> same code produce **byte-identical** output, pLDDT to two decimals included, across runs three
+> hours apart. **That is why a re-fold is a safe repair anywhere in this project**, which is the
+> property `F-078`'s disposition rests on and which was undemonstrated until now.
+>
+> ⚠ **The three duplicated tile identities are how it was learned, not what was learned.** They had
+> to be measured before anything collapsed them — two artifacts for one identity is *either* wasted
+> compute *or* two different answers — and the measurement settled it: wasted compute, either copy
+> is the tile, nothing downstream ambiguous.
 
 Three hold-48 parents carry the same `parent + tile_start + tile_end` folded twice:
 
@@ -62,6 +75,39 @@ batch roughly three hours after the first pass.
 so that a future duplicate is read against this pattern rather than investigated from scratch, and
 so that the emitter's idempotence is understood to be **unproven** — the folds were idempotent; the
 *enqueue* evidently was not.
+
+#### F-077 amendment 1 — ⚠⚠ §3's cause is WRONG. The separation it measured was the fold queue, not the emitter.
+
+**Superseded text, recorded rather than silently overwritten (`D-129-C`):** *"The three pairs are
+separated by a consistent ~2 h 57 m … That is a re-run of a wave, not three independent retries.
+Something re-emitted a batch roughly three hours after the first pass."*
+
+- **How known (`D-016`):** `jobs.created_at` and `jobs.id` read directly, one tunnel bound by name
+  (`D-162` rule 5), corroborated against the Direct IP, closed after. Read-only.
+
+⚠ **`completed_at` is not the enqueue.** The enqueues were **2 m 26 s** apart, not three hours:
+
+| | 3673/3693 | 3674/3695 | 3675/3696 |
+|---|---|---|---|
+| `created_at` (the enqueue) | `21:41:55` / `21:44:21` | same pair | same pair |
+| `completed_at` (what §3 used) | `23:21:12` / `02:18:22` | `23:29:16` / `02:26:25` | `23:37:19` / `02:34:28` |
+
+The ~2 h 57 m is **one GPU draining a serial queue** with 20 folds between the two batches. It is a
+property of the worker, and §3 read it as a property of the emitter.
+
+⚠⚠ **The corrected cause is `D-166`:** two **overlapping** transactions, proven by `jobs.id`
+interleaving — A took 3673–3692, B took 3693, A took **3694** and **3697**. A sequence is
+non-transactional, so A was still open when B began. Under `READ COMMITTED` neither could see the
+other's rows, `_emitted_tile_idents` returned *"not yet emitted"* in both, and both wrote.
+
+⚠ **This strengthens §2 rather than weakening it.** The determinism result stands untouched and is
+now the *larger* half by a wider margin: identical bytes from two folds is still the finding, and
+**the re-fold disposition `F-078` rests on is still safe.** What changes is that §3's *"idempotence
+unproven"* becomes **"idempotence disproven, mechanism established, remedy owed"**.
+
+⚠ **Why the error is recorded rather than corrected in place:** §3 was cited as settled when this
+finding closed, and `F-047`'s standing lesson is that a wrong-but-plausible answer travels. The
+superseded text stays visible so the citation can be followed to its correction.
 
 ### F-078 — ⚠⚠ 37 folds were lost from BOTH stores at the backup boundary, and four separate answers walked past them — the first of them because a verification probe returned success for a reason unrelated to what it claimed to test
 
@@ -2913,6 +2959,33 @@ from it by diffing failure sets before and after.
   the tree rather than from a list somebody has to maintain.
 - ⚠ **No content changed.** The staged diff is `.gitattributes` alone; the twelve blobs were already
   LF in the index and only the working-tree bytes moved.
+
+#### F-047 amendment 6 — ⚠⚠ The investigation layer, measured FOUR times in one day, by both parties
+
+`F-047` has so far been recorded against *artifacts*: a guard, a probe, a count, a cache. ⚠ **It has
+an investigation-layer form**, and 2026-09-15 produced four instances inside a single day:
+
+| # | the description that was judged | the thing it stood for | who |
+|---|---|---|---|
+| 1 | `/api/census/{accession}` returning HTTP 200 | whether the **artifact** exists | Code |
+| 2 | §E comparing job-id **presence** | job **state** | Code |
+| 3 | the same probe defect, independently | — | Planner |
+| 4 | `completed_at` separation of ~2 h 57 m | the **enqueue** separation (2 m 26 s) | Code |
+
+⚠ **In every one, a proxy was available, cheap, and nearly right — and the thing itself was one
+query away.** Instance 4 is the sharpest: it concluded a guard post-dated the duplicate waves when
+the guard **pre-dated both enqueues by five hours**, which inverts the finding (`D-166` §2).
+
+⚠⚠ **The generalisation is `D-162` rule 3's, one level up.** Rule 3 says a documented blind spot is
+a blocking defect rather than a comment. The investigation-layer form says: **a measurement of a
+proxy is a blocking gap rather than a result**, and the check is `D-162` rule 7 turned on oneself —
+*state what this number would read if the thing were not so.* Applied to instance 4: *"what would
+`completed_at` read if the enqueues had been simultaneous?"* — **exactly what it did read.** The
+proxy could not have distinguished the two cases, and that is discoverable before the query, not
+after.
+
+⚠ **Both parties, four times, one day.** This is not a lapse of care by one instance; it is the
+default behaviour of anyone holding a description that answers quickly.
 
 ### F-048 — For 58 census proteins the V2 span is a short extracellular loop INSIDE a larger transmembrane domain, and the annotation and the span are describing different objects
 

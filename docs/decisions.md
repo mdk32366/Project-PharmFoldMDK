@@ -16,6 +16,159 @@
 
 ## Log (newest first)
 
+### D-166 — The enqueue guard moves into the database, because a guard that REMEMBERS is defeated by the same guard running twice at once — and the disqualifying fact is that the guard was present, type-correct and five hours old when it failed
+
+- **Date:** 2026-09-15
+- **Status:** ⚠ **Shape accepted; the production DDL is OWED and owner-gated** (`F-075`). The
+  migration cannot run until the three duplicate rows are collapsed — see §5.
+- **How known (`D-016`):** read directly off `jobs.created_at` and `jobs.id` through one tunnel
+  bound by name (`D-162` rule 5), corroborated against `fly mpg status`'s Direct IP
+  `fdaa:62:76d9:0:1::9`, closed after. Read-only; no writes issued.
+
+**The decision.** Enqueue idempotency stops being an application property and becomes a **database
+constraint**: a `UNIQUE` index that refuses the second write *whatever* the application did or did
+not remember. ⚠ **It lands on the tile path now (§4a) and is OWED as a design on the Run-2 path
+(§4b)**, where the identity spans two tables and no single-table constraint expresses it.
+
+---
+
+#### 1. ⚠⚠ The mechanism, and it is proven rather than proposed
+
+`jobs.id` is `nextval('jobs_id_seq'::regclass)` — **monotonic and non-transactional**. Two
+transactions emitted the 2026-09-04 tile jobs:
+
+| txn | `created_at` (= transaction start) | n | parents | ids |
+|---|---|---|---|---|
+| **A** | `21:41:55.280652Z` | 22 | 20 | 3673–3692, **3694**, **3697** |
+| **B** | `21:44:21.940741Z` | 3 | 3 | **3693**, 3695, 3696 |
+
+⚠⚠ **A's ids 3694 and 3697 were allocated AFTER B's 3693.** A sequence hands out numbers in the
+order they are asked for and does not roll back, so **A was still running when B started.** The two
+transactions overlapped. That is not an inference from timing — it is the id order itself.
+
+Under `READ COMMITTED` neither transaction can see the other's uncommitted rows. So
+`_emitted_tile_idents` ran in **both**, correctly, and **both returned "not yet emitted"** for the
+three shared identities. Both wrote. **Nothing in the database refused the second.**
+
+#### 2. ⚠⚠ What this corrects, and it was a finding I closed
+
+`F-077` §3 recorded the cause as *"a consistent ~2 h 57 m … a re-run of a wave, not three
+independent retries."* **That is wrong, and `F-077` amendment 1 records it.**
+
+| | separation | what it is |
+|---|---|---|
+| `completed_at` | **~2 h 57 m** | the serial fold queue draining — one GPU, ~8 min/tile |
+| `created_at` | **2 m 26 s** | the enqueues, overlapping |
+
+⚠ **The three-hour figure measured the fold queue, not the emitter.** The pairs completed three
+hours apart because 20 folds sat between them in a single-worker queue. `completed_at` was a proxy
+for the enqueue and I read it as the enqueue.
+
+⚠⚠ **That is `F-047`'s class in the investigation layer, and it is the fourth instance measured in
+one day** — see `F-047` amendment 6. A guard's landing time was compared against a **completion**
+timestamp to conclude the guard post-dated the waves; the guard in fact **pre-dated both enqueues
+by five hours** and failed anyway, which is a materially different finding and the one that
+motivates this decision.
+
+#### 3. Why the guard cannot work where it lives
+
+```python
+emitted_indices, emitted_windows = _emitted_tile_idents(session, parent_job.id)   # READ
+for spec in specs:
+    if spec.tile_index in emitted_indices or (spec.start, spec.end) in emitted_windows:
+        continue                                                                   # WRITE
+```
+
+A read, then a decision, then a write, with no lock between them. ⚠ **It is correct under every
+sequential test and cannot be correct under concurrency** — and every test it has asserts the
+sequential case:
+
+- `tests/test_hold48_tiles.py::test_emit_wave_b_adds_mid_band_without_duplicating_wave_a`
+  calls `emit_tile_jobs` twice **on one session, in order**. It passes. It always would.
+
+⚠⚠ **The guard was never the subject of a decision.** It arrived inside `52ecb61`, *"hold-48:
+`emit_tile_jobs` length_min/length_max filter (#221)"* — a commit about a length band. A guard that
+lands as a side effect of another change gets the test that change needed, which is why the
+concurrent case was never written down as unasserted rather than as untested.
+
+⚠ **`scripts/task4_slice3.py` has the identical shape** at `_existing_run2` → `todo`: read, filter,
+write. Same defect, different table.
+
+#### 4. What is decided — and the two paths are NOT the same shape
+
+⚠⚠ **The tile identity can be constrained today. The Run-2 identity cannot, and this entry says so
+rather than implying a symmetry that does not exist.**
+
+**4a. Tile identity — a partial UNIQUE index, in `0014`.** Both keys live on one table:
+`jobs.inference_settings->>'parent_job_id'` and `->>'tile_index'`. ⚠ **Partial**, over
+`WHERE inference_settings ? 'tile_index'`, so it constrains tile jobs and no others.
+
+⚠ **The precedent is this repository's own.** Migration `0013` put a `UNIQUE
+(run_id, statistic, seer_site_id, sex)` on the burden figures *"so the loader physically cannot do
+what `F-021` recorded — a pure INSERT that took `protein_features` from 80 rows to 160 across two
+generations with nothing red."* **`F-077` is `F-021` in a different table**, and the answer is the
+one already ruled.
+
+**4b. Run-2 identity — NOT expressible as a single-table constraint, and it is owed as a design.**
+The identity is `(protein_analyses.input_value, jobs.inference_settings->>'run')` — **the accession
+is on one table and the run label on the other**, and the enqueue creates a fresh
+`ProteinAnalysis` per accession, so `analysis_id` is new every time and constrains nothing.
+
+⚠ Named, not invented: the candidates are a denormalised accession on `jobs`, or the run label
+recorded on `protein_analyses` so the pair lives on one row. **Neither is designed and neither is
+decided here.** ⚠⚠ The interim mitigation is a **transaction-scoped advisory lock**
+(`pg_advisory_xact_lock`) taken at the top of the enqueue, which serialises the read-then-write
+whatever the table shape — **owed, and deliberately NOT applied today because
+`scripts/task4_slice3.py` is mid-campaign.**
+
+**4c. The application filters STAY.** They are not the correctness boundary any more; they are what
+turns a would-be constraint violation into a clean *"nothing to enqueue"*. Removing them would make
+every ordinary re-run an error instead of a no-op.
+
+⚠⚠ **The constraint is the guard.** `D-159`'s identity check asks *which database am I writing to*;
+this asks *does this row already exist* — and unlike `D-159` it cannot be defeated by two copies of
+itself running at once, because the answer is the database's rather than the process's.
+
+#### 4d. ⚠⚠ CI will go green on a migration that cannot run against production
+
+`.github/workflows/gate.yml` runs `alembic upgrade head` against a **fresh service container**. A
+fresh database has no duplicate rows, so `CREATE UNIQUE INDEX` succeeds there **and would succeed
+there even if production could never take it.**
+
+⚠ **That is `F-056`'s class exactly** — the test substrate forgives what production rejects. It is
+recorded here because a green gate on `0014` is **not** evidence that the index can be created on
+the live cluster, and the only thing that establishes that is running it there. `fly.toml` has no
+`release_command`, so no deploy applies it silently; the owner runs it, by hand, after §5 step 1.
+
+#### 5. ⚠⚠ The index CANNOT be created until the duplicates are collapsed, and that ordering is the decision's teeth
+
+`CREATE UNIQUE INDEX` **fails** while jobs 3693 / 3695 / 3696 duplicate 3673 / 3674 / 3675.
+`F-077` established every pair is **byte-identical**, so either copy is the tile and the collapse
+destroys no evidence. Owed, in order:
+
+1. collapse the three duplicates — **owner at the keyboard** (`F-075`)
+2. create the unique indexes in an Alembic migration
+3. `alembic upgrade` against production — **owner at the keyboard**
+
+⚠ **The failure of step 2 is itself the check.** If the index will not build, a duplicate exists
+that nobody has looked at, and that is the finding — which is why this is a constraint and not a
+cleanup script.
+
+#### 6. ⚠ What this does NOT claim
+
+- **It does NOT say re-running an enqueue writes duplicates.** Measured 2026-09-15 on the live
+  cluster: re-running slice 3's `--enqueue` dry run after today's 1,097 rows reports
+  **`to enqueue: 0` — "nothing to enqueue; the band is already covered."** The sequential re-run is
+  a no-op and always was. ⚠⚠ **`PREWORK-2026-09-16.md` item 2 asserted the opposite and is
+  corrected**; the hazard is **concurrency**, not repetition.
+- **It does NOT establish who ran transaction B**, or why a 3-parent enqueue was started 146 s into
+  a 20-parent one. ⚠ **Unestablished and recorded as unestablished.** The remedy deliberately does
+  not depend on knowing — a unique index refuses the second write whatever started it.
+- **It does NOT touch `F-004`, `F-005` or `F-072`.** Hold-48 tiles enter none of them
+  (`F-077` §2, five modules say so in terms).
+
+---
+
 ### D-165 — Tile geometry is pinned so a fresh clone plans what a warm machine plans — 24 KB of DERIVED ends travel with the repository, and the 243 MB they came from does not
 
 - **Date:** 2026-09-15
@@ -217,12 +370,29 @@ them into the log is what converts an intention into a gate.**
    asserted: on 2026-09-13 the full rebuild ran **26,000+ seconds on a 20.91 GB context and had to
    be killed**; the `--image` redeploy took **under a minute**. A rebuild recompiles nothing that a
    secret change touches.
-3. ⚠⚠ **A documented blind spot in a safety system is a blocking defect under `D-074`, not a
-   comment.** `tests/_db_safety.py` named the tunnel hole in its own source, and the suite ran for
-   **27 more days**. The same sentence sits a third time in `scripts/taskb_pae_inventory.py:7`.
-   **Three written records, zero escalations.** `D-074` says a finding against an instrument stays
-   open until the instrument no longer exhibits the problem; **it had never been applied to a
-   SAFETY instrument**, and it should have been.
+3. ⚠⚠ **A documented blind spot is a blocking defect under `D-074`, not a comment.**
+   `tests/_db_safety.py` named the tunnel hole in its own source, and the suite ran for **27 more
+   days**. The same sentence sits a third time in `scripts/taskb_pae_inventory.py:7`. **Three
+   written records, zero escalations.** `D-074` says a finding against an instrument stays open
+   until the instrument no longer exhibits the problem; **it had never been applied to a SAFETY
+   instrument**, and it should have been.
+
+   ⚠⚠ **AMENDED 2026-09-15 — the rule is NOT about safety systems, and reading it as such is what
+   let it miss twice more in one day.** It was written *"a documented blind spot in a safety
+   system"*, and the qualifier was doing no work except excusing everything else. Two entries the
+   same day are the same rule on properties that are not safety properties:
+
+   | entry | the property | what the source already said |
+   |---|---|---|
+   | `D-165` | **determinism** — a fresh clone plans a different tiling than a warm machine | *"Empty when the cache file is absent — CI has no spancache (gitignored)"* |
+   | `D-166` | **idempotency** — a read-then-write enqueue guard defeated by concurrency | the guard's own test calls it **twice in order, on one session** |
+
+   ⚠ In each case the gap was written down and the consequence was not drawn. **The generalisation
+   is: a written-down limitation is an open finding wherever it sits — a safety instrument, a
+   determinism property, an idempotency property, or a docstring nobody escalated.** ⚠ The
+   `D-166` case is the sharpest, because the limitation was not even prose: it was a **test that
+   only ever exercised the sequential case**, which records the blind spot as precisely as a
+   comment would and is easier to mistake for coverage.
 4. **Use `127.0.0.1`, not `localhost`, in `DATABASE_URL` for tunnel connections** (IPv6 resolution).
    ⚠ **State the tension rather than leaving a reader to reconcile it:** rule 4 makes the connection
    *work*, while `127.0.0.1` sitting on the guard's trusted list is the hole that fired twice.
