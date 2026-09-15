@@ -1427,8 +1427,20 @@ S-002 Q1, now testable against a config that genuinely fits.
 - **⚠⚠ Campaign-write safety — every enqueue asks which database it holds (D-159):** `D-158`
   guards the *test suite*; it does nothing for the campaign scripts, which each build an engine from
   `DATABASE_URL` and write. `core/db_identity.assert_campaign_target()` runs before the first write
-  in `task4_slice1/2/3.py` and `task3_run2_folds.py`, and raises `WrongDatabase` having written
-  nothing.
+  of every owner-gated writer, and raises `WrongDatabase` having written nothing.
+  - **⚠⚠ The subjects are ENUMERATED, not listed (`F-079`).** The guard test used to police a
+    hand-written tuple of four scripts, which could not see the one irreversible `DELETE` in the tree
+    (`scripts/d166_collapse_duplicate_tiles.py`). `tests/test_d159_enqueue_identity.py` now takes
+    every git-tracked `scripts/*.py` carrying `--i-am-the-owner` whose code mutates (SQL statement
+    shapes, `s.add(`, `.commit()`; docstrings and comments blanked), and requires the call before the
+    first mutation. ⚠ **Named exceptions carry the owner's reason; an empty reason fails.** Ruled
+    2026-09-15: `backfill_run_label.py`, `census_ingest_features.py`, `clinical_ingest_edges.py` are
+    **TEMPORARY — owed the check**; `keel_mark_live_cluster.py` is the bootstrap of the check.
+  - **The collapse refuses three more things before it deletes (`F-079`):** a target it was not
+    handed by the operator (`--url`, never a port), any `claimed` job (a live fold; the `0014` index
+    build takes locks), and any row outside the delete set that references a row inside it —
+    foreign keys enumerated from `pg_constraint` (⚠ not `information_schema`, which shows only
+    tables the connected role owns), calibrated in the run on `jobs.analysis_id`.
   - **Identity first, population second.** The target must carry `keel_live_cluster` naming
     `kyzl60xz9zyrpj9g`. ⚠⚠ **A population floor cannot do this job alone:** the forensic cluster
     `zp2wjrej9lwodn4q` holds the same census — the live cluster was restored from its backup — so it
