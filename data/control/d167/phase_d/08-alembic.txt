@@ -1,0 +1,16 @@
+== target: 127.0.0.1:16391/pharmfoldmdk
+== alembic current (before)
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+0013_cancer_burden
+exit: 0
+== alembic upgrade head
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 0013_cancer_burden -> 0014_enqueue_identity_unique, Enqueue idempotency becomes a DATABASE constraint — `D-166`.
+exit: 0
+== alembic current (after)
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+0014_enqueue_identity_unique (head)
+exit: 0

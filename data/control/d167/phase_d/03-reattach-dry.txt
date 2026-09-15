@@ -1,0 +1,23 @@
+1. verify: every precondition met (40 directories, identity 37/37, pLDDT 40/40)
+2. probe calibrated: controls 200 with sha == capture, the 37 404
+ROLE PREAMBLE (D-167 amendment 1 §2, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+D-159: ACCEPTED (cluster identity, floor, anchor)
+siblings by structure_source: {'esmfold': 480}
+the 40 rows equal state_before.json column for column
+
+3. WHAT THE WRITE WOULD DO: 37 protein_analyses + 37 jobs rows
+   job 4869 -> analysis 4870  /data/artifacts/4869/structure.pdb  plddt 56.72  completed_at 2026-09-13T15:24:56.629153+00:00
+   job 4870 -> analysis 4871  /data/artifacts/4870/structure.pdb  plddt 54.06  completed_at 2026-09-13T15:25:16.657531+00:00
+   job 4871 -> analysis 4872  /data/artifacts/4871/structure.pdb  plddt 48.38  completed_at 2026-09-13T15:25:36.386648+00:00
+   {'job_id': '...'}
+   job 4905 -> analysis 4906  /data/artifacts/4905/structure.pdb  plddt 56.28  completed_at 2026-09-13T15:37:03.664793+00:00
+
+DRY RUN - nothing was written. Re-run with --i-am-the-owner. OWNER AT THE KEYBOARD (F-075).
+exit: 0
