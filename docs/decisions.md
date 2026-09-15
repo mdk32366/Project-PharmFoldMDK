@@ -116,10 +116,25 @@ is on one table and the run label on the other**, and the enqueue creates a fres
 
 ⚠ Named, not invented: the candidates are a denormalised accession on `jobs`, or the run label
 recorded on `protein_analyses` so the pair lives on one row. **Neither is designed and neither is
-decided here.** ⚠⚠ The interim mitigation is a **transaction-scoped advisory lock**
-(`pg_advisory_xact_lock`) taken at the top of the enqueue, which serialises the read-then-write
-whatever the table shape — **owed, and deliberately NOT applied today because
-`scripts/task4_slice3.py` is mid-campaign.**
+decided here.** ⚠ **Owner ruling: design it before slice 4 enqueues, not before slice 3 folds** —
+slice 3's rows are already written and the band is covered.
+
+**The interim, and it LANDED: `core/enqueue_lock.py`.** A **transaction-scoped** advisory lock
+(`pg_advisory_xact_lock`), taken by `core.hold48.emit_tile_jobs` and by
+`scripts.task3_run2_folds._existing_run2` — the shared helper every slice enqueue reaches its
+check-then-write through, so a new slice inherits it by calling the same function. ⚠
+`scripts/task4_slice3.py` is **not touched**; it is mid-campaign and it did not need to be.
+
+⚠⚠ **RECORD IT AS A PROCESS-LEVEL INTERIM, because that is the whole of what it is.** It
+serialises enqueues **that take it** and does **nothing at all** about one that does not. **The
+next enqueue path, written by someone who has not read this entry, will simply not call it — and
+that is the same shape as the check-then-write, one layer up.** A lock is a convention among
+callers; a constraint is a property of the data. Only §4a is the second kind.
+
+⚠ Two details are decisions rather than defaults: the lock is **transaction-scoped**, so a process
+that dies holding it cannot wedge every future enqueue (`pg_advisory_lock` can); and it **returns
+`False` on a non-Postgres engine rather than pretending**, because a test substrate reporting a
+protection it does not have is `F-056`'s class, which this project has already shipped once.
 
 **4c. The application filters STAY.** They are not the correctness boundary any more; they are what
 turns a would-be constraint violation into a clean *"nothing to enqueue"*. Removing them would make
@@ -146,9 +161,16 @@ the live cluster, and the only thing that establishes that is running it there. 
 `F-077` established every pair is **byte-identical**, so either copy is the tile and the collapse
 destroys no evidence. Owed, in order:
 
-1. collapse the three duplicates — **owner at the keyboard** (`F-075`)
-2. create the unique indexes in an Alembic migration
+1. collapse the three duplicates — **owner at the keyboard** (`F-075`), by
+   `scripts/d166_collapse_duplicate_tiles.py`. ⚠⚠ **It re-measures byte-identity in the run and
+   does not trust `F-077`** — a pair that is no longer identical is two different answers for one
+   identity, and collapsing it would destroy the evidence that decides which is right. ⚠ It
+   deletes **rows, never bytes**: the volume artifacts are left in place and named.
+2. ✅ the migration exists — `0014_enqueue_identity_unique`
 3. `alembic upgrade` against production — **owner at the keyboard**
+
+⚠ **Owner ruling: pair step 1 with `F-078`'s restore of the 37.** Both are owner writes against
+the same cluster, and one sitting costs less than two.
 
 ⚠ **The failure of step 2 is itself the check.** If the index will not build, a duplicate exists
 that nobody has looked at, and that is the finding — which is why this is a constraint and not a

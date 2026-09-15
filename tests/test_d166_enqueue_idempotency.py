@@ -160,3 +160,109 @@ def test_the_pointer_moved_in_this_commit_and_166_is_named_not_barred():
         text = q.read_text(encoding="utf-8")
         assert needle + ": **`D-167`**" in text, (
             f"{q.name} still pins the pointer at a spent integer")
+
+
+# ── the advisory lock: the INTERIM, and the tests say so in terms ──────────────────────────────
+
+def test_the_lock_is_transaction_scoped_and_never_session_scoped():
+    """⚠⚠ `pg_advisory_lock` survives the transaction and is released only by unlock or by the
+    session ending. A process that dies holding an enqueue lock would wedge every future enqueue
+    until someone went looking. `pg_advisory_xact_lock` is released by COMMIT or ROLLBACK."""
+    src = (REPO / "core" / "enqueue_lock.py").read_text(encoding="utf-8")
+    assert "pg_advisory_xact_lock" in src
+    assert "SELECT pg_advisory_lock(" not in src, (
+        "a session-scoped advisory lock can be leaked by a process that dies holding it")
+
+
+def test_the_lock_reports_FALSE_rather_than_pretending_on_a_substrate_without_it():
+    """⚠⚠ `F-056`'s class, which this project has already shipped once: the test substrate must
+    not report a protection it does not have. SQLite has no advisory locks."""
+    from core.enqueue_lock import RUN2_NAMESPACE, TILE_NAMESPACE, hold_enqueue_lock, lock_key
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    with Session(create_engine("sqlite://")) as s:
+        assert hold_enqueue_lock(s, TILE_NAMESPACE) is False, (
+            "the lock claims to have been taken on an engine that cannot take it")
+
+    # ⚠ Keys are DERIVED from the namespace, never hand-assigned: a hand-assigned integer is a
+    # second copy of a constant in the value that decides mutual exclusion (`F-014`'s class).
+    assert lock_key(TILE_NAMESPACE) != lock_key(RUN2_NAMESPACE), (
+        "two enqueue families collide into one lock and serialise for no reason")
+    for ns in (TILE_NAMESPACE, RUN2_NAMESPACE):
+        assert -(2 ** 63) <= lock_key(ns) < 2 ** 63, "key does not fit a Postgres bigint"
+        assert lock_key(ns) == lock_key(ns), "key is not stable across calls"
+
+
+def test_BOTH_check_then_write_paths_take_the_lock():
+    """⚠ The tile path and the Run-2 path are different code with the same defect. Wiring one and
+    not the other would leave the live campaign's path unguarded while reading as fixed."""
+    hold48 = (REPO / "core" / "hold48.py").read_text(encoding="utf-8")
+    assert "hold_enqueue_lock(session, TILE_NAMESPACE)" in hold48
+    assert hold48.index("hold_enqueue_lock(session, TILE_NAMESPACE)") < \
+        hold48.index("emitted_indices, emitted_windows = _emitted_tile_idents"), (
+        "the lock is taken AFTER the read it is supposed to serialise")
+
+    run2 = (REPO / "scripts" / "task3_run2_folds.py").read_text(encoding="utf-8")
+    assert "hold_enqueue_lock(session, RUN2_NAMESPACE)" in run2, (
+        "the Run-2 slice enqueues reach their check-then-write unserialised")
+
+
+def test_the_entry_records_the_lock_as_a_PROCESS_LEVEL_interim():
+    """⚠⚠ THE OVER-CLAIM GUARD FOR THE MITIGATION ITSELF.
+
+    A lock is a convention among callers; a constraint is a property of the data. The next enqueue
+    path, written by someone who has not read `D-166`, will simply not call it — which is the same
+    shape as the check-then-write, one layer up. An entry that presented the lock as the fix would
+    make the unconstrained Run-2 path read as safe.
+    """
+    body = DECISIONS.split("### D-166", 1)[1].split("\n### D-165", 1)[0]
+    assert "process-level" in body.lower(), "the entry does not bound what the lock is"
+    assert "will simply not call it" in body, (
+        "the entry does not name the way the interim fails")
+    src = (REPO / "core" / "enqueue_lock.py").read_text(encoding="utf-8")
+    assert "NOT a constraint" in src, "the module does not say what it is not"
+
+
+# ── the collapse: an owner-gated destructive write that re-measures rather than trusts ─────────
+
+def test_the_collapse_REMEASURES_and_does_not_trust_F077():
+    """⚠⚠ `F-077` measured byte-identity on 2026-09-15. Acting on a measurement after it stopped
+    being checkable is the shape this project keeps paying for — `D-166` exists because a
+    completion timestamp was read as an enqueue timestamp. The collapse hashes both artifacts in
+    its own run, and a single mismatch refuses everything."""
+    src = (REPO / "scripts" / "d166_collapse_duplicate_tiles.py").read_text(encoding="utf-8")
+    assert "hashlib.sha256" in src, "the collapse does not hash anything"
+    assert "not trusting F-077" in src or "does not trust" in src
+    assert "DIFFERENT" in src and "return 1" in src, (
+        "a non-identical pair does not stop the run")
+
+
+def test_the_collapse_deletes_ROWS_and_never_BYTES():
+    """⚠ A row can be re-derived from an artifact. An artifact deleted on a guess cannot be
+    re-derived from anything."""
+    src = (REPO / "scripts" / "d166_collapse_duplicate_tiles.py").read_text(encoding="utf-8")
+    assert "DELETE FROM jobs" in src and "DELETE FROM protein_analyses" in src
+    for forbidden in ("os.remove", "unlink", "shutil.rmtree", "_remove_files"):
+        assert forbidden not in src, f"the collapse deletes bytes via {forbidden}"
+    assert "LEFT IN PLACE" in src, "the surviving artifact files are not named"
+
+
+def test_the_collapse_is_owner_gated_and_refuses_an_unexpected_duplicate_set():
+    """⚠ `F-075`: an authenticated session is not an attestation. ⚠⚠ And a FOURTH duplicate is a
+    new finding, not something to sweep up in passing — the script refuses rather than widening."""
+    src = (REPO / "scripts" / "d166_collapse_duplicate_tiles.py").read_text(encoding="utf-8")
+    assert '"--i-am-the-owner" in sys.argv' in src
+    assert "F-075" in src, "the gate does not name the finding that requires it"
+    assert "live != EXPECTED" in src, "the script does not check WHICH duplicates it found"
+    assert "again != EXPECTED" in src, (
+        "the write does not re-check inside its own transaction — the very defect D-166 records")
+
+
+def test_the_prework_pairs_the_two_owner_writes():
+    """⚠ Both are owner writes against the same cluster. Two sittings cost more than one, and the
+    second is the one that gets postponed."""
+    prework = (REPO / "docs" / "PREWORK-2026-09-16.md").read_text(encoding="utf-8")
+    assert "d166_collapse_duplicate_tiles.py" in prework, (
+        "the duplicate collapse is not queued beside the 37")
+    assert "f078_null_tier_the_37.py" in prework

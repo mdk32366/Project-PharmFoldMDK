@@ -317,6 +317,42 @@ rows, still names both writes in order, and still explains why nothing else is w
 ⚠ **That test is deleted in the commit that pays the debt**, and its removal is the record.
 
 
+#### F-078 amendment 1 — ⚠ The boundary's provenance, checked rather than assumed: it is DATABASE-derived, the backup label corroborates it, and the label itself is no longer re-readable
+
+- **Date:** 2026-09-15 · **How known (`D-016`):** `fly mpg backup list` on both clusters; the Unix
+  epoch decoded out of the backup identifier; the `4868`/`4869` cut already in §4.
+
+⚠ **Occasioned by a different question.** A date convention was queried, and the owner's ruling was
+that if document dating is uncertain then the incident timestamps must be shown to come from the
+database and Fly rather than from a document. **They do, and here is the demonstration.**
+
+**1. The boundary this finding rests on is DATABASE-derived, not label-derived.** §4's cut is
+`job 4868 completed 15:24:36.578Z` (survived) against `job 4869 claimed 15:24:36.642Z` (lost),
+**64 ms apart**, read off `jobs`. ⚠ **The backup's label is not load-bearing for the finding** —
+remove it entirely and the contiguous cut still stands.
+
+**2. The label is corroborated, and the obvious alternative reading is RULED OUT.** The identifier
+`backup_1789312967_d0f89bdd9e16aed5` carries a Unix epoch, and `1789312967` decodes to
+**2026-09-13T15:22:47Z** — *not* the `15:24:33Z` this finding reports. ⚠ That is not a discrepancy:
+measured against four backups where both are readable, Fly's own `START` column runs **+3 s to
++103 s after** the epoch in the identifier, so `15:24:33Z` is a `START` value and `15:22:47Z` is
+not.
+
+⚠⚠ **And the database settles it.** A row committed at `15:24:36.578Z` **survived** the backup. If
+the backup had been taken at `15:22:47Z`, a write 109 seconds later could not have been captured.
+**The epoch reading is impossible against the evidence; the reported value is consistent with it.**
+
+**3. ⚠ What can no longer be re-read, stated rather than glossed.** `fly mpg backup list` returns
+**25 rows** and no longer reaches 2026-09-13 on either cluster, so the authoritative `START` for
+`backup_1789312967_...` **cannot be fetched today.** The value stands on the contemporaneous
+reading plus the two checks above. ⚠ **§3's "42 seconds after the backup" is a derived precision
+that inherits this** — the *direction* is unaffected (the 37 begin at `15:25:15Z`, after the
+boundary on any reading), but the *interval* rests on a number that is no longer verifiable at
+source.
+
+⚠ **Recorded, not repaired.** The right fix is forward-only: an incident that names a Fly artifact
+should capture that artifact's own output at the time, because a listing window closes.
+
 ### F-076 — ⚠⚠ Five tests asserted tile geometry while the input to that geometry was read from a GITIGNORED cache — so the same assertions asserted different science on different machines, green in CI and red locally, and the difference was read for two days as a numeric disagreement
 
 - **Date:** 2026-09-15 · **Status:** ⚠ **CLOSED for the test surface; OPEN as a question about the
