@@ -429,60 +429,54 @@ def report() -> int:
             print(f"    This is a FOURTH measured point and it lands in the gap where the")
             print(f"    three jump by a factor of five. It confirms none of them.")
     print("\n! SLICE 5 IS NOT AUTHORISED. Report the harvest; the owner rules.")
-    owed_restore_notice()
+    f078_paid_notice()
     return 0
 
 
-#: !! THE OWED RESTORE, PRINTED WHERE THE OPERATOR WILL ACTUALLY BE (F-078 amendment 1).
+#: !! THE HISTORY, KEPT, AND THE PROHIBITION THAT OUTLIVES IT (F-078 amendments 1, 2 and 3).
 #: Order B set slice 2 37 lost rows to tier NULL so slice 3 1,097 could be the only claimable
-#: population. Slice 3 folded 1097/1097 on 2026-09-15 and THE DEBT IS STILL OPEN.
-#: A NULL-tier job is claimable by NOBODY and `refuse_on_strangers` deliberately does not
-#: count one - so if the restore is forgotten it is forgotten SILENTLY, and slice 2 stays
-#: 480/517 for ever. That is the same shape as everything F-078 records: a loss no check
-#: watches. ! So the reminder lives in `--report`, the command run at the moment the fold
-#: ends, rather than in a document someone has to remember to open.
-#: !! AND IT NOW CARRIES A SECOND WARNING THAT IS SPECIFIC TO THIS SLICE: restoring the 37
-#: to tier `local` while these 600 are pending makes BOTH populations claimable at once,
-#: which contaminates the per-band transport term this campaign exists to measure. Fold the
-#: 37 as their own bounded population first, or leave them NULL until this slice finishes.
-#: !! F-078 amendment 2 (2026-09-15): the 37 FOLDS were never lost - only their database rows. The
-#: artifacts are on the volume, identity 37/37. A re-fold would overwrite them, so the notice no
-#: longer prints restore-and-re-fold steps. The ordering warning survives for the re-fold branch.
-OWED_RESTORE = [
+#: population. Slice 3 folded 1097/1097 on 2026-09-15. A NULL-tier job is claimable by NOBODY
+#: and `refuse_on_strangers` deliberately does not count one - so while the debt stood, it
+#: stood SILENTLY, and this notice was the only guard.
+#: !! THE ORDERING WARNING THIS SLICE CARRIED: restoring the 37 to tier `local` while these 600
+#: are pending would make BOTH populations claimable at once, which contaminates the per-band
+#: transport term this campaign exists to measure. ! Re-attach made nothing claimable, so the
+#: term is uncontaminated - the warning is recorded because it governed the choice, and it
+#: applies again to any future re-fold branch.
+#: !! F-078 amendment 2 (2026-09-15): the 37 FOLDS were never lost - only their database rows.
+#: The artifacts were on the volume all along, identity 37/37, and a re-fold would overwrite them.
+#: !! F-078 amendment 3 / D-167 (2026-09-15): the owner ruled RE-ATTACH and ran it. The debt is
+#: PAID - the database witness reads 480 -> 517. ! The re-fold prohibition is NOT lifted with it.
+F078_PAID_NOTICE = [
     "",
     "=" * 78,
-    "!! OWED, AND NOT YET DONE: SLICE 2's 37 (F-078 amendments 1 and 2)",
+    "PAID 2026-09-15: SLICE 2's 37 ARE RE-ATTACHED (D-167; F-078 amendment 3)",
     "=" * 78,
-    "  Jobs 4869-4905 were set tier NULL on 2026-09-15 so slice 3 could be the only claimable",
-    "  population. Slice 3 folded 1097/1097 the same day. THE DEBT IS STILL OPEN.",
+    "  Jobs 4869-4905 lost their DATABASE rows at the 2026-09-13 cut. Stated from the database",
+    "  because that is the leg that stays verifiable (F-078 amendment 1): job 4868 completed",
+    "  15:24:36.578Z and SURVIVED; job 4869 was claimed 64 ms later and its row did not.",
+    "  Their folds were never lost - all 37 artifacts were on the volume, identity 37/37",
+    "  (scripts/f078_identity_check.py).",
     "",
-    "  The cut, stated from the database because that is the leg that stays verifiable",
-    "  (F-078 amendment 1): job 4868 completed 15:24:36.578Z and SURVIVED; job 4869 was",
-    "  claimed 64 ms later and its DATABASE ROW did not.",
+    "  The owner ruled RE-ATTACH and ran it on 2026-09-15: the 37 rows were linked to those",
+    "  artifacts. No GPU, and NOTHING BECAME CLAIMABLE - so this slice's per-band transport",
+    "  term is uncontaminated by them.",
     "",
-    "  !! THEIR FOLDS WERE NOT LOST (F-078 amendment 2). All 37 artifacts are on the volume;",
-    "  sizes match progress.csv 37/37 and identity is 37/37 (scripts/f078_identity_check.py).",
+    "  WITNESS - the DATABASE, never this file's progress.csv (F-080):",
+    "    python scripts/d167_reattach.py --url <tunnel> --witness",
+    "    jobs 4389-4905, complete AND pdb_path IS NOT NULL: 480 before -> 517 after.",
     "",
-    "  !! DO NOT RE-FOLD THEM, AND DO NOT RUN f078_null_tier_the_37.py --restore.",
+    "  !! STILL FORBIDDEN, AND IT OUTLIVES THE DEBT:",
+    "  DO NOT RE-FOLD THE 37, AND DO NOT RUN f078_null_tier_the_37.py --restore.",
     "  A re-fold uploads into the same /data/artifacts/{job_id}/ directories and overwrites",
-    "  the verified bytes. The script refuses --restore for exactly that reason.",
-    "",
-    "  Owed instead: the OWNER rules re-attach (link the existing artifacts to the 37 rows)",
-    "  or re-fold. The rows stay tier NULL until that ruling is written.",
-    "",
-    "  ! A NULL-tier job is claimed by nobody and the stranger guard does not count it, so",
-    "  nothing else in this system will ever raise its hand about these rows. This notice IS",
-    "  the guard. Do not delete it until slice 2 reads 517/517.",
-    "",
-    "  !! ORDERING, IF THE RULING IS RE-FOLD: making the 37 claimable while slice 4's 600 are",
-    "  pending puts BOTH populations in one claimable pool, which contaminates the per-band",
-    "  transport term this campaign exists to measure. Re-attach makes nothing claimable.",
+    "  the verified bytes those rows now point at. --restore stays refused, and",
+    "  tests/test_f078_restore_refused.py pins the refusal.",
     "=" * 78,
 ]
 
 
-def owed_restore_notice() -> None:
-    for line in OWED_RESTORE:
+def f078_paid_notice() -> None:
+    for line in F078_PAID_NOTICE:
         print(line)
 
 

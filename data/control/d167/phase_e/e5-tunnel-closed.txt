@@ -1,0 +1,10 @@
+# D-167 Phase E read, close: tunnel closed and window B cleaned (D-162 rule 5; ORDERS A4.3, A6)
+# Session 2026-09-15 America/Los_Angeles (PDT).
+
+## owner's statement
+Window B: Removed.  Window A: Tunnel Closed.
+(window B: Remove-Variable url; Remove-Item Env:PYTHONUTF8 — window A: fly mpg proxy stopped)
+
+## local verification (read by Code, 2026-09-15T22:15:33Z)
+listeners on 16300-16499: 0
+fly/flyctl processes: 14960 flyctl.exe agent run (the Fly agent, not a proxy); pid 22464 (fly.exe mpg proxy kyzl60xz9zyrpj9g -p 16391) is gone

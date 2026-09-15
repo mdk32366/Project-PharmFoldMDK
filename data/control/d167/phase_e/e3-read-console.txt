@@ -1,0 +1,47 @@
+==============================================================================
+D-167 PHASE E READ (read-only transaction; role, then D-159)
+==============================================================================
+ROLE PREAMBLE (D-167 amendment 1 §2, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+  cluster_marker          : kyzl60xz9zyrpj9g
+  current_database        : pharmfoldmdk
+  current_user            : schema_admin
+  server_now_utc          : 2026-09-15 22:10:21.660808+00:00
+  transaction_read_only   : on
+
+census row-keyed: 3648  (baseline 3651, expected 3648)
+  verdict: expected  stop: False  -- all 3 dropped rows were in the key ((3696,) measured, [3693, 3695] inferred)
+census identity-keyed: 3576
+  identities holding more than one complete run-1 row: 50 (first shown)
+    {'accession': 'O00478', 'tile_start': None, 'tile_end': None, 'job_ids': [4, 2027]}
+
+  [MET] 1. DUPLICATES_SQL returns no row
+        measured {}   expected {}
+  [MET] 2. census row-keyed (run '1' AND complete) against the pre-registered table
+        measured {'reading': 3648, 'verdict': 'expected'}   expected 'expected or named_category'
+  [NOT MET] 3. census identity-keyed equals row-keyed
+        measured 3576   expected 3648
+  [MET] 4. every complete run-1 row holds a pdb_path
+        measured 3648   expected 3648
+  [MET] 4. run-1 rows not complete, by status
+        measured {'failed': 2, 'pending': 3}   expected {'failed': 2, 'pending': 3}
+  [MET] 4. failed run-1 accessions
+        measured ['P11717', 'P55073']   expected ['P11717', 'P55073']
+  [MET] 5. keep rows 3673, 3674, 3675 complete with a pdb_path
+        measured [(3673, 'complete', True), (3674, 'complete', True), (3675, 'complete', True)]   expected [(3673, 'complete', True), (3674, 'complete', True), (3675, 'complete', True)]
+  [MET] 6. alembic_version
+        measured '0014_enqueue_identity_unique'   expected '0014_enqueue_identity_unique'
+  [MET] 7. drop rows 3693, 3695, 3696 absent from jobs and protein_analyses
+        measured {'jobs': [], 'protein_analyses': []}   expected {'jobs': [], 'protein_analyses': []}
+
+written : C:\Projects\Project-PharmFoldMDK\data\control\d167\phase_e_read.json
+sha256  : 4d8b48861743f2e7804b937b89a81a45081ffed80ec0c524cb4612b7b69d10ec
+
+1 expectation(s) NOT MET. STOP and report (A8.3). This script does not interpret the reading.
+exit: 2

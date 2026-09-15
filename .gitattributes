@@ -198,3 +198,22 @@ db/migrations/versions/0012_census_structural_rank.py -text
 scripts/census_structural_rank.py                -text
 scripts/tranche6_runs.py                         -text
 ui/src/components/MethodNote.jsx                 -text
+
+# -- 2026-09-15 -- D-167's evidence, protected AT LANDING rather than after a mismatch (ORDERS A8.5)
+#
+# !! Each of these is verified by an authored sha256 that a reader is expected to re-derive:
+#   state_before.json  b825065d... the Phase B read, quoted in D-167 and in the sitting report
+#   capture.json       88820b82... printed by the machine, checked by --capture-sha before the write
+#   phase_e_read.json  4d8b4886... printed by the Phase E read
+# A Windows checkout under core.autocrlf would rewrite them and their pins would fail on disk while
+# the blobs stayed intact - F-047 member 15, the defect this file exists for, on the evidence that
+# a production write rests on.
+#
+# ! The directory glob covers the sitting's console logs too, so a log quoted by hash later cannot
+# drift. The three hash-pinned files are ALSO listed by name: the byte-for-byte guard in
+# tests/test_pinned_artifacts_are_eol_protected.py enumerates paths from this file, and a glob would
+# be skipped as "not present" rather than checked.
+data/control/d167/**                   -text
+data/control/d167/capture.json         -text
+data/control/d167/state_before.json    -text
+data/control/d167/phase_e_read.json    -text

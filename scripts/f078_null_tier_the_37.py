@@ -18,11 +18,16 @@ invented; `KNOWN_TIERS` is a `D-107` matter and this is not that.
 
 ⚠⚠ **THE DEBT THIS CREATES IS SILENT, AND THAT IS THE WHOLE RISK.** `refuse_on_strangers`
 deliberately does not count a NULL-tier row, so **nothing in this system will ever raise its hand
-about these 37 again.** If the restore is forgotten, slice 2 stays 480/517 for ever. The guard is
-`scripts/task4_slice3.py --report`, which prints the debt at the moment the fold ends, and
-`tests/test_f078_owed_restore.py`, which asserts that notice stays wired in.
+about these 37 again.** While the debt stood, the guard was `scripts/task4_slice3.py --report`,
+which printed it at the moment the fold ends.
 
-**Done looks like slice 2 reading 517/517.**
+⚠⚠ **THE DEBT IS PAID (`D-167` / `F-078` amendment 3, 2026-09-15).** The owner ruled **re-attach**,
+not re-fold: the 37 rows were linked to the artifacts that were on the volume all along, and the
+database witness reads **480 → 517** (`scripts/d167_reattach.py --url <tunnel> --witness`).
+
+⚠ **`--restore` stays refused anyway** — a re-fold would overwrite the verified bytes those rows now
+point at. `tests/test_f078_restore_refused.py` pins that refusal, and the `--report` notices now
+record the payment while keeping the prohibition.
 
 ⚠ This is a **production write** and it is owner-gated. `F-075` records what happens when that gate
 is passed by anyone other than the owner: a Planner instruction cannot discharge it, and an
@@ -152,8 +157,6 @@ def main(argv: list[str] | None = None) -> int:
                     {"a": FIRST_JOB, "b": LAST_JOB}).rowcount
                 print(f"\nrestored tier 'local' on {n} rows.")
                 print("The 37 are claimable again. Run --preflight, then fold them.")
-                print("⚠ When slice 2 reads 517/517, delete tests/test_f078_owed_restore.py")
-                print("  in the same commit - its removal is the record that the debt was paid.")
             else:
                 a = conn.execute(text(
                     "UPDATE jobs SET status = 'pending', claimed_at = NULL, worker_id = NULL"
@@ -165,8 +168,10 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"\nwrote: {a} row claimed -> pending, {b} rows tier -> NULL.")
                 print("The 37 are now claimable by NOBODY. Slice 3 is the only claimable")
                 print("population, so --preflight will pass.")
-                print("\n⚠⚠ A DEBT IS NOW OUTSTANDING. `--report` prints it when the fold ends;")
-                print("   pay it with `--restore --i-am-the-owner`. Done is slice 2 at 517/517.")
+                print("\n⚠⚠ A DEBT IS NOW OUTSTANDING. `--report` prints it when the fold ends.")
+                print("   It was PAID on 2026-09-15 by RE-ATTACH (D-167), never by --restore:")
+                print("   scripts/d167_reattach.py, database witness 480 -> 517.")
+                print("   ⚠ --restore stays refused - a re-fold overwrites the verified bytes.")
         return 0
     finally:
         eng.dispose()
