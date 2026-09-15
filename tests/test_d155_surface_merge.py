@@ -249,16 +249,16 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert 155 in ids, "this entry did not claim its own integer"
     assert 154 in ids and 152 in ids, "the entries this one builds on must still be named"
     # ⚠ 156 is ADDED as SPENT by the KEEL five-document split entry — the FIFTEENTH resolution
-    # by enumeration and never by a `>=`; `### D-167` now takes the bar. 148 stays a held hole.
+    # by enumeration and never by a `>=`; `### D-168` now takes the bar. 148 stays a held hole.
     assert 156 in ids, "D-156 claimed this integer when it split the log into five documents"
     # D-157 spent 157 (the Run 2 scope correction: 2,572 not 2,691): ADDED by name, and
-    # `### D-167` takes the bar. Never relaxed to a `>=`.
+    # `### D-168` takes the bar. Never relaxed to a `>=`.
     assert 157 in ids, "D-157 claimed this integer"
     # ⚠ 148 stays the trafficking hold; 164 is SPENT by the cost-stamp disclosure and is
-    # NAMED above, so `### D-167` takes the next-free bar. Never relaxed to a `>=`.
+    # NAMED above, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
     # ⚠ 148 stays the trafficking hold; 165 is SPENT by the spancache pin and is NAMED
-    # below, so `### D-167` takes the next-free bar. Never relaxed to a `>=`.
-    assert 148 not in ids and 167 not in ids
+    # below, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
+    assert 148 not in ids and 168 not in ids
     # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
     # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
@@ -277,10 +277,11 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert 164 in ids, "D-164 claimed this integer (the cost-stamp disclosure)"
     assert 165 in ids, "D-165 claimed this integer (the spancache pin)"
     assert 166 in ids, "D-166 claimed this integer (the enqueue-idempotency constraint)"
-    assert 167 not in ids, (
+    assert 167 in ids, "D-167 claimed this integer (the re-attach of slice 2's 37)"
+    assert 168 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG
-    assert "\n### D-167" not in LOG, (
+    assert "\n### D-168" not in LOG, (
         "D-164 is the next free integer and must stay unspent until an entry claims it by name — "
         "never admitted by a `>=`")
 
@@ -291,7 +292,7 @@ def test_the_reserved_map_retires_155_marker_safe_and_the_pointer_moves_here():
     assert "WRITTEN" in row and "Original reservation text" in row
     assert re.search(r"^\| \*\*D-156\*\*", RESERVED, re.M), "the bar moved to 156 with no row"
     assert not re.search(r"^\| ~~\*\*D-15[56]\*\*~~", RESERVED, re.M)
-    assert "Next free `D-` integer: **`D-167`**" in RESERVED
+    assert "Next free `D-` integer: **`D-168`**" in RESERVED
     for spent in ("D-152", "D-153", "D-154", "D-155"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED
 

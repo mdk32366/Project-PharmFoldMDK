@@ -278,7 +278,9 @@ def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
     # incident-closeout wave RESERVED F-073 and moved it again in the commit that reserved it.
     # ⚠ 80, not 79: F-079 (the collapse script without D-159's identity check) spent 079 on
     # 2026-09-15 and moved the pointer in the same commit. MOVED by name, never relaxed.
-    assert pointer == 80
+    # ⚠ 81, not 80: F-080 (the slice-2 report that cannot fail) spent 080 on 2026-09-15 and moved
+    # the pointer in the same commit. MOVED by name, never relaxed.
+    assert pointer == 81
     # Spent 2026-09-11, each with the pointer moved in its own commit: F-068 (the fold-path
     # asymmetry) and F-069 (the short-span population) together, then F-070 (the silently empty
     # structure panel), then F-071 (category E is the no_topology breakout). F-072 (Branch A,
@@ -287,4 +289,5 @@ def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
     # incident-closeout wave, spending the integer this file had been watching stay reserved. The
     # pin is MOVED by name, never relaxed to a `>=`, which is what tells a spent id from a free one.
     # ⚠ 79, not 78: F-079 written 2026-09-15. ADDED by name, not relaxed.
-    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 79
+    # ⚠ 80, not 79: F-080 written 2026-09-15. ADDED by name, not relaxed.
+    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 80

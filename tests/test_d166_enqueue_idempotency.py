@@ -118,7 +118,9 @@ def test_the_headline_leads_with_determinism_not_with_the_duplicates():
 def test_the_pointer_moved_in_this_commit_and_166_is_named_not_barred():
     """⚠⚠ The allocator discipline: the pointer moves in the SAME commit that spends the integer,
     and every next-free guard names the spent integer rather than relaxing to a `>=`."""
-    assert "Next free `D-` integer: **`D-167`**" in RESERVED
+    # ⚠ D-167 (the re-attach of slice 2's 37) spent 167 and moved the pointer in its own commit;
+    # the pin is MOVED by name, and the superseded D-166 note stays in the chain.
+    assert "Next free `D-` integer: **`D-168`**" in RESERVED
     assert "it read **`D-166`**" in RESERVED, (
         "the superseded pointer value was overwritten in silence — D-129-C")
     assert "| **D-166** |" in RESERVED, "D-166 has no row in the allocator"
@@ -158,7 +160,7 @@ def test_the_pointer_moved_in_this_commit_and_166_is_named_not_barred():
     assert len(pointer) == 9, f"{len(pointer)} files pin the D- pointer, expected 9"
     for q in pointer:
         text = q.read_text(encoding="utf-8")
-        assert needle + ": **`D-167`**" in text, (
+        assert needle + ": **`D-168`**" in text, (
             f"{q.name} still pins the pointer at a spent integer")
 
 
