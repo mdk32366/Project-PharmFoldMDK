@@ -1,0 +1,637 @@
+{
+  "expectations": [
+    {
+      "expected": {},
+      "key": "1. DUPLICATES_SQL returns no row",
+      "measured": {},
+      "met": true
+    },
+    {
+      "expected": "expected or named_category",
+      "key": "2. census row-keyed (run '1' AND complete) against the pre-registered table",
+      "measured": {
+        "reading": 3648,
+        "verdict": "expected"
+      },
+      "met": true
+    },
+    {
+      "expected": 3648,
+      "key": "3. census identity-keyed equals row-keyed",
+      "measured": 3576,
+      "met": false
+    },
+    {
+      "expected": 3648,
+      "key": "4. every complete run-1 row holds a pdb_path",
+      "measured": 3648,
+      "met": true
+    },
+    {
+      "expected": {
+        "failed": 2,
+        "pending": 3
+      },
+      "key": "4. run-1 rows not complete, by status",
+      "measured": {
+        "failed": 2,
+        "pending": 3
+      },
+      "met": true
+    },
+    {
+      "expected": [
+        "P11717",
+        "P55073"
+      ],
+      "key": "4. failed run-1 accessions",
+      "measured": [
+        "P11717",
+        "P55073"
+      ],
+      "met": true
+    },
+    {
+      "expected": [
+        [
+          3673,
+          "complete",
+          true
+        ],
+        [
+          3674,
+          "complete",
+          true
+        ],
+        [
+          3675,
+          "complete",
+          true
+        ]
+      ],
+      "key": "5. keep rows 3673, 3674, 3675 complete with a pdb_path",
+      "measured": [
+        [
+          3673,
+          "complete",
+          true
+        ],
+        [
+          3674,
+          "complete",
+          true
+        ],
+        [
+          3675,
+          "complete",
+          true
+        ]
+      ],
+      "met": true
+    },
+    {
+      "expected": "0014_enqueue_identity_unique",
+      "key": "6. alembic_version",
+      "measured": "0014_enqueue_identity_unique",
+      "met": true
+    },
+    {
+      "expected": {
+        "jobs": [],
+        "protein_analyses": []
+      },
+      "key": "7. drop rows 3693, 3695, 3696 absent from jobs and protein_analyses",
+      "measured": {
+        "jobs": [],
+        "protein_analyses": []
+      },
+      "met": true
+    }
+  ],
+  "identity": {
+    "cluster_marker": "kyzl60xz9zyrpj9g",
+    "current_database": "pharmfoldmdk",
+    "current_user": "schema_admin",
+    "server_now_utc": "2026-09-15 22:10:21.660808+00:00",
+    "transaction_read_only": "on"
+  },
+  "provenance": {
+    "branch": "d167-phase-e-evidence",
+    "commit": "66b7ca1d958293cd37ac7d424e7bfd5a80e2af1e",
+    "read_at_utc": "2026-09-15T22:10:21.820841+00:00",
+    "script": "scripts/d167_phase_e_read.py",
+    "target": "127.0.0.1:16391/pharmfoldmdk",
+    "tracked_files_clean": true,
+    "url_username": "pharmfoldmdk-app"
+  },
+  "readings": {
+    "alembic_version": "0014_enqueue_identity_unique",
+    "census_classification": {
+      "baseline": 3651,
+      "candidates": [],
+      "drops_outside_key": 0,
+      "expected": 3648,
+      "meaning": "all 3 dropped rows were in the key ((3696,) measured, [3693, 3695] inferred)",
+      "reading": 3648,
+      "stop": false,
+      "verdict": "expected"
+    },
+    "census_identity_keyed": 3576,
+    "census_row_keyed": 3648,
+    "drop_rows_present": {
+      "jobs": [],
+      "protein_analyses": []
+    },
+    "duplicates": {},
+    "identity_groups_with_more_than_one_row": [
+      {
+        "accession": "O00478",
+        "job_ids": [
+          4,
+          2027
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O00592",
+        "job_ids": [
+          24,
+          2496
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O14798",
+        "job_ids": [
+          38,
+          2100
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O15455",
+        "job_ids": [
+          78,
+          3006
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O60245",
+        "job_ids": [
+          71,
+          3009
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O60637",
+        "job_ids": [
+          40,
+          1720
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O75581",
+        "job_ids": [
+          63,
+          2943
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O75841",
+        "job_ids": [
+          42,
+          1577
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O75954",
+        "job_ids": [
+          41,
+          1410
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O95196",
+        "job_ids": [
+          11,
+          2530
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O95832",
+        "job_ids": [
+          10,
+          1462
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "O95858",
+        "job_ids": [
+          39,
+          1600
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P00533",
+        "job_ids": [
+          48,
+          3077
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P04626",
+        "job_ids": [
+          52,
+          3187
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P06213",
+        "job_ids": [
+          58,
+          2850
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P07333",
+        "job_ids": [
+          47,
+          3031
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P08195",
+        "job_ids": [
+          32,
+          2756
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P09619",
+        "job_ids": [
+          72,
+          3587
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P09693",
+        "job_ids": [
+          7,
+          1512
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P13591",
+        "job_ids": [
+          68,
+          3174
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P17948",
+        "job_ids": [
+          53,
+          3310
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P18084",
+        "job_ids": [
+          59,
+          2965
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P19397",
+        "job_ids": [
+          8,
+          1667
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P22607",
+        "job_ids": [
+          15,
+          2720
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P23471",
+        "job_ids": [
+          73,
+          2829
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P24530",
+        "job_ids": [
+          13,
+          1528
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P32302",
+        "job_ids": [
+          12,
+          1768
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P35052",
+        "job_ids": [
+          55,
+          3123
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P37088",
+        "job_ids": [
+          74,
+          3478
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P42081",
+        "job_ids": [
+          9,
+          2085
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P49961",
+        "job_ids": [
+          50,
+          2977
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P50281",
+        "job_ids": [
+          23,
+          2480
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P51810",
+        "job_ids": [
+          17,
+          138
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P54764",
+        "job_ids": [
+          51,
+          3460
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P55064",
+        "job_ids": [
+          2,
+          849
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P55287",
+        "job_ids": [
+          45,
+          3370
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P78504",
+        "job_ids": [
+          60,
+          2848
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "P78536",
+        "job_ids": [
+          43,
+          3215
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q01814",
+        "job_ids": [
+          3,
+          610
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q04721",
+        "job_ids": [
+          69,
+          3007
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q05586",
+        "job_ids": [
+          56,
+          3447
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q12866",
+        "job_ids": [
+          66,
+          3046
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q13421",
+        "job_ids": [
+          67,
+          2677
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q13433",
+        "job_ids": [
+          31,
+          1969
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q14CZ8",
+        "job_ids": [
+          20,
+          2404
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q15858",
+        "job_ids": [
+          25,
+          1910
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q16819",
+        "job_ids": [
+          65,
+          3341
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q3KNW5",
+        "job_ids": [
+          26,
+          237
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q53GD3",
+        "job_ids": [
+          33,
+          2196
+        ],
+        "tile_end": null,
+        "tile_start": null
+      },
+      {
+        "accession": "Q5BKX6",
+        "job_ids": [
+          34,
+          1239
+        ],
+        "tile_end": null,
+        "tile_start": null
+      }
+    ],
+    "keep_rows": [
+      {
+        "has_pdb_path": true,
+        "job_id": 3673,
+        "status": "complete"
+      },
+      {
+        "has_pdb_path": true,
+        "job_id": 3674,
+        "status": "complete"
+      },
+      {
+        "has_pdb_path": true,
+        "job_id": 3675,
+        "status": "complete"
+      }
+    ],
+    "run1_complete_with_pdb_path": 3648,
+    "run1_failed_accessions": [
+      "P11717",
+      "P55073"
+    ],
+    "run1_noncomplete_by_status": {
+      "failed": 2,
+      "pending": 3
+    },
+    "run1_total": 3653
+  },
+  "role": {
+    "can_build_jobs_index": true,
+    "current_user": "schema_admin",
+    "jobs_owner": "schema_admin",
+    "rolconfig": [
+      "role=schema_admin"
+    ],
+    "role": "schema_admin",
+    "rolsuper": false,
+    "session_user": "pharmfoldmdk-app"
+  }
+}

@@ -1,0 +1,17 @@
+# D-167 Phase E read, step 0: tunnel evidence (D-162 rule 5; ORDERS A4.3, A8.3)
+# Session 2026-09-15 America/Los_Angeles (PDT). Transcribed by Code from the sources named on each line.
+
+## window A (owner's paste)
+Proxying localhost:16391 to remote [fdaa:62:76d9:0:1::9]:5432
+
+## fly mpg status kyzl60xz9zyrpj9g (read by Code; Fly metadata, no database connection)
+ ID                  | kyzl60xz9zyrpj9g
+ Status              | ready
+ Direct IP           | fdaa:62:76d9:0:1::9
+
+## corroboration
+proxy remote == Direct IP: fdaa:62:76d9:0:1::9 == fdaa:62:76d9:0:1::9  -> MATCH
+
+## local listeners 16300-16499 (read by Code at 2026-09-15T22:03:19Z)
+count: 1
+127.0.0.1:16391  pid 22464  started 2026-09-15 15:02:11 local  "C:\Users\mdk32\.fly\bin\fly.exe" mpg proxy kyzl60xz9zyrpj9g -p 16391

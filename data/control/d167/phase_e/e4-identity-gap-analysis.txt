@@ -1,0 +1,35 @@
+# D-167 Phase E read: analysis of the one NOT MET expectation (3. identity-keyed == row-keyed). DISK-ONLY.
+# Session 2026-09-15 America/Los_Angeles (PDT). No database access for this analysis; inputs are the read's own
+# output data/control/d167/phase_e_read.json (sha256 4d8b48861743f2e7804b937b89a81a45081ffed80ec0c524cb4612b7b69d10ec)
+# and committed files named on each line. Status: STOPPED per A8.3; the Planner rules.
+
+## the reading
+census row-keyed      3648   (verdict: expected -> 3693 and 3695 are now MEASURED in the key, not inferred)
+census identity-keyed 3576   (distinct accession, tile_start, tile_end over complete run-1 rows)
+gap                     72
+
+## what the read's diagnostic returned
+groups returned: 50 -> ⚠ the query has LIMIT 50: TRUNCATED. The script printed "50" as if it were a count (Code's defect).
+extra rows accounted for by the 50 listed groups: 50 of the 72
+every listed group: exactly 2 rows; 0 tile groups (tile_start/tile_end NULL on both rows)
+lower job id of each pair: 2..78   higher job id: 138..3587
+first rows: O00478 [4, 2027] · O00592 [24, 2496] · O14798 [38, 2100] · O15455 [78, 3006] · O60245 [71, 3009] · O60637 [40, 1720]
+
+## prediction from committed population files
+data/cohort_82_accessions.txt                         82 accessions (the original cohort, cohort_tranche 0)
+data/census/census_manifest.v7.csv                   3467 accessions, 3467 rows, 0 repeated accessions
+cohort-82 accessions also in the census manifest:     75
+minus overlap accessions with a recorded non-complete cohort-side row:
+  P11717  job 57, cohort_tranche 0, failed            (docs/decisions.md:14426; this read's failed run-1 accessions)
+  Q8WXI7  MUC16, cohort tranche 0, not folded          (docs/decisions.md:16683)
+  Q9NYQ8  FAT2, cohort tranche 0, not folded           (docs/decisions.md:16684)
+prediction: 75 - 3 = 72          observed gap: 72          -> EXACT MATCH
+listed groups inside cohort∩census: 50 of 50; outside: none
+
+## reading (inference, labelled)
+The identity groups are one protein folded twice by design: once for the 82-target cohort (low job ids, tranche 0)
+and once for the census (high job ids), both labelled run '1' by backfill_run_label.py. Not duplicate folds of one
+identity, and not a data defect. Expectation 3's key (accession, tile_start, tile_end) omits the population, so it
+cannot equal the row count while the two populations overlap.
+⚠ The match assumes the only non-complete rows in the overlap are the three named; all other overlap accessions
+complete on both sides. The un-truncated group list and each row's cohort_tranche were NOT read.
