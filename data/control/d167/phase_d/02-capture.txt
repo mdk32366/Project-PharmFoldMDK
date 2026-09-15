@@ -1,0 +1,25 @@
+# transcribed from the console (ORDERS A6.4): step 2 runs as a plain console command because --% passes everything after it to flyctl.
+# The sha256 below is NOT trusted on its own: step 3's --capture-sha check recomputes it from the transferred file.
+# Session 2026-09-15 America/Los_Angeles (PDT). Window B (PYTHONUTF8=1, console UTF-8; step-0 probe read 10003).
+
+## 2a. command (as run; the capture line is printed by the committed script and --% inserted by -replace, never hand-edited)
+$cap = @(& $py scripts\d167_reattach.py --print-capture-command)[0]
+if (-not $cap.StartsWith('flyctl ssh console -C "python -c ')) { "STOP: unexpected capture line" } else { Invoke-Expression ($cap -replace '^flyctl ', 'flyctl --% ') }
+
+## 2a. console output
+Connecting to fdaa:62:76d9:a7b:59f:e07b:833c:2... complete
+captured 40 of 40 directories under /data/artifacts at 2026-09-15T18:47:03.214691+00:00
+wrote /tmp/d167_capture.json (101174 bytes); sha256 on the next line
+88820b8240c0a777bb808b003b1dfbc0bbabf4de924c2ccb6e308eafb82f93bb
+
+## 2b. transfer
+PS> flyctl ssh sftp get /tmp/d167_capture.json data/control/d167/capture.json
+101174 bytes written to data/control/d167/capture.json
+
+## 2c. local copy
+PS> (Get-FileHash data\control\d167\capture.json -Algorithm SHA256).Hash.ToLower()
+88820b8240c0a777bb808b003b1dfbc0bbabf4de924c2ccb6e308eafb82f93bb
+PS> (Get-Item data\control\d167\capture.json).Length
+101174
+
+## verdict (Code): machine sha256 == local sha256, machine bytes == local bytes -> transfer did not alter the file.

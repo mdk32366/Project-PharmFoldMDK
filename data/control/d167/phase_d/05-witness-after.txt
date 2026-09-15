@@ -1,0 +1,11 @@
+ROLE PREAMBLE (D-167 amendment 1 §2, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+witness: 517
+  key: jobs 4389-4905, complete AND pdb_path IS NOT NULL. Phase B read 480 on this key.
+exit: 0

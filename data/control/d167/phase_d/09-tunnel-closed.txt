@@ -1,0 +1,16 @@
+# D-167 Phase D, step 6/9: tunnel closed and window B cleaned (D-162 rule 5; ORDERS A4.3, A5.3, A6)
+# Session 2026-09-15 America/Los_Angeles (PDT).
+
+## owner's statement
+Tunnel Closed  (window A: fly mpg proxy stopped with Ctrl+C)
+
+## window B (owner's paste)
+PS> Remove-Variable url
+PS> Remove-Item Env:PYTHONUTF8
+PS> "url still defined: " + [bool](Get-Variable url -ErrorAction SilentlyContinue) + " | PYTHONUTF8 still set: " + [bool]$env:PYTHONUTF8
+url still defined: False | PYTHONUTF8 still set: False
+# (DATABASE_URL was removed inside step 5b; 08-alembic.txt records "DATABASE_URL still set: False")
+
+## local verification (read by Code, 2026-09-15T19:03:25Z)
+listeners on 16300-16499: none
+fly/flyctl processes: 14960 flyctl.exe agent run (the Fly agent, not a proxy); pid 10376 (fly.exe mpg proxy kyzl60xz9zyrpj9g -p 16391) is gone

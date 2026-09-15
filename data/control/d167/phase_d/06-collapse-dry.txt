@@ -1,0 +1,57 @@
+==============================================================================
+D-166 - COLLAPSE THE DUPLICATE TILE IDENTITIES   [DRY RUN]
+==============================================================================
+ROLE PREAMBLE (D-167 amendment 1 §2, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+
+0. D-159: ACCEPTED (cluster identity, floor, anchor)
+   no claimed jobs: no live fold
+
+1. LIVE DUPLICATE IDENTITIES: 3
+   parent 2817 tile 0 -> jobs [3673, 3693]
+   parent 2837 tile 1 -> jobs [3674, 3695]
+   parent 2917 tile 0 -> jobs [3675, 3696]
+   ✓ exactly the three F-077 named, and no others
+
+2. ROWS ELSEWHERE THAT REFERENCE A ROW TO BE DELETED (5 foreign keys, from the catalog)
+   analysis_embeddings.analysis_id -> protein_analyses(id)
+   census_structural_scores.analysis_id -> protein_analyses(id)
+   jobs.analysis_id -> protein_analyses(id)
+   protein_features.analysis_id -> protein_analyses(id)
+   target_scores.analysis_id -> protein_analyses(id)
+   + jobs.inference_settings->>'parent_job_id' -> jobs(id)   (no declared constraint)
+   none
+
+3. RE-MEASURING BYTE-IDENTITY NOW (not trusting F-077's 2026-09-15 measurement)
+   parent 2817 tile 0
+      KEEP job 3673 analysis 3673  1035465 bytes  sha 8e10627102bea252...  plddt 60.29
+      DROP job 3693 analysis 3693  1035465 bytes  sha 8e10627102bea252...  plddt 60.29
+      => BYTE-IDENTICAL
+      ⚠ volume artifact of the dropped row is LEFT IN PLACE: /data/artifacts/3693/structure.pdb
+   parent 2837 tile 1
+      KEEP job 3674 analysis 3674  1041945 bytes  sha 87b4477d4ba26f3f...  plddt 64.27
+      DROP job 3695 analysis 3695  1041945 bytes  sha 87b4477d4ba26f3f...  plddt 64.27
+      => BYTE-IDENTICAL
+      ⚠ volume artifact of the dropped row is LEFT IN PLACE: /data/artifacts/3695/structure.pdb
+   parent 2917 tile 0
+      KEEP job 3675 analysis 3675  1011732 bytes  sha 2c5a80c7126eccca...  plddt 59.66
+      DROP job 3696 analysis 3696  1011732 bytes  sha 2c5a80c7126eccca...  plddt 59.66
+      => BYTE-IDENTICAL
+      ⚠ volume artifact of the dropped row is LEFT IN PLACE: /data/artifacts/3696/structure.pdb
+
+4. WHAT THE WRITE WOULD DO
+   DELETE 3 jobs rows and 3 protein_analyses rows:
+      job 3693  +  analysis 3693
+      job 3695  +  analysis 3695
+      job 3696  +  analysis 3696
+   ⚠ No artifact file is deleted. No kept row is touched. No other table is written.
+
+DRY RUN - nothing was written.
+Re-run with --i-am-the-owner to write. ⚠ OWNER AT THE KEYBOARD (F-075).
+exit: 0

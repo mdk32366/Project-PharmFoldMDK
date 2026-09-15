@@ -1,0 +1,17 @@
+1. verify: every precondition met (40 directories, identity 37/37, pLDDT 40/40)
+2. probe calibrated: controls 200 with sha == capture, the 37 404
+ROLE PREAMBLE (D-167 amendment 1 §2, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+D-159: ACCEPTED (cluster identity, floor, anchor)
+siblings by structure_source: {'esmfold': 480}
+the 40 rows equal state_before.json column for column
+
+✓ RE-ATTACHED 37 rows; every structure serves the captured bytes and provenance.
+NEXT: python scripts/d167_reattach.py --url <tunnel> --witness   # expect 517
+exit: 0
