@@ -230,6 +230,45 @@ unproven"* becomes **"idempotence disproven, mechanism established, remedy owed"
 finding closed, and `F-047`'s standing lesson is that a wrong-but-plausible answer travels. The
 superseded text stays visible so the citation can be followed to its correction.
 
+#### F-077 amendment 2 — ✅ The collapse EXECUTED, byte-identity re-measured in the run, and the three duplicate rows are gone
+
+- **Date:** 2026-09-15 PDT · ⚠ **Sub-entry, consumes no integer.** Parent status unchanged (✅ CLOSED on
+  measurement); this records the disposition `D-166` §5 step 1 owed.
+- **How known (`D-016`):** the owner at the keyboard ran `scripts/d166_collapse_duplicate_tiles.py`
+  (`F-079`-guarded) through one tunnel bound by name, Direct IP `fdaa:62:76d9:0:1::9` corroborated
+  (`data/control/d167/phase_d/00-tunnel-open.txt`). Dry run `06-collapse-dry.txt`, write
+  `07-collapse-owner.txt`, both committed. Afterwards: anonymous public GETs (Code) and the read-only
+  Phase E read `data/control/d167/phase_e_read.json` (sha256 `4d8b4886…10ec`).
+
+**Re-measured in the run, not trusted from this entry's table** — the script fetches both artifacts of
+each pair from the serving surface and hashes them before it will delete anything:
+
+| parent job / tile | keep / drop | bytes | sha256 | pLDDT | verdict |
+|---|---|---|---|---|---|
+| 2817 / 0 | 3673 / 3693 | 1,035,465 both | `8e10627102bea252…` both | 60.29 both | BYTE-IDENTICAL |
+| 2837 / 1 | 3674 / 3695 | 1,041,945 both | `87b4477d4ba26f3f…` both | 64.27 both | BYTE-IDENTICAL |
+| 2917 / 0 | 3675 / 3696 | 1,011,732 both | `2c5a80c7126eccca…` both | 59.66 both | BYTE-IDENTICAL |
+
+The byte counts and hash prefixes equal this entry's own table, measured again, by a different run.
+Before deleting, the dry run found **0 rows elsewhere** referencing a drop row — five catalog foreign keys,
+plus `jobs.inference_settings->>'parent_job_id'`. Role preamble: `schema_admin`, which owns `jobs`.
+
+**What the write did:** `✓ COLLAPSED 3 duplicate rows. No duplicate tile identity remains.` (exit 0). It
+deleted jobs 3693/3695/3696 and analyses 3693/3695/3696. ⚠ **Rows, never bytes:**
+`/data/artifacts/3693|3695|3696/structure.pdb` were left in place.
+
+**Witnesses after:**
+- **Public API:** analyses 3673/3674/3675 serve 200 (record and structure); 3693/3695/3696 serve 404.
+- **Phase E read:** `DUPLICATES_SQL` returns no row; the keep rows are complete with a `pdb_path`; the
+  drop rows are absent from `jobs` and `protein_analyses`.
+- **`0014`:** the unique index built on the next step (`D-166` amendment 1). That is the constraint's own
+  proof that no duplicate tile identity remained.
+
+⚠ **A consequence this entry did not foresee (`ORDERS` A8.2, Planner error 7):** all three drop rows sat
+**inside** the run-1 census key (`run '1' AND complete`). The row-keyed census moved **3,651 → 3,648**.
+The Phase E read measured all three; before it, only 3696 had been sampled. Nothing scientific was lost:
+the rows were duplicate identities of one tile, and nothing referenced them.
+
 ### F-078 — ⚠⚠ 37 folds were lost from BOTH stores at the backup boundary, and four separate answers walked past them — the first of them because a verification probe returned success for a reason unrelated to what it claimed to test
 
 - **Date:** 2026-09-15 · **Status:** ⚠ **OPEN** until the 37 are re-folded and the timezone
@@ -554,6 +593,74 @@ it would pass. (`D-162` rule 3: a documented blind spot is a blocking defect.)
 instruction to check whether they were *truly* lost that sent Code to the volume, and the volume
 listing was the owner's to run: the SSH read was refused to Code as a production read. ⚠ **A
 re-measurement that uses the original instrument reproduces the original error.**
+
+#### F-078 amendment 3 — ✅ The debt is PAID by re-attach (`D-167`): slice 2 reads 517 on the database witness, and the 37 are the folds that were always on the volume
+
+- **Date:** 2026-09-15 PDT · ⚠ **Sub-entry, consumes no integer.**
+- **Status of F-078:** ✅ **amendment 2's closing condition is MET** — the owner ruled **re-attach**
+  (2026-09-15), and slice 2 reads **517** on the database witness.
+  ⚠ **The body's other clause** (*"the timezone convention is marked at source"*) is **not re-checked in
+  this amendment**. It is neither claimed discharged nor re-opened here.
+- **How known (`D-016`):** `D-167` and its amendment 1, executed by the owner at the keyboard. Evidence
+  committed under `data/control/d167/`:
+  - the Phase B read `state_before.json` (sha256 `b825065d…80b7`);
+  - the in-sitting volume capture `capture.json` (`88820b82…93bb`, identical on the machine, on disk and
+    as the committed blob);
+  - the sitting logs `phase_d/00–09`;
+  - the Phase E read `phase_e_read.json` (`4d8b4886…10ec`) and `phase_e/e1–e6`.
+
+**1. What was written:**
+- **Scope:** the 37 `protein_analyses` rows and the 37 `jobs` rows (jobs 4869–4905), in one transaction.
+- **Preconditions first:** every one passed — identity 37/37, pLDDT 40/40, and all 40 rows equal to the
+  Phase B read, column for column.
+- **Paths:** `/data/artifacts/{job_id}/…`, keyed by **job id**.
+- **Copied from the controls:** `structure_source` `esmfold` (the completion path's own value) and tier
+  `local`.
+- **`completed_at`:** reconstructed as `folded_at` + `wall_seconds`, and marked as reconstructed in
+  `metadata.reattach`.
+- **The claim record:** `worker_id` and `claimed_at` left NULL, named *"lost at the F-078 boundary"*.
+
+**2. Witnesses:**
+
+| witness | before | after | source |
+|---|---|---|---|
+| slice 2 `complete AND pdb_path IS NOT NULL`, jobs 4389–4905 (`F-080`) | **480** | **517** | `phase_d/01`, `05` |
+| served structure sha256 == capture, the 37 | 37 × 404 (calibrated) | **37 / 37** 200 and equal | the script's probe; Code's independent public GETs |
+| served `fold_provenance` == captured `provenance.json` | — | equal (the script: 37/37; Code: 4 sampled) | same |
+| identity from the committed blob (`f078_identity_check`) | — | **37 / 37** | `phase_e/e1` |
+| owner's walk: control + three of the 37 + the census page | — | **5 / 5 PASS** | `phase_e/e6` |
+
+**3. ⚠⚠ The census number this finding carried has moved, and its key is stated.**
+
+| key | value | why |
+|---|---|---|
+| **row-keyed** `run '1'` AND complete | **3,651 → 3,648** | `D-166`'s collapse deleted three duplicate tile rows, all inside that key (`ORDERS` A8.2, Planner error 7; measured in `phase_e_read.json`). Nothing scientific was lost: they were duplicate identities of one tile, and nothing referenced them (`F-077` amendment 2). |
+| **identity-keyed** `(accession, tile_start, tile_end)` | **3,576** | The cohort-82 and the census share 75 accessions under `run '1'`; 75 − 3 non-complete cohort rows = **72**, the observed gap. ⚠ **Consistent, not proven** (`ORDERS` A9.2): the group list was capped and tranches were not read. The population-aware read R1–R4 is owed. |
+| **census proteins**, one per accession (the census page) | **3,467 / 3,463 folded**, unchanged | `list_census` picks the lowest-id Run-1 representative, so neither the collapse nor the re-attach moves it (`docs/REPORT-Code-2026-09-15-A9-E2-readiness.md` §3) |
+
+⚠ **Every future citation of "the census" states which of these three it means.**
+
+**4. What the debt-paying commit does, and what it keeps:**
+- **Deletes `tests/test_f078_owed_restore.py`.** Its removal is the record that the debt was paid.
+  ⚠ **The refusal it held is not deleted.** `test_restore_refuses_even_for_the_owner` moved to
+  `tests/test_f078_restore_refused.py` in `D-167` Phase C, before this deletion.
+- **Rewrites `task4_slice3.py` and `task4_slice4.py --report`** from the OWED notice to a **PAID** notice
+  citing `D-167`, the witness and the date. ⚠ It **keeps DO NOT RE-FOLD** and the `--restore`
+  prohibition: the bytes on the volume are still the measurement, and a re-fold would still overwrite
+  them.
+- **Leaves `f078_null_tier_the_37.py --restore` refused.** The script no longer tells an operator to pay
+  the debt with it.
+- **Adds `data/control/d167/** -text` to `.gitattributes`** (`ORDERS` A8.5). A Windows checkout can no
+  longer change the evidence's bytes.
+
+**5. For the owner, not an edit:** the paper draft's methods §4.3 loss statement now narrows to **zero
+rows** (`PREWORK-2026-09-16` §5). ⚠ That is a flag for the owner's ruling on the draft, not a change to it.
+
+**6. What this does NOT claim:**
+- **No hidden whole-protein duplicate is claimed absent.** `0014` indexes tile identity only (`ORDERS`
+  A9.2).
+- **Not that Run 1 and Run 2 fold identically.** Three accessions show equal `mean_plddt`; that is filed
+  as a determinism-check candidate, not evidence (`ORDERS` A10.2).
 
 ### F-076 — ⚠⚠ Five tests asserted tile geometry while the input to that geometry was read from a GITIGNORED cache — so the same assertions asserted different science on different machines, green in CI and red locally, and the difference was read for two days as a numeric disagreement
 

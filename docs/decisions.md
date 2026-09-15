@@ -445,6 +445,44 @@ cleanup script.
 - **It does NOT touch `F-004`, `F-005` or `F-072`.** Hold-48 tiles enter none of them
   (`F-077` §2, five modules say so in terms).
 
+#### D-166 amendment 1 — `0014` is APPLIED to production; the tile identity is now a database constraint
+
+- **Date:** 2026-09-15 PDT · ⚠ **Sub-entry, consumes no integer.** The parent's text is not edited
+  (`D-129-C`). Its status line — *"the production DDL is OWED and owner-gated"* — is **superseded by this
+  amendment** for the tile path.
+- **How known (`D-016`):** the owner at the keyboard, one tunnel bound by name, Direct IP corroborated.
+  Logs `data/control/d167/phase_d/07-collapse-owner.txt` and `08-alembic.txt`, committed.
+
+**§5, in order, as executed:**
+1. **Collapse** — `scripts/d166_collapse_duplicate_tiles.py --i-am-the-owner`, exit 0. Byte identity was
+   re-measured in the run (`F-077` amendment 2). ⚠ The role preamble (`D-167` amendment 1 §2) ran first:
+   `current_user schema_admin`, `jobs_owner schema_admin`, `can_build_jobs_index True`, so the collapse
+   did not have to wait.
+2. ✅ `0014_enqueue_identity_unique` exists (unchanged).
+3. **`alembic upgrade head` against production.** A guard block refused unless the target was
+   `127.0.0.1:16391/pharmfoldmdk`:
+   - `alembic current` (before): `0013_cancer_burden`;
+   - `Running upgrade 0013_cancer_burden -> 0014_enqueue_identity_unique`, exit 0;
+   - `alembic current` (after): **`0014_enqueue_identity_unique (head)`**;
+   - `DATABASE_URL` removed from the shell immediately after.
+
+**⚠ Why "applied" is measured rather than inferred.** `D-017` recorded an upgrade that logged
+*"Running upgrade"*, exited 0, and silently rolled its DDL back. Here a **separate** `alembic current` reads
+`0014`. `alembic_version` is written in the same transaction as the `CREATE UNIQUE INDEX`, so it reads
+`0014` only if the index committed. The later read-only Phase E read also found `alembic_version =
+0014_enqueue_identity_unique` and `DUPLICATES_SQL` empty.
+
+**⚠ §5's closing sentence came true in the direction it hoped:** *"If the index will not build, a duplicate
+exists that nobody has looked at."* It built.
+
+**What this does NOT change:**
+- **§4b — the Run-2 identity — is still OWED and undesigned.** Nothing constrains
+  `(protein_analyses.input_value, jobs.inference_settings->>'run')`. Slice 4 stays blocked on it (`ORDERS`
+  A1.5).
+- ⚠ **Whole-protein identity is not indexed at all.** `0014` is partial over `inference_settings ?
+  'tile_index'`. A duplicate whole-protein row within one population is prevented by nothing (`ORDERS`
+  A9.2). The population-aware read R1–R4 is pre-registered for the next session.
+
 ---
 
 ### D-165 — Tile geometry is pinned so a fresh clone plans what a warm machine plans — 24 KB of DERIVED ends travel with the repository, and the 243 MB they came from does not

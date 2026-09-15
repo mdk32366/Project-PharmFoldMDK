@@ -1,0 +1,16 @@
+# D-167 Phase E, E.2: the owner's user-acceptance walk on the live site (ORDERS E.2, A9.4, A10.1)
+# Session 2026-09-15 America/Los_Angeles (PDT). Walk list named by Code from source and the public API
+# (docs/REPORT-Code-2026-09-15-A9-E2-readiness.md §4), approved by the Planner (A10.1).
+
+## owner's statement
+Walk passes in every test.
+
+## items walked, with their pass criteria
+1. https://pharmfoldmdk.fly.dev/census/4869  control (job 4868, Q15391): structure renders; pLDDT 58.37; provenance panel populated   -> PASS
+2. https://pharmfoldmdk.fly.dev/census/4870  job 4869 (first of the 37, Q2T9K0): renders; pLDDT 56.72; full provenance record          -> PASS
+3. https://pharmfoldmdk.fly.dev/census/4906  job 4905 (last of the 37, Q9UBD6): renders; pLDDT 56.28; full provenance record           -> PASS
+4. https://pharmfoldmdk.fly.dev/census/4875  job 4874 (highest pLDDT of the 37, Q96CP7): renders; pLDDT 75.05; full provenance record  -> PASS
+5. https://pharmfoldmdk.fly.dev/census       table line "3,463 folded, plus 4 listed but never folded" (key: census proteins, one per accession; pre-sitting 3,467 / 3,463 per D-159)  -> PASS
+
+## verdict
+E.2: 5 of 5 PASS (owner).
