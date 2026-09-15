@@ -76,6 +76,19 @@ of the marker — ⚠ it **cannot** call the check, which refuses until the mark
 ⚠ **Reported, not fixed** (orders §A.2 item 1). Each becomes a named exception whose reason **the
 owner rules**; Code does not invent one, and an exception with an empty reason fails the guard.
 
+**RULED by the owner (Matt Kelly), 2026-09-15**, transcribed into
+`tests/test_d159_enqueue_identity.py::IDENTITY_CHECK_EXCEPTIONS`:
+
+| script | ruling |
+|---|---|
+| `backfill_run_label.py` | ⚠ **TEMPORARY — owed the check.** Until a follow-up PR adds it. |
+| `census_ingest_features.py` | ⚠ **TEMPORARY — owed the check.** It runs on the machine, but the machine's `DATABASE_URL` secret is state outside the script, and only the marker detects a wrong cluster. ⚠ The alternative, *"runs on the machine, so the hazard does not arise"*, was weighed and not ruled: it answers the port hazard and not the cluster one. |
+| `clinical_ingest_edges.py` | ⚠ **TEMPORARY — owed the check.** Until a follow-up PR adds it. |
+| `keel_mark_live_cluster.py` | **BOOTSTRAP OF THE CHECK.** It writes the marker the check requires, so the check refuses it by construction until it has run; the operator's confirmation is the evidence. |
+
+⚠ **Three of the four are debts, not exemptions.** This entry stays **OPEN** on them after the
+collapse is fixed.
+
 #### 4. What closes it
 
 The collapse takes its URL from the operator (`--url` / `DATABASE_URL`), calls

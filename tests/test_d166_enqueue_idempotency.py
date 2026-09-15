@@ -252,7 +252,11 @@ def test_the_collapse_is_owner_gated_and_refuses_an_unexpected_duplicate_set():
     """⚠ `F-075`: an authenticated session is not an attestation. ⚠⚠ And a FOURTH duplicate is a
     new finding, not something to sweep up in passing — the script refuses rather than widening."""
     src = (REPO / "scripts" / "d166_collapse_duplicate_tiles.py").read_text(encoding="utf-8")
-    assert '"--i-am-the-owner" in sys.argv' in src
+    # ⚠ F-079 moved the gate from a bare `sys.argv` membership test to argparse, so the operator can
+    # also name the target (`--url`). The pin moves with it, by name; the gate is not relaxed.
+    # Superseded pin, recorded (D-129-C): `'"--i-am-the-owner" in sys.argv' in src`.
+    assert '"--i-am-the-owner", dest="owner"' in src
+    assert "if not owner:" in src, "the dry run is no longer the default"
     assert "F-075" in src, "the gate does not name the finding that requires it"
     assert "live != EXPECTED" in src, "the script does not check WHICH duplicates it found"
     assert "again != EXPECTED" in src, (
