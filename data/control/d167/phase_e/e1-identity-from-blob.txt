@@ -1,0 +1,49 @@
+# D-167 Phase E, E.1 (disk-only witness; ORDERS A8.7 step 1)
+# Identity of the 37 re-attached folds, re-checked from the COMMITTED capture blob, not the working copy.
+# Session 2026-09-15 America/Los_Angeles (PDT). No database, no tunnel, no network.
+# Checker: scripts/f078_identity_check.check (the one home), expectations data/control/f078/f078_identity_expected.json,
+# clock reference data/control/task4_slice2/progress.csv. Adapter: provenance = capture.dirs[j].provenance,
+# sequence = capture.dirs[j].ca_residues mapped through f078_identity_check.THREE.
+
+blob 63f0807:data/control/d167/capture.json  101174 bytes  sha256 88820b8240c0a777bb808b003b1dfbc0bbabf4de924c2ccb6e308eafb82f93bb
+expected sha256 (step 2, machine-printed): 88820b8240c0a777bb808b003b1dfbc0bbabf4de924c2ccb6e308eafb82f93bb  -> MATCH
+
+4869 Q2T9K0   OK
+4870 Q3KNW5   OK
+4871 Q6DWJ6   OK
+4872 Q6ZMZ3   OK
+4873 Q8NGV7   OK
+4874 Q96CP7   OK
+4875 Q96PE5   OK
+4876 Q96PG2   OK
+4877 Q9BYW1   OK
+4878 Q9HBA0   OK
+4879 Q9NRX5   OK
+4880 B0YJ81   OK
+4881 O94823   OK
+4882 P03999   OK
+4883 P29274   OK
+4884 P36383   OK
+4885 P49810   OK
+4886 P59534   OK
+4887 P60893   OK
+4888 Q13585   OK
+4889 Q5T1S8   OK
+4890 Q6Y1H2   OK
+4891 Q7LBE3   OK
+4892 Q8IXM6   OK
+4893 Q8NEW7   OK
+4894 Q8NF91   OK
+4895 Q8NH55   OK
+4896 Q8WXH0   OK
+4897 Q96CH1   OK
+4898 Q9BTX1   OK
+4899 Q9BXA5   OK
+4900 Q9H1C0   OK
+4901 Q9HBW0   OK
+4902 Q9NPC1   OK
+4903 Q9NRP0   OK
+4904 Q9NRX6   OK
+4905 Q9UBD6   OK
+
+identity confirmed: 37 of 37
