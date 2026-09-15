@@ -16,6 +16,74 @@
 
 ## Log (newest first)
 
+### F-079 — ⚠⚠ The one irreversible production DELETE in the tree shipped without the identity check its sibling writers carry, and the guard that polices that check could not see it, because the guard enumerates its subjects by hand
+
+- **Date:** 2026-09-15 · **Status:** ⚠ **OPEN** until `scripts/d166_collapse_duplicate_tiles.py`
+  refuses the wrong cluster, a live fold and a referencing row, **and** the identity-check guard
+  enumerates owner-gated writers from the tracked tree instead of from a list.
+- **Found by:** the Planner, reading `Project-PharmFoldMDK-d33027b.zip`
+  (`ORDERS-Code-2026-09-16-reattach-and-collapse.md` §1.1). **Re-measured by Code** at `d33027b`
+  before it was written here; every quotation below is from that tree, not from the orders.
+- **How known (`D-016`):** source reads and greps of git-tracked files. **No database was touched.**
+
+> **THE FINDING:** ⚠⚠ `D-159` put `assert_campaign_target` in front of every campaign write so that
+> a tunnel bound to the **forensic** cluster `zp2wjrej9lwodn4q` is refused. The collapse script — an
+> owner-gated `DELETE` of three `jobs` rows and three `protein_analyses` rows — **never calls it**,
+> and takes its target from a **hard-coded port**. ⚠ `D-162` rule 5, *a port number is not a cluster
+> identity*, is violated inside the only script in the tree whose effect cannot be re-derived.
+>
+> ⚠ **The forensic cluster would not refuse it on content.** It was the source of the live cluster's
+> restore, so it holds the same population and the same three `F-077` duplicates. **Run through a
+> tunnel on 16391 bound to the wrong cluster, the script would delete rows from the forensic record
+> and print `✓ COLLAPSED`.**
+
+#### 1. The evidence, re-measured
+
+| claim | quotation at `d33027b` |
+|---|---|
+| no identity check | `grep -c "assert_campaign_target(" scripts/d166_collapse_duplicate_tiles.py` → **0**; the only project import is `from db.dburl import normalize_db_url` (line 49) |
+| the target is a port | line 52: `PORT = "16391"`; lines 78–82: `_db_url()` reads `.env`'s `DATABASE_URL` and rewrites its port to `PORT` |
+| the siblings carry it | the same grep → **1** each in `task3_run2_folds.py`, `task4_slice1.py`–`task4_slice4.py`, `f078_null_tier_the_37.py` |
+| the guard is a hand list | `tests/test_d159_enqueue_identity.py` lines 42–47: `ENQUEUE_SCRIPTS = ("scripts/task4_slice1.py", "scripts/task4_slice2.py", "scripts/task4_slice3.py", "scripts/task3_run2_folds.py")` — ⚠ not even `task4_slice4.py`, which does call the check |
+
+⚠ **Why the gate did not catch it:** the list names four files written before it and nothing written
+after it. A single-copy enumeration kept by hand is `D-162` rule 8's class — the list *is* the state
+outside the check.
+
+#### 2. ⚠ Two more defects in the same file, both of the "documented limitation" shape
+
+1. **A live fold.** `PREWORK-2026-09-16.md` §1 says the collapse *"must not run during a live fold
+   (the index build takes locks)"*. **That is prose.** Nothing in the script reads `jobs.status`.
+   `D-162` rule 3: a documented blind spot is a blocking defect.
+2. **Referencing rows.** The dry run never asks whether another table references a row it will
+   delete. ⚠ **Measured from the migration chain, not from the live database:** `protein_analyses.id`
+   is referenced by `jobs.analysis_id` (`0002`), `analysis_embeddings.analysis_id` (`0002`, raw SQL),
+   `protein_features.analysis_id` (`0003`), `target_scores.analysis_id` (`0004`) and
+   `census_structural_scores.analysis_id` (`0012`, nullable). `grep ondelete db/migrations/versions/`
+   → **nothing**, so on the chain as written a referenced delete **fails** rather than cascades. ⚠
+   That is a property of the migration source; whether production's constraints match it is **not
+   measured here**, which is exactly why the check belongs in the run.
+
+#### 3. ⚠ The enumeration, once it stops being a list, finds more than the one script
+
+A grep of tracked `scripts/*.py` for `--i-am-the-owner` returns **11** files. Seven call the check.
+**Four owner-gated writers do not, besides the collapse:** `backfill_run_label.py` (ORM attribute
+assignment + `s.commit()` — ⚠ **no SQL verb token at all**, so a DML-token detector alone misses it),
+`census_ingest_features.py` (`s.add(`; ships in the image and runs on the machine),
+`clinical_ingest_edges.py` (`DELETE FROM` / `INSERT INTO`) and `keel_mark_live_cluster.py` (`INSERT`
+of the marker — ⚠ it **cannot** call the check, which refuses until the marker exists).
+
+⚠ **Reported, not fixed** (orders §A.2 item 1). Each becomes a named exception whose reason **the
+owner rules**; Code does not invent one, and an exception with an empty reason fails the guard.
+
+#### 4. What closes it
+
+The collapse takes its URL from the operator (`--url` / `DATABASE_URL`), calls
+`assert_campaign_target` before the read that decides, refuses on any `claimed` job, and refuses on
+any referencing row found by enumerating foreign keys **from the catalog** rather than from a table
+list. The guard enumerates tracked owner-gated writers. ⚠ **This entry does not change `F-077`,
+`D-166` or the collapse's re-measurement of byte identity**, all of which stand.
+
 ### F-077 — ✅ The FOLD path is deterministic end to end — same input, same weights, same bytes — and it was learned from three duplicated tile identities that turned out to be byte-identical: wasted compute, not two answers
 
 - **Date:** 2026-09-15 · **Status:** ✅ **CLOSED on measurement.** No artifact is ambiguous.
