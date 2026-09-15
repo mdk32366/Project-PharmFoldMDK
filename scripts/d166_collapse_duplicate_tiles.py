@@ -67,6 +67,7 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 from core.db_identity import WrongDatabase, assert_campaign_target  # noqa: E402
+from core.db_role import format_preamble, index_build_refusal, role_preamble  # noqa: E402
 from db.dburl import normalize_db_url              # noqa: E402
 
 BASE = "https://pharmfoldmdk.fly.dev"
@@ -203,6 +204,16 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         with eng.begin() as c:
+            # ⚠⚠ D-167 amendment 1 §2 (ORDERS A3.2 + A4.2): WHICH ROLE, printed before anything
+            # else, and whether it can build 0014's index. This delete exists only so that index
+            # can build; if the role cannot build it, the collapse WAITS with 0014.
+            pre = role_preamble(c)
+            for line in format_preamble(pre):
+                print(line)
+            refusal = index_build_refusal(pre)
+            if refusal:
+                print(f"\n{refusal}")
+                return 1
             # ⚠⚠ F-079: WHICH DATABASE, before the read that decides what is deleted.
             try:
                 assert_campaign_target(c)

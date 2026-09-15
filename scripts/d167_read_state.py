@@ -268,7 +268,10 @@ def main(argv: list[str] | None = None) -> int:
         "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
         "working_tree_clean": _git("status", "--porcelain", "--untracked-files=no") == "",
         "read_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "target": f"{eng.url.host}:{eng.url.port}/{eng.url.database} as {eng.url.username}",
+        # ⚠ ORDERS A3.2: the URL's username is NOT the role. The committed 2026-09-15 read labels
+        # it `target: … as pharmfoldmdk-app` while Postgres answered `schema_admin`.
+        "target": f"{eng.url.host}:{eng.url.port}/{eng.url.database}",
+        "url_username": eng.url.username,
     }
 
     print("=" * 78)

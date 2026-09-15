@@ -16,6 +16,46 @@
 
 ## Log (newest first)
 
+### F-080 — ⚠ The only in-tree report of slice 2 prints 517 folded while the database holds 480, because it reads the progress file — so the "done" it would announce is already announced with the debt unpaid
+
+- **Date:** 2026-09-15 · **Status:** ⚠ **OPEN** until a database witness exists in the tree
+  (`d167_reattach.py --witness`, `D-167` §4) **and** reads 517 after the re-attach, having read 480
+  before it.
+- **Found by:** the Planner (`ORDERS-Code-2026-09-16-reattach-and-collapse.md` §1.2). **Re-measured
+  by Code** on `d167-reattach` before it was written here.
+- **How known (`D-016`):** source read of `scripts/task4_slice2.py`; a count of
+  `data/control/task4_slice2/progress.csv`; and the owner-run read-only database read
+  `data/control/d167/state_before.json` (sha256 `b825065d…d38580b7`).
+
+> **THE FINDING:** `task4_slice2.py --report` answers *"how many of slice 2 folded?"* from a file the
+> worker loop appends to at fold time. The 37 folds happened, so the file says 517 — **and it would say
+> 517 whether or not their database rows are ever re-attached.** `D-162` rule 7: *a probe states what
+> it would return if the thing were absent.* This one returns the same answer in both states.
+
+#### 1. The evidence
+
+| claim | quotation / measurement |
+|---|---|
+| the report reads only the file | `scripts/task4_slice2.py:300`: *"⚠ Reads the progress file only — no tunnel, no database, no network."*; `:306`: `print(f"{len(rows)} folded\n")`; `:33`: *"`--report` reads the progress file and needs neither."* |
+| the file says 517 | `progress.csv`: **517 rows, verdicts `{'ok': 517}`, job ids 4389–4905, 517 distinct**; jobs 4869–4905 present: **37** |
+| the database says 480 | `state_before.json` expectation 5: `complete AND pdb_path IS NOT NULL` over id range 4389–4905 = **480**, and over `enqueued.json`'s job ids = **480** (keys agree) |
+
+#### 2. What replaces it as the witness
+
+A **database** count, read-only, keyed by **id range 4389–4905** (the key Phase B measured agreeing
+with `enqueued.json`), whose **before-value was measured: 480**. ⚠ The before-value is what makes it a
+witness. ⚠ Not the third key (`run = '2'` + span band 1–30): it reads 488 because it also counts
+Task 3's jobs 3698–3705 (`task3_overlap`), which are not slice 2.
+
+#### 3. NOT CLAIMED
+
+- **Not that `--report` is wrong about what it reports.** The folds ran and their measurements are the
+  record (`D-167` §1). It is wrong only as evidence that the database agrees.
+- **Not that the other slice reports have the same shape** — `task4_slice3.py` and `task4_slice4.py`
+  were not re-read for this entry.
+
+---
+
 ### F-079 — ⚠⚠ The one irreversible production DELETE in the tree shipped without the identity check its sibling writers carry, and the guard that polices that check could not see it, because the guard enumerates its subjects by hand
 
 - **Date:** 2026-09-15 · **Status:** ⚠ **OPEN** until `scripts/d166_collapse_duplicate_tiles.py`

@@ -1443,6 +1443,25 @@ S-002 Q1, now testable against a config that genuinely fits.
     tables the connected role owns), calibrated in the run on `jobs.analysis_id`. ⚠ The catalog
     sees DECLARED keys only, so `jobs.inference_settings->>'parent_job_id'` — a reference to
     `jobs.id` held in JSON — is checked by name as well.
+  - **⚠⚠ Every Phase D script says which ROLE it is before it asks which database (`D-167`
+    amendment 1 §2).** `core/db_role.role_preamble()` reads `session_user`, `current_user`, the `role`
+    setting, `rolconfig`, the owner of `jobs`, and `pg_has_role(current_user, <owner>, 'USAGE')` —
+    because `CREATE INDEX` needs **ownership** of the table, not a grant. If the effective role cannot
+    build `0014`'s index, **the collapse waits** (its delete exists only to let that index build) and
+    the re-attach proceeds.
+  - **The re-attach of slice 2's 37 (`D-167`).** `scripts/d167_reattach.py` (owner-gated; the dry run
+    is read-only BY THE DATABASE) links the 37 rows to the ESMFold artifacts already on the Fly volume
+    instead of re-folding them. Every value it writes is copied from the measured controls (jobs
+    4866–4868 in `data/control/d167/state_before.json`) or from a capture of the volume taken in the
+    same sitting; paths are keyed by **job id** (`/data/artifacts/{job_id}/…`). A pure `verify()` runs
+    before any connection opens (capture sha, age, file set, path frame, bytes, `f078_identity_check`,
+    drift from the committed dump, per-residue pLDDT mean), then a calibrated served-surface probe, then
+    one transaction that re-reads the 40 rows against `state_before.json` before 37 + 37 updates.
+    ⚠ `scripts/d167_volume_capture.py` runs **on the machine**, stdlib-only and read-only, delivered
+    as the base64 of the committed file (a test pins byte equality) — **never in the image**, per the
+    Dockerfile's rule that a writing script's machinery does not ship to the production host.
+    `--witness` is `F-080`'s database count (480 before, 517 after); `--revert` restores
+    `state_before.json` exactly.
   - **Identity first, population second.** The target must carry `keel_live_cluster` naming
     `kyzl60xz9zyrpj9g`. ⚠⚠ **A population floor cannot do this job alone:** the forensic cluster
     `zp2wjrej9lwodn4q` holds the same census — the live cluster was restored from its backup — so it

@@ -16,6 +16,262 @@
 
 ## Log (newest first)
 
+### D-167 — The 37 are RE-ATTACHED to the folds already on the volume, not re-folded — and every value the write sets is copied from a measured control or a captured artifact, never from what a completed row is remembered to look like
+
+- **Date:** 2026-09-15, **America/Los_Angeles (PDT, UTC−7)**. Measured, not labelled: `date` in this
+  session read `2026-09-15T09:06:57-0700` / `2026-09-15T16:06:57Z`, and the Phase B read's server
+  clock read `2026-09-15 15:59:26Z` (08:59 PDT). ⚠ The orders and pre-work are labelled **2026-09-16**;
+  this entry is written on the **15th**. ⚠ `ORDERS` §0.4: Phase D waits for the owner to confirm a
+  **fresh session**, not this one.
+- **Status:** ⚠ **Design accepted; the production write is OWED and owner-gated** (`F-075`). Nothing
+  here has written to production.
+- **Owner ruling:** RE-ATTACH, 2026-09-15 (`docs/PREWORK-2026-09-16.md` §1). Architecture by the
+  Planner (`ORDERS-Code-2026-09-16-reattach-and-collapse.md` §3, Amendments 1–3).
+- **How known (`D-016`):** every measured value below is quoted from
+  `data/control/d167/state_before.json` (sha256 `b825065d79fff36bf8d3fa9f0ec9e9100d7aebc4cead86e11b4f7f25d38580b7`,
+  committed at `540848a`), written by `scripts/d167_read_state.py` inside `SET TRANSACTION READ ONLY`
+  (`transaction_read_only: on`), cluster marker `kyzl60xz9zyrpj9g`, run by the owner. Code reads of
+  `app/artifacts.py`, `core/queue.py`, `worker/runner.py` and `data/control/task4_slice2/progress.csv`
+  are cited by line.
+- **Relates:** `F-078` amendment 2 (the folds were not lost), `F-080` (the witness), `D-166` (the
+  collapse and `0014` in the same sitting), `F-079` (the collapse's guards), `F-047` amendment 6.
+
+#### 0. C.0 — the read is evidence about the commit it names
+
+`provenance`: `commit 51fea11914d95042edb0799d1d31b110c5ca6572` · `branch main` ·
+`working_tree_clean true` · `read_at_utc 2026-09-15T15:59:27.090389+00:00`. **16 / 16 expectations
+met.** ⚠ `working_tree_clean` is computed with `--untracked-files=no`: tracked files matched the
+commit; the untracked scratch in the working tree is outside what the flag states.
+
+⚠ **Label, not a rewrite (`D-129-C`):** `provenance.target` reads `… as pharmfoldmdk-app`. That name
+is the **URL's username**, not a measurement; `identity.current_user` — what Postgres answered — is
+`schema_admin`. The committed file is not edited. The field is relabelled `url_username` in the
+script going forward (Amendment 3 A3.2).
+
+#### 1. Deep-learning justification
+
+The 37 structures are ESMFold's outputs, and each one's `progress.csv` row is the instrument
+measurement Run 2 exists to collect (wall time, VRAM headroom, transport). **Re-attaching keeps the
+network's actual inference as the record.** A re-fold substitutes a second inference whose equality
+to the first is *assumed*: `F-077` showed byte-determinism for three pairs, not for these 37, and
+`F-047` records what follows when a local result is asserted at wider scope. It would also add GPU
+wall time that is not part of the slice-2 measurement and make rows claimable while slice 4 is
+authorised — contaminating a transport term measured band by band because it is not linear.
+
+⚠ **The superseded option, weighed:** re-fold. It needed `f078_null_tier_the_37.py --restore`
+reinstated with a volume check that does not go through `pdb_path`. **`--restore` stays refused.**
+
+#### 2. What a correct completed row is — the controls, quoted
+
+| field | job 4866 (analysis 4867) | job 4867 (analysis 4868) | job 4868 (analysis 4869) |
+|---|---|---|---|
+| `status` | `complete` | `complete` | `complete` |
+| `tier` | `local` | `local` | `local` |
+| `attempts` | 0 | 0 | 0 |
+| `worker_id` | `local-gpu` | `local-gpu` | `local-gpu` |
+| `claimed_at` | `2026-09-13T15:23:36.736005Z` | `…15:23:56.735935Z` | `…15:24:16.755386Z` |
+| `completed_at` | `2026-09-13T15:23:56.669599Z` | `…15:24:16.681806Z` | `…15:24:36.578268Z` |
+| `error` | NULL | NULL | NULL |
+| `pdb_path` | `/data/artifacts/4866/structure.pdb` | `/data/artifacts/4867/structure.pdb` | `/data/artifacts/4868/structure.pdb` |
+| `pae_json_path` | `/data/artifacts/4866/pae.json.gz` | `/data/artifacts/4867/pae.json.gz` | `/data/artifacts/4868/pae.json.gz` |
+| `structure_source` | `esmfold` | `esmfold` | `esmfold` |
+| `mean_plddt` | 66.14 | 58.37 | 58.37 |
+| `fold_provenance.folded_at` | `2026-09-13T15:23:37.539455Z` | `…15:23:57.506865Z` | `…15:24:17.555447Z` |
+
+Metadata keys, identical on all three: the 20 enqueue keys (`band`, `boundary_method`,
+`census_class`, `cohort_tranche`, `ecd_end`, `ecd_start`, `fold_length`, `fold_order`,
+`full_length`, `guards`, `is_census`, `not_scored_reason`, `scored`, `sequence`, `source`, `span_aa`,
+`span_definition`, `span_rule`, `tier`, `tier_reason`) **plus `fold_provenance`**.
+
+⚠⚠ **The path directory is the JOB id, not the analysis id.** Job 4866's analysis is 4867 and its
+path is `/4866/`. Identical format on all three controls, and it is `_write_files`'s
+(`app/artifacts.py:133`, `Path(artifact_root) / str(job_id)`). A re-attach keyed by `analysis_id`
+would point every row at its neighbour's structure and pass every non-identity check.
+
+⚠ **A3.4 — 4867 and 4868 share `mean_plddt` 58.37** across different proteins. Internally
+consistent, therefore unproven; Phase D recomputes it from `plddt.json` for all 40 (§4, precondition 9).
+
+#### 3. The 37 as read — one shape, and it is the enqueue's
+
+Jobs 4869–4905, 37 rows. Distinct values (count): `status` `pending` (37) · `tier` NULL (37) ·
+`attempts` 0 (37) · `worker_id` NULL (37) · `claimed_at` NULL (37) · `completed_at` NULL (37) ·
+`error` NULL (37) · `pdb_path` NULL (37) · `pae_json_path` NULL (37) · `structure_source`
+`esmfold_local` (37) · `mean_plddt` NULL (37) · metadata keys = the controls' 20 enqueue keys (37).
+**`fold_provenance` present on 0 of 37.** `analysis_id = job_id + 1` on 37 of 37 (and on all 40, B.1
+item 3).
+
+#### 4. The design, with every measured slot filled
+
+**Capture (read-only, on the machine, in the sitting).** `scripts/d167_volume_capture.py`, standard
+library only, never in the image; delivered as a base64 payload a test proves decodes to the
+committed file byte for byte; transferred by `flyctl ssh sftp get`, never a shell redirect. For
+directories 4866–4905: names, sizes, sha256 of every file, full `provenance.json`, the per-residue
+`plddt.json` array, and the CA residue string of `structure.pdb` (`f078_identity_check`'s parse).
+`captured_at` in UTC.
+
+**Preconditions, checked by a pure `verify()` before any connection opens:**
+1. capture sha256 == the owner-pasted value;
+2. `captured_at` within 60 minutes of the local UTC clock;
+3. directories 4869–4905 all present, each holding exactly the controls' file set (measured from
+   4866–4868 in the capture; four expected);
+4. **frame calibration:** for 4866–4868, the captured absolute path == the stored `pdb_path` /
+   `pae_json_path` — format `/data/artifacts/{job_id}/…` (§2); controls disagreeing with each other
+   or with `_write_files` refuses;
+5. `structure.pdb` disk size == `progress.csv` `served_structure_bytes`, **only if the controls show
+   that equality first** (different frames: disk bytes vs served bytes); otherwise refuse, not compare;
+6. `f078_identity_check.check()` (imported) against `f078_identity_expected.json`: 37/37;
+7. drift: `input_length`, `ecd_start`, `ecd_end`, `mean_plddt`, `folded_at` equal the committed
+   volume dump per job; any difference is a finding and refuses;
+8. provenance `mean_plddt` summary cross-checked against the pre-work (mean 55.21, 46.86–75.05),
+   computed, not assumed;
+9. **(A3.4)** for all 40: `round(mean(plddt.json), 2)` — the runner's rounding,
+   `worker/runner.py:354` — == `provenance.json` `mean_plddt`. **If 4867 or 4868 fails, stop:** the
+   calibration rows are wrong.
+
+**The write — one transaction, owner-gated, dry run by default, in this order:**
+1. **Role preamble (A3.2), read-only, printed and logged:** `session_user`, `current_user`,
+   `current_setting('role')`, and `rolconfig` for the session user.
+2. `assert_campaign_target(conn)`.
+3. `count(*) WHERE status = 'claimed'` == 0.
+4. **(A3.1)** slice 2's 480 complete siblings grouped by `structure_source` == `{'esmfold': 480}`,
+   else refuse. Three controls are not the population.
+5. Re-read the 37 and the controls; any column differing from `state_before.json` refuses.
+6. `protein_analyses`, per row, mirroring `_update_analysis` (`app/artifacts.py:155–184`) and nothing
+   more:
+   - `pdb_path`, `pae_json_path` from the capture in the controls' format; `pae_json_path` only if
+     `pae.json.gz` is present (`D-106`);
+   - `mean_plddt` = `provenance.json` `mean_plddt`;
+   - ⚠ **`structure_source`: `esmfold_local` → `esmfold` on all 37 (A3.1, RULED).** `esmfold_local` is
+     the enqueue-time value (`scripts/task4_slice2.py:211` and five sibling enqueues);
+     `esmfold` is the completion path's own write (`app/artifacts.py:45`, `:175`) and what all three
+     controls carry. **This is the completion's write, not a divergence.** No reader in `app/` or
+     `core/` filters on the column (`app/reads.py:200`, `:1843` display it);
+   - `metadata` = existing merged with `fold_provenance` = the full captured `provenance.json`, plus
+     `reattach` = `{"decision": "D-167", "written_at": <UTC>, "capture_sha256": …,
+     "completed_at_reconstructed": true}`. Consumer grep: no code in `app/`, `core/` or `ui/src`
+     enumerates metadata keys; `app/reads.py:205`/`:1842` serve `fold_provenance` by name;
+     `core/hold48.py:575` copies meta for tile children and excludes `fold_provenance` — the new
+     `reattach` key is rendered and rejected by nothing;
+   - `WHERE id = :aid AND pdb_path IS NULL`, rowcount 1, else roll back.
+7. `jobs`, per row:
+   - `status = 'complete'`;
+   - **`completed_at` = `fold_provenance.folded_at` + `progress.csv` `wall_seconds` — RECONSTRUCTED,
+     and said so** in `metadata.reattach`. ⚠⚠ **Two clocks (A1.4):** `folded_at` is the **worker's**
+     clock (the GPU laptop, `worker/runner.py:143`, `datetime.now(timezone.utc)`); `completed_at` is
+     the **Fly server's** clock (`core/queue.py:184` `_clock`, stamped at `:218`). Both UTC; no
+     conversion is made, and `progress.csv`'s local `at` is never read. **Calibration, measured on the
+     controls** — residual = `completed_at` (server) − (`folded_at` (worker) + `wall_seconds`):
+     4866 **−0.040 s**, 4867 **+0.065 s**, 4868 **−0.077 s**; spread **0.142 s** against the 5 s stop
+     line. That is the combined skew-plus-latency error bar, not latency alone. ⚠ `ORDERS` §3.4's
+     "~+1–2 s" was a prediction from whole-second `at` values and is **not** the recorded figure
+     (Planner error 2, A3.3);
+   - `tier = 'local'` — the controls' value; a `complete` row is claimable under neither;
+   - `attempts` preserved (measured 0);
+   - **`worker_id`, `claimed_at` preserved NULL — a named category: *claim record lost at the F-078
+     boundary* (A3.5).** The controls carry `local-gpu`; copying it would be inference from siblings.
+     Consumer grep: the only read of `claimed_at` is stale-claim reaping, `WHERE status = 'claimed'`
+     (`core/queue.py:245`); nothing assumes a `complete` row has one;
+   - `WHERE id = :j AND status = 'pending' AND tier IS NULL` (the status as measured), rowcount 1.
+8. Totals 37 and 37, else roll back.
+
+**Post-write probe, calibrated first:** before the write, `GET /api/analyses/{analysis_id}/structure`
+returns 200 with sha256 == capture for the controls and 404 for the 37 (a control whose served sha
+differs from disk refuses — the probe would prove nothing). After commit: 200 with sha == capture and
+`fold_provenance` == captured `provenance.json`, 37/37. Mismatch: exit non-zero, no automatic write;
+`--revert --i-am-the-owner` restores `state_before.json` exactly. Code passes the owner flag to
+neither mode (`F-075`).
+
+**Done-witness (`F-080`):** `d167_reattach.py --witness`, read-only, counts `complete AND pdb_path IS
+NOT NULL` **keyed by id range 4389–4905** — the key Phase B measured agreeing with `enqueued.json`.
+**Before: 480 (measured). After: 517.** ⚠ The third key (`run = '2'` + span band) reads 488 before
+because of `task3_overlap` — jobs 3698–3705, which are not slice 2 — and is not the witness.
+
+#### 5. ⚠⚠ Which database role performs each Phase D write
+
+| Phase D step | writes | through | effective role |
+|---|---|---|---|
+| 3 — re-attach | `protein_analyses` ×37, `jobs` ×37 | the tunnel URL (username `pharmfoldmdk-app`) | **predicted `schema_admin`** |
+| 4 — collapse | `DELETE` 3 `jobs` + 3 `protein_analyses` | same | **predicted `schema_admin`** |
+| 5 — `0014` | `CREATE UNIQUE INDEX` on `jobs` | `alembic` via the same URL | **predicted `schema_admin`** |
+
+⚠ **Measured once, and only this far:** Phase B's `current_user` was `schema_admin` through a URL
+naming `pharmfoldmdk-app`. `session_user`, `current_setting('role')` and `rolconfig` were **not read**,
+so *why* they differ — a role default or the proxy's mapping — is **unestablished**. `docs/SPEC-2026-08-19-readonly-role.md`
+§0 records the cluster's measured user `fly-user` with role `schema_admin`, consistent with proxy
+mapping and not proof of it. **Each Phase D script prints the preamble before its first write; a role
+other than the one in this table stops the sitting and is reported.**
+
+⚠ **`0014` and ownership:** in PostgreSQL 16, `CREATE INDEX` requires **ownership of the table**, not
+a `CREATE` grant (A3.2 wrote "`CREATE` on `jobs`"). The owner of `jobs` is **UNREAD**. If the effective
+role does not own it, `alembic upgrade` refuses — that refusal is the check, and it is reported, not
+worked around.
+
+#### 6. Owed before Phase D, and not by Code
+
+- **Phase B tunnel evidence (A3.6):** the Direct IP versus `fly mpg status`, and that the tunnel
+  closed — **owner to paste.** ⚠ What Code could measure, and it is not a substitute: at
+  `2026-09-15T16:06:57Z` nothing listened on local port 16391, and the only `flyctl` process was
+  `flyctl agent run` (started 06:08 PDT), not a proxy. That says the tunnel is closed **now**; it says
+  nothing about which cluster it was bound to during the read.
+- **Fresh-session confirmation** (§0.4).
+- **Slice 4 stays blocked on the Run-2 identity** (A1.5) until the owner rules the scope.
+
+#### 7. What this does NOT claim
+
+- **Not that the files are present today.** `F-078` amendment 2 measured them on 2026-09-15; the
+  capture re-measures them in the sitting, and a missing directory refuses.
+- **Not that the reconstructed `completed_at` is the true completion time** — it is the fold end on
+  the worker's clock plus measured wall time, with a ±0.08 s control bar.
+- **Not that `esmfold_local` and `esmfold` differ in meaning.** `db/models.py:120` lists
+  `esmfold_local` while the app writes `esmfold` — two names for one thing, an observation for the
+  close-out (A3.1), not today's work.
+
+#### D-167 amendment 1 — the Planner's review (`ORDERS` Amendment 4): the index build's privilege is asked before the first write, the session question is asked rather than answered, and the job-id key gets its own test
+
+- **Date:** 2026-09-15 PDT · ⚠ **Sub-entry beneath its parent, consuming NO integer** (the
+  `D-099 amendment 1` precedent). The parent's text above is **not edited** (`D-129-C`); where this
+  amendment and the parent differ, **this amendment governs**.
+- **How known (`D-016`):** `ORDERS-Code-2026-09-16-reattach-and-collapse (3).md` Amendment 4, the
+  Planner's read of `origin/d167-reattach` at `2634ca3`. The review report it answers is committed at
+  `docs/REPORT-Code-2026-09-15-phase-C-C0-and-D-167.md` (A4.8).
+
+**1. The design of record (A4.1).** `D-167` is accepted. ⚠ The job-id key (§2: the directory is the
+JOB id, not the analysis id) gains a test in C.2: a capture whose directories are shifted by one fails
+the identity precondition on **every** row, and the write's path is built from `job_id`.
+
+**2. ⚠⚠ The index build's privilege is answered BEFORE the sitting's first write (A4.2).** §5's
+ownership note stands as corrected (`CREATE INDEX` requires ownership of `jobs`, or membership in the
+owning role — Planner error 3). The role preamble (§4 write step 1) additionally reads
+`pg_tables.tableowner` for `jobs` in `current_schema()` and `pg_has_role(current_user, <owner>, 'USAGE')`.
+If the effective role **cannot** build the index:
+- **the collapse WAITS with `0014`** — it is an irreversible delete of byte-identical rows whose only
+  purpose is to let the index build, so it refuses before its first write and names the owner;
+- **the re-attach PROCEEDS** — it depends on neither, and prints the same preamble;
+- the sitting reports the owner of `jobs` and **stops there**.
+
+**3. Phase B tunnel evidence (A4.3).** The Direct-IP corroboration was never pasted. ⚠ **The read
+stands:** its identity rests on `cluster_marker: kyzl60xz9zyrpj9g`, read inside the same read-only
+transaction as every value, not on the tunnel — which is `D-159`'s whole reason. The missed step is a
+**process** item for the close-out's error accounting, not a defect in the data. ⚠⚠ **Phase D does not
+inherit the waiver:** Direct IP vs `fly mpg status` is pasted before the first command, and the
+tunnel's closure after the last.
+
+**4. ⚠ Correction to §0 and §6 — the session question (A4.4).** §0 says Phase D waits for *"a fresh
+session, not this one"* and §6 lists *"fresh-session confirmation"*. **That presupposed the answer.**
+The rule (close-out §10) asks whether **this** session crossed a day boundary, followed a
+context-exhaustion or model switch, or is over-long. Measured: this Code session and the Planner's
+conversation began on the morning of **2026-09-15 PDT** (`date`: 09:06 PDT). ⚠ The "09-16" labels are a
+date-frame mismatch (`F-047` amendment 6) — `CLOSEOUT-2026-09-15` dates the session of 2026-09-14 PDT
+by its UTC day — **labelled inference, not a boundary crossing by this session.** **Ruling:** if the
+owner confirms this session began this morning with no model switch, **Phase D may run in this
+session.**
+
+**5. Code's tooling rule (A4.7.2).** Any bulk edit Code makes to the tree **fails on a zero
+replacement count** rather than printing it. A zero printed and not read is `D-162` rule 7's probe that
+cannot fail, applied to Code's own tooling — the 2026-09-15 CRLF sweep is the instance.
+
+---
+
 ### D-166 — The enqueue guard moves into the database, because a guard that REMEMBERS is defeated by the same guard running twice at once — and the disqualifying fact is that the guard was present, type-correct and five hours old when it failed
 
 - **Date:** 2026-09-15
