@@ -76,6 +76,11 @@ def _load(source: str, tmp_path: Path, monkeypatch):
     spec = importlib.util.spec_from_file_location("scripts.d167_read_state", path)
     mod = importlib.util.module_from_spec(spec)
     monkeypatch.setitem(sys.modules, "scripts.d167_read_state", mod)
+    # ⚠ BOTH homes. `import scripts.d167_read_state as r` binds the PACKAGE ATTRIBUTE, not the
+    # sys.modules entry, so patching only sys.modules left that import style reading the REAL script.
+    # Caught by this file on its first run: the hard-coded-overlap mutant passed its test.
+    import scripts
+    monkeypatch.setattr(scripts, "d167_read_state", mod, raising=False)
     spec.loader.exec_module(mod)
     monkeypatch.setattr(mod, "OUT", REAL_OUT)                 # ⚠ the harness artifact, pinned
     monkeypatch.setattr(t, "SCRIPT", path)

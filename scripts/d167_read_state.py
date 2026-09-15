@@ -55,11 +55,15 @@ from scripts.d166_collapse_duplicate_tiles import (  # noqa: E402
     DUPLICATES_SQL,
     EXPECTED as COLLAPSE_EXPECTED,
     foreign_keys,
+    json_parent_references,
     referencing_rows,
 )
 
 OUT = REPO / "data" / "control" / "d167" / "state_before.json"
 ENQUEUED_JSON = REPO / "data" / "control" / "task4_slice2" / "enqueued.json"
+#: ⚠ `ORDERS` A2.2: Task 3's Run-2 rows. Some fall in slice 2's band, so key 3 counts them while
+#: slice 2's enqueue (and keys 1-2) excluded them through `_existing_run2`.
+TASK3_ENQUEUED_JSON = REPO / "data" / "control" / "task3_run2" / "enqueued.json"
 
 FIRST, LAST, N_OWED = 4869, 4905, 37
 CONTROL_FIRST, CONTROL_LAST = 4866, 4868
@@ -108,6 +112,13 @@ def _git(*args: str) -> str:
                               check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError) as e:
         return f"UNKNOWN ({e})"
+
+
+def task3_overlap_ids(rows: list[dict], band: tuple[int, int]) -> list[int]:
+    """Job ids of `rows` (an `enqueued.json`) whose span falls inside `band`. Pure. ⚠ Computed from
+    the committed file in the run, never a hard-coded count (`ORDERS` A2.2)."""
+    lo, hi = band
+    return sorted(int(r["job_id"]) for r in rows if lo <= float(r["span_aa"]) <= hi)
 
 
 def _expect(key: str, measured: Any, expected: Any) -> dict:
@@ -179,11 +190,29 @@ def collect(conn) -> dict:
         total = conn.execute(text(f"SELECT count(*) {base}"), params).scalar()
         done = conn.execute(text(f"SELECT count(*) {base} AND {folded}"), params).scalar()
         slice2[name] = {"rows": total, "complete_and_pdb_path": done}
-        exp.append(_expect(f"5. slice 2 [{name}]: complete AND pdb_path IS NOT NULL", done,
-                           EXPECTED_SLICE2_FOLDED))
     state["slice2"] = slice2
-    distinct = sorted({v["complete_and_pdb_path"] for v in slice2.values()})
-    exp.append(_expect("5. the three keys agree on the folded count", len(distinct), 1))
+    k1, k2, k3 = (v["complete_and_pdb_path"] for v in slice2.values())
+    for name in list(keys)[:2]:
+        exp.append(_expect(f"5. slice 2 [{name}]: complete AND pdb_path IS NOT NULL",
+                           slice2[name]["complete_and_pdb_path"], EXPECTED_SLICE2_FOLDED))
+    exp.append(_expect("5. keys 1 and 2 agree (id range, enqueued.json)", k1 == k2, True))
+
+    # ⚠⚠ A2.2. Key 3 is not expected to equal keys 1-2: it also counts Task 3's Run-2 rows in the
+    # band. The difference must be exactly those rows that the database reports folded — measured
+    # here from the committed file, and recorded as a named category rather than a disagreement.
+    in_band = task3_overlap_ids(json.loads(TASK3_ENQUEUED_JSON.read_text(encoding="utf-8")),
+                                SLICE2_BAND)
+    key3_where, key3_params = keys["run = '2' AND metadata span_aa in 1-30"]
+    overlap_done = [r[0] for r in conn.execute(text(
+        "SELECT j.id FROM jobs j JOIN protein_analyses a ON a.id = j.analysis_id "
+        f"WHERE {key3_where} AND {folded} AND j.id = ANY(:t3) ORDER BY j.id"),
+        {**key3_params, "t3": in_band})]
+    state["task3_overlap"] = {"file": "data/control/task3_run2/enqueued.json",
+                              "band": list(SLICE2_BAND), "ids_in_band": in_band,
+                              "ids_complete_in_db": overlap_done}
+    exp.append(_expect("5. key 3 minus key 2 equals task3_overlap "
+                       "(Task 3 Run-2 rows in band 1-30, complete with pdb_path)",
+                       k3 - k2, len(overlap_done)))
 
     # ── 6: the collapse set, in the collapse script's own words ───────────────────────────────
     live = {f"{r['parent']}/{r['tile_index']}": list(r["ids"])
@@ -201,6 +230,10 @@ def collect(conn) -> dict:
     state["foreign_keys"] = [list(f) for f in fks]
     state["references_to_drop_rows"] = [list(r) for r in refs]
     exp.append(_expect("7. rows outside the collapse referencing its drop rows", len(refs), 0))
+    children = json_parent_references(conn, drop_jobs)
+    state["json_parent_references_to_drop_rows"] = children
+    exp.append(_expect("7. jobs naming a drop row as inference_settings parent_job_id "
+                       "(no declared constraint)", len(children), 0))
 
     # ── 8 + 9 ──────────────────────────────────────────────────────────────────────────────
     claimed = [r[0] for r in conn.execute(CLAIMED_SQL)]

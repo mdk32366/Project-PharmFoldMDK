@@ -1440,7 +1440,9 @@ S-002 Q1, now testable against a config that genuinely fits.
     handed by the operator (`--url`, never a port), any `claimed` job (a live fold; the `0014` index
     build takes locks), and any row outside the delete set that references a row inside it —
     foreign keys enumerated from `pg_constraint` (⚠ not `information_schema`, which shows only
-    tables the connected role owns), calibrated in the run on `jobs.analysis_id`.
+    tables the connected role owns), calibrated in the run on `jobs.analysis_id`. ⚠ The catalog
+    sees DECLARED keys only, so `jobs.inference_settings->>'parent_job_id'` — a reference to
+    `jobs.id` held in JSON — is checked by name as well.
   - **Identity first, population second.** The target must carry `keel_live_cluster` naming
     `kyzl60xz9zyrpj9g`. ⚠⚠ **A population floor cannot do this job alone:** the forensic cluster
     `zp2wjrej9lwodn4q` holds the same census — the live cluster was restored from its backup — so it
