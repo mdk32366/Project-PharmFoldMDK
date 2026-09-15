@@ -21,6 +21,13 @@ Run, in this order, with the tunnel open (`D-162` rule 5 — bind by name, corro
     python scripts/d166_collapse_duplicate_tiles.py                      # verify only, no writes
     python scripts/d166_collapse_duplicate_tiles.py --i-am-the-owner     # the write
 
+⚠⚠ **This file's first version built its engine from a raw `DATABASE_URL`, and the local
+suite was GREEN.** `tests/test_every_engine_normalizes_the_url.py` enumerates
+**git-tracked** files (`_tracked_sources`), so a script that has been written but not
+`git add`-ed is invisible to it. CI saw it on the first commit. **A green local gate is
+not evidence about a file the gate cannot see** — `git add` before trusting a local run
+on a new file.
+
 ⚠ **Pair this with the `F-078` restore of the 37** (`PREWORK-2026-09-16.md` item 1). Both are owner
 writes against the same cluster and one sitting costs less than two.
 """
@@ -38,6 +45,8 @@ from sqlalchemy import create_engine, text
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
+
+from db.dburl import normalize_db_url              # noqa: E402
 
 BASE = "https://pharmfoldmdk.fly.dev"
 PORT = "16391"
@@ -94,7 +103,10 @@ def _fetch(analysis_id: int) -> tuple[int, str]:
 
 def main() -> int:
     owner = "--i-am-the-owner" in sys.argv
-    eng = create_engine(_db_url())
+    # ⚠ `normalize_db_url`, never a raw URL: on Fly's bare `postgresql://` SQLAlchemy
+    # resolves psycopg2, which `D-012` does not install. Caught by
+    # `tests/test_every_engine_normalizes_the_url.py` — in CI, not locally, see below.
+    eng = create_engine(normalize_db_url(_db_url()))
 
     print("=" * 78)
     print("D-166 - COLLAPSE THE DUPLICATE TILE IDENTITIES" + ("" if owner else "   [DRY RUN]"))
