@@ -407,22 +407,31 @@ def report() -> int:
 #: 480/517 for ever. That is the same shape as everything F-078 records: a loss no check watches.
 #: ! So the reminder lives in `--report`, the command run at the moment the fold ends, rather than
 #: in a document someone has to remember to open.
+#: !! F-078 amendment 2 (2026-09-15): the 37 FOLDS were never lost - only their database rows. The
+#: artifacts are on the volume, identity 37/37. The steps this notice used to print (restore the
+#: tier, re-fold) would overwrite them, so it now says the opposite. The debt is still silent.
 OWED_RESTORE = [
     "",
     "=" * 78,
-    "!! OWED, AND NOT YET DONE: RESTORE SLICE 2's 37 (F-078, order B)",
+    "!! OWED, AND NOT YET DONE: SLICE 2's 37 (F-078 amendments 1 and 2)",
     "=" * 78,
-    "  Before slice 3 folded, jobs 4869-4905 were set tier NULL so this slice could be the only",
-    "  claimable population. They are slice 2 folds LOST at the 2026-09-13 15:24:33Z backup",
-    "  boundary - no artifact, no database record - and they are still owed a re-fold.",
+    "  Jobs 4869-4905 were set tier NULL on 2026-09-15 so slice 3 could be the only claimable",
+    "  population. Their DATABASE rows were lost at the 2026-09-13 cut: job 4868 completed",
+    "  15:24:36.578Z and survived; job 4869 was claimed 64 ms later and did not.",
     "",
-    "    1. job 4869: status 'claimed' -> 'pending'   (it was claimed 64 ms before the cut)",
-    "    2. jobs 4869-4905: tier NULL -> 'local'      (37 rows)",
-    "    3. then --preflight and fold them as their own bounded population",
+    "  !! THEIR FOLDS WERE NOT LOST (F-078 amendment 2). All 37 artifacts are on the volume;",
+    "  sizes match progress.csv 37/37 and identity is 37/37 (scripts/f078_identity_check.py).",
+    "",
+    "  !! DO NOT RE-FOLD THEM, AND DO NOT RUN f078_null_tier_the_37.py --restore.",
+    "  A re-fold uploads into the same /data/artifacts/{job_id}/ directories and overwrites",
+    "  the verified bytes. The script refuses --restore for exactly that reason.",
+    "",
+    "  Owed instead: the OWNER rules re-attach (link the existing artifacts to the 37 rows)",
+    "  or re-fold. The rows stay tier NULL until that ruling is written.",
     "",
     "  ! A NULL-tier job is claimed by nobody and the stranger guard does not count it, so",
     "  nothing else in this system will ever raise its hand about these rows. This notice IS",
-    "  the guard. Do not delete it until the 37 are folded and slice 2 reads 517/517.",
+    "  the guard. Do not delete it until slice 2 reads 517/517.",
     "=" * 78,
 ]
 

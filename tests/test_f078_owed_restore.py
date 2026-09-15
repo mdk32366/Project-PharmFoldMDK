@@ -38,17 +38,36 @@ def test_the_report_prints_the_owed_restore():
         "slice 2's 37 NULL-tiered rows — the stranger guard does not count them by design.")
 
 
-def test_the_notice_names_the_rows_and_the_steps():
-    """⚠ 'Something is owed' is not actionable at 2 a.m. after a ten-hour fold. The row range,
-    the two writes and their order have to be in the text itself."""
+def test_the_notice_names_the_rows_and_what_NOT_to_do():
+    """⚠ 'Something is owed' is not actionable at 2 a.m. after a ten-hour fold. The row range and
+    what done looks like have to be in the text itself.
+
+    ⚠⚠ `F-078` amendment 2 changed WHAT the notice must say. It used to be pinned to the restore
+    and re-fold steps — and following them would have overwritten 37 verified artifacts. It is
+    now pinned to the prohibition, so a later edit cannot quietly restore the old steps."""
     import scripts.task4_slice3 as s3
 
     text = "\n".join(s3.OWED_RESTORE)
     assert "4869" in text and "4905" in text, "the notice does not name the rows"
-    assert "'claimed' -> 'pending'" in text, "the notice does not name the status write"
-    assert "tier NULL -> 'local'" in text, "the notice does not name the tier write"
     assert "517/517" in text, "the notice does not say what done looks like"
-    assert "F-078" in text, "the notice does not cite the finding that explains it"
+    assert "F-078 amendments 1 and 2" in text, "the notice does not cite the amendment that governs"
+    assert "DO NOT RE-FOLD" in text, "the notice no longer forbids the re-fold"
+    assert "--restore" in text, "the notice does not name the command that must not run"
+    assert "f078_identity_check.py" in text, "the notice does not name the evidence"
+    assert "tier NULL -> 'local'" not in text, (
+        "the superseded restore step is back in the notice — following it destroys the evidence")
+
+
+def test_restore_refuses_even_for_the_owner():
+    """⚠⚠ `F-078` amendment 2 §4. `--restore` leads to a re-fold, and a re-fold overwrites the 37
+    artifacts in place. The script refuses BEFORE it builds an engine, so the refusal cannot depend
+    on a tunnel being up. ⚠ The URL below points at nothing: if the refusal moved after the connect,
+    this would raise instead of returning 1."""
+    import scripts.f078_null_tier_the_37 as f
+
+    url = "postgresql://nobody@127.0.0.1:1/nothing"
+    assert f.main(["--url", url, "--restore"]) == 1
+    assert f.main(["--url", url, "--restore", "--i-am-the-owner"]) == 1
 
 
 def test_the_notice_explains_why_nothing_else_will_catch_it():
