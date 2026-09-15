@@ -180,6 +180,14 @@ def test_the_task3_file_the_overlap_reads_is_the_committed_one():
     assert path.is_file()
 
 
+def test_the_provenance_labels_the_url_username_as_what_it_is():
+    """⚠ `ORDERS` A3.2. `target: … as pharmfoldmdk-app` read like the role; it was the URL's username,
+    and Postgres answered `schema_admin`. The label says what the value is from now on."""
+    src = SCRIPT.read_text(encoding="utf-8")
+    assert '"url_username": eng.url.username' in src
+    assert "as {eng.url.username}" not in src
+
+
 def test_main_prints_the_sha256_and_records_the_commit():
     src = SCRIPT.read_text(encoding="utf-8")
     assert 'print(f"sha256  : {sha}")' in src
