@@ -359,6 +359,81 @@ rows in `jobs` that anyone can re-read**, and not on a listing that has rolled p
 ⚠ **Recorded, not repaired.** The right fix is forward-only: an incident that names a Fly artifact
 should capture that artifact's own output at the time, because a listing window closes.
 
+#### F-078 amendment 2 — ⚠⚠ The 37 FOLDS were NOT lost. Their database rows were. The volume was never restored, and the witness this finding used for it cannot see an orphaned file.
+
+- **Date:** 2026-09-15 · **Consumes no integer.** · **Status of F-078:** ⚠ still **OPEN**, but its
+  closing condition changes: not *"until the 37 are re-folded"* but **until the owner rules
+  re-attach or re-fold and slice 2 reads 517/517.**
+- **How known (`D-016`):** the owner, at the keyboard, read-only, on the production machine:
+  `find /data/artifacts -type f -newermt '2026-09-13 15:24:00' -not -newermt '2026-09-13 15:45:00'`,
+  then `stat` of the 37 `structure.pdb`, then a `grep -H` dump of `provenance.json` and the CA lines
+  of `structure.pdb`, committed at `data/control/f078/f078_identity.volume_dump.txt`
+  (sha256 `b30d6a1815da69f6088dc8b422259918add77ca625ca2954443f635f784c66ef`, UTF-16 as captured).
+  Checked by `scripts/f078_identity_check.py` against `data/control/f078/f078_identity_expected.json`
+  and slice 2's `progress.csv`. Disk only after the dump.
+
+**1. What the volume holds.** Artifact directories are keyed by **job id**
+(`app/artifacts.py`: `Path(artifact_root) / str(job_id)`). In the window: **39 directories, four
+files each** — `4867`, `4868` (the last two folds *before* the cut, completed 15:24:15Z and
+15:24:35Z) and **`4869`–`4905`, all 37.** ⚠ Job `4866` (15:23:55Z) is correctly *outside* the window:
+the volume's clock agrees with `progress.csv` at both edges, so the result is not an artefact of a
+misaligned window.
+
+**2. Three measurements, each against a record that is not the volume:**
+
+| check | result |
+|---|---|
+| `structure.pdb` size vs `progress.csv` `served_structure_bytes` (recorded at fold time) | **37 / 37 equal**, byte for byte |
+| PDB residues == UniProt sequence at provenance `ecd_start..ecd_end` · `input_length` == span · `folded_at` within 60 s of `progress.csv` (UTC−7 converted explicitly) | **37 / 37** |
+| per-row negative control: the sequence is absent from a *different* job's protein | **37 / 37 absent** |
+
+⚠ **`D-162` rule 7, applied to the checker itself.** One residue changed (job 4880), one `folded_at`
+moved an hour (4890), one `ecd_start` shifted by one (4900), one CA line dropped (4875): **each fails
+on exactly its own row and no other.** `tests/test_f078_identity_check.py` pins all four, and reads
+nothing gitignored (`F-076`).
+
+**3. ⚠⚠ What this supersedes in the body, recorded rather than overwritten (`D-129-C`):**
+
+- *"37 folds were lost from BOTH stores"* and *"all with no artifact on the volume"* — **false for the
+  volume.** Only the database lost them (`pdb_path` NULL, not complete, no pLDDT).
+- §4: *"the database and the volume were recovered to the same instant"* — **false.** The restore
+  was database-only. Every one of the 37 artifacts was written after `15:24:33Z` and is still there.
+- §4: job 4869 *"claimed … and never finished"* — **it finished.** Its provenance reads
+  `folded_at 2026-09-13T15:24:37.43Z`. ⚠ `folded_at` is the fold's **start**: every row sits ~19 s,
+  one fold, before `progress.csv`'s end-of-fold `at`.
+- §7's *"Assumptions relied on: that the served surface is a faithful witness to the volume"* — **this
+  is where it broke, and the finding named the assumption without testing its edge.**
+  `GET /api/analyses/{id}/structure` resolves through the row's `pdb_path`
+  (`reads.served_structure_path`). ⚠ **For a row whose path the restore erased, the route returns 404
+  whether or not the file exists.** The 3,651 positive controls all had paths; not one of them could
+  exercise the case that mattered. *A calibration over the population where the witness works says
+  nothing about the population where it cannot.* `F-047` amendment 6's class.
+- The pLDDT the database lost survives in provenance: **mean 55.21, range 46.86–75.05, n = 37.**
+
+**4. ⚠⚠ The consequence that made this urgent.** The owed step on record was
+`f078_null_tier_the_37.py --restore` and a re-fold. **A re-fold uploads into the same
+`{artifact_root}/{job_id}/` directories and overwrites these bytes** — destroying the only evidence
+that the loss was never a loss. `--restore` now **refuses**, citing this amendment, and the
+`--report` notices in `task4_slice3.py` and `task4_slice4.py` say *do not re-fold*.
+⚠ **It refuses rather than checking the volume** because the only artifact check that script owns is
+`_head_served` — the served surface — **the exact witness §3 shows is blind here.** A guard built on
+it would pass. (`D-162` rule 3: a documented blind spot is a blocking defect.)
+
+**5. What is owed, and whose.**
+1. ⚠ **The owner rules: re-attach or re-fold** (a `D-` entry when written). Re-attach means writing
+   `pdb_path`, `pae_json_path` and completion onto 37 rows against files §2 verified; no GPU, and the
+   fold measurements already in `progress.csv` stay the measurements. Code prepares; the owner types.
+2. ⚠ The 37's **live database state was not re-read in this sitting.** It is recorded as the NULL-tier
+   write left it (amendment 1 §3). The next tunnel reads it first.
+3. `/tmp/f078_identity.txt` remains on the machine's ephemeral disk from the capture; harmless, gone
+   on restart.
+
+**6. How it was found.** Code's first answer to *"are they truly lost?"* repeated this finding's method
+— served surface 0/37, controls 3/3 — and it would have closed the question. It was the **owner's**
+instruction to check whether they were *truly* lost that sent Code to the volume, and the volume
+listing was the owner's to run: the SSH read was refused to Code as a production read. ⚠ **A
+re-measurement that uses the original instrument reproduces the original error.**
+
 ### F-076 — ⚠⚠ Five tests asserted tile geometry while the input to that geometry was read from a GITIGNORED cache — so the same assertions asserted different science on different machines, green in CI and red locally, and the difference was read for two days as a numeric disagreement
 
 - **Date:** 2026-09-15 · **Status:** ⚠ **CLOSED for the test surface; OPEN as a question about the

@@ -74,6 +74,18 @@ def main(argv: list[str] | None = None) -> int:
     if not args.url:
         return _refuse("no DATABASE_URL and no --url.")
 
+    # ⚠⚠ F-078 AMENDMENT 2. The 37 were never lost from the volume: all 37 artifacts are present
+    # and identity-checked 37/37. --restore makes them claimable, and a re-fold uploads into the
+    # same {artifact_root}/{job_id}/ directories and OVERWRITES them. ⚠ This does not try to check
+    # the volume first: the only artifact probe here is `_head_served`, which resolves through
+    # `pdb_path` and so answers 404 for exactly these rows whether or not the file exists.
+    if args.restore:
+        return _refuse(
+            "--restore is withdrawn by F-078 amendment 2. The 37 artifacts are ON THE VOLUME "
+            "(identity 37/37, scripts/f078_identity_check.py) and a re-fold would overwrite them. "
+            "The owner rules re-attach or re-fold first; this path returns only if that ruling "
+            "is re-fold, and then with a volume check that does not go through pdb_path.")
+
     from sqlalchemy import create_engine, text                # noqa: PLC0415
 
     from db.dburl import normalize_db_url                     # noqa: PLC0415
