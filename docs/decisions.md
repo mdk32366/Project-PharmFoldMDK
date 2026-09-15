@@ -431,13 +431,36 @@ the same content to drift.
 
 - **Date:** 2026-09-15 · **Consumes no integer.** · Occasioned by `F-078`.
 
-**6. A matching total is not a matching set. A matching set is not a matching state.**
+**6. A matching total is not a matching set. A matching set is not a matching state. And a check
+that runs against the WORKING TREE is not evidence about the COMMIT — in either direction.**
 
 ⚠⚠ The first two clauses were `§E`'s and they were right. They were also **insufficient in exactly
 the way that hid 37 lost folds**: every one of those rows was present, by id and by accession, in
 both stores. Identity reconciled perfectly. Only `status` differed. ⚠ A reconciliation that compares
 existence and not state will report a clean bill on a database that has lost every completion it
 ever recorded.
+
+⚠⚠ **AMENDED 2026-09-15 with a third clause, and it is deliberately the SAME rule rather than a
+ninth one.** The working-tree/commit gap has **two faces**, and 2026-09-15 produced both:
+
+| face | what happened | which way it failed |
+|---|---|---|
+| **partial `git add`** | `docs` and `scripts` staged, `tests` not | local **green**, CI **red** |
+| **not added at all** | `scripts/d166_collapse_duplicate_tiles.py` untracked | local **green**, CI **red** |
+
+⚠ **The mechanism is the same in both:** the repo-scanning guards enumerate **git-tracked** files
+(`tests/_tracked_sources.py`), so they report on the commit's contents while `pytest` itself imports
+the working tree. **The two disagree whenever staging does.**
+
+⚠⚠ **Stated plainly, because this is the part that makes it a rule rather than a nuisance: the
+local suite was GREEN while the file had a REAL DEFECT.** `scripts/d166_collapse_duplicate_tiles.py`
+built its engine from a raw `DATABASE_URL`, which on Fly's bare `postgresql://` resolves psycopg2 —
+a driver `D-012` does not install. **The guard that exists to catch exactly that could not see the
+file.** `git add` before treating a local run as evidence about a new file.
+
+⚠ **Why one rule and not two:** two separate rules invite a reader to match their situation against
+one, miss the other, and conclude they are covered. **That is precisely how rule 3's "in a safety
+system" qualifier was excusing the spancache docstring until it was dropped**, one rule above.
 
 **7. A verification probe states what a success proves, and what it would return if the thing were
 absent.** ⚠ `GET /api/census/{accession}` returns 200 for any census protein and was read as

@@ -350,6 +350,12 @@ that inherits this** — the *direction* is unaffected (the 37 begin at `15:25:1
 boundary on any reading), but the *interval* rests on a number that is no longer verifiable at
 source.
 
+**4. ⚠⚠ SCOPED: the paper must cite the leg that is still verifiable.** Methods §4.3 stated the
+loss at *"the 2026-09-13T15:24:33Z backup boundary"* — **the backup label, which is the leg that can
+no longer be checked at source.** It is amended to cite the **database-derived** cut instead, with
+the label kept as corroboration rather than as the claim. ⚠ **The paper's sentence then rests on two
+rows in `jobs` that anyone can re-read**, and not on a listing that has rolled past.
+
 ⚠ **Recorded, not repaired.** The right fix is forward-only: an incident that names a Fly artifact
 should capture that artifact's own output at the time, because a listing window closes.
 
@@ -2996,32 +3002,44 @@ from it by diffing failure sets before and after.
 - ⚠ **No content changed.** The staged diff is `.gitattributes` alone; the twelve blobs were already
   LF in the index and only the working-tree bytes moved.
 
-#### F-047 amendment 6 — ⚠⚠ The investigation layer, measured FOUR times in one day, by both parties
+#### F-047 amendment 6 — ⚠⚠ A VALUE READ AGAINST THE WRONG FRAME: five instances in one day, by both parties, two of which nearly authorised a production write
 
 `F-047` has so far been recorded against *artifacts*: a guard, a probe, a count, a cache. ⚠ **It has
-an investigation-layer form**, and 2026-09-15 produced four instances inside a single day:
+an investigation-layer form**, and 2026-09-15 produced five instances inside a single day.
 
-| # | the description that was judged | the thing it stood for | who |
-|---|---|---|---|
-| 1 | `/api/census/{accession}` returning HTTP 200 | whether the **artifact** exists | Code |
-| 2 | §E comparing job-id **presence** | job **state** | Code |
-| 3 | the same probe defect, independently | — | Planner |
-| 4 | `completed_at` separation of ~2 h 57 m | the **enqueue** separation (2 m 26 s) | Code |
+⚠⚠ **They are not merely "a proxy was used". They share one shape: a value was compared against a
+value in a DIFFERENT FRAME, and nothing in the comparison named either frame.**
 
-⚠ **In every one, a proxy was available, cheap, and nearly right — and the thing itself was one
-query away.** Instance 4 is the sharpest: it concluded a guard post-dated the duplicate waves when
-the guard **pre-dated both enqueues by five hours**, which inverts the finding (`D-166` §2).
+| # | the value read | the frame it was in | the frame it was judged against | near-miss | who |
+|---|---|---|---|---|---|
+| 1 | `/api/census/{accession}` → HTTP 200 | **any census protein** | *this Run 2 artifact exists* | ⚠⚠ **nearly authorised a 37-row reconciliation write against artifacts that do not exist** | Code |
+| 2 | §E's job-id comparison | **identity** (presence) | **state** (`status`) | ⚠⚠ **reported a clean bill while 37 folds were lost** | Code |
+| 3 | the same probe, independently | **any census protein** | *this artifact exists* | — | Planner |
+| 4 | the pairs' `completed_at`, ~2 h 57 m | **the fold queue** | **the enqueue** (2 m 26 s) | — | Code |
+| 5 | the machine's clock date | **local, UTC−7** | **UTC-dated documents** | — | Code |
 
-⚠⚠ **The generalisation is `D-162` rule 3's, one level up.** Rule 3 says a documented blind spot is
-a blocking defect rather than a comment. The investigation-layer form says: **a measurement of a
-proxy is a blocking gap rather than a result**, and the check is `D-162` rule 7 turned on oneself —
-*state what this number would read if the thing were not so.* Applied to instance 4: *"what would
+⚠ **Instance 4 inverts a finding:** it concluded a guard post-dated the duplicate waves when the
+guard **pre-dated both enqueues by five hours** (`D-166` §2). ⚠ **Instance 5 invents one:** it
+reported a document/machine date discrepancy that **does not exist** — local `2026-09-14 17:56` and
+UTC `2026-09-15 00:56Z` are the same instant, and the documents were right.
+
+##### ⚠⚠ The rule this yields, and it is PREDICTIVE rather than a tally
+
+> **Every comparison names the frame both sides are in — before it is made, not after it disagrees.**
+
+Frame, here, is whatever makes two values non-comparable: a **timezone** (5), a **clock domain**
+(4 — queue time against enqueue time), a **scope** (1 — any protein against this artifact), or a
+**dimension** (2 — identity against state). ⚠ **The check is `D-162` rule 7 turned on oneself:**
+*state what this number would read if the thing were not so.* Applied to 4 — *"what would
 `completed_at` read if the enqueues had been simultaneous?"* — **exactly what it did read.** The
-proxy could not have distinguished the two cases, and that is discoverable before the query, not
-after.
+proxy could not have distinguished the two cases, and that is discoverable **before** the query.
 
-⚠ **Both parties, four times, one day.** This is not a lapse of care by one instance; it is the
-default behaviour of anyone holding a description that answers quickly.
+⚠⚠ **The near-miss column is what separates this class from ordinary error.** Two of the five were
+one authorisation away from a production write, and in both the reasoning was sound *given the
+number* — the number was simply answering a different question than the one asked.
+
+⚠ **Both parties, five times, one day.** Not a lapse of care by one instance; the default behaviour
+of anyone holding a value that answers quickly.
 
 ### F-048 — For 58 census proteins the V2 span is a short extracellular loop INSIDE a larger transmembrane domain, and the annotation and the span are describing different objects
 
