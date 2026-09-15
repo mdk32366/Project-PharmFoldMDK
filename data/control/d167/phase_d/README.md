@@ -20,3 +20,5 @@ Not chat, not upload: the Planner fetches the same bytes (KEEL Principles 8-9).
 
 ⚠ Stop rules: any `REFUSING`, any exit ≠ 0, or any expectation not met stops the sitting at that line.
 Steps 3 and 4 are independent; a stop in 4 does not undo 3. Python: `.\.venv\Scripts\python.exe`.
+
+⚠ **`01a-witness-attempt1-placeholder-url.txt` is committed by the owner's ruling (ORDERS A8.4, 2026-09-15).** It records step 1's first attempt, run while `\` still held the literal placeholder: psycopg failed authentication before any session existed (no role preamble, no identity read, no count). The pre-commit scan (A6.5) matched the word `password` twice; both are the server's line `FATAL:  password authentication failed for user "<user>"` (placeholder user, no credential). Literal-password scan: 0 hits. Ruled: owner (Matt Kelly), commit.
