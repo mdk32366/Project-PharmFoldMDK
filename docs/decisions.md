@@ -226,6 +226,50 @@ worked around.
   `esmfold_local` while the app writes `esmfold` — two names for one thing, an observation for the
   close-out (A3.1), not today's work.
 
+#### D-167 amendment 1 — the Planner's review (`ORDERS` Amendment 4): the index build's privilege is asked before the first write, the session question is asked rather than answered, and the job-id key gets its own test
+
+- **Date:** 2026-09-15 PDT · ⚠ **Sub-entry beneath its parent, consuming NO integer** (the
+  `D-099 amendment 1` precedent). The parent's text above is **not edited** (`D-129-C`); where this
+  amendment and the parent differ, **this amendment governs**.
+- **How known (`D-016`):** `ORDERS-Code-2026-09-16-reattach-and-collapse (3).md` Amendment 4, the
+  Planner's read of `origin/d167-reattach` at `2634ca3`. The review report it answers is committed at
+  `docs/REPORT-Code-2026-09-15-phase-C-C0-and-D-167.md` (A4.8).
+
+**1. The design of record (A4.1).** `D-167` is accepted. ⚠ The job-id key (§2: the directory is the
+JOB id, not the analysis id) gains a test in C.2: a capture whose directories are shifted by one fails
+the identity precondition on **every** row, and the write's path is built from `job_id`.
+
+**2. ⚠⚠ The index build's privilege is answered BEFORE the sitting's first write (A4.2).** §5's
+ownership note stands as corrected (`CREATE INDEX` requires ownership of `jobs`, or membership in the
+owning role — Planner error 3). The role preamble (§4 write step 1) additionally reads
+`pg_tables.tableowner` for `jobs` in `current_schema()` and `pg_has_role(current_user, <owner>, 'USAGE')`.
+If the effective role **cannot** build the index:
+- **the collapse WAITS with `0014`** — it is an irreversible delete of byte-identical rows whose only
+  purpose is to let the index build, so it refuses before its first write and names the owner;
+- **the re-attach PROCEEDS** — it depends on neither, and prints the same preamble;
+- the sitting reports the owner of `jobs` and **stops there**.
+
+**3. Phase B tunnel evidence (A4.3).** The Direct-IP corroboration was never pasted. ⚠ **The read
+stands:** its identity rests on `cluster_marker: kyzl60xz9zyrpj9g`, read inside the same read-only
+transaction as every value, not on the tunnel — which is `D-159`'s whole reason. The missed step is a
+**process** item for the close-out's error accounting, not a defect in the data. ⚠⚠ **Phase D does not
+inherit the waiver:** Direct IP vs `fly mpg status` is pasted before the first command, and the
+tunnel's closure after the last.
+
+**4. ⚠ Correction to §0 and §6 — the session question (A4.4).** §0 says Phase D waits for *"a fresh
+session, not this one"* and §6 lists *"fresh-session confirmation"*. **That presupposed the answer.**
+The rule (close-out §10) asks whether **this** session crossed a day boundary, followed a
+context-exhaustion or model switch, or is over-long. Measured: this Code session and the Planner's
+conversation began on the morning of **2026-09-15 PDT** (`date`: 09:06 PDT). ⚠ The "09-16" labels are a
+date-frame mismatch (`F-047` amendment 6) — `CLOSEOUT-2026-09-15` dates the session of 2026-09-14 PDT
+by its UTC day — **labelled inference, not a boundary crossing by this session.** **Ruling:** if the
+owner confirms this session began this morning with no model switch, **Phase D may run in this
+session.**
+
+**5. Code's tooling rule (A4.7.2).** Any bulk edit Code makes to the tree **fails on a zero
+replacement count** rather than printing it. A zero printed and not read is `D-162` rule 7's probe that
+cannot fail, applied to Code's own tooling — the 2026-09-15 CRLF sweep is the instance.
+
 ---
 
 ### D-166 — The enqueue guard moves into the database, because a guard that REMEMBERS is defeated by the same guard running twice at once — and the disqualifying fact is that the guard was present, type-correct and five hours old when it failed
