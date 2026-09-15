@@ -28,6 +28,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.contracts import MIN_OVERLAP_AA, STRIDE_AA, TIER_RECIPE, TILE_WINDOW_AA
+from core.enqueue_lock import TILE_NAMESPACE, hold_enqueue_lock
 from db.models import JobRecord, ProteinAnalysis
 
 # Same pins as `worker.runner` (D-018). Duplicated so `app/artifacts.py` can
@@ -543,6 +544,13 @@ def emit_tile_jobs(
     parent_analysis.meta = merged_parent
     # ⚠ THE HOLD. Do not set parent_job.tier.
 
+    # ⚠⚠ `D-166`. The read below and the writes beneath it are a check-then-write, and on
+    # 2026-09-04 two OVERLAPPING transactions both passed it and both wrote — proven by `jobs.id`,
+    # a non-transactional sequence: txn A took 3694 and 3697 AFTER txn B took 3693. Under
+    # READ COMMITTED neither could see the other's uncommitted rows.
+    # ⚠ This lock is the INTERIM. `0014_enqueue_identity_unique` is the constraint, and it is the
+    # thing that actually cannot be bypassed; the lock only binds callers that take it.
+    hold_enqueue_lock(session, TILE_NAMESPACE)
     emitted_indices, emitted_windows = _emitted_tile_idents(session, parent_job.id)
 
     for spec in specs:

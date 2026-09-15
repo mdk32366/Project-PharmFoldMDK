@@ -176,9 +176,13 @@ wrong.
 ⚠ The 5 Run 1 jobs that are not `complete` (2 `failed`, 3 `pending`) hold no artifact, which is the
 expected state and not loss; the two failures are `P11717` (`F-066`) and `P55073` (`F-033`).
 
-⚠⚠ **`F-078`:** 37 slice 2 folds were lost from **both** the database and the artifact volume at the
-2026-09-13T15:24:33Z backup boundary — contiguous, nothing lost before it, nothing kept after it.
-They are owed a re-fold.
+⚠⚠ **`F-078`:** 37 slice 2 folds were lost from **both** the database and the artifact volume at a
+single instant — contiguous, nothing lost before it, nothing kept after it. They are owed a re-fold.
+
+⚠ **The boundary is stated from the database, which is the leg that stays verifiable:** job `4868`
+completed `2026-09-13T15:24:36.578Z` and **survived**; job `4869` was claimed **64 ms** later and
+did **not**. The hourly backup labelled `15:24:33Z` corroborates it and is **not** what the claim
+rests on — `fly mpg backup list` no longer reaches that date (`F-078` amendment 1).
 
 ✅ **The loss does not reach this paper.** It is confined to Run 2, which `D-161` records as
 instrument measurement that does not grow the population, does not enter `F-004`, and does not bear

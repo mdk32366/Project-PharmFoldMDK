@@ -16,11 +16,24 @@
 
 ## Log (newest first)
 
-### F-077 — ✅ The three duplicated tile identities are BYTE-IDENTICAL: wasted compute, not two answers — and the re-fold is evidence the fold path is deterministic
+### F-077 — ✅ The FOLD path is deterministic end to end — same input, same weights, same bytes — and it was learned from three duplicated tile identities that turned out to be byte-identical: wasted compute, not two answers
 
 - **Date:** 2026-09-15 · **Status:** ✅ **CLOSED on measurement.** No artifact is ambiguous.
+  ⚠⚠ **§3's stated cause is WRONG and amendment 1 replaces it** — the ~2 h 57 m it reasoned
+  from is the fold queue draining, not the emitter. The corrected mechanism is `D-166`.
+  ⚠ **§1 and §2 are untouched and the determinism result is unaffected.**
 - **How known (`D-016`):** both artifacts of each pair fetched from the live surface and hashed.
   Read-only, one tunnel bound by name per `D-162` rule 5, closed after.
+
+> **THE FINDING:** ⚠⚠ **the fold path is deterministic** — the same span, the same weights and the
+> same code produce **byte-identical** output, pLDDT to two decimals included, across runs three
+> hours apart. **That is why a re-fold is a safe repair anywhere in this project**, which is the
+> property `F-078`'s disposition rests on and which was undemonstrated until now.
+>
+> ⚠ **The three duplicated tile identities are how it was learned, not what was learned.** They had
+> to be measured before anything collapsed them — two artifacts for one identity is *either* wasted
+> compute *or* two different answers — and the measurement settled it: wasted compute, either copy
+> is the tile, nothing downstream ambiguous.
 
 Three hold-48 parents carry the same `parent + tile_start + tile_end` folded twice:
 
@@ -62,6 +75,39 @@ batch roughly three hours after the first pass.
 so that a future duplicate is read against this pattern rather than investigated from scratch, and
 so that the emitter's idempotence is understood to be **unproven** — the folds were idempotent; the
 *enqueue* evidently was not.
+
+#### F-077 amendment 1 — ⚠⚠ §3's cause is WRONG. The separation it measured was the fold queue, not the emitter.
+
+**Superseded text, recorded rather than silently overwritten (`D-129-C`):** *"The three pairs are
+separated by a consistent ~2 h 57 m … That is a re-run of a wave, not three independent retries.
+Something re-emitted a batch roughly three hours after the first pass."*
+
+- **How known (`D-016`):** `jobs.created_at` and `jobs.id` read directly, one tunnel bound by name
+  (`D-162` rule 5), corroborated against the Direct IP, closed after. Read-only.
+
+⚠ **`completed_at` is not the enqueue.** The enqueues were **2 m 26 s** apart, not three hours:
+
+| | 3673/3693 | 3674/3695 | 3675/3696 |
+|---|---|---|---|
+| `created_at` (the enqueue) | `21:41:55` / `21:44:21` | same pair | same pair |
+| `completed_at` (what §3 used) | `23:21:12` / `02:18:22` | `23:29:16` / `02:26:25` | `23:37:19` / `02:34:28` |
+
+The ~2 h 57 m is **one GPU draining a serial queue** with 20 folds between the two batches. It is a
+property of the worker, and §3 read it as a property of the emitter.
+
+⚠⚠ **The corrected cause is `D-166`:** two **overlapping** transactions, proven by `jobs.id`
+interleaving — A took 3673–3692, B took 3693, A took **3694** and **3697**. A sequence is
+non-transactional, so A was still open when B began. Under `READ COMMITTED` neither could see the
+other's rows, `_emitted_tile_idents` returned *"not yet emitted"* in both, and both wrote.
+
+⚠ **This strengthens §2 rather than weakening it.** The determinism result stands untouched and is
+now the *larger* half by a wider margin: identical bytes from two folds is still the finding, and
+**the re-fold disposition `F-078` rests on is still safe.** What changes is that §3's *"idempotence
+unproven"* becomes **"idempotence disproven, mechanism established, remedy owed"**.
+
+⚠ **Why the error is recorded rather than corrected in place:** §3 was cited as settled when this
+finding closed, and `F-047`'s standing lesson is that a wrong-but-plausible answer travels. The
+superseded text stays visible so the citation can be followed to its correction.
 
 ### F-078 — ⚠⚠ 37 folds were lost from BOTH stores at the backup boundary, and four separate answers walked past them — the first of them because a verification probe returned success for a reason unrelated to what it claimed to test
 
@@ -270,6 +316,48 @@ the fold ends — and `tests/test_f078_owed_restore.py` asserts it is still wire
 rows, still names both writes in order, and still explains why nothing else is watching.
 ⚠ **That test is deleted in the commit that pays the debt**, and its removal is the record.
 
+
+#### F-078 amendment 1 — ⚠ The boundary's provenance, checked rather than assumed: it is DATABASE-derived, the backup label corroborates it, and the label itself is no longer re-readable
+
+- **Date:** 2026-09-15 · **How known (`D-016`):** `fly mpg backup list` on both clusters; the Unix
+  epoch decoded out of the backup identifier; the `4868`/`4869` cut already in §4.
+
+⚠ **Occasioned by a different question.** A date convention was queried, and the owner's ruling was
+that if document dating is uncertain then the incident timestamps must be shown to come from the
+database and Fly rather than from a document. **They do, and here is the demonstration.**
+
+**1. The boundary this finding rests on is DATABASE-derived, not label-derived.** §4's cut is
+`job 4868 completed 15:24:36.578Z` (survived) against `job 4869 claimed 15:24:36.642Z` (lost),
+**64 ms apart**, read off `jobs`. ⚠ **The backup's label is not load-bearing for the finding** —
+remove it entirely and the contiguous cut still stands.
+
+**2. The label is corroborated, and the obvious alternative reading is RULED OUT.** The identifier
+`backup_1789312967_d0f89bdd9e16aed5` carries a Unix epoch, and `1789312967` decodes to
+**2026-09-13T15:22:47Z** — *not* the `15:24:33Z` this finding reports. ⚠ That is not a discrepancy:
+measured against four backups where both are readable, Fly's own `START` column runs **+3 s to
++103 s after** the epoch in the identifier, so `15:24:33Z` is a `START` value and `15:22:47Z` is
+not.
+
+⚠⚠ **And the database settles it.** A row committed at `15:24:36.578Z` **survived** the backup. If
+the backup had been taken at `15:22:47Z`, a write 109 seconds later could not have been captured.
+**The epoch reading is impossible against the evidence; the reported value is consistent with it.**
+
+**3. ⚠ What can no longer be re-read, stated rather than glossed.** `fly mpg backup list` returns
+**25 rows** and no longer reaches 2026-09-13 on either cluster, so the authoritative `START` for
+`backup_1789312967_...` **cannot be fetched today.** The value stands on the contemporaneous
+reading plus the two checks above. ⚠ **§3's "42 seconds after the backup" is a derived precision
+that inherits this** — the *direction* is unaffected (the 37 begin at `15:25:15Z`, after the
+boundary on any reading), but the *interval* rests on a number that is no longer verifiable at
+source.
+
+**4. ⚠⚠ SCOPED: the paper must cite the leg that is still verifiable.** Methods §4.3 stated the
+loss at *"the 2026-09-13T15:24:33Z backup boundary"* — **the backup label, which is the leg that can
+no longer be checked at source.** It is amended to cite the **database-derived** cut instead, with
+the label kept as corroboration rather than as the claim. ⚠ **The paper's sentence then rests on two
+rows in `jobs` that anyone can re-read**, and not on a listing that has rolled past.
+
+⚠ **Recorded, not repaired.** The right fix is forward-only: an incident that names a Fly artifact
+should capture that artifact's own output at the time, because a listing window closes.
 
 ### F-076 — ⚠⚠ Five tests asserted tile geometry while the input to that geometry was read from a GITIGNORED cache — so the same assertions asserted different science on different machines, green in CI and red locally, and the difference was read for two days as a numeric disagreement
 
@@ -2913,6 +3001,45 @@ from it by diffing failure sets before and after.
   the tree rather than from a list somebody has to maintain.
 - ⚠ **No content changed.** The staged diff is `.gitattributes` alone; the twelve blobs were already
   LF in the index and only the working-tree bytes moved.
+
+#### F-047 amendment 6 — ⚠⚠ A VALUE READ AGAINST THE WRONG FRAME: five instances in one day, by both parties, two of which nearly authorised a production write
+
+`F-047` has so far been recorded against *artifacts*: a guard, a probe, a count, a cache. ⚠ **It has
+an investigation-layer form**, and 2026-09-15 produced five instances inside a single day.
+
+⚠⚠ **They are not merely "a proxy was used". They share one shape: a value was compared against a
+value in a DIFFERENT FRAME, and nothing in the comparison named either frame.**
+
+| # | the value read | the frame it was in | the frame it was judged against | near-miss | who |
+|---|---|---|---|---|---|
+| 1 | `/api/census/{accession}` → HTTP 200 | **any census protein** | *this Run 2 artifact exists* | ⚠⚠ **nearly authorised a 37-row reconciliation write against artifacts that do not exist** | Code |
+| 2 | §E's job-id comparison | **identity** (presence) | **state** (`status`) | ⚠⚠ **reported a clean bill while 37 folds were lost** | Code |
+| 3 | the same probe, independently | **any census protein** | *this artifact exists* | — | Planner |
+| 4 | the pairs' `completed_at`, ~2 h 57 m | **the fold queue** | **the enqueue** (2 m 26 s) | — | Code |
+| 5 | the machine's clock date | **local, UTC−7** | **UTC-dated documents** | — | Code |
+
+⚠ **Instance 4 inverts a finding:** it concluded a guard post-dated the duplicate waves when the
+guard **pre-dated both enqueues by five hours** (`D-166` §2). ⚠ **Instance 5 invents one:** it
+reported a document/machine date discrepancy that **does not exist** — local `2026-09-14 17:56` and
+UTC `2026-09-15 00:56Z` are the same instant, and the documents were right.
+
+##### ⚠⚠ The rule this yields, and it is PREDICTIVE rather than a tally
+
+> **Every comparison names the frame both sides are in — before it is made, not after it disagrees.**
+
+Frame, here, is whatever makes two values non-comparable: a **timezone** (5), a **clock domain**
+(4 — queue time against enqueue time), a **scope** (1 — any protein against this artifact), or a
+**dimension** (2 — identity against state). ⚠ **The check is `D-162` rule 7 turned on oneself:**
+*state what this number would read if the thing were not so.* Applied to 4 — *"what would
+`completed_at` read if the enqueues had been simultaneous?"* — **exactly what it did read.** The
+proxy could not have distinguished the two cases, and that is discoverable **before** the query.
+
+⚠⚠ **The near-miss column is what separates this class from ordinary error.** Two of the five were
+one authorisation away from a production write, and in both the reasoning was sound *given the
+number* — the number was simply answering a different question than the one asked.
+
+⚠ **Both parties, five times, one day.** Not a lapse of care by one instance; the default behaviour
+of anyone holding a value that answers quickly.
 
 ### F-048 — For 58 census proteins the V2 span is a short extracellular loop INSIDE a larger transmembrane domain, and the annotation and the span are describing different objects
 

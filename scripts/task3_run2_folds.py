@@ -171,6 +171,15 @@ def _existing_run2(session, accessions: list[str]) -> dict[str, int]:
     from sqlalchemy import select                        # noqa: PLC0415
     from db.models import JobRecord, ProteinAnalysis     # noqa: PLC0415
 
+    # ⚠⚠ `D-166`. Every slice enqueue reaches its check-then-write through this function, so the
+    # lock is taken HERE rather than in each of the three scripts — one place to read, and a new
+    # slice inherits it by calling the same helper.
+    # ⚠ The Run-2 identity spans `protein_analyses.input_value` and
+    # `jobs.inference_settings->>'run'`, so NO single-table UNIQUE index expresses it and there is
+    # no constraint behind this lock. `D-166` §4b: owed and undesigned, before slice 4 enqueues.
+    from core.enqueue_lock import RUN2_NAMESPACE, hold_enqueue_lock   # noqa: PLC0415
+    hold_enqueue_lock(session, RUN2_NAMESPACE)
+
     hits: dict[str, int] = {}
     rows = session.execute(
         select(ProteinAnalysis.id, ProteinAnalysis.input_value, JobRecord.inference_settings)

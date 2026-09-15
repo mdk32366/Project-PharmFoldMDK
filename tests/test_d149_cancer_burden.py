@@ -760,12 +760,12 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     # and `### D-157` takes the bar. Never relaxed to a `>=`.
     assert 156 in ids, "D-156 claimed this integer"
     # D-157 spent 157 (the Run 2 scope correction: 2,572 not 2,691): ADDED by name, and
-    # `### D-166` takes the bar. Never relaxed to a `>=`.
+    # `### D-167` takes the bar. Never relaxed to a `>=`.
     assert 157 in ids, "D-157 claimed this integer"
-    # ⚠ 164 is SPENT by the cost-stamp disclosure and is NAMED below; `### D-166` takes the
+    # ⚠ 164 is SPENT by the cost-stamp disclosure and is NAMED below; `### D-167` takes the
     # next-free bar. A name is ADDED, nothing is relaxed.
     assert 165 in ids, "D-165 claimed this integer (the spancache pin)"
-    assert 166 not in ids
+    assert 167 not in ids
     # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
     # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
@@ -782,7 +782,8 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     # next-free bar at 164 is now the only bar. Never relaxed to a `>=`.
     assert {161, 162, 163} <= set(ids), "a reserved integer in the wave went unwritten"
     assert 164 in ids, "D-164 claimed this integer (the cost-stamp disclosure)"
-    assert 166 not in ids, (
+    assert 166 in ids, "D-166 claimed this integer (the enqueue-idempotency constraint)"
+    assert 167 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     # the two entries this one is built beside, NAMED so a rename cannot pass silently
     assert re.search(r"^### D-146 — Track B stops denying the surface it is served on", LOG, re.M)
@@ -795,17 +796,17 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
         "claims it by name — never admitted by a `>=`")
     # ⚠⚠ D-154 SPENT the integer this guard barred (the live-surface review ship), so
-    # it is NAMED here rather than barred and `### D-166` takes the next-free bar. This is the
+    # it is NAMED here rather than barred and `### D-167` takes the next-free bar. This is the
     # widening D-145 fixed the shape of: a name is ADDED and nothing becomes a `>=`.
     assert "\n### D-154 — Every UI surface walked on the live site" in LOG, (
         "D-154 was spent by the live-surface review ship, so it must be NAMED here rather "
         "than barred")
     # ⚠⚠ D-155 SPENT the integer this guard barred (the surface-merge ship), so it is NAMED
-    # here rather than barred and `### D-166` takes the next-free bar. A name is ADDED and
+    # here rather than barred and `### D-167` takes the next-free bar. A name is ADDED and
     # nothing becomes a `>=` — the widening D-145 fixed the shape of.
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
-    assert "\n### D-166" not in LOG, (
+    assert "\n### D-167" not in LOG, (
         "D-164 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
@@ -862,7 +863,7 @@ def test_the_reserved_map_holds_148_bars_150_and_the_pointer_skips_the_hold():
     # `D-149` shipped without) and deliberately did NOT take 152, because 152 became a HOLD for the
     # concurrent sitewide-layout lane while 148 remains the trafficking hold. So *"next free"* means
     # the lowest AVAILABLE integer, 154, and not the lowest unwritten one.
-    assert "Next free `D-` integer: **`D-166`**" in RESERVED
+    assert "Next free `D-` integer: **`D-167`**" in RESERVED
     assert "Next free `D-` integer: **`D-153`**" not in RESERVED
     assert "Next free `D-` integer: **`D-154`**" not in RESERVED
     assert "Next free `D-` integer: **`D-155`**" not in RESERVED
