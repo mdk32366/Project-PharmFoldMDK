@@ -146,6 +146,21 @@ def referencing_rows(conn, fks, drop_jobs: list[int], drop_analyses: list[int]):
     return found
 
 
+#: ⚠ `ORDERS` A2.1: a reference NO constraint declares. `inference_settings->>'parent_job_id'` names
+#: a `jobs.id` from inside JSON, so `FOREIGN_KEYS_SQL` is blind to it by construction.
+JSON_PARENT_SQL = text("""
+    SELECT id FROM jobs
+    WHERE inference_settings ? 'parent_job_id'
+      AND inference_settings->>'parent_job_id' = ANY(:ids)
+    ORDER BY id
+""")
+
+
+def json_parent_references(conn, drop_jobs: list[int]) -> list[int]:
+    """Job ids whose `inference_settings.parent_job_id` names a row the collapse would delete."""
+    return [r[0] for r in conn.execute(JSON_PARENT_SQL, {"ids": [str(j) for j in drop_jobs]})]
+
+
 def _fetch(analysis_id: int) -> tuple[int, str]:
     """GET the served structure and hash it.
 
@@ -226,17 +241,21 @@ def main(argv: list[str] | None = None) -> int:
             drop_jobs = [drop for _keep, drop in live.values()]
             drop_analyses = [rows[j]["analysis_id"] for j in drop_jobs]
             refs = referencing_rows(c, fks, drop_jobs, drop_analyses)
+            children = json_parent_references(c, drop_jobs)
 
         print(f"\n2. ROWS ELSEWHERE THAT REFERENCE A ROW TO BE DELETED "
               f"({len(fks)} foreign keys, from the catalog)")
         for tbl, col, ref in fks:
             print(f"   {tbl}.{col} -> {ref}(id)")
-        if refs:
+        print("   + jobs.inference_settings->>'parent_job_id' -> jobs(id)   (no declared constraint)")
+        if refs or children:
             print("\nREFUSING: rows outside the delete set reference rows inside it:")
             for tbl, col, n in refs:
                 print(f"   {tbl}.{col}: {n} row(s)")
-            print("  A delete here either fails mid-transaction or cascades. Neither is this "
-                  "script's to decide; stop and report.")
+            if children:
+                print(f"   jobs.inference_settings->>'parent_job_id': jobs {children}")
+            print("  A delete here either fails mid-transaction, cascades, or orphans a child tile. "
+                  "None of those is this script's to decide; stop and report.")
             return 1
         print("   none")
 
@@ -283,7 +302,8 @@ def main(argv: list[str] | None = None) -> int:
                      for r in c.execute(DUPLICATES_SQL).mappings()}
             if again != EXPECTED:
                 raise SystemExit("REFUSING inside the write: the duplicate set changed under us.")
-            if referencing_rows(c, foreign_keys(c), drop_jobs, drop_analyses):
+            if (referencing_rows(c, foreign_keys(c), drop_jobs, drop_analyses)
+                    or json_parent_references(c, drop_jobs)):
                 raise SystemExit("REFUSING inside the write: a referencing row appeared under us.")
             for job_id, analysis_id, _path in plan:
                 c.execute(text("DELETE FROM jobs WHERE id = :j"), {"j": job_id})
