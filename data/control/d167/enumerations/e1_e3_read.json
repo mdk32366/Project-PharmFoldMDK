@@ -1,0 +1,135 @@
+{
+  "diagnostics": {
+    "cohort_rows_by_run_label_and_status": {
+      "1": {
+        "complete": 79,
+        "failed": 1
+      }
+    },
+    "note": "E1 and E2 are enumerations, not gates. Only E3 stops. E1 does not reopen R4, whose verdict is ruled in F-082"
+  },
+  "identity": {
+    "cluster_marker": "kyzl60xz9zyrpj9g",
+    "current_database": "pharmfoldmdk",
+    "current_user": "schema_admin",
+    "server_now_utc": "2026-09-17 22:57:09.564525+00:00",
+    "transaction_read_only": "on"
+  },
+  "keys": {
+    "E1": "every jobs row for Q8WXI7 joined to its analysis, grouped by status x identity branch x run label (whole_protein = both tile keys absent; '(absent)' = no run key at all), each cell its own count(*)",
+    "E2": "run-1 jobs rows whose status is not 'complete', grouped by status with the accessions NAMED -- F-078 counted 5 and never listed them",
+    "E3": "cohort accessions (cohort_tranche = 0) from data/cohort_82_accessions.txt holding NO row with status 'complete' -- named, not counted. STOP if the set is not exactly P11717, Q8WXI7, Q9NYQ8"
+  },
+  "provenance": {
+    "branch": "d167-r1r4-population-read",
+    "commit": "56dfaaa22bf21e2680672fd7b5a4bfdfb434c117",
+    "orders": "ORDERS-Code-2026-09-17-AMENDMENT-2-phase1-and-enumerations.md section 5",
+    "read_at_utc": "2026-09-17T22:57:10.467236+00:00",
+    "script": "scripts/d167_enumerations.py",
+    "target": "127.0.0.1:16391/pharmfoldmdk",
+    "tracked_files_clean": true,
+    "url_username": "pharmfoldmdk-app"
+  },
+  "readings": {
+    "E1": {
+      "accession": "Q8WXI7",
+      "by_status": [
+        {
+          "cohort_tranche": 5,
+          "count": 1,
+          "identity": "whole_protein",
+          "run_label": "1",
+          "status": "pending"
+        }
+      ],
+      "total": 1
+    },
+    "E2": {
+      "by_status": {
+        "failed": 2,
+        "pending": 3
+      },
+      "distinct_accessions_by_status": {
+        "failed": 2,
+        "pending": 3
+      },
+      "failed_accessions": [
+        "P11717",
+        "P55073"
+      ],
+      "pending_accessions": [
+        "Q685J3",
+        "Q8WXI7",
+        "Q9UKN1"
+      ],
+      "rows": [
+        {
+          "accession": "P11717",
+          "cohort_tranche": 0,
+          "job_id": 57,
+          "status": "failed"
+        },
+        {
+          "accession": "P55073",
+          "cohort_tranche": 3,
+          "job_id": 2015,
+          "status": "failed"
+        },
+        {
+          "accession": "Q685J3",
+          "cohort_tranche": 5,
+          "job_id": 3072,
+          "status": "pending"
+        },
+        {
+          "accession": "Q8WXI7",
+          "cohort_tranche": 5,
+          "job_id": 3073,
+          "status": "pending"
+        },
+        {
+          "accession": "Q9UKN1",
+          "cohort_tranche": 5,
+          "job_id": 3451,
+          "status": "pending"
+        }
+      ]
+    },
+    "E3": {
+      "missing": [
+        "P11717",
+        "Q8WXI7",
+        "Q9NYQ8"
+      ],
+      "roster_size": 82,
+      "verdict": {
+        "absent_from_reading": [],
+        "expected": [
+          "P11717",
+          "Q8WXI7",
+          "Q9NYQ8"
+        ],
+        "matches": true,
+        "meaning": "the cohort account is proven, not merely consistent",
+        "reading": [
+          "P11717",
+          "Q8WXI7",
+          "Q9NYQ8"
+        ],
+        "stop": false,
+        "unexpected": []
+      }
+    }
+  },
+  "role": {
+    "can_build_jobs_index": true,
+    "current_user": "schema_admin",
+    "jobs_owner": "schema_admin",
+    "rolconfig": [
+      "role=schema_admin"
+    ],
+    "role": "schema_admin",
+    "rolsuper": false,
+    "session_user": "pharmfoldmdk-app"
+  }
+}

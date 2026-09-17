@@ -1,0 +1,38 @@
+==============================================================================
+FEATURE COVERAGE REPORT (read-only; role, then D-159). C5 FIRST.
+==============================================================================
+ROLE PREAMBLE (D-167 amendment 1 \xa72, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+  cluster_marker          : kyzl60xz9zyrpj9g
+  current_database        : pharmfoldmdk
+  current_user            : schema_admin
+  server_now_utc          : 2026-09-17 22:58:10.605664+00:00
+  transaction_read_only   : on
+  sections read           : ['C2', 'C3', 'C4']
+
+C2  [representatives whose accession HAS a protein_features row, but attached to a different analysis_id than the representative's (a stale representative). Count AND ids; no pre-set expectation -- the count is the measurement]
+    count 0
+
+C3  [cohort rows (cohort_tranche = 0) with no protein_features row -- this decides P2]
+    0
+
+C4  [C1a broken down by the structure_kind the picker returned: assembled / tiles_only / single-pass / mucin, each branch its own count, never a subtraction from a total]
+    assembled       : 45
+    mucin           : 3
+    single-pass     : 728
+    tiles_only      : 0
+
+diagnostics (not expectations):
+  C2 stale-representative ids: count 0 (its own count); list complete, 0 shown
+  representatives: 3466
+  accessions_without_a_representative: 1
+
+written : C:\Projects\Project-PharmFoldMDK\data\control\coverage\c2_c3_c4_read.json
+sha256  : f10883cda157b0cafa8f3e178ad1e58a716ada4a9a70713080b210f1fbf43095
+exit: 0

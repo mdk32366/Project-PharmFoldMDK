@@ -1,0 +1,28 @@
+# TUNNEL 2 of 2026-09-17 -- close evidence (ORDERS-Code-2026-09-17-tunnel2-phase1-and-T0 section 3)
+# Session 2026-09-17 America/Los_Angeles (PDT).
+
+## what was done
+proxy process stopped (pid 23488, fly.exe mpg proxy kyzl60xz9zyrpj9g -p 16391)
+Remove-Variable url, u, line  ;  Remove-Item Env:PYTHONUTF8
+
+## local verification (read by Code at 2026-09-17T22:58:32Z)
+listeners on 16300-16499: 0
+fly/flyctl processes: 14960 flyctl (the Fly agent, not a proxy); pid 23488 is gone
+
+## the reads taken inside tunnel 2, in the ordered blocks the orders fix
+1. E1 / E2 / E3        e1_e3_read.json        exit 0   E3 matches; the stop condition did not fire
+2. C5 alone            c5_read.json           exit 0   reported BEFORE C1 was computed
+3. C1a / C1b / C1c     c1_read.json           exit 0   776 / 45 / 731; C1a at or above its floor
+4. C2 / C3 / C4        c2_c3_c4_read.json     exit 0   0 / 0 / four branches
+
+## evidence hashes, re-derived on disk after the tunnel closed
+e1_e3_read.json        6c1c634e2ddaa150f2bad907efa1371eac5ac9a180e04d5213301681edf4cc32  MATCH
+c5_read.json           0ff35dbd0dd1776d35ccc3c5abfa243ca88be9bf3383736afab2559d74f2b8cb  MATCH
+c1_read.json           2afed323399ba69c273bbc81934503651dcaaf76109858a99c26bf346420d680  MATCH
+c2_c3_c4_read.json     f10883cda157b0cafa8f3e178ad1e58a716ada4a9a70713080b210f1fbf43095  MATCH
+
+## outcome
+No expectation was missed. E3's stop condition did not fire; C1a is at or above its pre-registered
+floor. Nothing was re-run to improve a number, no artifact was deleted or rewritten, and the C5 pause
+was real: c5_read.json carries no C1 reading at all, because none was computed.
+ONE tunnel was opened here and it is closed. TWO tunnels exist for 2026-09-17; a third is not authorised.

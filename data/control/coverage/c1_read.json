@@ -1,0 +1,54 @@
+{
+  "diagnostics": {
+    "accessions_without_a_representative": 1,
+    "note": "diagnostics are not expectations. C4 keeps `mucin` as its own branch: the picker returns four kinds and folding one into another would be D-168's section 3 defect",
+    "representatives": 3466
+  },
+  "identity": {
+    "cluster_marker": "kyzl60xz9zyrpj9g",
+    "current_database": "pharmfoldmdk",
+    "current_user": "schema_admin",
+    "server_now_utc": "2026-09-17 22:57:55.269053+00:00",
+    "transaction_read_only": "on"
+  },
+  "keys": {
+    "C1a": "census representatives (choose_census_representative over run-1 rows, cohort_tranche > 0) holding NO protein_features row",
+    "C1b": "of C1a, those where _incommensurable_assembly is true -- already refused as assembled, so extraction changes nothing any page displays",
+    "C1c": "C1a - C1b: representatives that would actually gain a rendered profile. THIS IS THE ONLY TRUE COVERAGE GAP"
+  },
+  "provenance": {
+    "branch": "d167-r1r4-population-read",
+    "commit": "56dfaaa22bf21e2680672fd7b5a4bfdfb434c117",
+    "orders": "ORDERS-Code-2026-09-17-TASK-D-coverage-report.md",
+    "read_at_utc": "2026-09-17T22:58:00.110254+00:00",
+    "script": "scripts/feature_coverage_report.py",
+    "target": "127.0.0.1:16391/pharmfoldmdk",
+    "tracked_files_clean": true,
+    "url_username": "pharmfoldmdk-app"
+  },
+  "readings": {
+    "C1a": 776,
+    "C1a_verdict": {
+      "finding": false,
+      "floor": 773,
+      "meaning": "at or above the floor of 773",
+      "reading": 776
+    },
+    "C1b": 45,
+    "C1c": 731
+  },
+  "role": {
+    "can_build_jobs_index": true,
+    "current_user": "schema_admin",
+    "jobs_owner": "schema_admin",
+    "rolconfig": [
+      "role=schema_admin"
+    ],
+    "role": "schema_admin",
+    "rolsuper": false,
+    "session_user": "pharmfoldmdk-app"
+  },
+  "sections": [
+    "C1"
+  ]
+}

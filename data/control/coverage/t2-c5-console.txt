@@ -1,0 +1,27 @@
+==============================================================================
+FEATURE COVERAGE REPORT (read-only; role, then D-159). C5 FIRST.
+==============================================================================
+ROLE PREAMBLE (D-167 amendment 1 \xa72, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+  cluster_marker          : kyzl60xz9zyrpj9g
+  current_database        : pharmfoldmdk
+  current_user            : schema_admin
+  server_now_utc          : 2026-09-17 22:57:40.321144+00:00
+  transaction_read_only   : on
+  sections read           : ['C5']
+
+C5  [analysis_ids present in the committed census_features.v1 artifact that are present in the protein_features TABLE, plus a capped equality sample -- the panel reads the table, and v1's manifest records wrote_database_rows: false]
+    v1 artifact analysis_ids: 2690   present in protein_features: 2690
+    equality sample: checked 50, equal 50, differing 0 (cap 50)
+
+diagnostics (not expectations):
+
+written : C:\Projects\Project-PharmFoldMDK\data\control\coverage\c5_read.json
+sha256  : 0ff35dbd0dd1776d35ccc3c5abfa243ca88be9bf3383736afab2559d74f2b8cb
+exit: 0

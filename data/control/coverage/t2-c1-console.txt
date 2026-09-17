@@ -1,0 +1,35 @@
+==============================================================================
+FEATURE COVERAGE REPORT (read-only; role, then D-159). C5 FIRST.
+==============================================================================
+ROLE PREAMBLE (D-167 amendment 1 \xa72, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+  cluster_marker          : kyzl60xz9zyrpj9g
+  current_database        : pharmfoldmdk
+  current_user            : schema_admin
+  server_now_utc          : 2026-09-17 22:57:55.269053+00:00
+  transaction_read_only   : on
+  sections read           : ['C1']
+
+C1a [census representatives (choose_census_representative over run-1 rows, cohort_tranche > 0) holding NO protein_features row]
+    776
+
+C1b [of C1a, those where _incommensurable_assembly is true -- already refused as assembled, so extraction changes nothing any page displays]
+    45
+
+C1c [C1a - C1b: representatives that would actually gain a rendered profile. THIS IS THE ONLY TRUE COVERAGE GAP]
+    731
+    C1a verdict: ok -- at or above the floor of 773
+
+diagnostics (not expectations):
+  representatives: 3466
+  accessions_without_a_representative: 1
+
+written : C:\Projects\Project-PharmFoldMDK\data\control\coverage\c1_read.json
+sha256  : 2afed323399ba69c273bbc81934503651dcaaf76109858a99c26bf346420d680
+exit: 0

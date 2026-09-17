@@ -1,0 +1,38 @@
+==============================================================================
+E1 / E2 / E3 -- THE THREE ENUMERATIONS (read-only; role, then D-159)
+==============================================================================
+ROLE PREAMBLE (D-167 amendment 1 \xa72, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+  cluster_marker          : kyzl60xz9zyrpj9g
+  current_database        : pharmfoldmdk
+  current_user            : schema_admin
+  server_now_utc          : 2026-09-17 22:57:09.564525+00:00
+  transaction_read_only   : on
+
+E1 [every jobs row for Q8WXI7 joined to its analysis, grouped by status x identity branch x run label (whole_protein = both tile keys absent; '(absent)' = no run key at all), each cell its own count(*)]
+    Q8WXI7: 1 row(s) in total
+      status pending    identity whole_protein     run 1         tranche 5  count 1
+
+E2 [run-1 jobs rows whose status is not 'complete', grouped by status with the accessions NAMED -- F-078 counted 5 and never listed them]
+    rows by status              : {'failed': 2, 'pending': 3}
+    DISTINCT accessions by status: {'failed': 2, 'pending': 3}  (rows and accessions are different quantities)
+    failed : ['P11717', 'P55073']
+    pending: ['Q685J3', 'Q8WXI7', 'Q9UKN1']
+
+E3 [cohort accessions (cohort_tranche = 0) from data/cohort_82_accessions.txt holding NO row with status 'complete' -- named, not counted. STOP if the set is not exactly P11717, Q8WXI7, Q9NYQ8]
+    cohort accessions read: 82
+    lacking a complete tranche-0 row: ['P11717', 'Q8WXI7', 'Q9NYQ8']
+    expected: ['P11717', 'Q8WXI7', 'Q9NYQ8']
+    verdict: matches -- the cohort account is proven, not merely consistent
+
+written : C:\Projects\Project-PharmFoldMDK\data\control\d167\enumerations\e1_e3_read.json
+sha256  : 6c1c634e2ddaa150f2bad907efa1371eac5ac9a180e04d5213301681edf4cc32
+
+E1/E2 reported; E3 matches its pre-registered set.
+exit: 0
