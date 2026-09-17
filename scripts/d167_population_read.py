@@ -124,6 +124,16 @@ def format_capped(d: dict[str, Any]) -> str:
     return f"{d['label']}: count {d['count']} (own count(*)); list complete, {d['rows_shown']} shown"
 
 
+def ascii_line(s: str) -> str:
+    """Printed output is ASCII (A7.4). A non-ASCII character is escaped, never dropped: the shared
+    `core.db_role.format_preamble` header carries a section sign, and the calibration report named it."""
+    return str(s).encode("ascii", "backslashreplace").decode("ascii")
+
+
+def _say(s: str = "") -> None:
+    print(ascii_line(s))
+
+
 def _expect(key: str, measured: Any, expected: Any) -> dict:
     return {"key": key, "measured": measured, "expected": expected, "met": measured == expected}
 
@@ -195,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", default=str(OUT))
     args = ap.parse_args(argv)
     if not args.url:
-        print("REFUSING: no --url and no DATABASE_URL. The operator names the target.")
+        _say("REFUSING: no --url and no DATABASE_URL. The operator names the target.")
         return 1
     out = pathlib.Path(args.out)
     if out.exists():
@@ -219,35 +229,35 @@ def main(argv: list[str] | None = None) -> int:
         "url_username": eng.url.username,
     }
 
-    print("=" * 78)
-    print("R1-R4 POPULATION-AWARE READ (read-only transaction; role, then D-159)")
-    print("=" * 78)
+    _say("=" * 78)
+    _say("R1-R4 POPULATION-AWARE READ (read-only transaction; role, then D-159)")
+    _say("=" * 78)
     for line in format_preamble(state["role"]):
-        print(line)
+        _say(line)
     for k, v in state["identity"].items():
-        print(f"  {k:24s}: {v}")
-    print()
+        _say(f"  {k:24s}: {v}")
+    _say()
     for e in state["expectations"]:
-        print(f"  [{'MET' if e['met'] else 'NOT MET'}] {e['key']}")
-        print(f"        measured {e['measured']!r}   expected {e['expected']!r}")
+        _say(f"  [{'MET' if e['met'] else 'NOT MET'}] {e['key']}")
+        _say(f"        measured {e['measured']!r}   expected {e['expected']!r}")
     d = state["diagnostics"]
-    print("\ndiagnostics (not expectations):")
-    print(f"  {format_capped(d['R1_groups'])}")
-    print(f"  {format_capped(d['R3_groups'])}")
-    print(f"  R1 groups by row count (size: groups): {d['R1_groups_by_row_count']}")
-    print(f"  untagged (NULL tranche) complete run-1 rows: {d['untagged_complete_run1_rows']}")
+    _say("\ndiagnostics (not expectations):")
+    _say(f"  {format_capped(d['R1_groups'])}")
+    _say(f"  {format_capped(d['R3_groups'])}")
+    _say(f"  R1 groups by row count (size: groups): {d['R1_groups_by_row_count']}")
+    _say(f"  untagged (NULL tranche) complete run-1 rows: {d['untagged_complete_run1_rows']}")
     for acc, det in d["R4_detail"].items():
-        print(f"  R4 {acc}: {det}")
+        _say(f"  R4 {acc}: {det}")
 
     sha = write_state(state, out)
-    print(f"\nwritten : {out}")
+    _say(f"\nwritten : {out}")
     print(f"sha256  : {sha}")
     not_met = [e["key"].split(" ")[0] for e in state["expectations"] if not e["met"]]
     if not_met:
-        print(f"\nNOT MET: {', '.join(not_met)}. A finding: STOP and report. "
+        _say(f"\nNOT MET: {', '.join(not_met)}. A finding: STOP and report. "
               f"This script does not interpret the reading.")
         return 2
-    print("\nR1-R4 all met. Report to the Planner.")
+    _say("\nR1-R4 all met. Report to the Planner.")
     return 0
 
 

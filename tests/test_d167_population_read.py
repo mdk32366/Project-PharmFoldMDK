@@ -150,6 +150,24 @@ def test_the_output_is_written_once_with_its_sha256():
     assert 'print(f"sha256  : {sha}")' in src
 
 
+def test_a_non_ascii_printed_line_is_escaped_not_dropped():
+    """⚠ The shared `core.db_role.format_preamble` header carries a section sign. CI caught it in the
+    printed output of the first push; the source-only ASCII test could not."""
+    r = _module()
+    line = r.ascii_line("ROLE PREAMBLE (D-167 amendment 1 §2, read-only)")
+    assert all(ord(ch) < 128 for ch in line)
+    assert "\\xa72" in line
+
+
+def test_main_prints_nothing_except_through_the_ascii_helper():
+    from test_d159_enqueue_identity import _code_only
+
+    r = _module()
+    code = _code_only(inspect.getsource(r.main))
+    bare = [ln.strip() for ln in code.splitlines() if ln.strip().startswith("print(")]
+    assert bare == ['print(f"sha256  : {sha}")'], f"printing around the ASCII helper: {bare}"
+
+
 def test_the_script_source_is_ascii():
     """⚠ A7.4: a PowerShell pipe under cp1252 cannot turn ASCII evidence into a traceback."""
     from test_d159_enqueue_identity import _code_only
