@@ -164,6 +164,33 @@ def test_the_run_label_predicate_is_stated_and_its_outside_is_measured():
     assert "a.cohort_tranche = 0" in r.TRANCHE0_RUN_LABEL_SQL
 
 
+def test_both_run_label_diagnostics_split_by_identity_branch():
+    """⚠⚠ AMENDMENT 1 §3. A non-zero `(absent)` means different things at the two identities: a carry at
+    tile identities, a STOP at whole-protein ones (§2). Without the split the ruling cannot be applied
+    without a second look at the database, and a second look is a re-read, not a reading."""
+    r = _module()
+    branch = " ".join(r.IDENTITY_BRANCH_SQL.split())
+    # the branch is the readings' own definition, not a new key
+    assert ("WHEN j.inference_settings->>'tile_start' IS NULL "
+            "AND j.inference_settings->>'tile_end' IS NULL THEN 'whole_protein'") in branch
+    assert ("WHEN j.inference_settings->>'tile_start' IS NOT NULL "
+            "AND j.inference_settings->>'tile_end' IS NOT NULL THEN 'tile'") in branch
+    # ⚠ one key present and one absent is neither branch, and is named rather than folded into one
+    assert "ELSE 'partial_tile_keys'" in branch
+    for sql in (r.RUN_LABEL_SQL, r.TRANCHE0_RUN_LABEL_SQL):
+        assert r.IDENTITY_BRANCH_SQL in sql
+        assert "GROUP BY 1, 2" in sql, "each (label, branch) cell must be its own count(*)"
+
+
+def test_no_branch_count_is_a_subtraction_from_a_total():
+    """⚠ AMENDMENT 1 §3 condition 2: never one branch minus another, never a list length."""
+    from test_d159_enqueue_identity import _code_only
+
+    r = _module()
+    code = _code_only(inspect.getsource(r.collect))
+    assert " - " not in code, f"a count is derived by arithmetic in collect(): {code}"
+
+
 def test_a_non_ascii_printed_line_is_escaped_not_dropped():
     """⚠ The shared `core.db_role.format_preamble` header carries a section sign. CI caught it in the
     printed output of the first push; the source-only ASCII test could not."""
@@ -198,7 +225,8 @@ SMALL_R1 = 2      # the clean fixture holds two cohort x census pairs
 
 
 def _seed(conn, *, pairs: int = 2, same_population_dup: bool = False, untagged_partner: bool = False,
-          drop_fat2_census: bool = False, empty: bool = False, unlabelled_tile: bool = False):
+          drop_fat2_census: bool = False, empty: bool = False, unlabelled_tile: bool = False,
+          unlabelled_whole: bool = False):
     """Marker + D-159 floor, then a miniature of production:
 
     - `pairs` accessions folded once per population (tranche 0 + tranche 1), both complete run '1'
@@ -246,6 +274,10 @@ def _seed(conn, *, pairs: int = 2, same_population_dup: bool = False, untagged_p
         # ⚠ core/hold48.py emits tile jobs with NO run key: outside the run-'1' key entirely.
         job(950020, "Q8WXI7", 5, "complete",
             {"parent_job_id": 950001, "tile_index": 9, "tile_start": 3217, "tile_end": 4872})
+    if unlabelled_whole:
+        # ⚠⚠ AMENDMENT 1 §2: the STOP branch. An unlabelled complete WHOLE-PROTEIN row could sit inside
+        # an R1 group or form a same-population pair and be invisible to both readings.
+        job(980000, "O90000", 4, "complete", {"ecd_start": 1, "ecd_end": 30})
     job(960000, "P11717", 0, "failed", whole)
     job(960001, "P11717", 5, "complete", whole)
     job(970000, "Q9NYQ8", 0, "pending", whole)
@@ -345,9 +377,23 @@ def test_a_tile_with_no_run_label_is_counted_outside_the_key_and_moves_no_readin
     rc, state, _, _ = _run(pop_db, tmp_path)
     assert rc == 0
     assert state["readings"]["R1"] == SMALL_R1 and state["readings"]["R4"] == 3
-    assert state["diagnostics"]["complete_rows_by_run_label"]["(absent)"] == 1
+    absent = state["diagnostics"]["complete_rows_by_run_label"]["(absent)"]
+    assert absent == {"tile": 1}, "the carry branch alone; no whole-protein row is unlabelled here"
     assert state["diagnostics"]["R4_detail"]["Q8WXI7"]["census_tile_complete"] == 2, \
         "the unlabelled tile is outside the key, so R4's tile diagnostic does not see it"
+
+
+@pytest.mark.postgres
+def test_an_unlabelled_whole_protein_row_is_the_stop_branch_and_is_told_apart_from_a_tile(pop_db, tmp_path):
+    """⚠⚠ AMENDMENT 1 §3 condition 5. The two branches must be distinguishable, or the §2 ruling cannot
+    be applied from the read's own output."""
+    with pop_db.begin() as c:
+        _seed(c, unlabelled_whole=True, unlabelled_tile=True)
+    rc, state, _, _ = _run(pop_db, tmp_path)
+    assert rc == 0, "an unlabelled row moves no reading: it is invisible to the run-1 key"
+    assert state["readings"] == {"R1": SMALL_R1, "R2": {"meeting": SMALL_R1, "of": SMALL_R1},
+                                 "R3": 0, "R4": 3}
+    assert state["diagnostics"]["complete_rows_by_run_label"]["(absent)"] == {"whole_protein": 1, "tile": 1}
 
 
 @pytest.mark.postgres
@@ -356,7 +402,7 @@ def test_the_tranche0_run_label_diagnostic_reports_the_cohort_side(pop_db, tmp_p
         _seed(c)
     rc, state, _, _ = _run(pop_db, tmp_path)
     assert rc == 0
-    assert state["diagnostics"]["tranche0_complete_rows_by_run_label"] == {"1": SMALL_R1}
+    assert state["diagnostics"]["tranche0_complete_rows_by_run_label"] == {"1": {"whole_protein": SMALL_R1}}
 
 
 @pytest.mark.postgres

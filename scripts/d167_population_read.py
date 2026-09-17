@@ -102,10 +102,21 @@ UNTAGGED_SQL = f"SELECT count(*) {_BASE} AND a.cohort_tranche IS NULL"
 #: this key entirely. These two counts say how much sits outside it.
 _COMPLETE_BASE = ("FROM jobs j JOIN protein_analyses a ON a.id = j.analysis_id "
                   "WHERE j.status = 'complete'")
-RUN_LABEL_SQL = (f"SELECT coalesce(j.inference_settings->>'run', '(absent)'), count(*) "
-                 f"{_COMPLETE_BASE} GROUP BY 1 ORDER BY 1")
-TRANCHE0_RUN_LABEL_SQL = (f"SELECT coalesce(j.inference_settings->>'run', '(absent)'), count(*) "
-                          f"{_COMPLETE_BASE} AND a.cohort_tranche = 0 GROUP BY 1 ORDER BY 1")
+#: AMENDMENT 1 section 3: the identity branch, defined exactly as the readings define it -- NOT a new key.
+#: ⚠ A non-zero `(absent)` is a CARRY at tile identities and a STOP at whole-protein ones (section 2), so
+#: the two are counted separately, each cell its own count(*), never one subtracted from a total.
+#: ⚠ One tile key present and the other absent is NEITHER branch, and is named rather than folded in.
+IDENTITY_BRANCH_SQL = (
+    "CASE WHEN j.inference_settings->>'tile_start' IS NULL "
+    "AND j.inference_settings->>'tile_end' IS NULL THEN 'whole_protein' "
+    "WHEN j.inference_settings->>'tile_start' IS NOT NULL "
+    "AND j.inference_settings->>'tile_end' IS NOT NULL THEN 'tile' "
+    "ELSE 'partial_tile_keys' END")
+RUN_LABEL_SQL = (f"SELECT coalesce(j.inference_settings->>'run', '(absent)'), {IDENTITY_BRANCH_SQL}, "
+                 f"count(*) {_COMPLETE_BASE} GROUP BY 1, 2 ORDER BY 1, 2")
+TRANCHE0_RUN_LABEL_SQL = (f"SELECT coalesce(j.inference_settings->>'run', '(absent)'), "
+                          f"{IDENTITY_BRANCH_SQL}, count(*) "
+                          f"{_COMPLETE_BASE} AND a.cohort_tranche = 0 GROUP BY 1, 2 ORDER BY 1, 2")
 R1_SIZES_SQL = (f"SELECT n, count(*) FROM (SELECT count(*) AS n {_BASE} GROUP BY {_IDENT} "
                 f"HAVING count(*) > 1) g GROUP BY n ORDER BY n")
 R4_DETAIL_SQL = (f"SELECT count(*) FILTER (WHERE a.cohort_tranche = 0), "
@@ -172,8 +183,12 @@ def collect(conn) -> dict:
     r4 = conn.execute(text(R4_SQL), {"accs": list(R4_ACCESSIONS)}).scalar()
 
     untagged = conn.execute(text(UNTAGGED_SQL)).scalar()
-    by_run = {str(k): c for k, c in conn.execute(text(RUN_LABEL_SQL))}
-    t0_by_run = {str(k): c for k, c in conn.execute(text(TRANCHE0_RUN_LABEL_SQL))}
+    by_run: dict[str, dict[str, int]] = {}
+    for label, branch, c in conn.execute(text(RUN_LABEL_SQL)):
+        by_run.setdefault(str(label), {})[str(branch)] = c
+    t0_by_run: dict[str, dict[str, int]] = {}
+    for label, branch, c in conn.execute(text(TRANCHE0_RUN_LABEL_SQL)):
+        t0_by_run.setdefault(str(label), {})[str(branch)] = c
     sizes = {str(n): c for n, c in conn.execute(text(R1_SIZES_SQL))}
     r4_detail = {}
     for acc in R4_ACCESSIONS:
@@ -265,8 +280,14 @@ def main(argv: list[str] | None = None) -> int:
     _say(f"  {format_capped(d['R3_groups'])}")
     _say(f"  R1 groups by row count (size: groups): {d['R1_groups_by_row_count']}")
     _say(f"  untagged (NULL tranche) complete run-1 rows: {d['untagged_complete_run1_rows']}")
-    _say(f"  complete rows by run label (all tranches): {d['complete_rows_by_run_label']}")
-    _say(f"  complete tranche-0 rows by run label: {d['tranche0_complete_rows_by_run_label']}")
+    _say(f"  complete rows by run label x identity branch (all tranches): "
+         f"{d['complete_rows_by_run_label']}")
+    _say(f"  complete tranche-0 rows by run label x identity branch: "
+         f"{d['tranche0_complete_rows_by_run_label']}")
+    absent = d["complete_rows_by_run_label"].get("(absent)", {})
+    _say(f"  (absent) run label: whole_protein {absent.get('whole_protein', 0)} "
+         f"(AMENDMENT 1 section 2: a STOP), tile {absent.get('tile', 0)} (a carry), "
+         f"partial_tile_keys {absent.get('partial_tile_keys', 0)}")
     for acc, det in d["R4_detail"].items():
         _say(f"  R4 {acc}: {det}")
 
