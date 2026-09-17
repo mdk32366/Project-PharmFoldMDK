@@ -86,7 +86,8 @@ def test_collect_derives_no_count_from_a_list_length():
 
 def test_every_reading_query_is_a_count():
     r = _module()
-    for name in ("R1_SQL", "R2_SQL", "R3_SQL", "R4_SQL", "UNTAGGED_SQL", "R1_SIZES_SQL"):
+    for name in ("R1_SQL", "R2_SQL", "R3_SQL", "R4_SQL", "UNTAGGED_SQL", "R1_SIZES_SQL",
+                 "RUN_LABEL_SQL", "TRANCHE0_RUN_LABEL_SQL"):
         sql = getattr(r, name)
         assert "count(*)" in sql, f"{name} is not a count(*)"
         assert "LIMIT" not in sql.upper(), f"{name} is capped; a capped query is never a count"
@@ -150,6 +151,19 @@ def test_the_output_is_written_once_with_its_sha256():
     assert 'print(f"sha256  : {sha}")' in src
 
 
+def test_the_run_label_predicate_is_stated_and_its_outside_is_measured():
+    """⚠ Owner ruling 2026-09-17 section 5 owes this. `run` is a JSON INTEGER (backfill_run_label.py
+    RUN_1 = 1, census_ingest.py, task3 RUN_LABEL = 2) read as text through `->>`. An ABSENT label is not
+    Run 1 (F-018), and `core/hold48.py` emits tile jobs with no run key at all -- so the two run-label
+    diagnostics measure what falls outside the key instead of assuming nothing does."""
+    r = _module()
+    assert "->>'run' = '1'" in r.R1_SQL
+    for sql in (r.RUN_LABEL_SQL, r.TRANCHE0_RUN_LABEL_SQL):
+        assert "coalesce(j.inference_settings->>'run', '(absent)')" in sql
+        assert "->>'run' = '1'" not in sql, "a diagnostic of what is outside the key cannot apply the key"
+    assert "a.cohort_tranche = 0" in r.TRANCHE0_RUN_LABEL_SQL
+
+
 def test_a_non_ascii_printed_line_is_escaped_not_dropped():
     """⚠ The shared `core.db_role.format_preamble` header carries a section sign. CI caught it in the
     printed output of the first push; the source-only ASCII test could not."""
@@ -184,7 +198,7 @@ SMALL_R1 = 2      # the clean fixture holds two cohort x census pairs
 
 
 def _seed(conn, *, pairs: int = 2, same_population_dup: bool = False, untagged_partner: bool = False,
-          drop_fat2_census: bool = False, empty: bool = False):
+          drop_fat2_census: bool = False, empty: bool = False, unlabelled_tile: bool = False):
     """Marker + D-159 floor, then a miniature of production:
 
     - `pairs` accessions folded once per population (tranche 0 + tranche 1), both complete run '1'
@@ -228,6 +242,10 @@ def _seed(conn, *, pairs: int = 2, same_population_dup: bool = False, untagged_p
     for k, (s, e) in enumerate(((1, 1656), (1609, 3264))):
         job(950010 + k, "Q8WXI7", 5, "complete",
             {"run": "1", "parent_job_id": 950001, "tile_index": k, "tile_start": s, "tile_end": e})
+    if unlabelled_tile:
+        # ⚠ core/hold48.py emits tile jobs with NO run key: outside the run-'1' key entirely.
+        job(950020, "Q8WXI7", 5, "complete",
+            {"parent_job_id": 950001, "tile_index": 9, "tile_start": 3217, "tile_end": 4872})
     job(960000, "P11717", 0, "failed", whole)
     job(960001, "P11717", 5, "complete", whole)
     job(970000, "Q9NYQ8", 0, "pending", whole)
@@ -316,6 +334,29 @@ def test_R4_fails_when_an_exception_has_no_census_row(pop_db, tmp_path):
     assert state["readings"]["R4"] == 2
     assert _met(state) == {"R1": True, "R2": True, "R3": True, "R4": False}
     assert state["diagnostics"]["R4_detail"]["Q9NYQ8"]["census_whole_complete"] == 0
+
+
+@pytest.mark.postgres
+def test_a_tile_with_no_run_label_is_counted_outside_the_key_and_moves_no_reading(pop_db, tmp_path):
+    """⚠ The run-label predicate, measured: an unlabelled tile is invisible to every R-reading and
+    appears only in the '(absent)' diagnostic."""
+    with pop_db.begin() as c:
+        _seed(c, unlabelled_tile=True)
+    rc, state, _, _ = _run(pop_db, tmp_path)
+    assert rc == 0
+    assert state["readings"]["R1"] == SMALL_R1 and state["readings"]["R4"] == 3
+    assert state["diagnostics"]["complete_rows_by_run_label"]["(absent)"] == 1
+    assert state["diagnostics"]["R4_detail"]["Q8WXI7"]["census_tile_complete"] == 2, \
+        "the unlabelled tile is outside the key, so R4's tile diagnostic does not see it"
+
+
+@pytest.mark.postgres
+def test_the_tranche0_run_label_diagnostic_reports_the_cohort_side(pop_db, tmp_path):
+    with pop_db.begin() as c:
+        _seed(c)
+    rc, state, _, _ = _run(pop_db, tmp_path)
+    assert rc == 0
+    assert state["diagnostics"]["tranche0_complete_rows_by_run_label"] == {"1": SMALL_R1}
 
 
 @pytest.mark.postgres

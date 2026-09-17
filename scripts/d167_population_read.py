@@ -94,6 +94,18 @@ R4_SQL = (f"SELECT count(*) FROM unnest(CAST(:accs AS text[])) AS x(acc) "
           f"AND (SELECT count(*) {_BASE} AND a.input_value = x.acc "
           f"AND a.cohort_tranche >= 1 AND {_WHOLE}) = 1")
 UNTAGGED_SQL = f"SELECT count(*) {_BASE} AND a.cohort_tranche IS NULL"
+#: The run-label predicate, measured rather than assumed (owner ruling 2026-09-17 section 5).
+#: `run` is written as a JSON INTEGER (`backfill_run_label.py` RUN_1 = 1, `census_ingest.py:279`,
+#: `task3_run2_folds.py` RUN_LABEL = 2) and read here as text through `->>`, which is why '1' matches.
+#: An ABSENT label is not Run 1 (`app.reads.keep_run_1`, F-018: Run 1 is positively declared), and
+#: `core/hold48.py` emits tile jobs with NO run key -- so a tile emitted after the backfill is outside
+#: this key entirely. These two counts say how much sits outside it.
+_COMPLETE_BASE = ("FROM jobs j JOIN protein_analyses a ON a.id = j.analysis_id "
+                  "WHERE j.status = 'complete'")
+RUN_LABEL_SQL = (f"SELECT coalesce(j.inference_settings->>'run', '(absent)'), count(*) "
+                 f"{_COMPLETE_BASE} GROUP BY 1 ORDER BY 1")
+TRANCHE0_RUN_LABEL_SQL = (f"SELECT coalesce(j.inference_settings->>'run', '(absent)'), count(*) "
+                          f"{_COMPLETE_BASE} AND a.cohort_tranche = 0 GROUP BY 1 ORDER BY 1")
 R1_SIZES_SQL = (f"SELECT n, count(*) FROM (SELECT count(*) AS n {_BASE} GROUP BY {_IDENT} "
                 f"HAVING count(*) > 1) g GROUP BY n ORDER BY n")
 R4_DETAIL_SQL = (f"SELECT count(*) FILTER (WHERE a.cohort_tranche = 0), "
@@ -160,6 +172,8 @@ def collect(conn) -> dict:
     r4 = conn.execute(text(R4_SQL), {"accs": list(R4_ACCESSIONS)}).scalar()
 
     untagged = conn.execute(text(UNTAGGED_SQL)).scalar()
+    by_run = {str(k): c for k, c in conn.execute(text(RUN_LABEL_SQL))}
+    t0_by_run = {str(k): c for k, c in conn.execute(text(TRANCHE0_RUN_LABEL_SQL))}
     sizes = {str(n): c for n, c in conn.execute(text(R1_SIZES_SQL))}
     r4_detail = {}
     for acc in R4_ACCESSIONS:
@@ -179,6 +193,8 @@ def collect(conn) -> dict:
         "R3_groups": capped_list("R3 groups (identity + population)", r3, r3_rows, LIST_CAP),
         "R1_groups_by_row_count": sizes,
         "untagged_complete_run1_rows": untagged,
+        "complete_rows_by_run_label": by_run,
+        "tranche0_complete_rows_by_run_label": t0_by_run,
         "R4_detail": r4_detail,
         "note": "diagnostics are not expectations; no diagnostic stops or passes the read",
     }
@@ -187,6 +203,9 @@ def collect(conn) -> dict:
         "identity": _IDENT,
         "population": POPULATION_SQL,
         "R4_census_row": f"cohort_tranche >= 1 AND {_WHOLE}",
+        "run_label_predicate": ("every reading counts only rows with inference_settings->>'run' = '1'; "
+                                "an absent label is NOT Run 1 (F-018), and the two run-label "
+                                "diagnostics measure what sits outside this key"),
     }
     state["expectations"] = [
         _expect("R1 groups of (accession, tile_start, tile_end) with > 1 complete run '1' row", r1, EXPECTED_R1),
@@ -246,6 +265,8 @@ def main(argv: list[str] | None = None) -> int:
     _say(f"  {format_capped(d['R3_groups'])}")
     _say(f"  R1 groups by row count (size: groups): {d['R1_groups_by_row_count']}")
     _say(f"  untagged (NULL tranche) complete run-1 rows: {d['untagged_complete_run1_rows']}")
+    _say(f"  complete rows by run label (all tranches): {d['complete_rows_by_run_label']}")
+    _say(f"  complete tranche-0 rows by run label: {d['tranche0_complete_rows_by_run_label']}")
     for acc, det in d["R4_detail"].items():
         _say(f"  R4 {acc}: {det}")
 
