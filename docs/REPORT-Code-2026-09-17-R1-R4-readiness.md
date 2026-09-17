@@ -94,10 +94,39 @@ as two complete `run '1'` rows at one identity.
 | 5 | ASCII | source, evidence bytes, **and printed output** |
 | 6 | **A-017 — each assertion can fail** | R3 fails on a same-population duplicate; R1 on a moved group count; R2 on an untagged partner (**and R3 stays met**); R4 when an exception loses its census row; **an empty database fails**; a list capped at 1 over 2 groups leaves R1 at 2 and prints `CAPPED` |
 
-### 2.4 CI — green on `612536c`
-Run **35255596709**: `test` **pass** (2,727 passed, 62 skipped, 1 xfailed; UI 858 passed) ·
-`postgres` **pass** (**55 passed**, 1 skipped, 2,736 deselected) · `deploy` skipped
-(`t4-ci-green.txt`). PR **#332**.
+### 2.4 CI — green
+- `612536c`, run **35255596709**: `test` **pass** (2,727 passed, 62 skipped, 1 xfailed; UI 858 passed) ·
+  `postgres` **pass** (**55 passed**, 1 skipped) (`t4-ci-green.txt`).
+- **`88d8fde`, run 35267676543** (the run-label work, §2.5): `test` **pass** · `postgres` **pass**
+  (**57 passed**, 1 skipped) (`t5-ci-green-run-label.txt`). PR **#332**.
+
+### 2.5 ⚠ R4's run-label predicate — stated, and what falls outside it measured
+
+Owed by `RULING-Owner-2026-09-17-population-P1-P4.md` §5.
+
+**Stated:** every reading, R4 included, counts only rows with `inference_settings->>'run' = '1'`. So
+R4's *"no complete tranche-0 row"* means **no complete tranche-0 row carrying run 1**, and its *"exactly
+one complete census row"* means one complete whole-protein census row carrying run 1.
+
+**From source:** the label is written as a **JSON integer** — `backfill_run_label.py` `RUN_1 = 1`,
+`census_ingest.py:279` `"run": 1`, `task3_run2_folds.py` `RUN_LABEL = 2` — and read here as text through
+`->>`, which is why `'1'` matches. An **absent** label is **not** Run 1: `census_ingest.py:270–275` states
+it outright (*"a row carrying no label is NOT Run 1 — deliberately, because Run 1 must be POSITIVELY
+DECLARED"*, `F-018`).
+
+⚠⚠ **And `core/hold48.py`'s `emit_tile_jobs` writes no `run` key at all** (`:601–617`). A tile emitted
+**after** the backfill therefore sits outside the run-1 key entirely — invisible to every R-reading, and to
+`app.reads.keep_run_1`. The tiles the earlier phases counted (3693/3695/3696) were stamped because they
+already existed when `backfill_run_label.py` ran.
+
+**So it is measured, not assumed:** two diagnostics count complete rows by run label with `(absent)` as a
+named bucket — all tranches, and tranche 0 alone — each its own `count(*)`, neither applying the key it
+reports the outside of. A postgres test seeds an unlabelled tile and proves it moves **no** R-reading and
+appears only under `(absent)`.
+
+⚠ **Whether an unlabelled complete tile exists in production is a reading, not a claim.** If
+`(absent)` comes back non-zero, that is a finding for the Planner — it would mean rows the census surfaces
+cannot see — and it belongs to `F-081`'s question, not to R1–R4's four expectations.
 
 ---
 
@@ -112,9 +141,12 @@ rows, and the two readings differ.
 absent) — the same identity R1–R3 group on, and the one that explains the 72. A parent's tiles are
 separate identities, so they are reported as a **diagnostic** (`census_tile_complete`), never inside R4.
 
-⚠ **This is a Code key choice on an ambiguous phrase, not a ruling.** It is recorded in the script's
-docstring and in the evidence file's `keys` block. **If the Planner reads R4 the other way, say so before
-the tunnel opens** — afterwards it is a re-read, not a reading.
+⚠ **This was a Code key choice on an ambiguous phrase, raised before the tunnel rather than after.**
+It is recorded in the script's docstring and in the evidence file's `keys` block.
+
+✅ **RULED, `RULING-Owner-2026-09-17-population-P1-P4.md` §6:** Code's choice is **correct** — *"it is the
+only key under which `3 of 3` is satisfiable"*. No change to the instrument follows; this section stays as
+the record of what was chosen and when.
 
 ---
 
@@ -127,7 +159,8 @@ script does not interpret it.**
 **Diagnostics, none of which passes or stops anything:** the R1 group list (capped, labelled, with its own
 count) with each group's job ids and `cohort_tranche`s · R1 groups by row count · the R3 group list ·
 untagged complete run-1 rows · per-accession R4 detail (tranche-0 complete, census whole complete, census
-tile complete, untagged complete).
+tile complete, untagged complete) · **complete rows by run label, and complete tranche-0 rows by run
+label, both with `(absent)` named** (§2.5).
 
 ⚠ **This is the reading the Phase E report could not take.** Its §3.4 named what was not established:
 *"the un-truncated group list and each row's `cohort_tranche` were not read"*. R1–R4 read both.
@@ -155,6 +188,17 @@ R1–R4 each against its expectation.
 
 ⚠ **Not touched, not read, not ruled on:** the untracked `_tmp_c1_*` / `_tmp_c2_*` helpers and the other
 pre-existing untracked files. No broad `git add` was used.
+
+## 6a. The population ruling, read and not acted on
+
+`RULING-Owner-2026-09-17-population-P1-P4.md` closes P1–P4 (P1 in unscoped · P2 only if `C3` > 0 · P3 a
+≤100 stratified instrument sample, tagged and never pooled · P4 out). ⚠ **It gates Phase 2 and authorises
+nothing today**, and Code has taken no step on it beyond §2.5's owed statement.
+
+⚠ **The document it answers is not on this machine either.**
+`ORDERS-RECONSTRUCTION-2026-09-17-feature-coverage.md` — cited by the ruling's header and its §2.1 — is
+absent from the repo, from `Downloads` and from `Documents`. **So §7's block is unchanged**, and it now
+covers two missing documents rather than one: the lost original and its reconstruction.
 
 ## 7. Still blocked, unchanged
 

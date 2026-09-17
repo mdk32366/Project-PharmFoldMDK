@@ -1,0 +1,6 @@
+# R1-R4 CI run 35267676543 on 88d8fde (PR #332): both jobs GREEN, run-label predicate included
+# https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/35267676543
+test      pass  2m35s
+postgres  pass  51s     57 passed, 1 skipped, 2737 deselected
+# +2 over run 35255596709: an unlabelled tile moves no R-reading and appears only under '(absent)';
+# the tranche-0 run-label diagnostic reports the cohort side.
