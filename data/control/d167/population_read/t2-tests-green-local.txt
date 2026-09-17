@@ -1,0 +1,14 @@
+# R1-R4 tests, GREEN locally (pure half); postgres half skips locally and runs in the CI postgres job
+# 2026-09-17T17:47:13.0258619Z branch d167-r1r4-population-read
+# .\.venv\Scripts\python.exe -m pytest tests\test_d167_population_read.py -q -rs
+SKIPPED [1] tests\test_d167_population_read.py:239: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:256: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:268: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:278: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:292: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:303: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:312: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:327: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:349: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+13 passed, 9 skipped in 0.18s
+
