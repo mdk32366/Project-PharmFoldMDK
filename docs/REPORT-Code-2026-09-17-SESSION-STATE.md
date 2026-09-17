@@ -95,8 +95,15 @@ and `pdb_coverage_census.py` **have never been run against live data at all.**
    in CI**, by the assertion on the **printed bytes**.
 3. **A `C4` branch vanished at zero** instead of reading `0` — `D-027` at the reporting surface.
    ⚠ Caught in CI.
-4. **Rows and accessions conflated** in E2 — 5 non-complete rows resolve to 4 distinct accessions,
-   because MUC16 holds one on each side. ⚠ Caught in CI.
+4. **Rows and accessions conflated** in E2 — a test asserted a row count equalled the length of a
+   list of names. ⚠ Caught in CI.
+   ⚠⚠ **CORRECTED 2026-09-17 (TASK N), in place and openly.** This item originally read *"5
+   non-complete rows resolve to 4 distinct accessions, because MUC16 holds one on each side."*
+   **That described the postgres TEST FIXTURE, not production**, and stating it here presented a
+   fixture's shape as a measurement. **In production `e1_e3_read.json` reads 5 rows → 5 DISTINCT
+   accessions** (`failed` `P11717`, `P55073`; `pending` `Q685J3`, `Q8WXI7`, `Q9UKN1`), and **MUC16
+   holds exactly ONE row in the whole database** (job 3073, tranche 5). **E1 was right.** See
+   `REPORT-Code-2026-09-17-TASK-N-MUC16-reconciliation.md`.
 
 ⚠ **The reusable method note: *a source-only ASCII check is not an output ASCII check.*** It belongs
 in the close-out as a **lesson**, not as a changelog line.
@@ -135,7 +142,7 @@ touched, not ruled on**, none landed.
 | party | count | today's additions |
 |---|---|---|
 | **Planner** | **15** | 9 (a second name for one refusal) · 11 (documents cited but undelivered) · 12 (R4's set built without checking fold state) · 13 (a Builder state asserted without verification) · 14 (`C4`'s three-branch vocabulary) · 15 (the `3,385` subtraction) |
-| **Code** | **7** | unchanged today — the four defects in §5 were caught **before** they reached a reading, by the instruments' own tests and by CI |
+| **Code** | ⚠ **8** | §5's four defects were caught **before** they reached a reading — that is the system working. ⚠⚠ **But a fifth was NOT: §5 item 4's original wording carried a test fixture's shape into a report as though it were a production measurement.** It reached two documents and would have reached the close-out. **Code's count is 8, not 7** |
 
 ⚠ **Code does not adjust the Planner's count**; it is recorded here as read from the orders so the
 close-out can reconcile it in one place.
