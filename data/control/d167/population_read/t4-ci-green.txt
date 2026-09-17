@@ -1,0 +1,6 @@
+# R1-R4 CI run 35255596709 on 612536c (PR #332): both jobs GREEN
+# https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/35255596709
+test      pass  2m50s   2727 passed, 62 skipped, 1 xfailed (python) + 73 UI files / 858 tests passed
+postgres  pass  53s     55 passed, 1 skipped, 2736 deselected
+# the 9 postgres tests of tests/test_d167_population_read.py are inside that 55: each of R1, R2, R3, R4
+# has a fixture that misses it, an empty database fails, and a list capped below its count moves no reading.
