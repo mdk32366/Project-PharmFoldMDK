@@ -1,5 +1,10 @@
 # ORDERS — Code — 2026-09-17 · R1–R4, one read-only tunnel
 
+> ⚠⚠ **Where this file and the log differ, THE LOG GOVERNS.**
+> ⚠ Landing header added by Code at landing, 2026-09-17. **The body below is the document as
+> delivered, byte-for-byte**; no AUTHORED-SHA256 range is declared over it, so nothing is pinned
+> by these lines.
+
 **Owner:** Matt Kelly · **Planner:** Claude Opus 5 · **Builder:** Code
 **Issued:** 2026-09-17, America/Los_Angeles. The `09-17` label is the real calendar date, confirmed
 against Code's `GROUNDING-Code-2026-09-17.md` (10:21 PDT / 17:21 UTC at session open).

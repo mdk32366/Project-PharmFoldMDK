@@ -1,5 +1,10 @@
 # ORDERS (RECONSTRUCTION) — Code — 2026-09-17 · Feature coverage, Phases 1–3
 
+> ⚠⚠ **Where this file and the log differ, THE LOG GOVERNS.**
+> ⚠ Landing header added by Code at landing, 2026-09-17. **The body below is the document as
+> delivered, byte-for-byte**; no AUTHORED-SHA256 range is declared over it, so nothing is pinned
+> by these lines.
+
 ## ⚠⚠ THIS DOCUMENT IS NOT THE ORIGINAL
 
 **This document reconstructs a lost original and is not the original.**

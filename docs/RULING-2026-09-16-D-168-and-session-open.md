@@ -1,5 +1,10 @@
 # PLANNER RULING — 2026-09-16 · `D-168` reuses the existing category; R1–R4 opens the session
 
+> ⚠⚠ **Where this file and the log differ, THE LOG GOVERNS.**
+> ⚠ Landing header added by Code at landing, 2026-09-17. **The body below is the document as
+> delivered, byte-for-byte**; no AUTHORED-SHA256 range is declared over it, so nothing is pinned
+> by these lines.
+
 **Owner:** Matt Kelly · **Planner:** Claude Opus 5 · **Builder:** Code
 **Grounded on:** `origin/main` @ **`1e67954`** (the #331 merge), read by the Planner through a public clone.
 **Answers:** `PREWORK-2026-09-17.md` §3.4 — *"Ask the Planner before writing the entry."*
