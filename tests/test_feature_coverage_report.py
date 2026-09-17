@@ -77,6 +77,17 @@ def test_c1c_is_c1a_minus_c1b_and_is_named_the_only_coverage_gap():
     assert "only" in doc.lower() and "gap" in doc.lower()
 
 
+def test_c5_can_be_read_alone_so_the_mandatory_pause_is_real():
+    """⚠⚠ ORDERS §4 item 2: C5 is reported BEFORE C1 runs, because C5 can invalidate C1's
+    expectation. A pause that still computes C1 first is not a pause."""
+    r = _module()
+    assert r.parse_sections("C5") == ["C5"]
+    assert r.parse_sections("C1,C2,C3,C4") == ["C1", "C2", "C3", "C4"]
+    assert r.parse_sections("all") == ["C5", "C1", "C2", "C3", "C4"]
+    with pytest.raises(SystemExit):
+        r.parse_sections("C9")
+
+
 def test_every_reading_states_its_key():
     """⚠ ORDERS §4.2 item 7: a bare number is not a C-reading."""
     r = _module()
@@ -230,10 +241,11 @@ def cov_db(pre_0014, monkeypatch):
     return pre_0014
 
 
-def _run(engine, tmp_path):
+def _run(engine, tmp_path, sections: str = "all", name: str = "coverage.json"):
     r = _module()
-    out = tmp_path / "coverage.json"
-    rc = r.main(["--url", engine.url.render_as_string(hide_password=False), "--out", str(out)])
+    out = tmp_path / name
+    rc = r.main(["--url", engine.url.render_as_string(hide_password=False), "--out", str(out),
+                 "--sections", sections])
     return rc, json.loads(out.read_text(encoding="utf-8"))
 
 
@@ -352,6 +364,23 @@ def test_a_c1a_at_or_above_the_floor_is_not_a_finding_and_exits_0(cov_db, tmp_pa
         _seed(c)
     rc, state = _run(cov_db, tmp_path)
     assert rc == 0 and state["readings"]["C1a_verdict"]["finding"] is False
+
+
+@pytest.mark.postgres
+def test_reading_c5_alone_computes_no_c1_and_writes_its_own_evidence_file(cov_db, tmp_path):
+    """⚠⚠ The pause, proven: a C5-only run must not carry C1a/C1b/C1c at all — not even as zeros,
+    which would read as 'measured none' when nothing was measured."""
+    with cov_db.begin() as c:
+        _seed(c)
+    rc, state = _run(cov_db, tmp_path, sections="C5", name="c5.json")
+    assert rc == 0
+    assert "C5" in state["readings"]
+    for absent in ("C1a", "C1b", "C1c", "C1a_verdict", "C2", "C3", "C4"):
+        assert absent not in state["readings"], f"{absent} was computed during the C5-only pause"
+    assert state["sections"] == ["C5"]
+    # and the rest runs afterwards, into its OWN file
+    rc2, rest = _run(cov_db, tmp_path, sections="C1,C2,C3,C4", name="rest.json")
+    assert rc2 == 0 and "C5" not in rest["readings"] and rest["readings"]["C1a"] == 2
 
 
 @pytest.mark.postgres

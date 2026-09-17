@@ -89,6 +89,23 @@ KEYS = {
 }
 
 
+#: ORDERS section 4: C5 is reported BEFORE C1 runs, because C5 can invalidate C1's expectation. The
+#: sections are therefore selectable, and a C5-only run computes NOTHING else -- a pause that still
+#: computed C1 first would not be a pause.
+SECTIONS = ("C5", "C1", "C2", "C3", "C4")
+
+
+def parse_sections(arg: str) -> list[str]:
+    """`all`, or a comma-separated subset, returned in the order the orders fix. Pure."""
+    if arg.strip().lower() == "all":
+        return list(SECTIONS)
+    want = {s.strip().upper() for s in arg.split(",") if s.strip()}
+    unknown = sorted(want - set(SECTIONS))
+    if unknown:
+        raise SystemExit(f"REFUSING: unknown section(s) {unknown}. Known: {list(SECTIONS)}")
+    return [s for s in SECTIONS if s in want]
+
+
 def c1c(c1a: int, c1b: int) -> int:
     """C1a - C1b: the rows that would actually gain a rendered profile.
 
@@ -196,8 +213,14 @@ def representative_readings(session: Session) -> dict[str, Any]:
             "representatives": representatives, "accessions_without_a_representative": no_representative}
 
 
-def collect(conn) -> dict:
-    """Role, identity, then C5 first, then the representative readings and C3."""
+def collect(conn, sections: list[str] | None = None) -> dict:
+    """Role, identity, then C5 first, then the representative readings and C3.
+
+    ! `sections` selects what is READ, not what is printed: a section that is not requested is not
+    computed at all, and its key is ABSENT from the output rather than present as a zero -- a zero
+    would read as "measured none" when nothing was measured.
+    """
+    wanted = list(SECTIONS) if sections is None else list(sections)
     pre = role_preamble(conn)
     assert_campaign_target(conn)
 
@@ -210,10 +233,49 @@ def collect(conn) -> dict:
             "server_now_utc": str(conn.execute(text("SELECT now()")).scalar()),
             "transaction_read_only": conn.execute(text("SHOW transaction_read_only")).scalar(),
         },
-        "keys": KEYS,
+        "keys": {k: v for k, v in KEYS.items()
+                 if k in wanted or (k.startswith("C1") and "C1" in wanted)},
+        "sections": wanted,
     }
+    readings: dict[str, Any] = {}
+    diagnostics: dict[str, Any] = {"note": (
+        "diagnostics are not expectations. C4 keeps `mucin` as its own branch: the picker returns "
+        "four kinds and folding one into another would be D-168's section 3 defect")}
 
     # -- C5 FIRST: the load-bearing reading. Did v1 ever reach the table at all?
+    if "C5" in wanted:
+        readings["C5"] = _c5(conn)
+
+    if "C3" in wanted:
+        # a row-level count, so it is SQL's own count(*)
+        readings["C3"] = conn.execute(text(
+            "SELECT count(*) FROM protein_analyses a LEFT JOIN protein_features f "
+            "ON f.analysis_id = a.id WHERE a.cohort_tranche = 0 AND f.analysis_id IS NULL")).scalar()
+
+    if {"C1", "C2", "C4"} & set(wanted):
+        with Session(conn) as session:
+            rep = representative_readings(session)
+        if "C1" in wanted:
+            readings["C1a"] = rep["C1a"]
+            readings["C1b"] = rep["C1b"]
+            readings["C1c"] = c1c(rep["C1a"], rep["C1b"])
+            readings["C1a_verdict"] = c1a_verdict(rep["C1a"])
+        if "C2" in wanted:
+            readings["C2"] = {"count": rep["C2"], "ids": rep["C2_ids"]}
+            diagnostics["C2_ids"] = capped_list("C2 stale-representative ids", rep["C2"],
+                                                rep["C2_ids"][:LIST_CAP], LIST_CAP)
+        if "C4" in wanted:
+            readings["C4"] = rep["C4"]
+        diagnostics["representatives"] = rep["representatives"]
+        diagnostics["accessions_without_a_representative"] = rep["accessions_without_a_representative"]
+
+    state["readings"] = readings
+    state["diagnostics"] = diagnostics
+    return state
+
+
+def _c5(conn) -> dict[str, Any]:
+    """C5, on its own, so it can be read and reported before C1 is computed."""
     v1_ids = v1_analysis_ids()
     v1_rows = conn.execute(text(
         "SELECT count(*) FROM (SELECT DISTINCT analysis_id FROM unnest(CAST(:ids AS bigint[])) "
@@ -253,36 +315,9 @@ def collect(conn) -> dict:
                                            "ecd_length": feats.get("ecd_length")},
                               "table": {"mean_plddt_ecd": mean_plddt, "ecd_length": ecd_length}})
 
-    # -- C3: a row-level count, so it is SQL's own count(*)
-    c3 = conn.execute(text(
-        "SELECT count(*) FROM protein_analyses a LEFT JOIN protein_features f "
-        "ON f.analysis_id = a.id WHERE a.cohort_tranche = 0 AND f.analysis_id IS NULL")).scalar()
-
-    with Session(conn) as session:
-        rep = representative_readings(session)
-
-    gap = c1c(rep["C1a"], rep["C1b"])
-    state["readings"] = {
-        "C5": {"v1_rows": v1_rows, "in_table": in_table,
-               "sample": {"cap": SAMPLE_CAP, "checked": checked, "equal": equal,
-                          "differing": differing}},
-        "C1a": rep["C1a"],
-        "C1b": rep["C1b"],
-        "C1c": gap,
-        "C1a_verdict": c1a_verdict(rep["C1a"]),
-        "C2": {"count": rep["C2"], "ids": rep["C2_ids"]},
-        "C3": c3,
-        "C4": rep["C4"],
-    }
-    state["diagnostics"] = {
-        "C2_ids": capped_list("C2 stale-representative ids", rep["C2"],
-                              rep["C2_ids"][:LIST_CAP], LIST_CAP),
-        "representatives": rep["representatives"],
-        "accessions_without_a_representative": rep["accessions_without_a_representative"],
-        "note": ("diagnostics are not expectations. C4 keeps `mucin` as its own branch: the picker "
-                 "returns four kinds and folding one into another would be D-168's section 3 defect"),
-    }
-    return state
+    return {"v1_rows": v1_rows, "in_table": in_table,
+            "sample": {"cap": SAMPLE_CAP, "checked": checked, "equal": equal,
+                       "differing": differing}}
 
 
 def _close(a: Any, b: Any) -> bool:
@@ -302,30 +337,37 @@ def render(state: dict) -> None:
     for k, v in state.get("identity", {}).items():
         _say(f"  {k:24s}: {v}")
     rd = state["readings"]
-    keys = state.get("keys", KEYS)
-    c5 = rd["C5"]
-    _say("")
-    _say(f"C5  [{keys['C5']}]")
-    _say(f"    v1 artifact analysis_ids: {c5['v1_rows']}   present in protein_features: {c5['in_table']}")
-    s = c5["sample"]
-    _say(f"    equality sample: checked {s['checked']}, equal {s['equal']}, "
-         f"differing {len(s['differing'])} (cap {s.get('cap')})")
-    for name in ("C1a", "C1b", "C1c"):
+    keys = {**KEYS, **state.get("keys", {})}
+    _say(f"  sections read           : {state.get('sections')}")
+    if "C5" in rd:
+        c5 = rd["C5"]
         _say("")
-        _say(f"{name} [{keys[name]}]")
-        _say(f"    {rd[name]}")
-    v = rd["C1a_verdict"]
-    _say(f"    C1a verdict: {'FINDING' if v['finding'] else 'ok'} -- {v['meaning']}")
-    _say("")
-    _say(f"C2  [{keys['C2']}]")
-    _say(f"    count {rd['C2']['count']}")
-    _say("")
-    _say(f"C3  [{keys['C3']}]")
-    _say(f"    {rd['C3']}")
-    _say("")
-    _say(f"C4  [{keys['C4']}]")
-    for kind, n in sorted(rd["C4"].items()):
-        _say(f"    {kind:16s}: {n}")
+        _say(f"C5  [{keys['C5']}]")
+        _say(f"    v1 artifact analysis_ids: {c5['v1_rows']}   "
+             f"present in protein_features: {c5['in_table']}")
+        s = c5["sample"]
+        _say(f"    equality sample: checked {s['checked']}, equal {s['equal']}, "
+             f"differing {s['checked'] - s['equal']} (cap {s.get('cap')})")
+    if "C1a" in rd:
+        for name in ("C1a", "C1b", "C1c"):
+            _say("")
+            _say(f"{name} [{keys[name]}]")
+            _say(f"    {rd[name]}")
+        v = rd["C1a_verdict"]
+        _say(f"    C1a verdict: {'FINDING' if v['finding'] else 'ok'} -- {v['meaning']}")
+    if "C2" in rd:
+        _say("")
+        _say(f"C2  [{keys['C2']}]")
+        _say(f"    count {rd['C2']['count']}")
+    if "C3" in rd:
+        _say("")
+        _say(f"C3  [{keys['C3']}]")
+        _say(f"    {rd['C3']}")
+    if "C4" in rd:
+        _say("")
+        _say(f"C4  [{keys['C4']}]")
+        for kind, n in sorted(rd["C4"].items()):
+            _say(f"    {kind:16s}: {n}")
     d = state.get("diagnostics", {})
     if d:
         _say("")
@@ -341,10 +383,14 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Feature coverage report (read-only, Phase 1)")
     ap.add_argument("--url", default=os.environ.get("DATABASE_URL", ""))
     ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--sections", default="all",
+                    help="all, or a comma-separated subset of C5,C1,C2,C3,C4. "
+                         "C5 alone is the ORDERS section 4 pause: nothing else is computed.")
     args = ap.parse_args(argv)
     if not args.url:
         print("REFUSING: no --url and no DATABASE_URL. The operator names the target.")
         return 1
+    sections = parse_sections(args.sections)
     out = pathlib.Path(args.out)
     if out.exists():
         raise SystemExit(f"REFUSING: {out} exists. It is evidence; move it aside deliberately.")
@@ -352,7 +398,7 @@ def main(argv: list[str] | None = None) -> int:
     eng = create_engine(normalize_db_url(args.url), future=True, connect_args={"connect_timeout": 15})
     try:
         with read_only_transaction(eng) as conn:
-            state = collect(conn)
+            state = collect(conn, sections)
     finally:
         eng.dispose()
 
@@ -371,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
     sha = write_state(state, out)
     _say(f"\nwritten : {out}")
     print(f"sha256  : {sha}")
-    if state["readings"]["C1a_verdict"]["finding"]:
+    if state["readings"].get("C1a_verdict", {}).get("finding"):
         _say("\nC1a is BELOW its floor. A finding: report it. This script does not interpret it.")
         return 2
     return 0
