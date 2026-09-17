@@ -1,0 +1,25 @@
+# R1-R4 read, close: tunnel closed and the session variables cleared (D-162 rule 5; ORDERS section 5.1)
+# Session 2026-09-17 America/Los_Angeles (PDT).
+
+## what was done
+proxy process stopped (pid 20176, fly.exe mpg proxy kyzl60xz9zyrpj9g -p 16391)
+Remove-Variable url, u, line  ;  Remove-Item Env:PYTHONUTF8
+
+## local verification (read by Code at 2026-09-17T20:52:51Z)
+listeners on 16300-16499: 0
+fly/flyctl processes: 14960 flyctl (the Fly agent, not a proxy); pid 20176 is gone
+
+## evidence hash, re-derived on disk after the tunnel closed
+data/control/d167/population_read/r1r4_read.json
+  printed by the read : aff8159330cbd280b8cd0905c968a8b9d18f4188e855e1434d13409fe8e15935
+  re-hashed by Code   : aff8159330cbd280b8cd0905c968a8b9d18f4188e855e1434d13409fe8e15935  -> MATCH
+
+## credential scan (A10.3) over every file written by this read
+r2-read-console.txt   literal password absent; credentialed URLs 0; bare words 0
+r1r4_read.json        literal password absent; credentialed URLs 0; bare words 0
+r1-tunnel-open.txt    literal password absent; credentialed URLs 0; bare words 0
+
+## outcome
+exit 2. R1, R2 and R3 met; R4 measured 2 against a pre-registered 3. A finding: the work stops.
+Nothing was re-run, nothing reconciled, and r1r4_read.json was not deleted or rewritten.
+ONE tunnel was opened and it is closed. No second read was taken.

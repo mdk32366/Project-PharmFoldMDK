@@ -1,0 +1,22 @@
+# R1-R4 read, step 3: tunnel evidence (D-162 rule 5; ORDERS-Code-2026-09-17-R1-R4 section 5.1)
+# Session 2026-09-17 America/Los_Angeles (PDT). Read by Code at 2026-09-17T20:51:55Z.
+#
+# !! WHO RAN IT. The orders say "owner at the keyboard". The owner instructed Code to run the tunnel and
+# the read directly in this session. Recorded as a departure, not smoothed. The read is read-only:
+# SET TRANSACTION READ ONLY is the first statement, and tests/test_d167_population_read.py proves the
+# script executes no mutation (a source scan, plus a spy over every statement the engine issues).
+
+## proxy output (this session, background process)
+Proxying localhost:16391 to remote [fdaa:62:76d9:0:1::9]:5432
+
+## fly mpg status kyzl60xz9zyrpj9g (Fly metadata, no database connection)
+ ID                  | kyzl60xz9zyrpj9g
+ Status              | ready
+ Direct IP           | fdaa:62:76d9:0:1::9
+
+## corroboration
+proxy remote == Direct IP: fdaa:62:76d9:0:1::9 == fdaa:62:76d9:0:1::9  -> MATCH
+
+## local listeners 16300-16499 (counted with Measure-Object, not the length of a printed list)
+count: 1
+127.0.0.1:16391  pid 20176  flyctl  (fly.exe mpg proxy kyzl60xz9zyrpj9g -p 16391)

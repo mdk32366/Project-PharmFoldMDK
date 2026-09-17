@@ -217,3 +217,11 @@ data/control/d167/**                   -text
 data/control/d167/capture.json         -text
 data/control/d167/state_before.json    -text
 data/control/d167/phase_e_read.json    -text
+
+# -- 2026-09-17 -- the R1-R4 read's evidence, protected BY NAME at landing (AMENDMENT 1 section 5).
+# ! The data/control/d167/** glob above is NOT sufficient: the byte-for-byte guard in
+# tests/test_pinned_artifacts_are_eol_protected.py enumerates paths from this file, and a glob is
+# skipped as 'not present' rather than checked. This file's authored sha256 is
+# aff8159330cbd280b8cd0905c968a8b9d18f4188e855e1434d13409fe8e15935, printed by the read and
+# re-derived on disk after the tunnel closed.
+data/control/d167/population_read/r1r4_read.json -text

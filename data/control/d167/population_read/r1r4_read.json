@@ -1,0 +1,1072 @@
+{
+  "diagnostics": {
+    "R1_groups": {
+      "cap": 100,
+      "capped": false,
+      "count": 72,
+      "label": "R1 groups (accession, tile_start, tile_end)",
+      "rows": [
+        {
+          "accession": "O00478",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            4,
+            2027
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O00592",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            24,
+            2496
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O14798",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            38,
+            2100
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O15455",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            78,
+            3006
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O60245",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            71,
+            3009
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O60637",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            40,
+            1720
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O75581",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            63,
+            2943
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O75841",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            42,
+            1577
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O75954",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            41,
+            1410
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O95196",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            11,
+            2530
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O95832",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            10,
+            1462
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "O95858",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            39,
+            1600
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P00533",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            48,
+            3077
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P04626",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            52,
+            3187
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P06213",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            58,
+            2850
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P07333",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            47,
+            3031
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P08195",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            32,
+            2756
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P09619",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            72,
+            3587
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P09693",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            7,
+            1512
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P13591",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            68,
+            3174
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P17948",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            53,
+            3310
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P18084",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            59,
+            2965
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P19397",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            8,
+            1667
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P22607",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            15,
+            2720
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P23471",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            73,
+            2829
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P24530",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            13,
+            1528
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P32302",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            12,
+            1768
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P35052",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            55,
+            3123
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P37088",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            74,
+            3478
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P42081",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            9,
+            2085
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P49961",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            50,
+            2977
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P50281",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            23,
+            2480
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P51810",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            17,
+            138
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P54764",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            51,
+            3460
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P55064",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            2,
+            849
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P55287",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            45,
+            3370
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P78504",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            60,
+            2848
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "P78536",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            43,
+            3215
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q01814",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            3,
+            610
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q04721",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            69,
+            3007
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q05586",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            56,
+            3447
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q12866",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            66,
+            3046
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q13421",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            67,
+            2677
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q13433",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            31,
+            1969
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q14CZ8",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            20,
+            2404
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q15858",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            25,
+            1910
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q16819",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            65,
+            3341
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q3KNW5",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            26,
+            237
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q53GD3",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            33,
+            2196
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q5BKX6",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            34,
+            1239
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q5VUB5",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            14,
+            2050
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q5ZPR3",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            6,
+            2684
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q6PJG9",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            62,
+            2972
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q6UXK5",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            64,
+            3243
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q8IYL9",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            19,
+            969
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q8ND94",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            21,
+            2297
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q8TDU6",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            16,
+            1394
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q96NY8",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            1,
+            2577
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q99523",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            77,
+            3267
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q99650",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            70,
+            3080
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q99835",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            36,
+            2429
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9BTN0",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            61,
+            3050
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9BXP2",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            28,
+            2029
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9BXS9",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            29,
+            365
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9BY67",
+          "cohort_tranches": [
+            0,
+            4
+          ],
+          "job_ids": [
+            5,
+            2670
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9GZU1",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            22,
+            2101
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9H5V8",
+          "cohort_tranches": [
+            0,
+            5
+          ],
+          "job_ids": [
+            44,
+            3150
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9NQ40",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            35,
+            1757
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9NRM0",
+          "cohort_tranches": [
+            0,
+            1
+          ],
+          "job_ids": [
+            30,
+            1269
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9NV96",
+          "cohort_tranches": [
+            0,
+            3
+          ],
+          "job_ids": [
+            37,
+            1984
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9UP95",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            27,
+            1747
+          ],
+          "tile_end": null,
+          "tile_start": null
+        },
+        {
+          "accession": "Q9UPC5",
+          "cohort_tranches": [
+            0,
+            2
+          ],
+          "job_ids": [
+            18,
+            1411
+          ],
+          "tile_end": null,
+          "tile_start": null
+        }
+      ],
+      "rows_shown": 72
+    },
+    "R1_groups_by_row_count": {
+      "2": 72
+    },
+    "R3_groups": {
+      "cap": 100,
+      "capped": false,
+      "count": 0,
+      "label": "R3 groups (identity + population)",
+      "rows": [],
+      "rows_shown": 0
+    },
+    "R4_detail": {
+      "P11717": {
+        "census_tile_complete": 2,
+        "census_whole_complete": 1,
+        "tranche0_complete": 0,
+        "untagged_complete": 0
+      },
+      "Q8WXI7": {
+        "census_tile_complete": 0,
+        "census_whole_complete": 0,
+        "tranche0_complete": 0,
+        "untagged_complete": 0
+      },
+      "Q9NYQ8": {
+        "census_tile_complete": 3,
+        "census_whole_complete": 1,
+        "tranche0_complete": 0,
+        "untagged_complete": 0
+      }
+    },
+    "complete_rows_by_run_label": {
+      "1": {
+        "tile": 106,
+        "whole_protein": 3542
+      },
+      "2": {
+        "whole_protein": 1976
+      }
+    },
+    "note": "diagnostics are not expectations; no diagnostic stops or passes the read",
+    "tranche0_complete_rows_by_run_label": {
+      "1": {
+        "whole_protein": 79
+      }
+    },
+    "untagged_complete_run1_rows": 0
+  },
+  "expectations": [
+    {
+      "expected": 72,
+      "key": "R1 groups of (accession, tile_start, tile_end) with > 1 complete run '1' row",
+      "measured": 72,
+      "met": true
+    },
+    {
+      "expected": {
+        "meeting": 72,
+        "of": 72
+      },
+      "key": "R2 groups holding exactly one tranche-0 row and exactly one tranche >= 1 row",
+      "measured": {
+        "meeting": 72,
+        "of": 72
+      },
+      "met": true
+    },
+    {
+      "expected": 0,
+      "key": "R3 identity key with population: groups with > 1 complete row",
+      "measured": 0,
+      "met": true
+    },
+    {
+      "expected": 3,
+      "key": "R4 P11717, Q8WXI7, Q9NYQ8: no complete tranche-0 row, exactly one complete census row",
+      "measured": 2,
+      "met": false
+    }
+  ],
+  "identity": {
+    "cluster_marker": "kyzl60xz9zyrpj9g",
+    "current_database": "pharmfoldmdk",
+    "current_user": "schema_admin",
+    "server_now_utc": "2026-09-17 20:52:23.641072+00:00",
+    "transaction_read_only": "on"
+  },
+  "keys": {
+    "R4_census_row": "cohort_tranche >= 1 AND (j.inference_settings->>'tile_start' IS NULL AND j.inference_settings->>'tile_end' IS NULL)",
+    "complete_run1_row": "FROM jobs j JOIN protein_analyses a ON a.id = j.analysis_id WHERE j.inference_settings->>'run' = '1' AND j.status = 'complete'",
+    "identity": "a.input_value, j.inference_settings->>'tile_start', j.inference_settings->>'tile_end'",
+    "population": "CASE WHEN a.cohort_tranche = 0 THEN 'cohort' WHEN a.cohort_tranche >= 1 THEN 'census' ELSE 'untagged' END",
+    "run_label_predicate": "every reading counts only rows with inference_settings->>'run' = '1'; an absent label is NOT Run 1 (F-018), and the two run-label diagnostics measure what sits outside this key"
+  },
+  "provenance": {
+    "branch": "d167-r1r4-population-read",
+    "commit": "00badb9fc1da7fb1bc4e6256cb9777a2cbdbc479",
+    "orders": "ORDERS-Code-2026-09-17-R1-R4.md",
+    "read_at_utc": "2026-09-17T20:52:25.045590+00:00",
+    "script": "scripts/d167_population_read.py",
+    "target": "127.0.0.1:16391/pharmfoldmdk",
+    "tracked_files_clean": true,
+    "url_username": "pharmfoldmdk-app"
+  },
+  "readings": {
+    "R1": 72,
+    "R2": {
+      "meeting": 72,
+      "of": 72
+    },
+    "R3": 0,
+    "R4": 2
+  },
+  "role": {
+    "can_build_jobs_index": true,
+    "current_user": "schema_admin",
+    "jobs_owner": "schema_admin",
+    "rolconfig": [
+      "role=schema_admin"
+    ],
+    "role": "schema_admin",
+    "rolsuper": false,
+    "session_user": "pharmfoldmdk-app"
+  }
+}
