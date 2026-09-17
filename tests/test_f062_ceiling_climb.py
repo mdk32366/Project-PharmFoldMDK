@@ -280,7 +280,10 @@ def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
     # 2026-09-15 and moved the pointer in the same commit. MOVED by name, never relaxed.
     # ⚠ 81, not 80: F-080 (the slice-2 report that cannot fail) spent 080 on 2026-09-15 and moved
     # the pointer in the same commit. MOVED by name, never relaxed.
-    assert pointer == 81
+    # ⚠ 83, not 81: F-081 (tiles enqueued with no `run` key) and F-082 (R4's mis-specified
+    # expectation for MUC16) were BOTH written on 2026-09-17, and the pointer moved to 83 in the
+    # same commit that spent them. MOVED by name, never relaxed to a `>=`.
+    assert pointer == 83
     # Spent 2026-09-11, each with the pointer moved in its own commit: F-068 (the fold-path
     # asymmetry) and F-069 (the short-span population) together, then F-070 (the silently empty
     # structure panel), then F-071 (category E is the no_topology breakout). F-072 (Branch A,
@@ -290,4 +293,5 @@ def test_the_real_repo_files_satisfy_the_invariant_at_this_ref():
     # pin is MOVED by name, never relaxed to a `>=`, which is what tells a spent id from a free one.
     # ⚠ 79, not 78: F-079 written 2026-09-15. ADDED by name, not relaxed.
     # ⚠ 80, not 79: F-080 written 2026-09-15. ADDED by name, not relaxed.
-    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 80
+    # ⚠ 82, not 80: F-081 and F-082 written 2026-09-17. ADDED by name, not relaxed.
+    assert max(spent_headings(LOG.read_text(encoding="utf-8"))) == 82
