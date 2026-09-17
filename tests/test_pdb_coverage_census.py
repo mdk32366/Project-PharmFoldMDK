@@ -143,6 +143,58 @@ def test_an_identity_failure_is_its_own_named_outcome_and_is_not_folded():
     assert detail["best_rejected"]["identity"] == 71.0
 
 
+def test_an_identity_failure_and_a_length_failure_are_TOLD_APART(capsys):
+    """⚠⚠ ORDERS TASK L item 3. The two fixtures differ in ONE dimension each, and must land in
+    DIFFERENT outcomes. A test that cannot tell them apart has measured nothing (A-017): reporting an
+    ortholog mismatch as a length problem is the whole reason the eighth outcome exists."""
+    r = _module()
+    long_but_wrong_protein, d1 = r.classify_accession(
+        span=(100, 400), entries=[_entry(start=100, end=400, identity=71.0)])
+    short_but_right_protein, d2 = r.classify_accession(
+        span=(100, 400), entries=[_entry(start=100, end=120, identity=99.0)])
+    assert long_but_wrong_protein == "overlap_identity_below_minimum"
+    assert short_but_right_protein == "overlap_below_minimum"
+    assert long_but_wrong_protein != short_but_right_protein
+    # ⚠ and the long one is NOT short: its overlap comfortably clears the residue minimum
+    assert d1["best_rejected"]["overlap"] >= r.MIN_OVERLAP_RESIDUES
+    assert d2["best"]["overlap"] < r.MIN_OVERLAP_RESIDUES
+
+
+def test_an_identity_failure_is_never_reported_as_an_absent_entry():
+    """⚠ ORDERS TASK L item 4: folding it into `no_pdb_entry` would report OUR filter as nature's
+    absence — the conflation SPEC v2 §1's last line forbids."""
+    r = _module()
+    out, detail = r.classify_accession(span=(100, 400), entries=[_entry(identity=50.0)])
+    assert out != "no_pdb_entry"
+    assert detail["entries_considered"] == 1 and detail["entries_intersecting"] == 1
+
+
+def test_both_sum_checks_are_against_EIGHT_outcomes():
+    """⚠⚠ ORDERS TASK L item 2. The tally the sum walks must carry all eight, or a pass could
+    reconcile while an outcome silently went uncounted."""
+    r = _module()
+    assert len(r.OUTCOMES) == 8
+    t = r.new_tally()
+    assert len(t) == 8 and set(t) == set(r.OUTCOMES)
+    # one accession in the NEW outcome still reconciles against its own population
+    t["overlap_identity_below_minimum"] = 82
+    assert r.sum_check("cohort", t, 82)["ok"] is True
+    census = r.new_tally()
+    census["overlap_identity_below_minimum"] = 3467
+    assert r.sum_check("census", census, 3467)["ok"] is True
+    # ⚠ and an outcome left out of the walk would be invisible: the walk is over OUTCOMES itself
+    walked = inspect.getsource(r.sum_check)
+    assert "for name in OUTCOMES" in walked
+
+
+def test_the_new_outcome_is_reported_even_when_it_is_zero(capsys):
+    r = _module()
+    r.render({"pass": "cohort", "tally": r.new_tally(), "read": 0, "population": 82,
+              "partial": True, "release": None, "sum_check": r.sum_check("cohort", r.new_tally(), 82)})
+    printed = capsys.readouterr().out
+    assert "overlap_identity_below_minimum" in printed, "a zero outcome must still be printed"
+
+
 def test_the_best_entry_is_chosen_deterministically():
     """Longest qualifying overlap; tie -> better resolution; tie -> lower PDB id."""
     r = _module()
