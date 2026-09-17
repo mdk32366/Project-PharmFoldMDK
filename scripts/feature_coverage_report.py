@@ -61,6 +61,11 @@ V1_ARTIFACT = REPO / "data" / "census" / "census_features.v1.jsonl"
 #: The one expectation that survives the loss of the source table. A SMALLER C1a is a finding.
 C1A_FLOOR = 773
 
+#: The kinds `choose_census_representative` returns (`app/reads.py:980-997`). ! FOUR, not the three
+#: the orders name: `mucin` is its own kind and is never folded into `single-pass` -- which is exactly
+#: MUC16's case (F-082). Reported here, per ORDERS section 4.1.
+STRUCTURE_KINDS = ("assembled", "tiles_only", "single-pass", "mucin")
+
 #: C5's equality sample. Capped on purpose, and the cap is reported as a cap.
 SAMPLE_CAP = 50
 LIST_CAP = 50
@@ -159,7 +164,10 @@ def representative_readings(session: Session) -> dict[str, Any]:
             grouped.setdefault(acc, []).append(row)
 
     c1a = c1b = c2 = 0
-    by_kind: dict[str, int] = {}
+    # !! Every branch is present with a zero rather than absent (D-027: an absence is a category, and
+    # a key that disappears when its count is zero reads as "not measured" instead of "measured none").
+    # A kind the picker returns that is not listed here is ADDED, never dropped into another branch.
+    by_kind: dict[str, int] = {k: 0 for k in STRUCTURE_KINDS}
     c2_ids: list[int] = []
     representatives = 0
     no_representative = 0

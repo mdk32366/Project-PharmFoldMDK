@@ -294,13 +294,27 @@ def test_c3_is_nonzero_when_a_cohort_row_lacks_features(cov_db, tmp_path):
 
 @pytest.mark.postgres
 def test_c4_breaks_c1a_down_by_structure_kind_and_keeps_mucin_as_its_own_branch(cov_db, tmp_path):
+    """⚠ The picker returns FOUR kinds, not the three the orders name (`app/reads.py:980-997`), and
+    `mucin` is exactly MUC16's case (F-082). It is never folded into `single-pass`."""
     with cov_db.begin() as c:
         _seed(c)
     _, state = _run(cov_db, tmp_path)
     c4 = state["readings"]["C4"]
     assert c4["assembled"] == 1 and c4["single-pass"] == 1
-    assert "mucin" in c4, "mucin is a fourth kind the picker returns; it is never folded into another"
+    assert set(c4) >= {"assembled", "tiles_only", "single-pass", "mucin"}
     assert sum(c4.values()) == state["readings"]["C1a"], "C4 must partition C1a"
+
+
+@pytest.mark.postgres
+def test_every_c4_branch_is_present_with_a_zero_rather_than_absent(cov_db, tmp_path):
+    """⚠⚠ D-027: an absence is a category. A branch that disappears when its count is zero reads as
+    'not measured' instead of 'measured none' — which is how a fifth silent category hides."""
+    with cov_db.begin() as c:
+        _seed(c, assembled_with_features=True)
+    _, state = _run(cov_db, tmp_path)
+    c4 = state["readings"]["C4"]
+    assert c4["assembled"] == 0, "the parent now has features, so this branch is zero — and present"
+    assert c4["mucin"] == 0 and c4["tiles_only"] == 0
 
 
 @pytest.mark.postgres
