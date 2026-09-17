@@ -77,7 +77,11 @@ E1_SQL = (f"SELECT j.status, {_IDENTITY_BRANCH}, "
           f"WHERE a.input_value = :acc GROUP BY 1, 2, 3, 4 ORDER BY 1, 2, 3, 4")
 E1_TOTAL_SQL = ("SELECT count(*) FROM jobs j JOIN protein_analyses a ON a.id = j.analysis_id "
                 "WHERE a.input_value = :acc")
-E2_SQL = ("SELECT j.status, count(*) FROM jobs j "
+#: !! ROWS and ACCESSIONS are different quantities and are counted separately. F-078 recorded "5
+#: non-complete run-1 rows"; one accession can hold more than one such row (a cohort-side row and a
+#: census-side row), so a list of names is NEVER the count of rows. Each is its own count(*).
+E2_SQL = ("SELECT j.status, count(*), count(DISTINCT a.input_value) FROM jobs j "
+          "JOIN protein_analyses a ON a.id = j.analysis_id "
           "WHERE j.inference_settings->>'run' = '1' AND j.status <> 'complete' "
           "GROUP BY 1 ORDER BY 1")
 E2_NAMED_SQL = ("SELECT j.status, a.input_value, a.cohort_tranche, j.id "
@@ -150,7 +154,11 @@ def collect(conn) -> dict:
                for s, ident, run, tranche, n in conn.execute(text(E1_SQL), {"acc": MUC16})]
     e1_total = conn.execute(text(E1_TOTAL_SQL), {"acc": MUC16}).scalar()
 
-    e2_by_status = {s: n for s, n in conn.execute(text(E2_SQL))}
+    e2_by_status = {}
+    e2_accessions_by_status = {}
+    for status, rows_n, accs_n in conn.execute(text(E2_SQL)):
+        e2_by_status[status] = rows_n
+        e2_accessions_by_status[status] = accs_n
     e2_named = [{"status": s, "accession": acc, "cohort_tranche": tranche, "job_id": jid}
                 for s, acc, tranche, jid in conn.execute(text(E2_NAMED_SQL))]
 
@@ -163,6 +171,7 @@ def collect(conn) -> dict:
     state["readings"] = {
         "E1": {"accession": MUC16, "total": e1_total, "by_status": e1_rows},
         "E2": {"by_status": e2_by_status,
+               "distinct_accessions_by_status": e2_accessions_by_status,
                "failed_accessions": sorted({r["accession"] for r in e2_named
                                             if r["status"] == "failed"}),
                "pending_accessions": sorted({r["accession"] for r in e2_named
@@ -205,7 +214,9 @@ def render(state: dict) -> None:
     e2 = rd["E2"]
     _say("")
     _say(f"E2 [{keys['E2']}]")
-    _say(f"    by status: {e2['by_status']}")
+    _say(f"    rows by status              : {e2['by_status']}")
+    _say(f"    DISTINCT accessions by status: {e2.get('distinct_accessions_by_status')}  "
+         f"(rows and accessions are different quantities)")
     _say(f"    failed : {e2['failed_accessions']}")
     _say(f"    pending: {e2['pending_accessions']}")
 

@@ -235,9 +235,13 @@ def test_e1_reports_muc16_by_status_and_identity_branch(enum_db, tmp_path):
     rc, state = _run(enum_db, tmp_path)
     e1 = state["readings"]["E1"]
     assert e1["total"] == 3, "the cohort-side pending row, the census pending row, and the tile"
-    kinds = {(b["status"], b["identity"], b["run_label"]): b["count"] for b in e1["by_status"]}
-    assert kinds[("pending", "whole_protein", "1")] == 2
-    assert kinds[("complete", "tile", "(absent)")] == 1, (
+    # ⚠ the grouping carries cohort_tranche, so the cohort-side and census-side pending rows are
+    # SEPARATE cells. Collapsing them here would hide which population each row belongs to.
+    cells = {(b["status"], b["identity"], b["run_label"], b["cohort_tranche"]): b["count"]
+             for b in e1["by_status"]}
+    assert cells[("pending", "whole_protein", "1", 0)] == 1, "the cohort-side row"
+    assert cells[("pending", "whole_protein", "1", 5)] == 1, "the census-side row"
+    assert cells[("complete", "tile", "(absent)", 5)] == 1, (
         "an unlabelled tile is named, not dropped: F-081's category")
 
 
@@ -261,7 +265,12 @@ def test_e2_names_the_pending_and_confirms_the_failed(enum_db, tmp_path):
     assert sorted(e2["failed_accessions"]) == ["P11717", "P55073"]
     assert "Q8WXI7" in e2["pending_accessions"], (
         "MUC16's census row is pending in this fixture, so E2 must name it")
-    assert e2["by_status"]["pending"] == len(e2["pending_accessions"])
+    # ⚠⚠ ROWS are not ACCESSIONS. MUC16 holds a pending row on BOTH sides, so 5 rows resolve to 4
+    # distinct accessions. A test that asserted these equal would be the session's defect class in
+    # the instrument written to enumerate — CI caught exactly that here.
+    assert e2["by_status"]["pending"] == 5, "rows"
+    assert e2["distinct_accessions_by_status"]["pending"] == 4, "distinct accessions"
+    assert len(e2["pending_accessions"]) == e2["distinct_accessions_by_status"]["pending"]
 
 
 @pytest.mark.postgres
