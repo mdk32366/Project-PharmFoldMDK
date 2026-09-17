@@ -166,14 +166,49 @@ Phase 1 opens**, which needs one of these documents on the machine.
 
 ---
 
+## 8a. ADDENDUM, after `ORDERS-Code-2026-09-17-AMENDMENT-1-identity-split.md`
+
+**Executed:** the identity split (AMENDMENT 1 §3), commit **`e4a300b`**. `IDENTITY_BRANCH_SQL` is the
+readings' own definition — whole-protein = both tile keys absent, tile = both present — and
+⚠ **one key present with the other absent is named `partial_tile_keys`**, not folded into either. Both
+by-run-label diagnostics now `GROUP BY label, branch`, **every cell its own `count(*)`**; a test fails on
+any `-` in `collect()`, so no branch can be a subtraction from a total. The printed output names the
+`whole_protein` count as the **STOP** branch and the `tile` count as a **carry**.
+A postgres fixture seeds an unlabelled **whole-protein** row **and** an unlabelled tile, and proves
+neither moves any of the four readings while `(absent)` reads `{whole_protein: 1, tile: 1}` — the two
+branches told apart, which §3 condition 5 requires.
+Local: 18 passed, 12 skipped; full suite **2,743 passed, 60 skipped**.
+
+### ⚠ One correction to AMENDMENT 1 §6 — a delivery claim that overstates the loss
+
+§6 states that **both** `ORDERS-RECONSTRUCTION-2026-09-17-feature-coverage.md` and
+`RULING-Owner-2026-09-17-population-P1-P4.md` are absent, and attributes that report to `RESULTS` §7.
+
+**Measured just now** (`Get-ChildItem` over `Downloads`, `Documents` and the repo):
+
+| document | actually |
+|---|---|
+| `RULING-Owner-2026-09-17-population-P1-P4.md` | ⚠ **PRESENT** — `C:\Users\mdk32\Downloads\`, 2026-09-17 12:52 PDT. Code read it and acted on it; `RESULTS` §6 records its rulings and §6a names it. **`RESULTS` never reported it missing.** |
+| `ORDERS-RECONSTRUCTION-2026-09-17-feature-coverage.md` | **absent**, as reported |
+| `ORDERS-Code-2026-09-16-feature-coverage.md` | **absent**, as reported |
+
+**So `F-081`'s question has two undelivered instances, not three**, and the ruling that closed P1–P4 is
+not one of them. ⚠ **Code does not adjust the Planner's error count** — that is the Planner's to keep.
+The record is corrected here because a close-out entry built on §6 as written would claim a loss that the
+filesystem contradicts, and *"a written record does not make a claim true"* (`D-016`).
+
+**Unchanged by this correction:** Phase 1 stays blocked on the **one** missing reconstruction, and the
+refusal to build from a paraphrase stands.
+
 ## 9. What Code asks the Planner for
 
-1. **Acknowledge §5**, and say whether a non-zero `(absent)` at the read is (a) reported and carried to the
-   close-out under `F-081`, or (b) a stop in its own right. **Code's reading is (a)** — it is outside
-   R1–R4's registered expectations — but the Planner decides before the tunnel, not after.
-2. **Confirm nothing else is owed before the tunnel.** The orders' §5 item ("Code's statement of R4's
-   run-label predicate") is discharged by §5 here and by `88d8fde`.
-3. **Unblock or re-issue** one of §7's documents, or confirm the day ends at R1–R4.
+1. ✅ **RULED** (AMENDMENT 1 §2): `(absent)` is a **carry** at tile identities and a **STOP** at
+   whole-protein ones. Code's (a) adopted, with the discriminator. Implemented at `e4a300b`; the runbook
+   now carries the stop at the keyboard, because **exit 0 alone no longer means a clean day.**
+2. ✅ **RULED** (AMENDMENT 1 §4): nothing else was owed but §3's split, which is now done.
+3. ✅ **RULED** (AMENDMENT 1 §7): the day ends at R1–R4 unless the missing reconstruction lands before the
+   tunnel closes, in which case Phase 1 may open **in the same tunnel**. ⚠ See §8a's correction: **one**
+   document is missing, not two.
 
 **The read itself is owner-gated:** `RUNBOOK-Owner-2026-09-17-R1-R4-read.md`, two windows, step-0 probe
 reading `10003`, `$url` with **16391 named explicitly** and a shape check calibrated both ways
