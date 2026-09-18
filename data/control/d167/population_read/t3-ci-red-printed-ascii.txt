@@ -1,0 +1,8 @@
+# R1-R4 CI run 35255209176 on 61f7117 (PR #332): postgres job RED at the printed-ASCII assertion
+# https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/35255209176 ; test job: pass
+# cause: core.db_role.format_preamble prints a section sign (U+00A7); the source-only ASCII test could not see it
+2026-09-17T17:51:42.8494646Z         assert all(b < 128 for b in body), "non-ASCII byte in the evidence file"
+2026-09-17T17:51:42.8495147Z >       assert all(ord(ch) < 128 for ch in printed), "non-ASCII character in the printed output"
+2026-09-17T17:51:42.8495659Z E       AssertionError: non-ASCII character in the printed output
+2026-09-17T17:51:42.8498535Z FAILED tests/test_d167_population_read.py::test_the_clean_population_meets_all_four - AssertionError: non-ASCII character in the printed output
+2026-09-17T17:51:42.8500217Z 1 failed, 54 passed, 1 skipped, 2734 deselected in 18.19s

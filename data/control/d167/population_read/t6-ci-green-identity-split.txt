@@ -1,0 +1,7 @@
+# R1-R4 CI run 35271860967 on e4a300b (PR #332): both jobs GREEN, identity split included
+# https://github.com/mdk32366/Project-PharmFoldMDK/actions/runs/35271860967
+test      pass  3m02s   2732 passed, 65 skipped, 1 xfailed
+postgres  pass  52s     58 passed, 1 skipped, 2739 deselected
+# +1 over run 35267676543: an unlabelled whole-protein row AND an unlabelled tile are seeded together,
+# neither moves any of the four readings, and (absent) reads {whole_protein: 1, tile: 1} - the two
+# branches of AMENDMENT 1 section 2 told apart from the read's own output.

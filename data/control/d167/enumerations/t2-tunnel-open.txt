@@ -1,0 +1,32 @@
+# TUNNEL 2 of 2026-09-17 -- open evidence (ORDERS-Code-2026-09-17-tunnel2-phase1-and-T0 section 3)
+# Session 2026-09-17 America/Los_Angeles (PDT). Read by Code at 2026-09-17T22:56:48Z.
+#
+# !! THIS IS TUNNEL 2 OF 2, and its evidence is its OWN. It is never merged into tunnel 1's account.
+# Tunnel 1 (morning): opened 20:51Z, closed ~20:52:45Z, 0 listeners at 20:52:51Z and again at
+# 21:23:51Z, one read taken (r1r4_read.json). That account stays "one tunnel, one read"; this is
+# additive. A THIRD tunnel is not authorised.
+#
+# !! WHO RAN IT. The orders say "owner at the keyboard". The owner's instruction quoted in the orders
+# is "Fresh tunnel, then the T0 work", and the owner directed Code to run the tunnel and the reads
+# directly, as this morning. Recorded as a departure, not smoothed. Every read below is read-only:
+# SET TRANSACTION READ ONLY is the first statement, and both instruments are proven by tests
+# (source scan + a statement spy over every statement the engine issues) to execute no mutation.
+
+## proxy output (this session, background process)
+Proxying localhost:16391 to remote [fdaa:62:76d9:0:1::9]:5432
+
+## fly mpg status kyzl60xz9zyrpj9g (Fly metadata, no database connection)
+ ID                  | kyzl60xz9zyrpj9g
+ Status              | ready
+ Direct IP           | fdaa:62:76d9:0:1::9
+
+## corroboration
+proxy remote == Direct IP: fdaa:62:76d9:0:1::9 == fdaa:62:76d9:0:1::9  -> MATCH
+
+## local listeners 16300-16499 (counted, not the length of a printed list)
+count: 1
+127.0.0.1:16391  pid 23488  flyctl  (fly.exe mpg proxy kyzl60xz9zyrpj9g -p 16391)
+
+## instruments entering this tunnel, both CI-green before it opened
+scripts/d167_enumerations.py        E1/E2/E3      CI run 35284284426, postgres 76 passed
+scripts/feature_coverage_report.py  C5/C1-C4      same run; --sections makes the C5 pause real

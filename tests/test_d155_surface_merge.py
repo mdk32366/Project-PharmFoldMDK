@@ -258,7 +258,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     # NAMED above, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
     # ⚠ 148 stays the trafficking hold; 165 is SPENT by the spancache pin and is NAMED
     # below, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
-    assert 148 not in ids and 168 not in ids
+    assert 148 not in ids and 169 not in ids
     # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
     # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
@@ -278,12 +278,20 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert 165 in ids, "D-165 claimed this integer (the spancache pin)"
     assert 166 in ids, "D-166 claimed this integer (the enqueue-idempotency constraint)"
     assert 167 in ids, "D-167 claimed this integer (the re-attach of slice 2's 37)"
-    assert 168 not in ids, (
+    assert 169 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG
-    assert "\n### D-168" not in LOG, (
-        "D-164 is the next free integer and must stay unspent until an entry claims it by name — "
-        "never admitted by a `>=`")
+    # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-169` takes the
+    # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
+    # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
+    # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
+    assert "\n### D-168 — Features measured on an assembled chain" in LOG, (
+        "D-168 was spent by the assembled-commensurability ruling, so it must be NAMED here "
+        "rather than barred")
+    assert "\n### D-169" not in LOG, (
+        "D-169 is the next free integer and must stay unspent until an entry claims it by name "
+        "— never admitted by a `>=`")
 
 
 def test_the_reserved_map_retires_155_marker_safe_and_the_pointer_moves_here():
@@ -292,7 +300,7 @@ def test_the_reserved_map_retires_155_marker_safe_and_the_pointer_moves_here():
     assert "WRITTEN" in row and "Original reservation text" in row
     assert re.search(r"^\| \*\*D-156\*\*", RESERVED, re.M), "the bar moved to 156 with no row"
     assert not re.search(r"^\| ~~\*\*D-15[56]\*\*~~", RESERVED, re.M)
-    assert "Next free `D-` integer: **`D-168`**" in RESERVED
+    assert "Next free `D-` integer: **`D-169`**" in RESERVED
     for spent in ("D-152", "D-153", "D-154", "D-155"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED
 

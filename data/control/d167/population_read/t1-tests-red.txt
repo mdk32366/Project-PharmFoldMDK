@@ -1,0 +1,28 @@
+# R1-R4 tests, RED at the assertion (before scripts/d167_population_read.py exists)
+# 2026-09-17T17:45:53.2189096Z branch d167-r1r4-population-read base 1e67954
+# .\.venv\Scripts\python.exe -m pytest tests\test_d167_population_read.py -q -rfs
+# note: line numbers below are from the revision before EXPECTED_R4 was added (one line earlier); the module-absent RED is unchanged
+FAILED tests/test_d167_population_read.py::test_the_expectations_are_the_pre_registered_values
+FAILED tests/test_d167_population_read.py::test_the_output_is_its_own_evidence_file_never_the_phase_e_one
+FAILED tests/test_d167_population_read.py::test_the_population_convention_is_the_source_one_and_null_is_its_own_category
+FAILED tests/test_d167_population_read.py::test_collect_derives_no_count_from_a_list_length
+FAILED tests/test_d167_population_read.py::test_every_reading_query_is_a_count
+FAILED tests/test_d167_population_read.py::test_a_capped_list_is_labelled_capped_and_never_printed_as_a_count
+FAILED tests/test_d167_population_read.py::test_an_uncapped_list_says_it_is_complete
+FAILED tests/test_d167_population_read.py::test_a_list_shorter_than_its_count_is_capped_even_below_the_cap
+FAILED tests/test_d167_population_read.py::test_the_script_executes_no_mutation
+FAILED tests/test_d167_population_read.py::test_main_reads_only_through_the_read_only_helper
+FAILED tests/test_d167_population_read.py::test_role_then_identity_then_the_first_read
+FAILED tests/test_d167_population_read.py::test_the_output_is_written_once_with_its_sha256
+FAILED tests/test_d167_population_read.py::test_the_script_source_is_ascii - ...
+SKIPPED [1] tests\test_d167_population_read.py:238: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:255: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:267: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:277: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:291: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:302: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:311: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:326: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+SKIPPED [1] tests\test_d167_population_read.py:348: no PostgreSQL DATABASE_URL ? runs only in the `postgres` CI job (D-017)
+13 failed, 9 skipped in 0.23s
+

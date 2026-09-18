@@ -16,6 +16,153 @@
 
 ## Log (newest first)
 
+### F-081 — ⚠ Tiles are enqueued with NO `run` key, so any tile emitted after the backfill is invisible to `keep_run_1` and to every reading that selects Run 1 — real in source today, ZERO instances in the database
+
+- **Date:** 2026-09-17, **America/Los_Angeles (PDT, UTC−7)**. · **Status:** ⚠ **OPEN as a latent defect
+  in the code. CLOSED as a production condition for today**, on the read below: there is no instance.
+- **Found by:** Code, reading source to discharge an obligation about R4's **run-label predicate**
+  (`RULING-Owner-2026-09-17-population-P1-P4.md` §5). The orders asked for a statement of the predicate
+  and the reading returned a blind spot in the read path. ⚠ **The measurement was ordered; the finding
+  was not.**
+- **How known (`D-016`):** source reads of `core/hold48.py:601–617` (`emit_tile_jobs`'s
+  `inference_settings` literal), `scripts/backfill_run_label.py` (`RUN_1 = 1`, and its bound: *"the key
+  `run` ONLY … no other row"*), `scripts/census_ingest.py:270–279`, and `app/reads.py`'s
+  `keep_run_1`. The production counts are from the read-only
+  `data/control/d167/population_read/r1r4_read.json` (sha256 `aff81593…e15935`), read
+  `2026-09-17T20:52:25Z` inside `SET TRANSACTION READ ONLY`.
+- **Relates:** `F-018` (the absent-value rule violated in the passing direction) · `A-030` (an additive
+  JSONB key changes no consumer) · `F-082` (the other reading taken the same day) · `D-166` / `D-167`.
+
+> **THE FINDING:** Run 1 is **positively declared** — `census_ingest.py:270–275` says so outright: *"a
+> row carrying no label is NOT Run 1 — deliberately, because Run 1 must be POSITIVELY DECLARED rather
+> than inferred from a key's absence."* **But `core/hold48.py`'s `emit_tile_jobs` writes no `run` key at
+> all.** A tile emitted **after** `backfill_run_label.py` therefore declares nothing, and is invisible to
+> every reading that selects `inference_settings->>'run' = '1'` — including **`app.reads.keep_run_1`**,
+> which is what the census surfaces select by.
+
+#### 1. Why the earlier phases did not see it
+
+The tile rows the collapse and the Phase E read counted (**3693 / 3695 / 3696**) **pre-date** the
+backfill, so they were stamped `run: 1` by it along with every other job then existing. ⚠ **The defect
+is in the path that creates NEW tiles, which is exactly the path slice 4 and any re-tiling would use.**
+
+#### 2. What was measured, and it is zero
+
+The read counted complete rows by run label **split by identity branch**, each cell its own `count(*)`,
+with `(absent)` as a **named** bucket rather than a zero:
+
+| run label | whole-protein | tile |
+|---|---|---|
+| `'1'` | 3,542 | 106 |
+| `'2'` | 1,976 | — |
+| ⚠ **`(absent)`** | **0** | **0** |
+
+`partial_tile_keys` — one tile key present and the other absent — is also **0**.
+
+⚠⚠ **This is what makes `R3 = 0` a measurement rather than an artifact.** Had an unlabelled complete
+**whole-protein** row existed, it could have sat inside an R1 group or formed a same-population pair and
+been invisible to both readings, and `R3 = 0` would have been the instrument reporting zero **because it
+cannot see**. The Planner pre-registered that discriminator as a stop condition
+(`ORDERS-Code-2026-09-17-AMENDMENT-1-identity-split.md` §2); it did not fire.
+
+#### 3. What is owed
+
+1. **`emit_tile_jobs` declares its generation** — the same way `census_ingest.py` does — so a new tile is
+   not born outside the key. ⚠ Not done today: **no write, no migration, and the tunnel is closed.**
+2. ⚠ **`app.reads.keep_run_1` shares the blind spot** and is the reason this is a surface defect and not
+   only a bookkeeping one.
+3. **A guard** that a tile-emitting path cannot ship without a generation label.
+
+#### 4. What this finding is NOT
+
+Not a claim that any production row is missing today — **the count is zero and that is measured** · not a
+reason to re-read R1–R4 · not a change to the run-label convention itself, which `F-018` and
+`census_ingest.py` state correctly · not authorisation to write to `jobs`.
+
+### F-082 — ⚠ R4's expectation was MIS-SPECIFIED for MUC16: it assumed a completed census fold that the log already said never existed. The database is sound; the wording was not
+
+- **Date:** 2026-09-17, **America/Los_Angeles (PDT, UTC−7)**, measured at session open
+  (`Get-Date` → `2026-09-17T17:21:27Z`). · **Status:** ⚠ **The expectation is closed as mis-specified.
+  Two sub-questions stay OPEN** (§5).
+- **Found by:** the read itself. `R4` measured **2** against a pre-registered **3** and the script
+  stopped (exit 2), naming the accession rather than interpreting the miss.
+- **How known (`D-016`):** the owner-directed, read-only database read
+  `data/control/d167/population_read/r1r4_read.json`, sha256
+  `aff8159330cbd280b8cd0905c968a8b9d18f4188e855e1434d13409fe8e15935` — printed by the read and
+  re-derived on disk after the tunnel closed — written by `scripts/d167_population_read.py` inside
+  `SET TRANSACTION READ ONLY` (`transaction_read_only: on`), cluster marker `kyzl60xz9zyrpj9g`,
+  provenance `commit 00badb9`, `tracked_files_clean true`, `read_at_utc 2026-09-17T20:52:25Z`. The
+  committed-record citations in §3 are line reads of this tree at that commit.
+- **Relates:** `D-167` (A9.2, which registered R4) · `F-078` (the five non-complete run-1 rows) ·
+  `D-109` ruling 7 and `D-120` (the mucin hold and the assembly refusal) · `F-049` (a name that
+  describes two different things).
+
+> **THE FINDING:** `A9.2`'s R4 asked that each of three named accessions have *"no complete tranche-0
+> row and exactly one complete census row."* **`Q8WXI7` (MUC16) has no complete run-1 row of any kind.**
+> It satisfies the first clause and fails the second — not by holding too many rows, but by holding
+> **none**. ⚠ **The expectation conflated a PLANNED tiled rental span with a protein actually folded as
+> tiles.**
+
+#### 1. The measurement, per accession
+
+| accession | tranche-0 complete | census whole complete | census tile complete | untagged complete | R4 |
+|---|---|---|---|---|---|
+| `P11717` IGF2R | 0 | **1** | 2 | 0 | as pre-registered |
+| `Q9NYQ8` FAT2 | 0 | **1** | 3 | 0 | as pre-registered |
+| ⚠ **`Q8WXI7` MUC16** | **0** | **0** | **0** | **0** | ⚠ **no complete run-1 row of any kind** |
+
+⚠ **`Q8WXI7` appears in NONE of the 72 R1 groups**, checked against the **complete, uncapped** group
+list (`R1_groups`: `count 72`, `rows_shown 72`, `capped false`).
+
+#### 2. The cause, named
+
+`P11717` and `Q9NYQ8` are **both** a planned rental span **and** a protein folded as tiles — 2 and 3
+complete tile rows respectively. `Q8WXI7` is **only the first**: tranche 5, rental, **14,451 aa**,
+planned and **never folded**. The pre-registration treated "named overlap exception" as one state when
+it is two. ⚠ **This is the same shape as Phase E's expectation 3** — a key that could not be satisfied
+by any sound database, discovered only by running it.
+
+#### 3. The committed record already said so, from the other side
+
+| source | says |
+|---|---|
+| `decisions.md:2860` | the four `none`-structure rows are the **3 mucins** (`Q685J3`, `Q8WXI7`, `Q9UKN1` — `structure_kind: mucin`, **`folded: false`**) plus `P55073`/DIO3; the partition is **3,418 + 45 + 4 + 0 = 3,467** |
+| `decisions.md:3041` | on the live surface `Q8WXI7` **"still wears NOT FOLDED"**, while `Q9NYQ8` renders *assembled (provisional)* |
+| `decisions.md:6883` | the **3 mucins stay `out_of_class`** — a standing ruling, not a pending state |
+| `data/census/census_manifest.v7.csv` | `Q8WXI7` **is** in the census: tranche 5, rental, span 14,451 aa |
+
+⚠ **So this is NOT a data defect and NOT a regression.** Nothing changed in the database; the
+expectation was written past a ruling that was already in the log.
+
+#### 4. ⚠⚠ `R1 = 72` STANDS, and it does not inherit the Phase E reasoning
+
+`R1` is a **direct measurement with its own `count(*)`**: 72, with a complete uncapped list at 72 shown
+and `R1_groups_by_row_count` `{2: 72}` — **no group holds more than two rows**. `R2` read **72 of 72**
+and `R3` read **0**.
+
+⚠ The Phase E derivation reached 72 as **`75 overlap − 3 exceptions`**, and that subtraction was
+**arithmetically right for the wrong reason**: MUC16 should have been excluded as **never folded,
+therefore incapable of forming a pair**, not as *"an exception holding exactly one census row."*
+
+⚠⚠ **The "75 overlap" figure rests on the same conflation. Nothing cites 75 as a measured overlap
+without re-deriving it.**
+
+#### 5. Two sub-questions, recorded OPEN and unmeasured
+
+- **(a) MUC16's rows by status.** Every R-reading counts `status = 'complete'` only, so whether MUC16
+  holds a `pending` or `failed` census row **is not established**. `F-078` recorded five non-complete
+  run-1 rows — 2 failed (`P11717`, `P55073`) and 3 pending — and **the three pending were never
+  enumerated.** MUC16 may or may not be among them.
+- **(b) ⚠ Whether this is a CLASS property of mucins** rather than a fact about one protein.
+  `Q685J3` and `Q9UKN1` were **untouched by this read**, and `decisions.md:6883` suggests all three
+  share the state. **This is wider than R4** and is not answered here.
+
+#### 6. What this finding is NOT
+
+Not a data defect · not a reason to re-read R1–R4 · **not a reason to delete or rewrite
+`r1r4_read.json`**, which is never deleted or rewritten and is EOL-protected by name in
+`.gitattributes` · not a claim about the other two mucins (§5b) · not a re-opening of `D-109` ruling 7.
+
 ### F-080 — ⚠ The only in-tree report of slice 2 prints 517 folded while the database holds 480, because it reads the progress file — so the "done" it would announce is already announced with the debt unpaid
 
 - **Date:** 2026-09-15 · **Status:** ⚠ **OPEN** until a database witness exists in the tree

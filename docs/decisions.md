@@ -16,6 +16,109 @@
 
 ## Log (newest first)
 
+### D-168 — Features measured on an assembled chain are STORED AND TAGGED, never pooled into a fit or a support range with single-pass vectors — and extracting them changes nothing any page displays
+
+- **Date:** 2026-09-17, **America/Los_Angeles (PDT, UTC−7)**. Measured at session open: `Get-Date` read
+  `2026-09-17T10:21:27-0700` / `2026-09-17T17:21:27Z`. The `09-17` labels on today's documents are the
+  real calendar date. ⚠ Contrast `D-167`, which was written on the 15th under documents labelled 09-16.
+- **Status:** **Ruled and written.** ⚠ **Extraction to an artifact may proceed. INGEST MAY NOT** — Phase 3
+  additionally requires the citation review and `census_ingest_features.py` gaining `D-159` plus the role
+  preamble (`F-079`). Nothing in this entry authorises a database write.
+- **Owner ruling:** *store tagged, never pool* — `RULING-Owner-2026-09-17-population-P1-P4.md` §6,
+  accepting the Planner's recommendation in `RULING-2026-09-16-D-168-and-session-open.md` §1.2. Both
+  documents are committed at `docs/`.
+- **How known (`D-016`):** every code claim below is a line Code read in this tree at `f0be03a`:
+  `core/structural_profile.py:53` (the category string) and `:268–272` (where it is returned, with
+  `D-109` ruling 7 quoted in the payload); `app/census_profile_read.py:83` (`_incommensurable_assembly`)
+  and `:127–129` (the short-circuit); `ui/src/components/CensusTable.jsx:212` (what a reader sees).
+  The partition `3,418 + 45 + 4 + 0 = 3,467` is quoted from `decisions.md:2860`, not recomputed here.
+  The instrument version `e67a8cf30c1c` is `feature_version()` read at `f7d0a9d`, with
+  `git log 8db7345..HEAD -- core/features.py` empty.
+- **Relates:** `D-120` (`decisions.md:13501`, the refusal this reuses) · `D-109` ruling 7
+  (`decisions.md:14392`) · `D-027` (an absent measurement is a category) · `D-079` decision 1 (no census
+  row is scored) · `F-049` (two names for one thing). ⚠ The surface-and-tail axes spec owes two further
+  axis rulings (its §2.6 and §3.7); **they cite this entry rather than re-rule it** (§5). They are not
+  named by integer here: their numbers are reserved-but-unwritten, and the citation invariant resolves
+  only written entries and whitelisted rows.
+
+#### 1. Deep-learning justification
+
+The six features are measurements **of an ESMFold forward pass**, and two of them — `mean_plddt_ecd` and
+`membrane_proximal_plddt` — are the network's own confidence. A single-pass fold is one inference over one
+sequence. An assembled chain is a **pLDDT-overlap composition of several forward passes over different
+windows**, each conditioned on a different context. The numbers look alike and are not the same quantity:
+the second carries a seam the model never saw, and its confidence terms are stitched from passes that
+disagreed where they overlapped.
+
+**Pooling them would corrupt the one thing v2 exists to test.** The November comparison asks whether a
+model's confidence is *honest* — calibration against solved structures. A calibration curve fitted over a
+mixture of single-pass and assembled vectors measures neither population, and the mixture's error would be
+read as the model's error. **This is the deep-learning content of the ruling:** commensurability is not
+bookkeeping, it is what makes a confidence claim about a network falsifiable at all.
+
+#### 2. The ruling
+
+1. **Features measured on an assembled chain ARE extracted and stored**, tagged with what produced them.
+2. ⚠⚠ **They are NEVER pooled** into a fit, a standardisation, a support range, or a reported distribution
+   with single-pass vectors. Not averaged, not concatenated, not "included for coverage".
+3. **A tagged vector may be compared with single-pass vectors** — that is the v2 comparison — provided the
+   comparison names the two populations. **Comparing is not pooling.**
+
+#### 3. ⚠⚠ It creates NO new refusal category — the tree already ships one
+
+`ORDERS-Code-2026-09-16-feature-coverage.md` §2.2 proposed **`refused_assembled_structure`**. The tree has
+shipped **`refused_assembled_incommensurable`** since `D-120`: declared at `core/structural_profile.py:53`,
+returned at `:268–272`, applied at `app/census_profile_read.py:128`, rendered at
+`ui/src/components/CensusTable.jsx:212` as *"assembly — not a single-pass measurement"*, and pinned by four
+test modules.
+
+**A second name for one refusal is `F-049`'s family.** The orders' §2.2 is **superseded** on this point —
+**Planner error 9, found by Code reading source** (`RULING-2026-09-16` §1). The rest of §2.2 stands.
+
+⚠ **`no_protein_level_structure` is superseded as a PROFILE category.** `_incommensurable_assembly` already
+returns true for a tile row. If the distinction is still wanted it belongs to the **extraction** artifact's
+outcome vocabulary — never as a second profile refusal.
+
+⚠ **The `structure_kind` tag in the v2 artifact stands, and is not a refusal.** It records what the
+extractor measured. The refusal is decided **at profile time, from the row**, by `_incommensurable_assembly`.
+
+#### 4. ⚠⚠ Extracting these features changes NOTHING any page displays. Say it plainly or the work looks failed.
+
+`census_profile_statuses` tests `_incommensurable_assembly(analysis)` **first and `continue`s**
+(`app/census_profile_read.py:127–129`), so **the feature row is never consulted** for an assembled parent or
+a tile window. Such a row displays `refused_assembled_incommensurable` **whether or not it has features.**
+
+**Therefore:**
+- Extraction over the assembled portion of P1 is **a measurement for the v2 comparison, not a coverage
+  fix.** No status flips, no number on `/census` moves.
+- **`C1b` is the figure that sizes it**, reported with its key, never as a bare number. ⚠ `C1b` is
+  unmeasured: Phase 1 did not run today.
+- The scale is not nothing: `decisions.md:2860` partitions the census as **3,418 single-pass + 45
+  `assembled_served` + 4 `none` + 0 `tiles_only` = 3,467**.
+
+#### 5. Commensurability, stated generally so this entry is not re-ruled per model
+
+**Commensurability is a property of the instrument and the object together.** Two measurements may be
+compared only when the same instrument measured the same kind of object. A feature vector must therefore
+carry enough provenance to establish **both** before it may enter a fit.
+
+⚠ **This is deliberately general.** The surface-and-tail spec's patch-chemistry ruling (its §2.6 — is a
+patch inventory on an assembled structure commensurable with one on a single-pass fold?) and the v2
+comparison's model axis are the same principle on new quantities: **they cite this entry, they do not
+re-rule it.**
+
+⚠ **This entry does NOT specify the v2 artifact's schema.** The `model` and `structure_kind` tag keys are
+named and pinned by the **v2 pre-registration**, which this entry does not pre-ratify. *(The two "never
+mix" rules — v2's across models, this one's across structure kinds — are one principle on two axes; Code
+raised that, and the Planner ruled the principle belongs here and the mechanism there.)*
+
+#### 6. What this entry is not
+
+Not a coverage fix (§4) · not authorisation to ingest · not a new category (§3) · not a score, rank or
+suitability claim (`D-079` decision 1) · not a re-pointing of any sealed analysis: **seven documents cite
+`census_features.v1` by sha256 `c08f9f1d…`, and v2 is ADDITIVE.** Replacing a v1 citation needs its own
+ruling.
+
 ### D-167 — The 37 are RE-ATTACHED to the folds already on the volume, not re-folded — and every value the write sets is copied from a measured control or a captured artifact, never from what a completed row is remembered to look like
 
 - **Date:** 2026-09-15, **America/Los_Angeles (PDT, UTC−7)**. Measured, not labelled: `date` in this

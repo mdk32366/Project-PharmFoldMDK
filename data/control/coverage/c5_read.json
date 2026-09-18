@@ -1,0 +1,51 @@
+{
+  "diagnostics": {
+    "note": "diagnostics are not expectations. C4 keeps `mucin` as its own branch: the picker returns four kinds and folding one into another would be D-168's section 3 defect"
+  },
+  "identity": {
+    "cluster_marker": "kyzl60xz9zyrpj9g",
+    "current_database": "pharmfoldmdk",
+    "current_user": "schema_admin",
+    "server_now_utc": "2026-09-17 22:57:40.321144+00:00",
+    "transaction_read_only": "on"
+  },
+  "keys": {
+    "C5": "analysis_ids present in the committed census_features.v1 artifact that are present in the protein_features TABLE, plus a capped equality sample -- the panel reads the table, and v1's manifest records wrote_database_rows: false"
+  },
+  "provenance": {
+    "branch": "d167-r1r4-population-read",
+    "commit": "56dfaaa22bf21e2680672fd7b5a4bfdfb434c117",
+    "orders": "ORDERS-Code-2026-09-17-TASK-D-coverage-report.md",
+    "read_at_utc": "2026-09-17T22:57:41.424957+00:00",
+    "script": "scripts/feature_coverage_report.py",
+    "target": "127.0.0.1:16391/pharmfoldmdk",
+    "tracked_files_clean": true,
+    "url_username": "pharmfoldmdk-app"
+  },
+  "readings": {
+    "C5": {
+      "in_table": 2690,
+      "sample": {
+        "cap": 50,
+        "checked": 50,
+        "differing": [],
+        "equal": 50
+      },
+      "v1_rows": 2690
+    }
+  },
+  "role": {
+    "can_build_jobs_index": true,
+    "current_user": "schema_admin",
+    "jobs_owner": "schema_admin",
+    "rolconfig": [
+      "role=schema_admin"
+    ],
+    "role": "schema_admin",
+    "rolsuper": false,
+    "session_user": "pharmfoldmdk-app"
+  },
+  "sections": [
+    "C5"
+  ]
+}

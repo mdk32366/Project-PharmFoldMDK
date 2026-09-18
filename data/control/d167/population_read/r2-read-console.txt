@@ -1,0 +1,43 @@
+==============================================================================
+R1-R4 POPULATION-AWARE READ (read-only transaction; role, then D-159)
+==============================================================================
+ROLE PREAMBLE (D-167 amendment 1 \xa72, read-only)
+  session_user          : 'pharmfoldmdk-app'
+  current_user          : 'schema_admin'
+  role                  : 'schema_admin'
+  rolconfig             : ['role=schema_admin']
+  rolsuper              : False
+  jobs_owner            : 'schema_admin'
+  can_build_jobs_index  : True
+  cluster_marker          : kyzl60xz9zyrpj9g
+  current_database        : pharmfoldmdk
+  current_user            : schema_admin
+  server_now_utc          : 2026-09-17 20:52:23.641072+00:00
+  transaction_read_only   : on
+
+  [MET] R1 groups of (accession, tile_start, tile_end) with > 1 complete run '1' row
+        measured 72   expected 72
+  [MET] R2 groups holding exactly one tranche-0 row and exactly one tranche >= 1 row
+        measured {'meeting': 72, 'of': 72}   expected {'meeting': 72, 'of': 72}
+  [MET] R3 identity key with population: groups with > 1 complete row
+        measured 0   expected 0
+  [NOT MET] R4 P11717, Q8WXI7, Q9NYQ8: no complete tranche-0 row, exactly one complete census row
+        measured 2   expected 3
+
+diagnostics (not expectations):
+  R1 groups (accession, tile_start, tile_end): count 72 (own count(*)); list complete, 72 shown
+  R3 groups (identity + population): count 0 (own count(*)); list complete, 0 shown
+  R1 groups by row count (size: groups): {'2': 72}
+  untagged (NULL tranche) complete run-1 rows: 0
+  complete rows by run label x identity branch (all tranches): {'1': {'tile': 106, 'whole_protein': 3542}, '2': {'whole_protein': 1976}}
+  complete tranche-0 rows by run label x identity branch: {'1': {'whole_protein': 79}}
+  (absent) run label: whole_protein 0 (AMENDMENT 1 section 2: a STOP), tile 0 (a carry), partial_tile_keys 0
+  R4 P11717: {'tranche0_complete': 0, 'census_whole_complete': 1, 'census_tile_complete': 2, 'untagged_complete': 0}
+  R4 Q8WXI7: {'tranche0_complete': 0, 'census_whole_complete': 0, 'census_tile_complete': 0, 'untagged_complete': 0}
+  R4 Q9NYQ8: {'tranche0_complete': 0, 'census_whole_complete': 1, 'census_tile_complete': 3, 'untagged_complete': 0}
+
+written : C:\Projects\Project-PharmFoldMDK\data\control\d167\population_read\r1r4_read.json
+sha256  : aff8159330cbd280b8cd0905c968a8b9d18f4188e855e1434d13409fe8e15935
+
+NOT MET: R4. A finding: STOP and report. This script does not interpret the reading.
+exit: 2
