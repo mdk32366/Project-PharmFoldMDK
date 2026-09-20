@@ -119,8 +119,8 @@ describe('MethodNote — the census structural rank (D-144)', () => {
     const view = await renderMethod()
     const text = view.getByTestId('census-structural-intermittent-limits').textContent
     // ⚠⚠ D-050 / D-051 Constraint A: a number on a surface is derived from a payload or it is not
-    // on the surface at all. No component fetches /api/census-structural-ranking, so there is no
-    // payload for this paragraph to derive from — it names the field and says why.
+    // on the surface at all. The Method page still does not type a live intermittent count here — that count
+    // lives on the structural-rank browse (D-169). This paragraph names the field and says why.
     expect(text).toMatch(/component_counts\.by_flag\.ecd_intermittent/)
     expect(text).toMatch(/not typed/i)
     expect(text).not.toMatch(/\b\d{1,3},\d{3}\b|\b\d{4,}\b/)

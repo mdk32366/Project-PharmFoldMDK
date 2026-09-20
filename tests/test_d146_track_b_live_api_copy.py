@@ -281,9 +281,9 @@ UNTOUCHED_SURFACE = {
     # ⚠ moved by `### D-153` (was fbd8402067ea504c6b477483f4b111f114576a73fa0de931b6388b9e0912a63f)
     ".dockerignore":
         "f4e284270c3ea9d98ad10a2f134a158fbf63809e84a5b3f3a6bfabb0789a8635",
-    # ⚠ moved by `### D-147` (was 062fd71ff19a4121a2924e00979f7bcc58228234368221ffac423f34956c7074)
+    # ⚠ moved by `### D-169` (was D-147 digest; MethodNote now names the structural-rank browse) (was 062fd71ff19a4121a2924e00979f7bcc58228234368221ffac423f34956c7074)
     "ui/src/components/MethodNote.jsx":
-        "fc30481d792a938c3990a68fff4e1f4c06aad2c7b6397307ed51585e1e48da5f",
+        "6d0778d4fae856e2456167da30d51978e84ec3b09b4eff7b13be95ffa33b8112",
     "core/scorer.py":
         "886b88ad8e0d25f1af74d65b25b46ab887c264fde654e9cea172d04ef9fb120b",
 }
@@ -588,7 +588,7 @@ def test_the_reserved_row_is_retired_marker_safe_and_147_has_a_row():
     # purpose — so *"next free"* means the lowest AVAILABLE integer and not the lowest unwritten
     # one. Six assertions where there was one: the pointer names 154, and it names none of 147,
     # 148, 150, 151, 152 or 153.
-    assert "Next free `D-` integer: **`D-169`**" in RESERVED, (
+    assert "Next free `D-` integer: **`D-170`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
     )
     assert "Next free `D-` integer: **`D-153`**" not in RESERVED

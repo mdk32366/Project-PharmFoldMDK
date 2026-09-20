@@ -60,8 +60,8 @@ describe('the census surface is unscored by construction', () => {
     // ⚠ A reader who stops after the headline figure must already have met the limit.
     const { container } = render(<CensusView />)
     const t = container.textContent
-    expect(t.indexOf('None of these proteins has been scored')).toBeGreaterThan(-1)
-    expect(t.indexOf('None of these proteins has been scored'))
+    expect(t.indexOf('None of these proteins has been run through the cohort-82 learned scorer')).toBeGreaterThan(-1)
+    expect(t.indexOf('None of these proteins has been run through the cohort-82 learned scorer'))
       .toBeLessThan(t.indexOf('proteins examined'))
   })
 
@@ -136,7 +136,7 @@ describe('batches are batches', () => {
 })
 
 // ⚠⚠ THE CLAIM MUST TRACK THE SURFACE, AND ONCE IT DID NOT. Until 2026-08-19 this page said
-// "None of these proteins has been scored or ranked" full stop — true when written, because no
+// "None of these proteins has been run through the cohort-82 learned scorer or ranked" full stop — true when written, because no
 // model output existed for a census protein. The structural profile (D-079 amendment 1, ruled by
 // amendment 2) made it true only by virtue of ruling 1's NAMING rule, one click from a page
 // showing the model's output. ⚠ A claim that survives on what we decided to call something is not
@@ -147,12 +147,12 @@ describe('CensusView — the unscored claim must disclose the profile', () => {
 
   it('still says none is scored or ranked, because that half is TRUE', () => {
     const t = text()
-    expect(t).toMatch(/None of these proteins has been scored or ranked/)
+    expect(t).toMatch(/None of these proteins has been run through the cohort-82 learned scorer/)
   })
 
   it('discloses the structural profile in the same sentence, not elsewhere on the page', () => {
     const t = text()
-    const claim = t.indexOf('None of these proteins has been scored or ranked')
+    const claim = t.indexOf('None of these proteins has been run through the cohort-82 learned scorer')
     const disclosure = t.indexOf('structural profile')
     expect(disclosure).toBeGreaterThan(-1)
     // ⚠ within the same paragraph's worth of text — a disclosure three sections down is a
@@ -230,7 +230,7 @@ describe('CensusView — what we found, and how to read it', () => {
 
   it('keeps every existing limit — the result did not replace the hedges', () => {
     const x = t()
-    expect(x).toMatch(/None of these proteins has been scored or ranked/)
+    expect(x).toMatch(/None of these proteins has been run through the cohort-82 learned scorer/)
     expect(x).toMatch(/What these numbers do not mean/)
     expect(x).toMatch(/not a list of candidates/)
   })

@@ -154,7 +154,8 @@ describe('D-135 — the second strip says it is a different population before it
     expect(strip.textContent).toMatch(/not more of the cohort/i)
     expect(strip.textContent).toMatch(/do not extend the denominator/i)
     expect(strip.textContent).toMatch(/different span definition/i)
-    expect(strip.textContent).toMatch(/not scored and not ranked/i)
+    expect(strip.textContent).toMatch(/not on the cohort-82 learned scorer/i)
+    expect(strip.textContent).toMatch(/structure-only rank/i)
   })
 
   // ⚠ The label must come BEFORE the figures — a reader who stops after the first number has to

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { CENSUS, CENSUS_LIMITS } from '../censusSummary.js'
 import { listCensus } from '../api.js'
 import CensusTable from './CensusTable.jsx'
+import CensusStructuralRank from './CensusStructuralRank.jsx'
 
 // The census surface. ⚠⚠ UNSCORED BY CONSTRUCTION — no score, no rank, no order-by-suitability,
 // because D-079 dec 1 bars scoring any census row.
@@ -28,12 +29,27 @@ import CensusTable from './CensusTable.jsx'
 // ⚠ What the old rule bought was safety through invisibility, and that has its own cost —
 // 2,500 measured structures nobody could look at.
 export default function CensusView() {
+  const [searchParams] = useSearchParams()
+  if (searchParams.get('view') === 'structural-rank') {
+    return (
+      <div className="census">
+        <p className="crumb"><Link to="/census">← Census</Link></p>
+        <h1>Census structural rank</h1>
+        <CensusStructuralRank />
+      </div>
+    )
+  }
+
   const foldable = CENSUS.sources.reduce((a, s) => a + s.foldable, 0)
   const rows = CENSUS.sources.reduce((a, s) => a + s.rows, 0)
   const notFoldableTotal = CENSUS.notFoldable.reduce((a, r) => a + r.rows, 0)
 
   return (
     <div className="census">
+      <p className="note" data-testid="structural-rank-link">
+        <Link to="/census?view=structural-rank">Structural rank (structure-only)</Link>
+        {" — "}membrane × ECD × pLDDT order from the live API; not the cohort-82 learned scorer.
+      </p>
       {/* ⚠⚠ D-151 — THE LIST MOVED ABOVE FIVE SECTIONS OF PROSE, AND NOTHING WAS DELETED TO DO IT.
           Owner complaint, 2026-09-09: *"You've got to scroll to get to the list."* Measured cause,
           not guessed: the lede, the unscored bar, the counts block, the absences `<dl>` and the
@@ -51,7 +67,7 @@ export default function CensusView() {
       {/* ⚠ The disclaimer sits ABOVE the numbers, not below them. A reader who stops after the
           headline figure must already have met the limit. */}
       <p className="census-bar">
-        <strong>None of these proteins has been scored or ranked.</strong> Each carries a{' '}
+        <strong>None of these proteins has been run through the cohort-82 learned scorer.</strong> Each carries a{' '}
         <strong>structural profile</strong> — the model applied to its measured features — which is
         a measurement, not a verdict, and <strong>no protein is ordered by it</strong>. This is a
         count of what is measurable, not a list of candidates — and it is not comparable to the

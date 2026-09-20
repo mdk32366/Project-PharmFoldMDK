@@ -136,11 +136,10 @@ export const CENSUS = {
 // Each line is a thing this page's numbers do NOT mean.
 export const CENSUS_LIMITS = [
   {
-    head: 'Nothing here is scored, and nothing here is ranked.',
-    body: 'These proteins have not been run through the ranking model, and they will not be ' +
-      'without a separate decision. A count is not a shortlist. The ranked list of 82 targets ' +
-      'elsewhere in this application is a different population, measured under a different span ' +
-      'definition, and the two must not be compared.',
+    head: 'Nothing here is run through the cohort-82 learned scorer.',
+    body: 'These proteins are not on the cohort-82 learned ranking. A separate structure-only order '
+      + '(membrane × ECD × pLDDT) is live at the Structural rank browse on this page — not ADC '
+      + 'readiness, and not the same population as the ranked list of 82 targets elsewhere.',
   },
   {
     head: 'Foldable is a statement about the annotation, not about the protein.',
