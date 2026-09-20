@@ -365,7 +365,7 @@ def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxin
         text = (ROOT / rel).read_text(encoding="utf-8")
         assert "D-154 — Every UI surface walked on the live site" in text, (
             f"{rel} does not NAME the entry that spent 154")
-        assert r'\n### D-169" not in' in text, f"{rel} does not bar the next free integer"
+        assert r'\n### D-170" not in' in text, f"{rel} does not bar the next free integer"
     # ⚠⚠ THE `>=` CHECK IS SCOPED TO THE TWO SPEC SUITES, AND THE SCOPE IS THE POINT.
     # `tests/test_d153_bake_burden_loader.py` performs this very check on those two files, so it
     # HOLDS the relaxation pattern as *data* — asserting the string's absence there would redden on

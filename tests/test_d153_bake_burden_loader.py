@@ -548,7 +548,7 @@ def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxin
         # with the bar rather than being dropped — the same flip this suite made at D-152.
         assert "D-154 — Every UI surface walked on the live site" in text, (
             f"{rel} does not NAME the entry that spent 154")
-        assert r'\n### D-169" not in' in text, f"{rel} does not bar the next free integer"
+        assert r'\n### D-170" not in' in text, f"{rel} does not bar the next free integer"
         assert r'\n### D-148" not in' in text, f"{rel} stopped barring the trafficking hold"
         # ⚠ FLIPPED AT `D-152`: the hold was claimed by its lane, so those two files NAME the
         # entry instead of barring the integer. The check moves with it rather than being dropped.
