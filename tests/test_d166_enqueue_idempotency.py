@@ -157,7 +157,8 @@ def test_the_pointer_moved_in_this_commit_and_166_is_named_not_barred():
     pointer = [q for q in sorted((REPO / "tests").glob("test_*.py"))
                if q.name != pathlib.Path(__file__).name
                and needle in q.read_text(encoding="utf-8")]
-    assert len(pointer) == 9, f"{len(pointer)} files pin the D- pointer, expected 9"
+    # ⚠ D-170 pins next-free (test_d170), so the pointer-file count is 10 (was 9).
+    assert len(pointer) == 10, f"{len(pointer)} files pin the D- pointer, expected 10"
     for q in pointer:
         text = q.read_text(encoding="utf-8")
         assert needle + ": **`D-171`**" in text, (

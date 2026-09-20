@@ -224,13 +224,24 @@ def test_track_b_is_not_pasted_into_a_scorer_surface():
 
 
 def test_the_census_table_still_has_no_rank_column():
-    """⚠ Hard stop from the GO, and `D-144`'s own *STANDS, UNCHANGED*: the census table is not a
-    ranked shortlist. A copy PR that named the route and then added a column would have made the
-    sentence true by moving the product instead of the words."""
-    for rel in ("ui/src/components/CensusView.jsx", "ui/src/components/CensusTable.jsx"):
-        census = (ROOT / rel).read_text(encoding="utf-8")
-        assert "structural_score" not in census, f"{rel}: no structural score column on /census"
-        assert "'rank'" not in census, f"{rel}: no rank column on /census"
+    """⚠ Hard stop amended by `### D-170`: STRUCTURAL_ONLY columns on CensusTable are allowed
+    (`structural_rank` / `structural_score` from the structure-only order). Still forbid calling
+    them the cohort-82 Rank / learned scorer. CensusView may stay without `structural_score` if
+    unused. Honesty intent stands — this is not a ranked shortlist via the cohort scorer."""
+    view = (ROOT / "ui/src/components/CensusView.jsx").read_text(encoding="utf-8")
+    # Default census lede surface: no structural_score paint (browse is a separate view).
+    assert "structural_score" not in view, "CensusView: structural_score unused on default surface"
+    assert "'rank'" not in view, "CensusView: no bare rank column"
+
+    table = (ROOT / "ui/src/components/CensusTable.jsx").read_text(encoding="utf-8")
+    # D-170 paints STRUCTURAL_ONLY — must be named as such, not as cohort Rank.
+    assert "STRUCTURAL_ONLY" in table, "CensusTable must label structural columns STRUCTURAL_ONLY"
+    assert "structural_rank" in table and "structural_score" in table
+    assert "cohort-82 learned scorer" in table, (
+        "CensusTable must refuse the cohort-82 learned scorer framing for STRUCTURAL_ONLY columns")
+    # Still forbid a bare cohort Rank column key.
+    assert "'rank'" not in table, "CensusTable: no bare 'rank' column (cohort Rank)"
+    assert '"rank"' not in table, 'CensusTable: no bare "rank" column (cohort Rank)'
 
 
 # ─────────────── the hard stops, as properties of the tree
@@ -244,7 +255,7 @@ def test_the_census_table_still_has_no_rank_column():
 #: says a route, loader or image edit *"belongs to a different entry with its own ruling"*, and
 #: `### D-147` is that entry — the `ecd_intermittent` serve-time join and its `/method` paragraph.
 #: The superseded values are recorded rather than overwritten in silence (D-129-C):
-#:     app/census_structural_read.py       D-146: 7f581c690ebc95bc… → D-147: 0fff62b0b947…
+#:     app/census_structural_read.py       D-146: 7f581c69… → D-147: 0fff62b0… → D-170: 5fa54ba8… (attach helpers; formula unchanged)
 #:     ui/src/components/MethodNote.jsx    D-146: 062fd71ff19a4121… → D-147: fc30481d792a…
 #: ⚠⚠ **THE OTHER EIGHT ARE UNTOUCHED, WHICH IS THE HALF WORTH READING.** `core/census_structural.py`
 #: (so `formula_version()` still returns the live run's `c859da97f73d`),

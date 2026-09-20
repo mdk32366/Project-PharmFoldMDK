@@ -744,10 +744,18 @@ def test_the_learned_scorer_cannot_reach_the_census_structural_formula():
 
 def test_app_reads_and_the_census_structural_reader_do_not_import_each_other():
     """⚠ D-079 amendment 1 ruling 5's wall, checkable at file granularity — the same shape
-    `census_profile_read.py` and `census_cost_read.py` already keep."""
-    reads = (REPO / "app" / "reads.py").read_text(encoding="utf-8")
-    assert "census_structural" not in reads, "app/reads.py must not learn this score"
+    `census_profile_read.py` and `census_cost_read.py` already keep.
+    ⚠ D-170 Join A: `app/reads.py` MAY lazy-import `attach_structural_rank_fields` (same
+    posture as `census_staining_read`) so list/detail can paint STRUCTURAL_ONLY rank+score.
+    The wall that must stay is one-way: `census_structural_read` must NOT import `app.reads`.
+    Formula / route isolation is unchanged."""
+    # One-way: the structural reader never imports the cohort/census read surface.
     assert "from app.reads import" not in READ_SRC and "app.reads" not in READ_SRC
+    reads = (REPO / "app" / "reads.py").read_text(encoding="utf-8")
+    # Allowed: lazy attach helper only (D-170). Still forbid a top-level formula/route pull.
+    assert "attach_structural_rank_fields" in reads
+    assert "census_structural_payload" not in reads
+    assert "from app.census_structural_read import census_structural_payload" not in reads
 
 
 def test_the_migration_is_additive_and_rewrites_nothing(engine):

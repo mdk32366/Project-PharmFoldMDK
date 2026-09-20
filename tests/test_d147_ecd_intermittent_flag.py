@@ -686,12 +686,15 @@ def test_the_method_note_paragraph_carries_the_denials_and_types_no_count():
 
 
 def test_the_census_table_still_has_no_rank_column_and_no_ranking_table_shipped():
-    """D-079 dec 1 as narrowed by D-144 left no rank column on /census standing.
-    D-169 adds an intentional structural-rank browse (separate surface) + api client;
-    CensusTable itself must still carry no rank column."""
+    """D-079 dec 1 as narrowed by D-144, then D-169 browse, then `### D-170` STRUCTURAL_ONLY
+    columns on CensusTable. Allow structural_rank/structural_score when labeled STRUCTURAL_ONLY;
+    still forbid calling them the cohort-82 Rank / learned scorer. No bare Rank column."""
     census_table = (REPO / "ui" / "src" / "components" / "CensusTable.jsx").read_text(
         encoding="utf-8")
-    for barred in ("structural_score", "'rank'", '"rank"'):
+    assert "STRUCTURAL_ONLY" in census_table
+    assert "structural_rank" in census_table and "structural_score" in census_table
+    assert "cohort-82 learned scorer" in census_table
+    for barred in ("'rank'", '"rank"'):
         assert barred not in census_table, barred
     consumers = []
     for path in (REPO / "ui" / "src").rglob("*.js*"):
