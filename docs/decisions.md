@@ -16,6 +16,20 @@
 
 ## Log (newest first)
 
+### D-170 — Census structural rank + score on every protein surface (list + detail)
+
+- **Date:** 2026-09-20, **America/Los_Angeles (PDT, UTC−7)**.
+- **Status:** **Ruled and written.** UI + read enrichment. No GPU, no ingest, no formula change, no CloudAgent.
+- **Problem:** After D-169 the structure-only order was browsable only at `/census?view=structural-rank`. Default CensusTable and `/census/:id` still omitted rank + `structural_score`.
+- **Contracts:**
+  - **Server enrich (required):** `structural_rank_index` / `attach_structural_rank_fields` in `app/census_structural_read.py` — same SoT as `GET /api/census-structural-ranking`. Attached on `list_census` and `get_census_detail`. Invalid status → null fields, never fake ranks.
+  - **Census table:** STRUCTURAL_ONLY columns + chrome note; cells show — when absent.
+  - **Census detail:** STRUCTURAL_ONLY disclaimer + rank/score; StructuralProfile naming unchanged.
+  - **Targets (Contract 3): N/A** — Targets / coverage list is the cohort-82 instrument; no census accession is a primary Targets row at tip. Census proteins remain on `/census` and `/census/:id` (and optional sibling links). No Targets redesign in this ship.
+  - **Naming:** structural_score ≠ cohort scorer ≠ structural profile / pLDDT.
+- **Hard stops held:** no `/api/ranking` change; no ADC claim; D-150 axes untouched; D-169 Contract E still deferred.
+- **RESERVED:** pointer moved to **`D-171`** in the SAME commit that spent 170.
+
 ### D-169 — UI truth fixes A–E: structural-rank browse, soften absolute census denials, `/coverage`→`/targets`, Track B bottom line
 
 - **Date:** 2026-09-20, **America/Los_Angeles (PDT, UTC−7)**.

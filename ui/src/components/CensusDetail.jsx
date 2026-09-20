@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { bandFor } from '../plddt.js'
 import { scoreState, seamState, structureServedLabel } from '../structureStatus.js'
 import StructuralProfile from './StructuralProfile.jsx'
@@ -261,6 +262,26 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
           page carries no scorer panel, and D-079 amendment 1 warns the profile block must not
           become one by another name. The order of the page is part of that: the reader is told
           this protein is unscored BEFORE being shown a structure-derived number. */}
+      <section className="structural-rank-detail panel" data-testid="structural-rank-detail">
+        <h3>Structure-only rank (STRUCTURAL_ONLY)</h3>
+        <p className="note">
+          Membrane × ECD × pLDDT order from the live ranking store —{' '}
+          <strong>not</strong> the cohort-82 learned scorer, <strong>not</strong> ADC readiness,
+          <strong> not</strong> a shortlist. Same numbers as{' '}
+          <Link to="/census?view=structural-rank">structural-rank browse</Link>.
+        </p>
+        {detail.structural_rank_status && detail.structural_rank_status !== 'valid' ? (
+          <p role="alert">Structural ranking is not valid right now — no rank painted.</p>
+        ) : detail.structural_rank != null ? (
+          <p>
+            Rank <strong>{detail.structural_rank}</strong>
+            {' · '}
+            score <strong>{Number(detail.structural_score).toFixed(4)}</strong>
+          </p>
+        ) : (
+          <p>Not in the structure-only ranking (—).</p>
+        )}
+      </section>
       <StructuralProfile block={detail.structural_profile_block} />
       {/* ⚠ D-093 edges 1+2 — the human-legible half, BELOW the structural
           profile: the reader meets what the protein IS before what a model

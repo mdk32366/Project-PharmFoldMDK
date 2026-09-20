@@ -1090,7 +1090,7 @@ export default function MethodNote() {
             that instrument, and the default order is still the accession. The structure-only
             order is browsable at{' '}
             <Link to="/census?view=structural-rank">/census?view=structural-rank</Link>{' '}
-            via <code>getCensusStructuralRanking()</code>.
+            via <code>getCensusStructuralRanking()</code>. D-170: the default Census table and each protein page also show that structure-only rank and score (same store as the ranking API).
           </p>
         </div>
 

@@ -80,6 +80,9 @@ export const COLUMNS = [
   { key: 'cost', label: 'Cost to fold (compute — not suitability)', numeric: false,
     order: COST_ORDER },
   { key: 'mean_plddt', label: 'pLDDT', numeric: true },
+  // D-170 — STRUCTURAL_ONLY order (membrane × ECD × pLDDT). Not the cohort-82 scorer.
+  { key: 'structural_rank', label: 'Struct. rank (STRUCTURAL_ONLY)', numeric: true },
+  { key: 'structural_score', label: 'Struct. score (STRUCTURAL_ONLY)', numeric: true },
   { key: 'tranche', label: 'Tranche', numeric: true },
   // ⚠⚠ A STATUS, NOT A VALUE, AND THAT IS RULING 2. This table sorts on every column (D-087), so a
   // profile VALUE here would be one header click from a ranked shortlist of 1,397 proteins. A
@@ -770,6 +773,15 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
           is positioned against its nearest scrolling ancestor, so the rule that used to stick it to
           the viewport now sticks it to this box — see the matching CSS, which is the half of this
           change jsdom cannot see. */}
+      <p className="note" data-testid="structural-rank-columns-note">
+        <strong>STRUCTURAL_ONLY</strong> columns (Struct. rank / Struct. score) are the structure-only
+        order (membrane × ECD × pLDDT) from the same source as{' '}
+        <Link to="/census?view=structural-rank">structural-rank browse</Link>
+        — not the cohort-82 learned scorer, not ADC readiness, not a shortlist.
+        {rows.some((r) => r.structural_rank_status && r.structural_rank_status !== 'valid') ? (
+          <span role="alert"> Ranking status is not valid — no numeric ranks are painted.</span>
+        ) : null}
+      </p>
       <div className="census-table-scroll">
         <table>
           <thead>
@@ -986,6 +998,18 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
 
                   <td className="num" style={{ color: band.color }}>
                     {r.mean_plddt != null ? r.mean_plddt.toFixed(1) : <span className="unknown">not measured</span>}
+                  </td>
+                  <td className="num" data-testid="structural-rank-cell"
+                      title={r.structural_rank == null ? 'not in structural ranking' : 'STRUCTURAL_ONLY rank'}>
+                    {r.structural_rank_status && r.structural_rank_status !== 'valid'
+                      ? '—'
+                      : (r.structural_rank != null ? r.structural_rank : '—')}
+                  </td>
+                  <td className="num" data-testid="structural-score-cell"
+                      title={r.structural_score == null ? 'not in structural ranking' : 'STRUCTURAL_ONLY score'}>
+                    {r.structural_rank_status && r.structural_rank_status !== 'valid'
+                      ? '—'
+                      : (r.structural_score != null ? Number(r.structural_score).toFixed(4) : '—')}
                   </td>
                   {/* ⚠ D-154: NAMED, like every neighbour. `{r.tranche}` drew an EMPTY cell for the
                       one row of 3,467 with no tranche (`P55073`/`DIO3`) — while `span_aa ?? '—'` two

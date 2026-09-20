@@ -1666,6 +1666,17 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
         except Exception:                  # noqa: BLE001
             pass                           # ⚠ enrichment is optional; the rows are not
     out.sort(key=lambda r: r.get("accession") or "")
+    # ⚠ D-170: same SoT as GET /api/census-structural-ranking. Enrichment is optional for
+    # survival of the list (staining pattern); missing table must not invent ranks.
+    try:
+        from app.census_structural_read import attach_structural_rank_fields
+        attach_structural_rank_fields(engine, out)
+    except Exception:  # noqa: BLE001
+        for row in out:
+            row.setdefault("structural_rank", None)
+            row.setdefault("structural_score", None)
+            row.setdefault("structural_rank_status", None)
+            row.setdefault("structural_rank_flags", None)
     return out
 
 
@@ -1838,6 +1849,14 @@ def get_census_detail(
             else "single-pass" if row.pdb_path else "tiles_only"
         )
         out = apply_structure_kind(census_projection(row), row, kind)
+        try:
+            from app.census_structural_read import attach_structural_rank_fields
+            attach_structural_rank_fields(engine, [out])
+        except Exception:  # noqa: BLE001
+            out.setdefault("structural_rank", None)
+            out.setdefault("structural_score", None)
+            out.setdefault("structural_rank_status", None)
+            out.setdefault("structural_rank_flags", None)
         out["sequence"] = (row.meta or {}).get("sequence")
         out["fold_provenance"] = (row.meta or {}).get("fold_provenance")
         out["structure_source"] = row.structure_source
