@@ -46,9 +46,12 @@ D144_OWN_FILES = {
     # recorded rather than overwritten in silence (D-129-C):
     #     D-144 / D-145 / D-146 : 7f581c690ebc95bceb532f0554e97d7499add4c327fcf15802ec406b69bdef6b
     #     D-147 onward          : 0fff62b0b9471cd4447255275cb13cd4ac07890e8a79aacec2c3d40a5d7142df
-    # ⚠ `D-149` does NOT touch this file, so it inherits D-147's value unchanged.
+    # ⚠⚠ MOVED BY `### D-170` (attach helpers for list/detail Join A). Digest moved by D-170
+    # attach helpers; formula unchanged. Superseded value recorded (D-129-C).
+    #     D-147 … D-169         : 0fff62b0b9471cd4447255275cb13cd4ac07890e8a79aacec2c3d40a5d7142df
+    #     D-170 onward          : 5fa54ba8f6a374b025eba09980840117d0617cf50822ebe2c2a10d62917fc174
     "app/census_structural_read.py":
-        "0fff62b0b9471cd4447255275cb13cd4ac07890e8a79aacec2c3d40a5d7142df",
+        "5fa54ba8f6a374b025eba09980840117d0617cf50822ebe2c2a10d62917fc174",
     "scripts/census_structural_rank.py":
         "ef222d19b2c15777ee65736bdc8f7b57b9ed65be990a1ae71a260dbbc7bbafe0",
     "db/migrations/versions/0012_census_structural_rank.py":

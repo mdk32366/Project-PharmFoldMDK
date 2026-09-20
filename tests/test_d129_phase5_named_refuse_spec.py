@@ -533,7 +533,7 @@ def test_d129_is_the_next_free_decision_id():
         # ⚠ 167 is ADDED by the re-attach of slice 2's 37 (`D-167`) — by enumeration,
         # for the EIGHTEENTH time, and never by a `>=`. Spending 167 reddened the previous
         # form BY DESIGN, which is what tells a spent id from a free one.
-        167, 168, 169
+        167, 168, 169, 170
     ], (
         f"⚠ 167 is ADDED by the re-attach of slice 2's 37 — the EIGHTEENTH resolution "
         f"by enumeration and never by a `>=`; `### D-168` now takes the bar. "
@@ -683,7 +683,7 @@ def test_d129_is_the_next_free_decision_id():
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
     # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
-    # store tagged, never pool), so it is NAMED here rather than barred and `### D-170` takes the
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-171` takes the
     # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
     # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
     # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
@@ -692,8 +692,10 @@ def test_d129_is_the_next_free_decision_id():
         "rather than barred")
     assert "\n### D-169 — UI truth fixes A–E: structural-rank browse, soften absolute census denials, `/coverage`→`/targets`, Track B bottom line" in LOG, (
         "D-169 was spent by the UI truth fixes, so it must be NAMED here rather than barred")
-    assert "\n### D-170" not in LOG, (
-        "D-170 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-170 — Census structural rank + score on every protein surface (list + detail)" in LOG, (
+        "D-170 was spent by census structural rank everywhere, so it must be NAMED here rather than barred")
+    assert "\n### D-171" not in LOG, (
+        "D-171 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 is the recorded successor id; it must be the /method contents-rail "

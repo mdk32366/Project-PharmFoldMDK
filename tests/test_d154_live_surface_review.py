@@ -286,7 +286,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     # NAMED above, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
     # ⚠ 148 stays the trafficking hold; 165 is SPENT by the spancache pin and is NAMED
     # below, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
-    assert 148 not in ids and 170 not in ids
+    assert 148 not in ids and 171 not in ids
     # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
     # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
@@ -306,7 +306,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert 165 in ids, "D-165 claimed this integer (the spancache pin)"
     assert 166 in ids, "D-166 claimed this integer (the enqueue-idempotency constraint)"
     assert 167 in ids, "D-167 claimed this integer (the re-attach of slice 2's 37)"
-    assert 170 not in ids, (
+    assert 171 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
@@ -317,7 +317,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
     # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
-    # store tagged, never pool), so it is NAMED here rather than barred and `### D-170` takes the
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-171` takes the
     # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
     # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
     # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
@@ -326,8 +326,10 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
         "rather than barred")
     assert "\n### D-169 — UI truth fixes A–E: structural-rank browse, soften absolute census denials, `/coverage`→`/targets`, Track B bottom line" in LOG, (
         "D-169 was spent by the UI truth fixes, so it must be NAMED here rather than barred")
-    assert "\n### D-170" not in LOG, (
-        "D-170 is the next free integer and must stay unspent until an entry claims it by name "
+    assert "\n### D-170 — Census structural rank + score on every protein surface (list + detail)" in LOG, (
+        "D-170 was spent by census structural rank everywhere, so it must be NAMED here rather than barred")
+    assert "\n### D-171" not in LOG, (
+        "D-171 is the next free integer and must stay unspent until an entry claims it by name "
         "— never admitted by a `>=`")
 
 
@@ -347,7 +349,7 @@ def test_the_reserved_map_retires_154_marker_safe_and_the_pointer_moves_here():
     assert re.search(r"^\| \*\*D-148\*\*", RESERVED, re.M), "the trafficking hold lost its row"
     assert not re.search(r"^\| ~~\*\*D-15[45]\*\*~~", RESERVED, re.M), (
         "a marker is struck through; that breaks a sibling suite's lookup instead of satisfying it")
-    assert "Next free `D-` integer: **`D-170`**" in RESERVED
+    assert "Next free `D-` integer: **`D-171`**" in RESERVED
     for spent in ("D-148", "D-149", "D-150", "D-151", "D-152", "D-153", "D-154", "D-155"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED, (
             f"the pointer still names {spent}, which would hand a spent or held integer to the "
@@ -365,7 +367,7 @@ def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxin
         text = (ROOT / rel).read_text(encoding="utf-8")
         assert "D-154 — Every UI surface walked on the live site" in text, (
             f"{rel} does not NAME the entry that spent 154")
-        assert r'\n### D-170" not in' in text, f"{rel} does not bar the next free integer"
+        assert r'\n### D-171" not in' in text, f"{rel} does not bar the next free integer"
     # ⚠⚠ THE `>=` CHECK IS SCOPED TO THE TWO SPEC SUITES, AND THE SCOPE IS THE POINT.
     # `tests/test_d153_bake_burden_loader.py` performs this very check on those two files, so it
     # HOLDS the relaxation pattern as *data* — asserting the string's absence there would redden on

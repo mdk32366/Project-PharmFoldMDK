@@ -221,7 +221,7 @@ def test_the_fly_volume_is_not_the_images_data_directory():
 #: belongs to a different entry with its own ruling"*, and `### D-147` is that entry: the
 #: `ecd_intermittent` serve-time join. So `app/census_structural_read.py` is **re-pinned** and the
 #: superseded value is recorded here rather than overwritten in silence (D-129-C):
-#:     app/census_structural_read.py  D-144/D-145/D-146: 7f581c690ebc95bc… → D-147: 0fff62b0b947…
+#:     app/census_structural_read.py  D-144…D-146: 7f581c69… → D-147: 0fff62b0… → D-170: 5fa54ba8… (attach helpers; formula unchanged)
 #: ⚠⚠ **AND WHAT DID *NOT* MOVE IS THE LOAD-BEARING HALF.** `core/census_structural.py`,
 #: `scripts/census_structural_rank.py`, `db/models.py`, migration `0012` and `app/read_routes.py`
 #: are **byte-identical** through D-147, so *"no formula, no schema, no loader, no route"* is a

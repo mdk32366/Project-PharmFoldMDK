@@ -380,3 +380,65 @@ def census_structural_payload(engine: Any) -> dict[str, Any]:
             "segment_topology": topology,
             "rows": projected,
         }
+
+
+def structural_rank_index(engine: Any) -> dict[str, Any]:
+    """Accession → {structural_rank, structural_score, flags} from the same SoT as the ranking route.
+
+    ⚠ D-170. Returns ``result_status`` at the top level; ``by_accession`` is empty unless
+    ``result_status`` is the valid-run status. Callers must not invent ranks on a miss.
+    """
+    payload = census_structural_payload(engine)
+    status = payload.get("result_status")
+    by_acc: dict[str, dict[str, Any]] = {}
+    # Valid run only — mirror the browse UI honesty (D-169).
+    if status == "valid":
+        for row in payload.get("rows") or []:
+            acc = row.get("accession")
+            if not acc:
+                continue
+            by_acc[acc] = {
+                "structural_rank": row.get("rank"),
+                "structural_score": row.get("structural_score"),
+                "flags": list(row.get("flags") or []),
+            }
+    return {
+        "result_status": status,
+        "by_accession": by_acc,
+        "structural_only": payload.get("structural_only") or payload.get("disclaimer"),
+    }
+
+
+def attach_structural_rank_fields(
+    engine: Any,
+    rows: list[dict[str, Any]],
+    *,
+    status_key: str = "structural_rank_status",
+) -> str | None:
+    """Mutate census list/detail dicts in place with structural_rank + structural_score.
+
+    Returns the ranking ``result_status`` so the list chrome can stay honest.
+    Missing accession → fields null (UI shows —), never 0.
+    """
+    idx = structural_rank_index(engine)
+    status = idx.get("result_status")
+    by_acc = idx.get("by_accession") or {}
+    valid = status == "valid"
+    for row in rows:
+        row[status_key] = status
+        if not valid:
+            row["structural_rank"] = None
+            row["structural_score"] = None
+            row["structural_rank_flags"] = None
+            continue
+        hit = by_acc.get(row.get("accession") or "")
+        if hit is None:
+            row["structural_rank"] = None
+            row["structural_score"] = None
+            row["structural_rank_flags"] = None
+        else:
+            row["structural_rank"] = hit["structural_rank"]
+            row["structural_score"] = hit["structural_score"]
+            row["structural_rank_flags"] = hit["flags"]
+    return status
+
