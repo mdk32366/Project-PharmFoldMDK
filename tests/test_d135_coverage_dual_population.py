@@ -487,7 +487,8 @@ def test_the_strip_labels_the_population_before_it_prints_a_count():
     assert "not more of the cohort" in plain
     assert "do not extend the denominator" in plain
     assert "different span definition" in plain
-    assert "not scored and not ranked" in plain
+    assert "not on the cohort-82 learned scorer" in plain
+    assert "structure-only rank" in plain
     # ⚠ the label comes first in the source, which is the render order
     assert plain.index("a different population") < plain.index("proteins in the census")
 

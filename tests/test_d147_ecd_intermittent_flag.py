@@ -686,10 +686,9 @@ def test_the_method_note_paragraph_carries_the_denials_and_types_no_count():
 
 
 def test_the_census_table_still_has_no_rank_column_and_no_ranking_table_shipped():
-    """⚠⚠ THE BADGE THE GO CONDITIONED ON A TABLE THAT DOES NOT EXIST. `D-079` dec 1 as narrowed by
-    `D-144` left *"no rank column on `/census`"* standing, and no component fetches the ranking
-    route — so the honesty lands as `/method` prose and a badge would have had to ship a ranking
-    table with it."""
+    """D-079 dec 1 as narrowed by D-144 left no rank column on /census standing.
+    D-169 adds an intentional structural-rank browse (separate surface) + api client;
+    CensusTable itself must still carry no rank column."""
     census_table = (REPO / "ui" / "src" / "components" / "CensusTable.jsx").read_text(
         encoding="utf-8")
     for barred in ("structural_score", "'rank'", '"rank"'):
@@ -700,9 +699,17 @@ def test_the_census_table_still_has_no_rank_column_and_no_ranking_table_shipped(
             continue
         text = path.read_text(encoding="utf-8")
         if "census-structural-ranking" in text or "censusStructural" in text:
-            consumers.append(str(path.relative_to(REPO / "ui" / "src")).replace("\\", "/"))
-    assert sorted(consumers) == ["aboutPaper.js", "components/MethodNote.jsx",
-                                 "system-model.json"], sorted(consumers)
+            consumers.append(str(path.relative_to(REPO / "ui" / "src")).replace(chr(92), "/"))
+    # Intentional consumers after D-169 (browse + MethodNote mention + prior about/system-model).
+    assert sorted(consumers) == sorted([
+        "aboutPaper.js",
+        "api.js",
+        "components/CensusStructuralRank.jsx",
+        "components/MethodNote.jsx",
+        "system-model.json",
+    ]), sorted(consumers)
+
+
 
 
 # ───────────── 5. the absences: stale and absent are not `contiguous` ────────
@@ -952,7 +959,7 @@ def test_the_reserved_row_is_retired_marker_safe_and_148_has_a_row():
     # sitewide-layout lane. A reserved integer is not a free one, so *"next free"* means the lowest
     # AVAILABLE integer and not the lowest unwritten one. Six assertions where there was one: the
     # pointer names 154, and it names none of 147, 148, 150, 151, 152 or 153.
-    assert "Next free `D-` integer: **`D-169`**" in RESERVED, (
+    assert "Next free `D-` integer: **`D-170`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer"
     )
     assert "Next free `D-` integer: **`D-157`**" not in RESERVED, (
