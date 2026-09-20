@@ -1086,8 +1086,11 @@ export default function MethodNote() {
           </p>
           <p className="note">
             The <Link to="/census">Census</Link> table itself still shows no score and no rank
-            column: every row there says it is unscored, and the default order is still the
-            accession. This rank is something you ask for by name.
+            column from the cohort-82 learned scorer: every row there says it is unscored for
+            that instrument, and the default order is still the accession. The structure-only
+            order is browsable at{' '}
+            <Link to="/census?view=structural-rank">/census?view=structural-rank</Link>{' '}
+            via <code>getCensusStructuralRanking()</code>.
           </p>
         </div>
 

@@ -192,7 +192,7 @@ export default function Story() {
           same tier, under the same rules.{' '}
           {/* ⚠⚠ D-079 decision 1, STATED rather than relied upon. A reader must not infer that a
               bigger pile of folds is a bigger shortlist. */}
-          <strong>The census is not scored and not ranked</strong> — a fold is a measurement, a score
+          <strong>The census is not on the cohort-82 learned scorer</strong> — a separate <Link to="/census?view=structural-rank">structure-only rank</Link> is browsable (not ADC readiness). A fold is a measurement, a score
           is an interpretation, and nothing here ranks a census protein against a cohort target.{' '}
           <Link to="/census">Browse the census →</Link>
         </p>

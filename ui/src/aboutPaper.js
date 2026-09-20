@@ -64,7 +64,7 @@ export const BOTTOM_LINE_1 =
   "Padcev's durable connection to Nectin-4's outside is a high-affinity, often two-armed, non-covalent CDR fit on the membrane-distant V domain, while MMAE is covalently attached to the antibody and released after internalization."
 
 export const BOTTOM_LINE_2 =
-  'That same antibody is not a universal V-domain key. For next targets after EV, rank folded membrane proteins by ADC biology, then make a **new** antibody — unless wet assays prove the existing EV antibody truly binds something else.'
+  'That same antibody is not a universal V-domain key. For next targets after EV, make a **new** antibody for a **new** antigen — today\'s browsable order of folded membrane proteins is structure-only (membrane × ECD × pLDDT), not an ADC-biology composite; ranking by ADC biology waits on its own GO — unless wet assays prove the existing EV antibody truly binds something else.'
 
 // The pin set — every member must be a substring of the owner Doc.
 export const VERBATIM_EXCERPTS = [

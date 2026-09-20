@@ -128,6 +128,7 @@ export default function App() {
           <Route path="/adcs/pipeline/:id" element={<AdcPipelineCardRoute />} />
           <Route path="/adcs/:id" element={<AdcCardRoute />} />
           <Route path="/about" element={<AdcContext />} />
+                    <Route path="/coverage" element={<Navigate to="/targets" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

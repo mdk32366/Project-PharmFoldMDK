@@ -16,6 +16,20 @@
 
 ## Log (newest first)
 
+### D-169 — UI truth fixes A–E: structural-rank browse, soften absolute census denials, `/coverage`→`/targets`, Track B bottom line
+
+- **Date:** 2026-09-20, **America/Los_Angeles (PDT, UTC−7)**.
+- **Status:** **Ruled and written.** UI-only. No GPU, no ingest, no ranking schema change, no CloudAgent.
+- **Problem:** Live `GET /api/census-structural-ranking` was served and Method/Track B said so, but the UI had no client and no browse surface; Story/Census copy used absolute "not scored / not ranked"; `/coverage` bookmarks fell through `*` to Story; `BOTTOM_LINE_2` still told readers to rank by ADC biology as present-tense fact.
+- **Contracts shipped:**
+  - **A** — `getCensusStructuralRanking()` in `ui/src/api.js`; browse at `/census?view=structural-rank` with STRUCTURAL_ONLY banner; tests pin client + banner + fixture rows.
+  - **B** — Story, CensusView bar, `CENSUS_LIMITS`, CensusPopulationStrip deny only the cohort-82 learned scorer and link the structure-only browse.
+  - **C** — `/coverage` → `/targets` (`Navigate` replace); catch-all is no longer the only handler.
+  - **D** — `BOTTOM_LINE_2` + owner Doc `docs/pharmfold-adc-nectin4-paper.md` amended together (D-123); next-target path is new Ab + new antigen; structure-only order today; ADC-biology ranking waits on its own GO.
+  - **E** — **Deferred** (named here): frozen profile folded=2690 vs live folded remains unlabeled residual; do not half-ship.
+- **Hard stops held:** no formula/schema change; structural rank not claimed as ADC-ready; cohort `/api/ranking` unchanged in intent.
+- **RESERVED:** pointer moved to **`D-170`** in the SAME commit that spent 169.
+
 ### D-168 — Features measured on an assembled chain are STORED AND TAGGED, never pooled into a fit or a support range with single-pass vectors — and extracting them changes nothing any page displays
 
 - **Date:** 2026-09-17, **America/Los_Angeles (PDT, UTC−7)**. Measured at session open: `Get-Date` read

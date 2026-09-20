@@ -13,6 +13,8 @@ export const getPlddt = (id) => getJSON(`/api/analyses/${id}/plddt`)
 export const getCoverage = () => getJSON('/api/coverage')
 export const getAssociations = () => getJSON('/api/associations')   // D-053
 export const getRanking = () => getJSON('/api/ranking')             // D-062
+// D-169 — census STRUCTURAL_ONLY rank (D-144). Not the cohort-82 learned scorer.
+export const getCensusStructuralRanking = () => getJSON('/api/census-structural-ranking')
 export const listCensus = () => getJSON('/api/census')                 // D-087
 export const getCensusDetail = (id) => getJSON(`/api/census/${id}`)      // D-087
 // ⚠ Four numbers, not 3,467 rows. `/api/census` is 7.1 MB uncompressed / 825 KB gzipped / ~4.8 s,

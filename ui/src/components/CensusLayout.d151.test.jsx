@@ -74,7 +74,7 @@ describe('D-151 — the search and the table come before the explanations', () =
     expect(bar.closest('details')).toBeNull()
     const details = container.querySelector('details.census-background')
     expect(bar.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(bar.textContent).toMatch(/None of these proteins has been scored or ranked/)
+    expect(bar.textContent).toMatch(/None of these proteins has been run through the cohort-82 learned scorer/)
   })
 
   it('inside the table, the search box precedes the legend and the table follows both', () => {

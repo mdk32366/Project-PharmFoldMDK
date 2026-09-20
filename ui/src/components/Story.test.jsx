@@ -95,9 +95,10 @@ describe('Story — the census beat (owner ruling 2026-08-21)', () => {
 
   // ⚠⚠ D-079 decision 1, STATED rather than relied upon: a bigger pile of folds must not read as a
   // bigger shortlist.
-  it('says the census is not scored and not ranked', async () => {
+  it('says the census is not on the cohort-82 learned scorer', async () => {
     const c = await withCensus()
-    expect(c.textContent).toMatch(/not scored and not ranked/i)
+    expect(c.textContent).toMatch(/not on the cohort-82 learned scorer/i)
+    expect(c.textContent).toMatch(/structure-only rank/i)
     expect(c.textContent).toMatch(/a fold is a measurement, a score is an interpretation/i)
   })
 

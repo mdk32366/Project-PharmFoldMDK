@@ -39,7 +39,7 @@ export default function CensusPopulationStrip({ summary }) {
         The census is a separate measurement of every human surface protein we could define a
         boundary for, cut under a <strong>different span definition</strong> — so a census count and
         a cohort count cannot be added, subtracted or compared. It is{' '}
-        <strong>not scored and not ranked</strong>, and nothing here is a candidate list.
+        <strong>not on the cohort-82 learned scorer</strong>; a separate <Link to="/census?view=structural-rank">structure-only rank</Link> is browsable. Nothing here is a candidate list.
       </p>
 
       {/* ⚠ The two population sizes, each stating its own key — the same discipline the summary

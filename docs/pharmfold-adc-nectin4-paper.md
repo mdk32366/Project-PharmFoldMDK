@@ -76,4 +76,4 @@ AGS-22C3 IgG1κ; ~3.8–4 MMAE per antibody via vc linker on interchain cysteine
 
 Padcev's durable connection to Nectin-4's outside is a high-affinity, often two-armed, non-covalent CDR fit on the membrane-distant V domain, while MMAE is covalently attached to the antibody and released after internalization.
 
-That same antibody is not a universal V-domain key. For next targets after EV, rank folded membrane proteins by ADC biology, then make a **new** antibody — unless wet assays prove the existing EV antibody truly binds something else.
+That same antibody is not a universal V-domain key. For next targets after EV, make a **new** antibody for a **new** antigen — today's browsable order of folded membrane proteins is structure-only (membrane × ECD × pLDDT), not an ADC-biology composite; ranking by ADC biology waits on its own GO — unless wet assays prove the existing EV antibody truly binds something else.
