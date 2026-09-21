@@ -25902,3 +25902,28 @@ hereby scoped to the **interactive** cap only. They were never valid criteria fo
 
 ---
 
+### D-172 — Census PDB ABSENT widen + SIFTS refresh (metadata-only)
+
+**Status:** Accepted (BUILD). Spends `D-172`; next free `D-173`.
+
+Widen the experimental PDB hunt for accessions still `pdb_status=ABSENT` after D-171
+(primary cohort ~1942) via RCSB/PDBe metadata: complexes, alternate construct
+accessions, domain fragments. Every candidate carries a **`match_kind`**:
+
+| match_kind | May become pdb_best? |
+|---|---|
+| uniprot_direct | Yes if ECD >= 0.50 |
+| complex_chain | Yes if ECD >= 0.50 on that chain |
+| construct_alt_accession | Yes with provenance + UI construct accession |
+| domain_fragment | Yes only if ECD >= 0.50 |
+| related_ortholog | **Never** silent pdb_best — `pdb_related[]` + badge only |
+
+ECD coverage gate **>= 0.50** (V2 segments) unchanged from D-171. ABSENT ->
+`ABSENT_NO_ECD_COVERING_STRUCTURE` allowed when real ids lack ECD cover.
+Statuses stay distinct. Never invent PDB ids. Never touch `structural_score`.
+
+Refresh: `python -m scripts.census_pdb_metadata --refresh --load` (weekly runbook;
+`normalize_db_url` D-012). Migration `0016_census_pdb_related` additive.
+
+Hard stops: no mmCIF/3Dmol; no AlphaFold-as-experimental; no collapsing status modes.
+

@@ -844,7 +844,7 @@ def test_the_migration_chain_is_linear_and_this_is_its_head():
     # would pass on a tree with no head at all.
     # ⚠ D-129-C: head moved by `### D-171` (census PDB metadata). Superseded value was
     # `0014_enqueue_identity_unique` — recorded rather than silently overwritten.
-    assert heads == {"0015_census_pdb_metadata"}, heads
+    assert heads == {"0016_census_pdb_related"}, heads
     # ⚠ and the new link is pinned too, so the chain is asserted end to end rather than only at its
     # tip — a tip assertion alone would pass on `0013` parented to `0011` alongside a deleted `0012`.
     assert downs["0013_cancer_burden"] == "0012_census_structural_rank"

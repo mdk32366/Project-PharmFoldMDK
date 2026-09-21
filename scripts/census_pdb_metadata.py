@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-"""Load census experimental PDB metadata — `D-171`.
+"""Load / refresh census experimental PDB metadata — `D-171` / `D-172`.
 
-Offline batch into Postgres (or SQLite test). Never mutates structural_score tables.
+Offline batch into Postgres. Never mutates structural_score tables.
+Uses normalize_db_url (D-012).
 
-Runbook (laptop → Fly DB):
-  1. Ensure migration 0015 applied.
-  2. Fetch/map (default: PDBe graph-api best_structures per accession) OR
-     `--from-json tests/fixtures/d171_pdbe_best_structures.json` for offline.
-  3. `python -m scripts.census_pdb_metadata --load` (DATABASE_URL).
-  4. Prior valid run → superseded; new run → valid.
+Runbook (weekly refresh + manual anytime):
+  1. Ensure migrations through 0016 applied.
+  2. Optional widen JSON for ABSENT cohort: `--widen-json path.json`
+     (map accession → list of API-shaped candidates with match_kind + pdb_id).
+  3. Full refresh (all census accessions):
+       python -m scripts.census_pdb_metadata --refresh --load
+     Alias: `--refresh` implies re-fetch/re-select for the whole census (or
+     `--from-json` / `--widen-json` offline paths).
+  4. Schedule note: run weekly from laptop (or Fly cron stub calling the same
+     entrypoint). Idempotent — supersedes prior valid run.
 
-ECD spans: `data/census/span_segments.csv` (V2 segments). Coverage gate ≥ 0.50.
-Attribution: PDBe/SIFTS + RCSB links on each best entry.
+D-172 widen: only ABSENT cohort gets widen candidates merged; NO_ECD / span_absent
+/ present are not reclassified by widen-only rules (refresh re-evals ECD for all).
 """
 from __future__ import annotations
 
@@ -36,6 +41,7 @@ from core.census_pdb import (  # noqa: E402
     STATUS_SPAN_ABSENT,
     select_pdb_for_accession,
 )
+from core.census_pdb_widen import merge_candidates, tag_direct  # noqa: E402
 
 RUN_VALID = "valid"
 RUN_SUPERSEDED = "superseded"
@@ -65,7 +71,9 @@ def load_manifest_accessions() -> list[str]:
 
 def fetch_pdbe(accession: str, timeout: float = 30.0) -> list[dict[str, Any]]:
     url = PDBE_BEST.format(acc=accession)
-    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "PharmFoldMDK-D171/1.0"})
+    req = urllib.request.Request(
+        url, headers={"Accept": "application/json", "User-Agent": "PharmFoldMDK-D172/1.0"}
+    )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
@@ -83,32 +91,54 @@ def build_rows(
     accessions: list[str],
     *,
     cache: dict[str, list[dict[str, Any]]] | None,
+    widen: dict[str, list[dict[str, Any]]] | None,
     segments: dict[str, str],
     sleep_s: float = 0.05,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for i, acc in enumerate(accessions):
         if cache is not None and acc in cache:
-            cands = cache[acc]
+            direct = tag_direct(cache[acc])
         elif cache is not None:
-            cands = []
+            direct = []
         else:
-            cands = fetch_pdbe(acc)
+            direct = tag_direct(fetch_pdbe(acc))
             if sleep_s:
                 time.sleep(sleep_s)
+        widen_hits = (widen or {}).get(acc) or []
+        # First-pass select without widen
         seg = segments.get(acc, "")
         span_absent = not bool(seg and seg.strip())
         painted = select_pdb_for_accession(
             accession=acc,
-            candidates_raw=cands,
+            candidates_raw=direct,
             ecd_segments=seg,
             span_absent=span_absent,
         )
+        # D-172: widen ONLY when still ABSENT (and widen data provided)
+        if painted["pdb_status"] == STATUS_ABSENT and widen_hits:
+            merged = merge_candidates(direct, widen_hits)
+            painted = select_pdb_for_accession(
+                accession=acc,
+                candidates_raw=merged,
+                ecd_segments=seg,
+                span_absent=span_absent,
+            )
+        elif painted["pdb_status"] != STATUS_ABSENT and widen_hits:
+            # refresh path: merge widen into all for ECD re-eval when refresh supplies it
+            merged = merge_candidates(direct, widen_hits)
+            painted = select_pdb_for_accession(
+                accession=acc,
+                candidates_raw=merged,
+                ecd_segments=seg,
+                span_absent=span_absent,
+            )
         rows.append({
             "accession": acc,
             "pdb_status": painted["pdb_status"],
             "pdb_ids": painted["pdb_ids"],
             "pdb_best": painted["pdb_best"],
+            "pdb_related": painted.get("pdb_related") or [],
             "entries": painted["entries"],
         })
         if (i + 1) % 100 == 0:
@@ -117,7 +147,7 @@ def build_rows(
 
 
 def persist(engine: Any, rows: list[dict[str, Any]], *, source: str, notes: str | None) -> int:
-    from sqlalchemy import select, update
+    from sqlalchemy import update
     from sqlalchemy.orm import Session
     from db.models import CensusPdbAccession, CensusPdbRun
 
@@ -152,6 +182,7 @@ def persist(engine: Any, rows: list[dict[str, Any]], *, source: str, notes: str 
                 pdb_ids=r["pdb_ids"],
                 pdb_best=r["pdb_best"],
                 entries=r["entries"],
+                pdb_related=r.get("pdb_related") or [],
             ))
         session.commit()
         return int(run.id)
@@ -160,9 +191,12 @@ def persist(engine: Any, rows: list[dict[str, Any]], *, source: str, notes: str 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--from-json", type=Path, help="Offline PDBe-shaped JSON map accession→list")
+    p.add_argument("--widen-json", type=Path, help="ABSENT widen candidates accession→list (match_kind required)")
     p.add_argument("--accessions", nargs="*", help="Subset of accessions (default: full manifest)")
     p.add_argument("--load", action="store_true", help="Persist to DATABASE_URL")
-    p.add_argument("--dry-run", action="store_true", help="Compute only; print counts")
+    p.add_argument("--refresh", action="store_true",
+                   help="Weekly/manual refresh: re-select whole census (same as full run)")
+    p.add_argument("--dry-run", action="store_true")
     p.add_argument("--sleep", type=float, default=0.05)
     args = p.parse_args(argv)
 
@@ -173,27 +207,39 @@ def main(argv: list[str] | None = None) -> int:
     if args.from_json:
         cache = json.loads(args.from_json.read_text(encoding="utf-8"))
         source = f"fixture:{args.from_json.name}"
+    widen = None
+    if args.widen_json:
+        widen = json.loads(args.widen_json.read_text(encoding="utf-8"))
+        source = source + f"+widen:{args.widen_json.name}"
+    if args.refresh:
+        source = source + "+refresh"
 
-    rows = build_rows(accessions, cache=cache, segments=segments, sleep_s=args.sleep)
-    counts = {}
+    rows = build_rows(
+        accessions, cache=cache, widen=widen, segments=segments, sleep_s=args.sleep
+    )
+    counts: dict[str, int] = {}
     for r in rows:
         counts[r["pdb_status"]] = counts.get(r["pdb_status"], 0) + 1
-    print("counts", counts, "n", len(rows))
+    print("counts", counts, "n", len(rows), flush=True)
 
     if args.dry_run or not args.load:
         if not args.load:
-            print("pass --load to persist")
+            print("pass --load to persist", flush=True)
         return 0
 
     import os
     from sqlalchemy import create_engine
     from db.dburl import normalize_db_url
+
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise SystemExit("DATABASE_URL required for --load")
     engine = create_engine(normalize_db_url(url), future=True)
-    run_id = persist(engine, rows, source=source, notes="D-171 census PDB metadata")
-    print("wrote run_id", run_id)
+    run_id = persist(
+        engine, rows, source=source,
+        notes="D-172 census PDB metadata (widen+refresh)" if (widen or args.refresh) else "D-171/D-172 census PDB metadata",
+    )
+    print("wrote run_id", run_id, flush=True)
     return 0
 
 

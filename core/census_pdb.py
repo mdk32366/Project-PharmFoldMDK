@@ -1,23 +1,15 @@
-"""Census experimental PDB metadata selection — D-171.
+"""Census experimental PDB metadata selection — D-171 / D-172.
 
 Metadata-only. Never recomputes structural_score / STRUCTURAL_ONLY.
 Never treats a PDB entry as the ranked fold or the served predicted fold.
+Never invents PDB ids — every candidate must carry a real pdb_id from API evidence.
 
-Selection rules (pinned by ### D-171 and tests):
-1. Prefer tax_id=9606; keep non-human only if no human candidate exists.
-2. ECD = union of census V2 extracellular segment residues.
-   OBS = union of UniProt residue ranges observed in the PDB map.
-   ecd_coverage_frac = |ECD ∩ OBS| / |ECD| when |ECD| > 0.
-3. Eligible for pdb_best when ECD exists: ecd_coverage_frac >= 0.50.
-   Else pdb_best=null and pdb_status=ABSENT_NO_ECD_COVERING_STRUCTURE
-   (other ids remain in pdb_ids with fracs).
-4. Among eligible: higher frac, better resolution (null last),
-   method X-ray > EM > NMR > other, pdb_id ascending.
-5. No map: pdb_ids=[], pdb_best=null, pdb_status=ABSENT.
+D-171: ECD coverage ≥ 0.50 for pdb_best; distinct ABSENT / ABSENT_NO_ECD / span_absent.
+D-172: match_kind provenance; related_ortholog never silent pdb_best; widen ABSENT cohort.
 """
 from __future__ import annotations
 
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable
 
 ECD_COVER_THRESHOLD = 0.50
 
@@ -26,6 +18,27 @@ STATUS_ABSENT = "ABSENT"
 STATUS_ABSENT_NO_ECD = "ABSENT_NO_ECD_COVERING_STRUCTURE"
 STATUS_SPAN_ABSENT = "span_absent"
 STATUS_INVALID = "invalid"
+
+MATCH_UNIPROT_DIRECT = "uniprot_direct"
+MATCH_COMPLEX_CHAIN = "complex_chain"
+MATCH_CONSTRUCT_ALT = "construct_alt_accession"
+MATCH_DOMAIN_FRAGMENT = "domain_fragment"
+MATCH_RELATED_ORTHOLOG = "related_ortholog"
+
+SAME_PROTEIN_KINDS = frozenset({
+    MATCH_UNIPROT_DIRECT,
+    MATCH_COMPLEX_CHAIN,
+    MATCH_CONSTRUCT_ALT,
+    MATCH_DOMAIN_FRAGMENT,
+})
+
+MATCH_KIND_LABELS = {
+    MATCH_UNIPROT_DIRECT: "direct UniProt map",
+    MATCH_COMPLEX_CHAIN: "complex chain",
+    MATCH_CONSTRUCT_ALT: "alternate construct accession",
+    MATCH_DOMAIN_FRAGMENT: "domain fragment",
+    MATCH_RELATED_ORTHOLOG: "related ortholog (not this UniProt)",
+}
 
 METHOD_RANK = {
     "x-ray diffraction": 0,
@@ -40,7 +53,6 @@ METHOD_RANK = {
 
 
 def parse_segment_intervals(segments: str | None) -> list[tuple[int, int]]:
-    """Parse ``42-483;544-551`` → inclusive intervals."""
     if not segments or not str(segments).strip():
         return []
     out: list[tuple[int, int]] = []
@@ -81,7 +93,6 @@ def observed_intervals_from_candidate(cand: dict[str, Any]) -> list[tuple[int, i
             out.append((lo, hi))
         if out:
             return out
-    # fallback: whole mapped unp range
     try:
         lo = int(cand["unp_start"])
         hi = int(cand["unp_end"])
@@ -99,7 +110,6 @@ def method_rank(method: str | None) -> int:
 
 
 def resolution_sort_key(resolution_A: float | None) -> tuple[int, float]:
-    # null sorts last
     if resolution_A is None:
         return (1, 0.0)
     return (0, float(resolution_A))
@@ -119,14 +129,19 @@ def pdbe_url(pdb_id: str) -> str:
     return f"https://www.ebi.ac.uk/pdbe/entry/pdb/{pdb_id.lower()}"
 
 
+def require_pdb_id(raw: dict[str, Any]) -> str:
+    """Reject inventable candidates — missing/blank pdb_id is a hard refuse."""
+    pdb_id = str(raw.get("pdb_id") or "").strip().lower()
+    if not pdb_id or pdb_id in {"none", "null", "n/a"}:
+        raise ValueError("candidate missing pdb_id from API evidence — refuse inventing ids")
+    return pdb_id
+
+
 def normalize_candidate(raw: dict[str, Any]) -> dict[str, Any]:
-    pdb_id = str(raw.get("pdb_id") or "").lower()
+    pdb_id = require_pdb_id(raw)
     chain_id = str(raw.get("chain_id") or "")
     method = raw.get("experimental_method") or raw.get("method")
-    res = raw.get("resolution")
-    if res is raw.get("resolution_A"):
-        pass
-    resolution_A: float | None
+    res = raw.get("resolution") if raw.get("resolution") is not None else raw.get("resolution_A")
     try:
         resolution_A = float(res) if res is not None else None
     except (TypeError, ValueError):
@@ -136,6 +151,12 @@ def normalize_candidate(raw: dict[str, Any]) -> dict[str, Any]:
         tax_id = int(tax) if tax is not None else None
     except (TypeError, ValueError):
         tax_id = None
+    match_kind = str(raw.get("match_kind") or MATCH_UNIPROT_DIRECT).strip()
+    if match_kind not in MATCH_KIND_LABELS:
+        match_kind = MATCH_UNIPROT_DIRECT
+    match_uniprot = raw.get("match_uniprot") or raw.get("related_uniprot")
+    if match_uniprot is not None:
+        match_uniprot = str(match_uniprot)
     intervals = observed_intervals_from_candidate(raw)
     return {
         "pdb_id": pdb_id,
@@ -143,7 +164,10 @@ def normalize_candidate(raw: dict[str, Any]) -> dict[str, Any]:
         "method": method,
         "resolution_A": resolution_A,
         "tax_id": tax_id,
+        "match_kind": match_kind,
+        "match_uniprot": match_uniprot,
         "observed_intervals": intervals,
+        "note": raw.get("note"),
         "raw": raw,
     }
 
@@ -153,6 +177,31 @@ def prefer_human(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return humans if humans else list(candidates)
 
 
+def _attribution(pdb_id: str) -> dict[str, str]:
+    return {
+        "source": "PDBe/SIFTS",
+        "rcsb_url": rcsb_url(pdb_id),
+        "pdbe_url": pdbe_url(pdb_id),
+    }
+
+
+def _entry_from_norm(c: dict[str, Any], *, frac: float | None, covers: bool) -> dict[str, Any]:
+    return {
+        "pdb_id": c["pdb_id"],
+        "chain_id": c["chain_id"],
+        "method": c["method"],
+        "resolution_A": c["resolution_A"],
+        "tax_id": c["tax_id"],
+        "match_kind": c["match_kind"],
+        "match_uniprot": c.get("match_uniprot"),
+        "ecd_coverage_frac": frac,
+        "ecd_covers": covers,
+        "unp_start": c["observed_intervals"][0][0] if c["observed_intervals"] else None,
+        "unp_end": c["observed_intervals"][-1][1] if c["observed_intervals"] else None,
+        "attribution": _attribution(c["pdb_id"]),
+    }
+
+
 def select_pdb_for_accession(
     *,
     accession: str,
@@ -160,16 +209,14 @@ def select_pdb_for_accession(
     ecd_segments: str | None,
     span_absent: bool = False,
 ) -> dict[str, Any]:
-    """Return paint dict for one accession.
-
-    Keys: pdb_status, pdb_ids, pdb_best, entries (detail list with fracs).
-    """
+    """Return paint dict for one accession (D-171 + D-172 match_kind / related)."""
     _ = accession
     if candidates_raw is None:
         return {
             "pdb_status": STATUS_INVALID,
             "pdb_ids": [],
             "pdb_best": None,
+            "pdb_related": [],
             "entries": [],
         }
     if not candidates_raw:
@@ -177,6 +224,7 @@ def select_pdb_for_accession(
             "pdb_status": STATUS_ABSENT,
             "pdb_ids": [],
             "pdb_best": None,
+            "pdb_related": [],
             "entries": [],
         }
 
@@ -184,36 +232,59 @@ def select_pdb_for_accession(
     ecd = residue_set(ecd_intervals)
     span_is_absent = span_absent or not ecd
 
-    norms = [normalize_candidate(c) for c in candidates_raw]
-    norms = [c for c in norms if c["pdb_id"]]
-    norms = prefer_human(norms)
+    norms: list[dict[str, Any]] = []
+    for raw in candidates_raw:
+        try:
+            norms.append(normalize_candidate(raw))
+        except ValueError:
+            # invent-refuse: drop candidate without pdb_id
+            continue
+
+    related_norms = [c for c in norms if c["match_kind"] == MATCH_RELATED_ORTHOLOG]
+    same_norms = [c for c in norms if c["match_kind"] in SAME_PROTEIN_KINDS]
+    same_norms = prefer_human(same_norms)
+
+    pdb_related = []
+    for c in related_norms:
+        pdb_related.append({
+            "pdb_id": c["pdb_id"],
+            "chain_id": c["chain_id"] or None,
+            "tax_id": c["tax_id"],
+            "related_uniprot": c.get("match_uniprot") or "",
+            "match_kind": MATCH_RELATED_ORTHOLOG,
+            "note": c.get("note") or "Related experimental structure — not this UniProt",
+            "attribution": _attribution(c["pdb_id"]),
+        })
 
     entries: list[dict[str, Any]] = []
-    for c in norms:
+    for c in same_norms:
         obs = residue_set(c["observed_intervals"])
         frac = None if span_is_absent else ecd_coverage_frac(ecd, obs)
         covers = (frac is not None and frac >= ECD_COVER_THRESHOLD)
-        entries.append({
-            "pdb_id": c["pdb_id"],
-            "chain_id": c["chain_id"],
-            "method": c["method"],
-            "resolution_A": c["resolution_A"],
-            "tax_id": c["tax_id"],
-            "ecd_coverage_frac": frac,
-            "ecd_covers": covers if not span_is_absent else False,
-            "unp_start": c["observed_intervals"][0][0] if c["observed_intervals"] else None,
-            "unp_end": c["observed_intervals"][-1][1] if c["observed_intervals"] else None,
-            "attribution": {
-                "source": "PDBe/SIFTS",
-                "rcsb_url": rcsb_url(c["pdb_id"]),
-                "pdbe_url": pdbe_url(c["pdb_id"]),
-            },
-        })
+        entries.append(_entry_from_norm(c, frac=frac, covers=covers if not span_is_absent else False))
 
-    pdb_ids = sorted({e["pdb_id"] for e in entries})
+    pdb_ids = sorted({e["pdb_id"] for e in entries} | {r["pdb_id"] for r in pdb_related})
+
+    if not same_norms and pdb_related:
+        # related-only: stay ABSENT
+        return {
+            "pdb_status": STATUS_ABSENT,
+            "pdb_ids": pdb_ids,
+            "pdb_best": None,
+            "pdb_related": pdb_related,
+            "entries": entries,
+        }
+
+    if not same_norms and not pdb_related:
+        return {
+            "pdb_status": STATUS_ABSENT,
+            "pdb_ids": [],
+            "pdb_best": None,
+            "pdb_related": [],
+            "entries": [],
+        }
 
     if span_is_absent:
-        # May still pick a best on resolution/method among all candidates.
         ranked = sorted(
             entries,
             key=lambda e: (
@@ -234,12 +305,15 @@ def select_pdb_for_accession(
                 "ecd_coverage_frac": None,
                 "ecd_covers": False,
                 "tax_id": best["tax_id"],
+                "match_kind": best["match_kind"],
+                "match_uniprot": best.get("match_uniprot"),
                 "attribution": best["attribution"],
             }
         return {
             "pdb_status": STATUS_SPAN_ABSENT,
             "pdb_ids": pdb_ids,
             "pdb_best": pdb_best,
+            "pdb_related": pdb_related,
             "entries": entries,
         }
 
@@ -249,6 +323,7 @@ def select_pdb_for_accession(
             "pdb_status": STATUS_ABSENT_NO_ECD,
             "pdb_ids": pdb_ids,
             "pdb_best": None,
+            "pdb_related": pdb_related,
             "entries": entries,
         }
 
@@ -271,11 +346,14 @@ def select_pdb_for_accession(
         "ecd_coverage_frac": best["ecd_coverage_frac"],
         "ecd_covers": True,
         "tax_id": best["tax_id"],
+        "match_kind": best["match_kind"],
+        "match_uniprot": best.get("match_uniprot"),
         "attribution": best["attribution"],
     }
     return {
         "pdb_status": STATUS_PRESENT,
         "pdb_ids": pdb_ids,
         "pdb_best": pdb_best,
+        "pdb_related": pdb_related,
         "entries": entries,
     }

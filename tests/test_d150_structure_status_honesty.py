@@ -518,7 +518,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
     # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
-    # store tagged, never pool), so it is NAMED here rather than barred and `### D-172` takes the
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-173` takes the
     # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
     # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
     # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
@@ -532,8 +532,8 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert "\n### D-171 — Census experimental PDB metadata (metadata-only)" in LOG, (
         "D-171 was spent by census PDB metadata, so it must be NAMED here rather than barred")
     assert "\n### D-171" in LOG  # spent by D-171 PDB metadata
-    assert "\n### D-172" not in LOG, (
-        "D-172 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
+    assert "\n### D-173" not in LOG, (
+        "D-173 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
 
 
 def test_the_reserved_map_bars_151_and_the_pointer_moves_in_this_commit():
@@ -559,7 +559,7 @@ def test_the_reserved_map_bars_151_and_the_pointer_moves_in_this_commit():
     # D-149 burden loader baked into the serving image) and deliberately did NOT take 152: 152 became
     # a HOLD for the concurrent sitewide-layout lane, 148 remains the trafficking hold, so
     # *"next free"* means the lowest AVAILABLE integer, 154.
-    assert "Next free `D-` integer: **`D-172`**" in RESERVED, (
+    assert "Next free `D-` integer: **`D-173`**" in RESERVED, (
         "the next-free pointer moves in the SAME commit that spends the integer")
     assert "Next free `D-` integer: **`D-153`**" not in RESERVED
     assert "Next free `D-` integer: **`D-154`**" not in RESERVED

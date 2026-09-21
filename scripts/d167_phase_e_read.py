@@ -21,7 +21,7 @@ It also reads, as measurements rather than implications:
    every identity holding more than one row, so a mismatch names its rows instead of only its size.
 4. every complete run-1 row holds a `pdb_path`; F-078's five non-complete run-1 rows (2 failed --
    P11717, P55073 -- and 3 pending) remain as they were.
-5. keep rows 3673/3674/3675 complete with a `pdb_path`; 6. `alembic_version` = `0015_census_pdb_metadata`;
+5. keep rows 3673/3674/3675 complete with a `pdb_path`; 6. `alembic_version` = `0016_census_pdb_related`;
 7. drop rows 3693/3695/3696 absent from `jobs` and `protein_analyses` (analysis id == job id for these
    three, `data/control/d167/phase_d/06-collapse-dry.txt`).
 
@@ -64,7 +64,7 @@ DROPS_MEASURED_IN_KEY = (3696,)
 #: F-078 section 4: "5 absent are exactly the 5 rows the database does not call complete".
 NONCOMPLETE_BY_STATUS = {"failed": 2, "pending": 3}
 FAILED_ACCESSIONS = ("P11717", "P55073")
-EXPECTED_ALEMBIC = "0015_census_pdb_metadata"  # moved by D-171 (was 0014_enqueue_identity_unique)
+EXPECTED_ALEMBIC = "0016_census_pdb_related"  # moved by D-171 (was 0014_enqueue_identity_unique)
 
 
 def classify_census(n: int, baseline: Optional[int] = None) -> dict[str, Any]:

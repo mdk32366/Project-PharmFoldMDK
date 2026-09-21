@@ -1,4 +1,4 @@
-"""Census experimental PDB metadata supplier — `D-171`.
+"""Census experimental PDB metadata supplier — `D-171` / `D-172`.
 
 Persisted rows only (latest VALID run). Metadata-only — never recomputes
 structural_score / STRUCTURAL_ONLY. Does not import `app.reads` (one-way wall).
@@ -31,11 +31,13 @@ def pdb_index(engine: Any) -> dict[str, Any]:
         ).all()
         by_acc: dict[str, dict[str, Any]] = {}
         for row in rows:
+            related = getattr(row, "pdb_related", None)
             by_acc[row.accession] = {
                 "pdb_status": row.pdb_status,
                 "pdb_ids": list(row.pdb_ids or []),
                 "pdb_best": row.pdb_best,
                 "entries": list(row.entries or []),
+                "pdb_related": list(related or []),
             }
         return {"result_status": run.run_status, "by_accession": by_acc, "run_id": run.id}
 
@@ -46,13 +48,7 @@ def attach_pdb_fields(
     *,
     include_full_ids: bool = False,
 ) -> str | None:
-    """Mutate census list/detail dicts with pdb_status + pdb_best (+ pdb_ids on detail).
-
-    List: pdb_status + compact pdb_best (pdb_ids omitted unless include_full_ids).
-    Detail: pass include_full_ids=True for full pdb_ids + entries.
-    Missing accession → ABSENT (outer-join honesty), never invent ids.
-    Invalid/missing run → pdb_status=invalid, null best.
-    """
+    """Mutate census list/detail with pdb_status + pdb_best (+ ids/related on detail)."""
     idx = pdb_index(engine)
     status = idx.get("result_status")
     by_acc = idx.get("by_accession") or {}
@@ -61,6 +57,7 @@ def attach_pdb_fields(
         if not valid:
             row["pdb_status"] = "invalid"
             row["pdb_best"] = None
+            row["pdb_related"] = []
             if include_full_ids:
                 row["pdb_ids"] = []
                 row["pdb_entries"] = []
@@ -69,13 +66,20 @@ def attach_pdb_fields(
         if hit is None:
             row["pdb_status"] = "ABSENT"
             row["pdb_best"] = None
+            row["pdb_related"] = []
             if include_full_ids:
                 row["pdb_ids"] = []
                 row["pdb_entries"] = []
         else:
             row["pdb_status"] = hit["pdb_status"]
             row["pdb_best"] = hit["pdb_best"]
+            # list: compact related length signal; detail gets full list
             if include_full_ids:
                 row["pdb_ids"] = hit["pdb_ids"]
                 row["pdb_entries"] = hit["entries"]
+                row["pdb_related"] = hit["pdb_related"]
+            else:
+                # list may omit full related — expose empty/non-empty via compact list of ids only
+                rel = hit["pdb_related"] or []
+                row["pdb_related"] = rel  # Spec: may omit if heavy; keep for honesty when small
     return status

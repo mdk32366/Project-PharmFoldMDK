@@ -288,7 +288,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG
     # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
-    # store tagged, never pool), so it is NAMED here rather than barred and `### D-172` takes the
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-173` takes the
     # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
     # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
     # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
@@ -302,8 +302,8 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert "\n### D-171 — Census experimental PDB metadata (metadata-only)" in LOG, (
         "D-171 was spent by census PDB metadata, so it must be NAMED here rather than barred")
     assert "\n### D-171" in LOG  # spent by D-171 PDB metadata
-    assert "\n### D-172" not in LOG, (
-        "D-172 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
+    assert "\n### D-173" not in LOG, (
+        "D-173 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
 
 
 def test_the_reserved_map_retires_155_marker_safe_and_the_pointer_moves_here():
@@ -312,7 +312,7 @@ def test_the_reserved_map_retires_155_marker_safe_and_the_pointer_moves_here():
     assert "WRITTEN" in row and "Original reservation text" in row
     assert re.search(r"^\| \*\*D-156\*\*", RESERVED, re.M), "the bar moved to 156 with no row"
     assert not re.search(r"^\| ~~\*\*D-15[56]\*\*~~", RESERVED, re.M)
-    assert "Next free `D-` integer: **`D-172`**" in RESERVED
+    assert "Next free `D-` integer: **`D-173`**" in RESERVED
     for spent in ("D-152", "D-153", "D-154", "D-155"):
         assert f"Next free `D-` integer: **`{spent}`**" not in RESERVED
 
