@@ -405,7 +405,10 @@ def test_d130_is_the_next_free_decision_id():
         # ⚠ 167 is ADDED by the re-attach of slice 2's 37 (`D-167`) — by enumeration,
         # for the EIGHTEENTH time, and never by a `>=`. Spending 167 reddened the previous
         # form BY DESIGN, which is what tells a spent id from a free one.
-        167, 168, 169, 170
+        167, 168, 169, 170,
+        # ⚠ 171 is ADDED by census experimental PDB metadata (`D-171`) — by enumeration,
+        # and never by a `>=`. Spending 171 reddened the previous form BY DESIGN.
+        171
     ], (
         f"⚠ 167 is ADDED by the re-attach of slice 2's 37 — the EIGHTEENTH resolution "
         f"by enumeration and never by a `>=`; `### D-168` now takes the bar. "
@@ -560,7 +563,8 @@ def test_d130_is_the_next_free_decision_id():
         "D-169 was spent by the UI truth fixes, so it must be NAMED here rather than barred")
     assert "\n### D-170 — Census structural rank + score on every protein surface (list + detail)" in LOG, (
         "D-170 was spent by census structural rank everywhere, so it must be NAMED here rather than barred")
-    assert "\n### D-171" in LOG  # spent by D-171 PDB metadata
+    assert "\n### D-171 — Census experimental PDB metadata (metadata-only)" in LOG, (
+        "D-171 was spent by census PDB metadata, so it must be NAMED here rather than barred")
     assert "\n### D-172" not in LOG, (
         "D-172 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

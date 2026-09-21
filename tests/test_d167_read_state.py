@@ -231,7 +231,7 @@ def seeded(pg_engine):
 
 @pytest.mark.postgres
 def test_the_read_measures_the_seeded_state(seeded, tmp_path):
-    """The read reports what is there. ⚠ It exits 2 here BY DESIGN: CI's chain is at `0014` and
+    """The read reports what is there. ⚠ It exits 2 here BY DESIGN: CI's chain is at `0015` and
     seeds no duplicates and 3 folded slice-2 rows, so those expectations are NOT MET — which is the
     proof that "not met" is reported rather than smoothed."""
     from scripts.d167_read_state import main

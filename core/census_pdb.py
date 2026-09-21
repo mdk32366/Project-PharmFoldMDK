@@ -1,4 +1,4 @@
-﻿"""Census experimental PDB metadata selection — D-171.
+"""Census experimental PDB metadata selection — D-171.
 
 Metadata-only. Never recomputes structural_score / STRUCTURAL_ONLY.
 Never treats a PDB entry as the ranked fold or the served predicted fold.

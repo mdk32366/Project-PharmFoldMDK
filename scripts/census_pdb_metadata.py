@@ -187,10 +187,11 @@ def main(argv: list[str] | None = None) -> int:
 
     import os
     from sqlalchemy import create_engine
+    from db.dburl import normalize_db_url
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise SystemExit("DATABASE_URL required for --load")
-    engine = create_engine(url)
+    engine = create_engine(normalize_db_url(url), future=True)
     run_id = persist(engine, rows, source=source, notes="D-171 census PDB metadata")
     print("wrote run_id", run_id)
     return 0
