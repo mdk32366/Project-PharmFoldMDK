@@ -1,4 +1,4 @@
-"""D-119 / D-124 / D-136 / D-140 — ADC catalogs are dated JSON contracts.
+"""D-119 / D-124 / D-136 / D-140 / D-174 — ADC catalogs are dated JSON contracts.
 
 Pure and fixture-testable (no network, no DB, no GPU). The live openFDA queries
 dated ``data/adcs/adcs.v1.json``; they do not run here. Weekly Drugs@FDA watch
@@ -74,6 +74,12 @@ HEADER_FIELDS = (
 )
 CANCER_TYPE_FIELD = "cancer_type"
 VERBATIM_FIELD = "label_indications_verbatim"
+RELATED_APPLICATION_NUMBERS_FIELD = "related_application_numbers"
+RELATED_RELATIONS = (
+    "administratively_closed_into_canonical",
+    "sibling_same_brand",
+)
+OPTIONAL_ADC_FIELDS = (RELATED_APPLICATION_NUMBERS_FIELD,)
 # D-136 decision 5 — a cancer type is FDA's indication text or nothing. `derived` is
 # refused: unlike an id slug or an INN stem, a tumour type cannot be computed.
 CANCER_TYPE_CONFIDENCES = ("official", "reviewed")
@@ -512,6 +518,61 @@ def _walk_forbidden_keys(obj: Any, trail: str = "") -> None:
             _walk_forbidden_keys(v, f"{trail}[{i}]")
 
 
+
+def _check_related_application_numbers(label: str, obj: Any, canonical_bla: str) -> None:
+    """D-174 — optional reviewed sibling / closed-BLA footnotes on the existing row."""
+    if not _is_field(obj):
+        raise CatalogError(f"{label} is not a {{value, source, as_of, confidence}} field")
+    if obj["confidence"] not in CONFIDENCES:
+        raise CatalogError(f"{label} confidence {obj['confidence']!r} is not in {CONFIDENCES}")
+    if obj["confidence"] != "reviewed":
+        raise CatalogError(f"{label} confidence must be reviewed (human Spec+BUILD), got {obj['confidence']!r}")
+    if not obj["source"] or not obj["as_of"]:
+        raise CatalogError(f"{label} source/as_of required")
+    items = obj["value"]
+    if items is None:
+        raise CatalogError(f"{label} value is empty")
+    if not isinstance(items, list):
+        raise CatalogError(f"{label} value must be a list of reviewed objects")
+    seen: set[str] = set()
+    for i, item in enumerate(items):
+        here = f"{label}.value[{i}]"
+        if not isinstance(item, dict):
+            raise CatalogError(f"{here} is not an object")
+        missing = [k for k in ("application_number", "relation", "source", "as_of", "confidence") if k not in item]
+        if missing:
+            raise CatalogError(f"{here} missing {missing}")
+        bla = item["application_number"]
+        if not isinstance(bla, str) or not bla.startswith("BLA"):
+            raise CatalogError(f"{here}.application_number must be a BLA string")
+        if bla == canonical_bla:
+            raise CatalogError(f"{here} must not duplicate canonical application_number {canonical_bla!r}")
+        if bla in seen:
+            raise CatalogError(f"{here} duplicate related BLA {bla!r}")
+        seen.add(bla)
+        if item["relation"] not in RELATED_RELATIONS:
+            raise CatalogError(
+                f"{here}.relation {item['relation']!r} is not in {RELATED_RELATIONS}"
+            )
+        if item["confidence"] != "reviewed":
+            raise CatalogError(f"{here}.confidence must be reviewed")
+        if not item["source"] or not item["as_of"]:
+            raise CatalogError(f"{here} source/as_of required")
+        # optional keys only
+        allowed = {
+            "application_number",
+            "relation",
+            "orig_ap_date",
+            "source",
+            "as_of",
+            "confidence",
+            "notes",
+        }
+        extra = set(item) - allowed
+        if extra:
+            raise CatalogError(f"{here} has extra keys {sorted(extra)}")
+
+
 def load_catalog(path: Any = CATALOG_V1) -> dict[str, Any]:
     """Load and validate ``adcs.v1.json``. Raises ``CatalogError`` on a structural fault."""
     raw = Path(path).read_text(encoding="utf-8")
@@ -545,7 +606,13 @@ def load_catalog(path: Any = CATALOG_V1) -> dict[str, Any]:
         _check_cancer_type_field(
             f"adcs[{i}].{CANCER_TYPE_FIELD}", row[CANCER_TYPE_FIELD], row[VERBATIM_FIELD]
         )
-        extra = set(row) - set(ADC_FIELDS)
+        if RELATED_APPLICATION_NUMBERS_FIELD in row:
+            _check_related_application_numbers(
+                f"adcs[{i}].{RELATED_APPLICATION_NUMBERS_FIELD}",
+                row[RELATED_APPLICATION_NUMBERS_FIELD],
+                row["application_number"]["value"],
+            )
+        extra = set(row) - set(ADC_FIELDS) - set(OPTIONAL_ADC_FIELDS)
         if extra:
             raise CatalogError(f"adcs[{i}] has extra keys {sorted(extra)}")
         adc_id = row["id"]["value"]

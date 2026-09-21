@@ -157,3 +157,8 @@ D-119). Open an issue; do not auto-merge rows.
 Suggested query (ops, not the gate): brand or application lookup against
 `https://api.fda.gov/drug/drugsfda.json`, then diff application numbers
 against `adcs[].application_number.value`.
+
+## Sibling / administratively-closed BLAs (D-174)
+
+Some marketed brands have a **second Drugs@FDA application number** that is not a second molecule (e.g. DATROWAY `BLA761464` closed into canonical `BLA761394`; ADCETRIS `BLA125399` beside `BLA125388`). Those numbers are documented on the **existing** catalog row under `related_application_numbers` — provenance-bearing footnotes — and **never** as a new `adcs[]` id. Emma’s weekly Drugs@FDA watch (D-119 / D-029) remains detect-only: sibling-BLA drift is catalog-footnote work via Spec + BUILD, not an auto-merge and not a new-row insert.
+

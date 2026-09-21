@@ -216,6 +216,21 @@
         "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"ADCETRIS\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 3904f8dd-1aef-3490-e48f-bd55f32ed67f version 38 effective_time 20251111. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2011-08-19 (D-136 provenance).",
         "as_of": "2026-09-08",
         "confidence": "official"
+      },
+      "related_application_numbers": {
+        "value": [
+          {
+            "application_number": "BLA125399",
+            "relation": "administratively_closed_into_canonical",
+            "source": "Drugs@FDA / openFDA second application number BLA125399 for ADCETRIS (canonical BLA125388). Same sibling / closed-application pattern as DATROWAY BLA761464. Reviewed for GitHub issue #338 / Emma Drugs@FDA weekly watch 2026-09-21. Not a new catalog row.",
+            "as_of": "2026-09-21",
+            "confidence": "reviewed",
+            "notes": "Second application number on the same brand; not a second ADC row."
+          }
+        ],
+        "source": "D-174 reviewed footnote for ADCETRIS; see issue #338. Sibling / administratively-closed BLAs documented on-row, not as new ids.",
+        "as_of": "2026-09-21",
+        "confidence": "reviewed"
       }
     },
     {
@@ -1060,6 +1075,22 @@
         "source": "openFDA SPL GET https://api.fda.gov/drug/label.json?search=openfda.brand_name:\"DATROWAY\" retrieved 2026-09-08; results[0].indications_and_usage, stored unedited as returned (single-element array, no join); SPL set_id 2950227c-6230-4ca4-a135-46e44d9424a0 version 18 effective_time 20260527. FDA section 1 INDICATIONS AND USAGE for the label in force on the retrieval date — not the ORIG-AP indication of 2025-01-17 (D-136 provenance).",
         "as_of": "2026-09-08",
         "confidence": "official"
+      },
+      "related_application_numbers": {
+        "value": [
+          {
+            "application_number": "BLA761464",
+            "relation": "administratively_closed_into_canonical",
+            "orig_ap_date": "2025-06-23",
+            "source": "Drugs@FDA / openFDA products for DATROWAY sibling application BLA761464 (ORIG-AP 2025-06-23 EGFR-mut NSCLC); approval letter administratively closed into canonical BLA761394. Reviewed for GitHub issue #338 / Emma Drugs@FDA weekly watch 2026-09-21. Not a new catalog row.",
+            "as_of": "2026-09-21",
+            "confidence": "reviewed",
+            "notes": "Letter closed BLA761464; subsequent filings to BLA761394. openfda.brand_name:DATROWAY returns only the canonical BLA."
+          }
+        ],
+        "source": "D-174 reviewed footnote for DATROWAY; see issue #338. Sibling / administratively-closed BLAs documented on-row, not as new ids.",
+        "as_of": "2026-09-21",
+        "confidence": "reviewed"
       }
     },
     {
