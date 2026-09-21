@@ -321,7 +321,7 @@ describe('D-150 — the census row states three statuses, not one', () => {
   // defect D-133 had to repair for Structure.
   it('offers the status column as a real sortable header', () => {
     table([FAT2, SINGLE])
-    expect(screen.getByRole('button', { name: /Status \(structure · score · seam\)/ }))
+    expect(screen.getByRole('button', { name: /Status \(structure · scored · seam\)/ }))
       .toBeInTheDocument()
   })
 })
@@ -384,7 +384,7 @@ describe('D-150 — the census card states three statuses, not one', () => {
     const { container } = card(FAT2)
     const line = container.querySelector('.status-unscored').textContent
     expect(line).toMatch(/D-079 decision 1/)
-    expect(line).toMatch(/not.*about whether a structure exists/i)
+    expect(line).toMatch(/not whether a structure exists/i)
   })
 
   it('gives a single-pass fold no seam line at all', () => {

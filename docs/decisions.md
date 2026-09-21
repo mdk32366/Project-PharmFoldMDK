@@ -25927,3 +25927,25 @@ Refresh: `python -m scripts.census_pdb_metadata --refresh --load` (weekly runboo
 
 Hard stops: no mmCIF/3Dmol; no AlphaFold-as-experimental; no collapsing status modes.
 
+
+
+### D-173 — Census UI: numeric structural_score primary + header wrap
+
+**Status:** Accepted (BUILD). Spends `D-173`; next free `D-174`.
+
+UI-only. Make numeric STRUCTURAL_ONLY `structural_score` / rank the thing a reader
+sees when they look for "the score" on the default Census table — without merging
+D-150 Status chips into Struct. score, without API/formula change, and without
+claiming cohort-82 / ADC.
+
+- Multi-line `th` wrap (Cost to fold keeps full honesty phrase); tighten Span /
+  Structure so Struct. rank / Struct. score are visible ~1024–1280 without h-scroll.
+- Status header: `Status (structure · scored · seam)` — "scored" is the D-150 axis
+  name, not a number.
+- Struct. rank / Struct. score headers shortened; STRUCTURAL_ONLY stays in legend.
+- Default sort remains accession ascending; sort on structural_score/rank stays.
+- Detail / baseball-card caveat: "Not scored, not ranked" denies cohort-82 / ADC
+  only; when STRUCTURAL_ONLY numbers are present the copy affirms them (O75899 scar).
+
+Hard stops: no `/api/census` contract change; no GPU/refold; no ECD/PDB lane change.
+

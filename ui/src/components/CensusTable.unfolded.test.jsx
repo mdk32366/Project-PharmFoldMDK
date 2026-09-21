@@ -75,6 +75,7 @@ describe('units are expanded on first use', () => {
   it('the span column says what aa means', () => {
     draw([FOLDED])
     // ⚠ "aa" is standard to a structural biologist and opaque to everyone else
-    expect(screen.getByRole('button', { name: /amino acids/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Span \(aa\)/ })).toBeTruthy()
+    expect(screen.getByTestId('span-structure-header-note').textContent).toMatch(/amino acids/)
   })
 })

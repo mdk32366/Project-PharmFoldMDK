@@ -34,7 +34,9 @@ const ROWS = [
     structure_kind: 'single-pass', structure_kind_label: 'single-pass', folded: true },
 ]
 
-const STRUCTURE_HEADER = /Structure \(single pass or assembled from tiles\)/
+// D-173: short th; long meaning in data-testid="span-structure-header-note".
+const STRUCTURE_HEADER = /^Structure/
+
 
 const accessions = () =>
   screen.getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell')[0].textContent)
@@ -45,6 +47,7 @@ describe('D-133 — the census sorts on structure kind', () => {
   it('carries structure_kind as a real COLUMNS entry, not a hand-drawn header', () => {
     const col = COLUMNS.find((c) => c.key === 'structure_kind')
     expect(col).toBeTruthy()
+    expect(col.label).toBe('Structure')
     expect(col.label).toMatch(STRUCTURE_HEADER)
     // ⚠ a CATEGORY, not a magnitude — the same ruling as Profile. `numeric: true` here would make
     // `av - bv` over strings produce NaN and order nothing, and would claim a rank while doing it.

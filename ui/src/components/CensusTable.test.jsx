@@ -44,10 +44,10 @@ describe('CensusTable', () => {
 
   it('sorts on click and reverses on a second click', () => {
     render(<CensusTable rows={ROWS} />)
-    fireEvent.click(screen.getByRole('button', { name: /Span \(aa = amino acids\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Span \(aa\)/ }))
     let cells = screen.getAllByRole('row')[1]
     expect(within(cells).getByRole('link')).toHaveTextContent('A0AVI2') // 75 aa
-    fireEvent.click(screen.getByRole('button', { name: /Span \(aa = amino acids\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Span \(aa\)/ }))
     cells = screen.getAllByRole('row')[1]
     expect(within(cells).getByRole('link')).toHaveTextContent('Q9UHC9') // 272 aa
   })
@@ -70,6 +70,7 @@ describe('CensusTable', () => {
   it('states on the surface that nothing here is scored or ranked', () => {
     render(<CensusTable rows={ROWS} />)
     expect(screen.getByText(/Not scored, not ranked, not ordered by suitability/i)).toBeInTheDocument()
+    expect(screen.getByTestId('span-structure-header-note').textContent).toMatch(/amino acids/)
   })
 
   // ⚠⚠ REWRITTEN after walking the live surface. The old wording — "no protein matches that
