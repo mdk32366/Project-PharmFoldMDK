@@ -25951,6 +25951,15 @@ Hard stops: no `/api/census` contract change; no GPU/refold; no ECD/PDB lane cha
 
 
 
+### D-175 — Census UI: header polish (PDB exp, tooltips, Status wrap)
+
+**Status:** Accepted (BUILD). Spends `D-175`; next free `D-176`. Spec@0.0 `Sessions/Trinity/2026-09-21-d175-census-header-tooltips-polish-spec@0.0.md`.
+
+UI-only Census table polish: shorten PDB header to `PDB (exp)` with tooltip honesty (experimental PDB metadata — not served fold / not STRUCTURAL_ONLY); shared `COLUMN_TITLES` map on every `COLUMNS.key` wired as `title=` / `aria-label` on header buttons; Status header two-line wrap via `headerLines` (`Status` + `(structure · scored · seam)`, middot U+00B7, keep scored not score) with `.th-line { display:block }`; tighten Protein `.protein-name` max-width ~12rem (was 22rem); pLDDT may shift right as layout consequence. No API / formula / PDB pipeline change.
+
+Hard stops: no reopen of D-173 contracts; no merge of Status chips into Struct. score; no invented PDB rows.
+
+
 ### D-174 — ADC catalog: sibling / administratively-closed BLA footnotes
 
 **Status:** Accepted (BUILD). Spends `D-174`; next free `D-175`. Closes/links #338.

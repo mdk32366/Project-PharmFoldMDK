@@ -14,7 +14,7 @@ def test_d172_entry_and_pointer():
     assert "\n### D-172 — Census PDB ABSENT widen + SIFTS refresh (metadata-only)" in LOG
     assert "match_kind" in LOG
     assert "0.50" in LOG
-    assert "Next free `D-` integer: **`D-175`**" in RESERVED
+    assert "Next free `D-` integer: **`D-176`**" in RESERVED
     assert "Next free `D-` integer: **`D-172`**" not in RESERVED
     assert "| **D-172**" in RESERVED and "Spent" in RESERVED.split("| **D-172**", 1)[1][:220]
     assert "| **D-173**" in RESERVED and "Spent" in RESERVED.split("| **D-173**", 1)[1][:280]
