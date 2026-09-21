@@ -15,11 +15,13 @@ CD = (REPO / "ui" / "src" / "components" / "CensusDetail.jsx").read_text(encodin
 
 def test_d170_entry_exists_and_pointer_moved():
     assert re.search(r"^### D-170\b", LOG, re.M)
-    assert "Next free `D-` integer: **`D-171`**" in RESERVED
+    assert "Next free `D-` integer: **`D-172`**" in RESERVED
     assert "Next free `D-` integer: **`D-170`**" not in RESERVED
     assert re.search(r"^\| \*\*D-170\*\* \|", RESERVED, re.M)
     assert re.search(r"^\| \*\*D-171\*\* \|", RESERVED, re.M)
-    assert not re.search(r"^### D-171\b", LOG, re.M)
+    assert re.search(r"^\| \*\*D-172\*\* \|", RESERVED, re.M)
+    assert re.search(r"^### D-171\b", LOG, re.M)  # spent
+    assert not re.search(r"^### D-172\b", LOG, re.M)
 
 
 def test_server_exposes_attach_helper_and_list_calls_it():

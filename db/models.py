@@ -563,3 +563,48 @@ class CancerBurdenStat(Base):
     is_primary_sex_stratum: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="0"
     )
+
+
+class CensusPdbRun(Base):
+    """One offline load of census experimental PDB metadata (`D-171`, migration 0015).
+
+    ⚠ Does not touch structural_score / STRUCTURAL_ONLY tables. Metadata only.
+    """
+
+    __tablename__ = "census_pdb_runs"
+    __table_args__ = (
+        Index("ix_census_pdb_runs_status", "run_status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_status: Mapped[str] = mapped_column(String(16), nullable=False)
+    source: Mapped[str] = mapped_column(String(64), nullable=False)
+    n_accessions: Mapped[int] = mapped_column(Integer, nullable=False)
+    n_present: Mapped[int] = mapped_column(Integer, nullable=False)
+    n_absent: Mapped[int] = mapped_column(Integer, nullable=False)
+    n_absent_no_ecd: Mapped[int] = mapped_column(Integer, nullable=False)
+    n_span_absent: Mapped[int] = mapped_column(Integer, nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class CensusPdbAccession(Base):
+    """Per-accession experimental PDB paint for one `census_pdb_runs` row (`D-171`)."""
+
+    __tablename__ = "census_pdb_accessions"
+    __table_args__ = (
+        Index("ix_census_pdb_accessions_run", "run_id"),
+        Index("ix_census_pdb_accessions_acc", "accession"),
+        UniqueConstraint("run_id", "accession", name="uq_census_pdb_accessions_run_acc"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey("census_pdb_runs.id"), nullable=False)
+    accession: Mapped[str] = mapped_column(String(16), nullable=False)
+    pdb_status: Mapped[str] = mapped_column(String(48), nullable=False)
+    pdb_ids: Mapped[dict | list] = mapped_column(JSON_VARIANT, nullable=False)
+    pdb_best: Mapped[dict | None] = mapped_column(JSON_VARIANT, nullable=True)
+    entries: Mapped[dict | list] = mapped_column(JSON_VARIANT, nullable=False)
+

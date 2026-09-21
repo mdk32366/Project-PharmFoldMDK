@@ -30,6 +30,21 @@
 - **Hard stops held:** no `/api/ranking` change; no ADC claim; D-150 axes untouched; D-169 Contract E still deferred.
 - **RESERVED:** pointer moved to **`D-171`** in the SAME commit that spent 170.
 
+
+
+### D-171 — Census experimental PDB metadata (metadata-only)
+
+**Date:** 2026-09-20  
+**Status:** ACCEPTED (BUILD)  
+**Spec:** `Sessions/Trinity/2026-09-20-d171-census-pdb-experimental-metadata-spec@0.0.md`
+
+Attach experimental PDB metadata to every census accession (~3467): mapped PDB ids, selected `pdb_best` (or null), method, resolution, ECD-coverage flag, PDBe/SIFTS + RCSB attribution — on `GET /api/census` + `GET /api/census/:id`, with honest UI on detail and an optional table column.
+
+**Selection (Contract 1):** prefer tax_id=9606; ECD = census V2 extracellular residue set from `span_segments.csv`; `ecd_coverage_frac = |ECD ∩ OBS| / |ECD|`; eligible for `pdb_best` when frac **≥ 0.50**; among eligible sort by higher frac, better resolution (null last), method X-ray > EM > NMR > other, pdb_id ascending. Distinct statuses: `present`, `ABSENT`, `ABSENT_NO_ECD_COVERING_STRUCTURE`, `span_absent`, `invalid`.
+
+**Hard stops:** no `structural_score` / STRUCTURAL_ONLY recompute; no mmCIF bulk; no 3Dmol switcher; do not call PDB the ranked fold or cohort-82 Rank; offline batch load only (no per-request PDBe for full list).
+
+**Ship shape:** `core/census_pdb.py`, migration `0015_census_pdb_metadata`, `scripts/census_pdb_metadata.py`, `app/census_pdb_read.py` (Join A from `reads.py`), CensusDetail block + CensusTable `PDB (experimental)` column.
 ### D-169 — UI truth fixes A–E: structural-rank browse, soften absolute census denials, `/coverage`→`/targets`, Track B bottom line
 
 - **Date:** 2026-09-20, **America/Los_Angeles (PDT, UTC−7)**.

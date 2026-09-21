@@ -283,6 +283,53 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
         )}
       </section>
       <StructuralProfile block={detail.structural_profile_block} />
+      {/* ⚠ D-171 — experimental PDB metadata only. NOT the served predicted fold, NOT STRUCTURAL_ONLY rank. */}
+      <section className="experimental-pdb-detail panel" data-testid="experimental-pdb-detail">
+        <h3>Experimental PDB (metadata)</h3>
+        <p className="note">
+          Mapped experimental structures from <strong>PDBe/SIFTS</strong> (with RCSB links).
+          This is <strong>not</strong> the served predicted fold and <strong>not</strong> STRUCTURAL_ONLY
+          rank or the cohort-82 learned scorer.
+        </p>
+        {detail.pdb_status === 'invalid' || detail.pdb_status == null ? (
+          <p role="alert">PDB metadata run is not valid right now — no experimental ids painted.</p>
+        ) : detail.pdb_status === 'ABSENT' ? (
+          <p data-testid="pdb-absent">No experimental PDB map for this UniProt accession (<strong>ABSENT</strong>).</p>
+        ) : detail.pdb_status === 'ABSENT_NO_ECD_COVERING_STRUCTURE' ? (
+          <p data-testid="pdb-absent-no-ecd">
+            PDB entries exist, but none cover ≥50% of the census V2 ECD span
+            (<strong>ABSENT_NO_ECD_COVERING_STRUCTURE</strong>).
+            {Array.isArray(detail.pdb_ids) && detail.pdb_ids.length
+              ? ` Mapped ids: ${detail.pdb_ids.join(', ')}.`
+              : ''}
+          </p>
+        ) : detail.pdb_status === 'span_absent' ? (
+          <p data-testid="pdb-span-absent">
+            No V2 ECD span for coverage — ECD coverage N/A.
+            {detail.pdb_best
+              ? <> Best experimental entry: <a href={detail.pdb_best.attribution?.rcsb_url} target="_blank" rel="noreferrer">{detail.pdb_best.pdb_id}</a></>
+              : ' No pdb_best selected.'}
+          </p>
+        ) : detail.pdb_best ? (
+          <dl data-testid="pdb-best">
+            <dt>Best (ECD-covering)</dt>
+            <dd>
+              <a href={detail.pdb_best.attribution?.rcsb_url} target="_blank" rel="noreferrer">{detail.pdb_best.pdb_id}</a>
+              {' · '}
+              <a href={detail.pdb_best.attribution?.pdbe_url} target="_blank" rel="noreferrer">PDBe</a>
+              {detail.pdb_best.chain_id ? ` · chain ${detail.pdb_best.chain_id}` : ''}
+              {detail.pdb_best.method ? ` · ${detail.pdb_best.method}` : ''}
+              {detail.pdb_best.resolution_A != null ? ` · ${detail.pdb_best.resolution_A} Å` : ''}
+              {detail.pdb_best.ecd_coverage_frac != null
+                ? ` · ECD cover ${(detail.pdb_best.ecd_coverage_frac * 100).toFixed(1)}%`
+                : ''}
+            </dd>
+          </dl>
+        ) : (
+          <p>Status {detail.pdb_status} — no pdb_best.</p>
+        )}
+      </section>
+
       {/* ⚠ D-093 edges 1+2 — the human-legible half, BELOW the structural
           profile: the reader meets what the protein IS before what a model
           says about it. */}
