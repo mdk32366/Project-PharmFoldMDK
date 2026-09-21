@@ -830,6 +830,7 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                     type="button"
                     onClick={() => toggle(c.key)}
                     title={COLUMN_TITLES[c.key] ?? c.label}
+                    aria-label={c.label}
                     aria-sort={sort.key === c.key ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
                     {c.headerLines
