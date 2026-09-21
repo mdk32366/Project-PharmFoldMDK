@@ -197,12 +197,19 @@ export default function CensusProteinView({ id }) {
           </p>
         )}
         <Igf2rTwoPopulation copy={detail.igf2r_two_population} />
-        <p className="census-bar">
+        <p className="census-bar" data-testid="census-cohort-scorer-bar">
           {/* ⚠ The bar asserted "this protein WAS FOLDED" on every card, including the ones that
               were never folded — a false claim sitting directly above a NOT FOLDED banner. */}
           {/* ⚠ D-150: axis B's wording comes from `scoreState` so the bar, the census row and the
               Status block cannot drift into three phrasings of one fact. */}
           <strong>{score.label}.</strong>{' '}
+          {/* D-173: cohort-82 / ADC denial only — never denies STRUCTURAL_ONLY when present. */}
+          That means <strong>no cohort-82 learned scorer</strong> and <strong>no ADC shortlist</strong>
+          on this protein
+          {detail.structural_rank != null
+            && (!detail.structural_rank_status || detail.structural_rank_status === 'valid')
+            ? <> — structure-only rank and score (STRUCTURAL_ONLY) are still on this card below.</>
+            : <> — and no structure-only rank is painted here either.</>}{' '}
           {unfoldedCopy(detail)?.bar
             ?? (detail.structure_kind === 'assembled'
               ? 'This chain was assembled by pLDDT overlap, not superimposed. It has not been assessed as a target, and it is not comparable to the ranked 82.'

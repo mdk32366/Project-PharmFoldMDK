@@ -245,10 +245,15 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
         {/* AXIS B — scored and ranked, or not. ⚠ It sits with the other two rather than at the
             bottom of the list: it is a status, not a footnote, and the whole defect this block
             repairs was three statuses being read off one. */}
-        <li className="caveat status-unscored">
+        <li className="caveat status-unscored" data-testid="census-detail-cohort-scorer">
           ⚠ <strong>{score.label}.</strong> {score.reason}
-          {' '}⚠ This is a statement about scoring, <strong>not</strong> about whether a structure
-          exists — the Structure line above is the only line that answers that.
+          {' '}⚠ That denies the <strong>cohort-82 learned scorer / ADC composite</strong>,{' '}
+          <strong>not</strong> whether a structure exists (Structure line above), and{' '}
+          <strong>not</strong> whether structure-only (STRUCTURAL_ONLY) rank/score exist
+          {detail.structural_rank != null
+            && (!detail.structural_rank_status || detail.structural_rank_status === 'valid')
+            ? <> — those numbers are on this card in the block below.</>
+            : <> — none are painted when the ranking store has no valid row.</>}
         </li>
         <li>
           Span {detail.span_aa} aa (amino acids; residues {detail.span_start}–{detail.span_end} of{' '}

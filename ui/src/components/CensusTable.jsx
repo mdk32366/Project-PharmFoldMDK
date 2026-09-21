@@ -38,7 +38,7 @@ export const COLUMNS = [
   { key: 'label', label: 'Protein', numeric: false },
   // ⚠ 'aa' expanded on FIRST USE. It is standard notation to a structural biologist and
   // opaque to everyone else, and the owner spent a long while resolving it.
-  { key: 'span_aa', label: 'Span (aa = amino acids)', numeric: true },
+  { key: 'span_aa', label: 'Span (aa)', numeric: true },
   { key: 'topology', label: 'Topology', numeric: false },
   // ⚠⚠ THREE QUESTIONS, THREE CHIPS, ONE COLUMN (D-150). Before this the row answered *is there a
   // structure* only sideways — through a `NOT FOLDED` badge in the Topology column — and answered
@@ -53,7 +53,7 @@ export const COLUMNS = [
   // ⚠ `order: STRUCTURE_SERVED_ORDER` for the same reason Cost declares one — the categories
   // group, and alphabetical would file `assembled_served` and `none` next to each other. It is a
   // GROUPING and not a ranking; nothing here scores a census row.
-  { key: 'status_structure', label: 'Status (structure · score · seam)', numeric: false,
+  { key: 'status_structure', label: 'Status (structure · scored · seam)', numeric: false,
     order: STRUCTURE_SERVED_ORDER },
   // ⚠⚠ HOW THE FOLD WAS PRODUCED, AND SORTABLE (D-133). The kind was rendered as a badge in the
   // accession cell and was the one row property the table could NOT sort by — while the paragraph
@@ -65,7 +65,7 @@ export const COLUMNS = [
   // ⚠ `numeric: false` on purpose, and it is the same ruling as Profile: four kinds with no
   // magnitude sort into GROUPS. Ascending happens to put `assembled` first; that is alphabetical
   // happenstance and not a suitability order, and nothing here ranks a census row.
-  { key: 'structure_kind', label: 'Structure (single pass or assembled from tiles)', numeric: false },
+  { key: 'structure_kind', label: 'Structure', numeric: false },
   // ⚠⚠ WHAT THIS PROTEIN COSTS TO FOLD, AND THE HEADER SAYS SO IN THE HEADER (D-137). The axis
   // is `core.foldability`'s envelope against the measured ceiling — a **cost / tractability**
   // reading and **not** a suitability one, which D-077 dec 1 refusal 2 requires be stated in the
@@ -81,8 +81,8 @@ export const COLUMNS = [
     order: COST_ORDER },
   { key: 'mean_plddt', label: 'pLDDT', numeric: true },
   // D-170 — STRUCTURAL_ONLY order (membrane × ECD × pLDDT). Not the cohort-82 scorer.
-  { key: 'structural_rank', label: 'Struct. rank (STRUCTURAL_ONLY)', numeric: true },
-  { key: 'structural_score', label: 'Struct. score (STRUCTURAL_ONLY)', numeric: true },
+  { key: 'structural_rank', label: 'Struct. rank', numeric: true },
+  { key: 'structural_score', label: 'Struct. score', numeric: true },
   // D-171 — experimental PDB metadata (not ranked fold / not STRUCTURAL_ONLY).
   { key: 'pdb_best', label: 'PDB (experimental)', numeric: false },
   { key: 'tranche', label: 'Tranche', numeric: true },
@@ -775,6 +775,11 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
           is positioned against its nearest scrolling ancestor, so the rule that used to stick it to
           the viewport now sticks it to this box — see the matching CSS, which is the half of this
           change jsdom cannot see. */}
+      <p className="note" data-testid="span-structure-header-note">
+        <strong>Span (aa)</strong> means amino acids (residues). <strong>Structure</strong> is
+        single-pass or assembled from tiles — same categories as before; the long header was
+        shortened (D-173) so Struct. rank / Struct. score stay on screen without horizontal scroll.
+      </p>
       <p className="note" data-testid="structural-rank-columns-note">
         <strong>STRUCTURAL_ONLY</strong> columns (Struct. rank / Struct. score) are the structure-only
         order (membrane × ECD × pLDDT) from the same source as{' '}
@@ -794,7 +799,7 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
           <thead>
             <tr>
               {COLUMNS.map((c) => (
-                <th key={c.key}>
+                <th key={c.key} data-col={c.key} className={c.key === 'cost' ? 'th-wrap' : undefined}>
                   <button
                     type="button"
                     onClick={() => toggle(c.key)}

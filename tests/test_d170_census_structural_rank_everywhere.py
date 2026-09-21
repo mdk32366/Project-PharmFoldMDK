@@ -15,13 +15,14 @@ CD = (REPO / "ui" / "src" / "components" / "CensusDetail.jsx").read_text(encodin
 
 def test_d170_entry_exists_and_pointer_moved():
     assert re.search(r"^### D-170\b", LOG, re.M)
-    assert "Next free `D-` integer: **`D-173`**" in RESERVED
+    assert "Next free `D-` integer: **`D-174`**" in RESERVED
     assert "Next free `D-` integer: **`D-170`**" not in RESERVED
     assert re.search(r"^\| \*\*D-170\*\* \|", RESERVED, re.M)
     assert re.search(r"^\| \*\*D-171\*\* \|", RESERVED, re.M)
     assert re.search(r"^\| \*\*D-172\*\* \|", RESERVED, re.M)
     assert re.search(r"^### D-171\b", LOG, re.M)  # spent
-    assert not re.search(r"^### D-173\b", LOG, re.M)
+    assert re.search(r"^### D-173\b", LOG, re.M)
+    assert not re.search(r"^### D-174\b", LOG, re.M)
 
 
 def test_server_exposes_attach_helper_and_list_calls_it():
@@ -34,7 +35,9 @@ def test_census_table_has_structural_only_columns_and_label():
     assert "structural_rank" in CT
     assert "structural_score" in CT
     assert "STRUCTURAL_ONLY" in CT
-    assert "Struct. rank (STRUCTURAL_ONLY)" in CT
+    assert "Struct. rank" in CT
+    assert "Struct. score" in CT
+    # D-173: STRUCTURAL_ONLY moved out of th into legend chrome
     assert "structural-rank-cell" in CT
     assert "cohort-82" in CT
 

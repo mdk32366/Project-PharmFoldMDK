@@ -555,7 +555,7 @@ def test_d130_is_the_next_free_decision_id():
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
     # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
-    # store tagged, never pool), so it is NAMED here rather than barred and `### D-173` takes the
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-174` takes the
     # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
     # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
     # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
@@ -570,8 +570,8 @@ def test_d130_is_the_next_free_decision_id():
         "D-171 was spent by census PDB metadata, so it must be NAMED here rather than barred")
     assert "\n### D-172 — Census PDB ABSENT widen + SIFTS refresh (metadata-only)" in LOG, (
         "D-172 was spent by ABSENT widen + SIFTS refresh, so it must be NAMED here rather than barred")
-    assert "\n### D-173" not in LOG, (
-        "D-173 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
+    assert "\n### D-174" not in LOG, (
+        "D-174 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 must be the /method contents-rail entry, not some other entry that "
         "took the number"

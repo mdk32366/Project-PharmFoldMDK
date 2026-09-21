@@ -851,7 +851,7 @@ main.wide .prose { max-width: none; }
    floor to respect, so narrow viewports scroll the port instead of crushing thirteen columns into
    unreadable slivers. Removing it does not "fix" a horizontal scrollbar — it moves the damage into
    the cells. */
-.census-table table { width: 100%; min-width: 78rem; border-collapse: collapse; font-size: 0.9rem; }
+.census-table table { width: 100%; min-width: 62rem; border-collapse: collapse; font-size: 0.9rem; }
 /* ⚠ Sticky header: the list is thousands of rows and a header that scrolls away turns every
    column into an unlabelled number.
    ⚠ D-151: `top: 0` is now measured against `.census-table-scroll`, and the z-index is raised so
@@ -859,12 +859,32 @@ main.wide .prose { max-width: none; }
 .census-table thead th {
   position: sticky; top: 0; z-index: 3;
   background: #131c27; border-bottom: 1px solid #2d3748;
-  padding: 0; text-align: left; white-space: nowrap;
+  padding: 0; text-align: left;
+  /* D-173: multi-line headers (Cost to fold must wrap); do not force nowrap. */
+  white-space: normal;
+  vertical-align: bottom;
+  max-width: 9rem;
+}
+.census-table thead th.th-wrap,
+.census-table thead th[data-col="cost"] {
+  max-width: 7.5rem;
+}
+.census-table thead th[data-col="span_aa"],
+.census-table thead th[data-col="structure_kind"] {
+  max-width: 5.5rem;
+}
+.census-table thead th[data-col="structural_rank"],
+.census-table thead th[data-col="structural_score"] {
+  max-width: 5rem;
+  min-width: 4.5rem;
 }
 .census-table thead th button {
   width: 100%; background: none; border: 0; color: #cbd5e0;
   font: inherit; font-weight: 600; text-align: inherit;
   padding: 0.5rem 0.6rem; cursor: pointer;
+  white-space: normal;
+  line-height: 1.25;
+  overflow-wrap: break-word;
 }
 .census-table thead th button:hover { color: #e2e8f0; background: #1a2431; }
 .census-table tbody td { padding: 0.35rem 0.6rem; border-bottom: 1px solid #1c2530; }
