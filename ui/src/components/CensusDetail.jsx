@@ -6,7 +6,7 @@ import ClinicalEdges from './ClinicalEdges.jsx'
 import SurfaceCheck from './SurfaceCheck.jsx'
 import { HpaDeepLink } from './HpaAttribution.jsx'
 
-const PDB_MATCH_KIND_LABELS = {
+const MATCH_KIND_LABELS = {
   uniprot_direct: 'direct UniProt map',
   complex_chain: 'complex chain',
   construct_alt_accession: 'alternate construct accession',
@@ -299,10 +299,10 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
           This is <strong>not</strong> the served predicted fold and <strong>not</strong> STRUCTURAL_ONLY
           rank or the cohort-82 learned scorer.
         </p>
-              {protein?.pdb_best?.match_kind && (
+              {detail?.pdb_best?.match_kind && (
                 <p className="note" data-testid="match-kind-label">
-                  Match kind: <strong>{PDB_MATCH_KIND_LABELS[protein.pdb_best.match_kind] || protein.pdb_best.match_kind}</strong>
-                  {protein.pdb_best.match_uniprot ? ` (construct/map UniProt ${protein.pdb_best.match_uniprot})` : ''}
+                  Match kind: <strong>{MATCH_KIND_LABELS[detail.pdb_best.match_kind] || detail.pdb_best.match_kind}</strong>
+                  {detail.pdb_best.match_uniprot ? ` (construct/map UniProt ${detail.pdb_best.match_uniprot})` : ''}
                 </p>
               )}
 
@@ -344,7 +344,7 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
           <p>Status {detail.pdb_status} — no pdb_best.</p>
         )}
       
-              {Array.isArray(protein?.pdb_related) && protein.pdb_related.length > 0 && (
+              {Array.isArray(detail?.pdb_related) && detail.pdb_related.length > 0 && (
                 <div className="pdb-related-block" data-testid="pdb-related-detail">
                   <h4>Related experimental structures (not this UniProt)</h4>
                   <p className="note">
@@ -352,12 +352,12 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
                     not this protein&apos;s structure and never silent <code>pdb_best</code>.
                   </p>
                   <ul>
-                    {protein.pdb_related.map((rel, i) => (
+                    {detail.pdb_related.map((rel, i) => (
                       <li key={`${rel.pdb_id}-${i}`}>
                         <strong>{(rel.pdb_id || '').toUpperCase()}</strong>
                         {rel.related_uniprot ? ` · UniProt ${rel.related_uniprot}` : ''}
                         {rel.tax_id != null ? ` · tax ${rel.tax_id}` : ''}
-                        {' · '}{PDB_MATCH_KIND_LABELS[rel.match_kind] || rel.match_kind || 'related'}
+                        {' · '}{MATCH_KIND_LABELS[rel.match_kind] || rel.match_kind || 'related'}
                         {rel.attribution?.rcsb_url && (
                           <> · <a href={rel.attribution.rcsb_url} target="_blank" rel="noreferrer">RCSB</a></>
                         )}
