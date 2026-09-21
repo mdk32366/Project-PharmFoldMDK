@@ -539,7 +539,10 @@ def test_d129_is_the_next_free_decision_id():
         171,
         # ⚠ 172 is ADDED by ABSENT widen + SIFTS refresh (`D-172`) — by enumeration,
         # and never by a `>=`. Spending 172 reddened the previous form BY DESIGN.
-        172
+        172,
+        # ⚠ 173 is ADDED by census UI score headers + wrap (`D-173`) — by enumeration,
+        # and never by a `>=`. Spending 173 reddened the previous form BY DESIGN.
+        173
     ], (
         f"⚠ 167 is ADDED by the re-attach of slice 2's 37 — the EIGHTEENTH resolution "
         f"by enumeration and never by a `>=`; `### D-168` now takes the bar. "
@@ -704,6 +707,8 @@ def test_d129_is_the_next_free_decision_id():
         "D-171 was spent by census PDB metadata, so it must be NAMED here rather than barred")
     assert "\n### D-172 — Census PDB ABSENT widen + SIFTS refresh (metadata-only)" in LOG, (
         "D-172 was spent by ABSENT widen + SIFTS refresh, so it must be NAMED here rather than barred")
+    assert "\n### D-173 — Census UI: numeric structural_score primary + header wrap" in LOG, (
+        "D-173 was spent by census UI score headers + wrap, so it must be NAMED here rather than barred")
     assert "\n### D-174" not in LOG, (
         "D-174 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (

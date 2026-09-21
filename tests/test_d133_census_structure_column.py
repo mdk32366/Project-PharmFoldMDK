@@ -73,11 +73,12 @@ def test_structure_kind_is_a_real_columns_entry():
         cols.group(1),
     )
     assert entry, "COLUMNS must hold a structure_kind column"
-    # ⚠ the substance, not the wording: the header has to name what it groups, or a reader
-    # scanning for the seam-spliced proteins cannot find the column that holds them.
-    assert re.search(r"assembl", entry.group(1), re.I), (
-        f"the Structure header must name assembly; got {entry.group(1)!r}"
+    # D-173: th is short (`Structure`); assembly / single-pass honesty lives in the legend note.
+    assert entry.group(1) == "Structure", (
+        f"the Structure header must stay short (D-173); got {entry.group(1)!r}"
     )
+    assert "span-structure-header-note" in CENSUS_TABLE
+    assert "single-pass or assembled from tiles" in CENSUS_TABLE
     # ⚠⚠ A CATEGORY, NEVER A MAGNITUDE. `numeric: true` orders nothing (NaN over strings)
     # and claims a rank while doing it.
     assert entry.group(2) == "false", "structure kind is a category; it has no magnitude"
