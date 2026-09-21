@@ -765,7 +765,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     # ⚠ 164 is SPENT by the cost-stamp disclosure and is NAMED below; `### D-168` takes the
     # next-free bar. A name is ADDED, nothing is relaxed.
     assert 165 in ids, "D-165 claimed this integer (the spancache pin)"
-    assert 172 not in ids
+    assert 173 not in ids
     # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
     # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
@@ -785,7 +785,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     assert 166 in ids, "D-166 claimed this integer (the enqueue-idempotency constraint)"
     assert 167 in ids, "D-167 claimed this integer (the re-attach of slice 2's 37)"
     assert 171 in ids, "D-171 claimed this integer (census PDB metadata)"
-    assert 172 not in ids, (
+    assert 173 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     # the two entries this one is built beside, NAMED so a rename cannot pass silently
     assert re.search(r"^### D-146 — Track B stops denying the surface it is served on", LOG, re.M)

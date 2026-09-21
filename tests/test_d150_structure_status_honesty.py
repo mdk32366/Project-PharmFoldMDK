@@ -480,7 +480,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     # NAMED above, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
     # ⚠ 148 stays the trafficking hold; 165 is SPENT by the spancache pin and is NAMED
     # below, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
-    assert 148 not in ids and 172 not in ids
+    assert 148 not in ids and 173 not in ids
     # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
     # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
@@ -501,7 +501,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_still_a_held_hole(
     assert 166 in ids, "D-166 claimed this integer (the enqueue-idempotency constraint)"
     assert 167 in ids, "D-167 claimed this integer (the re-attach of slice 2's 37)"
     assert 171 in ids, "D-171 claimed this integer (census PDB metadata)"
-    assert 172 not in ids, (
+    assert 173 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
