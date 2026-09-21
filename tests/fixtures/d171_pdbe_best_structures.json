@@ -1,0 +1,214 @@
+{
+  "O75899": [
+    {
+      "experimental_method": "X-ray diffraction",
+      "tax_id": 9606,
+      "resolution": 2.5,
+      "pdb_id": "4ms3",
+      "chain_id": "B",
+      "entity_id": 2,
+      "preferred_assembly_id": 1,
+      "observed_regions": [
+        {
+          "unp_start": 50,
+          "unp_end": 291
+        },
+        {
+          "unp_start": 302,
+          "unp_end": 466
+        }
+      ],
+      "start": 1,
+      "end": 425,
+      "unp_start": 42,
+      "unp_end": 466,
+      "coverage": 0.43
+    },
+    {
+      "experimental_method": "X-ray diffraction",
+      "tax_id": 9606,
+      "resolution": 1.9,
+      "pdb_id": "4ms4",
+      "chain_id": "B",
+      "entity_id": 2,
+      "preferred_assembly_id": 1,
+      "observed_regions": [
+        {
+          "unp_start": 50,
+          "unp_end": 291
+        },
+        {
+          "unp_start": 302,
+          "unp_end": 466
+        }
+      ],
+      "start": 1,
+      "end": 425,
+      "unp_start": 42,
+      "unp_end": 466,
+      "coverage": 0.43
+    },
+    {
+      "experimental_method": "X-ray diffraction",
+      "tax_id": 9606,
+      "resolution": 2.22,
+      "pdb_id": "4mqf",
+      "chain_id": "B",
+      "entity_id": 2,
+      "preferred_assembly_id": 1,
+      "observed_regions": [
+        {
+          "unp_start": 53,
+          "unp_end": 292
+        },
+        {
+          "unp_start": 300,
+          "unp_end": 379
+        },
+        {
+          "unp_start": 385,
+          "unp_end": 466
+        }
+      ],
+      "start": 1,
+      "end": 425,
+      "unp_start": 42,
+      "unp_end": 466,
+      "coverage": 0.43
+    },
+    {
+      "experimental_method": "X-ray diffraction",
+      "tax_id": 9606,
+      "resolution": 1.62,
+      "pdb_id": "4pas",
+      "chain_id": "B",
+      "entity_id": 2,
+      "preferred_assembly_id": 1,
+      "observed_regions": [
+        {
+          "unp_start": 779,
+          "unp_end": 817
+        }
+      ],
+      "start": 1,
+      "end": 41,
+      "unp_start": 779,
+      "unp_end": 819,
+      "coverage": 0.04
+    },
+    {
+      "experimental_method": "X-ray diffraction",
+      "tax_id": 9606,
+      "resolution": 2.25,
+      "pdb_id": "4ms1",
+      "chain_id": "B",
+      "entity_id": 2,
+      "preferred_assembly_id": 1,
+      "observed_regions": [
+        {
+          "unp_start": 53,
+          "unp_end": 292
+        },
+        {
+          "unp_start": 300,
+          "unp_end": 379
+        },
+        {
+          "unp_start": 385,
+          "unp_end": 466
+        }
+      ],
+      "start": 1,
+      "end": 425,
+      "unp_start": 42,
+      "unp_end": 466,
+      "coverage": 0.43
+    },
+    {
+      "experimental_method": "Electron Microscopy",
+      "tax_id": 9606,
+      "resolution": 3.6,
+      "pdb_id": "6w2x",
+      "chain_id": "B",
+      "entity_id": 2,
+      "preferred_assembly_id": 1,
+      "observed_regions": [
+        {
+          "unp_start": 53,
+          "unp_end": 291
+        },
+        {
+          "unp_start": 304,
+          "unp_end": 379
+        },
+        {
+          "unp_start": 385,
+          "unp_end": 584
+        },
+        {
+          "unp_start": 592,
+          "unp_end": 632
+        },
+        {
+          "unp_start": 638,
+          "unp_end": 750
+        }
+      ],
+      "start": 9,
+      "end": 908,
+      "unp_start": 42,
+      "unp_end": 941,
+      "coverage": 0.71
+    },
+    {
+      "experimental_method": "Electron Microscopy",
+      "tax_id": 9606,
+      "resolution": 3.5,
+      "pdb_id": "7eb2",
+      "chain_id": "F",
+      "entity_id": 6,
+      "preferred_assembly_id": 1,
+      "observed_regions": [
+        {
+          "unp_start": 55,
+          "unp_end": 294
+        },
+        {
+          "unp_start": 301,
+          "unp_end": 376
+        },
+        {
+          "unp_start": 385,
+          "unp_end": 748
+        }
+      ],
+      "start": 30,
+      "end": 808,
+      "unp_start": 41,
+      "unp_end": 819,
+      "coverage": 0.72
+    }
+  ],
+  "SYNABS01": [
+    {
+      "pdb_id": "1abc",
+      "chain_id": "A",
+      "experimental_method": "X-ray diffraction",
+      "resolution": 1.5,
+      "tax_id": 9606,
+      "unp_start": 900,
+      "unp_end": 920,
+      "observed_regions": [
+        {
+          "unp_start": 900,
+          "unp_end": 920
+        }
+      ],
+      "coverage": 0.02,
+      "start": 1,
+      "end": 21,
+      "entity_id": 1
+    }
+  ],
+  "SYNNONE1": []
+}

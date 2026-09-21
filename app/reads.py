@@ -1677,6 +1677,14 @@ def list_census(engine: Any) -> list[dict[str, Any]]:
             row.setdefault("structural_score", None)
             row.setdefault("structural_rank_status", None)
             row.setdefault("structural_rank_flags", None)
+    # ⚠ D-171 — experimental PDB metadata (offline load). Lazy import; missing table → ABSENT/invalid.
+    try:
+        from app.census_pdb_read import attach_pdb_fields
+        attach_pdb_fields(engine, out, include_full_ids=False)
+    except Exception:  # noqa: BLE001
+        for _row in out:
+            _row.setdefault("pdb_status", "invalid")
+            _row.setdefault("pdb_best", None)
     return out
 
 
@@ -1857,6 +1865,14 @@ def get_census_detail(
             out.setdefault("structural_score", None)
             out.setdefault("structural_rank_status", None)
             out.setdefault("structural_rank_flags", None)
+        try:
+            from app.census_pdb_read import attach_pdb_fields
+            attach_pdb_fields(engine, [out], include_full_ids=True)
+        except Exception:  # noqa: BLE001
+            out.setdefault("pdb_status", "invalid")
+            out.setdefault("pdb_best", None)
+            out.setdefault("pdb_ids", [])
+            out.setdefault("pdb_entries", [])
         out["sequence"] = (row.meta or {}).get("sequence")
         out["fold_provenance"] = (row.meta or {}).get("fold_provenance")
         out["structure_source"] = row.structure_source

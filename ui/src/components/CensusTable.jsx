@@ -83,6 +83,8 @@ export const COLUMNS = [
   // D-170 — STRUCTURAL_ONLY order (membrane × ECD × pLDDT). Not the cohort-82 scorer.
   { key: 'structural_rank', label: 'Struct. rank (STRUCTURAL_ONLY)', numeric: true },
   { key: 'structural_score', label: 'Struct. score (STRUCTURAL_ONLY)', numeric: true },
+  // D-171 — experimental PDB metadata (not ranked fold / not STRUCTURAL_ONLY).
+  { key: 'pdb_best', label: 'PDB (experimental)', numeric: false },
   { key: 'tranche', label: 'Tranche', numeric: true },
   // ⚠⚠ A STATUS, NOT A VALUE, AND THAT IS RULING 2. This table sorts on every column (D-087), so a
   // profile VALUE here would be one header click from a ranked shortlist of 1,397 proteins. A
@@ -782,6 +784,11 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
           <span role="alert"> Ranking status is not valid — no numeric ranks are painted.</span>
         ) : null}
       </p>
+      <p className="note" data-testid="pdb-experimental-columns-note">
+        <strong>PDB (experimental)</strong> is metadata from PDBe/SIFTS (RCSB links) — not the served
+        predicted fold, not STRUCTURAL_ONLY rank, not the cohort-82 learned scorer.
+        ABSENT / ABSENT_NO_ECD_COVERING_STRUCTURE are explicit when no qualifying structure exists.
+      </p>
       <div className="census-table-scroll">
         <table>
           <thead>
@@ -1010,6 +1017,18 @@ export default function CensusTable({ rows, onSelect, kindFilter: controlledKind
                     {r.structural_rank_status && r.structural_rank_status !== 'valid'
                       ? '—'
                       : (r.structural_score != null ? Number(r.structural_score).toFixed(4) : '—')}
+                  </td>
+                  <td data-testid="pdb-best-cell"
+                      title={r.pdb_status === 'ABSENT' ? 'no experimental PDB map'
+                        : r.pdb_status === 'ABSENT_NO_ECD_COVERING_STRUCTURE' ? 'PDB exists but ECD cover < 50%'
+                        : r.pdb_best?.pdb_id ? 'experimental PDB metadata' : (r.pdb_status || '—')}>
+                    {r.pdb_status === 'invalid' || r.pdb_status == null
+                      ? '—'
+                      : r.pdb_best?.pdb_id
+                        ? r.pdb_best.pdb_id.toUpperCase()
+                        : (r.pdb_status === 'ABSENT' || r.pdb_status === 'ABSENT_NO_ECD_COVERING_STRUCTURE'
+                          ? '—'
+                          : '—')}
                   </td>
                   {/* ⚠ D-154: NAMED, like every neighbour. `{r.tranche}` drew an EMPTY cell for the
                       one row of 3,467 with no tranche (`P55073`/`DIO3`) — while `span_aa ?? '—'` two
