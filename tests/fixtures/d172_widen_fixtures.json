@@ -1,0 +1,82 @@
+{
+  "ABSENT_TO_COMPLEX": {
+    "direct": [],
+    "widen": [
+      {
+        "pdb_id": "8xyz",
+        "chain_id": "A",
+        "experimental_method": "X-ray diffraction",
+        "resolution": 2.1,
+        "tax_id": 9606,
+        "match_kind": "complex_chain",
+        "unp_start": 1,
+        "unp_end": 200,
+        "observed_regions": [
+          {
+            "unp_start": 1,
+            "unp_end": 200
+          }
+        ]
+      }
+    ],
+    "ecd_segments": "10-150"
+  },
+  "ABSENT_RELATED_ONLY": {
+    "direct": [],
+    "widen": [
+      {
+        "pdb_id": "1rel",
+        "chain_id": "A",
+        "experimental_method": "X-ray diffraction",
+        "resolution": 1.8,
+        "tax_id": 10090,
+        "match_kind": "related_ortholog",
+        "match_uniprot": "P12345",
+        "unp_start": 1,
+        "unp_end": 100,
+        "observed_regions": [
+          {
+            "unp_start": 1,
+            "unp_end": 100
+          }
+        ],
+        "note": "Mouse ortholog \u2014 not this UniProt"
+      }
+    ],
+    "ecd_segments": "1-80"
+  },
+  "ABSENT_WIDEN_NO_ECD": {
+    "direct": [],
+    "widen": [
+      {
+        "pdb_id": "9frag",
+        "chain_id": "B",
+        "experimental_method": "X-ray diffraction",
+        "resolution": 2.0,
+        "tax_id": 9606,
+        "match_kind": "domain_fragment",
+        "unp_start": 500,
+        "unp_end": 520,
+        "observed_regions": [
+          {
+            "unp_start": 500,
+            "unp_end": 520
+          }
+        ]
+      }
+    ],
+    "ecd_segments": "1-100"
+  },
+  "INVENT_REFUSE": {
+    "direct": [
+      {
+        "chain_id": "A",
+        "match_kind": "uniprot_direct",
+        "unp_start": 1,
+        "unp_end": 50
+      }
+    ],
+    "widen": [],
+    "ecd_segments": "1-40"
+  }
+}

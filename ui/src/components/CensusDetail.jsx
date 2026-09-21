@@ -6,6 +6,14 @@ import ClinicalEdges from './ClinicalEdges.jsx'
 import SurfaceCheck from './SurfaceCheck.jsx'
 import { HpaDeepLink } from './HpaAttribution.jsx'
 
+const MATCH_KIND_LABELS = {
+  uniprot_direct: 'direct UniProt map',
+  complex_chain: 'complex chain',
+  construct_alt_accession: 'alternate construct accession',
+  domain_fragment: 'domain fragment',
+  related_ortholog: 'related ortholog (not this UniProt)',
+};
+
 // One census protein. Four questions, in the order a reader asks them: what is it, what did we
 // fold, how confident is the model, and what is it associated with.
 //
@@ -291,6 +299,13 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
           This is <strong>not</strong> the served predicted fold and <strong>not</strong> STRUCTURAL_ONLY
           rank or the cohort-82 learned scorer.
         </p>
+              {detail?.pdb_best?.match_kind && (
+                <p className="note" data-testid="match-kind-label">
+                  Match kind: <strong>{MATCH_KIND_LABELS[detail.pdb_best.match_kind] || detail.pdb_best.match_kind}</strong>
+                  {detail.pdb_best.match_uniprot ? ` (construct/map UniProt ${detail.pdb_best.match_uniprot})` : ''}
+                </p>
+              )}
+
         {detail.pdb_status === 'invalid' || detail.pdb_status == null ? (
           <p role="alert">PDB metadata run is not valid right now — no experimental ids painted.</p>
         ) : detail.pdb_status === 'ABSENT' ? (
@@ -328,7 +343,30 @@ export default function CensusDetail({ detail, onClose, embedded = false }) {
         ) : (
           <p>Status {detail.pdb_status} — no pdb_best.</p>
         )}
-      </section>
+      
+              {Array.isArray(detail?.pdb_related) && detail.pdb_related.length > 0 && (
+                <div className="pdb-related-block" data-testid="pdb-related-detail">
+                  <h4>Related experimental structures (not this UniProt)</h4>
+                  <p className="note">
+                    These are related/ortholog entries with a <strong>related</strong> badge -
+                    not this protein&apos;s structure and never silent <code>pdb_best</code>.
+                  </p>
+                  <ul>
+                    {detail.pdb_related.map((rel, i) => (
+                      <li key={`${rel.pdb_id}-${i}`}>
+                        <strong>{(rel.pdb_id || '').toUpperCase()}</strong>
+                        {rel.related_uniprot ? ` · UniProt ${rel.related_uniprot}` : ''}
+                        {rel.tax_id != null ? ` · tax ${rel.tax_id}` : ''}
+                        {' · '}{MATCH_KIND_LABELS[rel.match_kind] || rel.match_kind || 'related'}
+                        {rel.attribution?.rcsb_url && (
+                          <> · <a href={rel.attribution.rcsb_url} target="_blank" rel="noreferrer">RCSB</a></>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+</section>
 
       {/* ⚠ D-093 edges 1+2 — the human-legible half, BELOW the structural
           profile: the reader meets what the protein IS before what a model

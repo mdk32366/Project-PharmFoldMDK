@@ -591,7 +591,7 @@ class CensusPdbRun(Base):
 
 
 class CensusPdbAccession(Base):
-    """Per-accession experimental PDB paint for one `census_pdb_runs` row (`D-171`)."""
+    """Per-accession experimental PDB paint for one `census_pdb_runs` row (`D-171`/`D-172`)."""
 
     __tablename__ = "census_pdb_accessions"
     __table_args__ = (
@@ -607,4 +607,8 @@ class CensusPdbAccession(Base):
     pdb_ids: Mapped[dict | list] = mapped_column(JSON_VARIANT, nullable=False)
     pdb_best: Mapped[dict | None] = mapped_column(JSON_VARIANT, nullable=True)
     entries: Mapped[dict | list] = mapped_column(JSON_VARIANT, nullable=False)
+    # D-172 -- related_ortholog badge lane (never silent pdb_best)
+    pdb_related: Mapped[dict | list] = mapped_column(
+        JSON_VARIANT, nullable=False, server_default="[]"
+    )
 
