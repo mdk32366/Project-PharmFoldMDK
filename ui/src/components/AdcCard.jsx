@@ -20,6 +20,30 @@ const TARGET = [
   ['Antigen', 'antigen'],
   ['UniProt accession', 'uniprot_accession'],
 ]
+
+function relatedBlaFootnote(field) {
+  if (!isEnvelope(field)) return null
+  const items = Array.isArray(field.value) ? field.value : []
+  if (items.length === 0) return null
+  return (
+    <div className="adc-related-blas" data-testid="adc-related-application-numbers">
+      <p className="note">
+        <strong>Related / closed application numbers</strong> (same drug — not a second ADC):
+      </p>
+      <ul>
+        {items.map((item) => (
+          <li key={item.application_number}>
+            <code>{item.application_number}</code>
+            {item.relation ? <> — {String(item.relation).split('_').join(' ')}</> : null}
+            {item.orig_ap_date ? <> (ORIG-AP {item.orig_ap_date})</> : null}
+            {item.notes ? <>. {item.notes}</> : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 const APPROVAL = [
   ['Application', 'application_number'],
   ['Approval date (this application)', 'current_application_approval_date'],
@@ -174,6 +198,7 @@ export default function AdcCard({ id }) {
             <ProvenanceField key={key} label={label} field={row[key]} />
           ))}
         </dl>
+        {relatedBlaFootnote(row.related_application_numbers)}
       </section>
 
       {isEnvelope(row.brand_name) ? (

@@ -13,6 +13,7 @@ import pytest
 
 from core.adc_catalog import (
     ADC_FIELDS,
+    OPTIONAL_ADC_FIELDS,
     CATALOG_V1,
     CONFIDENCES,
     FIELD_KEYS,
@@ -97,7 +98,8 @@ def test_committed_catalog_every_field_is_an_envelope():
         assert set(data[name].keys()) == set(FIELD_KEYS)
         assert data[name]["confidence"] in CONFIDENCES
     for row in data["adcs"]:
-        assert set(row) == set(ADC_FIELDS)
+        assert set(row) <= set(ADC_FIELDS) | set(OPTIONAL_ADC_FIELDS)
+        assert set(ADC_FIELDS) <= set(row)
         for name, field in row.items():
             assert set(field.keys()) == set(FIELD_KEYS), name
             assert field["confidence"] in CONFIDENCES, name

@@ -25949,3 +25949,13 @@ claiming cohort-82 / ADC.
 
 Hard stops: no `/api/census` contract change; no GPU/refold; no ECD/PDB lane change.
 
+
+
+### D-174 — ADC catalog: sibling / administratively-closed BLA footnotes
+
+**Status:** Accepted (BUILD). Spends `D-174`; next free `D-175`. Closes/links #338.
+
+Keep singular `application_number` (canonical surviving BLA). Add optional `related_application_numbers` envelope whose `value` is a list of reviewed objects (application_number, relation in {administratively_closed_into_canonical, sibling_same_brand}, source, as_of, confidence=`reviewed`, optional orig_ap_date/notes). First fill: DATROWAY→BLA761464, ADCETRIS→BLA125399. Catalog row count stays **15**. No antigen / cancer_type / label edits. Related BLAs are not members of the canonical-15 set-diff. Watch remains detect-only (D-029 / D-119).
+
+Hard stops: no new ADC row; no application_number array; no auto-merge from watch; no invented BLAs.
+

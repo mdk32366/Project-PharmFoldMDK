@@ -16,10 +16,12 @@ EM = "—"
 
 def test_d173_entry_and_pointer():
     assert "\n### D-173 — Census UI: numeric structural_score primary + header wrap" in LOG
-    assert "Next free `D-` integer: **`D-174`**" in RESERVED
+    assert "Next free `D-` integer: **`D-175`**" in RESERVED
     assert "Next free `D-` integer: **`D-173`**" not in RESERVED
+    assert "Next free `D-` integer: **`D-174`**" not in RESERVED
     assert "| **D-173**" in RESERVED and "Spent" in RESERVED.split("| **D-173**", 1)[1][:280]
-    assert "| **D-174**" in RESERVED
+    assert "| **D-174**" in RESERVED and "Spent" in RESERVED.split("| **D-174**", 1)[1][:280]
+    assert "| **D-175**" in RESERVED
 
 
 def test_status_header_says_scored_not_score():
