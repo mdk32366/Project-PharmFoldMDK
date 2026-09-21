@@ -545,7 +545,10 @@ def test_d129_is_the_next_free_decision_id():
         173,
         # ⚠ 174 is ADDED by ADC sibling / closed BLA footnotes (`D-174`) — by enumeration,
         # and never by a `>=`. Spending 174 reddened the previous form BY DESIGN.
-        174
+        174,
+        # ⚠ 175 is ADDED by census header polish (`D-175`) — by enumeration,
+        # and never by a `>=`. Spending 175 reddened the previous form BY DESIGN.
+        175
     ], (
         f"⚠ 167 is ADDED by the re-attach of slice 2's 37 — the EIGHTEENTH resolution "
         f"by enumeration and never by a `>=`; `### D-168` now takes the bar. "
@@ -695,7 +698,7 @@ def test_d129_is_the_next_free_decision_id():
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
     # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
-    # store tagged, never pool), so it is NAMED here rather than barred and `### D-175` takes the
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-176` takes the
     # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
     # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
     # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
@@ -714,8 +717,10 @@ def test_d129_is_the_next_free_decision_id():
         "D-173 was spent by census UI score headers + wrap, so it must be NAMED here rather than barred")
     assert "\n### D-174 — ADC catalog: sibling / administratively-closed BLA footnotes" in LOG, (
         "D-174 was spent by ADC sibling BLA footnotes, so it must be NAMED here rather than barred")
-    assert "\n### D-175" not in LOG, (
-        "D-175 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
+    assert "\n### D-175 — Census UI: header polish (PDB exp, tooltips, Status wrap)" in LOG, (
+        "D-175 was spent by census header polish, so it must be NAMED here rather than barred")
+    assert "\n### D-176" not in LOG, (
+        "D-176 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
     assert re.search(r"^### D-138 — `/method` gets a contents rail", LOG, re.M), (
         "D-138 is the recorded successor id; it must be the /method contents-rail "
         "entry, not some other entry that took the number"

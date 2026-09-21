@@ -4,7 +4,10 @@ import { COLUMNS } from './CensusTable.jsx'
 describe('D-173 census score headers', () => {
   it('Status header uses scored axis name, not score-as-number', () => {
     const status = COLUMNS.find((c) => c.key === 'status_structure')
-    expect(status.label).toBe('Status (structure · scored · seam)')
+    expect(status.headerLines.join(' ')).toContain('scored')
+    expect(status.headerLines.join(' ')).not.toMatch(/\bscore\b/)
+    expect(status.headerLines[0]).toBe('Status')
+    expect(status.headerLines[1]).toBe('(structure · scored · seam)')
   })
 
   it('Struct. score / rank headers are short; sort keys unchanged', () => {

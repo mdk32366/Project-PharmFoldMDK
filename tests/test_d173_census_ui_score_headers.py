@@ -16,17 +16,21 @@ EM = "—"
 
 def test_d173_entry_and_pointer():
     assert "\n### D-173 — Census UI: numeric structural_score primary + header wrap" in LOG
-    assert "Next free `D-` integer: **`D-175`**" in RESERVED
+    assert "Next free `D-` integer: **`D-176`**" in RESERVED
     assert "Next free `D-` integer: **`D-173`**" not in RESERVED
     assert "Next free `D-` integer: **`D-174`**" not in RESERVED
+    assert "Next free `D-` integer: **`D-175`**" not in RESERVED
     assert "| **D-173**" in RESERVED and "Spent" in RESERVED.split("| **D-173**", 1)[1][:280]
     assert "| **D-174**" in RESERVED and "Spent" in RESERVED.split("| **D-174**", 1)[1][:280]
-    assert "| **D-175**" in RESERVED
+    assert "| **D-175**" in RESERVED and "Spent" in RESERVED.split("| **D-175**", 1)[1][:280]
+    assert "| **D-176**" in RESERVED
 
 
 def test_status_header_says_scored_not_score():
-    assert f"Status (structure {MDOT} scored {MDOT} seam)" in TABLE
+    assert f"(structure {MDOT} scored {MDOT} seam)" in TABLE
+    assert "headerLines" in TABLE
     assert f"Status (structure {MDOT} score {MDOT} seam)" not in TABLE
+    assert f"(structure {MDOT} score {MDOT} seam)" not in TABLE
 
 
 def test_struct_headers_short_structural_only_in_legend():
@@ -59,4 +63,3 @@ def test_detail_caveat_scopes_cohort_denial():
 def test_protein_view_bar_affirms_structural_only_when_present():
     assert 'data-testid="census-cohort-scorer-bar"' in PROTEIN
     assert "structure-only rank and score (STRUCTURAL_ONLY) are still on this card" in PROTEIN
-

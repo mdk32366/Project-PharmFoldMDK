@@ -23,14 +23,15 @@ SEG_O75899 = "42-483;544-551;619-654;713-720"
 
 def test_d171_entry_exists_and_pointer_moved():
     assert re.search(r"^### D-171\b", LOG, re.M)
-    assert "Next free `D-` integer: **`D-175`**" in RESERVED
+    assert "Next free `D-` integer: **`D-176`**" in RESERVED
     assert "Next free `D-` integer: **`D-171`**" not in RESERVED
     assert "Next free `D-` integer: **`D-172`**" not in RESERVED
     assert re.search(r"^\| \*\*D-171\*\* \|", RESERVED, re.M)
     assert re.search(r"^\| \*\*D-172\*\* \|", RESERVED, re.M)
     assert re.search(r"^### D-173\b", LOG, re.M)
     assert re.search(r"^### D-174\b", LOG, re.M)
-    assert not re.search(r"^### D-175\b", LOG, re.M)
+    assert re.search(r"^### D-175\b", LOG, re.M)
+    assert not re.search(r"^### D-176\b", LOG, re.M)
     assert "0.50" in LOG[LOG.find("### D-171") : LOG.find("### D-171") + 2000]
     assert "ABSENT_NO_ECD_COVERING_STRUCTURE" in LOG[LOG.find("### D-171") : LOG.find("### D-171") + 2500]
 

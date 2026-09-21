@@ -866,8 +866,12 @@ main.wide .prose { max-width: none; }
   max-width: 9rem;
 }
 .census-table thead th.th-wrap,
-.census-table thead th[data-col="cost"] {
+.census-table thead th[data-col="cost"],
+.census-table thead th[data-col="status_structure"] {
   max-width: 7.5rem;
+}
+.census-table thead th .th-line {
+  display: block;
 }
 .census-table thead th[data-col="span_aa"],
 .census-table thead th[data-col="structure_kind"] {
@@ -906,9 +910,9 @@ main.wide .prose { max-width: none; }
    ⚠ NO ELLIPSIS AND NO CLIPPING. The longest census protein names run past 70 characters; they
    wrap onto a second line and every character stays on screen. **A bound is not a truncation** is
    the standing rule here (`.col-rank`, `.description-text`), and it governs this column too. */
-.census-table .protein-cell { min-width: 12rem; }
+.census-table .protein-cell { min-width: 8rem; }
 .census-table .protein-name {
-  display: block; min-width: 12rem; max-width: 22rem;
+  display: block; min-width: 8rem; max-width: 12rem;
   overflow-wrap: break-word;
 }
 /* ⚠ The identity columns do not wrap — an accession broken across two lines stops being one token
