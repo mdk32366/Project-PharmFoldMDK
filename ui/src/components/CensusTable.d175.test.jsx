@@ -16,7 +16,8 @@ describe('D-175 census header polish', () => {
   it('Status uses headerLines with scored (not score)', () => {
     const status = COLUMNS.find((c) => c.key === 'status_structure')
     expect(status.headerLines).toEqual(['Status', '(structure · scored · seam)'])
-    expect(status.label).toBe('Status')
+    expect(status.label).toContain('scored')
+    expect(status.label).toContain('structure')
   })
 
   it('tooltips stay honest for Cost, Struct. score, PDB', () => {

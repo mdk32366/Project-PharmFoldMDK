@@ -53,7 +53,7 @@ export const COLUMNS = [
   // ⚠ `order: STRUCTURE_SERVED_ORDER` for the same reason Cost declares one — the categories
   // group, and alphabetical would file `assembled_served` and `none` next to each other. It is a
   // GROUPING and not a ranking; nothing here scores a census row.
-  { key: 'status_structure', label: 'Status', numeric: false,
+  { key: 'status_structure', label: 'Status (structure · scored · seam)', numeric: false,
     headerLines: ['Status', '(structure · scored · seam)'],
     order: STRUCTURE_SERVED_ORDER },
   // ⚠⚠ HOW THE FOLD WAS PRODUCED, AND SORTABLE (D-133). The kind was rendered as a badge in the
