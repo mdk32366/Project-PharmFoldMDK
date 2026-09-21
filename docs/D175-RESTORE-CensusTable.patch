@@ -1,0 +1,75 @@
+--- a/ui/src/components/CensusTable.jsx
++++ b/ui/src/components/CensusTable.jsx
+@@ -53,7 +53,8 @@
+   // ⚠ `order: STRUCTURE_SERVED_ORDER` for the same reason Cost declares one — the categories
+   // group, and alphabetical would file `assembled_served` and `none` next to each other. It is a
+   // GROUPING and not a ranking; nothing here scores a census row.
+-  { key: 'status_structure', label: 'Status (structure · scored · seam)', numeric: false,
++  { key: 'status_structure', label: 'Status', numeric: false,
++    headerLines: ['Status', '(structure · scored · seam)'],
+     order: STRUCTURE_SERVED_ORDER },
+   // ⚠⚠ HOW THE FOLD WAS PRODUCED, AND SORTABLE (D-133). The kind was rendered as a badge in the
+   // accession cell and was the one row property the table could NOT sort by — while the paragraph
+@@ -84,7 +85,7 @@
+   { key: 'structural_rank', label: 'Struct. rank', numeric: true },
+   { key: 'structural_score', label: 'Struct. score', numeric: true },
+   // D-171 — experimental PDB metadata (not ranked fold / not STRUCTURAL_ONLY).
+-  { key: 'pdb_best', label: 'PDB (experimental)', numeric: false },
++  { key: 'pdb_best', label: 'PDB (exp)', numeric: false },
+   { key: 'tranche', label: 'Tranche', numeric: true },
+   // ⚠⚠ A STATUS, NOT A VALUE, AND THAT IS RULING 2. This table sorts on every column (D-087), so a
+   // profile VALUE here would be one header click from a ranked shortlist of 1,397 proteins. A
+@@ -98,6 +99,27 @@
+   { key: 'stained_pct', label: 'Stained %', numeric: true },
+   { key: 'critical_n', label: 'Critical tissue', numeric: true },
+ ]
++
++// D-175 — one tooltip map keyed by COLUMNS.key so header title= cannot drift from legend.
++export const COLUMN_TITLES = {
++  accession: 'UniProt accession',
++  gene: 'Gene symbol',
++  label: 'Protein / gene product display name',
++  span_aa: 'Extracellular span length in amino acids',
++  topology: 'Membrane topology class',
++  status_structure: 'Three Status axes: structure served · scored (pipeline) · seam',
++  structure_kind: 'How the fold was produced (single-pass vs assembled-from-tiles, etc.)',
++  cost: 'Compute cost to fold — not suitability',
++  mean_plddt: 'Mean pLDDT confidence of the served structure',
++  structural_rank: 'STRUCTURAL_ONLY rank (membrane × ECD × pLDDT) — not the cohort-82 scorer',
++  structural_score: 'STRUCTURAL_ONLY score — not the cohort-82 scorer',
++  pdb_best: 'Experimental PDB metadata (PDBe/SIFTS / RCSB) — not the served fold, not STRUCTURAL_ONLY',
++  tranche: 'Census tranche',
++  profile_status: 'Structural profile status',
++  stained_pct: 'Stained tissue percentage (HPA-class)',
++  critical_n: 'Critical tissue count',
++}
++
+ 
+ // ⚠⚠ ONE FUNCTION DECIDES WHICH TOPOLOGY BADGE A ROW WEARS (D-133 am. 1). It used to be a nested
+ // ternary inside the JSX, which is not a thing another part of the surface can ask a question of —
+@@ -799,13 +821,23 @@
+           <thead>
+             <tr>
+               {COLUMNS.map((c) => (
+-                <th key={c.key} data-col={c.key} className={c.key === 'cost' ? 'th-wrap' : undefined}>
++                <th
++                  key={c.key}
++                  data-col={c.key}
++                  className={(c.key === 'cost' || c.key === 'status_structure' || c.headerLines) ? 'th-wrap' : undefined}
++                >
+                   <button
+                     type="button"
+                     onClick={() => toggle(c.key)}
++                    title={COLUMN_TITLES[c.key]}
++                    aria-label={COLUMN_TITLES[c.key]}
+                     aria-sort={sort.key === c.key ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                   >
+-                    {c.label}
++                    {c.headerLines
++                      ? c.headerLines.map((line) => (
++                          <span key={line} className="th-line">{line}</span>
++                        ))
++                      : c.label}
+                     {sort.key === c.key && <span aria-hidden="true">{sort.dir === 'asc' ? ' ▲' : ' ▼'}</span>}
+                   </button>
+                 </th>
