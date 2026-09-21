@@ -24,10 +24,10 @@
     "confidence": "reviewed"
   },
   "approvals_reconciled_as_of": {
-    "value": "2026-09-21",
-    "source": "openFDA Drugs@FDA brand-name search for the 15 v1 brands (prior 2026-09-05 pin) + reviewed sibling/closed BLA footnotes for DATROWAY BLA761464 and ADCETRIS BLA125399 (D-174 / #338)",
-    "as_of": "2026-09-21",
-    "confidence": "reviewed"
+    "value": "2026-09-05",
+    "source": "openFDA Drugs@FDA brand-name search for the 15 v1 brands + LUMOXITI (404), this session",
+    "as_of": "2026-09-05",
+    "confidence": "official"
   },
   "antigen_mapping_reviewed_as_of": {
     "value": "2026-09-05",
