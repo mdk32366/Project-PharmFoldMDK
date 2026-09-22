@@ -765,7 +765,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     # ⚠ 164 is SPENT by the cost-stamp disclosure and is NAMED below; `### D-168` takes the
     # next-free bar. A name is ADDED, nothing is relaxed.
     assert 165 in ids, "D-165 claimed this integer (the spancache pin)"
-    assert 176 not in ids
+    assert 177 not in ids
     # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
     # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
@@ -785,7 +785,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     assert 166 in ids, "D-166 claimed this integer (the enqueue-idempotency constraint)"
     assert 167 in ids, "D-167 claimed this integer (the re-attach of slice 2's 37)"
     assert 171 in ids, "D-171 claimed this integer (census PDB metadata)"
-    assert 176 not in ids, (
+    assert 177 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     # the two entries this one is built beside, NAMED so a rename cannot pass silently
     assert re.search(r"^### D-146 — Track B stops denying the surface it is served on", LOG, re.M)
@@ -809,7 +809,7 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
     # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
-    # store tagged, never pool), so it is NAMED here rather than barred and `### D-176` takes the
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-177` takes the
     # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
     # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
     # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
@@ -821,8 +821,8 @@ def test_the_next_free_integer_is_named_and_barred_and_148_is_a_held_hole():
     assert "\n### D-170 — Census structural rank + score on every protein surface (list + detail)" in LOG, (
         "D-170 was spent by census structural rank everywhere, so it must be NAMED here rather than barred")
     assert "\n### D-171" in LOG  # spent by D-171 PDB metadata
-    assert "\n### D-176" not in LOG, (
-        "D-176 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
+    assert "\n### D-177" not in LOG, (
+        "D-177 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
 
 
 def test_the_reserved_map_holds_148_bars_150_and_the_pointer_skips_the_hold():
@@ -877,7 +877,7 @@ def test_the_reserved_map_holds_148_bars_150_and_the_pointer_skips_the_hold():
     # `D-149` shipped without) and deliberately did NOT take 152, because 152 became a HOLD for the
     # concurrent sitewide-layout lane while 148 remains the trafficking hold. So *"next free"* means
     # the lowest AVAILABLE integer, 154, and not the lowest unwritten one.
-    assert "Next free `D-` integer: **`D-176`**" in RESERVED
+    assert "Next free `D-` integer: **`D-177`**" in RESERVED
     assert "Next free `D-` integer: **`D-153`**" not in RESERVED
     assert "Next free `D-` integer: **`D-154`**" not in RESERVED
     assert "Next free `D-` integer: **`D-155`**" not in RESERVED

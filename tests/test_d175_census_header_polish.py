@@ -14,7 +14,7 @@ MDOT = "·"
 
 def test_d175_entry_and_pointer():
     assert "\n### D-175 — Census UI: header polish (PDB exp, tooltips, Status wrap)" in LOG
-    assert "Next free `D-` integer: **`D-176`**" in RESERVED
+    assert "Next free `D-` integer: **`D-177`**" in RESERVED
     assert "Next free `D-` integer: **`D-175`**" not in RESERVED
     assert "| **D-175**" in RESERVED and "Spent" in RESERVED.split("| **D-175**", 1)[1][:280]
     assert "| **D-176**" in RESERVED

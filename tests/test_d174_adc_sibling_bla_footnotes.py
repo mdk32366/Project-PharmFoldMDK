@@ -19,7 +19,7 @@ EM = "—"
 
 def test_d174_entry_and_pointer():
     assert "\n### D-174 — ADC catalog: sibling / administratively-closed BLA footnotes" in LOG
-    assert "Next free `D-` integer: **`D-176`**" in RESERVED
+    assert "Next free `D-` integer: **`D-177`**" in RESERVED
     assert "Next free `D-` integer: **`D-174`**" not in RESERVED
     assert "| **D-174**" in RESERVED and "Spent" in RESERVED.split("| **D-174**", 1)[1][:280]
     assert "| **D-175**" in RESERVED and "Spent" in RESERVED.split("| **D-175**", 1)[1][:280]
