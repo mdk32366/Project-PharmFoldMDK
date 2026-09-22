@@ -480,7 +480,7 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
     # NAMED above, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
     # ⚠ 148 stays the trafficking hold; 165 is SPENT by the spancache pin and is NAMED
     # below, so `### D-168` takes the next-free bar. Never relaxed to a `>=`.
-    assert 148 not in ids and 176 not in ids
+    assert 148 not in ids and 177 not in ids
     # ⚠⚠ D-158–D-163 are RESERVED for the 2026-09-15 incident-closeout wave and each
     # has a row in `docs/RESERVED.md`. **Reserved is NOT free**, so the band is barred here the
     # way 148 and 152 were: an entry claims its integer by NAME or not at all. Each PR in the
@@ -501,7 +501,7 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
     assert 166 in ids, "D-166 claimed this integer (the enqueue-idempotency constraint)"
     assert 167 in ids, "D-167 claimed this integer (the re-attach of slice 2's 37)"
     assert 171 in ids, "D-171 claimed this integer (census PDB metadata)"
-    assert 176 not in ids, (
+    assert 177 not in ids, (
         "a RESERVED integer was taken without an entry claiming it by name")
     assert "\n### D-148" not in LOG, (
         "D-148 is a RESERVED HOLD for the trafficking Spec and must stay unspent until that Spec "
@@ -522,7 +522,7 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
     assert "\n### D-155 — One population had two tables" in LOG, (
         "D-155 was spent by the surface-merge ship, so it must be NAMED here rather than barred")
     # ⚠⚠ D-168 SPENT the integer this guard barred (the assembled-commensurability ruling:
-    # store tagged, never pool), so it is NAMED here rather than barred and `### D-176` takes the
+    # store tagged, never pool), so it is NAMED here rather than barred and `### D-177` takes the
     # next-free bar. A name is ADDED and nothing becomes a `>=` — the widening D-145 fixed the
     # shape of. ⚠ The superseded message text read "D-164 is the next free integer" while the
     # literal barred 168: the bar was moved and its prose was not. Corrected here, not silently.
@@ -536,8 +536,8 @@ def test_the_next_free_integer_is_named_and_both_holds_stay_barred():
     assert "\n### D-171 — Census experimental PDB metadata (metadata-only)" in LOG, (
         "D-171 was spent by census PDB metadata, so it must be NAMED here rather than barred")
     assert "\n### D-171" in LOG  # spent by D-171 PDB metadata
-    assert "\n### D-176" not in LOG, (
-        "D-176 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
+    assert "\n### D-177" not in LOG, (
+        "D-177 is the next free integer and must stay unspent until an entry claims it by name — never a `>=`, never deleted.")
 
 
 def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxing():
@@ -553,7 +553,7 @@ def test_the_inherited_guards_were_widened_by_adding_a_name_and_never_by_relaxin
         # with the bar rather than being dropped — the same flip this suite made at D-152.
         assert "D-154 — Every UI surface walked on the live site" in text, (
             f"{rel} does not NAME the entry that spent 154")
-        assert r'\n### D-176" not in' in text, f"{rel} does not bar the next free integer"
+        assert r'\n### D-177" not in' in text, f"{rel} does not bar the next free integer"
         assert r'\n### D-148" not in' in text, f"{rel} stopped barring the trafficking hold"
         # ⚠ FLIPPED AT `D-152`: the hold was claimed by its lane, so those two files NAME the
         # entry instead of barring the integer. The check moves with it rather than being dropped.
@@ -594,7 +594,7 @@ def test_the_reserved_map_retires_153_marker_safe_and_records_both_holds():
 def test_the_pointer_moved_in_this_commit_and_skips_both_holds():
     """⚠ `RESERVED.md`'s own rule: *the pointer moves in the SAME commit that spends the integer*,
     and *"next free"* means the lowest AVAILABLE integer rather than the lowest unwritten one."""
-    assert "Next free `D-` integer: **`D-176`**" in RESERVED
+    assert "Next free `D-` integer: **`D-177`**" in RESERVED
     for unavailable in ("D-148", "D-149", "D-150", "D-151", "D-152", "D-153"):
         assert f"Next free `D-` integer: **`{unavailable}`**" not in RESERVED, (
             f"the pointer still names {unavailable}, which would hand a spent or held integer to "

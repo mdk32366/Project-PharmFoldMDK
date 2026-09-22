@@ -120,7 +120,7 @@ def test_the_pointer_moved_in_this_commit_and_166_is_named_not_barred():
     and every next-free guard names the spent integer rather than relaxing to a `>=`."""
     # ⚠ D-167 (the re-attach of slice 2's 37) spent 167 and moved the pointer in its own commit;
     # the pin is MOVED by name, and the superseded D-166 note stays in the chain.
-    assert "Next free `D-` integer: **`D-176`**" in RESERVED
+    assert "Next free `D-` integer: **`D-177`**" in RESERVED
     assert "it read **`D-166`**" in RESERVED, (
         "the superseded pointer value was overwritten in silence — D-129-C")
     assert "| **D-166** |" in RESERVED, "D-166 has no row in the allocator"
@@ -162,11 +162,11 @@ def test_the_pointer_moved_in_this_commit_and_166_is_named_not_barred():
     # ⚠ D-172 pins next-free (test_d172), so the pointer-file count is 12 (was 11).
     # ⚠ D-173 pins next-free (test_d173), so the pointer-file count is 13 (was 12).
     # ⚠ D-174 pins next-free (test_d174), so the pointer-file count is 14 (was 13).
-    # ⚠ D-175 pins next-free (test_d175), so the pointer-file count is 15 (was 14).
-    assert len(pointer) == 15, f"{len(pointer)} files pin the D- pointer, expected 15"
+    # ⚠ D-176 pins next-free (test_d176), so the pointer-file count is 16 (was 15).
+    assert len(pointer) == 16, f"{len(pointer)} files pin the D- pointer, expected 16"
     for q in pointer:
         text = q.read_text(encoding="utf-8")
-        assert needle + ": **`D-176`**" in text, (
+        assert needle + ": **`D-177`**" in text, (
             f"{q.name} still pins the pointer at a spent integer")
 
 

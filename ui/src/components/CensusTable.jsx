@@ -117,7 +117,11 @@ export const COLUMN_TITLES = {
   tranche: 'Census tranche',
   profile_status: 'Structural profile status',
   stained_pct: 'Stained tissue percentage (HPA-class)',
-  critical_n: 'Critical tissue count',
+  // D-176 — Critical / critical_n definition on hover (exact CRITICAL_TISSUES strings).
+  // Only High counts; safety filter / off-tumor lens — not a tumour÷normal ratio (D-093).
+  critical_n:
+    'Declared critical HPA normal tissues stained High: heart muscle, liver, kidney, lung, cerebral cortex, bone marrow. '
+    + 'Only High counts. Safety filter / off-tumor lens — not a tumour÷normal ratio (D-093).',
 }
 
 

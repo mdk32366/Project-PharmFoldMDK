@@ -25960,6 +25960,16 @@ UI-only Census table polish: shorten PDB header to `PDB (exp)` with tooltip hone
 Hard stops: no reopen of D-173 contracts; no merge of Status chips into Struct. score; no invented PDB rows.
 
 
+
+### D-176 — Census UI: Critical / critical_n header tooltip
+
+**Status:** Accepted (BUILD). Spends `D-176`; next free `D-177`. Spec@0.0 `Sessions/Trinity/2026-09-22-d176-critical-n-header-tooltip-spec@0.0.md`.
+
+UI-only: expand `COLUMN_TITLES.critical_n` so the Critical header `title=` names all six declared HPA normal tissues (`heart muscle`, `liver`, `kidney`, `lung`, `cerebral cortex`, `bone marrow`), states **Only High** counts, and states this is a safety filter / off-tumor **lens** — **not** a tumour÷normal ratio (D-093 honesty). Keep short COLUMNS label `Critical tissue`. D-175 scar stands: `title={COLUMN_TITLES[c.key] ?? c.label}`; `aria-label={c.label}` (do not put the long tooltip into aria-label). No scoring / API / schema / migrate change. Lens checkbox chrome that already joins `critical_tissues_declared` stays.
+
+Hard stops: no invent tissues beyond `CRITICAL_TISSUES`; no count Medium/Low; no reopen D-173/D-174/D-175 contracts.
+
+
 ### D-174 — ADC catalog: sibling / administratively-closed BLA footnotes
 
 **Status:** Accepted (BUILD). Spends `D-174`; next free `D-175`. Closes/links #338.
