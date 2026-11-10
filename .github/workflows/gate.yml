@@ -14,6 +14,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -114,7 +115,7 @@ jobs:
   # only the deploy STEP is skipped when a push changed nothing outside docs/ and *.md.
   deploy:
     needs: [test, postgres]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
